@@ -1,31 +1,25 @@
-;; shadow-cljs configuration
-{:source-paths
- ["src/dev"
-  "src/main"
-  "src/test"]
+;; shadow-cljs configuration for NRPK-22
+{:open-file-command ["idea" :pwd "--line" :line :file]
  :deps              {:aliases [:shadow-cljs]}
- :nrepl             {:port       7003
-                     :middleware []}
- :dev-http          {8060 "public/eykt"}
- :dependencies
- []
+ :nrepl             {:port 9000}
+ :dev-http          {8010 "public/eykt"}
+ :builds            {:logg    {:target :browser}
+                     :booking {:target :browser}
+                     :eykt    {:target            :browser
+                               :output-dir        "public/eykt/js"
+                               :asset-path        "/js"
+                               :after-load        eykt.core/reload!
+                               :modules           {:main {:init-fn eykt.core/init!}}
+                               :module-hash-names 4
+                               :release           {:output-dir       "public/eykt/dist/js"
+                                                   :compiler-options {:closure-defines {goog.DEBUG false}
+                                                                      :infer-externs   :auto
+                                                                      :optimizations   :advanced}}
 
- :builds
- {:eykt {:target :browser
-         :output-dir "public/eykt/js"
-         :asset-path "/js"
-         :module-hash-names 4
-         :modules {:main {:init-fn eykt.core/init!}}
-         :devtools { :after-load eykt.core/reload!}
-         :release           {:output-dir       "public/torv/dist/js"
-                             :compiler-options {:closure-defines {goog.DEBUG false}
-                                                :infer-externs   :auto
-                                                :optimizations   :advanced}
-                             }
-         :dev               {:compiler-options {:closure-defines {goog.DEBUG true}
-                                                :infer-externs   :auto
-                                                :optimizations   :none}}
-         }
-  }
- }
+                               :dev               {:compiler-options {:closure-defines {goog.DEBUG true}
+                                                                      :infer-externs   :auto
+                                                                      :optimizations   :none}}}}}
+
+
+
   
