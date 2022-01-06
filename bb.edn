@@ -9,7 +9,17 @@
                            (def -dist-dir "resources/dist")
                            (def -dist-dir-logg "resources/logg/dist")
                            (def -dist-dir-wheel "resources/wheel/dist")
-                           (defn done [] (shell "say task has completed bitches"))
+                           (defn done [] (shell "say task has completed"))
+
+                           (defn replacer' [{:keys [app-name path manifest-file index-file title]}]
+                             (let [output-name-js (:output-name (first (read-string (slurp (str path manifest-file)))))
+                                   output-name-css "output.css"
+                                   html (slurp (str "template/" app-name "/index.html"))]
+                               (spit (str path index-file)
+                                 (-> (slurp (str "template/" app-name "/index.html"))
+                                   (.replace "{title}" title)
+                                   (.replace "{css-source}" output-name-css)
+                                   (.replace "{js-source}" output-name-js)))))
 
                            (defn replacer [path manifest-file index-file title]
                              (let [output-name-js (:output-name (first (read-string (slurp (str path manifest-file)))))
@@ -18,12 +28,12 @@
                                (spit (str path index-file)
                                  (-> (slurp "template/index.html")
                                    (.replace "{title}" title)
-                                   (.replace "{source1}" output-name-css)
-                                   (.replace "{source2}" output-name-js))))))
+                                   (.replace "{css-source}" output-name-css)
+                                   (.replace "{js-source}" output-name-js))))))
 
   carve                  (shell "carve")
 
-  browser                (shell "open http://localhost:9631/dashboard")
+  dash                   (shell "open http://localhost:9630/dashboard")
 
   lint                   (shell "clj-kondo --lint src")
 
@@ -223,11 +233,11 @@
                           :task    (do
                                      (shell {:continue true} "clj -Ashadow-cljs release :torv"))}
 
-  torv-prepare-template (replacer
-                          "public/torv/dist"
-                          "/js/manifest.edn"
-                          "/index.html"
-                          "Torv")
+  torv-prepare-template  (replacer
+                           "public/torv/dist"
+                           "/js/manifest.edn"
+                           "/index.html"
+                           "Torv")
 
   torv-release           {:depends [torv-clean-before
                                     torv-compile-release
@@ -244,11 +254,24 @@
   torv-dev               (shell "clj -A:shadow-cljs watch :torv")
   torv-dev-css-jit       (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./public/torv/css/output.css --jit --watch --content=\"./public/torv/js/cljs-runtime/**/*.js\"")
   torv-deploy            {:depends [torv-release]
-                          :task (shell "firebase deploy --only hosting:zenit-sample")}
+                          :task    (shell "firebase deploy --only hosting:zenit-sample")}
 
   run                    {:depends []
                           :task    (do
                                      (println "Truing")
                                      (sh "bash" "-c" "ls -l ./public/torv/dist/js/*.js >> ./public/torv/history.md")
-                                     (shell {:continue true} "cat ./public/torv/history.md"))}}}
+                                     (shell {:continue true} "cat ./public/torv/history.md"))}
+
+  ;==========================
+
+  eykt-release           (shell "clj -M:shadow-cljs release eykt")
+
+  eykt-dev               (shell "clj -M:shadow-cljs watch eykt")
+
+  eykt-prepare-template  (replacer'
+                           {:app-name      "eykt"
+                            :path          "public/eykt"
+                            :manifest-file "/dist/js/manifest.edn"
+                            :index-file    "/index.html"
+                            :title         "EYKT-22"})}}
 
