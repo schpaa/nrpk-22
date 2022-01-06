@@ -1,11 +1,15 @@
 # nrpk-22
 Hoved-repo for alt relatert NRPK
 
+@TODO Lage skript som setter opp utviklingsmiljø fra grunnen av fra en [github-gist]()...
+
 ## Forutsetninger
 
 Du trenger terminal-tilgang til et unix-miljø (WSL/Windows, MacOS eller Linux). 
 
-Hovedaktivetene skjer i Clojure/Clojurescript så dette må være på plass. Babashka brukes som oppgave-system som erstatning for `Make`.
+Hovedaktivetene skjer i Clojure/Clojurescript så dette må være på plass. Dette bygger igjen på Java, så JDK 15 eller nyere må være installert. Node (og npm) må også installeres, versjon 8 eller høyere. Når Node/npm og Java/Clojure er installert kjører du `npm i` fra prosjekt-mappen for å sette igang resten. 
+
+Babashka brukes som oppgave-kjører (som erstatning for `Make`).
 
 ## Vanlige oppgaver
 
@@ -54,5 +58,4 @@ Annet
 - [clojure](https://clojure.org/)
 - [tailwind](https://tailwindcss.com/)
 
-@TODO
-Ideelt vil det være en docker-container som inneholder alt sammen inkludert utviklingsmiljø. 
+@TODO Ideelt vil det være en docker-container som inneholder alt sammen inkludert utviklingsmiljø. 
