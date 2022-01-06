@@ -1,0 +1,50 @@
+{:paths   ["src/cljs"]
+ :deps    {org.clojure/clojure                   {:mvn/version "1.10.3"}
+           org.clojure/clojurescript             {:mvn/version "1.10.896"}
+           times/times                           {:local/root    "./lib/times"
+                                                  :deps/manifest :deps}
+           db/db                                 {:local/root    "./lib/db"
+                                                  :deps/manifest :deps}
+           editor/editor                         {:local/root    "./lib/editor"
+                                                  :deps/manifest :deps}
+           whatever/whatever                     {:local/root    "./lib/whatever"
+                                                  :deps/manifest :deps}
+           schpaa/schpaa                         {:local/root    "./lib/schpaa"
+                                                  :deps/manifest :deps}
+           org.clojure/core.async                {:mvn/version "1.5.640"}
+           expound/expound                       {:mvn/version "0.8.10"}
+           reagent/reagent                       {:mvn/version "1.1.0"}
+           re-frame/re-frame                     {:mvn/version "1.2.0"}
+           kee-frame/kee-frame                   {:mvn/version "1.3.2"}
+           com.github.ingesolvoll/re-statecharts {:mvn/version "0.1.1"}
+           cljs-bean/cljs-bean                   {:mvn/version "1.7.0"}
+           fork/fork                             {:mvn/version "2.4.2"}
+           vlad/vlad                             {:mvn/version "3.3.2"}
+           com.andrewmcveigh/cljs-time           {:mvn/version "0.5.2"}
+           thedavidmeister/cljs-i18n             {:mvn/version "0.4.0"}
+           arco/arco                             {:mvn/version "0.3.5"}
+           fipp/fipp                             {:mvn/version "0.6.24"}
+           mvxcvi/puget                          {:mvn/version "1.3.1"}
+           markdown-to-hiccup/markdown-to-hiccup {:mvn/version "0.6.2"}
+           markdown-clj/markdown-clj             {:mvn/version "1.10.7"}
+           re-pressed/re-pressed                 {:mvn/version "0.3.1"}
+           medley/medley                         {:mvn/version "1.3.0"}
+           ;           nrepl/nrepl                           {:mvn/version "0.9.0-beta5"}
+           day8.re-frame/re-frame-10x            {:mvn/version "1.1.13"}
+           day8.re-frame/test                    {:mvn/version "0.1.5"}
+           applied-science/js-interop            {:mvn/version "0.2.5"}
+           day8/shadow-git-inject                {:mvn/version "0.0.5"}}
+
+ :aliases {:shadow-cljs
+           {:main-opts   ["-m" "shadow.cljs.devtools.cli"]
+            :extra-paths ["src/dev"]
+            :extra-deps  {thheller/shadow-cljs       {:mvn/version "2.16.6"}
+                          ;nrepl/nrepl                {:mvn/version "0.9.0"}
+                          cider/piggieback           {:mvn/version "0.4.2"}
+                          day8.re-frame/re-frame-10x {:mvn/version "1.2.0"}
+                          binaryage/devtools         {:mvn/version "1.0.4"}}}
+           :nREPL
+           {:extra-deps
+            {nrepl/nrepl      {:mvn/version "0.9.0"}
+             cider/piggieback {:mvn/version "0.4.2"}}}}}
+

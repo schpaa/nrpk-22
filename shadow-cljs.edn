@@ -3,9 +3,29 @@
  ["src/dev"
   "src/main"
   "src/test"]
-
+ :deps              {:aliases [:shadow-cljs]}
+ :nrepl             {:port       7003
+                     :middleware []}
+ :dev-http          {8060 "public/eykt"}
  :dependencies
  []
 
  :builds
- {}}
+ {:eykt {:target :browser
+         :output-dir "public/eykt/js"
+         :asset-path "/js"
+         :module-hash-names 4
+         :modules {:main {:init-fn eykt.core/init!}}
+         :devtools { :after-load eykt.core/reload!}
+         :release           {:output-dir       "public/torv/dist/js"
+                             :compiler-options {:closure-defines {goog.DEBUG false}
+                                                :infer-externs   :auto
+                                                :optimizations   :advanced}
+                             }
+         :dev               {:compiler-options {:closure-defines {goog.DEBUG true}
+                                                :infer-externs   :auto
+                                                :optimizations   :none}}
+         }
+  }
+ }
+  
