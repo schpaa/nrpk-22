@@ -264,14 +264,27 @@
 
   ;==========================
 
-  eykt-release           (shell "clj -M:shadow-cljs release eykt")
+  eykt-css               (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
+
+  eykt-release           {:depends []
+                          :task    (do
+                                     (shell "clj -M:shadow-cljs release eykt"))}
 
   eykt-dev               (shell "clj -M:shadow-cljs watch eykt")
 
-  eykt-prepare-template  (replacer'
-                           {:app-name      "eykt"
-                            :path          "public/eykt"
-                            :manifest-file "/dist/js/manifest.edn"
-                            :index-file    "/index.html"
-                            :title         "EYKT-22"})}}
+  eykt-prepare-template  {:depends [eykt-release eykt-store-build-statistics]
+                          :task (replacer'
+                                  {:app-name      "eykt"
+                                   :path          "dist/eykt"
+                                   :manifest-file "/js/manifest.edn"
+                                   :index-file    "/index.html"
+                                   :title         "EYKT-22"})}
 
+  eykt-store-build-statistics {:depends [eykt-release]
+                               :task    (do
+                                          (sh "bash" "-c" "ls -l ./dist/eykt/js/*.js >> ./history.md")
+                                          (shell {:continue true} "cat ./history.md"))}
+
+  eykt-css-release (shell "npx tailwindcss -i ./template/styles/style.css -o ./dist/eykt/css/output.css")
+
+  build-eykt {:depends [eykt-css-release eykt-release eykt-store-build-statistics]}}}

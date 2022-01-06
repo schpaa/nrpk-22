@@ -11,7 +11,7 @@
                                :after-load        eykt.core/reload!
                                :modules           {:main {:init-fn eykt.core/init!}}
                                :module-hash-names 4
-                               :release           {:output-dir       "public/eykt/dist/js"
+                               :release           {:output-dir       "dist/eykt/js"
                                                    :compiler-options {:closure-defines {goog.DEBUG false}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :advanced}}
