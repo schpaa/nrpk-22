@@ -1,22 +1,14 @@
 (ns eykt.core
   (:require [re-frame.core :as rf]
             [kee-frame.core :as k]
-            [reagent.dom :as rdom]
-            [eykt.spa :as spa]))
-
-(def root-element
-  (js/document.getElementById "app"))
-
-(defn start []
-  (rdom/render [:div "eykt"] root-element))
-
-(def localstorage-key "eykt-22")
+            [eykt.spa :as spa]
+            [eykt.data :as data]))
 
 (defn kee-start []
-  (k/start! {:routes         spa/app-routes,
-             :initial-db     (spa/initialize spa/start-db localstorage-key),
-             :root-component [spa/app-wrapper [spa/dispatch-main]],
-             :screen         spa/screen-breakpoints,
+  (k/start! {:routes         data/app-routes,
+             :initial-db     data/initial-db,
+             :screen         data/screen-breakpoints
+             :root-component spa/root-component
              :hash-routing?  false,
              :not-found      "/fant-ikke"}))
 
