@@ -1,0 +1,10 @@
+{:paths   ["src"]
+ :deps {org.clojure/clojurescript             {:mvn/version "1.10.896"}
+        db/db                           {:local/root "../../lib/db"
+                                         :deps/manifest :deps}
+        times/times                           {:local/root "../../lib/times"
+                                                       :deps/manifest :deps}
+        schpaa/schpaa                         {:local/root "../../lib/schpaa"
+                                               :deps/manifest :deps}
+        reagent/reagent                       {:mvn/version "1.1.0"}
+        re-frame/re-frame                     {:mvn/version "1.2.0"}}}

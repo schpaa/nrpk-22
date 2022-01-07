@@ -1,0 +1,9 @@
+{:paths ["src"]
+ :deps  {org.clojure/clojure       {:mvn/version "1.10.3"}
+         org.clojure/clojurescript {:mvn/version "1.10.896"}
+         markdown-clj/markdown-clj {:mvn/version "1.10.7"}
+         times/times               {:local/root    "../../lib/times"
+                                    :deps/manifest :deps}
+         reagent/reagent           {:mvn/version "1.1.0"}
+         re-frame/re-frame         {:mvn/version "1.2.0"}
+         tick/tick                 {:mvn/version "0.5.0-RC5"}}}
