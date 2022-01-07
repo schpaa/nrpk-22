@@ -28,11 +28,19 @@
                   -dev:css    (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
                   -dev:watch  (clojure (str "-M:shadow-cljs watch " -app-name))
                   -dev        {:depends [-dev:watch -dev:css -dev:browser]}
+                  template      {:depends []
+                                 :task    (do
+                                            (replacer
+                                              {:app-name      "eykt"
+                                               :path          "dist/eykt"
+                                               :manifest-file "/js/manifest.edn"
+                                               :index-file    "/index.html"
+                                               :title         "EYKT-22"}))}
                   dev         {:task (run '-dev {:parallel true})}
                   css         {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
                   clean       {:task (fs/delete-tree -dist-dir)}
                   build       {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
-                  deploy      {:depends []
+                  deploy      {:depends [clean build template css]
                                :task    (shell "firebase deploy --only hosting:eykt-22")}}}
 
 #_{:enter                 (println "Entering " (:name (current-task)))
