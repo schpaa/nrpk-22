@@ -2,8 +2,9 @@
   (:require [re-frame.core :refer [reg-sub]]
             [cljs.reader :refer [read-string]]))
 
-(def app-routes
+(def routes
   [["/" {:name :r.common :header "Forsiden"}]
+   ["/init" {:name :r.init :header "Init"}]
    ["/baksiden" {:name :r.back :header "Baksiden"}]])
 
 (def screen-breakpoints

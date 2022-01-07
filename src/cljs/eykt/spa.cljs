@@ -1,15 +1,25 @@
 (ns eykt.spa
   (:require [re-frame.core :as rf]
             [kee-frame.router]
+            [re-statecharts.core]
             [cljs.pprint :refer [pprint]]
-            [eykt.data :as data :refer [screen-breakpoints start-db app-routes]]
+            [eykt.data :as data :refer [screen-breakpoints start-db routes]]
             [kee-frame.core :as k]))
 
+(defn header []
+  [:div
+   [:div.text-red-500.text-2xl "EYKT-22"]
+   [:div.flex.gap-4
+    [:a {:href (k/path-for [:r.common])} "Forsiden"]
+    [:a {:href (k/path-for [:r.back])} "Baksiden"]
+    [:a {:href (k/path-for [:r.init])} "Restart"]]])
+
 (def route-table
-  {:r.common (fn [_]
+  {:r.init (fn [_]
+             [:div "INIT"])
+   :r.common (fn [_]
                [:div.space-y-4.p-4
-                [:div.text-red-500.text-2xl "EYKT"]
-                [:a {:href (k/path-for [:r.back])} "Baksiden"]
+                [header]
                 [:pre.text-base.text-yellow-500.bg-black.overflow-auto.-mx-4.p-2
                  (with-out-str (pprint @re-frame.db/app-db))]])
    :r.back   (fn [_]
