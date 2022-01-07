@@ -1,0 +1,354 @@
+{:paths          ["script"]
+ :min-bb-version "0.5.0"
+ :tasks          {:enter      (println "Entering " (:name (current-task)))
+
+                  :requires   ([babashka.fs :as fs]
+                               [clojure.java.shell :refer [sh]])
+
+                  :init       (do
+                                (def -app-name "eykt")
+
+                                (def -dist-dir "dist")
+
+                                (def -css-output (str -dist-dir "/" -app-name "/css/output.css"))
+
+                                (defn replacer [{:keys [path manifest-file index-file title]}]
+                                  (let [output-name-js (:output-name (first (read-string (slurp (str path manifest-file)))))
+                                        output-name-css "output.css"
+                                        html (slurp (str "template/" -app-name "/index.html"))]
+                                    (spit (str path index-file)
+                                      (-> (slurp (str "template/" -app-name "/index.html"))
+                                        (.replace "{title}" title)
+                                        (.replace "{css-source}" output-name-css)
+                                        (.replace "{js-source}" output-name-js))))))
+
+                  -dev:browser (do
+                                 (shell "open http://localhost:8010")
+                                 (shell "open http://localhost:9630/build/eykt"))
+                  -dev:css    (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
+                  -dev:watch  (clojure (str "-M:shadow-cljs watch " -app-name))
+                  -dev        {:depends [-dev:watch -dev:css -dev:browser]}
+                  dev         {:task (run '-dev {:parallel true})}
+                  css         {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
+                  clean       {:task (fs/delete-tree -dist-dir)}
+                  build       {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
+                  deploy      {:depends []
+                               :task    (shell "firebase deploy --only hosting:eykt-22")}}}
+
+#_{:enter                 (println "Entering " (:name (current-task)))
+   :requires              ([babashka.fs :as fs]
+                           [clojure.java.shell :refer [sh]])
+
+   :init                  (do
+                            (def -dist-dir "dist")
+                            (def -dist-dir-logg "resources/logg/dist")
+                            (def -dist-dir-wheel "resources/wheel/dist")
+                            (defn done [] (shell "say task has completed"))
+
+                            (defn replacer' [{:keys [app-name path manifest-file index-file title]}]
+                              (let [output-name-js (:output-name (first (read-string (slurp (str path manifest-file)))))
+                                    output-name-css "output.css"
+                                    html (slurp (str "template/" app-name "/index.html"))]
+                                (spit (str path index-file)
+                                  (-> (slurp (str "template/" app-name "/index.html"))
+                                    (.replace "{title}" title)
+                                    (.replace "{css-source}" output-name-css)
+                                    (.replace "{js-source}" output-name-js)))))
+
+                            (defn replacer [path manifest-file index-file title]
+                              (let [output-name-js (:output-name (first (read-string (slurp (str path manifest-file)))))
+                                    output-name-css "output.css"
+                                    html (slurp "template/index.html")]
+                                (spit (str path index-file)
+                                  (-> (slurp "template/index.html")
+                                    (.replace "{title}" title)
+                                    (.replace "{css-source}" output-name-css)
+                                    (.replace "{js-source}" output-name-js))))))
+
+   carve                  (shell "carve")
+
+   dash                   (shell "open http://localhost:9630/dashboard")
+
+   lint                   (shell "clj-kondo --lint src")
+
+   clean                  (do
+                            (println "removing target folder")
+                            (shell "say working"))
+
+   release
+   {:depends [compile-css]
+    :task    (do
+               (shell "shadow-cljs release :app")
+               (shell {:continue true} "ls -lh resources/dist/js")
+               (shell {:continue true} "ls -lh resources/dist/css")
+               (done))}
+
+   dev-css
+   (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/app/css/output.css -w")
+
+
+   compile-prod-css
+   {:enter (println "enter " (:name (current-task)))
+    :task  (do
+             (shell {:continue true} "ls -lh resources/dist/css")
+             (shell {:continue true} "ls -lh resources/app/css")
+             (sh "bash" "-c" "export NODE_ENV=production; echo $NODE_ENV; npx tailwindcss --postcss -i ./css/styles.css -o ./resources/dist/css/output.css")
+             ;(fs/copy "resources/")
+             #_(sh "bash" "-c" "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/app/css/output.css"))}
+
+   compile-dev-css
+   (do
+     (shell {:continue true} "ls -lh resources/dist/css")
+     (shell {:continue true} "ls -lh resources/app/css")
+     (sh "bash" "-c" "npx tailwindcss --postcss -i css/styles.css -o resources/dist/css/output.css")
+     ;(fs/copy "resources/")
+     #_(sh "bash" "-c" "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/app/css/output.css"))
+
+   prepare
+   (do
+     (fs/delete-tree "resources/dist")
+     (fs/create-dirs -dist-dir)
+     (fs/create-dirs (str -dist-dir "/" "css"))
+     (fs/create-dirs (str -dist-dir "/" "img"))
+     (fs/create-dirs (str -dist-dir "/" "fonts"))
+     (fs/create-dirs (str -dist-dir "/" "js"))
+     (fs/copy "template/img/nrpk-logo-transp.png" "resources/dist/img/nrpk-logo-transp.png"))
+
+   compile-booking-release
+   {:enter   (println "enter " (:name (current-task)))
+    :depends []
+    :task    (do
+               (shell {:continue true} "shadow-cljs release :app")
+               (shell "bb -f scripts/replacer.clj"))}
+
+   deploy-preview
+   (shell "firebase hosting:channel:deploy samplepreview")
+
+   deploy-booking-release
+   (shell "firebase deploy")
+
+   deploy-booking
+   {:enter   (println "enter " (:name (current-task)))
+    :depends [compile-booking-release
+              compile-prod-css
+              deploy-booking-release
+              open-release]
+    :task    (done)}
+
+   ;intent nrpk-logg
+
+   dev-css-logg
+   (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/logg/css/output.css -w")
+
+   prepare-logg
+   (do
+     (fs/delete-tree -dist-dir-logg)
+     (fs/create-dirs -dist-dir-logg)
+     (fs/create-dirs (str -dist-dir-logg "/" "css"))
+     (fs/create-dirs (str -dist-dir-logg "/" "img"))
+     (fs/create-dirs (str -dist-dir-logg "/" "fonts"))
+     (fs/create-dirs (str -dist-dir-logg "/" "js"))
+     (fs/copy "template/img/nrpk-logo-transp.png" (str -dist-dir-logg "/img/nrpk-logo-transp.png")))
+
+   compile-logg-prod-css
+   (do
+     ;(shell {:continue true} "ls -lh resources/dist/css")
+     ;(shell {:continue true} "ls -lh resources/app/css")
+     (sh "bash" "-c" "export NODE_ENV=production; echo $NODE_ENV; npx tailwindcss --postcss -i ./css/styles.css -o ./resources/logg/dist/css/output.css")
+     ;(fs/copy "resources/")
+     #_(sh "bash" "-c" "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/app/css/output.css"))
+   open-logg-release
+   (shell "open https://logg.nrpk.no")
+
+   compile-logg-release   {:depends []
+                           :task    (do
+                                      (shell {:continue true} "shadow-cljs release :logg"))}
+
+   replace-logg-release   {:depends [compile-logg-release]
+                           :task    (do
+                                      (replacer
+                                        "resources/logg/dist"
+                                        "/js/manifest.edn"
+                                        "/index.html"
+                                        "NRPK Båtlogg"))}
+
+   local-logg-release     {:depends [replace-logg-release]
+                           :task    (done)}
+
+   deploy-logg-release
+   (shell "firebase deploy --only hosting:nrpk-logg")
+
+   deploy-logg            {:depends [prepare-logg
+                                     replace-logg-release
+                                     compile-logg-prod-css
+                                     deploy-logg-release
+                                     open-logg-release]
+                           :task    (done)}
+
+   preview
+   {:depends [compile-release compile-dev-css deploy-preview open-preview]
+    :task    (done)}
+
+   open-release
+   (shell "open https://booking.nrpk.no")
+
+   open-preview           {:doc  "deprecated: Opens the system browser with ..."
+                           :task (shell "open https://eykt-booking--samplepreview-iboqakgg.web.app")}
+
+   fb-emulator            {:doc  "Starts the firebase-emulator for database and hosting"
+                           :task (shell {:continue true} "firebase emulators:start --only database storage")}
+
+   base                   {:enter (println "enter " (:name (current-task)))
+                           :task  (println 'done)
+                           :leave (println "leave-base")}
+   bise                   "just something"
+   bose                   {:depends [bise]
+                           :task    (println bise)}
+
+   ; --------------------------------------
+
+   wheel-dev-css
+   (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/wheel/css/output.css")
+
+   wheel-dev-css-jit
+   (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./resources/wheel/css/output.css --jit --watch")
+
+
+   wheel-clean            (fs/delete-tree -dist-dir-wheel)
+   wheel-prepare          {:depends [wheel-clean]
+                           :task    (do
+
+                                      (fs/create-dirs -dist-dir-wheel)
+                                      (fs/create-dirs (str -dist-dir-wheel "/" "css"))
+                                      ;(fs/create-dirs (str -dist-dir-wheel "/" "img"))
+                                      ;(fs/create-dirs (str -dist-dir-wheel "/" "fonts"))
+                                      (fs/create-dirs (str -dist-dir-wheel "/" "js"))
+                                      (fs/copy-tree "template" (str -dist-dir-wheel "") :replace-existing)
+                                      ;(fs/copy "template/fonts/FritzQuad-Regular.ttf" (str -dist-dir-wheel "/fonts/."))
+                                      ;(fs/copy "template/fonts/FrizQuaBol-Regular.ttf" (str -dist-dir-wheel "/fonts/."))
+                                      #_(fs/copy "template/img/nrpk-logo-transp.png" (str -dist-dir-wheel "/img/nrpk-logo-transp.png")))}
+
+   wheel-replace-release  {:depends [wheel-compile-release]
+                           :task    (do
+                                      (replacer
+                                        "resources/wheel/dist"
+                                        "/js/manifest.edn"
+                                        "/index.html"
+                                        "NRPK Årshjul"))}
+
+   wheel-compile-release  {:depends []
+                           :task    (do
+                                      (shell {:continue true} "shadow-cljs release :wheel"))}
+
+   wheel-compile-prod-css (do
+                            (sh "bash" "-c" "export NODE_ENV=production; echo $NODE_ENV; npx tailwindcss --postcss -i ./css/styles.css -o ./resources/wheel/dist/css/output.css"))
+
+   wheel-deploy-release   (shell "firebase deploy --only hosting:nrpk-arshjul")
+
+   wheel-dev              (shell "clj -A:wheel watch wheel")
+
+   wheel-deploy           {:depends [wheel-prepare
+                                     wheel-replace-release
+                                     wheel-compile-prod-css
+                                     wheel-deploy-release]
+                           :task    (done)}
+
+   ;===================
+
+   torv-compile-prod-css  (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./public/torv/dist/css/output.css --jit --content=\"./public/torv/dist/js/**/*.js\"")
+
+   torv-clean-before      (do
+                            (sh "bash" "-c" "rm -rf ./public/torv/dist")
+                            (fs/create-dirs (str "public/torv/dist" "/" "css"))
+                            (fs/copy-tree "template/css/inter" (str "public/torv/dist" "/css/inter") :replace-existing)
+                            (fs/copy-tree "template/img" (str "public/torv/dist" "/img") :replace-existing))
+
+   torv-compile-release   {:depends []
+                           :task    (do
+                                      (shell {:continue true} "clj -Ashadow-cljs release :torv"))}
+
+   torv-prepare-template  (replacer
+                            "public/torv/dist"
+                            "/js/manifest.edn"
+                            "/index.html"
+                            "Torv")
+
+   torv-release           {:depends [torv-clean-before
+                                     torv-compile-release
+                                     torv-compile-prod-css
+                                     torv-prepare-template]
+                           :task    (do
+
+
+                                      (sh "bash" "-c" "echo \"---\" >> ./public/torv/history.md")
+                                      (sh "bash" "-c" "ls -lh ./public/torv/dist/css/*.css >> ./public/torv/history.md ")
+                                      (sh "bash" "-c" "ls -lh ./public/torv/dist/js/*.js >> ./public/torv/history.md")
+                                      (shell {:continue true} "tail -n2 ./public/torv/history.md"))}
+
+   torv-dev               (shell "clj -A:shadow-cljs watch :torv")
+   torv-dev-css-jit       (shell "npx tailwindcss --postcss -i ./css/styles.css -o ./public/torv/css/output.css --jit --watch --content=\"./public/torv/js/cljs-runtime/**/*.js\"")
+   torv-deploy            {:depends [torv-release]
+                           :task    (shell "firebase deploy --only hosting:zenit-sample")}
+
+   run                    {:depends []
+                           :task    (do
+                                      (println "Truing")
+                                      (sh "bash" "-c" "ls -l ./public/torv/dist/js/*.js >> ./public/torv/history.md")
+                                      (shell {:continue true} "cat ./public/torv/history.md"))}
+
+   ;==========================
+
+   eykt-css               (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
+   -dev:eykt-css          (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
+
+   -dev:template          {:depends [-dev:eykt]
+                           :task    (replacer'
+                                      {:app-name      "eykt"
+                                       :path          "public/eykt"
+                                       :manifest-file "/js/manifest.edn"
+                                       :index-file    "/index.html"
+                                       :title         "EYKT-22-DEV"})}
+
+   ;-dev:template
+   -rel:eykt-stats        {:depends []
+                           :task    (do
+                                      (sh "bash" "-c" "ls -l ./dist/eykt/js/*.js >> ./history.md")
+                                      (shell {:continue true} "cat ./history.md")
+                                      (shell "say done"))}
+
+   -dev:eykt              {:depends []
+                           :task    (do
+                                      (run '-dev:eykt-css {:parallel true})
+                                      (shell "echo sample compile")
+                                      #_(clojure "-M:shadow-cljs compile eykt"))}
+
+   dev:eykt               {:doc     "Produce everything that goes into the public/eykt folder"
+                           :depends []
+                           :task    (do
+                                      (run '-dev:eykt {:parallel true})
+                                      (run '-dev:eykt-stats))}
+
+   rel:eykt-template      {:depends []
+                           :task    (do
+                                      (replacer'
+                                        {:app-name      "eykt"
+                                         :path          "dist/eykt"
+                                         :manifest-file "/js/manifest.edn"
+                                         :index-file    "/index.html"
+                                         :title         "EYKT-22"}))}
+
+   build-eykt             {:depends [rel:eykt-css rel:eykt-cljs -dev:eykt-stats]}
+
+   rel:eykt-css           {:depends [rel:eykt-cljs]
+                           :task    (shell "npx tailwindcss -i ./template/styles/style.css -o ./dist/eykt/css/output.css")}
+
+   rel:eykt-cljs          {:depends []
+                           :task    (do
+                                      (shell "clj -M:shadow-cljs release eykt"))}
+
+   rel:eykt-clean         {:task (fs/delete-tree -dist-dir)}
+
+   rel:eykt-build         {:depends [rel:eykt-clean rel:eykt-css rel:eykt-cljs rel:eykt-template -rel:eykt-stats]
+                           :task    (do)}
+   rel:eykt-deploy        {:depends [rel:eykt-build]
+                           :task    (shell "firebase deploy --only hosting:eykt-22")}}
