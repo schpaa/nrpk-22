@@ -13,50 +13,91 @@
             [db.core :as db]
             [db.signin]))
 
+(defn rounded-view [& content]
+  [:div.bg-gray-100.rounded.p-3.space-y-4
+   (into [:<>] (map identity content))])
+
+(defn rounded-view' [& content]
+  [:div.rounded.p-3.space-y-4
+   {:class ["bg-gray-400/50"]}
+   (into [:<>] (map identity content))])
+
+(defn view-info [{:keys [username]}]
+  [:div username])
+
 (defn rounded-box []
   (let [*st-all (rf/subscribe [::rs/state :main-fsm])
+        some-data (db/on-value-reaction {:path ["some-path"]})
         user-auth (rf/subscribe [::db/user-auth])]
-    (fn []
-      (if-not @user-auth
-        [:div
-         [:button.btn.btn-free {:on-click #()} "Login"]
-         [db.signin/login]]
-        [:div
-         [l/ppre-x user-auth]
-         [:button.btn.btn-free {:on-click #(db/sign-out)} "Sign out"]
-         (rs/match-state (:user @*st-all)
-           [:s.ready]
-           [:div.bg-gray-100.rounded.p-3.space-y-4
-            [:div.h-10.bg-gray-50.flex.items-center.-m-2.p-2 "min side"]
-            [:div "1 extra"]
-            [fork/form {:initial-values    {:input "hello"}
-                        :prevent-default?  true
-                        :clean-on-unmount? true
-                        :keywordize-keys   true
-                        :on-submit
-                        #(rf/dispatch (state/send :e.store %))
-                        #_#(js/alert % #_#_rf/dispatch [:submit-handler %])}
-             (fn [{:keys [values handle-change handle-blur form-id handle-submit]}]
-               [:form
-                {:id        form-id
-                 :on-submit handle-submit}
-                [:div
-                 [:p "Read back: " (values :input)]
-                 [:div.flex.gap-4
-                  [:input
-                   {:name      :input
-                    :value     (values :input)
-                    :on-change handle-change
-                    :on-blur   handle-blur}]
-                  [:button.btn.btn-free {:type :submit} "Store"]
-                  [:button.btn.btn-free {:type     :button
-                                         :on-click #(rf/dispatch (state/send :e.restart))} "Reset"]]]])]
-            [:div "2 info"]]
-           [:s.initial]
-           [:div
-            [:div "Initial"]]
 
-           [l/ppre-x @*st-all])]))))
+    (fn []
+      (let [path {:path ["some-path" (:uid @user-auth)]}
+            loaded-data (db/on-value-reaction path)]
+        (if-not @user-auth
+          [:div
+           ;[:button.btn.btn-free {:on-click #()} "Login"]
+           [rounded-view [db.signin/login]]]
+          [:div.space-y-4
+           ;[l/ppre (:uid @user-auth)]
+           ;[l/ppre-x @some-data (:uid @some-data)]
+           ;(:user @*st-all)
+
+           (rs/match-state (:user @*st-all)
+             [:s.editing]
+             [:div
+              [rounded-view
+               [:div.flex.items-center.justify-between
+                [view-info {:username (:display-name @user-auth)}]
+                [:button.btn.btn-free.bg-red-500.text-white {:on-click #(db/sign-out)} "Logg ut"]]
+
+               ;[:div.h-10.bg-gray-50.flex.items-center.-m-2.p-4 "min side"]
+               [fork/form {:initial-values    {:input (:input @loaded-data)}
+                           :prevent-default?  true
+                           :clean-on-unmount? true
+                           :keywordize-keys   true
+                           :on-submit
+                           #(state/send :e.store (assoc-in % [:values :uid] (:uid @user-auth)))
+                           #_#(js/alert % #_#_rf/dispatch [:submit-handler %])}
+                (fn [{:keys [values handle-change handle-blur form-id handle-submit dirty]}]
+                  [:form.space-y-4
+                   {:id        form-id
+                    :on-submit handle-submit}
+                   [:div.flex.gap-4.justify-between
+                    [:div.flex-col.flex
+                     [:label {:for "z"} "Data"]
+                     [:input.flex-grow.h-10
+                      {:name      :input
+                       :id        "z"
+                       :type      :text
+                       :value     (values :input)
+                       :on-change handle-change
+                       :on-blur   handle-blur}]]]
+                   [:div.flex.gap-4.justify-end
+                    [:button.btn.btn-free {:type     :button
+                                           :on-click #(rf/dispatch (state/send :e.restart))} "Avbryt"]
+                    [:button.btn.btn-free.btn-cta.text-white {:disabled (not (some? dirty))
+                                                              :type     :submit} "Lagre"]]])]]]
+
+             [:s.store]
+             [rounded-view
+              [:div "Saving"]]
+
+             [:s.initial]
+             [rounded-view
+              [:div.flex.items-center.justify-between
+               [view-info {:username (:display-name @user-auth)}]
+               [:button.btn.btn-free.bg-red-500.text-white {:on-click #(db/sign-out)} "Logg ut"]]
+
+              [:div (:input @loaded-data)]
+
+              [:div.flex.justify-end
+               [:button.btn.btn-free
+                {:type     :button
+                 :on-click #(state/send :e.edit)}
+                "Rediger"]]]
+             [l/ppre-x :state @*st-all])
+           (for [e (keep :input (vals @some-data))]
+             [rounded-view' e])])))))
 
 (def route-table
   {:r.init    (fn [_]

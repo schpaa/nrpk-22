@@ -8,8 +8,15 @@
     }
     .btn {
         @apply px-4 py-2 active:shadow disabled:cursor-default cursor-pointer truncate;
+        min-width: 6rem;
     }
     .btn-free {
         @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded-sm
+    }
+    .btn-cta {
+        @apply disabled:bg-alt/50 bg-alt
+    }
+    label {
+        @apply text-sm text-gray-600 mb-1 pl-2;
     }
 }
