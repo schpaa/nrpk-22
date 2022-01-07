@@ -6,4 +6,10 @@
     a {
         @apply underline cursor-pointer;
     }
+    .btn {
+        @apply px-4 py-2 active:shadow disabled:cursor-default cursor-pointer truncate;
+    }
+    .btn-free {
+        @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded-sm
+    }
 }
