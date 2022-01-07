@@ -2,20 +2,25 @@
   (:require [re-frame.core :as rf]
             [kee-frame.core :as k]
             [eykt.spa :as spa]
-            [eykt.data :as app-data]))
+            [eykt.state]
+            [re-statecharts.core :as rs]
+            [eykt.data :as app-data]
+            [db.core :as db]))
 
 (defn kee-start []
   (k/start! {:routes         app-data/routes,
              :initial-db     app-data/initial-db,
              :screen         app-data/screen-breakpoints
              :root-component spa/root-component
-             :hash-routing?  false,
-             :not-found      "/fant-ikke"}))
+             :not-found      "/fant-ikke",
+             :hash-routing?  false}))
 
 (defn ^:dev/after-load reload! []
-  (js/console.log "Startup")
+  (js/console.log "loaded!")
   (rf/clear-subscription-cache!)
   (kee-start))
 
 (defn init! []
-  (reload!))
+  (db/init! {:config app-data/firebaseconfig})
+  (reload!)
+  (rf/dispatch [::rs/transition :main :e.restart]))
