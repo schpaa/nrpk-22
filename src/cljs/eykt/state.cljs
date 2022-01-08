@@ -15,12 +15,14 @@
    :on      {:e.restart {:target [:. :s.initial]}
              :e.edit    {:target [:. :s.editing]}
              :e.store   {:target  [:> :user :s.store]
-                         :actions [(assign (fn [st {:keys [data] :as _event}]
-                                             (let [input (-> data :values :input)
-                                                   uid (-> data :values :uid)]
-                                               (db/database-set {:path ["some-path" uid] :value {:input input}})
-                                               (tap> (l/ppr (-> data :values :input)))
-                                               st)))]}}
+                         :actions [(fn [st {:keys [data] :as _event}]
+                                     (let [values (-> data :values)
+                                           uid (-> values :uid)
+                                           values (dissoc values :uid)]
+                                       (db/firestore-set {:path ["users2" uid] :value values})
+                                       (db/database-set {:path ["some-path" uid] :value values})
+                                       (tap> values)
+                                       st))]}}
 
    :states  {:s.initial {}
              :s.editing {}

@@ -1,5 +1,7 @@
 (ns eykt.spa
   (:require [re-frame.core :as rf]
+            [reagent.core :as r]
+            [times.api :refer []]
             [re-statecharts.core :as rs]
             [kee-frame.router]
             [kee-frame.core :as k]
@@ -11,7 +13,8 @@
             [eykt.state :as state]
             [fork.re-frame :as fork]
             [db.core :as db]
-            [db.signin]))
+            [db.signin]
+            [schpaa.time]))
 
 (defn rounded-view [& content]
   [:div.bg-gray-100.rounded.p-3.space-y-4
@@ -25,79 +28,97 @@
 (defn view-info [{:keys [username]}]
   [:div username])
 
+(defn my-form [{:keys [values handle-change handle-blur form-id handle-submit dirty readonly?]}]
+  [:form.space-y-4
+   {:id        form-id
+    :on-submit handle-submit}
+   [:div.flex.flex-col.gap-4
+    [:div.flex-col.flex
+     [:label {:for "z"} "Data"]
+     [:input.h-10.field-w-max
+      {:class     [:form-input :active:border-2 :border-none :rounded]
+       :name      :input
+       :id        "z"
+       :type      :text
+       :value     (values :input)
+       :on-change handle-change
+       :on-blur   handle-blur}]]
+    [:div.flex-col.flex
+     [:label {:for "x"} "Kallenavn"]
+     [:input.w-auto.h-10.field-w-max.focus:border-2.border-none
+      {:class     [:form-input :active:border-2 :border-none :rounded]
+       :name      :shortname
+       :id        "x"
+       :type      :text
+       :value     (values :shortname)
+       :on-change handle-change
+       :on-blur   handle-blur}]]]
+   (when-not readonly?
+     [:div.flex.gap-4.justify-end
+      [:button.btn.btn-free {:type     :button
+                             :on-click #(rf/dispatch (state/send :e.restart))} "Avbryt"]
+      [:button.btn.btn-free.btn-cta.text-white {:disabled (not (some? dirty))
+                                                :type     :submit} "Lagre"]])])
+
+(rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
+(rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
+
 (defn rounded-box []
   (let [*st-all (rf/subscribe [::rs/state :main-fsm])
         some-data (db/on-value-reaction {:path ["some-path"]})
         user-auth (rf/subscribe [::db/user-auth])]
 
     (fn []
-      (let [path {:path ["some-path" (:uid @user-auth)]}
+      (let [uid (:uid @user-auth)
+            path {:path ["some-path" uid]}
             loaded-data (db/on-value-reaction path)]
+
         (if-not @user-auth
-          [:div
-           ;[:button.btn.btn-free {:on-click #()} "Login"]
-           [rounded-view [db.signin/login]]]
+          [rounded-view [db.signin/login]]
           [:div.space-y-4
-           ;[l/ppre (:uid @user-auth)]
-           ;[l/ppre-x @some-data (:uid @some-data)]
-           ;(:user @*st-all)
 
-           (rs/match-state (:user @*st-all)
-             [:s.editing]
-             [:div
-              [rounded-view
-               [:div.flex.items-center.justify-between
-                [view-info {:username (:display-name @user-auth)}]
-                [:button.btn.btn-free.bg-red-500.text-white {:on-click #(db/sign-out)} "Logg ut"]]
+           [rounded-view
+            [:div.flex.justify-between.items-center
+             [:h2 (:display-name @user-auth)]
+             [:button.btn.btn-danger {:on-click #(db/sign-out)} "Logg ut"]]]
 
-               ;[:div.h-10.bg-gray-50.flex.items-center.-m-2.p-4 "min side"]
-               [fork/form {:initial-values    {:input (:input @loaded-data)}
-                           :prevent-default?  true
-                           :clean-on-unmount? true
-                           :keywordize-keys   true
-                           :on-submit
-                           #(state/send :e.store (assoc-in % [:values :uid] (:uid @user-auth)))
-                           #_#(js/alert % #_#_rf/dispatch [:submit-handler %])}
-                (fn [{:keys [values handle-change handle-blur form-id handle-submit dirty]}]
-                  [:form.space-y-4
-                   {:id        form-id
-                    :on-submit handle-submit}
-                   [:div.flex.gap-4.justify-between
-                    [:div.flex-col.flex
-                     [:label {:for "z"} "Data"]
-                     [:input.flex-grow.h-10
-                      {:name      :input
-                       :id        "z"
-                       :type      :text
-                       :value     (values :input)
-                       :on-change handle-change
-                       :on-blur   handle-blur}]]]
-                   [:div.flex.gap-4.justify-end
-                    [:button.btn.btn-free {:type     :button
-                                           :on-click #(rf/dispatch (state/send :e.restart))} "Avbryt"]
-                    [:button.btn.btn-free.btn-cta.text-white {:disabled (not (some? dirty))
-                                                              :type     :submit} "Lagre"]]])]]]
+           (r/with-let [s (db/on-snapshot-doc-reaction {:path ["users2" uid]})]
 
-             [:s.store]
-             [rounded-view
-              [:div "Saving"]]
+               [rounded-view
+                [:div.flex.items-center.justify-between
+                 [:div.flex.flex-col
+                  [:h2 "Mine opplysninger"]
+                  [:h2.text-xs (if-let [tm (get @s "timestamp")]
+                                 (schpaa.time/x' tm)
+                                 "Ikke registrert")]]]
+                (rs/match-state (:user @*st-all)
+                  [:s.initial] [:<>
+                                (if @loaded-data
+                                  (my-form {:values @loaded-data :readonly? true})
+                                  [:div "Ingen data"])
+                                [:div.flex.justify-end
+                                 [:button.btn.btn-free.btn-cta
+                                  {:type     :button
+                                   :on-click #(state/send :e.edit)}
+                                  "Rediger"]]]
 
-             [:s.initial]
-             [rounded-view
-              [:div.flex.items-center.justify-between
-               [view-info {:username (:display-name @user-auth)}]
-               [:button.btn.btn-free.bg-red-500.text-white {:on-click #(db/sign-out)} "Logg ut"]]
+                  [:s.editing] [fork/form {:initial-values    @loaded-data
+                                           :prevent-default?  true
+                                           :clean-on-unmount? true
+                                           :keywordize-keys   true
+                                           :on-submit         #(state/send :e.store (assoc-in % [:values :uid] (:uid @user-auth)))}
+                                my-form]
 
-              [:div (:input @loaded-data)]
+                  [:s.store] [rounded-view
+                              [:div "Lagrer, et øyeblikk"]]
 
-              [:div.flex.justify-end
-               [:button.btn.btn-free
-                {:type     :button
-                 :on-click #(state/send :e.edit)}
-                "Rediger"]]]
-             [l/ppre-x :state @*st-all])
-           (for [e (keep :input (vals @some-data))]
-             [rounded-view' e])])))))
+                  [l/ppre-x :state @*st-all])])
+
+           (when @some-data
+             (for [[a b] (keep (juxt :input :shortname) (vals @some-data))]
+               [rounded-view' [:div.flex.justify-between
+                               [:div a]
+                               [:div {:class (if-not b "text-black/25")} (or b "ingen")]]]))])))))
 
 (def route-table
   {:r.init    (fn [_]

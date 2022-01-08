@@ -11,12 +11,29 @@
         min-width: 6rem;
     }
     .btn-free {
-        @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded-sm
+        @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded
     }
+
+    .btn-danger {
+        @apply bg-white disabled:text-gray-300 active:bg-red-500 active:text-white rounded border-2 border-red-500 text-black
+    }
+
     .btn-cta {
-        @apply disabled:bg-alt/50 bg-alt
+        @apply disabled:text-black/25 bg-white text-black border-alt border-2
     }
+
     label {
-        @apply text-sm text-gray-600 mb-1 pl-2;
+        @apply text-sm mb-1 text-black/50;
+    }
+
+    h2 {
+        @apply text-lg font-light text-black/50
+    }
+
+}
+
+@layer utilities {
+    .field-w-max {
+        max-width: 15rem;
     }
 }
