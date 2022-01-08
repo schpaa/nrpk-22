@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+
+    @font-face {
+      font-family: 'Lora';
+
+    }
+
+    @font-face {
+        font-family: 'Inter', sans-serif;
+        font-feature-settings: "salt", "calt";
+    }
+
     a {
         @apply underline cursor-pointer;
     }
@@ -15,19 +26,19 @@
     }
 
     .btn-danger {
-        @apply bg-white disabled:text-gray-300 active:bg-red-500 active:text-white rounded border-2 border-red-500 text-black
+        @apply bg-white dark:bg-black disabled:text-gray-300 active:bg-red-500 active:text-white rounded border-2 border-red-500 text-black dark:text-white
     }
 
     .btn-cta {
-        @apply disabled:text-black/25 bg-white text-black border-alt border-2
+        @apply disabled:text-black/25 bg-white dark:bg-black dark:text-white text-black border-alt border-2
     }
 
     label {
-        @apply text-sm mb-1 text-black/50;
+        @apply text-sm mb-1 text-black/50 dark:text-white/50;
     }
 
     h2 {
-        @apply text-lg font-light text-black/50
+        @apply text-lg font-light text-black/50 dark:text-white/50
     }
 
 }
@@ -36,4 +47,8 @@
     .field-w-max {
         max-width: 15rem;
     }
+    .debug {
+        outline: #f448 solid 2px;
+    }
+
 }

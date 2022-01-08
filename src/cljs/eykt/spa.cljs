@@ -14,10 +14,14 @@
             [fork.re-frame :as fork]
             [db.core :as db]
             [db.signin]
+            [eykt.content.pages]
             [schpaa.time]))
 
 (defn rounded-view [& content]
-  [:div.bg-gray-100.rounded.p-3.space-y-4
+  [:div.rounded.p-3.space-y-4
+   {:class [:dark:bg-gray-800
+            :bg-gray-100
+            :dark:text-gray-500]}
    (into [:<>] (map identity content))])
 
 (defn rounded-view' [& content]
@@ -57,7 +61,7 @@
      [:div.flex.gap-4.justify-end
       [:button.btn.btn-free {:type     :button
                              :on-click #(rf/dispatch (state/send :e.restart))} "Avbryt"]
-      [:button.btn.btn-free.btn-cta.text-white {:disabled (not (some? dirty))
+      [:button.btn.btn-free.btn-cta.text-black {:disabled (not (some? dirty))
                                                 :type     :submit} "Lagre"]])])
 
 (rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
@@ -126,24 +130,52 @@
    :r.user    (fn [_]
                 [rounded-box])
    :r.content (fn [_]
-                [rounded-box])
+                [:h2 "Oversikt"])
    :r.common  (fn [_]
-                [:div.space-y-4
-                 [:div.flex.gap-4
-                  [:a {:href (k/path-for [:r.back])} "Til baksiden"]
-                  [:a {:href (k/path-for [:r.content])} "Innhold"]]
-                 [:div.bg-gray-100.-mx-4.px-4.space-y-1
-                  (for [e (range 10)]
-                    [:div.h-10.bg-gray-200.-mx-4.px-4 e])]
-                 [:div.bg-gray-300.-mx-4.px-4.space-y-4
-                  (for [e (range 20)]
-                    [:div e])]
-                 [:div.-mx-4 [l/ppre-x @re-frame.db/app-db]]])
+                [:div;.space-y-4.x-m-3.max-w-lgx.xmx-auto
+
+                 #_[:div.w-screen.p-3.h-16.whitespace-nowrap
+                    {:class []}
+                    [:div.relative.w-full.flex.gap-6.items-center.overflow-x-auto
+                     {:class [:snap-x
+                              :bg-gray-300 :text-black]}
+
+                     [:div {:class [:snap-center :shrink-0]}
+                      [:div {:class [:shrink-0 :w-4 :sm:w-48]}]]
+
+                     [:a {:class [:snap-center]
+                          :href (k/path-for [:r.back])} "Til baksiden"]
+
+                     [:div.underline.cursor-pointer
+                      {:class [:snap-center]
+                       :on-click #(rf/dispatch [:app/open-menu-at :list])
+                       :href     (k/path-for [:r.content])} "Innhold"]
+
+                     (into [:<>] (mapv (fn [e] [:div.underline.cursor-pointer
+                                                {:class [:snap-center
+                                                         :w-80
+                                                         :h-32
+                                                         :bg-alt
+                                                         :first:pl-8
+                                                         :last:pr-8]
+                                                 :on-click #(rf/dispatch [:app/open-menu-at :list])
+                                                 :href     (k/path-for [:r.content])} "Annet " e])
+                                       (range 6)))
+                     [:div {:class [:snap-center :shrink-0]}
+                      [:div {:class [:shrink-0 :w-4 :sm:w-48]}]]]]
+
+                 [:div.p-3 (eykt.content.pages/new-designed-content {})]
+                 #_[:div.bg-gray-100.-mx-4.px-4.space-y-1
+                    (for [e (range 10)]
+                      [:div.h-10.bg-gray-200.-mx-4.px-4 e])]
+                 #_[:div.bg-gray-300.-mx-4.px-4.space-y-4
+                    (for [e (range 20)]
+                      [:div e])]
+                 #_[:div.-mx-4 [l/ppre-x @re-frame.db/app-db]]])
    :r.back    (fn [_]
                 [:div.space-y-4
 
-                 [:div.-mx-4 [l/ppre-x @re-frame.db/app-db]]])})
-
+                 [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
 
 (rf/reg-sub :route-name
             :<- [:kee-frame/route]
@@ -165,6 +197,11 @@
 (rf/reg-event-db :toggle-menu-open
                  (fn [db]
                    (update db :menu-open? (fnil not false))))
+
+(rf/reg-event-db :app/open-menu-at
+                 (fn [db [_ tab]]
+                   (assoc db :menu-open? true
+                             :tab tab)))
 
 (rf/reg-event-fx :app/navigate-to
                  [rf/trim-v]
@@ -199,7 +236,7 @@
 (defn app-wrapper
   "takes care of light/dark-mode and loading-states"
   [content]
-  (let [user-screenmode @(rf/subscribe [::data/user-screenmode])
+  (let [user-screenmode :light #_@(rf/subscribe [::data/user-screenmode])
         html (aget (.getElementsByTagName js/document "html") 0)
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute html "class" (if (= :dark user-screenmode) "dark" ""))
