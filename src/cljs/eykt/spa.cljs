@@ -15,11 +15,13 @@
             [db.core :as db]
             [db.signin]
             [eykt.content.pages]
-            [schpaa.time]))
+            [schpaa.time]
+            [schpaa.darkmode]))
 
 (defn rounded-view [& content]
   [:div.rounded.p-3.space-y-4
    {:class [:dark:bg-gray-800
+            :shadow
             :bg-gray-100
             :dark:text-gray-500]}
    (into [:<>] (map identity content))])
@@ -65,6 +67,7 @@
                                                 :type     :submit} "Lagre"]])])
 
 (rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
+
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
 (defn rounded-box []
@@ -182,7 +185,7 @@
             (fn [route _]
               (-> route :data :name)))
 
-(rf/reg-sub :menu-open? :-> :menu-open?)
+(rf/reg-sub :app/menu-open? :-> :menu-open?)
 
 (rf/reg-sub :app/current-page
             :<- [:kee-frame/route]
@@ -217,7 +220,7 @@
 
 (defn dispatch-main []
   (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
-        menu-open? (rf/subscribe [:menu-open?])
+        menu-open? (rf/subscribe [:app/menu-open?])
         route-name @(rf/subscribe [:route-name])
         web-content (when-let [page (get route-table route-name)]
                       (kee-frame.router/make-route-component page @(rf/subscribe [:kee-frame/route])))]
@@ -228,7 +231,7 @@
       :navigate-to-home   (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
       :navigate-to-user   (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
       :current-page-title (fn [] @(rf/subscribe [:app/current-page-title]))
-      :get-menuopen-fn    (fn [] @(rf/subscribe [:menu-open?]))
+      :get-menuopen-fn    (fn [] @(rf/subscribe [:app/menu-open?]))
       :get-writingmode-fn (fn [] false)}
      web-content
      nil]))
@@ -236,10 +239,10 @@
 (defn app-wrapper
   "takes care of light/dark-mode and loading-states"
   [content]
-  (let [user-screenmode :light #_@(rf/subscribe [::data/user-screenmode])
+  (let [user-screenmode (rf/subscribe [:app/user-screenmode])
         html (aget (.getElementsByTagName js/document "html") 0)
         body (aget (.getElementsByTagName js/document "body") 0)]
-    (.setAttribute html "class" (if (= :dark user-screenmode) "dark" ""))
+    (.setAttribute html "class" (if (= :dark @user-screenmode) "dark" ""))
     (.setAttribute body "class" "font-sans inter bg-gray-100 dark:bg-gray-800 min-h-screen")
     content))
 

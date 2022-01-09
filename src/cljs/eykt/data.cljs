@@ -13,9 +13,9 @@
   {:breakpoints [:mobile 640 :tablet 992 :small-monitor 1200 :large-monitor],
    :debounce-ms 166})
 
-(reg-sub ::user-screenmode
-         (fn [db]
-           (get-in db [:settings :pref-screenmode] :auto)))
+#_(reg-sub :app/user-screenmode
+           (fn [db]
+             (get-in db [:settings :pref-screenmode] :auto)))
 
 ;region initial-state
 

@@ -5,6 +5,7 @@
             [eykt.state]
             [re-statecharts.core :as rs]
             [eykt.data :as app-data]
+            [schpaa.darkmode]
             [db.core :as db]))
 
 (defn kee-start []
@@ -18,7 +19,8 @@
 (defn ^:dev/after-load reload! []
   (js/console.log "loaded!")
   (rf/clear-subscription-cache!)
-  (kee-start))
+  (kee-start)
+  (rf/dispatch [:app/setup-handlers]))
 
 (defn init! []
   (db/init! {:config app-data/firebaseconfig})
