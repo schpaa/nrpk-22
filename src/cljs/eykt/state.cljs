@@ -12,10 +12,12 @@
 
 (def user-machine
   {:initial :s.initial
-   :on      {:e.restart {:target [:. :s.initial]}
-             :e.edit    {:target [:. :s.editing]}
+   :on      {:e.restart {:target [:> :user :s.initial]}
+             :e.edit    {:target [:> :user :s.editing]}
+             :e.cancel-useredit {:target [:> :user :s.initial]}
              :e.store   {:target  [:> :user :s.store]
                          :actions [(fn [st {:keys [data] :as _event}]
+                                     (js/alert "!")
                                      (let [values (-> data :values)
                                            uid (-> values :uid)
                                            values (dissoc values :uid)]
@@ -31,12 +33,32 @@
              :s.ready   {}
              :s.error   {}}})
 
+(def booking-machine
+  {:initial :s.initial
+   :on      {:e.restart {:target [:> :booking :s.initial]}
+             :e.book-now {:target [:. :s.booking]}
+             :e.cancel-booking {:target [:. :s.initial]}
+             :e.confirm-booking  {:target [:. :s.initial]}
+             #_#_:e.store   {:target  [:> :user :s.store]
+                             :actions [(fn [st {:keys [data] :as _event}]
+                                         (let [values (-> data :values)
+                                               uid (-> values :uid)
+                                               values (dissoc values :uid)]
+                                           (db/firestore-set {:path ["users2" uid] :value values})
+                                           (db/database-set {:path ["some-path" uid] :value values})
+                                           (tap> values)
+                                           st))]}}
+
+   :states  {:s.initial {}
+             :s.booking {}}})
+
 (def main
   ^{:transition-opts {:ignore-unknown-event? true}}
   {:id      :main-fsm
    :type    :parallel
    :context {:modal false}
-   :regions {:user user-machine}})
+   :regions {:user user-machine
+             :booking booking-machine}})
 
 (def *st
   (let [_ (rf/dispatch [::rs/start main])

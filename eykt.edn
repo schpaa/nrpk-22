@@ -23,7 +23,7 @@
                                         (.replace "{js-source}" output-name-js))))))
 
                   fb:emu            {:doc  "Starts the firebase-emulator for database and hosting"
-                                     :task (shell {:continue true} "firebase emulators:start --only database storage")}
+                                     :task (shell {:continue true} "firebase emulators:start --only database,firestore")}
                   -dev:browser (do
                                  (shell "open http://localhost:8010")
                                  (shell "open http://localhost:9630/build/eykt"))

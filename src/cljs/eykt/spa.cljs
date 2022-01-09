@@ -8,6 +8,7 @@
             [cljs.pprint :refer [pprint]]
             [eykt.data :as data :refer [screen-breakpoints start-db routes]]
             [schpaa.components.screen :as components.screen]
+            [schpaa.components.views :as views :refer [rounded-view]]
             ["body-scroll-lock" :as body-scroll-lock]
             [schpaa.debug :as l]
             [eykt.state :as state]
@@ -17,19 +18,6 @@
             [eykt.content.pages]
             [schpaa.time]
             [schpaa.darkmode]))
-
-(defn rounded-view [& content]
-  [:div.rounded.p-3.space-y-4
-   {:class [:dark:bg-gray-800
-            :shadow
-            :bg-gray-100
-            :dark:text-gray-500]}
-   (into [:<>] (map identity content))])
-
-(defn rounded-view' [& content]
-  [:div.rounded.p-3.space-y-4
-   {:class ["bg-gray-400/50"]}
-   (into [:<>] (map identity content))])
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -62,7 +50,7 @@
    (when-not readonly?
      [:div.flex.gap-4.justify-end
       [:button.btn.btn-free {:type     :button
-                             :on-click #(rf/dispatch (state/send :e.restart))} "Avbryt"]
+                             :on-click #(state/send :e.cancel-useredit)} "Avbryt"]
       [:button.btn.btn-free.btn-cta.text-black {:disabled (not (some? dirty))
                                                 :type     :submit} "Lagre"]])])
 
@@ -81,23 +69,23 @@
             loaded-data (db/on-value-reaction path)]
 
         (if-not @user-auth
-          [rounded-view [db.signin/login]]
+          [rounded-view {} [db.signin/login]]
           [:div.space-y-4
 
-           [rounded-view
+           [rounded-view {}
             [:div.flex.justify-between.items-center
              [:h2 (:display-name @user-auth)]
              [:button.btn.btn-danger {:on-click #(db/sign-out)} "Logg ut"]]]
 
            (r/with-let [s (db/on-snapshot-doc-reaction {:path ["users2" uid]})]
-
-               [rounded-view
+               [rounded-view {}
                 [:div.flex.items-center.justify-between
                  [:div.flex.flex-col
                   [:h2 "Mine opplysninger"]
                   [:h2.text-xs (if-let [tm (get @s "timestamp")]
                                  (schpaa.time/x' tm)
                                  "Ikke registrert")]]]
+                [l/ppre-x @*st-all]
                 (rs/match-state (:user @*st-all)
                   [:s.initial] [:<>
                                 (if @loaded-data
@@ -123,62 +111,118 @@
 
            (when @some-data
              (for [[a b] (keep (juxt :input :shortname) (vals @some-data))]
-               [rounded-view' [:div.flex.justify-between
-                               [:div a]
-                               [:div {:class (if-not b "text-black/25")} (or b "ingen")]]]))])))))
+               [rounded-view {:dark true} [:div.flex.justify-between
+                                           [:div a]
+                                           [:div {:class (if-not b "text-black/25")} (or b "ingen")]]]))])))))
+
+(comment
+  (do
+    (into []
+          (comp
+            (filter (comp #(pos? (compare % "20210921T200000")) :checkout val))
+            (map val))
+          @(db/on-value-reaction {:path ["booking"]}))))
+
 
 (def route-table
-  {:r.init    (fn [_]
-                [:div "INIT"])
-   :r.user    (fn [_]
-                [rounded-box])
-   :r.content (fn [_]
-                [:h2 "Oversikt"])
-   :r.common  (fn [_]
-                [:div;.space-y-4.x-m-3.max-w-lgx.xmx-auto
+  {:r.init       (fn [_]
+                   [:div "INIT"])
+   :r.user       (fn [_]
+                   [rounded-box])
+   :r.content    (fn [_]
+                   [:h2 "Oversikt"])
+   :r.common     (fn [_]
+                   (let [*st-all (rf/subscribe [::rs/state :main-fsm])]
+                     [:div.space-y-4
+                      ;[l/ppre @*st-all]
 
-                 #_[:div.w-screen.p-3.h-16.whitespace-nowrap
-                    {:class []}
-                    [:div.relative.w-full.flex.gap-6.items-center.overflow-x-auto
-                     {:class [:snap-x
-                              :bg-gray-300 :text-black]}
+                      (rs/match-state (:booking @*st-all)
+                        [:s.initial]
+                        (r/with-let [data (db/on-value-reaction {:path ["booking"]})]
+                          [:<>
+                           (views/booking-header
+                             {:book-now #(state/send :e.book-now)})
+                           (into [:div.space-y-px]
+                                 (reverse (map views/booking-list-item
+                                               (into []
+                                                     (comp
+                                                       (map val)
+                                                       ;(keep :checkout)
+                                                       (filter (comp #(pos? (compare % "20210321T200000")) :checkout)))
+                                                     @data))))
 
-                     [:div {:class [:snap-center :shrink-0]}
-                      [:div {:class [:shrink-0 :w-4 :sm:w-48]}]]
+                           #_(views/booking-list
+                               {:anon-booking-data (fn [] (transduce
+                                                            (comp
+                                                              ;(filter (comp #(pos? (compare % "20211020T000000")) :checkin val))
+                                                              (map (comp #(dissoc % :navn) val)))
+                                                            conj
+                                                            []
+                                                            @(db/on-value-reaction {:path ["booking"]})))
+                                :booking-data      (fn [_] (into []
+                                                                 (comp
+                                                                   (filter (comp #(pos? (compare % "20210921T200000")) :checkout val))
+                                                                   (map val))
+                                                                 @(db/on-value-reaction {:path ["booking"]})))
+                                :valid-user?       (fn [] (some? @(rf/subscribe [::db/user-auth])))})])
+                        [:s.booking]
+                        [views/booking-form
+                         {:ok            #(state/send :e.confirm-booking)
+                          :cancel        #(state/send :e.cancel-booking)
+                          :my-form       views/my-booking-form
+                          :booking-data' (transduce
+                                           (comp
+                                             (filter (comp #(pos? (compare (str %) "20210101T000000")) :checkin val))
+                                             ;(if f (filter (comp #(= % "Aasta") :navn val)) identity)
+                                             (map val))
+                                           conj
+                                           []
+                                           @(db/on-value-reaction {:path ["booking"]}))}]
 
-                     [:a {:class [:snap-center]
-                          :href (k/path-for [:r.back])} "Til baksiden"]
 
-                     [:div.underline.cursor-pointer
-                      {:class [:snap-center]
-                       :on-click #(rf/dispatch [:app/open-menu-at :list])
-                       :href     (k/path-for [:r.content])} "Innhold"]
+                        [l/ppre @*st-all])]))
+   :r.common-old (fn [_]
+                   [:div
+                    #_[:div.w-screen.p-3.h-16.whitespace-nowrap
+                       {:class []}
+                       [:div.relative.w-full.flex.gap-6.items-center.overflow-x-auto
+                        {:class [:snap-x
+                                 :bg-gray-300 :text-black]}
 
-                     (into [:<>] (mapv (fn [e] [:div.underline.cursor-pointer
-                                                {:class [:snap-center
-                                                         :w-80
-                                                         :h-32
-                                                         :bg-alt
-                                                         :first:pl-8
-                                                         :last:pr-8]
-                                                 :on-click #(rf/dispatch [:app/open-menu-at :list])
-                                                 :href     (k/path-for [:r.content])} "Annet " e])
-                                       (range 6)))
-                     [:div {:class [:snap-center :shrink-0]}
-                      [:div {:class [:shrink-0 :w-4 :sm:w-48]}]]]]
+                        [:div {:class [:snap-center :shrink-0]}
+                         [:div {:class [:shrink-0 :w-4 :sm:w-48]}]]
 
-                 [:div.p-3 (eykt.content.pages/new-designed-content {})]
-                 #_[:div.bg-gray-100.-mx-4.px-4.space-y-1
-                    (for [e (range 10)]
-                      [:div.h-10.bg-gray-200.-mx-4.px-4 e])]
-                 #_[:div.bg-gray-300.-mx-4.px-4.space-y-4
-                    (for [e (range 20)]
-                      [:div e])]
-                 #_[:div.-mx-4 [l/ppre-x @re-frame.db/app-db]]])
-   :r.back    (fn [_]
-                [:div.space-y-4
+                        [:a {:class [:snap-center]
+                             :href  (k/path-for [:r.back])} "Til baksiden"]
 
-                 [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
+                        [:div.underline.cursor-pointer
+                         {:class    [:snap-center]
+                          :on-click #(rf/dispatch [:app/open-menu-at :list])
+                          :href     (k/path-for [:r.content])} "Innhold"]
+
+                        (into [:<>] (mapv (fn [e] [:div.underline.cursor-pointer
+                                                   {:class    [:snap-center
+                                                               :w-80
+                                                               :h-32
+                                                               :bg-alt
+                                                               :first:pl-8
+                                                               :last:pr-8]
+                                                    :on-click #(rf/dispatch [:app/open-menu-at :list])
+                                                    :href     (k/path-for [:r.content])} "Annet " e])
+                                          (range 6)))
+                        [:div {:class [:snap-center :shrink-0]}
+                         [:div {:class [:shrink-0 :w-4 :sm:w-48]}]]]]
+                    [:div.p-3 (eykt.content.pages/new-designed-content {})]
+                    #_[:div.bg-gray-100.-mx-4.px-4.space-y-1
+                       (for [e (range 10)]
+                         [:div.h-10.bg-gray-200.-mx-4.px-4 e])]
+                    #_[:div.bg-gray-300.-mx-4.px-4.space-y-4
+                       (for [e (range 20)]
+                         [:div e])]
+                    #_[:div.-mx-4 [l/ppre-x @re-frame.db/app-db]]])
+   :r.back       (fn [_]
+                   [:div.space-y-4
+                    [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
 
 (rf/reg-sub :route-name
             :<- [:kee-frame/route]
