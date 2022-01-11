@@ -40,7 +40,7 @@
     }
 
     label {
-        @apply text-sm mb-1 text-black/50 dark:text-white/50;
+        @apply text-sm mb-1 text-black/50 dark:text-white/50 uppercase;
     }
 
     h2 {
