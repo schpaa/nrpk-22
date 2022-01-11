@@ -34,12 +34,13 @@
         ss (subs dt 13 15)]
     (t'/at (t'/new-date y m d) (t'/new-time hh mm ss))))
 
-(defn line-click [checkout checkin]
+(defn line-click [{:keys [date start-time end-time sleepover]}]
   (swap! views/my-state (fn [e]
                           (-> e
-                              (assoc-in [:values :date] (t'/date (str->datetime checkout)))
-                              (assoc-in [:values :start-time] (t'/time (str->datetime checkout)))
-                              (assoc-in [:values :end-time] (t'/time (str->datetime checkin)))))))
+                              (assoc-in [:values :sleepover] sleepover)
+                              (assoc-in [:values :date] (t'/date date))
+                              (assoc-in [:values :start-time] (t'/time start-time))
+                              (assoc-in [:values :end-time] (t'/time end-time))))))
 
 (defn booking-list-item-color-map [relation]
   (case relation
@@ -56,69 +57,76 @@
 
 (defn- booking-list-item [item]
 
-  (let [{:keys [version date bid navn checkin checkout on-click]} item]
-        ;checkout-dt (t'/at date checkout)]
-        ;relation' (relation checkout-dt (t'/new-date 2021 10 20))
-        ;color-map (booking-list-item-color-map relation')]
-    (if (and date checkout)
-       [l/ppre-x "X"  version date checkout checkin
-        ;(t/at date checkout)
-        #_(t'/at (t'/date (str date)) (t'/time (str checkout)))]
-       [:div "none"])
+  ;[l/ppre item]
 
-    #_[l/ppre item]
-    #_(let [cell-class (concat
-                         (:bg color-map)
-                         (:fg color-map)
-                         (if (not= relation' :precedes)
-                           (when on-click
-                             [:cursor-pointer
-                              "hover:bg-white/90"
-                              "dark:hover:bg-white/10"])))
+  (let [{:keys [version date bid navn checkin checkout
+                selected start-time end-time on-click]} item
+        checkout-dt (t'/at (t/date date) (t/time start-time))
+        relation' (relation checkout-dt (t'/new-date 2021 10 20))
+        color-map (booking-list-item-color-map relation')]
+    #_(if (and date end-time)
+         [l/ppre-x "X"  version date start-time end-time
+          ;(t/at date checkout)
+          #_(t'/at (t'/date (str date)) (t'/time (str checkout)))]
+         [:div "none"])
 
 
-            navn (or navn "skult navn")
-            day-name (day-name date)
-            checkout-time (str checkout)
-            checkin-time (str checkin)]
-        [:div
-         {:on-click #(when on-click (on-click checkout checkin))}
-         [:div.gap-2.h-12.items-center.p-2
-          {:class (concat [:hidden :mob:flex] cell-class)}
+    (let [cell-class (concat
+                       (:bg color-map)
+                       (:fg color-map)
+                       (if (not= relation' :precedes)
+                         (when on-click
+                           [:cursor-pointer
+                            "hover:bg-white/90"
+                            "dark:hover:bg-white/10"])))
+
+          navn (or navn "skult navn")
+          day-name (day-name date)
+          checkout-time (str start-time)
+          checkin-time (str end-time)]
+      [:div
+       {:on-click #(when on-click (on-click item))}
+
+       [l/ppre item]
+
+       [:div.gap-2.h-12.items-center.p-2
+        {:class (concat [:hidden :mob:flex] cell-class)}
+        [:div.w-12.truncate.shrink-0 (straight-date date)]
+        [:div.w-6 day-name]
+        [:div.w-10.shrink-0.text-center checkout-time]
+        [:div.w-8.flex.justify-center [:div.w-5.h-5 [icon/adapt (if (pos? (rand-int 2)) :arrow-right :moon-2)]]]
+        [:div.w-10.shrink-0.text-center checkin-time]
+        [:div.grow.flex.justify-end
+         {:class (:fg color-map)}
+         navn]
+        [:div.w-12.shrink-0.justify-end
+         {:class (concat [:font-bold] (:fg color-map))}
+         (if (and (vector? selected)
+                  (< 1 (count selected)))
+           [:div "KURS"]
+           [:div (first selected)])]]
+       [:div
+        {:class [:visible :mob:hidden]}
+        [:div.select-none.flex.flex-col.p-2.gap-x-2
+         {:style {:min-height "3rem"}
+          :class cell-class}
+         [:div.flex.items-center.justify-between.gap-x-2
+          {:class (:fg- color-map)}
           [:div.w-12.truncate.shrink-0 (straight-date date)]
           [:div.w-6 day-name]
           [:div.w-10.shrink-0.text-center checkout-time]
           [:div.w-8.flex.justify-center [:div.w-5.h-5 [icon/adapt (if (pos? (rand-int 2)) :arrow-right :moon-2)]]]
           [:div.w-10.shrink-0.text-center checkin-time]
-          [:div.grow.flex.justify-end
-           {:class (:fg color-map)}
-           navn]
-          [:div.w-12.shrink-0.justify-end
+          [:div.flex-grow.w-full.flex.justify-end
            {:class (concat [:font-bold] (:fg color-map))}
-           (if (vector? bid)
+           (if (and (vector? selected)
+                    (< 1 (count selected)))
              [:div "KURS"]
-             [:div bid])]]
-         [:div
-          {:class [:visible :mob:hidden]}
-          [:div.select-none.flex.flex-col.p-2.gap-x-2
-           {:style {:min-height "3rem"}
-            :class cell-class}
-           [:div.flex.items-center.justify-between.gap-x-2
-            {:class (:fg- color-map)}
-            [:div.w-12.truncate.shrink-0 (straight-date date)]
-            [:div.w-6 day-name]
-            [:div.w-10.shrink-0.text-center checkout-time]
-            [:div.w-8.flex.justify-center [:div.w-5.h-5 [icon/adapt (if (pos? (rand-int 2)) :arrow-right :moon-2)]]]
-            [:div.w-10.shrink-0.text-center checkin-time]
-            [:div.flex-grow.w-full.flex.justify-end
-             {:class (concat [:font-bold] (:fg color-map))}
-             (if (vector? bid)
-               [:div "KURS"]
-               [:div bid])]]
-           [:div.flex.w-full.flex-wrap.gap-x-2.items-center.justify-end
-            [:div.growx.line-clamp-2x.w-64x.flex.justify-endx
-             {:class (:fg color-map)}
-             navn]]]]])))
+             [:div (first selected)])]]
+         [:div.flex.w-full.flex-wrap.gap-x-2.items-center.justify-end
+          [:div.growx.line-clamp-2x.w-64x.flex.justify-endx
+           {:class (:fg color-map)}
+           navn]]]]])))
 
 (defn booking-list [{:keys [booking-data anon-booking-data valid-user?] :as accessors}]
   (if (valid-user?)
@@ -134,6 +142,7 @@
    {:id        form-id
     :on-submit handle-submit}
    [:div.flex.flex-col.gap-4
+    ;[l/ppre @views/my-state]
     [:div.flex.gap-x-2.flex-wrap
      (fields/date (assoc (fields/normal-field props)
                     :handle-change (fn [evt]
