@@ -1,12 +1,12 @@
 (ns booking.database
   (:require [db.core :as db]
+            [db.auth]
             [times.api :as ta]
             [tick.core :as t']
-            [tick.core :as t]))
+            [tick.core :as t]
+            [re-frame.core :as rf]))
 
 (def path ["booking2"])
-
-
 
 (defn write [{:keys [uid value]}]
   (let [id (.-key (db/database-push {:path  path
@@ -19,6 +19,7 @@
     id))
 
 (defn v1->v2 [{:keys [version timestamp uid date bid navn checkin checkout
+                      description
                       overnatting
                       sleepover
                       start-time end-time selected] :as m}]
@@ -26,6 +27,7 @@
     2 {:timestamp  timestamp
        :date       (str (t/date date))
        :start-time start-time
+       :description description
        :end-time   end-time
        :sleepover  sleepover
        :selected   selected
@@ -52,26 +54,27 @@
     (if true
       @(db/on-value-reaction {:path ["booking2"]})
       (concat (take 2 @(db/on-value-reaction {:path ["booking"]}))
-              {:intern-a {:date       (str (t/new-date 2022 11 1))
+              {:intern-a {:date       (str (t/new-date 2022 1 15))
                           :start-time (str (t/new-time 10 0))
                           :end-time   (str (t/new-time 10 0))
                           :sleepover  false
                           :selected   [2]
-                          :uid        "uid"
-                          :navn       "navn"
+                          :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
+                          :navn       "navns"
                           :version    2
                           :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
                                                             (t/new-time 10 0))))}}
-              {:intern-b {:date       (str (t/new-date 2022 11 1))
+              {:intern-b {:date       (str (t/new-date 2022 2 3))
                           :start-time (str (t/new-time 10 0))
                           :end-time   (str (t/new-time 10 0))
                           :sleepover  false
-                          :selected   [1]
-                          :uid        "uid"
-                          :navn       "navn"
+                          :selected   [501]
+                          :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
+                          :navn       "navn future"
                           :version    2
                           :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
                                                             (t/new-time 10 0))))}}))))
+
 (comment
   (comment
     (do
@@ -92,4 +95,22 @@
       (prn (t'/date (t'/instant tm)))
       (prn (t'/zone (t'/instant tm))))))
 
-(read)
+(defn bookings-for [uid]
+  (sort-by :date > (filter (comp #(= % uid) :uid) (read))))
+
+;fixme (?) this actually works with low impact!
+;(defonce u (db.auth/user-info))
+
+(defn lookup-username [uid]
+  ;(tap> ["U"])
+  (if-some [_ @(rf/subscribe [::db/user-auth])]
+    (:navn @(db/on-value-reaction {:path ["users" uid]}))
+    nil))
+
+(comment
+  (do
+    (into []
+          (comp
+            (filter (comp #(pos? (compare % "20210921T200000")) :checkout val))
+            (map val))
+          @(db/on-value-reaction {:path ["booking"]}))))

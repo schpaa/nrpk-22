@@ -7,6 +7,7 @@
    ["/init" {:name :r.init :header "Init"}]
    ["/innhold" {:name :r.content :header "Innhold"}]
    ["/min-side" {:name :r.user :header "Min side"}]
+   ["/mine-bookinger" {:name :r.my-bookings :header "Mine bookinger"}]
    ["/baksiden" {:name :r.back :header "Baksiden"}]])
 
 (def screen-breakpoints

@@ -18,115 +18,51 @@
             [eykt.content.pages]
             [schpaa.time]
             [schpaa.darkmode]
-            [booking.views]))
+            [booking.views]
+            [user.views]))
 
 (defn view-info [{:keys [username]}]
   [:div username])
-
-(defn my-form [{:keys [values handle-change handle-blur form-id handle-submit dirty readonly?]}]
-  [:form.space-y-4
-   {:id        form-id
-    :on-submit handle-submit}
-   [:div.flex.flex-col.gap-4
-    [:div.flex-col.flex
-     [:label {:for "z"} "Data"]
-     [:input.h-10.field-w-max
-      {:class     [:form-input :active:border-2 :border-none :rounded]
-       :name      :input
-       :id        "z"
-       :type      :text
-       :value     (values :input)
-       :on-change handle-change
-       :on-blur   handle-blur}]]
-    [:div.flex-col.flex
-     [:label {:for "x"} "Kallenavn"]
-     [:input.w-auto.h-10.field-w-max.focus:border-2.border-none
-      {:class     [:form-input :active:border-2 :border-none :rounded]
-       :name      :shortname
-       :id        "x"
-       :type      :text
-       :value     (values :shortname)
-       :on-change handle-change
-       :on-blur   handle-blur}]]]
-   (when-not readonly?
-     [:div.flex.gap-4.justify-end
-      [:button.btn.btn-free {:type     :button
-                             :on-click #(state/send :e.cancel-useredit)} "Avbryt"]
-      [:button.btn.btn-free.btn-cta.text-black {:disabled (not (some? dirty))
-                                                :type     :submit} "Lagre"]])])
 
 (rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
 
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
 (defn rounded-box []
-  (let [*st-all (rf/subscribe [::rs/state :main-fsm])
-        some-data (db/on-value-reaction {:path ["some-path"]})
+  (let [route (rf/subscribe [:app/current-page])
         user-auth (rf/subscribe [::db/user-auth])]
-
     (fn []
-      (let [uid (:uid @user-auth)
-            path {:path ["some-path" uid]}
-            loaded-data (db/on-value-reaction path)]
+      (if-not @user-auth
+        [rounded-view {} [db.signin/login]]
+        [:div.space-y-4
+         [user.views/logout-form {:name (:display-name @user-auth)}]
 
-        (if-not @user-auth
-          [rounded-view {} [db.signin/login]]
-          [:div.space-y-4
+         [:div.flex.gap-4
+          [:button.btn.btn-free {:on-click #(rf/dispatch [:app/navigate-to [:r.user]])} "Mine opplysninger"]
+          [:button.btn.btn-free {:on-click #(rf/dispatch [:app/navigate-to [:r.my-bookings]])} "Mine bookinger"]]
 
-           [rounded-view {}
-            [:div.flex.justify-between.items-center
-             [:h2 (:display-name @user-auth)]
-             [:button.btn.btn-danger {:on-click #(db/sign-out)} "Logg ut"]]]
+         [k/case-route (fn [route] (-> route :data :name))
+          :r.user [:div.space-y-4
 
-           (r/with-let [s (db/on-snapshot-doc-reaction {:path ["users2" uid]})]
-             [rounded-view {}
-              [:div.flex.items-center.justify-between
-               [:div.flex.flex-col
-                [:h2 "Mine opplysninger"]
-                [:h2.text-xs (if-let [tm (get @s "timestamp")]
-                               (schpaa.time/x' tm)
-                               "Ikke registrert")]]]
-              [l/ppre-x @*st-all]
-              (rs/match-state (:user @*st-all)
-                [:s.initial] [:<>
-                              (if @loaded-data
-                                (my-form {:values @loaded-data :readonly? true})
-                                [:div "Ingen data"])
-                              [:div.flex.justify-end
-                               [:button.btn.btn-free.btn-cta
-                                {:type     :button
-                                 :on-click #(state/send :e.edit)}
-                                "Rediger"]]]
+                   [user.views/my-info]
 
-                [:s.editing] [fork/form {:initial-values    @loaded-data
-                                         :prevent-default?  true
-                                         :clean-on-unmount? true
-                                         :keywordize-keys   true
-                                         :on-submit         #(state/send :e.store (assoc-in % [:values :uid] (:uid @user-auth)))}
-                              my-form]
+                   #_[user.views/all-registered
+                      {:some-data* (db/on-value-reaction {:path ["some-path"]})}]]
+          :r.my-bookings
+          [:div
+           [:h2 "Mine bookinger"]
+           [user.views/my-bookings
+            {:uid      (:uid @user-auth)
+             :bookings (booking.database/bookings-for (:uid @user-auth))}]]
 
-                [:s.store] [rounded-view
-                            [:div "Lagrer, et øyeblikk"]]
+          [:div "other " @route]]]))))
 
-                [l/ppre-x :state @*st-all])])
-
-           (when @some-data
-             (for [[a b] (keep (juxt :input :shortname) (vals @some-data))]
-               [rounded-view {:dark true} [:div.flex.justify-between
-                                           [:div a]
-                                           [:div {:class (if-not b "text-black/25")} (or b "ingen")]]]))])))))
-
-(comment
-  (do
-    (into []
-          (comp
-            (filter (comp #(pos? (compare % "20210921T200000")) :checkout val))
-            (map val))
-          @(db/on-value-reaction {:path ["booking"]}))))
 
 (def route-table
   {:r.init       (fn [_]
                    [:div "INIT"])
+   :r.my-bookings (fn [_]
+                    [rounded-box])
    :r.user       (fn [_]
                    [rounded-box])
    :r.content    (fn [_]
@@ -142,15 +78,12 @@
                           [:<>
                            (views/booking-header
                              {:book-now #(state/send :e.book-now)})
-                           (into [:div.space-y-px]
-                                 (reverse (map booking.views/booking-list-item
-                                               (booking.database/read)
-                                               #_(into []
-                                                       (comp
-                                                         (map val)
-                                                         ;(keep :checkout)
-                                                         (filter (comp #(pos? (compare % "20210321T200000")) :checkout)))
-                                                       @data))))])
+                           (schpaa.components.views/rounded-view
+                             {:dark 1}
+                             (into [:div.space-y-px]
+                                   (map booking.views/booking-list-item
+                                        (sort-by :date > (booking.database/read)))))])
+
 
                         [:s.booking]
                         (let [user-auth (rf/subscribe [::db/user-auth])]
@@ -159,7 +92,7 @@
                             :cancel        #(state/send :e.cancel-booking)
                             :uid           (:uid @user-auth)
                             :my-state schpaa.components.views/my-state
-                            :booking-data' (booking.database/read)}])
+                            :booking-data' (sort-by :date > (booking.database/read))}])
 
                         [:s.boat-picker]
                         [:div ":s.boat-picker"]

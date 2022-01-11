@@ -9,7 +9,7 @@
             [tick.core :as t']
             [tick.core :as t]
             [tick.alpha.interval :refer [relation]]
-
+            [booking.database]
             [fork.re-frame :as fork]
             [schpaa.icon :as icon]
             [schpaa.debug :as l]))
@@ -44,51 +44,49 @@
 
 (defn booking-list-item-color-map [relation]
   (case relation
-    :preceded-by {:bg  ["dark:bg-gray-500" "bg-gray-100"]
+    :preceded-by {:bg  ["dark:bg-gray-500" "odd:bg-gray-100" "even:bg-gray-50"]
                   :fg  ["dark:text-black" "text-black"]
                   :fg- ["dark:text-black/40" "text-black/40"]}
 
-    :precedes {:bg  ["dark:bg-black/30"]
+    :precedes {:bg  ["dark:bg-black/30" "odd:bg-gray-100" "even:bg-gray-50"]
                :fg  ["dark:text-gray-500/50" "text-black/20"]
                :fg- ["dark:text-white/30"]}
-    {:bg  ["dark:bg-gray-700" "bg-gray-300"]
+    {:bg  ["dark:bg-gray-700" "odd:bg-gray-100" "even:bg-gray-50"]
      :fg  ["dark:text-black" "text-sky-600"]
      :fg- ["dark:text-white"]}))
 
 (defn- booking-list-item [item]
-
-  ;[l/ppre item]
-
   (let [{:keys [version date bid navn checkin checkout
+                uid
+                description
                 selected start-time end-time on-click]} item
         checkout-dt (t'/at (t/date date) (t/time start-time))
         relation' (relation checkout-dt (t'/new-date 2021 10 20))
         color-map (booking-list-item-color-map relation')]
     #_(if (and date end-time)
-         [l/ppre-x "X"  version date start-time end-time
-          ;(t/at date checkout)
-          #_(t'/at (t'/date (str date)) (t'/time (str checkout)))]
-         [:div "none"])
-
+        [l/ppre-x "X" version date start-time end-time
+         ;(t/at date checkout)
+         #_(t'/at (t'/date (str date)) (t'/time (str checkout)))]
+        [:div "none"])
 
     (let [cell-class (concat
-                       (:bg color-map)
                        (:fg color-map)
                        (if (not= relation' :precedes)
                          (when on-click
                            [:cursor-pointer
                             "hover:bg-white/90"
                             "dark:hover:bg-white/10"])))
-
           navn (or navn "skult navn")
           day-name (day-name date)
           checkout-time (str start-time)
           checkin-time (str end-time)]
       [:div
-       {:on-click #(when on-click (on-click item))}
-
-       [l/ppre item]
-
+       {:class    (concat
+                    (:bg color-map)
+                    [:first:rounded-t
+                     :last:rounded-b
+                     :overflow-hidden])
+        :on-click #(when on-click (on-click item))}
        [:div.gap-2.h-12.items-center.p-2
         {:class (concat [:hidden :mob:flex] cell-class)}
         [:div.w-12.truncate.shrink-0 (straight-date date)]
@@ -126,16 +124,17 @@
          [:div.flex.w-full.flex-wrap.gap-x-2.items-center.justify-end
           [:div.growx.line-clamp-2x.w-64x.flex.justify-endx
            {:class (:fg color-map)}
-           navn]]]]])))
+           navn]]
+         [:div.text-xs description]]]])))
 
-(defn booking-list [{:keys [booking-data anon-booking-data valid-user?] :as accessors}]
-  (if (valid-user?)
-    (when booking-data
-      (into [:div.space-y-1] (reverse (map #(booking-list-item
-                                              (assoc % :on-click line-click)) (booking-data)))))
-    (when anon-booking-data
-      (into [:div.space-y-1] (reverse (map #(booking-list-item
-                                              (assoc % :on-click line-click)) (anon-booking-data)))))))
+;(defn booking-list [{:keys [booking-data anon-booking-data valid-user?] :as accessors}]
+;  (if (valid-user?)
+;    (when booking-data
+;      (into [:div.space-y-1] (reverse (map #(booking-list-item
+;                                              (assoc % :on-click line-click)) (booking-data)))))
+;    (when anon-booking-data
+;      (into [:div.space-y-1] (reverse (map #(booking-list-item
+;                                              (assoc % :on-click line-click)) (anon-booking-data)))))))
 
 (defn my-booking-form [{:keys [state touched errors values set-values handle-change handle-blur form-id handle-submit dirty readonly?] :as props}]
   [:form.space-y-4
@@ -321,8 +320,10 @@
                                              (pos? (compare checkin @f))
                                              true)))
                                  #_(reverse))]))
-           (into [:div.space-y-px] (map #(booking-list-item (assoc % :on-click line-click))
-                                        (take 1 (reverse booking-data'))))])]])))
+           (schpaa.components.views/rounded-view
+             {:dark 1}
+             (into [:div.space-y-px] (map #(booking-list-item (assoc % :on-click line-click))
+                                          (take 1 (reverse booking-data')))))])]])))
 
 (comment
   ;todo shortcut for this!

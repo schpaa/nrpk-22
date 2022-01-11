@@ -18,12 +18,11 @@
              :e.cancel-useredit {:target [:> :user :s.initial]}
              :e.store           {:target  [:> :user :s.store]
                                  :actions [(fn [st {:keys [data] :as _event}]
-                                             (js/alert "!")
                                              (let [values (-> data :values)
                                                    uid (-> values :uid)
                                                    values (dissoc values :uid)]
                                                (db/firestore-set {:path ["users2" uid] :value values})
-                                               (db/database-set {:path ["some-path" uid] :value values})
+                                               (db/database-update {:path ["users" uid] :value values})
                                                (tap> values)
                                                st))]}}
 
