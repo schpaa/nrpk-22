@@ -83,8 +83,8 @@
       [:div
        {:class    (concat
                     (:bg color-map)
-                    [:first:rounded-t
-                     :last:rounded-b
+                    [;:first:rounded-t
+                     :last:rounded-b-lg
                      :overflow-hidden])
         :on-click #(when on-click (on-click item))}
        [:div.gap-2.h-12.items-center.p-2
@@ -199,7 +199,7 @@
 
 (defn list-line [{:keys [id text on-click remove?]}]
   [:div.px-4.h-12.flex.items-center.justify-between.gap-4
-   {:class    ["bg-white/90"
+   {:class    ["bg-black/10"
                "hover:bg-black/10"]
     :on-click #(on-click id)}
    [:div id]
@@ -298,8 +298,9 @@
         (rs/match-state (:booking @*st-all)
           [:s.booking :s.boat-picker]
           [:<>
-           [:div.flex.justify-between
-            [:button.btn.btn-free {:on-click #(state/send :e.show-bookings)} "Vis andres bookinger"]]
+           [:div.flex.gap-4
+            [:button.btn.btn-free {:on-click #(state/send :e.show-bookings)} "Vis andres bookinger"]
+            [:button.btn.btn-free {:on-click #(state/send :e.pick-boat)} "Vis båtliste"]]
            (views/rounded-view
              {}
              [:div.space-y-4
@@ -311,8 +312,8 @@
 
           [:s.booking :s.initial]
           [:div.space-y-4
-           [:div.flex.justify-between
-            [:button.btn.btn-free {:on-click #(state/send :e.pick-boat)} "Vis båtliste"]]
+           [:div.flex.justify-between]
+
            #_(r/with-let [f (rf/subscribe [:exp/filter])]
                #_(let [data (->> booking-data'
                                  (filter (fn [{:keys [checkin]}]
@@ -320,10 +321,8 @@
                                              (pos? (compare checkin @f))
                                              true)))
                                  #_(reverse))]))
-           (schpaa.components.views/rounded-view
-             {:dark 1}
-             (into [:div.space-y-px] (map #(booking-list-item (assoc % :on-click line-click))
-                                          (take 1 (reverse booking-data')))))])]])))
+           (into [:div.space-y-px.shadow] (map #(booking-list-item (assoc % :on-click line-click))
+                                               (take 1 (reverse booking-data'))))])]])))
 
 (comment
   ;todo shortcut for this!

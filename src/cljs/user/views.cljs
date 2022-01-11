@@ -28,11 +28,9 @@
 
 
 (defn my-bookings [{:keys [uid bookings]}]
-  (rounded-view
-    {:dark 1}
-    [:ul.space-y-px
-     (for [e bookings]
-       [booking.views/booking-list-item e])]))
+  [:ul.space-y-px.shadow
+   (for [e bookings]
+     [booking.views/booking-list-item e])])
 
 ;endregion
 
@@ -76,7 +74,7 @@
         [rounded-view {}
          [:div.flex.items-center.justify-between
           [:div.flex.flex-col
-           [:h2 "Mine opplysninger"]
+           ;[:h2 "Mine opplysninger"]
            [:h2.text-xs (if-let [tm (get @s "timestamp")]
                           (schpaa.time/x' tm)
                           "Ikke registrert")]]]

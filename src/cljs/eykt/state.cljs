@@ -4,7 +4,8 @@
             [statecharts.core :refer [assign]]
             [schpaa.debug :as l]
             [db.core :as db]
-            [booking.database]))
+            [booking.database]
+            [user.database]))
 
 (def fsm [::rs/transition :main-fsm])
 
@@ -18,13 +19,14 @@
              :e.cancel-useredit {:target [:> :user :s.initial]}
              :e.store           {:target  [:> :user :s.store]
                                  :actions [(fn [st {:keys [data] :as _event}]
-                                             (let [values (-> data :values)
-                                                   uid (-> values :uid)
-                                                   values (dissoc values :uid)]
-                                               (db/firestore-set {:path ["users2" uid] :value values})
-                                               (db/database-update {:path ["users" uid] :value values})
-                                               (tap> values)
-                                               st))]}}
+                                             (user.database/write (:values data))
+                                             #_(let [values (-> data :values)
+                                                     uid (-> values :uid)
+                                                     values (dissoc values :uid)]
+                                                 (db/firestore-set {:path ["users2" uid] :value values})
+                                                 (db/database-update {:path ["users" uid] :value values})
+                                                 (tap> values)
+                                                 st))]}}
 
    :states  {:s.initial {}
              :s.editing {}

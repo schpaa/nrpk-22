@@ -4,6 +4,7 @@
 
 (def routes
   [["/" {:name :r.common :header "Forsiden"}]
+   ["/batliste" {:name :r.boatlist :header "Båtliste"}]
    ["/init" {:name :r.init :header "Init"}]
    ["/innhold" {:name :r.content :header "Innhold"}]
    ["/min-side" {:name :r.user :header "Min side"}]

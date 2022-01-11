@@ -31,6 +31,11 @@
         @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded
     }
 
+    .btn-tab {
+        @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+    }
+
+
     .btn-danger {
         @apply bg-white dark:bg-black disabled:text-gray-300 active:bg-red-500 active:text-white rounded border-2 border-red-500 text-black dark:text-white
     }
