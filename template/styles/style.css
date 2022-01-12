@@ -18,21 +18,29 @@
         @apply underline cursor-pointer;
     }
     .btn {
-        @apply px-4 py-2 active:shadow disabled:cursor-default cursor-pointer truncate;
+        @apply px-4 py-2 active:shadow disabled:cursor-default cursor-pointer truncate border-2 border-transparent;
         min-width: 6rem;
     }
+    .btn-small {
+        @apply px-2 py-1 text-xs active:shadow disabled:cursor-default cursor-pointer truncate border-2 border-transparent;
+        min-width: 4rem;
+    }
 
-        .btn-narrow {
-            @apply px-2 py-2 active:shadow disabled:cursor-default cursor-pointer truncate;
+    .btn-narrow {
+        @apply px-2 :h-10 active:shadow disabled:cursor-default cursor-pointer truncate;
 
-        }
+    }
 
     .btn-free {
         @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded
     }
 
     .btn-tab {
-        @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+        @apply px-8 bg-gray-300 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+    }
+
+    .btn-tab-inactive {
+        @apply px-8 bg-gray-500/50 text-black/50 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
     }
 
 

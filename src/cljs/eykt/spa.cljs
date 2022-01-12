@@ -19,7 +19,8 @@
             [schpaa.time]
             [schpaa.darkmode]
             [booking.views]
-            [user.views]))
+            [user.views]
+            [tick.core :as t]))
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -28,72 +29,113 @@
 
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
+(defn tab [s & m]
+  [:div.flex.gap-1.ml-2
+   (for [[page title] m]
+     [:button.btn {:on-click #(rf/dispatch [:app/navigate-to [page]])
+                   :class (if (= s page) :btn-tab :btn-tab-inactive)} title])])
+
 (defn home []
   (let [*st-all (rf/subscribe [::rs/state :main-fsm])
-        route (rf/subscribe [:app/current-page])]
-    [:div.space-y-4
+        route (rf/subscribe [:app/current-page])
+        user-auth (rf/subscribe [::db/user-auth])]
+    (fn []
+      [:div.-mx-4
+       (tab @(rf/subscribe [:app/current-page])
+            [:r.new-booking "Ny Booking"]
+            [:r.common "mine bookinger"])
 
-     #_(views/booking-header
-         {:book-now #(state/send :e.book-now)})
+       [:div.bg-gray-300.p-4
+        [k/case-route (comp :name :data)
+         :r.new-booking
+         [booking.views/booking-form
+          {:boat-db {413 {:brand "Brandname"
+                          :text "asdas"}
 
-     [:div
-      (rs/match-state (:booking @*st-all)
-        [:s.initial]
-        (r/with-let [data (db/on-value-reaction {:path ["booking"]})]
-          [:<>
+                     422 {:text "b"}
+                     501 {:text "c"
+                          :brand "Levi's"}
+                     4 {:text "d"}
+                     5 {:text "e"}
+                     6 {:text "f"}}
+           :selected (r/atom #{413 501})
+           :on-submit     #(state/send :e.confirm-booking %)
+           :cancel        #(state/send :e.cancel-booking)
+           :uid           (:uid @user-auth)
+           :my-state      schpaa.components.views/my-state
+           :booking-data' (sort-by :date > (booking.database/read))}]
 
-           (into [:div.space-y-px.shadow]
-                 (map booking.views/booking-list-item
-                      (sort-by :date > (booking.database/read))))]
+         :r.common
+         [booking.views/my-booking-list
+          {:data  (booking.database/read)
+           :today (t/new-date 2022 1 4)                   ;(t/new-date 2021 8 23)
+           :uid   (:uid @user-auth)}]
 
-         [:s.booking])
-        (let [user-auth (rf/subscribe [::db/user-auth])]
-          [booking.views/booking-form
-           {:on-submit     #(state/send :e.confirm-booking %)
-            :cancel        #(state/send :e.cancel-booking)
-            :uid           (:uid @user-auth)
-            :my-state      schpaa.components.views/my-state
-            :booking-data' (sort-by :date > (booking.database/read))}])
+         [:div "other"]]]
 
-        [:s.boat-picker]
-        [:div ":s.boat-picker"]
+       #_[:<>
+          [:div.flex.gap-1
+           [:button.btn.btn-tab-inactive {:on-click #(state/send :e.book-now)} "ny booking"]
+           [:button.btn.btn-tab {:on-click #(state/send :e.cancel-booking)} "mine bookinger"]]
 
-        [:s.confirm-booking]
-        [views/booking-confirmed
-         {:values (:last-booking @(rf/subscribe [::rs/state-full :main-fsm]))}]
+          (rs/match-state (:booking @*st-all)
+            [:s.initial]
+            [:div.space-y-4
 
-        [l/ppre @*st-all])
+             [booking.views/my-booking-list
+              {:data  (booking.database/read)
+               :today (t/new-date 2022 1 4)                   ;(t/new-date 2021 8 23)
+               :uid   (:uid @uid)}]]
 
-      [:div.flex.gap-4
-       [:button.btn {:class    (when (= :r.common @route) [:btn-tab])
-                     :on-click #(rf/dispatch [:app/navigate-to [:r.common]])} "Alle bookinger"]
-       [:button.btn {:class    (when (= :r.boatlist @route) [:btn-tab])
-                     :on-click #(rf/dispatch [:app/navigate-to [:r.boatlist]])} "Båtliste"]]
+            [:s.booking]
+            (let [user-auth (rf/subscribe [::db/user-auth])]
+              [booking.views/booking-form
+               {:on-submit     #(state/send :e.confirm-booking %)
+                :cancel        #(state/send :e.cancel-booking)
+                :uid           (:uid @user-auth)
+                :my-state      schpaa.components.views/my-state
+                :booking-data' (sort-by :date > (booking.database/read))}])
 
-      [k/case-route (comp :name :data)
-       :r.common [:div
-                  [:div.flex.justify-end.p-4
-                   {:class ["dark:bg-gray-700" "bg-white"]}
-                   [:button.btn.btn-free.btn-cta {:on-click #(state/send :e.book-now)} "Book båt"]]
-                  (into [:div.space-y-px.shadow]
-                        (map booking.views/booking-list-item
-                             (sort-by :date > (booking.database/read))))]
-       :r.boatlist [:div
-                    {:class ["dark:bg-gray-700" "bg-white"]}
-                    [:div.p-4 "boatlist"]
-                    (let [boat-db {1 {:text "a"}
-                                   2 {:text "b"}
-                                   3 {:text "c"}
-                                   4 {:text "d"}
-                                   5 {:text "e"}
-                                   6 {:text "f"}}
-                          selected (r/atom #{})]
-                      (booking.views/boat-list
-                        {:boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
-                         :selected selected
-                         :on-click #(swap! selected conj %)}))]
+            [:s.boat-picker]
+            [:div ":s.boat-picker"]
 
-       [:div "else"]]]]))
+            [:s.confirm-booking]
+            [views/booking-confirmed
+             {:values (:last-booking @(rf/subscribe [::rs/state-full :main-fsm]))}]
+
+            [l/ppre @*st-all])
+
+          #_[:div
+             [:div.flex.gap-4
+              [:button.btn {:class    (when (= :r.common @route) [:btn-tab])
+                            :on-click #(rf/dispatch [:app/navigate-to [:r.common]])} "Alle bookinger"]
+              [:button.btn {:class    (when (= :r.boatlist @route) [:btn-tab])
+                            :on-click #(rf/dispatch [:app/navigate-to [:r.boatlist]])} "Båtliste"]]
+
+             [k/case-route (comp :name :data)
+              :r.common [:div
+                         #_[:div.flex.justify-end.p-4
+                            {:class ["dark:bg-gray-700" "bg-white"]}
+                            [:button.btn.btn-free.btn-cta {:on-click #(state/send :e.book-now)} "Book båt"]]
+                         (into [:div.space-y-px.shadow]
+                               (map booking.views/booking-list-item {}
+                                    (sort-by :date > (booking.database/read))))]
+              :r.boatlist [:div
+                           {:class ["dark:bg-gray-700" "bg-white"]}
+                           [:div.p-4 "boatlist"]
+                           (let [boat-db {1 {:text "a"}
+                                          2 {:text "b"}
+                                          3 {:text "c"}
+                                          4 {:text "d"}
+                                          5 {:text "e"}
+                                          6 {:text "f"}}
+                                 selected (r/atom #{})]
+                             (booking.views/boat-list
+                               {:boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
+                                :selected selected
+                                :on-click #(swap! selected conj %)}))]
+
+              [:div "else"]]]]])))
 
 (defn rounded-box []
   (let [route (rf/subscribe [:app/current-page])
@@ -130,7 +172,9 @@
   {:r.init        (fn [_]
                     [:div "INIT"])
    :r.my-bookings (fn [_]
-                    [rounded-box])
+                    [home])
+   :r.new-booking (fn [_]
+                    [home])
    :r.user        (fn [_]
                     [rounded-box])
    :r.content     (fn [_]

@@ -30,7 +30,7 @@
 (defn my-bookings [{:keys [uid bookings]}]
   [:ul.space-y-px.shadow
    (for [e bookings]
-     [booking.views/booking-list-item e])])
+     [booking.views/booking-list-item {}  e])])
 
 ;endregion
 

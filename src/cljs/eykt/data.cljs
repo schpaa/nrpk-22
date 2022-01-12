@@ -5,10 +5,12 @@
 (def routes
   [["/" {:name :r.common :header "Forsiden"}]
    ["/batliste" {:name :r.boatlist :header "Båtliste"}]
+
    ["/init" {:name :r.init :header "Init"}]
    ["/innhold" {:name :r.content :header "Innhold"}]
    ["/min-side" {:name :r.user :header "Min side"}]
    ["/mine-bookinger" {:name :r.my-bookings :header "Mine bookinger"}]
+   ["/ny-booking" {:name :r.new-booking :header "Ny booking"}]
    ["/baksiden" {:name :r.back :header "Baksiden"}]])
 
 (def screen-breakpoints

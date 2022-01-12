@@ -6,7 +6,7 @@
             [tick.core :as t]
             [re-frame.core :as rf]))
 
-(def path ["booking2"])
+(def path ["booking"])
 
 (defn write [{:keys [uid value]}]
   (let [id (.-key (db/database-push {:path  path
@@ -19,8 +19,10 @@
     id))
 
 (defn v1->v2 [{:keys [version timestamp uid date bid navn checkin checkout
+                      deleted
                       description
                       overnatting
+                      book-for-andre
                       sleepover
                       start-time end-time selected] :as m}]
   (case (or version 1)
@@ -32,33 +34,38 @@
        :sleepover  sleepover
        :selected   selected
        :uid        uid
+       :book-for-andre  book-for-andre
        :navn       navn
+       :deleted deleted
        :version    version}
     {:timestamp  (str (t/instant (t/at (t/date (ta/str->datetime date)) (t/time (ta/str->datetime date)))))
      :date       (str (t/date (ta/str->datetime date)))
      :start-time (str (t/time (ta/str->datetime checkout)))
      :end-time   (str (t/time (ta/str->datetime checkin)))
      :sleepover  overnatting
+     :description description
      :selected   [bid]
      :uid        uid
      :navn       navn
+     :book-for-andre  book-for-andre
+     :deleted deleted
      :version    version}))
 
 (defn read []
   (transduce
     (comp
-      (map val)
-      (map v1->v2))
+      (map (fn [[k v]] (assoc (v1->v2 v) :id k)))
+      (remove :deleted))
     conj
     []
-    (if true
-      @(db/on-value-reaction {:path ["booking2"]})
-      (concat (take 2 @(db/on-value-reaction {:path ["booking"]}))
+    (if false
+      @(db/on-value-reaction {:path ["booking"]})
+      (concat (take 4 @(db/on-value-reaction {:path ["booking"]}))
               {:intern-a {:date       (str (t/new-date 2022 1 15))
                           :start-time (str (t/new-time 10 0))
                           :end-time   (str (t/new-time 10 0))
                           :sleepover  false
-                          :selected   [2]
+                          :selected   [232]
                           :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                           :navn       "navns"
                           :version    2
@@ -69,11 +76,97 @@
                           :end-time   (str (t/new-time 10 0))
                           :sleepover  false
                           :selected   [501]
+                          :deleted false
                           :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                           :navn       "navn future"
                           :version    2
                           :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                            (t/new-time 10 0))))}}
+              {:intern-c {:date       (str (t/new-date 2021 2 3))
+                          :start-time (str (t/new-time 10 0))
+                          :end-time   (str (t/new-time 10 0))
+                          :sleepover  false
+                          :selected   [501]
+                          :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                          :navn       "navn future"
+                          :version    2
+                          :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                            (t/new-time 10 0))))}}
+              {:intern-c2 {:date       (str (t/new-date 2021 1 1))
+                           :start-time (str (t/new-time 10 0))
+                           :end-time   (str (t/new-time 10 0))
+                           :sleepover  false
+                           :selected   [501]
+                           :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                           :navn       "navn future"
+                           :version    2
+                           :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                             (t/new-time 10 0))))}}
+              {:intern-d {:date       (str (t/new-date 2022 1 3))
+                          :start-time (str (t/new-time 10 0))
+                          :end-time   (str (t/new-time 10 0))
+                          :sleepover  false
+                          :selected   [501]
+                          :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                          :navn       "navn future"
+                          :version    2
+                          :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                            (t/new-time 10 0))))}}
+              {:intern-e {:date       (str (t/new-date 2022 1 5))
+                          :start-time (str (t/new-time 10 0))
+                          :end-time   (str (t/new-time 10 0))
+                          :sleepover  false
+                          :selected   [501]
+                          :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                          :navn       "navn future"
+                          :version    2
+                          :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                            (t/new-time 10 0))))}}
+              {:intern-f {:date       (str (t/new-date))
+                          :start-time (str (t/new-time 10 0))
+                          :end-time   (str (t/new-time 10 0))
+                          :sleepover  false
+                          :selected   [501]
+                          :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                          :navn       "navn future"
+                          :description "Onsdagspadling, men på en fredag, vel møtt!"
+                          :version    2
+                          :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                            (t/new-time 10 0))))}}
+              {:intern-f-before {:date       (str (t/<< (t/new-date) (t/new-period 1 :days)))
+                                 :start-time (str (t/new-time 10 0))
+                                 :end-time   (str (t/new-time 10 0))
+                                 :sleepover  false
+                                 :selected   [501]
+                                 :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                                 :navn       "navn future"
+                                 :version    2
+                                 :description "Første turen i år, hvem har lyst å bli med? Vi skal grille på munkholmen så ta med mat og kull"
+                                 :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                                   (t/new-time 10 0))))}}
+              {:intern-f-after {:date       (str (t/>> (t/new-date) (t/new-period 1 :days)))
+                                :start-time (str (t/new-time 10 0))
+                                :end-time   (str (t/new-time 10 0))
+                                :sleepover  false
+                                :selected   [501]
+                                :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                                :navn       "navn future"
+                                :version    2
+                                :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                                  (t/new-time 10 0))))}}
+              {:intern-g {:date       (str (t/new-date 2022 4 29))
+                          :start-time (str (t/new-time 10 0))
+                          :end-time   (str (t/new-time 10 0))
+                          :sleepover  false
+                          :selected   [501]
+                          :uid        "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                          :navn       "navn future"
+                          :version    2
+                          :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
                                                             (t/new-time 10 0))))}}))))
+
+(comment
+  (read))
 
 (comment
   (comment
@@ -114,3 +207,10 @@
             (filter (comp #(pos? (compare % "20210921T200000")) :checkout val))
             (map val))
           @(db/on-value-reaction {:path ["booking"]}))))
+;-MmspM7AnhWGdp8kw8BK
+(defn delete [ks]
+    (doseq [k ks]
+      (let [path (conj path (name k))]
+        (tap> path)
+        (db/database-update {:path  path
+                             :value {:deleted true}}))))

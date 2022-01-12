@@ -36,7 +36,7 @@
              :s.error   {}}})
 
 (def booking-machine
-  {:initial :s.initial
+  {:initial :s.booking
    :on      {:e.restart         {:target [:> :booking :s.initial]}
              :e.book-now        {:target [:. :s.booking]}
              :e.cancel-booking  {:actions [(assign (fn [st {:keys [data]}]
@@ -46,7 +46,7 @@
                                  :target  [:. :s.initial]}
              :e.confirm-booking {:target  [:> :booking :s.confirm-booking]
                                  :actions [(assign (fn [st {:keys [data] :as _event}]
-                                                     ;(js/alert (l/ppr data))
+                                                     (js/alert (l/ppr data))
                                                      (let [prepare-data (fn [values]
                                                                           (-> values
                                                                               (update :date str)
@@ -58,17 +58,20 @@
                                                            uid (-> v :uid)
                                                            values (dissoc (prepare-data v) :uid)]
                                                        ;(tap> [uid values])
-                                                       (booking.database/write {:uid uid
+                                                       (booking.database/write {:uid   uid
                                                                                 :value values})
                                                        ;(db/firestore-set {:path ["booking2" uid] :value values})
                                                        ;(db/database-set {:path ["booking2" uid] :value values})
                                                        (assoc st :last-booking values))))]}}
    :states  {:s.initial         {}
              :s.booking         {:initial :s.initial
-                                 :on      {:e.show-bookings {:target [:> :booking :s.booking :s.initial]}
-                                           :e.pick-boat {:target [:> :booking :s.booking :s.boat-picker]}}
-                                 :states  {:s.initial     {}
-                                           :s.boat-picker {}}}
+                                 :on      {:e.edit-basics {:target [:> :booking :s.booking :s.initial]}
+                                           :e.pick-boat   {:target [:> :booking :s.booking :s.boat-picker]}
+                                           :e.confirm     {:target [:> :booking :s.booking :s.confirm]}}
+                                 :states  {:s.edit-basics {}
+                                           :s.initial     {}
+                                           :s.boat-picker {}
+                                           :s.confirm     {}}}
              :s.confirm-booking {}}})
 
 (def main
