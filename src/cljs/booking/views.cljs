@@ -88,24 +88,6 @@
 
        (when insert-top-fn
          [:div (insert-top-fn item)])
-       ;[:div.text-xs.text-red-500 date " " relation' " " (str today)]
-       #_[:div.gap-2.h-12.items-center.p-2.space-y-2
-          {:class (concat [:hidden :mob:flex] cell-class)}
-          [:div.w-12.truncate.shrink-0 (straight-date date)]
-          [:div.w-6 day-name]
-          [:div.w-10.shrink-0.text-center checkout-time]
-          [:div.w-8.flex.justify-center [:div.w-5.h-5 [icon/adapt (if (pos? (rand-int 2)) :arrow-right :moon-2)]]]
-          [:div.w-10.shrink-0.text-center checkin-time]
-          (when-not hide-name?
-            [:div.grow.flex.justify-end
-             {:class (:fg color-map)}
-             navn])
-          [:div.w-12.shrink-0.justify-end
-           {:class (concat [:font-bold] (:fg color-map))}
-           (if (and (vector? selected)
-                    (< 1 (count selected)))
-             [:div "KURS"]
-             [:div (first selected)])]]
 
        [:div.flex
         (when insert-front insert-front)
@@ -135,101 +117,130 @@
               navn]])
           [:div.text-sm.ml-12.pl-2 description]]]]])))
 
-(defn my-booking-form [{:keys [state touched errors values set-values handle-change handle-blur form-id handle-submit dirty readonly?] :as props}]
-  [:form.space-y-4
-   {:id        form-id
-    :on-submit handle-submit}
-   [:div.flex.flex-col.gap-4
-    ;[l/ppre @views/my-state]
-    [:div.flex.gap-x-2.flex-wrap
-     (fields/date (assoc (fields/normal-field props)
-                    :handle-change (fn [evt]
-                                     (let [v (-> evt .-target .-value)]
-                                       (rf/dispatch [:exp/set-date-filter v]))
-                                     (handle-change evt)))
-                  "Dato" :date)
-
-     (fields/button #(let [v (t'/>> (t'/date) (t'/new-period 0 :days))]
-                       (rf/dispatch [:exp/set-date-filter v])
-                       (set-values {:date v}))
-                    nil "I dag")
-
-     (fields/button #(set-values {:date (t'/>> (t'/date) (t'/new-period 1 :days))})
-                    nil "I morgen")]
-
-    [:div.flex.gap-x-2.flex-wrap
-     (fields/time (fields/small-field props) "UT Kl" :start-time)
-
-     (let [next-hour (-> (t'/>> (t'/time) (t'/new-duration 1 :hours))
-                         (t'/truncate :hours))]
-       (fields/button #(set-values {:start-time next-hour}) nil (str next-hour)))
-
-     (fields/button #(set-values {:start-time (t'/new-time 12 0)}) nil "12:")
-     (fields/button #(set-values {:start-time (t'/new-time 15 0)}) nil "15:")
-     (fields/button #(set-values {:start-time (t'/new-time 17 0)}) nil "17:")]
-
-    (fields/checkbox props "Overnatting" :sleepover)
-
-    [:div.flex.gap-x-2.flex-wrap
-     (fields/time (fields/small-field props) "Tilbake kl" :end-time)
-     (fields/button #(set-values {:end-time (-> (t'/>> (t'/time) (t'/new-duration 1 :hours))
-                                                (t'/truncate :hours))}) nil "Snarest")
-     (fields/button #(set-values {:end-time (t'/new-time 17 0)}) nil "17:")
-     (fields/button #(set-values {:end-time (t'/new-time 19 0)}) nil "19:")]
-
-    (fields/textarea (fields/full-field props) "Beskjed til tur-kamerater" :description)]
-
-   (let [ready? (and (empty? errors)
-                     (seq @(values :selected)))]
-     [:div.py-4
-      (if readonly?
-        [:div.flex.gap-4.justify-end
-         [:button.btn.btn-free {:type     :button
-                                :on-click #(state/send :e.restart)} "Tilbake"]
-         [:button.btn.btn-free.btn-danger.text-black {;:disabled (not (some? dirty))
-                                                      :type :submit} "Avlys booking"]]
-        [:div.flex.gap-4.justify-end
-         [:button.btn.btn-free {:type     :button
-                                :on-click #(state/send :e.restart)} "Avbryt"]
-         [:button.btn.btn-free.btn-cta.text-black {:disabled (not ready?)
-                                                   :type     :submit} "Bekreft"]])])])
-
 ;region boat-picking
 
-(defn list-line [{:keys [id  brand on-click remove? data]}]
-  (let [{:keys [text brand ] } data]
-    [:div.px-4.py-2.xh-12.flex.items-center.justify-between.gap-4
-     {:class    (concat
-                  [:first:rounded-t
-                   :last:rounded-b]
-                  ["bg-black/10"
-                   "hover:bg-black/10"])
+(defn- available? [slot boat]
+  (try
 
-      :on-click #(on-click id)}
-     [:div.font-bold id]
-     [:div.flex.flex-col.flex-grow
-      [:div.text-sm brand]
-      [:div text]]
-     (if remove? [icon/small :cross-out])]))
+    (tick.alpha.interval/relation boat slot)
+    (catch js/Error t nil #_(.-message t))))
 
-(defn pick-list [{:keys [selected on-click boat-db]}]
+(defn- convert [dt]
+  (let [f #(t/days (t/between (t/new-date 2022 1 1) %))]
+    (when-let [dt (t/date-time dt)]
+      (+ (* 24 (t/day-of-month dt))
+         (t/hour dt)
+         (* 24 (f dt))))))
+
+(defn- draw-graph [{:keys [window slot start end list r?]}]
+  (tap> ["list" list])
+  (let [{:keys [from to]} slot
+        {:keys [width offset]} window]
+    [:svg.w-full.h-6
+     {:class               :bg-white ;(if r? :bg-white "bg-amber-200/50")
+      :viewBox             (str "0 0 " width " 10")
+      :width               "100"
+      :height              "auto"
+      :preserveAspectRatio "none"}
+     [:g {:stroke :none}
+      [:rect {:fill   "#0008"
+              :x      from
+              :width  (- to from)
+              :y      0
+              :height 10}]
+      (into [:<>] (map (fn [{:keys [start end r?]}]
+                         [:rect {:fill   (if r? "#00a8" "#a008")
+                                 :x      start
+                                 :width  (- end start)
+                                 :y      5
+                                 :height 5}])
+                       list))]]))
+
+(comment
+  (do
+    (draw-graph {:window {:width 10 :offset 10}
+                 :slot   {:from 1 :to 2}
+                 :list   [{:start 1 :end 1}
+                          {:start 1 :end 1}]})))
+
+(defn has-selection [id x]
+  (= id (first (:selected x))))
+
+(defn list-line [{:keys [slot id brand on-click remove? data]}]
+  (let [start (str (t/at (t/new-date 2022 1 6) (t/new-time 10 1)))
+        end (str (t/at (t/new-date 2022 1 8) (t/new-time 20 1)))
+
+        #_#_slot (tick.alpha.interval/bounds
+                   (tick.alpha.interval/new-interval
+                     (t/date-time (str (t/at (t/new-date 2022 1 8) (t/new-time 22 0))))
+                     (t/date-time (str (t/at (t/new-date 2022 1 11) (t/new-time 10 0))))))
+        day 1
+        window {:width  (* 24 30)
+                :offset (* 24 day)}
+        slot' {:from (- (convert (t/beginning slot)) (:offset window))
+               :to   (- (convert (t/end slot)) (:offset window))}
+        booking-db (filter (partial has-selection id)
+                           (booking.database/read))
+        r? true]
+    (let [{:keys [text brand]} data]
+      [:div.flex.flex-col
+       {:class    (concat
+                    [:first:rounded-t
+                     :last:rounded-b]
+                    ["bg-black/10"
+                     "hover:bg-black/10"])
+        :on-click #(on-click id)}
+       [:div.px-4.py-2.xh-12.flex.items-center.justify-between.gap-4
+
+        [:div.font-bold id]
+        (count booking-db)
+        [:div.flex.flex-col.flex-grow
+         [:div.text-sm brand]
+         [:div text]]
+        (if remove? [icon/small :cross-out])]
+       [:div.pb-1.px-1
+        (when booking-db
+          (draw-graph
+            {:window window                                 ; width and offset of presentation
+             :list   (->>
+                       booking-db
+                       (map (fn [{:keys [start end]}]
+                              {:r?
+                               (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+
+                               :start (- (convert start) (:offset window)) ; many of these
+                               :end   (- (convert end) (:offset window))}))) ; many of these
+
+             ;:start  (- (convert start) (:offset window))     ; many of these
+             ;:end    (- (convert end) (:offset window))       ; many of these
+             :slot   slot'                                  ;INTENT our desired timeslot, who is available in this slow?
+             #_#_:r?     (available? slot (tick.alpha.interval/bounds start end))}))
+        #_(for [{:keys [start end]} booking-db]
+            (let [boat (tick.alpha.interval/bounds start end)]
+              [:div
+               [l/ppre-x start end]
+               [l/ppre-x (available? slot (tick.alpha.interval/bounds start end))]]))]])))
+
+(defn pick-list [{:keys [slot selected on-click boat-db]}]
   (if (seq @selected)
-    [:div.space-y-px
+    [:div.space-y-1
      (for [id @selected]
        [list-line
-        {:remove?  true
+        {:slot     slot
+         :remove?  true
          :on-click #(on-click id)
          :id       id
-         :data  (get boat-db id)}])]
+         :data     (get boat-db id)}])]
 
     [:div.h-12.flex.items-center.justify-center.bg-white "Velg båt"]))
 
-(defn boat-list [{:keys [boat-db on-click]}]
+(defn boat-list [{:keys [slot boat-db on-click]}]
   (if (seq boat-db)
     [:div.space-y-px
      (for [[id data] boat-db]
        [list-line
-        {:on-click on-click
+        {:slot     slot
+         :on-click on-click
          :id       id
          :data     data}])]
 
@@ -268,13 +279,13 @@
 
 (defn button [a c]
   [:button.btn-narrow.btn-free.h-10
-   {:type :button
+   {:type     :button
     :on-click a}
    (if (keyword? c) [schpaa.icon/small c] c)])
 
 (defn button-submit [a c]
   [:button.btn-narrow.btn-free.h-10.btn-cta
-   {:type :submit
+   {:type     :submit
     :on-click a}
    (if (keyword? c) [schpaa.icon/small c] c)])
 
@@ -296,7 +307,9 @@
     [:s.booking :s.confirm]
     [:div.flex.justify-between
      (button #(state/send :e.pick-boat) "Forrige")
-     (button-submit #(state/send :e.confirm-booking) "Bekreft")]))
+     (button-submit #(state/send :e.confirm-booking) "Bekreft")]
+
+    [:div "uh?"]))
 
 (defn time-navigator []
   [:div
@@ -334,22 +347,75 @@
         :on-click #(swap! selected disj %)})
      (fields/textarea (fields/full-field props) "Beskjed til tur-kamerater" :description)]))
 
+(comment
+  (do
+    (let [dt (t/new-date 2022 1 1)]
+      ;(range 1 (t/int (t/month dt)))
+      ;(t/day-of-month (t/last-day-of-month dt))
+      (reduce (fn [a e] (+ a (t/day-of-month (t/last-day-of-month (t/new-date 2022 e 1)))))
+              0
+              (range 1 (t/int (t/month dt)))))))
+
+
+
 (defn boat-picker [{:keys [uid cancel on-submit booking-data' my-state boat-db selected]}]
-  [:div.space-y-4
+  (let [date (-> @my-state :values :date)
+        slot (tick.alpha.interval/bounds
+               (t/at date (-> @my-state :values :start-time))
+               (t/at date (-> @my-state :values :end-time)))]
+    [:div.space-y-4
 
-   [time-navigator]
+     [time-navigator]
 
-   [:div.space-y-4
-    (pick-list
-      {:boat-db  boat-db
-       :selected selected
-       :on-click #(swap! selected disj %)})
-    (boat-list
-      {:boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
-       :selected selected
-       :on-click #(swap! selected conj %)})]])
+     [:div.space-y-4
+      (pick-list
+        {:slot     slot
+         :boat-db  boat-db
+         :selected selected
+         :on-click #(swap! selected disj %)})
+      (boat-list
+        {:slot     slot
+         :boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
+         :selected selected
+         :on-click #(swap! selected conj %)})]
+     (comment
+       {:doc
+        "Find all entries with a relation of :precedes or preceded-by, all the
+        other relations must fail. Since there isn't any allowance for abutting
+        entries (1 hour minimum between each booking), :met-by and :meets thus
+        are rejected."})
 
-(defn initial-booking-state [{:keys [handle-change  set-values] :as props}]
+     #_(let [day 2
+             window (* 24 20)
+             offset (* 24 day)
+             from-x (- (convert (t/beginning slot)) offset)
+             to-x (- (convert (t/end slot)) offset)]
+         (let [low-lim offset
+               high-lim (+ window offset)]
+           [:div
+            [:div.w-32 low-lim "—" high-lim]
+            (for [{:keys [start end selected]} (booking.database/read)
+                  :let [boat (tick.alpha.interval/bounds (t/date-time start)
+                                                         (t/date-time end))
+                        r? (some #{(available? slot boat)} [:precedes :preceded-by])]]
+              [:div.space-y-1.h-8
+               (let [[start end] (map #(- (convert %) offset) (list start end))
+                     w-start start
+                     w-end ""]
+                 [:div.flex.text-xs
+                  ;[:div.w-32 start " " end]
+                  ;[:div.w-32 (max low-lim start) ", " (min end high-lim)]
+                  ;[:div.w-32 w-start " " w-end]
+                  [:div.text-sky-500.w-24 (first selected)]
+                  #_(draw-graph
+                      {:window {:width window :offset offset}
+                       :from-x from-x
+                       :to-x   to-x
+                       :start  start
+                       :end    end
+                       :r?     r?})])])]))]))
+
+(defn initial-booking-state [{:keys [handle-change set-values] :as props}]
   [:div.space-y-4
    [:div.flex.flex-col.gap-4
     [:div.flex.gap-x-2.flex-wrap
@@ -388,12 +454,11 @@
      (fields/button #(set-values {:end-time (t'/new-time 17 0)}) nil "17:")
      (fields/button #(set-values {:end-time (t'/new-time 19 0)}) nil "19:")]]])
 
-
 (defn booking-form [{:keys [uid cancel on-submit booking-data' my-state boat-db selected] :as main-m}]
-  [fork/form {:initial-values    {:date        (t/date "2022-10-12")
-                                  :start-time  (t/time "11:00")
-                                  :end-time    (t/time "14:00")
-                                  :sleepover true
+  [fork/form {:initial-values    {:date        (t/date "2022-01-10")
+                                  :start-time  (t/time "08:00")
+                                  :end-time    (t/time "18:00")
+                                  :sleepover   true
                                   :description "Ugh"}
               :validation        booking-validation
               :form-id           :booking-form
@@ -425,39 +490,11 @@
           [:s.booking :s.confirm]
           (confirm-form
             props
-            {:boat-db boat-db
+            {:boat-db  boat-db
              :selected selected
-             :state my-state})
+             :state    my-state})
 
-          [:div "OTERH" booking-state]
-          #_(rs/match-state (:booking @*st-all)
-              [:s.booking :s.boat-picker]
-              [:<>
-               [:div.flex.gap-4
-                [:button.btn.btn-free {:on-click #(state/send :e.show-bookings)} "Vis andres bookinger"]
-                [:button.btn.btn-free {:on-click #(state/send :e.pick-boat)} "Vis båtliste"]]
-               (views/rounded-view
-                 {}
-                 [:div.space-y-4
-                  [:h2 "Utvalg"]
-                  (boat-list
-                    {:boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
-                     :selected selected
-                     :on-click #(swap! selected conj %)})])]
-
-              [:s.booking :s.initial]
-              [:div.space-y-4
-               [:div.flex.justify-between]
-
-               #_(r/with-let [f (rf/subscribe [:exp/filter])]
-                   #_(let [data (->> booking-data'
-                                     (filter (fn [{:keys [checkin]}]
-                                               (if @f
-                                                 (pos? (compare checkin @f))
-                                                 true)))
-                                     #_(reverse))]))
-               (into [:div.space-y-px.shadow] (map #(booking-list-item {} (assoc % :on-click line-click))
-                                                   (take 1 (reverse booking-data'))))]))]))])
+          [:div "OTERH" booking-state])]))])
 
 (comment
   ;todo shortcut for this!

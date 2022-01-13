@@ -49,16 +49,17 @@
         [k/case-route (comp :name :data)
          :r.new-booking
          [booking.views/booking-form
-          {:boat-db {413 {:brand "Brandname"
+          {:boat-db {504 {:brand "Brandname"
                           :text "asdas"}
-
-                     422 {:text "b"}
+                     232 {:text "b"}
                      501 {:text "c"
                           :brand "Levi's"}
-                     4 {:text "d"}
-                     5 {:text "e"}
-                     6 {:text "f"}}
-           :selected (r/atom #{413 501})
+                     502 {:text "c"
+                          :brand "Levi's"}
+                     503 {:text "c"
+                          :brand "Levi's"}}
+
+           :selected (r/atom #{503 501})
            :on-submit     #(state/send :e.confirm-booking %)
            :cancel        #(state/send :e.cancel-booking)
            :uid           (:uid @user-auth)

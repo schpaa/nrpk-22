@@ -27,7 +27,7 @@
     }
 
     .btn-narrow {
-        @apply px-2 :h-10 active:shadow disabled:cursor-default cursor-pointer truncate;
+        @apply px-2 h-10 active:shadow disabled:cursor-default cursor-pointer truncate;
 
     }
 
