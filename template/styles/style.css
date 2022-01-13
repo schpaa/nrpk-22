@@ -36,13 +36,20 @@
     }
 
     .btn-tab {
-        @apply px-8 bg-gray-300 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+        @apply bg-gray-100 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
     }
 
     .btn-tab-inactive {
-        @apply px-8 bg-gray-500/50 text-black/50 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+        @apply bg-gray-300/50 text-gray-400/50 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-800 dark:text-gray-400
     }
 
+    .btn-tab-b {
+        @apply bg-gray-100 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-700 dark:text-white
+    }
+
+    .btn-tab-inactive-b {
+        @apply bg-gray-300/50 text-gray-400/50 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-800 dark:text-gray-400
+    }
 
     .btn-danger {
         @apply bg-white dark:bg-black disabled:text-gray-300 active:bg-red-500 active:text-white rounded border-2 border-red-500 text-black dark:text-white

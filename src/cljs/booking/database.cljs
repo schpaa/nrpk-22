@@ -60,7 +60,6 @@
      :deleted        deleted
      :version        version}))
 
-
 (defn upgrade [m]
   (-> m
       (update :start (fn [e]
@@ -290,3 +289,18 @@
       (tap> path)
       (db/database-update {:path  path
                            :value {:deleted true}}))))
+
+(defn boat-db []
+  {501 {:brand "Wildermoose"
+        :text  "Hunting peck"
+        :warning? true
+        :location "A3/4"}
+   232 {:text "b"}
+   504 {:text  "c"
+        :brand "Levi's"}
+   500 {:text  "500"
+        :brand "Levi's"}
+   502 {:text  "c"
+        :brand "Levi's"}
+   503 {:text  "c"
+        :brand "Levi's"}})

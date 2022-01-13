@@ -30,113 +30,69 @@
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
 (defn tab [s & m]
-  [:div.flex.gap-1.ml-2
+  [:div.flex.gap-1.mx-1x
    (for [[page title] m]
-     [:button.btn {:on-click #(rf/dispatch [:app/navigate-to [page]])
-                   :class (if (= s page) :btn-tab :btn-tab-inactive)} title])])
+     [:button.btn.flex-grow
+      {:on-click #(rf/dispatch [:app/navigate-to [page]])
+       :class    (if (= s page) :btn-tab :btn-tab-inactive)} title])])
+
+(defn tab-b [s & m]
+  [:div.flex.gap-1.mx-1x
+   (for [[page title] m]
+     [:button.btn.flex-grow
+      {:on-click #(rf/dispatch [:app/navigate-to [page]])
+       :class    (if (= s page) :btn-tab-b :btn-tab-inactive-b)} title])])
 
 (defn home []
   (let [*st-all (rf/subscribe [::rs/state :main-fsm])
         route (rf/subscribe [:app/current-page])
         user-auth (rf/subscribe [::db/user-auth])]
     (fn []
-      [:div.-mx-4
+      [:div.space-y-4
+
+       [:div
+        [views/rounded-view {:tab 1}
+         [:h2 "Søndag 3 August"]
+         [:h2 "16:00 --> 21:00"]
+
+         (booking.views/pick-list
+           {:selected (r/atom #{501 502 403 401 201})
+            :boat-db  (booking.database/boat-db)
+            :day      1
+            :slot     (tick.alpha.interval/bounds
+                        (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
+                        (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
+            :on-click #(js/alert "!")})]
+
+        (tab-b @(rf/subscribe [:app/current-page])
+             [:r.last-booking "Siste Booking"]
+             [:r.new-booking "Ny Booking"])]
+
        (tab @(rf/subscribe [:app/current-page])
             [:r.new-booking "Ny Booking"]
-            [:r.common "mine bookinger"])
+            [:r.common "Mine Bookinger"])
 
-       [:div.bg-gray-300.p-4
-        [k/case-route (comp :name :data)
-         :r.new-booking
-         [booking.views/booking-form
-          {:boat-db {504 {:brand "Brandname"
-                          :text "asdas"}
-                     232 {:text "b"}
-                     501 {:text "c"
-                          :brand "Levi's"}
-                     502 {:text "c"
-                          :brand "Levi's"}
-                     503 {:text "c"
-                          :brand "Levi's"}}
+       #_[:div.bg-gray-300.p-4
+          [k/case-route (comp :name :data)
+           :r.common
+           [booking.views/my-booking-list
+            {:data  (booking.database/read)
+             :today (t/new-date 2022 1 14)
+             :uid   (:uid @user-auth)}]
 
-           :selected (r/atom #{503 501})
-           :on-submit     #(state/send :e.confirm-booking %)
-           :cancel        #(state/send :e.cancel-booking)
-           :uid           (:uid @user-auth)
-           :my-state      schpaa.components.views/my-state
-           :booking-data' (sort-by :date > (booking.database/read))}]
+           :r.new-booking
+           [booking.views/booking-form
+            {:boat-db       (booking.database/boat-db)
+             :selected      (r/atom #{})
+             :uid           (:uid @user-auth)
+             :on-submit     #(state/send :e.confirm-booking %)
+             :cancel        #(state/send :e.cancel-booking)
+             :my-state      schpaa.components.views/my-state
+             :booking-data' (sort-by :date > (booking.database/read))}]
 
-         :r.common
-         [booking.views/my-booking-list
-          {:data  (booking.database/read)
-           :today (t/new-date 2022 1 4)                   ;(t/new-date 2021 8 23)
-           :uid   (:uid @user-auth)}]
 
-         [:div "other"]]]
 
-       #_[:<>
-          [:div.flex.gap-1
-           [:button.btn.btn-tab-inactive {:on-click #(state/send :e.book-now)} "ny booking"]
-           [:button.btn.btn-tab {:on-click #(state/send :e.cancel-booking)} "mine bookinger"]]
-
-          (rs/match-state (:booking @*st-all)
-            [:s.initial]
-            [:div.space-y-4
-
-             [booking.views/my-booking-list
-              {:data  (booking.database/read)
-               :today (t/new-date 2022 1 4)                   ;(t/new-date 2021 8 23)
-               :uid   (:uid @uid)}]]
-
-            [:s.booking]
-            (let [user-auth (rf/subscribe [::db/user-auth])]
-              [booking.views/booking-form
-               {:on-submit     #(state/send :e.confirm-booking %)
-                :cancel        #(state/send :e.cancel-booking)
-                :uid           (:uid @user-auth)
-                :my-state      schpaa.components.views/my-state
-                :booking-data' (sort-by :date > (booking.database/read))}])
-
-            [:s.boat-picker]
-            [:div ":s.boat-picker"]
-
-            [:s.confirm-booking]
-            [views/booking-confirmed
-             {:values (:last-booking @(rf/subscribe [::rs/state-full :main-fsm]))}]
-
-            [l/ppre @*st-all])
-
-          #_[:div
-             [:div.flex.gap-4
-              [:button.btn {:class    (when (= :r.common @route) [:btn-tab])
-                            :on-click #(rf/dispatch [:app/navigate-to [:r.common]])} "Alle bookinger"]
-              [:button.btn {:class    (when (= :r.boatlist @route) [:btn-tab])
-                            :on-click #(rf/dispatch [:app/navigate-to [:r.boatlist]])} "Båtliste"]]
-
-             [k/case-route (comp :name :data)
-              :r.common [:div
-                         #_[:div.flex.justify-end.p-4
-                            {:class ["dark:bg-gray-700" "bg-white"]}
-                            [:button.btn.btn-free.btn-cta {:on-click #(state/send :e.book-now)} "Book båt"]]
-                         (into [:div.space-y-px.shadow]
-                               (map booking.views/booking-list-item {}
-                                    (sort-by :date > (booking.database/read))))]
-              :r.boatlist [:div
-                           {:class ["dark:bg-gray-700" "bg-white"]}
-                           [:div.p-4 "boatlist"]
-                           (let [boat-db {1 {:text "a"}
-                                          2 {:text "b"}
-                                          3 {:text "c"}
-                                          4 {:text "d"}
-                                          5 {:text "e"}
-                                          6 {:text "f"}}
-                                 selected (r/atom #{})]
-                             (booking.views/boat-list
-                               {:boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
-                                :selected selected
-                                :on-click #(swap! selected conj %)}))]
-
-              [:div "else"]]]]])))
+           [:div]]]])))
 
 (defn rounded-box []
   (let [route (rf/subscribe [:app/current-page])
@@ -168,7 +124,6 @@
 
            [:div "other " @route]]]]))))
 
-
 (def route-table
   {:r.init        (fn [_]
                     [:div "INIT"])
@@ -176,6 +131,8 @@
                     [home])
    :r.new-booking (fn [_]
                     [home])
+   :r.last-booking (fn [_]
+                     [home])
    :r.user        (fn [_]
                     [rounded-box])
    :r.content     (fn [_]
@@ -191,6 +148,8 @@
    :r.back        (fn [_]
                     [:div.space-y-4
                      [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
+
+;region events and subs
 
 (rf/reg-sub :route-name
             :<- [:kee-frame/route]
@@ -222,6 +181,8 @@
                  [rf/trim-v]
                  (fn [_ [page]]
                    {:fx [[:navigate-to page]]}))
+
+;endregion
 
 (defn- forced-scroll-lock
   [locked?]

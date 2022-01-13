@@ -10,7 +10,8 @@
    ["/innhold" {:name :r.content :header "Innhold"}]
    ["/min-side" {:name :r.user :header "Min side"}]
    ["/mine-bookinger" {:name :r.my-bookings :header "Mine bookinger"}]
-   ["/ny-booking" {:name :r.new-booking :header "Ny booking"}]
+   ["/ny" {:name :r.new-booking :header "Ny booking"}]
+   ["/siste" {:name :r.last-booking :header "Siste booking"}]
    ["/baksiden" {:name :r.back :header "Baksiden"}]])
 
 (def screen-breakpoints

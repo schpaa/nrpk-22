@@ -64,7 +64,7 @@
                                                        ;(db/database-set {:path ["booking2" uid] :value values})
                                                        (assoc st :last-booking values))))]}}
    :states  {:s.initial         {}
-             :s.booking         {:initial :s.initial
+             :s.booking         {:initial :s.boat-picker
                                  :on      {:e.edit-basics {:target [:> :booking :s.booking :s.initial]}
                                            :e.pick-boat   {:target [:> :booking :s.booking :s.boat-picker]}
                                            :e.confirm     {:target [:> :booking :s.booking :s.confirm]}}

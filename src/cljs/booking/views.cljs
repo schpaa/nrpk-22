@@ -9,8 +9,11 @@
             [tick.core :as t']
             [tick.core :as t]
             [tick.alpha.interval :refer [relation]]
+            [tick.locale-en-us]
+    ;["@js-joda/locale_no-no" :as js-joda-locale]
             [booking.database]
             [fork.re-frame :as fork]
+            [times.api :refer [format]]
             [schpaa.icon :as icon]
             [schpaa.debug :as l]))
 
@@ -132,12 +135,11 @@
          (t/hour dt)
          (* 24 (f dt))))))
 
-(defn- draw-graph [{:keys [window slot start end list r?]}]
-  (tap> ["list" list])
+(defn- draw-graph [{:keys [window slot list]}]
   (let [{:keys [from to]} slot
-        {:keys [width offset]} window]
-    [:svg.w-full.h-6
-     {:class               :bg-white ;(if r? :bg-white "bg-amber-200/50")
+        {:keys [width _offset]} window]
+    [:svg.w-full.rounded
+     {:class               :bg-white                        ;(if r? :bg-white "bg-amber-200/50")
       :viewBox             (str "0 0 " width " 10")
       :width               "100"
       :height              "auto"
@@ -149,84 +151,72 @@
               :y      0
               :height 10}]
       (into [:<>] (map (fn [{:keys [start end r?]}]
-                         [:rect {:fill   (if r? "#00a8" "#a008")
+                         [:rect {:fill   (if r? "#a0a8" "#a008")
                                  :x      start
                                  :width  (- end start)
                                  :y      5
                                  :height 5}])
                        list))]]))
 
-(comment
-  (do
-    (draw-graph {:window {:width 10 :offset 10}
-                 :slot   {:from 1 :to 2}
-                 :list   [{:start 1 :end 1}
-                          {:start 1 :end 1}]})))
-
 (defn has-selection [id x]
   (= id (first (:selected x))))
 
-(defn list-line [{:keys [slot id brand on-click remove? data]}]
-  (let [start (str (t/at (t/new-date 2022 1 6) (t/new-time 10 1)))
-        end (str (t/at (t/new-date 2022 1 8) (t/new-time 20 1)))
-
-        #_#_slot (tick.alpha.interval/bounds
-                   (tick.alpha.interval/new-interval
-                     (t/date-time (str (t/at (t/new-date 2022 1 8) (t/new-time 22 0))))
-                     (t/date-time (str (t/at (t/new-date 2022 1 11) (t/new-time 10 0))))))
-        day 1
-        window {:width  (* 24 30)
+(defn list-line [{:keys [day slot id on-click remove? data]}]
+  (let [window {:width  (* 24 @(rf/subscribe [:app/width]))
                 :offset (* 24 day)}
+        offset (:offset window)
         slot' {:from (- (convert (t/beginning slot)) (:offset window))
                :to   (- (convert (t/end slot)) (:offset window))}
         booking-db (filter (partial has-selection id)
-                           (booking.database/read))
-        r? true]
-    (let [{:keys [text brand]} data]
+                           (booking.database/read))]
+    (let [{:keys [text brand location warning?]} data]
       [:div.flex.flex-col
        {:class    (concat
                     [:first:rounded-t
+                     :shadow
                      :last:rounded-b]
-                    ["bg-black/10"
-                     "hover:bg-black/10"])
+                    ["bg-pink-300/20"
+                     "hover:bg-pink-300/50"])
         :on-click #(on-click id)}
-       [:div.px-4.py-2.xh-12.flex.items-center.justify-between.gap-4
+       [:div.grid.gap-2.p-2.w-full
+        {:style {:grid-template-columns "3rem 2rem 1fr min-content"
+                 :grid-auto-rows "auto"}}
+        [:div.font-bold.text-xl.place-self-center id]
+        [:div.self-center  (count booking-db)]
+        [:div.text-xl.self-center brand]
+        (if remove? [icon/small :cross-out])
+        [:div.place-self-center.text-sm location]
+        [:div]
+        [:div.col-span-2.self-center.text-sm text]
 
-        [:div.font-bold id]
-        (count booking-db)
-        [:div.flex.flex-col.flex-grow
-         [:div.text-sm brand]
-         [:div text]]
-        (if remove? [icon/small :cross-out])]
-       [:div.pb-1.px-1
-        (when booking-db
-          (draw-graph
-            {:window window                                 ; width and offset of presentation
-             :list   (->>
-                       booking-db
-                       (map (fn [{:keys [start end]}]
-                              {:r?
-                               (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+        #_[:div.px-4.py-2.xh-12.flex.items-center.justify-between.gap-4
+           [:div.font-bold.text-lg id]
+           (count booking-db)
+           [:div.flex.flex-col.flex-grow
+            [:div.text-base brand]
+            [:div text]]
+           (if remove? [icon/small :cross-out])]
+        [:div.col-span-2]
+        [:div.col-span-1
+         (when booking-db
+           (draw-graph
+             {:window window
+              :list   (map (fn [{:keys [start end]}]
+                             {:r?
+                              (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+                              :start (- (convert start) offset)
+                              :end   (- (convert end) offset)})
+                           booking-db)
+              :slot   slot'}))]
+        [:div.place-self-center [icon/small :circle-question-filled]]]])))                          ;INTENT our desired timeslot, who is available in this slow?
 
-                               :start (- (convert start) (:offset window)) ; many of these
-                               :end   (- (convert end) (:offset window))}))) ; many of these
-
-             ;:start  (- (convert start) (:offset window))     ; many of these
-             ;:end    (- (convert end) (:offset window))       ; many of these
-             :slot   slot'                                  ;INTENT our desired timeslot, who is available in this slow?
-             #_#_:r?     (available? slot (tick.alpha.interval/bounds start end))}))
-        #_(for [{:keys [start end]} booking-db]
-            (let [boat (tick.alpha.interval/bounds start end)]
-              [:div
-               [l/ppre-x start end]
-               [l/ppre-x (available? slot (tick.alpha.interval/bounds start end))]]))]])))
-
-(defn pick-list [{:keys [slot selected on-click boat-db]}]
+(defn pick-list [{:keys [day slot selected on-click boat-db]}]
   (if (seq @selected)
     [:div.space-y-1
      (for [id @selected]
        [list-line
-        {:slot     slot
+        {:day      day
+         :slot     slot
          :remove?  true
          :on-click #(on-click id)
          :id       id
@@ -234,12 +224,13 @@
 
     [:div.h-12.flex.items-center.justify-center.bg-white "Velg båt"]))
 
-(defn boat-list [{:keys [slot boat-db on-click]}]
+(defn boat-list [{:keys [day slot boat-db on-click]}]
   (if (seq boat-db)
     [:div.space-y-px
      (for [[id data] boat-db]
        [list-line
-        {:slot     slot
+        {:day      day
+         :slot     slot
          :on-click on-click
          :id       id
          :data     data}])]
@@ -290,7 +281,12 @@
    (if (keyword? c) [schpaa.icon/small c] c)])
 
 (defn adjust [f field]
-  (fn [] (swap! views/my-state update-in [:values field] #(f (t/time %) (t/new-duration 1 :hours)))))
+  (fn [] (swap! views/my-state
+                update-in [:values field] #(f (t/date-time %) (t/new-duration 1 :hours)))))
+
+(defn adjust' [f field d]
+  (fn [] (swap! views/my-state
+                update-in [:values field] #(f (t/date-time %) (t/new-duration 1 d)))))
 
 (defn navigation [booking-state]
   (rs/match-state booking-state
@@ -301,80 +297,147 @@
 
     [:s.booking :s.boat-picker]
     [:div.flex.justify-between
-     (button #(state/send :e.edit-basics) "Forrige")
+     [:div]
+     ;(button #(state/send :e.edit-basics) "Forrige")
      (button #(state/send :e.confirm) "Neste")]
 
     [:s.booking :s.confirm]
     [:div.flex.justify-between
-     (button #(state/send :e.pick-boat) "Forrige")
-     (button-submit #(state/send :e.confirm-booking) "Bekreft")]
+     [:div]
+     (button #(state/send :e.pick-boat) "Forrige")]
 
     [:div "uh?"]))
 
-(defn time-navigator []
-  [:div
-   [:div.flex.flex-col.items-center.gap-1
+;region events and subs
+
+(rf/reg-event-db :app/inc-window-width (fn [db [_ arg]]
+                                         (update db :window-width (fnil inc 0))))
+
+(rf/reg-event-db :app/dec-window-width (fn [db [_ arg]]
+                                         (if (< 10 (:window-width db))
+                                           (update db :window-width (fnil dec 0))
+                                           db)))
+
+(rf/reg-event-db :app/set-window-width (fn [db [_ arg]]
+                                         (assoc db :window-width arg)))
+
+(rf/reg-event-db :app/inc-window-offset (fn [db [_ arg]]
+                                          (update db :window-offset #(+ % (or arg 1)))))
+
+(rf/reg-event-db :app/dec-window-offset (fn [db [_ arg]]
+                                          (update db :window-offset #(- % (or arg 1)))))
+
+(rf/reg-event-db :app/set-window-offset (fn [db [_ arg]]
+                                          (assoc db :window-offset arg)))
+
+(rf/reg-sub :app/offset (fn [db] (:window-offset db 10)))
+
+(rf/reg-sub :app/width (fn [db] (:window-width db 10)))
+
+;endregion
+
+(defn window-adjuster []
+  [:div.grid.grid-cols-2.gap-1
+   [:div.flex.justify-start.gap-1.items-center
+    (button #(rf/dispatch [:app/set-window-offset -24]) "Forrige uke")
+    (button #(rf/dispatch [:app/set-window-offset 0]) "Nå + 2 uker")
+    (button #(rf/dispatch [:app/set-window-offset (* 24 4)]) "1 måned")]
+   [:div.flex.justify-start.gap-1.items-center
+    (button #(rf/dispatch [:app/set-window-width 0]) "Kort")
+    (button #(rf/dispatch [:app/set-window-width 48]) "Langt")]
+   [:div (format "%d dager" (/ @(rf/subscribe [:app/offset]) 24))]
+   [:div (format "%d noe" (/ @(rf/subscribe [:app/width]) 24))]])
+
+(defn time-navigator [props]
+  [:div.space-y-4
+   [:div.grid.grid-cols-2.gap-1
+    [:div.flex.gap-1
+     (button (adjust' t/<< :start :days) :minus)
+     (fields/date (assoc (fields/date-field props)
+                    :naked? true
+                    :values (fn [] (-> @views/my-state :values :start t/date))
+                    :handle-change (fn [e] (let [date-str (-> e .-target .-value)
+                                                 time-str (t/time (get-in @views/my-state [:values :start]))]
+                                             (swap! views/my-state assoc-in [:values :start]
+                                                    (t/at (t/date date-str) time-str)))))
+                  "test" :name)
+     (button (adjust' t/>> :start :days) :plus)]
 
     [:div.flex.gap-1
-     (button #() :rotate-left)
-     (button (adjust t/<< :start-time) :minus)
+     (button (adjust t/<< :start) :minus)
      (fields/time {:naked?        true
-                   :values        (fn [] (-> @views/my-state :values :start-time))
-                   :handle-change (fn [e] (let [v (-> e .-target .-value)]
-                                            (swap! views/my-state assoc-in [:values :start-time] v)))} "" :name)
-     (button (adjust t/>> :start-time) :plus)]
+                   :values        (fn [] (-> @views/my-state :values :start t/time))
+                   :handle-change (fn [e] (let [time-str (-> e .-target .-value)
+                                                date-time-str (get-in @views/my-state [:values :start])]
+                                            (swap! views/my-state assoc-in [:values :start]
+                                                   (t/at (t/date date-time-str) time-str))))}
+                  "" :name)
+     (button (adjust t/>> :start) :plus)]
+    [:div.flex.items-center
+     (fields/checkbox
+       (assoc props
+         :handle-change (fn [evt]
+                          (let [v (-> evt .-target .-checked)
+                                end (t/date-time (get-in @(:state props) [:values :end]))]
+                            (swap! @(:state props) update-in [:values]
+                                   assoc :sleepover v
+                                   :end (t/>> end (t/new-period (if (get-in @(:state props) [:values :sleepover]) 1 0) :days))))))
+       "Overnatting" :sleepover)]
 
     [:div.flex.gap-1
-     (button (adjust t/<< :end-time) :minus)
+     (button (adjust t/<< :end) :minus)
      (fields/time {:naked?        true
-                   :values        (fn [] (-> @views/my-state :values :end-time))
-                   :handle-change (fn [e] (let [v (-> e .-target .-value)]
-                                            (swap! views/my-state assoc-in [:values :end-time] v)))} "" :name)
-     (button (adjust t/>> :end-time) :plus)
-     (button #() :rotate-right)]]])
+                   :values        (fn [] (-> @views/my-state :values :end t/time))
+                   :handle-change (fn [e] (let [time-str (-> e .-target .-value)
+                                                date-time-str (get-in @views/my-state [:values :end])]
+                                            (swap! views/my-state assoc-in [:values :end]
+                                                   (t/at (t/date date-time-str) time-str))))}
+                  "" :name)
+     (button (adjust t/>> :end) :plus)]]])
 
-(defn confirm-form [{:as props} {:keys [state selected boat-db]}]
-  (let [{:keys [sleepover date start-time end-time]} (-> @state :values)]
+(defn confirmation [{:as props} {:keys [state selected boat-db]}]
+  (let [{:keys [sleepover date start end]} (-> @state :values)
+        slot (tick.alpha.interval/bounds
+               (-> @state :values :start)
+               (-> @state :values :end))]
     [:div.space-y-4
      ;[l/ppre-x @selected @state]
-     [:div date]
-     [:div start-time]
-     [:div end-time]
+
+     (let [h (t/hours (t/duration (tick.alpha.interval/bounds start end)))]
+       [:div (format "Fra %s til %s %s, %s"
+                     (t/format (t/formatter "d/M-yy hh:mm") start)
+                     (t/format (t/formatter "d/M-yy hh:mm") end)
+                     (if sleepover "(1 overnatting)")
+                     (apply str (cond-> []
+                                  (< 24 h) (conj "dager"))))])
+     [:div (str (t/hours (t/duration (tick.alpha.interval/bounds start end))))]
      [:div (if sleepover "Overnatting")]
      (pick-list
-       {:boat-db  boat-db
+       {:day      @(rf/subscribe [:app/offset])
+        :slot     slot
+        :boat-db  boat-db
         :selected selected
         :on-click #(swap! selected disj %)})
      (fields/textarea (fields/full-field props) "Beskjed til tur-kamerater" :description)]))
 
-(comment
-  (do
-    (let [dt (t/new-date 2022 1 1)]
-      ;(range 1 (t/int (t/month dt)))
-      ;(t/day-of-month (t/last-day-of-month dt))
-      (reduce (fn [a e] (+ a (t/day-of-month (t/last-day-of-month (t/new-date 2022 e 1)))))
-              0
-              (range 1 (t/int (t/month dt)))))))
-
-
-
-(defn boat-picker [{:keys [uid cancel on-submit booking-data' my-state boat-db selected]}]
-  (let [date (-> @my-state :values :date)
+(defn boat-picker [{:keys [uid cancel on-submit booking-data' my-state boat-db selected]} props]
+  (let [;date (-> @my-state :values :date)
         slot (tick.alpha.interval/bounds
-               (t/at date (-> @my-state :values :start-time))
-               (t/at date (-> @my-state :values :end-time)))]
+               (-> @my-state :values :start)
+               (-> @my-state :values :end))]
     [:div.space-y-4
-
-     [time-navigator]
-
+     [time-navigator props]
+     [window-adjuster]
      [:div.space-y-4
       (pick-list
-        {:slot     slot
+        {:day      @(rf/subscribe [:app/offset])
+         :slot     slot
          :boat-db  boat-db
          :selected selected
          :on-click #(swap! selected disj %)})
       (boat-list
-        {:slot     slot
+        {:day      @(rf/subscribe [:app/offset])
+         :slot     slot
          :boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
          :selected selected
          :on-click #(swap! selected conj %)})]
@@ -383,118 +446,81 @@
         "Find all entries with a relation of :precedes or preceded-by, all the
         other relations must fail. Since there isn't any allowance for abutting
         entries (1 hour minimum between each booking), :met-by and :meets thus
-        are rejected."})
+        are rejected."})]))
 
-     #_(let [day 2
-             window (* 24 20)
-             offset (* 24 day)
-             from-x (- (convert (t/beginning slot)) offset)
-             to-x (- (convert (t/end slot)) offset)]
-         (let [low-lim offset
-               high-lim (+ window offset)]
-           [:div
-            [:div.w-32 low-lim "—" high-lim]
-            (for [{:keys [start end selected]} (booking.database/read)
-                  :let [boat (tick.alpha.interval/bounds (t/date-time start)
-                                                         (t/date-time end))
-                        r? (some #{(available? slot boat)} [:precedes :preceded-by])]]
-              [:div.space-y-1.h-8
-               (let [[start end] (map #(- (convert %) offset) (list start end))
-                     w-start start
-                     w-end ""]
-                 [:div.flex.text-xs
-                  ;[:div.w-32 start " " end]
-                  ;[:div.w-32 (max low-lim start) ", " (min end high-lim)]
-                  ;[:div.w-32 w-start " " w-end]
-                  [:div.text-sky-500.w-24 (first selected)]
-                  #_(draw-graph
-                      {:window {:width window :offset offset}
-                       :from-x from-x
-                       :to-x   to-x
-                       :start  start
-                       :end    end
-                       :r?     r?})])])]))]))
-
-(defn initial-booking-state [{:keys [handle-change set-values] :as props}]
+(defn initial-booking-state [{:keys [handle-change set-values state] :as props}]
   [:div.space-y-4
    [:div.flex.flex-col.gap-4
+
     [:div.flex.gap-x-2.flex-wrap
-     (fields/date (assoc (fields/normal-field props)
+     ;todo
+     (fields/date (assoc (fields/date-field props)
+                    :values (fn [] (str (t/date (get-in @state [:values :start]))))
                     :handle-change (fn [evt]
-                                     (let [v (-> evt .-target .-value)]
-                                       (rf/dispatch [:exp/set-date-filter v]))
-                                     (handle-change evt)))
-                  "Dato" :date)
+                                     (let [v (-> evt .-target .-value)
+                                           time (t/time (get-in @state [:values :start]))
+                                           time' (t/time (get-in @state [:values :end]))
+                                           sleepover (get-in @state [:values :sleepover])]
+                                       (rf/dispatch [:exp/set-date-filter v])
+                                       (swap! state update-in [:values]
+                                              assoc :start (t/at (t/date v) time)
+                                              :end (t/at (t/>> (t/date v) (t/new-period (if sleepover 1 0) :days)) time')))))
+                  "Dato" :start)
 
-     (fields/button #(let [v (t'/>> (t'/date) (t'/new-period 0 :days))]
-                       (rf/dispatch [:exp/set-date-filter v])
-                       (set-values {:date v}))
-                    nil "I dag")
+     #_(fields/button #(let [v (t'/>> (t'/date) (t'/new-period 0 :days))]
+                         (rf/dispatch [:exp/set-date-filter v])
+                         (set-values {:date v}))
+                      nil "I dag")
 
-     (fields/button #(set-values {:date (t'/>> (t'/date) (t'/new-period 1 :days))})
-                    nil "I morgen")]
-
-    [:div.flex.gap-x-2.flex-wrap
-     (fields/time (fields/small-field props) "UT Kl" :start-time)
-
-     (let [next-hour (-> (t'/>> (t'/time) (t'/new-duration 1 :hours))
-                         (t'/truncate :hours))]
-       (fields/button #(set-values {:start-time next-hour}) nil (str next-hour)))
-
-     (fields/button #(set-values {:start-time (t'/new-time 12 0)}) nil "12:")
-     (fields/button #(set-values {:start-time (t'/new-time 15 0)}) nil "15:")
-     (fields/button #(set-values {:start-time (t'/new-time 17 0)}) nil "17:")]
-
-    (fields/checkbox props "Overnatting" :sleepover)
+     #_(fields/button #(set-values {:date (t'/>> (t'/date) (t'/new-period 1 :days))})
+                      nil "I morgen")]
 
     [:div.flex.gap-x-2.flex-wrap
-     (fields/time (fields/small-field props) "Tilbake kl" :end-time)
-     (fields/button #(set-values {:end-time (-> (t'/>> (t'/time) (t'/new-duration 1 :hours))
-                                                (t'/truncate :hours))}) nil "Snarest")
-     (fields/button #(set-values {:end-time (t'/new-time 17 0)}) nil "17:")
-     (fields/button #(set-values {:end-time (t'/new-time 19 0)}) nil "19:")]]])
+     ;todo
+     (fields/time (assoc (fields/time-field props)
+                    :values (fn [] (str (t/time (get-in @state [:values :start]))))
+                    :handle-change (fn [evt]
+                                     (let [v (-> evt .-target .-value)
+                                           date (t/date (get-in @state [:values :start]))]
+                                       (rf/dispatch [:exp/set-date-filter v])
+                                       (swap! state update-in [:values] assoc :start (t/at date (t/time v))))))
+                  "UT Kl" :start)
 
-(defn booking-form [{:keys [uid cancel on-submit booking-data' my-state boat-db selected] :as main-m}]
-  [fork/form {:initial-values    {:date        (t/date "2022-01-10")
-                                  :start-time  (t/time "08:00")
-                                  :end-time    (t/time "18:00")
-                                  :sleepover   true
-                                  :description "Ugh"}
-              :validation        booking-validation
-              :form-id           :booking-form
-              :state             my-state
-              :prevent-default?  true
-              :clean-on-unmount? true
-              :keywordize-keys   true
-              :on-submit         #(on-submit (assoc-in % [:values :uid] uid))}
-   (fn [{:keys [state touched errors values set-values handle-change handle-blur form-id handle-submit dirty readonly?] :as props}]
-     (let [*st-all (rf/subscribe [::rs/state :main-fsm])
-           booking-state (:booking @*st-all)]
+     #_(let [next-hour (-> (t'/>> (t'/time) (t'/new-duration 1 :hours))
+                           (t'/truncate :hours))]
+         (fields/button #(set-values {:start-time next-hour}) nil (str next-hour)))
 
-       [:form.space-y-4
-        {:id        form-id
-         :on-submit handle-submit}
+     #_(fields/button #(set-values {:start-time (t'/new-time 12 0)}) nil "12:")
+     #_(fields/button #(set-values {:start-time (t'/new-time 15 0)}) nil "15:")
+     #_(fields/button #(set-values {:start-time (t'/new-time 17 0)}) nil "17:")]
 
-        ;intent Navigation
-        [navigation booking-state]
+    (fields/checkbox
+      (assoc props
+        :handle-change (fn [evt]
+                         (let [v (-> evt .-target .-checked)
+                               end (t/date-time (get-in @state [:values :end]))]
+                           (swap! state update-in [:values]
+                                  assoc :sleepover v
+                                  :end (t/>> end (t/new-period (if (get-in @state [:values :sleepover]) 1 0) :days))))))
+      "Overnatting" :sleepover)
 
-        ;[l/ppre @views/my-state]
+    [:div.flex.gap-x-2.flex-wrap
+     ;todo
+     (fields/time (assoc (fields/time-field props)
+                    :values (fn [] (str (t/time (get-in @state [:values :end]))))
+                    :handle-change (fn [evt]
+                                     (let [v (-> evt .-target .-value)
+                                           date (t/date (get-in @state [:values :start]))]
+                                       (rf/dispatch [:exp/set-date-filter v])
+                                       (swap! state
+                                              update-in [:values]
+                                              assoc :end (t/at (t/>> date (t/new-period (if (get-in @state [:values :sleepover]) 1 0) :days)) (t/time v))))))
 
-        (rs/match-state booking-state
-          [:s.booking :s.initial]
-          (initial-booking-state props)
-
-          [:s.booking :s.boat-picker]
-          (boat-picker main-m)
-
-          [:s.booking :s.confirm]
-          (confirm-form
-            props
-            {:boat-db  boat-db
-             :selected selected
-             :state    my-state})
-
-          [:div "OTERH" booking-state])]))])
+                  "Tilbake kl" :end)
+     #_(fields/button #(set-values {:end-time (-> (t'/>> (t'/time) (t'/new-duration 1 :hours))
+                                                  (t'/truncate :hours))}) nil "Snarest")
+     #_(fields/button #(set-values {:end-time (t'/new-time 17 0)}) nil "17:")
+     #_(fields/button #(set-values {:end-time (t'/new-time 19 0)}) nil "19:")]]])
 
 (comment
   ;todo shortcut for this!
@@ -514,98 +540,91 @@
     (some #{p} [:precedes :meets])))
 
 (defn my-booking-list [{:keys [uid today data]}]
-  (let [my-data (filter (partial belong-to-me uid) data)]
-    [:div
+  [:div "my-booking-list"]
+  #_(let [my-data (filter (partial belong-to-me uid) data)]
+      (r/with-let [show-all (r/atom false)
+                   edit (r/atom false)
+                   markings (r/atom {})]
+        (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
+              c (count selected-keys)
+              my-data (filter (partial belong-to-me uid) data)
+              data (cond->> (->> my-data
+                                 (filter (partial after-and-including today))
+                                 (sort-by :date <))
+                            (not @show-all) (take 3))]
+          [:<>
+           (into [:div.space-y-px.shadow]
+                 (map (fn [e]
+                        (let [idx (:id e)]
+                          (booking-list-item
+                            {:today        today
+                             :hide-name?   true
+                             :on-click     (fn [e]
+                                             (swap! markings update idx (fnil not false))
+                                             (.stopPropagation e))
+                             :insert-front (when @edit
+                                             [:div.flex.items-center.px-2.bg-gray-400
+                                              [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
+                                                                :handle-change #(swap! markings update idx (fnil not false))}
+                                               "" nil]])} e)))
+                      (reverse data)))
 
-     #_[:div.flex.justify-end.p-4
-        {:class ["dark:bg-gray-700" "bg-gray-300"]}
-        [:button.btn.btn-free.btn-cta {:on-click #(state/send :e.book-now)} "Ny booking"]]
-     (r/with-let [show-all (r/atom false)
-                  edit (r/atom false)
-                  markings (r/atom {})]
-       (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
-             c (count selected-keys)
-             my-data (filter (partial belong-to-me uid) data)
-             data (cond->> (->> my-data
-                                (filter (partial after-and-including today))
-                                (sort-by :date <))
-                           (not @show-all) (take 3))]
-         [:<>
-          (into [:div.space-y-px.shadow]
-                (map (fn [e]
-                       (let [idx (:id e)]
-                         (booking-list-item
-                           {:today        today
-                            :hide-name?   true
-                            :on-click     (fn [e]
-                                            (swap! markings update idx (fnil not false))
-                                            (.stopPropagation e))
-                            :insert-front (when @edit
-                                            [:div.flex.items-center.px-2.bg-gray-400
-                                             [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
-                                                               :handle-change #(swap! markings update idx (fnil not false))}
-                                              "" nil]])} e)))
-                     (reverse data)))
+           [:div.flex.justify-between.py-4.px-2.bg-gray-400.sticky.bottom-0
+            [:div.gap-2.flex
+             [:button.btn-small.btn-free {:on-click #(swap! edit not)} (if @edit "Ferdig" "Endre")]
+             (when @edit
+               [:button.btn-small.btn-free {:on-click #(reset! markings (reduce (fn [a e] (assoc a e true)) {} (map :id data)))} "Merk alt"])
+             (when @edit
+               [:button.btn-small.btn-free {:disabled (zero? c)
+                                            :on-click #(reset! markings {})} "Merk ingen"])
+             (if @edit
+               (let []
+                 [:button.btn-small.btn-danger
+                  {:disabled (zero? c)
+                   :on-click #(do
+                                (booking.database/delete selected-keys)
+                                (reset! markings {}))}
+                  (str "Slett " (when (pos? c) c))])
+               [:div])]
+            (when-not @show-all
+              [:button.btn-small.btn-free {:on-click #(reset! show-all true)} "Vis alle"])]]))))
 
-          [:div.flex.justify-between.py-4.px-2.bg-gray-400.sticky.bottom-0
-           [:div.gap-2.flex
-            [:button.btn-small.btn-free {:on-click #(swap! edit not)} (if @edit "Ferdig" "Endre")]
-            (when @edit
-              [:button.btn-small.btn-free {:on-click #(reset! markings (reduce (fn [a e] (assoc a e true)) {} (map :id data)))} "Merk alt"])
-            (when @edit
-              [:button.btn-small.btn-free {:disabled (zero? c)
-                                           :on-click #(reset! markings {})} "Merk ingen"])
-            (if @edit
-              (let []
-                [:button.btn-small.btn-danger
-                 {:disabled (zero? c)
-                  :on-click #(do
-                               (booking.database/delete selected-keys)
-                               (reset! markings {}))}
-                 (str "Slett " (when (pos? c) c))])
-              [:div])]
-           (when-not @show-all
-             [:button.btn-small.btn-free {:on-click #(reset! show-all true)} "Vis alle"])]]))
+(defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
+  (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
+    [fork/form {#_#_:initial-values {:start       (t/at (t/date "2022-01-10") (t/time "08:00"))
+                                     :end         (t/at (t/date "2022-01-10") (t/time "18:00"))
+                                     :sleepover   true
+                                     :description "Ugh"}
+                :validation        booking-validation
+                :form-id           :booking-form
+                :state             my-state
+                :prevent-default?  true
+                :clean-on-unmount? true
+                :keywordize-keys   true
+                :on-submit         #(on-submit (assoc-in % [:values :uid] uid))}
+     (fn [{:keys [form-id handle-submit] :as props}]
 
-     (r/with-let [show-history (r/atom true)
-                  edit (r/atom true)
-                  show-all (r/atom false)
-                  markings (r/atom {})]
+       [:form.space-y-4
+        {:id        form-id
+         :on-submit handle-submit}
+        [navigation booking-state]
 
-       (let [data (cond->> (->> my-data
-                                (filter (partial before today))
-                                (sort-by :date >))
-                           (not @show-all) (take 5))]
-         [:div
-          [:div.py-4.flex.justify-end
-           [:button.btn.btn-free {:on-click #(do
-                                               (swap! show-history not)
-                                               (if @show-history (reset! show-all false)))} (if @show-history "Skjul historikk" "Vis historikk")]]
-          (if @show-history
-            [:div
-             (into [:div.space-y-px.shadow]
-                   (map (fn [e]
-                          (let [idx (:id e)]
-                            (booking-list-item
-                              {:today        today
-                               :hide-name?   true
-                               :on-click     #(swap! markings update idx not)
-                               :insert-front (when @edit
-                                               [:div.flex.items-center.px-2.bg-gray-400
-                                                [fields/checkbox {:values        #(get @markings idx)
-                                                                  :handle-change #(swap! markings update idx not)} "" :vis-eldre]])}
-                              e)))
-                        data))
-             [:div.flex.justify-between.px-2.py-4.bg-gray-400.sticky.bottom-0
-              [:div.flex.gap-2
-               [:button.btn-small.btn-free {:on-click #(swap! edit not)} (if @edit "Ferdig" "Rediger")]
-               (if @edit
-                 (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
-                       c (count selected-keys)]
-                   [:button.btn-small.btn-danger
-                    {:disabled (zero? c)
-                     :on-click #(booking.database/delete selected-keys)}
-                    (str "Slett " (when (pos? c) c))])
-                 [:div])]
-              (when-not @show-all
-                [:button.btn-small.btn-free {:on-click #(reset! show-all true)} "Vis alle"])]])]))]))
+        (rs/match-state booking-state
+          [:s.booking :s.boat-picker]
+          (boat-picker main-m props)
+
+          [:s.booking :s.confirm]
+          [confirmation
+           props
+           {:boat-db  boat-db
+            :selected selected
+            :state    my-state}]
+
+          [:div "?"])
+
+        (rs/match-state booking-state
+          [:s.booking :s.boat-picker]
+          [:div.flex.justify-between
+           [:div]
+           (button-submit #(state/send :e.confirm-booking) "Bekreft")]
+          [:div "?"])])]))
