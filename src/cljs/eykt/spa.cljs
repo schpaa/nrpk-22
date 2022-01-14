@@ -29,19 +29,17 @@
 
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
-(defn tab [s & m]
+(defn tab [{bottom? :bottom? locked? :locked? s :selected} & m]
   [:div.flex.gap-1.mx-1x
    (for [[page title] m]
      [:button.btn.flex-grow
-      {:on-click #(rf/dispatch [:app/navigate-to [page]])
-       :class    (if (= s page) :btn-tab :btn-tab-inactive)} title])])
-
-(defn tab-b [s & m]
-  [:div.flex.gap-1.mx-1x
-   (for [[page title] m]
-     [:button.btn.flex-grow
-      {:on-click #(rf/dispatch [:app/navigate-to [page]])
-       :class    (if (= s page) :btn-tab-b :btn-tab-inactive-b)} title])])
+      (conj
+        (if bottom?
+          {:class (if (= s page) :btn-tab-b :btn-tab-inactive-b)}
+          {:class (if (= s page) :btn-tab :btn-tab-inactive)})
+        (when-not locked?
+          {:on-click #(rf/dispatch [:app/navigate-to [page]])}))
+      title])])
 
 (defn home []
   (let [*st-all (rf/subscribe [::rs/state :main-fsm])
@@ -56,7 +54,7 @@
          [:h2 "16:00 --> 21:00"]
 
          (booking.views/pick-list
-           {:selected (r/atom #{501 502 403 401 201})
+           {:selected (r/atom #{501})
             :boat-db  (booking.database/boat-db)
             :day      1
             :slot     (tick.alpha.interval/bounds
@@ -64,35 +62,57 @@
                         (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
             :on-click #(js/alert "!")})]
 
-        (tab-b @(rf/subscribe [:app/current-page])
+        (tab {:bottom?  true
+              :selected @(rf/subscribe [:app/current-page])}
              [:r.last-booking "Siste Booking"]
              [:r.new-booking "Ny Booking"])]
 
        (tab @(rf/subscribe [:app/current-page])
             [:r.new-booking "Ny Booking"]
-            [:r.common "Mine Bookinger"])
+            [:r.common "Mine Bookinger"])])))
 
-       #_[:div.bg-gray-300.p-4
-          [k/case-route (comp :name :data)
-           :r.common
-           [booking.views/my-booking-list
-            {:data  (booking.database/read)
-             :today (t/new-date 2022 1 14)
-             :uid   (:uid @user-auth)}]
+;region todo: extract these higher-order-components
 
-           :r.new-booking
-           [booking.views/booking-form
-            {:boat-db       (booking.database/boat-db)
-             :selected      (r/atom #{})
-             :uid           (:uid @user-auth)
-             :on-submit     #(state/send :e.confirm-booking %)
-             :cancel        #(state/send :e.cancel-booking)
-             :my-state      schpaa.components.views/my-state
-             :booking-data' (sort-by :date > (booking.database/read))}]
+(defn new-booking []
+  (let [user-auth (rf/subscribe [::db/user-auth])]
+    [booking.views/booking-form
+     {:boat-db       (booking.database/boat-db)
+      :selected      (r/atom #{501})
+      :uid           (:uid @user-auth)
+      :on-submit     #(state/send :e.confirm-booking %)
+      :cancel        #(state/send :e.cancel-booking)
+      :my-state      schpaa.components.views/my-state
+      :booking-data' (sort-by :date > (booking.database/read))}]))
 
+(defn last-active-booking []
+  [views/rounded-view {:tab 1}
+   [:h2 "Søndag 3 August"]
+   [:h2 "16:00 --> 21:00"]
 
+   (booking.views/pick-list
+     {:selected (r/atom #{501})
+      :boat-db  (booking.database/boat-db)
+      :day      1
+      :slot     (tick.alpha.interval/bounds
+                  (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
+                  (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
+      :on-click #(js/alert "!")})
+   [:div.flex.justify-end
+    [:button.btn.btn-danger "Avlys booking"]]])
 
-           [:div]]]])))
+(defn all-active-bookings []
+  (let [user-auth (rf/subscribe [::db/user-auth])]
+    [:div
+     #_[views/rounded-view
+        {:info 1}
+        [:div "Click on a line to create a new booking at the same date and time"]
+        [:div "You will edit the booking if it belongs to you."]]
+     [booking.views/booking-list
+      {:data  (booking.database/read)
+       :today (t/new-date 2022 1 4)
+       :uid   (:uid @user-auth)}]]))
+
+;endregion
 
 (defn rounded-box []
   (let [route (rf/subscribe [:app/current-page])
@@ -124,30 +144,49 @@
 
            [:div "other " @route]]]]))))
 
+(defn front []
+  (let [my-latest-booking {}]
+    [:div.space-y-8
+     (if (nil? my-latest-booking)
+       [:<>
+        (tab {:locked?  true
+              :selected :r.new-booking}
+             [:r.common "Min Siste Booking"]
+             [:r.all "Alle"]
+             [:r.new-booking "Ny Booking"])
+        [new-booking]]
+       [:div
+        (tab {:selected @(rf/subscribe [:app/current-page])}
+             [:r.common "Min Siste Booking"]
+             [:r.all "Alle"]
+             [:r.new-booking "Ny Booking"])
+        [k/case-route (comp :name :data)
+         :r.new-booking
+         [views/rounded-view {} [new-booking]]
+         :r.all
+         [all-active-bookings]
+         :r.common
+         [last-active-booking]]])
+     #_[all-active-bookings]]))
+
 (def route-table
-  {:r.init        (fn [_]
-                    [:div "INIT"])
-   :r.my-bookings (fn [_]
-                    [home])
-   :r.new-booking (fn [_]
-                    [home])
-   :r.last-booking (fn [_]
-                     [home])
-   :r.user        (fn [_]
-                    [rounded-box])
-   :r.content     (fn [_]
-                    [:h2 "Oversikt"])
-   :r.boatlist    (fn [_]
-                    [home])
-   :r.common      (fn [_]
-                    [home])
-
-   :r.common-old  (fn [_]
-                    [:div.p-3 (eykt.content.pages/new-designed-content {})])
-
-   :r.back        (fn [_]
-                    [:div.space-y-4
-                     [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
+  {:r.init         (fn [_]
+                     [:div "INIT"])
+   :r.my-bookings  home
+   :r.common       front
+   :r.new-booking  front
+   :r.all          front
+   :r.last-booking home
+   :r.user         (fn [_]
+                     [rounded-box])
+   :r.content      (fn [_]
+                     [:h2 "Oversikt"])
+   :r.boatlist     home
+   :r.common-old   (fn [_]
+                     [:div.p-3 (eykt.content.pages/new-designed-content {})])
+   :r.back         (fn [_]
+                     [:div.space-y-4
+                      [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
 
 ;region events and subs
 

@@ -4,17 +4,20 @@
             [times.api :as ta]
             [tick.core :as t']
             [tick.core :as t]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [schpaa.debug :as l]))
 
 (def path ["booking"])
 
-(defn write [{:keys [uid value]}]
+(defn write [{:keys [uid value] :as m}]
   (let [id (.-key (db/database-push {:path  path
                                      :value (assoc value
                                               :uid uid
                                               :version 2
                                               :timestamp (str (t'/instant)))}))]
     ;intent Perform a backup to the users doc
+
+    (js/alert (l/ppr m))
     (db/firestore-set {:path (conj path uid "trans" id) :value value})
     id))
 
@@ -282,7 +285,8 @@
             (filter (comp #(pos? (compare % "20210921T200000")) :checkout val))
             (map val))
           @(db/on-value-reaction {:path ["booking"]}))))
-;-MmspM7AnhWGdp8kw8BK
+
+
 (defn delete [ks]
   (doseq [k ks]
     (let [path (conj path (name k))]
@@ -302,5 +306,13 @@
         :brand "Levi's"}
    502 {:text  "c"
         :brand "Levi's"}
-   503 {:text  "c"
+   603 {:text  "c"
+        :brand "Levi's"}
+   703 {:text  "c"
+        :brand "Levi's"}
+   803 {:text  "c"
+        :brand "Levi's"}
+   903 {:text  "c"
+        :brand "Levi's"}
+   999 {:text  "c"
         :brand "Levi's"}})

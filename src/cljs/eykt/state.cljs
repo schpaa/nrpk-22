@@ -44,34 +44,38 @@
                                                                        data]))
                                                      st))]
                                  :target  [:. :s.initial]}
-             :e.confirm-booking {:target  [:> :booking :s.confirm-booking]
+             :e.confirm-booking {:target  [:> :booking :s.booking :s.boat-picker]
                                  :actions [(assign (fn [st {:keys [data] :as _event}]
-                                                     (js/alert (l/ppr data))
-                                                     (let [prepare-data (fn [values]
-                                                                          (-> values
-                                                                              (update :date str)
-                                                                              (update :start-time str)
-                                                                              (update :end-time str)
-                                                                              ;fixme: deref before send
-                                                                              (update :selected deref)))
-                                                           v (-> data :values)
-                                                           uid (-> v :uid)
-                                                           values (dissoc (prepare-data v) :uid)]
-                                                       ;(tap> [uid values])
-                                                       (booking.database/write {:uid   uid
-                                                                                :value values})
-                                                       ;(db/firestore-set {:path ["booking2" uid] :value values})
-                                                       ;(db/database-set {:path ["booking2" uid] :value values})
-                                                       (assoc st :last-booking values))))]}}
+                                                     (booking.database/write data #_{:uid   uid
+                                                                                     :value values})
+                                                     (assoc st :last-booking data)
+                                                     #_(let [prepare-data (fn [values]
+                                                                            (-> values
+                                                                                (update :date str)
+                                                                                (update :start-time str)
+                                                                                (update :end-time str)
+                                                                                ;fixme: deref before send
+                                                                                (update :selected deref)))
+                                                             v (-> data :values)
+                                                             uid (-> v :uid)
+                                                             values (dissoc (prepare-data v) :uid)]
+                                                         ;(tap> [uid values])
+                                                         (booking.database/write {:uid   uid
+                                                                                  :value values})
+                                                         ;(db/firestore-set {:path ["booking2" uid] :value values})
+                                                         ;(db/database-set {:path ["booking2" uid] :value values})
+                                                         (assoc st :last-booking values))))
+                                           (fn [_ _]
+                                             (rf/dispatch [:app/navigate-to [:r.common]]))]}}
    :states  {:s.initial         {}
              :s.booking         {:initial :s.boat-picker
                                  :on      {:e.edit-basics {:target [:> :booking :s.booking :s.initial]}
                                            :e.pick-boat   {:target [:> :booking :s.booking :s.boat-picker]}
-                                           :e.confirm     {:target [:> :booking :s.booking :s.confirm]}}
+                                           #_#_:e.confirm     {:target [:> :booking :s.booking :s.confirm]}}
                                  :states  {:s.edit-basics {}
                                            :s.initial     {}
                                            :s.boat-picker {}
-                                           :s.confirm     {}}}
+                                           #_#_:s.confirm     {}}}
              :s.confirm-booking {}}})
 
 (def main
