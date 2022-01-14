@@ -56,7 +56,7 @@
      :fg  ["dark:text-black" "text-sky-600"]
      :fg- ["dark:text-white"]}))
 
-(defn- booking-list-item [{:keys [today hide-name? insert-front insert-top-fn on-click]
+(defn- booking-list-item [{:keys [today hide-name? insert-front insert-top-fn on-click insert-behind]
                            :or   {today (t/new-date)}} item]
   (let [{:keys [navn book-for-andre sleepover description selected start end]} item
         relation' (relation start today)
@@ -102,17 +102,23 @@
               (str (t/time (t/date-time end)))]
              [:div (str (t/time (t/date-time end)))])
            (catch js/Error e (.-message e)))
-         [:div
+
+         [:div.w-full.text-right.font-bold (first selected)]
+
+         [:div]
+         [:div]
+
+         [:div.col-span-4.text-right.debug
 
           (when-not false #_(and hide-name? (not book-for-andre))
             [:div.flex.w-full.flex-wrap.gap-x-2.items-center.justify-end
              [:div.growx.line-clamp-2x.w-64x.flex.justify-endx
               {:class (:fg- color-map)}
               navn]])]
-         [:div.w-full.text-right (first selected)]
 
-         [:div]
-         [:div.col-span-4.text-sm {:class (:fg- color-map)} description]]]])))
+         [:div][:div]
+         [:div.col-span-4.text-sm {:class (:fg- color-map)} description]]
+        (when insert-behind insert-behind)]])))
 
 ;region boat-picking
 
@@ -159,7 +165,8 @@
 (defn has-selection [id x]
   (= id (first (:selected x))))
 
-(defn list-line [{:keys [offset slot id on-click remove? data]}]
+(defn list-line [{:keys [offset slot id on-click remove? data insert-front graph?
+                         insert-behind] :or {graph? true}}]
   (let [window {:width  (* 24 5)
                 :offset (* 24 offset)}
         offset (* 24 (dec offset))
@@ -169,40 +176,47 @@
         booking-db (filter (partial has-selection id)
                            (booking.database/read))]
     (let [{:keys [text brand location warning?]} data]
-      [:div.flex.flex-col
-       {:class    (concat
-                    [:first:rounded-t
-                     :shadow
-                     :last:rounded-b]
-                    (if remove?
-                      ["bg-amber-300/20"
-                       "hover:bg-amber-300/50"]
-                      ["bg-pink-300/20"
-                       "hover:bg-pink-300/50"]))
-        :on-click #(on-click id)}
-       [:div.grid.gap-2.p-2.w-full
-        {:style {:grid-template-columns "3rem 2rem 1fr min-content"
-                 :grid-auto-rows        "auto"}}
-        [:div.font-bold.text-xl.place-self-center id]
-        [:div.self-center (count booking-db)]
-        [:div.text-xl.self-center brand]
-        (if remove? [icon/small :cross-out])
-        [:div.place-self-center.text-sm location]
-        [:div]
-        [:div.col-span-2.self-center.text-sm text]
-        [:div.col-span-2]
-        [:div.col-span-1
-         (when booking-db
-           (draw-graph
-             {:window window
-              :list   (map (fn [{:keys [start end]}]
-                             {:r?
-                              (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
-                              :start (- (convert start) offset)
-                              :end   (- (convert end) offset)})
-                           booking-db)
-              :slot   slot'}))]
-        [:div.place-self-center [icon/small :circle-question-filled]]]]))) ;INTENT our desired timeslot, who is available in this slow?
+      [:div.flex
+       (when insert-front insert-front)
+       [:div.flex.flex-col.w-full
+        {:class    (concat
+                     [:shadow]
+
+                     (if remove?
+                       ["bg-amber-300/20"
+                        "hover:bg-amber-300/50"]
+                       ["bg-pink-400/20"
+                        "hover:bg-pink-300/50"]))
+         :on-click #(on-click id)}
+
+        [:div.grid.gap-2.p-1.w-full
+         {:style {:grid-template-columns "3rem 2rem 1fr min-content"
+                  :grid-auto-rows        "auto"}}
+         [:div.font-bold.text-xl.place-self-center id]
+         [:div.self-center (count booking-db)]
+         [:div.text-xl.self-center brand]
+         (if remove? [icon/small :cross-out])
+         [:div.place-self-center.text-sm location]
+         [:div]
+         [:div.col-span-2.self-center.text-sm text]
+         [:div.col-span-2]
+         (when graph?
+           [:<>
+            [:div.col-span-1
+             (when booking-db
+               (draw-graph
+                 {:window window
+                  :list   (map (fn [{:keys [start end]}]
+                                 {:r?
+                                  (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+                                  :start (- (convert start) offset)
+                                  :end   (- (convert end) offset)})
+                               booking-db)
+                  :slot   slot'}))]
+            [:div.place-self-center [icon/small :circle-question-filled]]])]]
+       (when insert-behind insert-behind)])))
+
+        ;INTENT our desired timeslot, who is available in this slow?
 
 (defn pick-list [{:keys [offset slot selected on-click boat-db]}]
   (if (seq @selected)
@@ -528,6 +542,10 @@
                          :on-click     (fn [e]
                                          (swap! markings update idx (fnil not false))
                                          (.stopPropagation e))
+                         :insert-behind [:div.w-16.flex.items-center.justify-center
+                                         {:class    ["hover:bg-gray-500" "bg-black" "text-amber-500"]
+                                          :on-click #(js/alert "!")}
+                                         [icon/touch :chevron-right]]
                          :insert-front (when @edit
                                          [:div.flex.items-center.px-2.bg-gray-400
                                           [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))

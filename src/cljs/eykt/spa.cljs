@@ -20,7 +20,9 @@
             [schpaa.darkmode]
             [booking.views]
             [user.views]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [schpaa.components.fields :as fields]
+            [schpaa.icon :as icon]))
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -112,6 +114,76 @@
        :today (t/new-date 2022 1 4)
        :uid   (:uid @user-auth)}]]))
 
+
+(defn general-footer
+  "a footer for all lists where editing of some sort makes sense"
+  [{:keys [edit-state markings c data]}]
+  [:div.flex.justify-between.py-4.px-2.sticky.bottom-0
+   {:class ["bg-black/20"]}
+   [:div.gap-2.flex
+    [:button.btn-small.btn-free {:on-click #(swap! edit-state not)} (if @edit-state "Ferdig" "Endre")]
+    (when @edit-state
+      [:button.btn-small.btn-free
+       {:on-click #(reset! markings (reduce (fn [a e] (assoc a e true)) {} (map key data)))}
+       "Merk alt"])
+    (when @edit-state
+      [:button.btn-small.btn-free
+       {:disabled (zero? c)
+        :on-click #(reset! markings {})}
+       "Merk ingen"])
+    (if @edit-state
+      (let []
+        [:button.btn-small.btn-danger
+         {:disabled (zero? c)
+          :on-click #(js/alert "!") #_#(do
+                                         (booking.database/delete selected-keys)
+                                         (reset! markings {}))}
+         (str "Operasjon " (when (pos? c) c))])
+      [:div])]
+   #_(when-not @show-all
+       [:button.btn-small.btn-free {:on-click #(reset! show-all true)} "Vis alle"])])
+
+(defn all-boats []
+  (r/with-let [data (booking.database/boat-db)
+               ;show-all (r/atom false)
+               edit (r/atom false)
+               markings (r/atom {})]
+    (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
+          c (count selected-keys)
+          offset  (booking.views/day-number-in-year (t/date-time))
+          #_#_slot    (tick.alpha.interval/bounds
+                        (t/date-time)
+                        (t/>> (t/date-time) (t/new-duration 3 :hours)))]
+      [:div.w-full
+
+       (into [:div {:class [:overflow-clip
+                            :space-y-px
+                            :first:rounded-t
+                            :last:rounded-b]}]
+             (map (fn [[id data]]
+                    (let [idx id]
+                      [booking.views/list-line
+                       {:graph?        false
+                        :id            id
+                        :on-click      #(swap! markings update idx (fnil not false))
+                        :data          data
+                        :insert-behind [:div.w-16.flex.items-center.justify-center
+                                        {:class    ["hover:bg-gray-500" "bg-black" "text-amber-500"]
+                                         :on-click #(js/alert "!")}
+                                        [icon/touch :chevron-right]]
+                        :insert-front  (when @edit
+                                         [:div.flex.items-center.px-2.bg-gray-400
+                                          [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
+                                                            :handle-change #(swap! markings update idx (fnil not false))}
+                                           "" nil]])}]))
+                  data))
+
+       [general-footer
+        {:data       data
+         :edit-state edit
+         :markings   markings
+         :c          c}]])))
+
 ;endregion
 
 (defn rounded-box []
@@ -152,13 +224,13 @@
         (tab {:locked?  true
               :selected :r.new-booking}
              [:r.common "Min Siste Booking"]
-             [:r.all "Alle"]
+             ;[:r.all "Alle"]
              [:r.new-booking "Ny Booking"])
         [new-booking]]
        [:div
         (tab {:selected @(rf/subscribe [:app/current-page])}
              [:r.common "Min Siste Booking"]
-             [:r.all "Alle"]
+             ;[:r.all "Alle"]
              [:r.new-booking "Ny Booking"])
         [k/case-route (comp :name :data)
          :r.new-booking
@@ -166,8 +238,10 @@
          :r.all
          [all-active-bookings]
          :r.common
-         [last-active-booking]]])
-     #_[all-active-bookings]]))
+         [:div.space-y-8
+          [last-active-booking]
+          [all-active-bookings]
+          [all-boats]]]])]))
 
 (def route-table
   {:r.init         (fn [_]

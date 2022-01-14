@@ -295,7 +295,8 @@
                            :value {:deleted true}}))))
 
 (defn boat-db []
-  {501 {:brand "Wildermoose"
+  {501 {:id 501
+        :brand "Wildermoose"
         :text  "Hunting peck"
         :warning? true
         :location "A3/4"}
