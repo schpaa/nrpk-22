@@ -22,7 +22,8 @@
             [user.views]
             [tick.core :as t]
             [schpaa.components.fields :as fields]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [eykt.hoc :as hoc]))
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -32,230 +33,110 @@
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
 (defn tab [{bottom? :bottom? locked? :locked? s :selected} & m]
-  [:div.flex.gap-1.mx-1x
+  [:div.flex.sticky.top-16.z-50.w-full
    (for [[page title] m]
-     [:button.btn.flex-grow
-      (conj
-        (if bottom?
-          {:class (if (= s page) :btn-tab-b :btn-tab-inactive-b)}
-          {:class (if (= s page) :btn-tab :btn-tab-inactive)})
-        (when-not locked?
-          {:on-click #(rf/dispatch [:app/navigate-to [page]])}))
-      title])])
+     [:button.btn.flex-grow.h-16.shadow-none
+      (conj {:class (concat ["w-1/3"]
+                            (conj
+                              (if bottom?
+                                (if (= s page) [:btn-tab-b] [:btn-tab-inactive-b])
+                                (if (= s page) [:btn-tab] [:btn-tab-inactive]))))}
+            (when-not locked?
+              {:on-click #(rf/dispatch [:app/navigate-to [page]])}))
+      [:h2 title]])])
 
 (defn home []
-  (let [*st-all (rf/subscribe [::rs/state :main-fsm])
-        route (rf/subscribe [:app/current-page])
-        user-auth (rf/subscribe [::db/user-auth])]
-    (fn []
-      [:div.space-y-4
+  (fn []
+    [:div.space-y-4
 
-       [:div
-        [views/rounded-view {:tab 1}
-         [:h2 "Søndag 3 August"]
-         [:h2 "16:00 --> 21:00"]
+     [:div
+      [views/rounded-view {:tab 1}
+       [:h2 "Søndag 3 August"]
+       [:h2 "16:00 --> 21:00"]
 
-         (booking.views/pick-list
-           {:selected (r/atom #{501})
-            :boat-db  (booking.database/boat-db)
-            :day      1
-            :slot     (tick.alpha.interval/bounds
-                        (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
-                        (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
-            :on-click #(js/alert "!")})]
+       (booking.views/pick-list
+         {:selected (r/atom #{501})
+          :boat-db  (booking.database/boat-db)
+          :day      1
+          :slot     (tick.alpha.interval/bounds
+                      (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
+                      (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
+          :on-click #(js/alert "!")})]
 
-        (tab {:bottom?  true
-              :selected @(rf/subscribe [:app/current-page])}
-             [:r.last-booking "Siste Booking"]
-             [:r.new-booking "Ny Booking"])]
+      (tab {:bottom?  true
+            :selected @(rf/subscribe [:app/current-page])}
+           [:r.last-booking "Siste Booking"]
+           [:r.new-booking "Ny Booking"])]
 
-       (tab @(rf/subscribe [:app/current-page])
-            [:r.new-booking "Ny Booking"]
-            [:r.common "Mine Bookinger"])])))
+     (tab @(rf/subscribe [:app/current-page])
+          [:r.new-booking "Ny Booking"]
+          [:r.common "Mine Bookinger"])]))
 
 ;region todo: extract these higher-order-components
 
-(defn new-booking []
-  (let [user-auth (rf/subscribe [::db/user-auth])]
-    [booking.views/booking-form
-     {:boat-db       (booking.database/boat-db)
-      :selected      (r/atom #{501})
-      :uid           (:uid @user-auth)
-      :on-submit     #(state/send :e.confirm-booking %)
-      :cancel        #(state/send :e.cancel-booking)
-      :my-state      schpaa.components.views/my-state
-      :booking-data' (sort-by :date > (booking.database/read))}]))
-
-(defn last-active-booking []
-  [views/rounded-view {:tab 1}
-   [:h2 "Søndag 3 August"]
-   [:h2 "16:00 --> 21:00"]
-
-   (booking.views/pick-list
-     {:selected (r/atom #{501})
-      :boat-db  (booking.database/boat-db)
-      :day      1
-      :slot     (tick.alpha.interval/bounds
-                  (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
-                  (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
-      :on-click #(js/alert "!")})
-   [:div.flex.justify-end
-    [:button.btn.btn-danger "Avlys booking"]]])
-
-(defn all-active-bookings []
-  (let [user-auth (rf/subscribe [::db/user-auth])]
-    [:div
-     #_[views/rounded-view
-        {:info 1}
-        [:div "Click on a line to create a new booking at the same date and time"]
-        [:div "You will edit the booking if it belongs to you."]]
-     [booking.views/booking-list
-      {:data  (booking.database/read)
-       :today (t/new-date 2022 1 4)
-       :uid   (:uid @user-auth)}]]))
-
-
-(defn general-footer
-  "a footer for all lists where editing of some sort makes sense"
-  [{:keys [edit-state markings c data]}]
-  [:div.flex.justify-between.py-4.px-2.sticky.bottom-0
-   {:class ["bg-black/20"]}
-   [:div.gap-2.flex
-    [:button.btn-small.btn-free {:on-click #(swap! edit-state not)} (if @edit-state "Ferdig" "Endre")]
-    (when @edit-state
-      [:button.btn-small.btn-free
-       {:on-click #(reset! markings (reduce (fn [a e] (assoc a e true)) {} (map key data)))}
-       "Merk alt"])
-    (when @edit-state
-      [:button.btn-small.btn-free
-       {:disabled (zero? c)
-        :on-click #(reset! markings {})}
-       "Merk ingen"])
-    (if @edit-state
-      (let []
-        [:button.btn-small.btn-danger
-         {:disabled (zero? c)
-          :on-click #(js/alert "!") #_#(do
-                                         (booking.database/delete selected-keys)
-                                         (reset! markings {}))}
-         (str "Operasjon " (when (pos? c) c))])
-      [:div])]
-   #_(when-not @show-all
-       [:button.btn-small.btn-free {:on-click #(reset! show-all true)} "Vis alle"])])
-
-(defn all-boats []
-  (r/with-let [data (booking.database/boat-db)
-               ;show-all (r/atom false)
-               edit (r/atom false)
-               markings (r/atom {})]
-    (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
-          c (count selected-keys)
-          offset  (booking.views/day-number-in-year (t/date-time))
-          #_#_slot    (tick.alpha.interval/bounds
-                        (t/date-time)
-                        (t/>> (t/date-time) (t/new-duration 3 :hours)))]
-      [:div.w-full
-
-       (into [:div {:class [:overflow-clip
-                            :space-y-px
-                            :first:rounded-t
-                            :last:rounded-b]}]
-             (map (fn [[id data]]
-                    (let [idx id]
-                      [booking.views/list-line
-                       {:graph?        false
-                        :id            id
-                        :on-click      #(swap! markings update idx (fnil not false))
-                        :data          data
-                        :insert-behind [:div.w-16.flex.items-center.justify-center
-                                        {:class    ["hover:bg-gray-500" "bg-black" "text-amber-500"]
-                                         :on-click #(js/alert "!")}
-                                        [icon/touch :chevron-right]]
-                        :insert-front  (when @edit
-                                         [:div.flex.items-center.px-2.bg-gray-400
-                                          [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
-                                                            :handle-change #(swap! markings update idx (fnil not false))}
-                                           "" nil]])}]))
-                  data))
-
-       [general-footer
-        {:data       data
-         :edit-state edit
-         :markings   markings
-         :c          c}]])))
-
 ;endregion
 
-(defn rounded-box []
+(defn user []
   (let [route (rf/subscribe [:app/current-page])
         user-auth (rf/subscribe [::db/user-auth])]
     (fn []
       (if-not @user-auth
-        [rounded-view {} [db.signin/login]]
-        [:div.space-y-4
-         [user.views/logout-form {:name (:display-name @user-auth)}]
+        [:div.p-4  [rounded-view {:float 1} [db.signin/login]]]
+        [:div.bg-gray-100.dark:bg-gray-800
+         [:div.p-4 [user.views/logout-form {:user-auth @user-auth
+                                            :name (:display-name @user-auth)}]]
 
          [:div
-          [:div.flex.gap-4
-           [:button.btn {:class    (when (= :r.user @route) [:btn-tab])
-                         :on-click #(rf/dispatch [:app/navigate-to [:r.user]])} "Mine opplysninger"]
-           [:button.btn {:class    (when (= :r.my-bookings @route) [:btn-tab])
-                         :on-click #(rf/dispatch [:app/navigate-to [:r.my-bookings]])} "Mine bookinger"]]
+          (tab {:selected @(rf/subscribe [:app/current-page])}
+               [:r.user "Om meg"]
+               [:r.logg "Logg"])
 
           [k/case-route (fn [route] (-> route :data :name))
            :r.user
            [:div.space-y-4
             [user.views/my-info]]
 
-           :r.my-bookings
-           [:div
-            ;[:h2 "Mine bookinger"]
-            [user.views/my-bookings
-             {:uid      (:uid @user-auth)
-              :bookings (booking.database/bookings-for (:uid @user-auth))}]]
+           :r.logg
+           [hoc/user-logg]
 
            [:div "other " @route]]]]))))
 
 (defn front []
-  (let [my-latest-booking {}]
-    [:div.space-y-8
-     (if (nil? my-latest-booking)
-       [:<>
-        (tab {:locked?  true
-              :selected :r.new-booking}
-             [:r.common "Min Siste Booking"]
-             ;[:r.all "Alle"]
-             [:r.new-booking "Ny Booking"])
-        [new-booking]]
-       [:div
-        (tab {:selected @(rf/subscribe [:app/current-page])}
-             [:r.common "Min Siste Booking"]
-             ;[:r.all "Alle"]
-             [:r.new-booking "Ny Booking"])
-        [k/case-route (comp :name :data)
-         :r.new-booking
-         [views/rounded-view {} [new-booking]]
-         :r.all
-         [all-active-bookings]
-         :r.common
-         [:div.space-y-8
-          [last-active-booking]
-          [all-active-bookings]
-          [all-boats]]]])]))
+  (let [user-auth (rf/subscribe [::db/user-auth])]
+    [:div
+     (tab {:selected @(rf/subscribe [:app/current-page])}
+          [:r.new-booking "Ny"]
+          [:r.common "Siste"]
+          [:r.boatlist "Båtliste"])
+     [k/case-route (comp :name :data)
+      :r.new-booking
+      (if-not @user-auth
+        [views/rounded-view {}
+         [:div.p-4.space-y-4
+          [:h2 "Er du ny her?"]
+          [:a {:href (k/path-for [:r.user])} "Logg inn først"]]]
+        [hoc/new-booking])
+
+      :r.common
+      [:div.space-y-8
+       {:class ["bg-gray-200"]}
+       (when @user-auth [views/rounded-view {} [hoc/last-active-booking]])
+       [hoc/all-active-bookings]]
+
+      :r.boatlist
+      [hoc/all-boats]]]))
 
 (def route-table
   {:r.init         (fn [_]
                      [:div "INIT"])
-   :r.my-bookings  home
    :r.common       front
    :r.new-booking  front
-   :r.all          front
-   :r.last-booking home
-   :r.user         (fn [_]
-                     [rounded-box])
+   :r.boatlist     front
+   ;:r.last-booking home
+   :r.user         user
+   :r.logg         user
    :r.content      (fn [_]
                      [:h2 "Oversikt"])
-   :r.boatlist     home
    :r.common-old   (fn [_]
                      [:div.p-3 (eykt.content.pages/new-designed-content {})])
    :r.back         (fn [_]

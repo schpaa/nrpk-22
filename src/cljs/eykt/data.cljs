@@ -3,16 +3,15 @@
             [cljs.reader :refer [read-string]]))
 
 (def routes
-  [["/" {:name :r.common :header "Forsiden"}]
-   ["/batliste" {:name :r.boatlist :header "Båtliste"}]
-   ["/alle" {:name :r.all :header "Alle"}]
+  [["/" {:name :r.common :header "Siste bookinger"}]
+   ["/batlist" {:name :r.boatlist :header "Oversikt over båter"}]
    ["/init" {:name :r.init :header "Init"}]
    ["/innhold" {:name :r.content :header "Innhold"}]
-   ["/min-side" {:name :r.user :header "Min side"}]
-   ["/mine" {:name :r.my-bookings :header "Mine bookinger"}]
    ["/ny" {:name :r.new-booking :header "Ny booking"}]
    ["/siste" {:name :r.last-booking :header "Siste booking"}]
-   ["/baksiden" {:name :r.back :header "Baksiden"}]])
+   ["/baksiden" {:name :r.back :header "Baksiden"}]
+   ["/om-meg" {:name :r.user :header "Om meg"}]
+   ["/logg" {:name :r.logg :header "Min logg"}]])
 
 (def screen-breakpoints
   {:breakpoints [:mobile 640 :tablet 992 :small-monitor 1200 :large-monitor],

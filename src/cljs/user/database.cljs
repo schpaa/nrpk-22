@@ -2,7 +2,8 @@
   (:require [db.core :as db]
             [tick.core :as t']
             [schpaa.debug :as l]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [re-frame.core :as rf]))
 
 (defn write [{:keys [uid values] :as m}]
   (js/alert (l/ppr m))
@@ -33,3 +34,14 @@
     (db/database-update {:path ["users" uid] :value values})
     (tap> values)
     st))
+
+(defn lookup-userinfo [uid]
+  (if-some [_ @(rf/subscribe [::db/user-auth])]
+    @(db/on-value-reaction {:path ["users" uid]})
+    nil))
+
+(defn lookup-username [uid]
+  ;(tap> ["U"])
+  (if-some [_ @(rf/subscribe [::db/user-auth])]
+    (:navn @(db/on-value-reaction {:path ["users" uid]}))
+    nil))

@@ -22,33 +22,70 @@
         min-width: 6rem;
     }
     .btn-small {
-        @apply px-2 py-1 text-xs active:shadow disabled:cursor-default cursor-pointer truncate border-2 border-transparent;
+        @apply px-2 py-1 text-xs active:shadow disabled:cursor-default  truncate
+        rounded-sm
+        border-2
+        border-black
+        cursor-pointer
+        dark:bg-gray-700
+        dark:text-gray-300;
         min-width: 4rem;
     }
 
-    .btn-narrow {
-        @apply px-2 h-10 active:shadow disabled:cursor-default cursor-pointer truncate;
+    .btn-menu {
+        @apply border-alt border-2 dark:bg-black;
+    }
 
+    .btn-narrow {
+        @apply px-2 h-10 active:shadow disabled:cursor-default cursor-pointer truncate
     }
 
     .btn-free {
-        @apply bg-white disabled:text-gray-300 active:bg-gray-200 rounded
+        @apply bg-gray-200
+        disabled:bg-gray-50
+        disabled:text-gray-200
+        active:bg-gray-50
+        hover:bg-gray-100
+        rounded;
     }
 
     .btn-tab {
-        @apply bg-gray-100 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+        @apply
+        dark:bg-gray-800
+        active:shadow-none
+        bg-gray-100
+        text-center
+        border-b-4 border-t-0 border-x-0 border-alt;
     }
 
     .btn-tab-inactive {
+        @apply dark:bg-gray-800
+
+        bg-gray-100 text-black border-b-4 border-t-0 border-x-0 border-transparent text-center;
+    }
+
+    .btn-tab h2 {
+        @apply dark:text-alt text-black;
+    }
+
+    .btn-tab-inactive h2 {
+        @apply text-black dark:text-gray-500;
+    }
+
+    .btn-tab- {
+        @apply bg-gray-100 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-700 dark:text-white
+    }
+
+    .btn-tab-inactive- {
         @apply bg-gray-300/50 text-gray-400/50 disabled:text-gray-300 active:bg-gray-200 rounded-t dark:bg-gray-800 dark:text-gray-400
     }
 
     .btn-tab-b {
-        @apply bg-gray-100 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-700 dark:text-white
+        /* @apply bg-gray-100 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-700 dark:text-white */
     }
 
     .btn-tab-inactive-b {
-        @apply bg-gray-300/50 text-gray-400/50 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-800 dark:text-gray-400
+        /* @apply bg-gray-300/50 text-gray-400/50 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-800 dark:text-gray-400 */
     }
 
     .btn-danger {
@@ -56,7 +93,18 @@
     }
 
     .btn-cta {
-        @apply disabled:text-black/25 bg-white dark:bg-black dark:text-white text-black border-alt border-2
+        @apply
+        disabled:text-black/25
+        disabled:border-alt/25
+        disabled:bg-alt/20
+        bg-alt/80
+        hover:bg-alt
+        hover:disabled:bg-transparent
+        dark:bg-black
+        dark:text-white
+        text-white
+        rounded-sm
+        border-alt border-2;
     }
 
     label {
@@ -64,16 +112,22 @@
     }
 
     h2 {
-        @apply text-lg font-light text-black/50 dark:text-white/50
+        @apply text-lg font-light
     }
 
+    .panel {
+        @apply dark:bg-gray-900
+               bg-white
+               dark:text-gray-500;
+    }
 }
 
 @layer utilities {
     .field-w-max {
         max-width: 15rem;
     }
-    .debug {
+    .-debug {
+        @apply bg-rose-400/20;
         outline: #f448 solid 2px;
     }
 
