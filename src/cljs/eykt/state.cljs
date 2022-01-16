@@ -3,15 +3,28 @@
             [re-statecharts.core :as rs]
             [statecharts.core :refer [assign]]
             [schpaa.debug :as l]
-            [db.core :as db]
             [eykt.msg :as msg]
             [booking.database]
             [user.database]))
 
-(def fsm [::rs/transition :main-fsm])
-
 (defn send [& event]
-  (rf/dispatch (apply conj fsm event)))
+  (rf/dispatch (apply conj [::rs/transition :main-fsm] event)))
+
+(defn confirm-registry []
+  (apply send
+         (msg/confirm-action
+           {:primary "Ok"
+            :title   "Bekreftet"
+            :text    [:div.leading-normal
+                      [:p "Registreringen er fullført. Velkommen!"]]})))
+
+(defn confirm-booking []
+  (apply send
+         (msg/confirm-action
+           {:primary "Ok"
+            :title   "Bekreftet"
+            :text    [:div.leading-normal
+                      [:p "Bookingen er registrert. God tur!"]]})))
 
 (def modal-machine
   {:initial :s.hidden
@@ -54,14 +67,8 @@
              :e.store           {:target  [:> :user :s.store]
                                  :actions [(fn [st {:keys [data] :as _event}]
                                              (user.database/write (:values data))
-                                             #_(let [values (-> data :values)
-                                                     uid (-> values :uid)
-                                                     values (dissoc values :uid)]
-                                                 (db/firestore-set {:path ["users2" uid] :value values})
-                                                 (db/database-update {:path ["users" uid] :value values})
-                                                 (tap> values)
-                                                 st))]}}
-
+                                             (confirm-registry)
+                                             st)]}}
    :states  {:s.initial {}
              :s.editing {}
              :s.store   {:after [{:delay  1000
@@ -90,12 +97,7 @@
                                                                      (booking.database/write data)
                                                                      (assoc st :last-booking data)))
                                                            (fn [_ _]
-                                                             (send :e.show
-                                                                   (msg/confirm-action
-                                                                     {:primary "Ok"
-                                                                      :title   "Bekreftet"
-                                                                      :text    [:div.leading-normal
-                                                                                [:p "Bookingen er registrert. God tur!"]]})))
+                                                             (confirm-booking))
                                                            (fn [_ _]
                                                              (rf/dispatch [:app/navigate-to [:r.common]]))]}}
                          :states  {:s.boat-picker {:on {:e.confirm [:> :booking :s.booking :s.confirm]}}

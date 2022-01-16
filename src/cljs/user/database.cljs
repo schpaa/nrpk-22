@@ -6,7 +6,6 @@
             [re-frame.core :as rf]))
 
 (defn write [{:keys [uid values] :as m}]
-  (js/alert (l/ppr m))
   (let [tm (str (t/instant))
         uid (-> m :uid)
         values (-> m
@@ -15,7 +14,6 @@
                           :version 2))]
     (db/firestore-set {:path ["users3" uid "log" tm] :value values})
     (db/database-update {:path ["users" uid] :value values}))
-
   #_(let [id (.-key (db/database-push {:path  path
                                        :value (assoc value
                                                 :uid uid
