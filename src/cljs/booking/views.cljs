@@ -14,7 +14,8 @@
             [fork.re-frame :as fork]
             [times.api :refer [format]]
             [schpaa.icon :as icon]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [logg.database]))
 
 (rf/reg-sub :app/accepted-user? (fn [db] false))
 
@@ -160,7 +161,7 @@
 (defn has-selection [id x]
   (= id (first (:selected x))))
 
-(defn list-line [{:keys [offset slot id on-click remove? data insert-before graph?
+(defn list-line [{:keys [offset slot id on-click remove? data insert-before graph? details? compact?
                          insert-after] :or {graph? true}}]
   (let [window {:width  (* 24 5)
                 :offset (* 24 offset)}
@@ -170,80 +171,109 @@
                  :to   (- (convert (t/end slot)) offset)})
         booking-db (filter (partial has-selection id)
                            (booking.database/read))]
-    (let [{:keys [text brand location warning?]} data]
+    (let [{:keys [navn description location number
+                  slot expert kind]} data]
       [:div.flex
        (when insert-before insert-before)
        [:div.flex.flex-col.w-full
         {:class    (concat
                      [:shadow]
-
                      (if remove?
-                       ["bg-amber-300/20"
+                       ["bg-amber-300"
                         "hover:bg-amber-300/50"]
-                       ["bg-pink-400/20"
+                       ["bg-gray-400"
                         "hover:bg-pink-300/50"]))
          :on-click #(on-click id)}
 
-        [:div.grid.gap-2.p-1.w-full
-         {:style {:grid-template-columns "3rem 2rem 1fr min-content"
-                  :grid-auto-rows        "auto"}}
-         [:div.font-bold.text-xl.place-self-center id]
-         [:div.self-center (count booking-db)]
-         [:div.text-xl.self-center brand]
-         (if remove? [icon/small :cross-out])
-         [:div.place-self-center.text-sm location]
-         [:div]
-         [:div.col-span-2.self-center.text-sm text]
-         [:div.col-span-2]
-         (when graph?
-           [:<>
-            [:div.col-span-1
-             (when booking-db
-               (draw-graph
-                 {:window window
-                  :list   (map (fn [{:keys [start end]}]
-                                 {:r?
-                                  (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
-                                  :start (- (convert start) offset)
-                                  :end   (- (convert end) offset)})
-                               booking-db)
-                  :slot   slot'}))]
-            [:div.place-self-center [icon/small :circle-question-filled]]])]]
+        (if compact?
+          [:div.grid.gap-1.p-1.w-full
+           {:style {:grid-template-columns "3rem 8rem 1fr"
+                    :grid-auto-rows        "auto"}}
+           [:div.font-bold.text-xl.place-self-center number]
+           [:div.text-xl.self-center.truncate navn]
+           (when booking-db
+             (draw-graph
+               {:window window
+                :list   (map (fn [{:keys [start end]}]
+                               {:r?
+                                (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+                                :start (- (convert start) offset)
+                                :end   (- (convert end) offset)})
+                             booking-db)
+                :slot   slot'}))]
+          [:div.grid.gap-1.p-1.w-full
+           {:style {:grid-template-columns "3rem 1fr min-content"
+                    :grid-auto-rows        "auto"}}
+
+           [:div.font-bold.text-xl.place-self-center number]
+           [:div.text-xl.self-center navn]
+           (if remove?
+             [icon/small :cross-out]
+             [:div])
+           [:div.place-self-center.text-sm slot]
+           [:div kind]
+           [:div]
+
+           (if details?
+             [:<>
+              [:div]
+              [:div.col-span-2.self-center.text-sm description]])
+
+           ;[:div.col-span-2]
+           (when graph?
+             [:<>
+              [:div]
+              [:div.col-span-1
+               (when booking-db
+                 (draw-graph
+                   {:window window
+                    :list   (map (fn [{:keys [start end]}]
+                                   {:r?
+                                    (some #{(available? slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+                                    :start (- (convert start) offset)
+                                    :end   (- (convert end) offset)})
+                                 booking-db)
+                    :slot   slot'}))]
+              [:div.place-self-center [icon/small :circle-question-filled]]])])]
        (when insert-after insert-after)])))
 
 ;INTENT our desired timeslot, who is available in this slow?
 
-(defn pick-list [{:keys [offset slot selected on-click boat-db]}]
+(defn pick-list [{:keys [offset slot selected on-click boat-db details? graph?] :as m}]
   (if (seq @selected)
-    [:div.space-y-1
+    [:div.space-y-px
+     {:class [:overflow-clip
+              :first:rounded-t
+              :last:rounded-b]}
      (for [id @selected]
        [list-line
-        {:offset   offset
-         :slot     slot
-         :remove?  true
-         :on-click #(on-click id)
-         :id       id
-         :data     (get boat-db id)}])]
+        (conj m
+         {:remove?  true
+          :on-click #(on-click id)
+          :id       id
+          :data     (get boat-db id)})])]
 
     [:div.h-12.flex.items-center.justify-center.bg-white "Velg båt"]))
 
-(defn boat-list [{:keys [offset slot boat-db on-click]}]
+(defn boat-list [{:keys [offset slot on-click boat-db] :as m}]
   (if (seq boat-db)
     [:div.space-y-px
-     (for [[id data] boat-db]
+     {:class [:overflow-clip
+              :first:rounded-t
+              :last:rounded-b]}
+     (for [[id {:keys [number] :as data} ] boat-db]
        [list-line
-        {:offset   offset
-         :slot     slot
-         :on-click on-click
-         :id       id
-         :data     data}])]
+        (conj m
+          {:on-click on-click
+           :id       id
+           :data     data})])]
 
     [:div.h-12 "Alle er valgt"]))
 
 ;endregion
 
 (defn goto-chevron [location]
-  [:div.w-12.flex.items-baseline.justify-center.py-1
+  [:div.w-12.flex.items-center.justify-center.py-1
    {:class    ["hover:bg-gray-500" "bg-black/50" "text-white"]
     :on-click #(js/alert location)}
    [icon/touch :chevron-right]])
@@ -319,22 +349,22 @@
 
 (defn navigation [booking-state my-state]
   [:div.w-full
-   [l/ppre-x booking-state]
+   ;[l/ppre-x booking-state]
    (rs/match-state booking-state
      [:s.booking :s.initial]
      [:div.flex.justify-between
       (push-button #(state/send :e.pick-boat) nil "Neste")
       [:div]]
 
-     [:s.booking :s.boat-picker]
+     [:s.booking :s.basic-booking-info]
      [:div.flex.justify-between
-      (push-button #(state/send :e.confirm) nil "Neste")
-      [:div]]
+      [:div]
+      (push-button #(state/send :e.confirm) nil "Neste")]
 
      [:s.booking :s.confirm]
      [:div.flex.justify-between
       (push-button #(state/send :e.pick-boat) nil "Forrige")
-      (button-submit nil "Bekreft booking")]
+      #_(button-submit nil "Bekreft booking")]
 
      [:div "uh?"])])
 
@@ -466,13 +496,11 @@
                                           (< 24 h) (conj "dager")))))]))
 
 (defn confirmation [{:as props} {:keys [state selected boat-db]}]
-  (let [{:keys [sleepover start end]} (-> @state :values)
+  (let [{:keys [sleepover start end]} (some-> state deref :values)
         slot (try
-               (tick.alpha.interval/bounds
-                 (-> @state :values :start)
-                 (-> @state :values :end))
+               (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
-    [:div.space-y-4
+    [:div.space-y-4.p-4
      (let [h (when slot (t/hours (t/duration slot)))]
        [:div (when slot (format "Fra %s til %s %s, %s"
                                 (t/format (t/formatter "d/M-yy hh:mm") start)
@@ -481,15 +509,16 @@
                                 (apply str (cond-> []
                                              (< 24 h) (conj "dager")))))])
      [:div (if sleepover "Overnatting")]
-     (pick-list
-       {:offset   (day-number-in-year start)
-        :slot     slot
-        :boat-db  boat-db
-        :selected selected
-        :on-click #(swap! selected disj %)})
+     (when slot
+       (pick-list
+         {:offset   (day-number-in-year start)
+          :slot     slot
+          :boat-db  boat-db
+          :selected selected
+          :on-click #(swap! selected disj %)}))
      (fields/textarea (fields/full-field props) "Beskjed til tur-kamerater" :description)]))
 
-(defn boat-picker [{:keys [uid cancel on-submit booking-data' my-state boat-db selected]} props]
+(defn boat-picker [{:keys [details? compact? graph? uid cancel on-submit booking-data' my-state boat-db selected]} props]
   (comment
     {:doc
      "Find all entries with a relation of :precedes or preceded-by, all the
@@ -507,15 +536,21 @@
      [views/rounded-view {:flat 1}
       [:div.space-y-4
        (pick-list
-         {:offset   offset
+         {:graph? graph?
+          :compact? compact?
+          :details? details?
+          :offset   offset
           :slot     slot
           :boat-db  boat-db
           :selected selected
           :on-click #(swap! selected disj %)})
        (boat-list
-         {:offset   offset
+         {:graph? graph?
+          :compact? compact?
+          :details? details?
+          :offset   offset
           :slot     slot
-          :boat-db  (remove (fn [[k _v]] (some #{k} @selected)) boat-db)
+          :boat-db  (remove (fn [[id _v]] (some #{id} @selected)) boat-db)
           :selected selected
           :on-click #(swap! selected conj %)})]]]))
 
@@ -591,23 +626,20 @@
 
        [general-footer
         {:accepted-user? accepted-user?
-         :data       data
-         :show-all show-all
-         :key-fn     :id
-         :edit-state edit
-         :markings   markings
-         :c          c}]])))
+         :data           data
+         :show-all       show-all
+         :key-fn         :id
+         :edit-state     edit
+         :markings       markings
+         :c              c}]])))
 
 (defn all-boats [{:keys []}]
-  (r/with-let [data (booking.database/boat-db)
+  (r/with-let [data (logg.database/boat-db)
                edit (r/atom false)
                markings (r/atom {})]
     (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
           c (count selected-keys)]
       [:div.w-full
-       [general-header
-        [:h2 "Alle båter"]]
-
        (into [:div {:class [:overflow-clip
                             :space-y-px
                             :first:rounded-t
@@ -615,7 +647,9 @@
              (map (fn [[id data]]
                     (let [idx id]
                       [booking.views/list-line
-                       {:graph?        false
+                       {:graph?        true
+                        :compact? true
+                        :details? true
                         :id            id
                         :on-click      #(swap! markings update idx (fnil not false))
                         :data          data
@@ -634,13 +668,14 @@
          :c          c}]])))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
-  (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
+  (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))
+        graph? (r/atom true)
+        details? (r/atom false)
+        compact? (r/atom true)]
     [fork/form {:initial-values    {:start       (t/at (t/date "2022-01-12") (t/time "09:00"))
                                     :end         (t/at (t/date "2022-01-13") (t/time "17:00"))
                                     :sleepover   true
                                     :description "Ugh"}
-                ;:validation        booking-validation
-                ;:form-id           :booking-form
                 :state             my-state
                 :prevent-default?  true
                 :clean-on-unmount? true
@@ -658,8 +693,8 @@
          (navigation booking-state my-state)]
 
         (rs/match-state booking-state
-          [:s.booking :s.boat-picker]
-          [boat-picker main-m props]
+          [:s.booking :s.basic-booking-info]
+          [boat-picker (conj main-m {:compact? compact? :graph? @graph? :details? @details?}) props]
 
           [:s.booking :s.confirm]
           [confirmation props
@@ -674,4 +709,10 @@
           [:div "d?" booking-state])
 
         [:div.flex.items-center.sticky.bottom-0.xh-16.panel.p-4
-         (navigation booking-state my-state)]])]))
+         (when (= booking-state [:s.booking :s.confirm]))
+         [:div.flex.justify-between.w-full
+          [:div]
+          [:button.btn-narrow.btn-free.h-10.btn-cta
+           {:disabled (empty? @selected)
+            :type     :submit}
+           "Bekreft booking"]]]])]))

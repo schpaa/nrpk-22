@@ -56,7 +56,7 @@
        [:h2 "16:00 --> 21:00"]
 
        (booking.views/pick-list
-         {:selected (r/atom #{501})
+         {:selected (r/atom #{})
           :boat-db  (booking.database/boat-db)
           :day      1
           :slot     (tick.alpha.interval/bounds

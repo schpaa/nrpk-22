@@ -82,17 +82,17 @@
              :e.cancel-booking {:actions [(assign (fn [st {:keys [data]}]
                                                     (js/alert (l/ppr ["@todo cancel booking" data]))
                                                     st))]
-                                :target  [:> :booking :s.booking :s.boat-picker]}
+                                :target  [:> :booking :s.booking :s.basic-booking-info]}
              :e.confirm        [:> :booking]
-             :e.complete       {:target  [:> :booking :s.booking :s.boat-picker]
+             :e.complete       {:target  [:> :booking :s.booking :s.basic-booking-info]
                                 :actions [(assign (fn [st {:keys [data] :as _event}]
                                                     (booking.database/write data)
                                                     (assoc st :last-booking data)))
                                           (fn [_ _]
                                             (rf/dispatch [:app/navigate-to [:r.common]]))]}}
-   :states  {:s.booking {:initial :s.boat-picker
-                         :on      {:e.pick-boat {:target [:> :booking :s.booking :s.boat-picker]}
-                                   :e.complete  {:target  [:> :booking :s.booking :s.boat-picker]
+   :states  {:s.booking {:initial :s.basic-booking-info
+                         :on      {:e.pick-boat {:target [:> :booking :s.booking :s.basic-booking-info]}
+                                   :e.complete  {:target  [:> :booking :s.booking :s.basic-booking-info]
                                                  :actions [(assign (fn [st {:keys [data] :as _event}]
                                                                      (booking.database/write data)
                                                                      (assoc st :last-booking data)))
@@ -100,9 +100,9 @@
                                                              (confirm-booking))
                                                            (fn [_ _]
                                                              (rf/dispatch [:app/navigate-to [:r.common]]))]}}
-                         :states  {:s.boat-picker {:on {:e.confirm [:> :booking :s.booking :s.confirm]}}
-                                   :s.confirm     {}
-                                   :s.complete    {}}}
+                         :states  {:s.basic-booking-info {:on {:e.confirm [:> :booking :s.booking :s.confirm]}}
+                                   :s.confirm            {}
+                                   :s.complete           {}}}
 
 
              :s.confirm {}}})
