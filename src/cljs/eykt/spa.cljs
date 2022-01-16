@@ -23,7 +23,8 @@
             [tick.core :as t]
             [schpaa.components.fields :as fields]
             [schpaa.icon :as icon]
-            [eykt.hoc :as hoc]))
+            [eykt.hoc :as hoc]
+            [eykt.modal]))
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -190,18 +191,27 @@
         menu-open? (rf/subscribe [:app/menu-open?])
         route-name @(rf/subscribe [:route-name])
         web-content (when-let [page (get route-table route-name)]
-                      (kee-frame.router/make-route-component page @(rf/subscribe [:kee-frame/route])))]
+                      (kee-frame.router/make-route-component page @(rf/subscribe [:kee-frame/route])))
+        s (rf/subscribe [::rs/state-full :main-fsm])]
     (forced-scroll-lock (and @mobile? @menu-open?))
-    [components.screen/render
-     {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
-      :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))
-      :navigate-to-home   (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
-      :navigate-to-user   (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
-      :current-page-title (fn [] @(rf/subscribe [:app/current-page-title]))
-      :get-menuopen-fn    (fn [] @(rf/subscribe [:app/menu-open?]))
-      :get-writingmode-fn (fn [] false)}
-     web-content
-     nil]))
+    [eykt.modal/overlay-with
+     {:modal?   (:modal @s)
+      :on-close #(eykt.state/send :e.hide)}
+     [:<>
+      [eykt.modal/render'
+       {:show?     (:modal @s)
+        :config-fn (:modal-config-fn @s)
+        :on-close  #(eykt.state/send :e.hide)}]
+      [components.screen/render
+       {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
+        :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))
+        :navigate-to-home   (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
+        :navigate-to-user   (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
+        :current-page-title (fn [] @(rf/subscribe [:app/current-page-title]))
+        :get-menuopen-fn    (fn [] @(rf/subscribe [:app/menu-open?]))
+        :get-writingmode-fn (fn [] false)}
+       web-content
+       nil]]]))
 
 (defn app-wrapper
   "takes care of light/dark-mode and loading-states"

@@ -35,7 +35,16 @@
                   (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
       :on-click #(js/alert "!")})
    [:div.flex.justify-between
-    [:button.btn.btn-danger #() "Avlys"]
+    [:button.btn.btn-danger
+     {:on-click #(eykt.modal/are-you-sure?
+                   {:on-confirm (fn [] (tap> "confirmed!"))
+                    :yes        "Ja, slett"
+                    :no         "Avbryt"
+                    :title      "Avlys booking"
+                    :text       [:div.leading-relaxed
+                                 [:p.mb-2 "Dette vil slette bookingen."]
+                                 [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]})}
+     "Avlys"]
     [:button.btn.btn-free "Endre"]]])
 
 (defn all-active-bookings []

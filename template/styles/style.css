@@ -46,6 +46,8 @@
         disabled:text-gray-200
         active:bg-gray-50
         hover:bg-gray-100
+        dark:bg-gray-700
+        dark:text-white
         rounded;
     }
 
@@ -89,22 +91,33 @@
     }
 
     .btn-danger {
-        @apply bg-white dark:bg-black disabled:text-gray-300 active:bg-red-500 active:text-white rounded border-2 border-red-500 text-black dark:text-white
+        @apply
+        bg-rose-400 border-rose-500 text-rose-50 hover:bg-rose-500 active:bg-rose-600
+
+        disabled:active:bg-transparent
+
+        active:text-white
+        rounded border-2
+
+        disabled:bg-rose-400/20 disabled:border-rose-500/20 disabled:bg-rose-900/10
+
+        dark:bg-rose-600 dark:bg-rose-700 dark:text-rose-100 dark:hover:bg-rose-500
+        disabled:dark:bg-rose-600/20 disabled:dark:bg-rose-700/20 disabled:dark:text-rose-900
     }
 
     .btn-cta {
         @apply
-        disabled:text-black/25
-        disabled:border-alt/25
-        disabled:bg-alt/20
-        bg-alt/80
+        bg-alt-400 border-alt-500 text-black
+        dark:bg-alt-500 dark:bg-alt-600 dark:text-white
+
+        disabled:bg-alt/20 disabled:border-alt/25 disabled:text-black/25
+
         hover:bg-alt
+        dark:hover:bg-alt
         hover:disabled:bg-transparent
-        dark:bg-black
-        dark:text-white
-        text-white
-        rounded-sm
-        border-alt border-2;
+        active:bg-alt/50
+
+        rounded border-2;
     }
 
     label {

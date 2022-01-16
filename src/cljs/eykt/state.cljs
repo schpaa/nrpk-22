@@ -12,6 +12,29 @@
 (defn send [& event]
   (rf/dispatch (apply conj fsm event)))
 
+(def modal-machine
+  {:initial :s.hidden
+   :states  {:s.hidden       {:entry (assign (fn [st _] (assoc st :modal false)))
+                              :on    {:e.show-with-timeout :s.with-timeout
+                                      ;intent :e.show is not a very unique name
+                                      :e.show              :s.visible}}
+             :s.with-timeout {:entry (assign (fn [st {:keys [data] :as _event}]
+                                               (assoc st
+                                                 :modal-config-fn (:modal-config-fn data)
+                                                 :modal true)))
+                              :on    {:e.hide              :s.hidden
+                                      ;showing again will close it
+                                      :e.show-with-timeout :s.hidden}
+                              :after [{:delay  (fn [_st {:keys [data] :as _event}] (:timeout data))
+                                       :target :s.hidden}]}
+             :s.visible      {:entry (assign (fn [st {:keys [data] :as _event}]
+                                               (assoc st
+                                                 :modal-config-fn (:modal-config-fn data)
+                                                 :modal true)))
+                              :on    {:e.hide :s.hidden
+                                      ;showing again will close it
+                                      :e.show :s.hidden}}}})
+
 (def user-machine
   {:initial :s.initial
    :on      {:e.restart         {:target [:> :user :s.initial]}
@@ -84,7 +107,8 @@
    :type    :parallel
    :context {:modal false}
    :regions {:user    user-machine
-             :booking booking-machine}})
+             :booking booking-machine
+             :modal modal-machine}})
 
 (def *st
   (let [_ (rf/dispatch [::rs/start main])
