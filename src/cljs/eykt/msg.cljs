@@ -66,3 +66,20 @@
             :content     (fn [_context]
                            [:div.p-4.space-y-4.inter
                             [:div.font-normal.text-lg text]])})}])
+
+(defn are-you-sure-cover-and-forced?
+  "invoked from call-site"
+  [{:keys [title text primary alternative on-confirm on-close footer]}]
+  [:e.show-locked
+   {:modal-config-fn
+    (fn [] {:style       {:final-position [:translate-y-0]
+                          :type           #{:title :confirm :cover}}
+            :primary     primary
+            :alternative alternative
+            :footer      footer
+            :on-confirm  on-confirm
+            :on-close    on-close
+            :title       title
+            :content     (fn [_context]
+                           [:div.p-4.space-y-4.inter
+                            [:div.font-normal.text-lg text]])})}])
