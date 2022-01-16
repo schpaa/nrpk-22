@@ -40,16 +40,6 @@
         @apply px-2 h-10 active:shadow disabled:cursor-default cursor-pointer truncate
     }
 
-    .btn-free {
-        @apply bg-gray-200
-        disabled:bg-gray-50
-        disabled:text-gray-200
-        active:bg-gray-50
-        hover:bg-gray-100
-        dark:bg-gray-700
-        dark:text-white
-        rounded;
-    }
 
     .btn-tab {
         @apply
@@ -90,18 +80,27 @@
         /* @apply bg-gray-300/50 text-gray-400/50 disabled:text-gray-300 active:bg-gray-200 rounded-b dark:bg-gray-800 dark:text-gray-400 */
     }
 
+    .btn-free {
+        @apply
+        bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-500
+        dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 dark:active:bg-gray-400
+        active:shadow-none
+
+        disabled:bg-gray-50
+        disabled:text-gray-200
+        rounded;
+    }
+
     .btn-danger {
         @apply
         bg-rose-400 border-rose-500 text-rose-50 hover:bg-rose-500 active:bg-rose-600
+        dark:bg-rose-600 dark:text-rose-100 dark:hover:bg-rose-700 dark:hover:bg-rose-500
 
         disabled:active:bg-transparent
-
         active:text-white
         rounded border-2
 
         disabled:bg-rose-400/20 disabled:border-rose-500/20 disabled:bg-rose-900/10
-
-        dark:bg-rose-600 dark:bg-rose-700 dark:text-rose-100 dark:hover:bg-rose-500
         disabled:dark:bg-rose-600/20 disabled:dark:bg-rose-700/20 disabled:dark:text-rose-900
     }
 

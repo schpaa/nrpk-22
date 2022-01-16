@@ -7,6 +7,7 @@
             [schpaa.components.fields :as fields]
             [schpaa.components.views :refer [rounded-view]]
             [eykt.state :as state]
+            [eykt.msg]
             [fork.re-frame :as fork]
             user.database
             booking.views
@@ -25,27 +26,28 @@
 
 (def loggout-command
   [:button.btn.btn-danger
-   {:on-click #(eykt.modal/are-you-sure?
-                 {:on-confirm (fn [] (db/sign-out))
-                  :yes        "Logg ut nå!"
-                  :no         "Avbryt"
-                  :title      "Logg ut"
-                  :text       [:div.leading-normal
-                               [:p "Dette vil logge deg ut av kontoen på denne enheten."]
-                               #_[:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]})} "Logg ut"])
-
+   {:on-click #(apply eykt.state/send
+                      (eykt.msg/are-you-sure?
+                        {:on-confirm (fn [] (db/sign-out))
+                         :yes        "Logg ut nå!"
+                         :no         "Avbryt"
+                         :title      "Logg ut"
+                         :text       [:div.leading-normal
+                                      [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
+   "Logg ut"])
 
 (def removeaccount-command
   [:button.btn.btn-danger
    {:type     :button
-    :on-click #(eykt.modal/are-you-sure?
-                 {:on-confirm (fn [] (tap> "confirmed!"))
-                  :yes        "Ja, slett"
-                  :no         "Avbryt"
-                  :title      "Slett konto"
-                  :text       [:div.leading-normal
-                               [:p.mb-2 "Dette vil slette kontoen din permanent."]
-                               [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]})}
+    :on-click #(apply eykt.state/send
+                      (eykt.msg/are-you-sure?
+                        {:on-confirm (fn [] (tap> "confirmed!"))
+                         :yes        "Ja, slett"
+                         :no         "Avbryt"
+                         :title      "Slett konto"
+                         :text       [:div.leading-normal
+                                      [:p.mb-2 "Dette vil slette kontoen din permanent."]
+                                      [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
    "Slett konto"])
 
 
@@ -79,29 +81,29 @@
 
 (defn my-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
 
-   [:form.space-y-8
-    {:id        form-id
-     :on-submit handle-submit}
-    [:div.space-y-4
-     [:div.flex.gap-4.flex-wrap
-      [fields/text (-> props fields/large-field (assoc :readonly? true)) "UID" :uid]]
-     [:div.flex.gap-4.flex-wrap
-      [fields/text (fields/large-field props) "Navn" :navn]
-      [fields/text (fields/small-field props) "Alias" :alias]
-      [fields/text (fields/small-field props) "Våttkort #" :våttkortnr]
-      [fields/text (fields/normal-field props) "Telefon" :telefon]
-      [fields/text (fields/large-field props) "Epost" :epost]]
-     [:div.flex.gap-4.flex-wrap
-      [fields/date (-> props fields/date-field (assoc :readonly? true)) "Req booking" :request-booking]]]
+  [:form.space-y-8
+   {:id        form-id
+    :on-submit handle-submit}
+   [:div.space-y-4
+    [:div.flex.gap-4.flex-wrap
+     [fields/text (-> props fields/large-field (assoc :readonly? true)) "UID" :uid]]
+    [:div.flex.gap-4.flex-wrap
+     [fields/text (fields/large-field props) "Navn" :navn]
+     [fields/text (fields/small-field props) "Alias" :alias]
+     [fields/text (fields/small-field props) "Våttkort #" :våttkortnr]
+     [fields/text (fields/normal-field props) "Telefon" :telefon]
+     [fields/text (fields/large-field props) "Epost" :epost]]
+    [:div.flex.gap-4.flex-wrap
+     [fields/date (-> props fields/date-field (assoc :readonly? true)) "Req booking" :request-booking]]]
 
-    (when-not readonly?
-      [:div.flex.gap-4.justify-between
-       removeaccount-command
-       [:div.flex.gap-4
-        [:button.btn.btn-free {:type     :button
-                               :on-click #(state/send :e.cancel-useredit)} "Avbryt"]
-        [:button.btn.btn-cta {:disabled (not (some? dirty))
-                              :type     :submit} "Lagre"]]])])
+   (when-not readonly?
+     [:div.flex.gap-4.justify-between
+      removeaccount-command
+      [:div.flex.gap-4
+       [:button.btn.btn-free {:type     :button
+                              :on-click #(state/send :e.cancel-useredit)} "Avbryt"]
+       [:button.btn.btn-cta {:disabled (not (some? dirty))
+                             :type     :submit} "Lagre"]]])])
 
 (defn my-info [{:keys []}]
   (let [*st-all (rf/subscribe [::rs/state :main-fsm])

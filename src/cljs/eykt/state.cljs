@@ -4,6 +4,7 @@
             [statecharts.core :refer [assign]]
             [schpaa.debug :as l]
             [db.core :as db]
+            [eykt.msg :as msg]
             [booking.database]
             [user.database]))
 
@@ -60,46 +61,39 @@
 
 (def booking-machine
   {:initial :s.booking
-   :on      {:e.restart         {:target [:> :booking :s.initial]}
-             :e.book-now        {:target [:. :s.booking]}
-             :e.cancel-booking  {:actions [(assign (fn [st {:keys [data]}]
-                                                     (js/alert (l/ppr ["@todo cancel booking"
-                                                                       data]))
-                                                     st))]
-                                 :target  [:. :s.initial]}
-             :e.confirm-booking {:target  [:> :booking :s.booking :s.boat-picker]
-                                 :actions [(assign (fn [st {:keys [data] :as _event}]
-                                                     (booking.database/write data #_{:uid   uid
-                                                                                     :value values})
-                                                     (assoc st :last-booking data)
-                                                     #_(let [prepare-data (fn [values]
-                                                                            (-> values
-                                                                                (update :date str)
-                                                                                (update :start-time str)
-                                                                                (update :end-time str)
-                                                                                ;fixme: deref before send
-                                                                                (update :selected deref)))
-                                                             v (-> data :values)
-                                                             uid (-> v :uid)
-                                                             values (dissoc (prepare-data v) :uid)]
-                                                         ;(tap> [uid values])
-                                                         (booking.database/write {:uid   uid
-                                                                                  :value values})
-                                                         ;(db/firestore-set {:path ["booking2" uid] :value values})
-                                                         ;(db/database-set {:path ["booking2" uid] :value values})
-                                                         (assoc st :last-booking values))))
-                                           (fn [_ _]
-                                             (rf/dispatch [:app/navigate-to [:r.common]]))]}}
-   :states  {:s.initial         {}
-             :s.booking         {:initial :s.boat-picker
-                                 :on      {:e.edit-basics {:target [:> :booking :s.booking :s.initial]}
-                                           :e.pick-boat   {:target [:> :booking :s.booking :s.boat-picker]}
-                                           #_#_:e.confirm     {:target [:> :booking :s.booking :s.confirm]}}
-                                 :states  {:s.edit-basics {}
-                                           :s.initial     {}
-                                           :s.boat-picker {}
-                                           #_#_:s.confirm     {}}}
-             :s.confirm-booking {}}})
+   :on      {:e.restart        {:target [:> :booking :s.booking]}
+             :e.cancel-booking {:actions [(assign (fn [st {:keys [data]}]
+                                                    (js/alert (l/ppr ["@todo cancel booking" data]))
+                                                    st))]
+                                :target  [:> :booking :s.booking :s.boat-picker]}
+             :e.confirm        [:> :booking]
+             :e.complete       {:target  [:> :booking :s.booking :s.boat-picker]
+                                :actions [(assign (fn [st {:keys [data] :as _event}]
+                                                    (booking.database/write data)
+                                                    (assoc st :last-booking data)))
+                                          (fn [_ _]
+                                            (rf/dispatch [:app/navigate-to [:r.common]]))]}}
+   :states  {:s.booking {:initial :s.boat-picker
+                         :on      {:e.pick-boat {:target [:> :booking :s.booking :s.boat-picker]}
+                                   :e.complete  {:target  [:> :booking :s.booking :s.boat-picker]
+                                                 :actions [(assign (fn [st {:keys [data] :as _event}]
+                                                                     (booking.database/write data)
+                                                                     (assoc st :last-booking data)))
+                                                           (fn [_ _]
+                                                             (send :e.show
+                                                               (msg/confirm-action
+                                                                 {:ok    "Ok"
+                                                                  :title "Bekreftet"
+                                                                  :text  [:div.leading-normal
+                                                                          [:p "Bookingen er registrert. God tur!"]]})))
+                                                           (fn [_ _]
+                                                             (rf/dispatch [:app/navigate-to [:r.common]]))]}}
+                         :states  {:s.boat-picker {:on {:e.confirm [:> :booking :s.booking :s.confirm]}}
+                                   :s.confirm     {}
+                                   :s.complete    {}}}
+
+
+             :s.confirm {}}})
 
 (def main
   ^{:transition-opts {:ignore-unknown-event? true}}

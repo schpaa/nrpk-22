@@ -13,7 +13,8 @@
             [booking.database]
             [fork.re-frame :as fork]
             [times.api :refer [format]]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [schpaa.debug :as l]))
 
 (rf/reg-sub :app/accepted-user? (fn [db] false))
 
@@ -318,6 +319,7 @@
 
 (defn navigation [booking-state my-state]
   [:div.w-full
+   [l/ppre-x booking-state]
    (rs/match-state booking-state
      [:s.booking :s.initial]
      [:div.flex.justify-between

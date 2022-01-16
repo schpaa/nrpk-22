@@ -4,25 +4,6 @@
 
 (def animation-duration :duration-300)
 
-(defn are-you-sure?
-  "invoked from call-site"
-  [{:keys [title text yes no on-confirm]}]
-  (eykt.state/send
-    :e.show-with-timeout
-    {:timeout         7500
-     :modal-config-fn
-     (fn [] {:style   {:final-position [:translate-y-0]
-                       :type           #{:confirm :title :dialog :message}}
-             :yes yes
-             :no no
-             :on-confirm on-confirm
-             :title title
-             ;:footer  [:div.grid.place-content-center [icon/small :cross-out]]
-             :content (fn [context]
-                        [:div.p-4.space-y-4.inter
-                         ;[:div.font-bold.text-xl title]
-                         [:div.font-normal.text-lg text]])})}))
-
 (defn overlay-with [{:keys [modal? on-close]} content]
   [:div.relative.min-.h-full
    [:div.fixed.inset-0.z-400
@@ -37,13 +18,95 @@
      :on-click on-close}]
    content])
 
-(defn render' [{:keys [show? config-fn on-close]}]
-  (let [{:keys [title style context content footer yes no on-confirm]} (if (some? config-fn) (config-fn))
-        {:keys [type final-position] :or {type #{:dialog}
+(def color-map
+  {:error   {:bgt [:bg-rose-400 :text-rose-900]
+             :bg  [:bg-rose-500 :text-rose-200]
+             :bgp [:bg-rose-400 :text-rose-900]
+             :bgf [:bg-rose-900 :text-rose-200]}
+   :message {:bgt [:bg-gray-50 :text-gray-700]
+             :bg  [:bg-gray-50 :text-gray-700]
+             :bgp [:bg-gray-500 :text-gray-100]
+             :bgf [:text-white :bg-black]}
+   :confirm {:bgt [:bg-gray-50 :text-gray-700]
+             :bg  [:bg-gray-50 :text-gray-700]
+             :bgp [:bg-gray-500 :text-gray-100]
+             :bgf [:text-white :bg-alt]}})
+
+(defn dialog [{:keys [title style context content footer yes no ok on-confirm on-close]
+               :or   {on-close #(eykt.state/send :e.hide)}}]
+  (let [{:keys [type final-position] :or {type           #{:confirm}
                                           final-position [:translate-y-12]}} style
-        is-confirm? (some #{:confirm} type)
+        t (cond (some #{:confirm} type) :confirm
+                (some #{:error} type) :error
+                :else :message)
+        is-confirm? (= t :confirm)
+        [bg bgp bgf bgt] ((juxt :bg :bgp :bgf :bgt) (get color-map t))]
+    [:div.relative.top-0
+     {:class bg}
+     ;intent header
+     (when title
+       [:div.absolute.top-0.sticky.inset-x-0.z-110
+        {:class (concat
+                  [:h-12 :flex :items-center :justify-between :px-2]
+                  bgt)}
+        [:h2.pl-1 title]])
+
+     (when content
+       [:div {:class bgp}
+        (content context)])
+
+     (when is-confirm?
+       [:div.flex.justify-end.gap-4.p-4
+        (when no [:button.btn.btn-free {:on-click on-close} no])
+        (when yes [:button.btn.btn-danger {:on-click #(do
+                                                        (on-confirm)
+                                                        (on-close))} yes])])
+
+     (when footer
+       [:div
+        {:class (concat
+                  [:h-12 :flex :items-center :justify-between :px-2]
+                  bgf)}
+        [:div footer]])]))
+
+(defn message [{:keys [title style context content footer yes no ok on-confirm on-close]
+                :or   {on-close #(eykt.state/send :e.hide)}}]
+  (let [{:keys [type final-position] :or {type           #{:message}
+                                          final-position [:translate-y-12]}} style
+        t (cond (some #{:confirm} type) :confirm
+                (some #{:error} type) :error
+                :else :message)
+        [bg bgp bgf bgt] ((juxt :bg :bgp :bgf :bgt) (get color-map t))]
+    [:div.relative.top-0
+     {:class bg}
+     (when title
+       [:div.absolute.top-0.sticky.inset-x-0.z-110
+        {:class (concat
+                  [:h-12 :flex :items-center :justify-between :px-2]
+                  bgt)}
+        [:h2.pl-1.font-bold title]])
+
+     (when content
+       [:div {:class (concat bgp)}
+        (content context)])
+
+     [:div.p-4.flex.justify-end
+      [:button.btn.btn-free {:on-click on-close} ok]]
+
+     (when footer
+       [:div
+        {:on-click on-close
+         :class    (concat
+                     [:h-12 :flex :items-center :justify-between :px-4]
+                     bgf)}
+        [:div.w-full footer]])]))
+
+(defn render' [{:keys [show? config-fn]}]
+  (let [{:keys [title style context content footer yes no ok on-close on-confirm] :as m} (if (some? config-fn) (config-fn))
+        {:keys [type final-position] :or {type           #{:confirm}
+                                          final-position [:translate-y-12]}} style
         is-message? (some #{:message} type)
-        is-error? (some #{:error} type)]
+        is-dialog? (some #{:confirm} type)]
     [:div.fixed.inset-x-2.max-w-xs.print:hidden.top-0
      {:style (if-not show? {:transform "translate(0,-110%)"})
       :class (concat (if is-message? [:rounded-b] [:rounded])
@@ -52,60 +115,8 @@
                      (if show? final-position)
                      [:z-400 :h-auto :mx-auto :shadow :drop-shadow-xl :filter])}
      (cond
-       (some #{:dialog} type)
-       [:div.relative.top-0
-        {:class [:text-black :dark:text-gray-300
-                 :bg-gray-100 :dark:bg-gray-900]}
-        ;intent header
-        (when title
-          [:div.absolute.top-0.sticky.inset-x-0.z-110
-           {:class (concat
-                     [:h-12 :flex :items-center :justify-between :px-2]
-                     [:text-black :dark:text-white])}
-           [:h2.pl-1 title]])
-
-        (when content
-          [:div {:class [:bg-gray-200 :dark:bg-gray-800]}
-           (content context)])
-
-        (when is-confirm?
-          [:div.flex.justify-end.gap-4.p-4
-           (when no [:button.btn.btn-free {:on-click on-close} no])
-           (when yes [:button.btn.btn-danger {:on-click #(do
-                                                           (on-confirm)
-                                                           (on-close))} yes])])
-
-        (when footer
-          [:div
-           {:class (concat
-                     [:h-12 :flex :items-center :justify-between :px-2]
-                     [:text-white :dark:text-white])}
-           [:div footer]])]
-       (some #{:message} type) [:div.relative.top-0
-                                {:class (concat
-                                          [:px-1 :pb-1]
-                                          (if is-error?
-                                            [:text-white :bg-danger-800
-                                             :dark:text-white :dark:bg-black]
-                                            [:text-white :dark:text-white
-                                             :bg-alt-600 :dark:bg-black]))}
-
-                                (when content
-                                  [:div {:class (concat [:rounded-b]
-                                                        (if is-error?
-                                                          [:text-white :dark:text-gray-300
-                                                           :bg-danger-600 :dark:bg-gray-800]
-                                                          [:text-white :dark:text-gray-300
-                                                           :bg-alt-500 :dark:bg-gray-800]))}
-                                   (content context)])
-
-                                (when footer
-                                  [:div
-                                   {:on-click on-close
-                                    :class (concat
-                                             [:h-12 :flex :items-center :justify-between :px-4]
-                                             [:text-white :dark:text-white])}
-                                   [:div.w-full footer]])]
+       is-dialog? (dialog m)
+       is-message? (message m)
        :else [:div.relative.p-1.top-0.rounded-lg
               {:class (concat
                         [:text-black :dark:text-white]

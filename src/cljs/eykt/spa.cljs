@@ -201,7 +201,7 @@
       [eykt.modal/render'
        {:show?     (:modal @s)
         :config-fn (:modal-config-fn @s)
-        :on-close  #(eykt.state/send :e.hide)}]
+        }]
       [components.screen/render
        {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
         :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))
