@@ -32,8 +32,8 @@
              :bgp [:bg-gray-500 :text-gray-100]
              :bgf [:text-white :bg-alt]}})
 
-(defn dialog [{:keys [title style context content footer yes no ok on-confirm on-close]
-               :or   {on-close #(eykt.state/send :e.hide)}}]
+(defn confirm [{:keys [title style context content footer primary alternative on-confirm on-close]
+                :or   {on-close #(eykt.state/send :e.hide)}}]
   (let [{:keys [type final-position] :or {type           #{:confirm}
                                           final-position [:translate-y-12]}} style
         t (cond (some #{:confirm} type) :confirm
@@ -57,10 +57,10 @@
 
      (when is-confirm?
        [:div.flex.justify-end.gap-4.p-4
-        (when no [:button.btn.btn-free {:on-click on-close} no])
-        (when yes [:button.btn.btn-danger {:on-click #(do
-                                                        (on-confirm)
-                                                        (on-close))} yes])])
+        (when alternative [:button.btn.btn-free {:on-click #(on-close)} alternative])
+        (when primary [:button.btn.btn-danger {:on-click #(do
+                                                            (on-confirm)
+                                                            (on-close))} primary])])
 
      (when footer
        [:div
@@ -69,7 +69,7 @@
                   bgf)}
         [:div footer]])]))
 
-(defn message [{:keys [title style context content footer yes no ok on-confirm on-close]
+(defn message [{:keys [title style context content footer primary on-close]
                 :or   {on-close #(eykt.state/send :e.hide)}}]
   (let [{:keys [type final-position] :or {type           #{:message}
                                           final-position [:translate-y-12]}} style
@@ -91,7 +91,7 @@
         (content context)])
 
      [:div.p-4.flex.justify-end
-      [:button.btn.btn-free {:on-click on-close} ok]]
+      [:button.btn.btn-free {:on-click on-close} primary]]
 
      (when footer
        [:div
@@ -101,12 +101,12 @@
                      bgf)}
         [:div.w-full footer]])]))
 
-(defn render' [{:keys [show? config-fn]}]
-  (let [{:keys [title style context content footer yes no ok on-close on-confirm] :as m} (if (some? config-fn) (config-fn))
+(defn render [{:keys [show? config-fn]}]
+  (let [{:keys [style] :as m} (if (some? config-fn) (config-fn))
         {:keys [type final-position] :or {type           #{:confirm}
                                           final-position [:translate-y-12]}} style
-        is-message? (some #{:message} type)
-        is-dialog? (some #{:confirm} type)]
+        is-confirm? (some #{:confirm} type)
+        is-message? (some #{:message} type)]
     [:div.fixed.inset-x-2.max-w-xs.print:hidden.top-0
      {:style (if-not show? {:transform "translate(0,-110%)"})
       :class (concat (if is-message? [:rounded-b] [:rounded])
@@ -115,19 +115,6 @@
                      (if show? final-position)
                      [:z-400 :h-auto :mx-auto :shadow :drop-shadow-xl :filter])}
      (cond
-       is-dialog? (dialog m)
+       is-confirm? (confirm m)
        is-message? (message m)
-       :else [:div.relative.p-1.top-0.rounded-lg
-              {:class (concat
-                        [:text-black :dark:text-white]
-                        [:bg-alt :dark:bg-black])}
-
-              (when content
-                [:div {:class (concat [:rounded]
-                                      [:dark:text-gray-300 :text-gray-700]
-                                      [:bg-gray-100 :dark:bg-gray-800])}
-                 (content context)])
-
-              (when footer
-                [:div.h-12.flex.items-center.px-2
-                 [:div footer]])])]))
+       :else [:div "UNDEFINED"])]))

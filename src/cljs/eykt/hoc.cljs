@@ -38,13 +38,13 @@
     [:button.btn.btn-danger
      {:on-click #(apply eykt.state/send
                         (eykt.msg/are-you-sure?
-                          {:on-confirm (fn [] (tap> "confirmed!"))
-                           :yes        "Ja, slett"
-                           :no         "Avbryt"
-                           :title      "Avlys booking"
-                           :text       [:div.leading-relaxed
-                                        [:p.mb-2 "Dette vil slette bookingen."]
-                                        [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+                          {:on-confirm  (fn [] (tap> "confirmed!"))
+                           :primary     "Ja, slett"
+                           :alternative "Avbryt"
+                           :title       "Avlys booking"
+                           :text        [:div.leading-relaxed
+                                         [:p.mb-2 "Dette vil slette bookingen."]
+                                         [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
      "Avlys"]
     [:button.btn.btn-free.shadow-none "Endre"]]])
 

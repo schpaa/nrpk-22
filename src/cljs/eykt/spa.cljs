@@ -195,13 +195,13 @@
         s (rf/subscribe [::rs/state-full :main-fsm])]
     (forced-scroll-lock (and @mobile? @menu-open?))
     [eykt.modal/overlay-with
-     {:modal?   (:modal @s)
-      :on-close #(eykt.state/send :e.hide)}
+     {:modal?   (or (:modal @s) (:modal-forced @s))
+      ;intent No dismiss-fx on click when forced, must click on a button
+      :on-close (if-not (:modal-forced @s) #(eykt.state/send :e.hide))}
      [:<>
-      [eykt.modal/render'
-       {:show?     (:modal @s)
-        :config-fn (:modal-config-fn @s)
-        }]
+      [eykt.modal/render
+       {:show?     (or (:modal @s) (:modal-forced @s))
+        :config-fn (:modal-config-fn @s)}]
       [components.screen/render
        {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
         :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))

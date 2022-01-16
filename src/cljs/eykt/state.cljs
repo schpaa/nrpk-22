@@ -15,26 +15,36 @@
 
 (def modal-machine
   {:initial :s.hidden
-   :states  {:s.hidden       {:entry (assign (fn [st _] (assoc st :modal false)))
-                              :on    {:e.show-with-timeout :s.with-timeout
-                                      ;intent :e.show is not a very unique name
-                                      :e.show              :s.visible}}
-             :s.with-timeout {:entry (assign (fn [st {:keys [data] :as _event}]
-                                               (assoc st
-                                                 :modal-config-fn (:modal-config-fn data)
-                                                 :modal true)))
-                              :on    {:e.hide              :s.hidden
-                                      ;showing again will close it
-                                      :e.show-with-timeout :s.hidden}
-                              :after [{:delay  (fn [_st {:keys [data] :as _event}] (:timeout data))
-                                       :target :s.hidden}]}
-             :s.visible      {:entry (assign (fn [st {:keys [data] :as _event}]
-                                               (assoc st
-                                                 :modal-config-fn (:modal-config-fn data)
-                                                 :modal true)))
-                              :on    {:e.hide :s.hidden
-                                      ;showing again will close it
-                                      :e.show :s.hidden}}}})
+   :states  {:s.hidden             {:entry (assign (fn [st _] (assoc st :modal false
+                                                                        :modal-forced false)))
+                                    :on    {:e.show-locked       :s.visible-and-locked
+                                            :e.show-with-timeout :s.with-timeout
+                                            ;intent :e.show is not a very unique name
+                                            :e.show              :s.visible}}
+             :s.with-timeout       {:entry (assign (fn [st {:keys [data] :as _event}]
+                                                     (assoc st
+                                                       :modal-config-fn (:modal-config-fn data)
+                                                       :modal true)))
+                                    :on    {:e.hide              :s.hidden
+                                            ;showing again will close it
+                                            :e.show-with-timeout :s.hidden}
+                                    :after [{:delay  (fn [_st {:keys [data] :as _event}] (:timeout data))
+                                             :target :s.hidden}]}
+             :s.visible-and-locked {:entry (assign (fn [st {:keys [data] :as _event}]
+                                                     (assoc st
+                                                       :modal-config-fn (:modal-config-fn data)
+                                                       :modal-forced true)))
+
+                                    :on    {:e.hide :s.hidden
+                                            ;showing again will close it
+                                            :e.show :s.hidden}}
+             :s.visible            {:entry (assign (fn [st {:keys [data] :as _event}]
+                                                     (assoc st
+                                                       :modal-config-fn (:modal-config-fn data)
+                                                       :modal true)))
+                                    :on    {:e.hide :s.hidden
+                                            ;showing again will close it
+                                            :e.show :s.hidden}}}})
 
 (def user-machine
   {:initial :s.initial
@@ -81,11 +91,11 @@
                                                                      (assoc st :last-booking data)))
                                                            (fn [_ _]
                                                              (send :e.show
-                                                               (msg/confirm-action
-                                                                 {:ok    "Ok"
-                                                                  :title "Bekreftet"
-                                                                  :text  [:div.leading-normal
-                                                                          [:p "Bookingen er registrert. God tur!"]]})))
+                                                                   (msg/confirm-action
+                                                                     {:primary "Ok"
+                                                                      :title   "Bekreftet"
+                                                                      :text    [:div.leading-normal
+                                                                                [:p "Bookingen er registrert. God tur!"]]})))
                                                            (fn [_ _]
                                                              (rf/dispatch [:app/navigate-to [:r.common]]))]}}
                          :states  {:s.boat-picker {:on {:e.confirm [:> :booking :s.booking :s.confirm]}}
@@ -102,7 +112,7 @@
    :context {:modal false}
    :regions {:user    user-machine
              :booking booking-machine
-             :modal modal-machine}})
+             :modal   modal-machine}})
 
 (def *st
   (let [_ (rf/dispatch [::rs/start main])

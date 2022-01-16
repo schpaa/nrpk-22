@@ -28,12 +28,12 @@
   [:button.btn.btn-danger
    {:on-click #(apply eykt.state/send
                       (eykt.msg/are-you-sure?
-                        {:on-confirm (fn [] (db/sign-out))
-                         :yes        "Logg ut nå!"
-                         :no         "Avbryt"
-                         :title      "Logg ut"
-                         :text       [:div.leading-normal
-                                      [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
+                        {:on-confirm  (fn [] (db/sign-out))
+                         :primary     "Logg ut nå!"
+                         :alternative "Avbryt"
+                         :title       "Logg ut"
+                         :text        [:div.leading-normal
+                                       [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
    "Logg ut"])
 
 (def removeaccount-command
@@ -41,13 +41,13 @@
    {:type     :button
     :on-click #(apply eykt.state/send
                       (eykt.msg/are-you-sure?
-                        {:on-confirm (fn [] (tap> "confirmed!"))
-                         :yes        "Ja, slett"
-                         :no         "Avbryt"
-                         :title      "Slett konto"
-                         :text       [:div.leading-normal
-                                      [:p.mb-2 "Dette vil slette kontoen din permanent."]
-                                      [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+                        {:on-confirm  (fn [] (tap> "confirmed!"))
+                         :primary     "Ja, slett"
+                         :alternative "Avbryt"
+                         :title       "Slett konto"
+                         :text        [:div.leading-normal
+                                       [:p.mb-2 "Dette vil slette kontoen din permanent."]
+                                       [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
    "Slett konto"])
 
 
