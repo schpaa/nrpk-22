@@ -114,7 +114,10 @@
       :r.common
       [:div.space-y-8
        {:class ["bg-gray-200"]}
-       (when @user-auth [views/rounded-view {} [hoc/last-active-booking]])
+       (when @user-auth
+         [views/rounded-view
+          {}
+          [hoc/last-active-booking]])
        [hoc/all-active-bookings]]
 
       :r.boatlist

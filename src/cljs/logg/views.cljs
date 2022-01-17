@@ -5,7 +5,9 @@
     [logg.database]
     [re-frame.core :as rf]
     [schpaa.components.views :refer [goto-chevron general-footer]]
-    [schpaa.components.fields :as fields]))
+    [schpaa.components.fields :as fields]
+    [booking.views.picker]
+    [tick.core :as t]))
 
 (defn all-boats [{:keys [data]}]
   (r/with-let [edit (r/atom false)
@@ -20,8 +22,9 @@
                                       :last:rounded-b]}]
                        (map (fn [[id data]]
                               (let [idx id]
-                                [booking.views/list-line
-                                 (conj {:graph?        (or
+                                [booking.views.picker/list-line
+                                 (conj {:offset (times.api/day-number-in-year (t/date))}
+                                       {:graph?        (or
                                                          (= detail-level 2)
                                                          (< detail-level 1))
                                         :details?      (= detail-level 2)
@@ -44,10 +47,7 @@
                                                    :select   #() #_#(rf/dispatch [:app/next-detail])})
                                             [0 "S" #(rf/dispatch [:app/set-detail 0])]
                                             [1 "M" #(rf/dispatch [:app/set-detail 1])]
-                                            [2 "L" #(rf/dispatch [:app/set-detail 2])])]
-                                    #_[:div.select-none.font-bold.px-2
-                                       {:on-click #(rf/dispatch [:app/next-detail])}
-                                       (str @(rf/subscribe [:app/details]))])
+                                            [2 "L" #(rf/dispatch [:app/set-detail 2])])])
                    :data          data
                    :key-fn        key
                    :edit-state    edit

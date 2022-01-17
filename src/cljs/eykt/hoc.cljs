@@ -4,7 +4,6 @@
             [re-frame.core :as rf]
             [booking.views]
             [logg.views]
-            [eykt.fsm-model :as state]
             [schpaa.modal :as modal]
             [eykt.fsm-helpers :refer [send]]
             [reagent.core :as r]
@@ -12,14 +11,14 @@
             [schpaa.components.views :as views]
             [schpaa.icon :as icon]))
 
-;region
+;region booking
 
 (defonce selected (r/atom #{}))
 
 (defn new-booking []
   (let [user-auth (rf/subscribe [::db/user-auth])]
     [booking.views/booking-form
-     {:boat-db       (logg.database/boat-db)
+     {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
       :selected      selected
       :uid           (:uid @user-auth)
       :on-submit     #(send :e.complete %)
@@ -31,14 +30,14 @@
   [:<>
    [:h2 "Søndag 3 August"]
    [:h2 "16:00 --> 21:00"]
-   (booking.views/pick-list
-     {:selected (r/atom #{473})
-      :boat-db  (logg.database/boat-db)
-      :day      1
-      :slot     (tick.alpha.interval/bounds
-                  (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
-                  (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
-      :on-click #(js/alert "!")})
+   [booking.views/pick-list
+    {:selected (r/atom #{})
+     :boat-db  (logg.database/boat-db)
+     :day      1
+     :slot     (tick.alpha.interval/bounds
+                 (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
+                 (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
+     :on-click #(js/alert "!")}]
    [:div.flex.justify-between
     [:button.btn.btn-danger
      {:on-click #(apply send
@@ -59,12 +58,12 @@
     [booking.views/booking-list
      {:accepted-user? @accepted-user?
       :data           (booking.database/read)
-      :today          (t/new-date 2022 1 4)
+      :today          (t/new-date 2022 1 19)
       :uid            (:uid @user-auth)}]))
 
 (defn all-boats []
   [logg.views/all-boats
-   {:data (logg.database/boat-db)}])
+   {:data (sort-by (comp :number val) < (logg.database/boat-db))}])
 
 ;endregion
 
@@ -80,6 +79,5 @@
        :data           (booking.database/read)
        :today          (t/new-date 2022 1 4)
        :uid            (:uid @user-auth)}]]))
-
 
 ;endregion

@@ -100,52 +100,56 @@
     (if false
       @(db/on-value-reaction {:path ["booking"]})
       (concat #_(take 4 @(db/on-value-reaction {:path ["booking"]}))
-        {:intern-a {
-                    :start     (str (t/at (t/new-date 2022 1 5) (t/new-time 0 0)))
-                    :end       (str (t/at (t/new-date 2022 1 7) (t/new-time 23 0)))
-                    :selected  [233]
+        {:xx       {
+                    :start     (str (t/at (t/new-date 2022 1 18) (t/new-time 14 0)))
+                    :end       (str (t/at (t/new-date 2022 1 19) (t/new-time 19 0)))
+                    :selected  [:-MeAwP8CBm620L9pzVHY]
+                    :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
+                    :navn      "navns"
+                    :version   2
+                    :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                     (t/new-time 10 0))))}
+         :intern-a {
+                    :start     (str (t/at (t/new-date 2022 1 16) (t/new-time 10 0)))
+                    :end       (str (t/at (t/new-date 2022 1 16) (t/new-time 16 0)))
+                    :selected  [:-MeAwP8CBm620L9pzVHY]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-a {
-                    :start     (str (t/at (t/new-date 2022 1 5) (t/new-time 0 0)))
-                    :end       (str (t/at (t/new-date 2022 1 7) (t/new-time 23 0)))
-                    :selected  [501]
+                    :start     (str (t/at (t/new-date 2022 1 15) (t/new-time 0 0)))
+                    :end       (str (t/at (t/new-date 2022 1 17) (t/new-time 23 0)))
+                    :selected  [:-Mi1VEvPzB7CwUKRFnuM]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-a {
-                    :start     (str (t/at (t/new-date 2022 1 5) (t/new-time 0 0)))
-                    :end       (str (t/at (t/new-date 2022 1 7) (t/new-time 23 0)))
-                    :selected  [500]
+                    :start     (str (t/at (t/new-date 2022 1 15) (t/new-time 0 0)))
+                    :end       (str (t/at (t/new-date 2022 1 20) (t/new-time 23 0)))
+                    :selected  [:-Mi1SV8ndQjj8eWDnU4e]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-a {:date       (str (t/new-date 2021 1 5))
-                    :start-time (str (t/new-time 10 0))
-                    :end-time   (str (t/new-time 15 0))
-                    :end        (str (t/at (t/new-date 2022 1 10) (t/new-time 20 0)))
-
+                    :start      (str (t/at (t/new-date 2022 1 16) (t/new-time 8 0)))
+                    :end        (str (t/at (t/new-date 2022 1 16) (t/new-time 20 0)))
                     :sleepover  false
-                    :selected   [232]
+                    :selected   [:-Mg5wRGchF2DP-S8n627]
                     :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn       "navns"
                     :version    2
                     :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
                                                       (t/new-time 10 0))))}}
-        {:intern-a {:date       (str (t/new-date 2021 1 15))
-                    :start-time (str (t/new-time 10 0))
-                    :end-time   (str (t/new-time 20 0))
-                    :start      (str (t/at (t/new-date 2022 1 15) (t/new-time 11 0)))
-                    :end        (str (t/at (t/new-date 2022 1 15) (t/new-time 22 0)))
+        {:intern-a {:start      (str (t/at (t/new-date 2022 1 19) (t/new-time 23 0)))
+                    :end        (str (t/at (t/new-date 2022 1 20) (t/new-time 22 0)))
                     :sleepover  false
-                    :selected   [232]
+                    :selected   [:-Mg5wRGchF2DP-S8n627]
                     :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn       "navns"
                     :version    2

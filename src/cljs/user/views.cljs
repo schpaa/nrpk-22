@@ -11,6 +11,7 @@
             [fork.re-frame :as fork]
             [user.database]
             [booking.views]
+            [booking.views.picker]
             [tick.core :as t]))
 
 (defn confirm-registry []

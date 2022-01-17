@@ -2,7 +2,6 @@
   (:require [re-frame.core :as rf]
             [kee-frame.core :as k]
             [eykt.spa :as spa]
-            [eykt.fsm-model]
             [re-statecharts.core :as rs]
             [eykt.data :as app-data]
             [schpaa.darkmode]

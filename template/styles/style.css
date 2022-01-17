@@ -10,9 +10,29 @@
     }
 
     @font-face {
-        font-family: 'Inter', sans-serif;
-        font-feature-settings: "salt", "calt";
+        font-family: "Oswald";
     }
+
+    .font-oswald {
+        font-family: "Oswald";
+    }
+
+    @font-face {
+      font-family: 'Inter';
+      font-weight: 100 900;
+      font-display: swap;
+      font-style: oblique 0deg 10deg;
+      src: url("fonts/Inter.var.woff2?v=3.19") format("woff2");
+      font-feature-settings: "zero", "ss01", "ss02", "salt", "calt";
+    }
+
+
+/*
+    @font-face {
+        font-family: "Inter", sans-serif;
+        font-feature-settings: "zero", "ss01", "ss02", "salt", "calt";
+    }
+*/
 
     a {
         @apply underline cursor-pointer;
