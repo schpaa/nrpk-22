@@ -2,7 +2,6 @@
   (:require [re-statecharts.core :as rs]
             [reagent.core :as r]
             [re-frame.core :as rf]
-            [eykt.state :as state]
             [schpaa.components.fields :as fields]
             [schpaa.components.views :as views]
     ;todo extract common functions and relocate
@@ -15,6 +14,7 @@
             [times.api :refer [format]]
             [schpaa.icon :as icon]
             [schpaa.debug :as l]
+            [eykt.fsm-helpers :refer [send]]
             [logg.database]))
 
 (rf/reg-sub :app/accepted-user? (fn [db] false))
@@ -353,17 +353,17 @@
    (rs/match-state booking-state
      [:s.booking :s.initial]
      [:div.flex.justify-between
-      (push-button #(state/send :e.pick-boat) nil "Neste")
+      (push-button #(send :e.pick-boat) nil "Neste")
       [:div]]
 
      [:s.booking :s.basic-booking-info]
      [:div.flex.justify-between
       [:div]
-      (push-button #(state/send :e.confirm) nil "Neste")]
+      (push-button #(send :e.confirm) nil "Neste")]
 
      [:s.booking :s.confirm]
      [:div.flex.justify-between
-      (push-button #(state/send :e.pick-boat) nil "Forrige")
+      (push-button #(send :e.pick-boat) nil "Forrige")
       #_(button-submit nil "Bekreft booking")]
 
      [:div "uh?"])])

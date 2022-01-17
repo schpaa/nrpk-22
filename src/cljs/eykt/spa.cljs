@@ -7,25 +7,29 @@
             [kee-frame.core :as k]
             [cljs.pprint :refer [pprint]]
             [eykt.data :as data :refer [screen-breakpoints start-db routes]]
+
+            [schpaa.modal :as modal]
+            [eykt.fsm-helpers :refer [send]]
             [schpaa.components.screen :as components.screen]
             [schpaa.components.views :as views :refer [rounded-view]]
             [schpaa.components.tab :refer [tab]]
-            ["body-scroll-lock" :as body-scroll-lock]
+            [schpaa.time]
+            [schpaa.darkmode]
+            [schpaa.icon :as icon]
+            [schpaa.components.fields :as fields]
+
             [schpaa.debug :as l]
-            [eykt.state :as state]
+
+            ["body-scroll-lock" :as body-scroll-lock]
+            [eykt.fsm-model :as state]
             [fork.re-frame :as fork]
             [db.core :as db]
             [db.signin]
             [eykt.content.pages]
-            [schpaa.time]
-            [schpaa.darkmode]
             [booking.views]
             [user.views]
             [tick.core :as t]
-            [schpaa.components.fields :as fields]
-            [schpaa.icon :as icon]
-            [eykt.hoc :as hoc]
-            [eykt.modal]))
+            [eykt.hoc :as hoc]))
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -117,21 +121,12 @@
       [hoc/all-boats]]]))
 
 (def route-table
-  {:r.init         (fn [_]
-                     [:div "INIT"])
-   :r.common       front
+  {:r.common       front
    :r.new-booking  front
    :r.boatlist     front
-   ;:r.last-booking home
    :r.user         user
-   :r.logg         user
-   :r.content      (fn [_]
-                     [:h2 "Oversikt"])
-   :r.common-old   (fn [_]
-                     [:div.p-3 (eykt.content.pages/new-designed-content {})])
-   :r.back         (fn [_]
-                     [:div.space-y-4
-                      [:div.-m-4 [l/ppre-x @re-frame.db/app-db]]])})
+   :r.logg         user})
+
 
 ;region events and subs
 
@@ -183,12 +178,12 @@
                       (kee-frame.router/make-route-component page @(rf/subscribe [:kee-frame/route])))
         s (rf/subscribe [::rs/state-full :main-fsm])]
     (forced-scroll-lock (and @mobile? @menu-open?))
-    [eykt.modal/overlay-with
+    [modal/overlay-with
      {:modal?   (or (:modal @s) (:modal-forced @s))
       ;intent No dismiss-fx on click when forced, must click on a button
-      :on-close (if-not (:modal-forced @s) #(eykt.state/send :e.hide))}
+      :on-close (if-not (:modal-forced @s) #(send :e.hide))}
      [:<>
-      [eykt.modal/render
+      [modal/render
        {:show?     (or (:modal @s) (:modal-forced @s))
         :config-fn (:modal-config-fn @s)}]
       [components.screen/render

@@ -1,18 +1,16 @@
-(ns eykt.state
+(ns eykt.fsm-model
   (:require [re-frame.core :as rf]
             [re-statecharts.core :as rs]
             [statecharts.core :refer [assign]]
             [schpaa.debug :as l]
-            [eykt.msg :as msg]
+            [schpaa.modal :as modal]
+            [eykt.fsm-helpers :refer [send]]
             [booking.database]
             [user.database]))
 
-(defn send [& event]
-  (rf/dispatch (apply conj [::rs/transition :main-fsm] event)))
-
 (defn confirm-registry []
   (apply send
-         (msg/confirm-action
+         (modal/confirm-action
            {:primary "Ok"
             :title   "Bekreftet"
             :text    [:div.leading-normal
@@ -20,7 +18,7 @@
 
 (defn confirm-booking []
   (apply send
-         (msg/confirm-action
+         (modal/confirm-action
            {:primary "Ok"
             :title   "Bekreftet"
             :text    [:div.leading-normal

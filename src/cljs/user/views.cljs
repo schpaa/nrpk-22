@@ -6,13 +6,12 @@
             [db.auth :refer [user-info]]
             [schpaa.components.fields :as fields]
             [schpaa.components.views :refer [rounded-view]]
-            [eykt.state :as state]
-            [eykt.msg]
+            [schpaa.modal :as modal]
+            [eykt.fsm-helpers :refer [send]]
             [fork.re-frame :as fork]
             user.database
             booking.views
-            [tick.core :as t]
-            [schpaa.icon :as icon]))
+            [tick.core :as t]))
 
 ;region prelim
 
@@ -26,8 +25,8 @@
 
 (def loggout-command
   [:button.btn.btn-danger
-   {:on-click #(apply eykt.state/send
-                      (eykt.msg/are-you-sure?
+   {:on-click #(apply send
+                      (modal/are-you-sure?
                         {:on-confirm  (fn [] (db/sign-out))
                          :primary     "Logg ut nå!"
                          :alternative "Avbryt"
@@ -39,8 +38,8 @@
 (def removeaccount-command
   [:button.btn.btn-danger
    {:type     :button
-    :on-click #(apply eykt.state/send
-                      (eykt.msg/are-you-sure?
+    :on-click #(apply send
+                      (modal/are-you-sure?
                         {:on-confirm  (fn [] (tap> "confirmed!"))
                          :primary     "Ja, slett"
                          :alternative "Avbryt"
@@ -101,7 +100,7 @@
       removeaccount-command
       [:div.flex.gap-4
        [:button.btn.btn-free {:type     :button
-                              :on-click #(state/send :e.cancel-useredit)} "Avbryt"]
+                              :on-click #(send :e.cancel-useredit)} "Avbryt"]
        [:button.btn.btn-cta {:disabled (not (some? dirty))
                              :type     :submit} "Lagre"]]])])
 
@@ -134,17 +133,17 @@
                           [:button.btn.btn-danger
                            {:disabled true
                             :type     :button
-                            :on-click #(state/send :e.edit)}
+                            :on-click #(send :e.edit)}
                            "Slett konto"]
                           [:button.btn.btn-free.btn-cta
                            {:type     :button
-                            :on-click #(state/send :e.edit)}
+                            :on-click #(send :e.edit)}
                            "Rediger"]]]
            [:s.editing] [fork/form {:initial-values    loaded-data'
                                     :prevent-default?  true
                                     :clean-on-unmount? true
                                     :keywordize-keys   true
-                                    :on-submit         #(state/send :e.store (assoc-in % [:values :uid] uid))}
+                                    :on-submit         #(send :e.store (assoc-in % [:values :uid] uid))}
                          my-form]
            [:s.store] [rounded-view
                        [:div "Lagrer, et øyeblikk"]]

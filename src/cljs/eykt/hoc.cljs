@@ -3,7 +3,9 @@
   (:require [db.core :as db]
             [re-frame.core :as rf]
             [booking.views]
-            [eykt.state :as state]
+            [eykt.fsm-model :as state]
+            [schpaa.modal :as modal]
+            [eykt.fsm-helpers :refer [send]]
             [reagent.core :as r]
             [tick.core :as t]
             [schpaa.components.views :as views]
@@ -19,8 +21,8 @@
      {:boat-db       (logg.database/boat-db)
       :selected      selected
       :uid           (:uid @user-auth)
-      :on-submit     #(state/send :e.complete %)
-      :cancel        #(state/send :e.cancel-booking)
+      :on-submit     #(send :e.complete %)
+      :cancel        #(send :e.cancel-booking)
       :my-state      schpaa.components.views/my-state
       :booking-data' (sort-by :date > (booking.database/read))}]))
 
@@ -38,8 +40,8 @@
       :on-click #(js/alert "!")})
    [:div.flex.justify-between
     [:button.btn.btn-danger
-     {:on-click #(apply eykt.state/send
-                        (eykt.msg/are-you-sure?
+     {:on-click #(apply send
+                        (modal/are-you-sure?
                           {:on-confirm  (fn [] (tap> "confirmed!"))
                            :primary     "Ja, slett"
                            :alternative "Avbryt"
