@@ -9,6 +9,7 @@
             [eykt.data :as data :refer [screen-breakpoints start-db routes]]
             [schpaa.components.screen :as components.screen]
             [schpaa.components.views :as views :refer [rounded-view]]
+            [schpaa.components.tab :refer [tab]]
             ["body-scroll-lock" :as body-scroll-lock]
             [schpaa.debug :as l]
             [eykt.state :as state]
@@ -32,19 +33,6 @@
 (rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
 
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
-
-(defn tab [{bottom? :bottom? locked? :locked? s :selected} & m]
-  [:div.flex.sticky.top-16.z-50.w-full
-   (for [[page title] m]
-     [:button.btn.flex-grow.h-16.shadow-none
-      (conj {:class (concat ["w-1/3"]
-                            (conj
-                              (if bottom?
-                                (if (= s page) [:btn-tab-b] [:btn-tab-inactive-b])
-                                (if (= s page) [:btn-tab] [:btn-tab-inactive]))))}
-            (when-not locked?
-              {:on-click #(rf/dispatch [:app/navigate-to [page]])}))
-      [:h2 title]])])
 
 (defn home []
   (fn []
@@ -105,7 +93,8 @@
 (defn front []
   (let [user-auth (rf/subscribe [::db/user-auth])]
     [:div
-     (tab {:selected @(rf/subscribe [:app/current-page])}
+     (tab {:item ["w-1/3"]
+           :selected @(rf/subscribe [:app/current-page])}
           [:r.new-booking "Ny"]
           [:r.common "Siste"]
           [:r.boatlist "Båtliste"])

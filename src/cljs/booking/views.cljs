@@ -248,10 +248,10 @@
      (for [id @selected]
        [list-line
         (conj m
-         {:remove?  true
-          :on-click #(on-click id)
-          :id       id
-          :data     (get boat-db id)})])]
+              {:remove?  true
+               :on-click #(on-click id)
+               :id       id
+               :data     (get boat-db id)})])]
 
     [:div.h-12.flex.items-center.justify-center.bg-white "Velg båt"]))
 
@@ -261,12 +261,12 @@
      {:class [:overflow-clip
               :first:rounded-t
               :last:rounded-b]}
-     (for [[id {:keys [number] :as data} ] boat-db]
+     (for [[id {:keys [number] :as data}] boat-db]
        [list-line
         (conj m
-          {:on-click on-click
-           :id       id
-           :data     data})])]
+              {:on-click on-click
+               :id       id
+               :data     data})])]
 
     [:div.h-12 "Alle er valgt"]))
 
@@ -536,7 +536,7 @@
      [views/rounded-view {:flat 1}
       [:div.space-y-4
        (pick-list
-         {:graph? graph?
+         {:graph?   graph?
           :compact? compact?
           :details? details?
           :offset   offset
@@ -545,7 +545,7 @@
           :selected selected
           :on-click #(swap! selected disj %)})
        (boat-list
-         {:graph? graph?
+         {:graph?   graph?
           :compact? compact?
           :details? details?
           :offset   offset
@@ -565,10 +565,12 @@
 
 (defn general-footer
   "a footer for all lists where editing of some sort makes sense"
-  [{:keys [accepted-user? edit-state markings c data key-fn show-all]}]
+  [{:keys [insert-before accepted-user? edit-state markings c data key-fn show-all]}]
   [:div.flex.justify-between.p-4.sticky.bottom-0.z-0
    {:class [:panel]}
    [:div.gap-2.flex
+    (when insert-before
+      (insert-before))
     [:button.btn-small {:on-click #(swap! edit-state not)} (if @edit-state "Ferdig" "Endre")]
     (when @edit-state
       [:button.btn-small
@@ -633,11 +635,16 @@
          :markings       markings
          :c              c}]])))
 
+(rf/reg-sub :app/details (fn ([db] (get db :details 0))))
+
+(rf/reg-event-db :app/next-detail (fn [db] (update db :details (fnil #(mod (inc %) 3) 0))))
+
 (defn all-boats [{:keys []}]
   (r/with-let [data (logg.database/boat-db)
                edit (r/atom false)
                markings (r/atom {})]
     (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
+          detail-level @(rf/subscribe [:app/details])
           c (count selected-keys)]
       [:div.w-full
        (into [:div {:class [:overflow-clip
@@ -647,9 +654,9 @@
              (map (fn [[id data]]
                     (let [idx id]
                       [booking.views/list-line
-                       {:graph?        true
-                        :compact? true
-                        :details? true
+                       {:graph?        (< detail-level 1)
+                        :details?      (= detail-level 2)
+                        :compact?      (= detail-level 0)
                         :id            id
                         :on-click      #(swap! markings update idx (fnil not false))
                         :data          data
@@ -661,17 +668,19 @@
                         :insert-after  (goto-chevron idx)}]))
                   data))
        [general-footer
-        {:data       data
-         :key-fn     key
-         :edit-state edit
-         :markings   markings
-         :c          c}]])))
+        {:insert-before (fn [] [:div.select-none.font-bold.px-2 {:on-click #(rf/dispatch [:app/next-detail])} (str @(rf/subscribe [:app/details]))])
+         :data          data
+         :key-fn        key
+         :edit-state    edit
+         :markings      markings
+         :c             c}]])))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))
-        graph? (r/atom true)
-        details? (r/atom false)
-        compact? (r/atom true)]
+        detail-level @(rf/subscribe [:app/details])
+        graph? (< detail-level 1)
+        details? (= detail-level 2)
+        compact? (= detail-level 0)]
     [fork/form {:initial-values    {:start       (t/at (t/date "2022-01-12") (t/time "09:00"))
                                     :end         (t/at (t/date "2022-01-13") (t/time "17:00"))
                                     :sleepover   true
@@ -694,7 +703,7 @@
 
         (rs/match-state booking-state
           [:s.booking :s.basic-booking-info]
-          [boat-picker (conj main-m {:compact? compact? :graph? @graph? :details? @details?}) props]
+          [boat-picker (conj main-m {:compact? compact? :graph? graph? :details? details?}) props]
 
           [:s.booking :s.confirm]
           [confirmation props
@@ -710,8 +719,9 @@
 
         [:div.flex.items-center.sticky.bottom-0.xh-16.panel.p-4
          (when (= booking-state [:s.booking :s.confirm]))
-         [:div.flex.justify-between.w-full
-          [:div]
+         [:div.flex.justify-between.w-full.items-center
+          [:div.select-none.font-bold.px-2
+           {:on-click #(rf/dispatch [:app/next-detail])} (inc @(rf/subscribe [:app/details]))]
           [:button.btn-narrow.btn-free.h-10.btn-cta
            {:disabled (empty? @selected)
             :type     :submit}

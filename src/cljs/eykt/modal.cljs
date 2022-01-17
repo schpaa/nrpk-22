@@ -107,7 +107,10 @@
         [:div footer]])]))
 
 (defn message [{:keys [title style context content footer primary on-close]
-                :or   {on-close #(eykt.state/send :e.hide)}}]
+                :or   {title    "no title"
+                       content  (fn [_] [:div.p-4 "no content"])
+                       primary "ok"
+                       on-close #(eykt.state/send :e.hide)}}]
   (let [{:keys [type final-position] :or {type           #{:message}
                                           final-position [:translate-y-12]}} style
         t (cond (some #{:confirm} type) :confirm
@@ -140,8 +143,9 @@
 
 (defn render [{:keys [show? config-fn]}]
   (let [{:keys [style] :as m} (if (some? config-fn) (config-fn))
-        {:keys [type final-position] :or {type           #{:confirm}
-                                          final-position [:translate-y-12]}} style
+        {:keys [type final-position] :or {type           #{:message}
+                                          final-position [:translate-y-0]}} style
+        is-wide? (some #{:wide} type)
         is-confirm? (some #{:confirm} type)
         is-cover? (some #{:cover} type)
         is-message? (some #{:message} type)]
@@ -149,7 +153,8 @@
      {:style (if-not show? (if is-cover?
                              {:transform "translate(0,-150%)"}
                              {:transform "translate(0,-110%)"}))
-      :class (concat (if is-cover? [:max-w-sm :top-32 :rounded] [:max-w-xs :top-0])
+      :class (concat (if is-cover? [:max-w-sm :top-32 :rounded] [ :top-0])
+                     (if is-wide? [:max-w-sm] [:max-w-xs])
                      (if (or is-confirm? is-message?) [:rounded-b] [:rounded])
                      [:overflow-hidden :transition :transform]
                      animation-duration

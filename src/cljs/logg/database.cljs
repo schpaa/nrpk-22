@@ -83,11 +83,10 @@
 
 (defn boat-db []
   (let [type-db @(db/on-value-reaction {:path ["boat-brand"]})]
-    (transduce
+    (into {}
       (comp
         (filter (comp #(= % "1") :location val))
         (map (fn [[id {:keys [boat-type] :as v}]]
+               (tap> "WTF?")
                [id (conj v (get type-db (keyword boat-type)))])))
-      conj
-      {}
       @(db/on-value-reaction {:path ["boad-item"]}))))

@@ -132,6 +132,14 @@
                bg-white
                dark:text-gray-500;
     }
+
+    .btn-on {
+        @apply bg-black text-white;
+    }
+    .btn-off {
+        @apply bg-black/25 text-white/50;
+    }
+
 }
 
 @layer utilities {
