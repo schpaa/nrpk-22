@@ -3,8 +3,8 @@
             [reagent.core :as r]
             [re-frame.core :as rf]
             [schpaa.components.fields :as fields]
-            [schpaa.components.views :as views]
-    ;todo extract common functions and relocate
+            [schpaa.components.views :as views :refer [goto-chevron general-footer]]
+            ;todo extract common functions and relocate
             [tick.core :as t']
             [tick.core :as t]
             [tick.alpha.interval :refer [relation]]
@@ -13,11 +13,18 @@
             [fork.re-frame :as fork]
             [times.api :refer [format]]
             [schpaa.icon :as icon]
-            [schpaa.debug :as l]
             [eykt.fsm-helpers :refer [send]]
             [logg.database]))
 
+(declare list-line)
+
+(rf/reg-sub :app/details (fn ([db] (get db :details 0))))
+
+(rf/reg-event-db :app/next-detail (fn [db] (update db :details (fnil #(mod (inc %) 3) 0))))
+
 (rf/reg-sub :app/accepted-user? (fn [db] false))
+
+;region date-time
 
 (defn day-number-in-year [dt]
   (let [year (t/int (t/year dt))
@@ -38,6 +45,8 @@
     "/"
     (t'/int (t'/month (t'/date instant)))))
 
+;endregion
+
 (defn- convert [dt]
   (when-let [dt (t/date-time dt)]
     (+ (* 24 (day-number-in-year (t/date dt)))
@@ -46,7 +55,7 @@
 
 ;;
 
-(defn booking-list-item-color-map [relation]
+(defn- booking-list-item-color-map [relation]
   (case relation
     :preceded-by {:bg  ["dark:bg-gray-400" "bg-gray-300"]
                   :fg  ["dark:text-black" "text-black"]
@@ -272,12 +281,6 @@
 
 ;endregion
 
-(defn goto-chevron [location]
-  [:div.w-12.flex.items-center.justify-center.py-1
-   {:class    ["hover:bg-gray-500" "bg-black/50" "text-white"]
-    :on-click #(js/alert location)}
-   [icon/touch :chevron-right]])
-
 (defn booking-validation [{:keys [date start-time end-time sleepover] :as all}]
   (cond-> {}
     (= "" (str date))
@@ -307,36 +310,7 @@
       (= :precedes (relation (t'/time end-time) (t'/time start-time))))
     (assoc :end-time "Trenger slutt-tid < start-tid")))
 
-(defn button
-  ([a disabled? c]
-   [:button.bg-gray-50.shadow-inside
-    {:class    (if disabled? [:text-gray-300])
-     :type     :button
-     :disabled disabled?
-     :on-click a}
-    (if (keyword? c) [schpaa.icon/small c] c)])
-  ([a c]
-   [:button.bg-gray-50.shadow-inside
-    {:type     :button
-     :disabled false
-     :on-click a}
-    (if (keyword? c) [schpaa.icon/small c] c)]))
-
-(defn push-button
-  ([a disabled? c]
-   [:button.btn.btn-free
-    {:class    (if disabled? [:text-gray-300])
-     :type     :button
-     :disabled disabled?
-     :on-click a}
-    (if (keyword? c) [schpaa.icon/small c] c)]))
-
-(defn button-submit [a c]
-  [:button.btn-narrow.btn-free.h-10.btn-cta
-   {:type :submit}
-   (if (keyword? c) [schpaa.icon/small c] c)])
-
-(defn adjust' [state f field d]
+(defn adjust [state f field d]
   (fn []
     (let [has-time? (try (t/time (get-in @state [:values field])) (catch js/Error _ false))]
       (if has-time?
@@ -346,6 +320,20 @@
                     (update-in [:values :end] (fn [e] (f (t/date-time e) (t/new-duration 1 d))))))
         (swap! state
                update-in [:values field] #(f (t/date %) (t/new-period 1 d)))))))
+
+(defn- push-button
+  ([a disabled? c]
+   [:button.btn.btn-free
+    {:class    (if disabled? [:text-gray-300])
+     :type     :button
+     :disabled disabled?
+     :on-click a}
+    (if (keyword? c) [schpaa.icon/small c] c)]))
+
+(defn- button-submit [a c]
+  [:button.btn-narrow.btn-free.h-10.btn-cta
+   {:type :submit}
+   (if (keyword? c) [schpaa.icon/small c] c)])
 
 (defn navigation [booking-state my-state]
   [:div.w-full
@@ -368,6 +356,21 @@
 
      [:div "uh?"])])
 
+(defn- button
+  ([a disabled? c]
+   [:button.bg-gray-200.shadow-inside
+    {:class    (if disabled? [:text-gray-300])
+     :type     :button
+     :disabled disabled?
+     :on-click a}
+    (if (keyword? c) [schpaa.icon/small c] c)])
+  ([a c]
+   [:button.bg-gray-200.shadow-inside
+    {:type     :button
+     :disabled false
+     :on-click a}
+    (if (keyword? c) [schpaa.icon/small c] c)]))
+
 (defn time-navigator [{:keys [state] :as props}]
   [:div.space-y-4
    [:div.grid.gap-4
@@ -385,7 +388,7 @@
      [:div.col-span-3
       (fields/date
         (assoc props
-          :class [:w-full]
+          :class [:w-full :border-2 :border-black]
           :naked? true
           :values (fn [] (some-> @state :values :start t/date))
           :handle-change (fn [e] (let [date-str (-> e .-target .-value)
@@ -419,8 +422,8 @@
         "test" :name)]
 
      [:div]
-     (button (adjust' state t/<< :start :days) :chevron-left)
-     (button (adjust' state t/>> :start :days) :chevron-right)
+     (button (adjust state t/<< :start :days) :chevron-left)
+     (button (adjust state t/>> :start :days) :chevron-right)
      [:div]]
 
 
@@ -429,7 +432,7 @@
        {:style {:grid-template-columns "repeat(4,1fr)"
                 :grid-auto-rows        "3rem"}}
        [:div.col-span-4 (fields/time {:naked?        true
-                                      :class         [:w-full]
+                                      :class         [:w-full :border-2 :border-black]
                                       :values        (fn [] (some-> @views/my-state :values :start t/time))
                                       :handle-change (fn [e] (let [time-str (-> e .-target .-value)
                                                                    date-time-str (get-in @views/my-state [:values :start])]
@@ -464,7 +467,7 @@
 
        [:div.col-span-4 (fields/time {:naked?        true
                                       :disabled?     disabled?
-                                      :class         [:w-full]
+                                      :class         [:w-full :border-2 :border-black]
                                       :values        (fn [] (some-> @views/my-state :values :end t/time))
                                       :handle-change (fn [e] (let [time-str (-> e .-target .-value)
                                                                    date-time-str (get-in @views/my-state [:values :end])]
@@ -558,42 +561,6 @@
   (let [p (tick.alpha.interval/relation today start)]
     (some #{p} [:equals :starts :during :meets :precedes])))
 
-(defn general-header [& content]
-  [:div.h-16x.flex.p-3.items-center.sticky.top-32x.mt-3.z-10
-   {:class [:panel]}
-   content])
-
-(defn general-footer
-  "a footer for all lists where editing of some sort makes sense"
-  [{:keys [insert-before accepted-user? edit-state markings c data key-fn show-all]}]
-  [:div.flex.justify-between.p-4.sticky.bottom-0.z-0
-   {:class [:panel]}
-   [:div.gap-2.flex
-    (when insert-before
-      (insert-before))
-    [:button.btn-small {:on-click #(swap! edit-state not)} (if @edit-state "Ferdig" "Endre")]
-    (when @edit-state
-      [:button.btn-small
-       {:on-click #(reset! markings (reduce (fn [a e] (assoc a e true)) {} (map key-fn data)))}
-       "Merk alt"])
-    (when @edit-state
-      [:button.btn-small
-       {:disabled (zero? c)
-        :on-click #(reset! markings {})}
-       "Merk ingen"])
-    (if @edit-state
-      (let []
-        [:button.btn-small.btn-menu
-         {:disabled (zero? c)
-          :on-click #(js/alert "!") #_#(do
-                                         (booking.database/delete selected-keys)
-                                         (reset! markings {}))}
-         [:div.flex.gap-2.items-center (icon/small :chevron-down) (str "Operasjon " (when (pos? c) c))]])
-      [:div])]
-   (when accepted-user?
-     (when-not @show-all
-       [:button.btn-small.btn-free {:on-click #(reset! show-all true)} "Vis alle"]))])
-
 (defn booking-list [{:keys [uid today data accepted-user? class]}]
   (r/with-let [show-all (r/atom false)
                edit (r/atom false)
@@ -634,46 +601,6 @@
          :edit-state     edit
          :markings       markings
          :c              c}]])))
-
-(rf/reg-sub :app/details (fn ([db] (get db :details 0))))
-
-(rf/reg-event-db :app/next-detail (fn [db] (update db :details (fnil #(mod (inc %) 3) 0))))
-
-(defn all-boats [{:keys []}]
-  (r/with-let [data (logg.database/boat-db)
-               edit (r/atom false)
-               markings (r/atom {})]
-    (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
-          detail-level @(rf/subscribe [:app/details])
-          c (count selected-keys)]
-      [:div.w-full
-       (into [:div {:class [:overflow-clip
-                            :space-y-px
-                            :first:rounded-t
-                            :last:rounded-b]}]
-             (map (fn [[id data]]
-                    (let [idx id]
-                      [booking.views/list-line
-                       {:graph?        (< detail-level 1)
-                        :details?      (= detail-level 2)
-                        :compact?      (= detail-level 0)
-                        :id            id
-                        :on-click      #(swap! markings update idx (fnil not false))
-                        :data          data
-                        :insert-before (when @edit
-                                         [:div.flex.items-center.px-2.bg-gray-500
-                                          [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
-                                                            :handle-change #(swap! markings update idx (fnil not false))}
-                                           "" nil]])
-                        :insert-after  (goto-chevron idx)}]))
-                  data))
-       [general-footer
-        {:insert-before (fn [] [:div.select-none.font-bold.px-2 {:on-click #(rf/dispatch [:app/next-detail])} (str @(rf/subscribe [:app/details]))])
-         :data          data
-         :key-fn        key
-         :edit-state    edit
-         :markings      markings
-         :c             c}]])))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))

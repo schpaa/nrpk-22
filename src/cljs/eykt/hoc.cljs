@@ -3,6 +3,7 @@
   (:require [db.core :as db]
             [re-frame.core :as rf]
             [booking.views]
+            [logg.views]
             [eykt.fsm-model :as state]
             [schpaa.modal :as modal]
             [eykt.fsm-helpers :refer [send]]
@@ -42,13 +43,13 @@
     [:button.btn.btn-danger
      {:on-click #(apply send
                         (modal/are-you-sure?
-                          {:on-confirm  (fn [] (tap> "confirmed!"))
-                           :primary     "Ja, slett"
-                           :alternative "Avbryt"
-                           :title       "Avlys booking"
-                           :text        [:div.leading-relaxed
-                                         [:p.mb-2 "Dette vil slette bookingen."]
-                                         [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+                          {:on-confirm (fn [] (tap> "confirmed!"))
+                           :primary    "Ja, slett"
+                           :secondary  "Avbryt"
+                           :title      "Avlys booking"
+                           :text       [:div.leading-relaxed
+                                        [:p.mb-2 "Dette vil slette bookingen."]
+                                        [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
      "Avlys"]
     [:button.btn.btn-free.shadow-none "Endre"]]])
 
@@ -62,7 +63,8 @@
       :uid            (:uid @user-auth)}]))
 
 (defn all-boats []
-  [booking.views/all-boats {}])
+  [logg.views/all-boats
+   {:data (logg.database/boat-db)}])
 
 ;endregion
 

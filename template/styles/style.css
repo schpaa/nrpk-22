@@ -82,6 +82,7 @@
 
     .btn-free {
         @apply
+
         bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-500
         dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 dark:active:bg-gray-400
         active:shadow-none
@@ -90,6 +91,18 @@
         disabled:text-gray-200
         rounded;
     }
+
+    .btn-secondary {
+        @apply
+        bg-gray-200/50 text-gray-900 hover:bg-gray-300 active:bg-gray-500
+        dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 dark:active:bg-gray-400
+        active:shadow-none
+
+        disabled:bg-gray-50
+        disabled:text-gray-200
+        rounded;
+    }
+
 
     .btn-danger {
         @apply

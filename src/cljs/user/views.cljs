@@ -9,9 +9,34 @@
             [schpaa.modal :as modal]
             [eykt.fsm-helpers :refer [send]]
             [fork.re-frame :as fork]
-            user.database
-            booking.views
+            [user.database]
+            [booking.views]
             [tick.core :as t]))
+
+(defn confirm-registry []
+  (apply send
+         (modal/confirm-action
+           {:primary "Ok"
+            :title   "Bekreftet"
+            :text    [:div.leading-normal
+                      [:p "Registreringen er fullført. Velkommen!"]]})))
+
+(def user-machine
+  {:initial :s.initial
+   :on      {:e.restart         {:target [:> :user :s.initial]}
+             :e.edit            {:target [:> :user :s.editing]}
+             :e.cancel-useredit {:target [:> :user :s.initial]}
+             :e.store           {:target  [:> :user :s.store]
+                                 :actions [(fn [st {:keys [data] :as _event}]
+                                             (user.database/write (:values data))
+                                             (confirm-registry)
+                                             st)]}}
+   :states  {:s.initial {}
+             :s.editing {}
+             :s.store   {:after [{:delay  1000
+                                  :target :s.initial}]}
+             :s.ready   {}
+             :s.error   {}}})
 
 ;region prelim
 
@@ -27,12 +52,12 @@
   [:button.btn.btn-danger
    {:on-click #(apply send
                       (modal/are-you-sure?
-                        {:on-confirm  (fn [] (db/sign-out))
-                         :primary     "Logg ut nå!"
-                         :alternative "Avbryt"
-                         :title       "Logg ut"
-                         :text        [:div.leading-normal
-                                       [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
+                        {:on-confirm (fn [] (db/sign-out))
+                         :primary    "Logg ut nå!"
+                         :secondary  "Avbryt"
+                         :title      "Logg ut"
+                         :text       [:div.leading-normal
+                                      [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
    "Logg ut"])
 
 (def removeaccount-command
@@ -40,13 +65,13 @@
    {:type     :button
     :on-click #(apply send
                       (modal/are-you-sure?
-                        {:on-confirm  (fn [] (tap> "confirmed!"))
-                         :primary     "Ja, slett"
-                         :alternative "Avbryt"
-                         :title       "Slett konto"
-                         :text        [:div.leading-normal
-                                       [:p.mb-2 "Dette vil slette kontoen din permanent."]
-                                       [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+                        {:on-confirm (fn [] (tap> "confirmed!"))
+                         :primary    "Ja, slett"
+                         :secondary  "Avbryt"
+                         :title      "Slett konto"
+                         :text       [:div.leading-normal
+                                      [:p.mb-2 "Dette vil slette kontoen din permanent."]
+                                      [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
    "Slett konto"])
 
 
