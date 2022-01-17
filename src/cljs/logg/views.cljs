@@ -38,9 +38,16 @@
                             data))
                  [general-footer
                   {:insert-before (fn []
-                                    [:div.select-none.font-bold.px-2
-                                     {:on-click #(rf/dispatch [:app/next-detail])}
-                                     (str @(rf/subscribe [:app/details]))])
+                                    [:div (schpaa.components.tab/tab
+                                            (conj schpaa.components.tab/select-bar-bottom-config
+                                                  {:selected @(rf/subscribe [:app/details])
+                                                   :select   #() #_#(rf/dispatch [:app/next-detail])})
+                                            [0 "S" #(rf/dispatch [:app/set-detail 0])]
+                                            [1 "M" #(rf/dispatch [:app/set-detail 1])]
+                                            [2 "L" #(rf/dispatch [:app/set-detail 2])])]
+                                    #_[:div.select-none.font-bold.px-2
+                                       {:on-click #(rf/dispatch [:app/next-detail])}
+                                       (str @(rf/subscribe [:app/details]))])
                    :data          data
                    :key-fn        key
                    :edit-state    edit

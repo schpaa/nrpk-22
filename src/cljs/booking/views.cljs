@@ -22,6 +22,8 @@
 
 (rf/reg-event-db :app/next-detail (fn [db] (update db :details (fnil #(mod (inc %) 3) 0))))
 
+(rf/reg-event-db :app/set-detail (fn [db [_ arg]] (update db :details (fnil #(mod arg 3) 0))))
+
 (rf/reg-sub :app/accepted-user? (fn [db] false))
 
 ;region date-time
