@@ -8,7 +8,11 @@
             [tick.core :as t]
             [schpaa.icon :as icon]
             [clojure.set :as set]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.modal :as modal]
+            [fork.re-frame :as fork]
+            [re-frame.core :as rf]
+            [db.core :as db]))
 
 (defn- booking-list-item-color-map [relation]
   (case relation
@@ -38,7 +42,7 @@
   (case kind
     "havkayak" "Havkayak"
     "sup" "Standup padlebrett"
-    "grkayak" "Grønnlandskayak"
+    "grkayak" "Grønnlands\u00adkayak"
     "surfski" "Surfski"
     "?"))
 
@@ -53,12 +57,12 @@
        #_(* 24 (f dt)))))
 
 (defn number-view [slot]
-  [:div.font-oswald.tracking-wider.text-xl
+  [:div.font-oswald.tracking-wider.text-xl.font-bold.leading-normal
    {:class ["dark:text-white" "text-black"]}
    slot])
 
 (defn slot-view [slot]
-  [:div.px-1.rounded-sm.text-sm.py-px.font-oswald.font-normal
+  [:div.px-1.rounded-sm.text-base.py-px.font-oswald.font-normal.whitespace-nowrap.h-auto
    {:class ["dark:bg-amber-400" "dark:text-black"
             "bg-gray-900" "text-gray-300"]}
    slot])
@@ -69,21 +73,19 @@
 
 (defn- draw-graph [{:keys [window time-slot list]}]
   (let [{:keys [from to]} time-slot
-        {:keys [width _offset]} window]
+        {:keys [width offset]} window
+        d (+ 24 (- (+ 1 (* 24 (times.api/day-number-in-year (t/date)))
+                      (t/hour (t/time)))
+                   offset))]
     [:svg.w-full.rounded-sm.h-full
-     {
-      :viewBox             (str "0 0 " width " 10")
-      :width               "100%"
+     {:viewBox             (str "0 0 " width " 10")
+      :width               "auto"
+      :height              "auto"
+      ;xMinYMid meet
       :preserveAspectRatio "none"}
-     [:g {
-          :stroke :none}
-      #_[:line {:vector-effect :non-scaling-stroke
-                :stroke        :blue
-                :x1            (+ (max from to))
-                :y1            0
-                :x2            (+ (max from to))
-                :y2            10}]
-      [:rect {:class "text-gray-600"
+     [:g {:stroke :none}
+
+      [:rect {:class  "text-gray-600"
               :fill   "currentColor"
               :x      from
               :width  (- to from)
@@ -101,9 +103,18 @@
        {:vector-effect :non-scaling-stroke
         :stroke-width  2
         :stroke        :currentColor
-        :d             (str
-
-                         (apply str "M 0 10 " (repeat 4 " m 24 0 v -3 v 3 ")))}]]]))
+        :d             (apply str "M 0 10 " (repeat 4 " m 24 0 v -3 v 3 "))}]
+      [:path.text-black
+       {:vector-effect :non-scaling-stroke
+        :stroke-width  2
+        :stroke        :currentColor
+        :d             (apply str "M " d #_(+ (t/hour (t/time)) (- from offset)) " 0 v 10")}]
+      (let [n (inc (t/hour (t/time)))]
+        [:path
+         {:class         "text-amber-500/30"
+          :vector-effect :non-scaling-stroke
+          :fill          :currentColor
+          :d             (apply str "M " (+ 24 n) " 10 h " (- 24 n) " v -12 h -" (- 24 n) " z")}])]]))
 
 (defn- expanded-view [{:keys [selected?
                               offset time-slot id on-click remove? data insert-before graph? details? compact?
@@ -119,15 +130,14 @@
                             {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
                              :start (- (convert start) offset)
                              :end   (- (convert end) offset)})
-                         booking-db)
+                          booking-db)
         overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))
 
         {:keys [navn description location number
                 slot expert kind]} data]
-    [:div
+
+    [:div.grid
      {:class
-
-
       (if selected?
         (if overlapping?
           ["bg-rose-500/50"]
@@ -135,18 +145,19 @@
            "dark:bg-gray-700"
            "text-white"
            "hover:bg-alt/80"])
-        ["bg-gray-100"
+        ["bg-gray-200"
          "dark:bg-gray-500"
          "text-gray-700"
-         "hover:bg-gray-200"])}
-
-
-     ;[l/ppre-x status-list available?]
+         "hover:bg-gray-200"])
+      :style {:grid-template-columns "1fr min-content"}}
      [:div.grid.gap-2.p-2.w-full
-      {:style {:grid-template-columns "3rem 3rem 1fr  1fr "
+      {
+       :style {:grid-template-columns "min-content 3rem 1fr  1fr "
                :grid-auto-rows        "auto"}}
 
-      [:div.self-center.justify-self-start (number-view number)]
+      [:div.self-center.justify-self-start
+       {:class (if selected? :w-16 :w-12)}
+       (number-view number)]
       [:div.self-center.justify-self-end (slot-view slot)]
       [:div.text-base.self-center.justify-self-start {:class ["dark:text-gray-100"]} navn]
       [:div.col-span-1.h-6.self-center.bg-gray-400
@@ -158,8 +169,10 @@
 
       [:div.col-span-2.self-start.text-sm.justify-self-start (normalize-kind kind)]
       (if details?
-        [:div.col-span-2.self-start.text-sm description])]]))
+        [:div.col-span-2.self-start.text-sm description])]
 
+     (when (and insert-after (fn? insert-after))
+       (insert-after id))]))
 
 (defn- compact-view [{:keys [selected?
                              offset time-slot id on-click remove? data insert-before graph? details? compact?
@@ -179,7 +192,7 @@
         overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))
         {:keys [navn description location number
                 slot expert kind]} data]
-    [:div.grid.gap-x-2.h-10
+    [:div.grid.gap-x-2.h-10.w-full
      {:style {:grid-template-columns "2.5rem 8rem 1fr"
               :grid-auto-rows        "auto"}
       :class (if selected?
@@ -203,52 +216,40 @@
      [:div.bg-gray-400.h-6.self-center
       (when booking-db
         (draw-graph
-          {:window window
-           :list   status-list
-           :time-slot   slot'}))]]))
+          {:window    window
+           :list      status-list
+           :time-slot slot'}))]]))
 
 (defn list-line [{:keys [selected?
                          offset time-slot details? data
-                         id on-click remove?  insert-before graph?  compact?
+                         id on-click remove? insert-before graph? compact?
                          insert-after]
-                  :or {graph? true}
-                  :as m}]
+                  :or   {graph? true}
+                  :as   m}]
   [:div.flex
    {:class (if-not selected? [:ml-4])}
    (when insert-before insert-before)
-   [:div.flex.flex-col.w-full.h-16x.items-center
-    {:class    (concat
-
-                 (if remove?
-                   ["bg-amber-300" "hover:bg-amber-300/50"])
-
-                 ["dark:text-gray-400"])
-     :on-click #(on-click id)}
+   [:div
+    {:on-click #(on-click id)}
     (if compact?
       (compact-view m)
-      (expanded-view m))]
-   (when insert-after insert-after)])
-
-;endregion drawing
+      (expanded-view m))]])
 
 (defn boat-list [{:keys [offset time-slot on-click boat-db selected] :as m}]
   (if (seq boat-db)
     [:div.space-y-px.select-none
-     {:class [:overflow-clip
-              :first:rounded-t
-              :last:rounded-b]}
      (doall (for [[id {:keys [number] :as data}] boat-db]
               ^{:key (str id)}
               [list-line
                (conj m
-                     {
-                      :selected? (some #{id} @selected)
+                     {:selected? (some #{id} @selected)
                       :on-click  on-click
                       :id        id
                       :data      data})]))]
 
     [:div.h-12 "Alle er valgt"]))
 
+;endregion drawing
 
 (defn- button
   ([a disabled? c]
@@ -390,6 +391,66 @@
           (button #(f 15) disabled? "15")
           (button #(f 17) disabled? "17")])])]])
 
+(defn toggle-favorite [id]
+  (let [user-auth (rf/subscribe [::db/user-auth])]
+    (tap> ["toggle-fav" id (:uid @user-auth)])))
+
+(defn modal-title
+  "A view that is a presentation of the boat with some details and a Star to click on"
+  [{:keys [toggle-favorite-fn read-db-fn]}]
+  (let [star [:div {:on-click #(toggle-favorite-fn)
+                    :class    ["text-amber-500"]} [icon/small :filled-star]]
+        {:keys [slot number navn kind description]} (read-db-fn)]
+
+    [:div.grid.gap-2.p-4.text-base.font-normal.w-full
+     {:class ["dark:text-white" :text-black]
+      :style {:grid-template-columns "3rem 1fr min-content"}}
+     [:div.self-start.justify-self-center (number-view number)]
+     [:div.leading-snug
+      [:div.font-semibold.text-lg navn]
+      [:div.text-sm.font-normal (normalize-kind kind)]]
+     [:div (slot-view slot)]
+     [:div.justify-self-center.self-start.pt-px star]
+     [:div.col-span-2.font-normal.text-base description]]))
+
+(defn modal-form [{:keys [on-close]}]
+  [fork/form {:prevent-default?  true
+              :initial-values    {:feilmelding ""}
+              :clean-on-unmount? true
+              :keywordize-keys   true
+              :on-submit         (fn [{:keys [values]}]
+                                   ;(on-close)
+                                   (tap> ["save settings " values]))}
+   (fn [{:keys [dirty handle-submit form-id values] :as props}]
+     [:form
+      {:id        form-id
+       :on-submit handle-submit}
+      [:div.space-y-4.p-4
+       (fields/textarea (assoc props :placeholder "Kort beskrivelse") "Meld om feil" :feilmelding)
+       ;(if dirty)
+       [:div.flex.justify-end.gap-4
+        [:button.btn.btn-free {:type     :button
+                               :on-click on-close} "Avbryt"]
+        [:button.btn.btn-danger {:on-click on-close
+                                 :type     :submit} "Lagre"]]]])])
+
+(defn insert-after-fn [id]
+  ^{:key (str id)}
+  [:div.w-10.flex.flex-center
+   {:class    [:text-black "bg-gray-500/50"]
+    :on-click #(do
+                 ;intent Prevent selecting the item when clicking on the insert-after-button
+                 (.stopPropagation %)
+                 ;intent sends a config/declaration to the fsm to build the dialog and present it in a modal manner
+                 (modal/form-action
+                   {:primary   (fn [] [:button.btn.btn-danger {:type :submit} "Lagre"])
+                    :secondary (fn [] [:button.btn.btn-free {:type :button} "Avbryt"])
+                    :footer    [:div.text-xs.p-4 "hooter footer"]
+                    :title     [modal-title {:read-db-fn         (fn [] (get (logg.database/boat-db) id))
+                                             :toggle-favorite-fn (fn [] (toggle-favorite id))}]
+                    :form-fn   modal-form}))}
+   (icon/small :three-vertical-dots)])
+
 (defn boat-picker
   "Find all entries with a relation of :precedes or preceded-by, all the
   other relations must fail. Since there isn't any allowance for abutting
@@ -405,7 +466,6 @@
                (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
     [:div.space-y-4
-     ;[l/ppre props]
      [views/rounded-view
       {:flat 1}
       [time-navigator {:my-state my-state} props]]
@@ -419,14 +479,16 @@
         [:button.btn-small.btn-free {:type     :button
                                      :on-click #(reset! selected (into #{} (keys boat-db)))} "Velg alle"]]
        [:div.-mx-4
-        [boat-list
-         {:graph?    graph?
-          :compact?  compact?
-          :details?  details?
-          :offset    offset
-          :time-slot slot
-          :boat-db   boat-db
-          :selected  selected
-          :on-click  (fn [e] (swap! selected (fn [sel] (if (some #{e} sel)
-                                                         (set/difference sel #{e})
-                                                         (set/union sel #{e})))))}]]]]]))
+        (boat-list
+          {:graph?       graph?
+           :compact?     compact?
+           :details?     details?
+           :offset       offset
+           :time-slot    slot
+           :boat-db      boat-db
+           :selected     selected
+           :insert-after insert-after-fn
+           :on-click     (fn [e] (swap! selected
+                                        (fn [sel] (if (some #{e} sel)
+                                                    (set/difference sel #{e})
+                                                    (set/union sel #{e})))))})]]]]))

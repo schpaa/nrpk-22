@@ -1,5 +1,5 @@
 (ns eykt.hoc
-  "Eykt higher-order components"
+  "higher-order components"
   (:require [db.core :as db]
             [re-frame.core :as rf]
             [booking.views]
@@ -42,7 +42,7 @@
     [:button.btn.btn-danger
      {:on-click #(apply send
                         (modal/are-you-sure?
-                          {:on-confirm (fn [] (tap> "confirmed!"))
+                          {:on-primary (fn [] (tap> "confirmed!"))
                            :primary    "Ja, slett"
                            :secondary  "Avbryt"
                            :title      "Avlys booking"
@@ -74,7 +74,7 @@
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:div.select-none
      [booking.views/booking-list
-      {:class          [:panel :px-4]
+      {:class          []
        :accepted-user? @accepted-user?
        :data           (booking.database/read)
        :today          (t/new-date 2022 1 4)

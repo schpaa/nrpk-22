@@ -17,10 +17,6 @@
             :text    [:div.leading-normal
                       [:p "Bookingen er registrert. God tur!"]]})))
 
-
-
-
-
 (def booking-machine
   {:initial :s.booking
    :on      {:e.restart        {:target [:> :booking :s.booking]}

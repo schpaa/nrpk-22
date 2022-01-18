@@ -53,7 +53,7 @@
   [:button.btn.btn-danger
    {:on-click #(apply send
                       (modal/are-you-sure?
-                        {:on-confirm (fn [] (db/sign-out))
+                        {:on-primary (fn [] (db/sign-out))
                          :primary    "Logg ut nå!"
                          :secondary  "Avbryt"
                          :title      "Logg ut"
@@ -66,7 +66,7 @@
    {:type     :button
     :on-click #(apply send
                       (modal/are-you-sure?
-                        {:on-confirm (fn [] (tap> "confirmed!"))
+                        {:on-primary (fn [] (tap> "confirmed!"))
                          :primary    "Ja, slett"
                          :secondary  "Avbryt"
                          :title      "Slett konto"

@@ -1,13 +1,12 @@
 (ns eykt.spa
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
-            [times.api :refer []]
+            ;[times.api :refer []]
             [re-statecharts.core :as rs]
             [kee-frame.router]
             [kee-frame.core :as k]
             [cljs.pprint :refer [pprint]]
             [eykt.data :as data :refer [screen-breakpoints start-db routes]]
-
             [schpaa.modal :as modal]
             [eykt.fsm-helpers :refer [send]]
             [schpaa.components.screen :as components.screen]
@@ -17,9 +16,7 @@
             [schpaa.darkmode]
             [schpaa.icon :as icon]
             [schpaa.components.fields :as fields]
-
             [schpaa.debug :as l]
-
             ["body-scroll-lock" :as body-scroll-lock]
             [eykt.fsm-model :as state]
             [fork.re-frame :as fork]
@@ -49,7 +46,7 @@
 
        (booking.views/pick-list
          {:selected (r/atom #{})
-          :boat-db  (booking.database/boat-db)
+          :boat-db  (logg.database/boat-db)
           :day      1
           :slot     (tick.alpha.interval/bounds
                       (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
@@ -130,7 +127,6 @@
    :r.user         user
    :r.logg         user})
 
-
 ;region events and subs
 
 (rf/reg-sub :route-name
@@ -180,12 +176,17 @@
         web-content (when-let [page (get route-table route-name)]
                       (kee-frame.router/make-route-component page @(rf/subscribe [:kee-frame/route])))
         s (rf/subscribe [::rs/state-full :main-fsm])]
-    (forced-scroll-lock (and @mobile? @menu-open?))
+    (forced-scroll-lock (or (and @mobile? @menu-open?)
+                            (or (:modal @s) (:modal-forced @s))))
     [modal/overlay-with
-     {:modal?   (or (:modal @s) (:modal-forced @s))
+     {:modal?   (or (:modal @s)
+                    (:modal-forced @s))
       ;intent No dismiss-fx on click when forced, must click on a button
-      :on-close (if-not (:modal-forced @s) #(send :e.hide))}
+      :on-close (if-not
+                  (:modal-forced @s)
+                  #(send :e.hide))}
      [:<>
+      ;[l/ppre @s]
       [modal/render
        {:show?     (or (:modal @s) (:modal-forced @s))
         :config-fn (:modal-config-fn @s)}]
