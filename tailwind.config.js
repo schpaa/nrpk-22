@@ -40,8 +40,8 @@ module.exports = {
     screens: {
         xs: '415px',
         br: '455px',
-        mob: '640px',
-        md: '768px',
+        mob: '768px',
+        /*md: '768px',*/
         lg: '1024px',
         'print': {'raw':'print'},
         'screen': {'raw':'screen'},

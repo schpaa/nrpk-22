@@ -4,7 +4,7 @@
     [reagent.core :as r]
     [logg.database]
     [re-frame.core :as rf]
-    [schpaa.components.views :refer [goto-chevron general-footer]]
+    [schpaa.components.views :refer [goto-chevron general-footer open-details]]
     [schpaa.components.fields :as fields]
     [booking.views.picker]
     [tick.core :as t]))
@@ -37,7 +37,7 @@
                                                           [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
                                                                             :handle-change #(swap! markings update idx (fnil not false))}
                                                            "" nil]])
-                                        :insert-after  (goto-chevron idx)})]))
+                                        :insert-after  open-details})]))
                             data))
                  [general-footer
                   {:insert-before (fn []

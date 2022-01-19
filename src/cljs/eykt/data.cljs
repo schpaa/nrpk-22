@@ -11,7 +11,8 @@
    ["/siste" {:name :r.last-booking :header "Siste booking"}]
    ["/baksiden" {:name :r.back :header "Baksiden"}]
    ["/om-meg" {:name :r.user :header "Om meg"}]
-   ["/logg" {:name :r.logg :header "Min logg"}]])
+   ["/logg" {:name :r.logg :header "Min logg"}]
+   ["/debug" {:name :r.debug :header "Feilsøking"}]])
 
 (def screen-breakpoints
   {:breakpoints [:mobile 640 :tablet 992 :small-monitor 1200 :large-monitor],

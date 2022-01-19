@@ -35,33 +35,6 @@
 
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
-(defn home []
-  (fn []
-    [:div.space-y-4
-
-     [:div
-      [views/rounded-view {:tab 1}
-       [:h2 "Søndag 3 August"]
-       [:h2 "16:00 --> 21:00"]
-
-       (booking.views/pick-list
-         {:selected (r/atom #{})
-          :boat-db  (logg.database/boat-db)
-          :day      1
-          :slot     (tick.alpha.interval/bounds
-                      (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
-                      (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
-          :on-click #(js/alert "!")})]
-
-      (tab {:bottom?  true
-            :selected @(rf/subscribe [:app/current-page])}
-           [:r.last-booking "Siste Booking"]
-           [:r.new-booking "Ny Booking"])]
-
-     (tab @(rf/subscribe [:app/current-page])
-          [:r.new-booking "Ny Booking"]
-          [:r.common "Mine Bookinger"])]))
-
 ;region todo: extract these higher-order-components
 
 ;endregion
@@ -71,23 +44,31 @@
         user-auth (rf/subscribe [::db/user-auth])]
     (fn []
       (if-not @user-auth
-        [:div.p-4  [rounded-view {:float 1} [db.signin/login]]]
-        [:div.bg-gray-100.dark:bg-gray-800
-         [:div.p-4 [user.views/logout-form {:user-auth @user-auth
-                                            :name (:display-name @user-auth)}]]
+        [:div.p-2
+         [rounded-view {:float 1} [db.signin/login]]]
+        [:div.bg-gray-200.dark:bg-gray-800
+         [:div.p-4.max-w-md.mx-auto
+          [user.views/logout-form
+           {:user-auth @user-auth
+            :name (:display-name @user-auth)}]]
 
          [:div
           (tab {:selected @(rf/subscribe [:app/current-page])}
                [:r.user "Om meg"]
-               [:r.logg "Logg"])
+               [:r.logg "Logg"]
+               [:r.debug "Feilsøking"])
 
           [k/case-route (fn [route] (-> route :data :name))
            :r.user
-           [:div.space-y-4
+           [:div.space-y-4.dark:bg-gray-900.bg-gray-50
             [user.views/my-info]]
 
            :r.logg
            [hoc/user-logg]
+
+           :r.debug
+           [:div.space-y-4.dark:bg-gray-900.bg-gray-50
+            [hoc/debug]]
 
            [:div "other " @route]]]]))))
 
@@ -125,7 +106,8 @@
    :r.new-booking  front
    :r.boatlist     front
    :r.user         user
-   :r.logg         user})
+   :r.logg         user
+   :r.debug user})
 
 ;region events and subs
 
@@ -209,7 +191,7 @@
         html (aget (.getElementsByTagName js/document "html") 0)
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute html "class" (if (= :dark @user-screenmode) "dark" ""))
-    (.setAttribute body "class" "font-sans inter bg-gray-100 dark:bg-gray-800 min-h-screen")
+    (.setAttribute body "class" "font-sans bg-gray-600 dark:bg-gray-800 min-h-screen")
     content))
 
 (def root-component

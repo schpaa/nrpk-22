@@ -61,7 +61,7 @@
                          [modal/just-buttons
                           [["Avbryt" [:btn-free] (fn [] (send :e.hide))]
                            ["Logg ut" [:btn-cta] (fn []
-                                                   ;(db/sign-out)
+                                                   (db/sign-out)
                                                    (send :e.hide))]]]])})}
 
    "Logg ut"])
@@ -92,18 +92,19 @@
                                      accepted? [:text-alt "Godkjent booking"]
                                      use-booking? [:text-amber-500 "Godkjenning venter"]
                                      :else [:text-rose-500 "Ikke påmeldt"])]
-    [rounded-view {:float 1}
+    [:div.p-4.bg-gray-50.shadow.rounded.space-y-4.text-base
      [:div.flex.justify-between.items-center
-      [:h2 name]
+      name
       loggout-command]
 
-     [:div.flex.justify-between.items-center.gap-4
+     [:div.flex.justify-between.items-center.gap-2
       [:svg.w-4.h-4 {:class   status-color
                      :viewBox "0 0 10 10"}
        [:circle {:fill :currentColor
-                 :cx   5 :cy 5 :r 5}]]
-      [:h2.flex-grow status-text]
-      [:button.btn.btn-free {:on-click #(js/alert "!")} "Ping"]]]))
+                 :cx   5 :cy 5 :r 4}]]
+      [:div.flex-grow status-text]
+      [:button.btn.btn-free {:disabled true
+                             :on-click #(js/alert "!")} "Hjelp"]]]))
 
 
 (defn my-bookings [{:keys [uid bookings]}]
@@ -114,7 +115,6 @@
 ;endregion
 
 (defn my-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
-
   [:form.space-y-8
    {:id        form-id
     :on-submit handle-submit}
@@ -152,7 +152,7 @@
                                      #(try
                                         (str (t/date (times.api/str->datetime %)))
                                         (catch js/Error _ %))))]
-        [rounded-view {:flat 1}
+        [:div.p-4
          [:div.flex.items-center.justify-between
           [:div.flex.flex-col
            (if-let [tm (:timestamp @s)]

@@ -85,4 +85,22 @@
        :today          (t/new-date 2022 1 4)
        :uid            (:uid @user-auth)}]]))
 
+
+(defn debug []
+  [:div.p-4.space-y-4.columns-3xs.gap-4;.divide-x.divide-dashed.divide-black
+   [:div (str devtools.version/current-version)]
+
+   (for [e [:text-sm :text-base :text-xl :text-4xl]]
+     [:div.font-sans
+      {:class e}
+      [:div e]
+      [:div.font-thin "0123456789"]
+      [:div.font-extralight "0123456789"]
+      [:div.font-light "0123456789"]
+      [:div.font-normal "0123456789"]
+      [:div.font-medium "0123456789"]
+      [:div.font-semibold "0123456789"]
+      [:div.font-bold "0123456789"]
+      [:div.font-extrabold "0123456789"]
+      [:div.font-black "0123456789"]])])
 ;endregion

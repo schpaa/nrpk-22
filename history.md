@@ -7,3 +7,7 @@
 -rw-r--r--  1 chris  staff  2910931 Jan 16 16:45 ./dist/eykt/js/main.C94B.js
 -rw-r--r--  1 chris  staff  2913656 Jan 16 23:21 ./dist/eykt/js/main.D111.js
 -rw-r--r--  1 chris  staff  2913656 Jan 16 23:24 ./dist/eykt/js/main.D111.js
+-rw-r--r--  1 chris  staff  2916218 Jan 19 13:58 ./dist/eykt/js/main.A50F.js
+-rw-r--r--  1 chris  staff  2916314 Jan 19 14:09 ./dist/eykt/js/main.3985.js
+-rw-r--r--  1 chris  staff  2916930 Jan 19 15:18 ./dist/eykt/js/main.C5B9.js
+-rw-r--r--  1 chris  staff  2920078 Jan 19 19:09 ./dist/eykt/js/main.42B1.js

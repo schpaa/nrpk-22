@@ -185,7 +185,7 @@
                                                    (assoc-in [:values :selected] @selected)
                                                    :values))}
      (fn [{:keys [form-id handle-submit] :as props}]
-       [:form.space-y-4x.bg-white
+       [:form.bg-gray-500
         {:id        form-id
          :on-submit handle-submit}
 
@@ -216,7 +216,10 @@
 
           [:div "d?" booking-state])
 
-        [:div.flex.items-center.sticky.bottom-0.xh-16.panel.p-4
+        [:div.flex.items-center.sticky.bottom-0.xh-16.panelx.p-4 ;.border-t.border-gray-500.shadow-xl
+         {:class "bg-gray-400/90"
+          :style {:box-shadow "rgba(0, 0, 0, 0.35) 0px 5px 15px"}}
+
          (when (= booking-state [:s.booking :s.confirm]))
          [:div                                              ;.flex.justify-between.w-full.items-center
           #_[:div.select-none.font-bold.px-2

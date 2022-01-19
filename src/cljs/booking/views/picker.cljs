@@ -3,6 +3,7 @@
             [schpaa.components.fields :as fields :refer [save-ref placeholder]]
             [schpaa.components.views :as views :refer [goto-chevron general-footer]]
             [tick.alpha.interval :refer [relation]]
+            [logg.database]
             [reagent.core :as r]
             [times.api :refer [day-name day-number-in-year]]
             [tick.core :as t]
@@ -145,7 +146,7 @@
            "dark:bg-gray-700"
            "text-white"
            "hover:bg-alt/80"])
-        ["bg-gray-200"
+        ["bg-gray-50"
          "dark:bg-gray-500"
          "text-gray-700"
          "hover:bg-gray-200"])
@@ -221,13 +222,16 @@
            :time-slot slot'}))]]))
 
 (defn list-line [{:keys [selected?
+
                          offset time-slot details? data
                          id on-click remove? insert-before graph? compact?
                          insert-after]
                   :or   {graph? true}
                   :as   m}]
   [:div.flex
-   {:class (if-not selected? [:ml-4])}
+
+   {:class (concat [:first:rounded-t :overflow-clip] (if (some? selected?)
+                                                       (if-not selected? [:ml-4] [:ml-2])))}
    (when insert-before insert-before)
    [:div
     {:on-click #(on-click id)}
@@ -237,7 +241,8 @@
 
 (defn boat-list [{:keys [offset time-slot on-click boat-db selected] :as m}]
   (if (seq boat-db)
-    [:div.space-y-px.select-none
+    [:div.space-y-px.select-none.overflow-clip
+
      (doall (for [[id {:keys [number] :as data}] boat-db]
               ^{:key (str id)}
               [list-line
@@ -279,8 +284,7 @@
 
 (defn time-navigator
   [{:keys [my-state]} props]
-  ;[l/ppre my-state]
-  [:div.space-y-4
+  [:div.space-y-4.p-4.bg-white
    [:div.grid.gap-4
     {:style {:grid-template-columns "3fr 2fr"
              :grid-auto-rows        "auto"}}
@@ -447,20 +451,23 @@
              {:disabled (not (some? dirty))
               :type     :submit} "Lagre"]]]])])))
 
+(defn details-dialog-fn [id]
+  (modal/form-action
+    {:header  (modal-title
+                {:read-db-fn         (fn [] (get (logg.database/boat-db) id))
+                 :toggle-favorite-fn (fn [] (toggle-favorite id))})
+     :form-fn (modal-form :store (fn [values] (tap> ["save settings " values])))
+     :footer  "Trykk på stjernen for å markere som favoritt"}))
+
 (defn insert-after-fn [id]
   ^{:key (str id)}
   [:div.w-10.flex.flex-center
-   {:class    [:text-black "bg-gray-500/50"]
+   {:class    [:text-black "bg-gray-400"]
     :on-click #(do
                  ;intent Prevent selecting the item when clicking on the insert-after-button
                  (.stopPropagation %)
                  ;intent sends a config/declaration to the fsm to build the dialog and present it in a modal manner
-                 (modal/form-action
-                   {:header  (modal-title
-                               {:read-db-fn         (fn [] (get (logg.database/boat-db) id))
-                                :toggle-favorite-fn (fn [] (toggle-favorite id))})
-                    :form-fn (modal-form :store (fn [values] (tap> ["save settings " values])))
-                    :footer  "Trykk på stjernen for å markere som favoritt"}))}
+                 (details-dialog-fn id))}
    (icon/small :three-vertical-dots)])
 
 (defn boat-picker
@@ -477,30 +484,27 @@
         slot (try
                (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
-    [:div.space-y-4
-     [views/rounded-view
-      {:flat 1}
-      [time-navigator {:my-state my-state} props]]
+    [:div
+     [time-navigator {:my-state my-state} props]
 
-     [views/rounded-view
-      {:flat 1}
-      [:div.space-y-4
-       [:div.flex.justify-end.gap-2
-        [:button.btn-small.btn-free {:type     :button
-                                     :on-click #(reset! selected #{})} "Velg ingen"]
-        [:button.btn-small.btn-free {:type     :button
-                                     :on-click #(reset! selected (into #{} (keys boat-db)))} "Velg alle"]]
-       [:div.-mx-4
-        (boat-list
-          {:graph?       graph?
-           :compact?     compact?
-           :details?     details?
-           :offset       offset
-           :time-slot    slot
-           :boat-db      boat-db
-           :selected     selected
-           :insert-after insert-after-fn
-           :on-click     (fn [e] (swap! selected
-                                        (fn [sel] (if (some #{e} sel)
-                                                    (set/difference sel #{e})
-                                                    (set/union sel #{e})))))})]]]]))
+     [:div.flex.justify-end.gap-2.p-4.x-mx-4.bg-gray-500
+      [:button.btn-small.btn-dim {:type     :button
+                                  :on-click #(reset! selected #{})} "ingen"]
+      [:button.btn-small.btn-dim {:type     :button
+                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]
+      [:button.btn-small.btn-dim {:type     :button
+                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "siste"]]
+
+     (boat-list
+       {:graph?       graph?
+        :compact?     compact?
+        :details?     details?
+        :offset       offset
+        :time-slot    slot
+        :boat-db      boat-db
+        :selected     selected
+        :insert-after insert-after-fn
+        :on-click     (fn [e] (swap! selected
+                                     (fn [sel] (if (some #{e} sel)
+                                                 (set/difference sel #{e})
+                                                 (set/union sel #{e})))))})]))
