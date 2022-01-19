@@ -40,15 +40,15 @@
      :on-click #(js/alert "!")}]
    [:div.flex.justify-between
     [:button.btn.btn-danger
-     {:on-click #(apply send
-                        (modal/are-you-sure?
-                          {:on-primary (fn [] (tap> "confirmed!"))
-                           :primary    "Ja, slett"
-                           :secondary  "Avbryt"
-                           :title      "Avlys booking"
-                           :text       [:div.leading-relaxed
-                                        [:p.mb-2 "Dette vil slette bookingen."]
-                                        [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+     #_{:on-click #(apply send
+                          (modal/are-you-sure?
+                            {:on-primary (fn [] (tap> "confirmed!"))
+                             :primary    "Ja, slett"
+                             :secondary  "Avbryt"
+                             :title      "Avlys booking"
+                             :text       [:div.leading-relaxed
+                                          [:p.mb-2 "Dette vil slette bookingen."]
+                                          [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
      "Avlys"]
     [:button.btn.btn-free.shadow-none "Endre"]]])
 

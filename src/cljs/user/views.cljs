@@ -15,12 +15,12 @@
             [tick.core :as t]))
 
 (defn confirm-registry []
-  (apply send
-         (modal/confirm-action
-           {:primary "Ok"
-            :title   "Bekreftet"
-            :text    [:div.leading-normal
-                      [:p "Registreringen er fullført. Velkommen!"]]})))
+  #_(apply send
+           (modal/confirm-action
+             {:primary "Ok"
+              :title   "Bekreftet"
+              :text    [:div.leading-normal
+                        [:p "Registreringen er fullført. Velkommen!"]]})))
 
 (def user-machine
   {:initial :s.initial
@@ -51,28 +51,28 @@
 
 (def loggout-command
   [:button.btn.btn-danger
-   {:on-click #(apply send
-                      (modal/are-you-sure?
-                        {:on-primary (fn [] (db/sign-out))
-                         :primary    "Logg ut nå!"
-                         :secondary  "Avbryt"
-                         :title      "Logg ut"
-                         :text       [:div.leading-normal
-                                      [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
+   #_{:on-click #(apply send
+                        (modal/are-you-sure?
+                          {:on-primary (fn [] (db/sign-out))
+                           :primary    "Logg ut nå!"
+                           :secondary  "Avbryt"
+                           :title      "Logg ut"
+                           :text       [:div.leading-normal
+                                        [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
    "Logg ut"])
 
 (def removeaccount-command
   [:button.btn.btn-danger
-   {:type     :button
-    :on-click #(apply send
-                      (modal/are-you-sure?
-                        {:on-primary (fn [] (tap> "confirmed!"))
-                         :primary    "Ja, slett"
-                         :secondary  "Avbryt"
-                         :title      "Slett konto"
-                         :text       [:div.leading-normal
-                                      [:p.mb-2 "Dette vil slette kontoen din permanent."]
-                                      [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+   #_{:type     :button
+      :on-click #(apply send
+                        (modal/are-you-sure?
+                          {:on-primary (fn [] (tap> "confirmed!"))
+                           :primary    "Ja, slett"
+                           :secondary  "Avbryt"
+                           :title      "Slett konto"
+                           :text       [:div.leading-normal
+                                        [:p.mb-2 "Dette vil slette kontoen din permanent."]
+                                        [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
    "Slett konto"])
 
 

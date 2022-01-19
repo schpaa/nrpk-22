@@ -132,7 +132,7 @@
         active:text-white
         rounded border-2
 
-        disabled:bg-rose-400/20 disabled:border-rose-500/20 disabled:bg-rose-900/10
+        disabled:bg-gray-400/20 disabled:border-gray-500/20 disabled:bg-gray-900/10
         disabled:dark:bg-rose-600/20 disabled:dark:bg-rose-700/20 disabled:dark:text-rose-900
     }
 

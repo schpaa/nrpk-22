@@ -186,7 +186,6 @@
                   (:modal-forced @s)
                   #(send :e.hide))}
      [:<>
-      ;[l/ppre @s]
       [modal/render
        {:show?     (or (:modal @s) (:modal-forced @s))
         :config-fn (:modal-config-fn @s)}]

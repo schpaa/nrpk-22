@@ -1,6 +1,6 @@
 (ns booking.views.picker
   (:require [schpaa.components.views :as views]
-            [schpaa.components.fields :as fields]
+            [schpaa.components.fields :as fields :refer [save-ref placeholder]]
             [schpaa.components.views :as views :refer [goto-chevron general-footer]]
             [tick.alpha.interval :refer [relation]]
             [reagent.core :as r]
@@ -414,25 +414,34 @@
      [:div.col-span-2.font-normal.text-base description]]))
 
 (defn modal-form [{:keys [on-close]}]
-  [fork/form {:prevent-default?  true
-              :initial-values    {:feilmelding ""}
-              :clean-on-unmount? true
-              :keywordize-keys   true
-              :on-submit         (fn [{:keys [values]}]
-                                   ;(on-close)
-                                   (tap> ["save settings " values]))}
-   (fn [{:keys [dirty handle-submit form-id values] :as props}]
-     [:form
-      {:id        form-id
-       :on-submit handle-submit}
-      [:div.space-y-4.p-4
-       (fields/textarea (assoc props :placeholder "Kort beskrivelse") "Meld om feil" :feilmelding)
-       ;(if dirty)
-       [:div.flex.justify-end.gap-4
-        [:button.btn.btn-free {:type     :button
-                               :on-click on-close} "Avbryt"]
-        [:button.btn.btn-danger {:on-click on-close
-                                 :type     :submit} "Lagre"]]]])])
+  (r/with-let [ref (r/atom nil)]
+    [fork/form {:prevent-default?    true
+                :initial-values      {:feilmelding ""}
+                :clean-on-unmount?   true
+                :component-did-mount (fn [_]
+                                       (when-let [r @ref]
+                                         (.focus r)))
+                :keywordize-keys     true
+                :on-submit           (fn [{:keys [values]}]
+                                       ;(on-close)
+                                       (tap> ["save settings " values]))}
+     (fn [{:keys [dirty handle-submit form-id values] :as props}]
+       [:form
+        {:id        form-id
+         :on-submit handle-submit}
+
+        [:div.space-y-4.p-4
+         (fields/textarea (-> props
+                              (save-ref ref)
+                              (placeholder "Kort beskrivelse")) "Meld om feil" :feilmelding)
+         (fields/text props "test" :thing)
+
+         [:div.flex.justify-end.gap-4
+          [:button.btn.btn-free {:type     :button
+                                 :on-click on-close} "Avbryt"]
+          [:button.btn.btn-danger {:disabled (not (some? dirty))
+                                   :on-click on-close
+                                   :type     :submit} "Lagre"]]]])]))
 
 (defn insert-after-fn [id]
   ^{:key (str id)}
@@ -443,12 +452,11 @@
                  (.stopPropagation %)
                  ;intent sends a config/declaration to the fsm to build the dialog and present it in a modal manner
                  (modal/form-action
-                   {:primary   (fn [] [:button.btn.btn-danger {:type :submit} "Lagre"])
-                    :secondary (fn [] [:button.btn.btn-free {:type :button} "Avbryt"])
-                    :footer    [:div.text-xs.p-4 "hooter footer"]
-                    :title     [modal-title {:read-db-fn         (fn [] (get (logg.database/boat-db) id))
-                                             :toggle-favorite-fn (fn [] (toggle-favorite id))}]
-                    :form-fn   modal-form}))}
+                   {:header  (modal-title
+                               {:read-db-fn         (fn [] (get (logg.database/boat-db) id))
+                                :toggle-favorite-fn (fn [] (toggle-favorite id))})
+                    :form-fn modal-form
+                    :footer  [:div.text-xs.p-4 "hooter footer"]}))}
    (icon/small :three-vertical-dots)])
 
 (defn boat-picker

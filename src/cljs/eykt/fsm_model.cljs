@@ -10,12 +10,12 @@
             [user.views]))
 
 (defn confirm-booking []
-  (apply send
-         (modal/confirm-action
-           {:primary "Ok"
-            :title   "Bekreftet"
-            :text    [:div.leading-normal
-                      [:p "Bookingen er registrert. God tur!"]]})))
+  #_(apply send
+           (modal/confirm-action
+             {:primary "Ok"
+              :title   "Bekreftet"
+              :text    [:div.leading-normal
+                        [:p "Bookingen er registrert. God tur!"]]})))
 
 (def booking-machine
   {:initial :s.booking
