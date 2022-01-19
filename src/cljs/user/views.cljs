@@ -152,11 +152,11 @@
                                      #(try
                                         (str (t/date (times.api/str->datetime %)))
                                         (catch js/Error _ %))))]
-        [:div.p-4
+        [:div.p-4.space-y-4
          [:div.flex.items-center.justify-between
           [:div.flex.flex-col
            (if-let [tm (:timestamp @s)]
-             (try [:h2.text-xs "Oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
+             (try [:div.text-sm "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
                   (catch js/Error e (.-message e)))
              [:h2.text-xs "Ikke registrert"])]]
          (rs/match-state (:user @*st-all)

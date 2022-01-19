@@ -4,10 +4,19 @@
     [reagent.core :as r]
     [logg.database]
     [re-frame.core :as rf]
-    [schpaa.components.views :refer [goto-chevron general-footer open-details]]
+    [schpaa.components.views :refer [goto-chevron general-footer]]
     [schpaa.components.fields :as fields]
+    [schpaa.modal.readymade :refer [details-dialog-fn]]
     [booking.views.picker]
-    [tick.core :as t]))
+    [tick.core :as t]
+    [schpaa.icon :as icon]))
+
+;todo This is nonsense, migrate to the readymade in booking.views.picker/insert-after
+(defn open-details [id]
+  [:div.w-10.flex.flex-center
+   {:class    [:text-black "bg-gray-200"]
+    :on-click #(details-dialog-fn id)}
+   [icon/small :three-vertical-dots]])
 
 (defn all-boats [{:keys [data]}]
   (r/with-let [edit (r/atom false)
@@ -44,7 +53,7 @@
                                     [:div (schpaa.components.tab/tab
                                             (conj schpaa.components.tab/select-bar-bottom-config
                                                   {:selected @(rf/subscribe [:app/details])
-                                                   :select   #() #_#(rf/dispatch [:app/next-detail])})
+                                                   :select   #()})
                                             [0 "S" #(rf/dispatch [:app/set-detail 0])]
                                             [1 "M" #(rf/dispatch [:app/set-detail 1])]
                                             [2 "L" #(rf/dispatch [:app/set-detail 2])])])

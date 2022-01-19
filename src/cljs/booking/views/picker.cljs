@@ -1,7 +1,9 @@
 (ns booking.views.picker
   (:require [schpaa.components.views :as views]
+            [schpaa.modal.readymade]
             [schpaa.components.fields :as fields :refer [save-ref placeholder]]
             [schpaa.components.views :as views :refer [goto-chevron general-footer]]
+            [schpaa.components.views :refer [number-view slot-view normalize-kind name-view]]
             [tick.alpha.interval :refer [relation]]
             [logg.database]
             [reagent.core :as r]
@@ -39,13 +41,7 @@
     (tick.alpha.interval/relation boat slot)
     (catch js/Error t (.-message t))))
 
-(defn normalize-kind [kind]
-  (case kind
-    "havkayak" "Havkayak"
-    "sup" "Standup padlebrett"
-    "grkayak" "Grønnlands\u00adkayak"
-    "surfski" "Surfski"
-    "?"))
+
 
 (defn has-selection [id x]
   ;(tap> ["has-selection" id (first (:selected x))])
@@ -57,16 +53,6 @@
        (t/hour dt)
        #_(* 24 (f dt)))))
 
-(defn number-view [slot]
-  [:div.font-oswald.tracking-wider.text-xl.font-bold.leading-normal
-   {:class ["dark:text-white" "text-black"]}
-   slot])
-
-(defn slot-view [slot]
-  [:div.px-1.rounded-sm.text-base.py-px.font-oswald.font-normal.whitespace-nowrap.h-auto
-   {:class ["dark:bg-amber-400" "dark:text-black"
-            "bg-gray-900" "text-gray-300"]}
-   slot])
 
 ;endregion
 
@@ -160,7 +146,8 @@
        {:class (if selected? :w-16 :w-12)}
        (number-view number)]
       [:div.self-center.justify-self-end (slot-view slot)]
-      [:div.text-base.self-center.justify-self-start {:class ["dark:text-gray-100"]} navn]
+      [:div.self-center.justify-self-start
+       (name-view navn)]
       [:div.col-span-1.h-6.self-center.bg-gray-400
        (when booking-db
          (draw-graph
@@ -168,7 +155,8 @@
             :list      status-list
             :time-slot slot'}))]
 
-      [:div.col-span-2.self-start.text-sm.justify-self-start (normalize-kind kind)]
+      (if details?
+        [:div.col-span-2.self-start.text-sm.justify-self-start (normalize-kind kind)])
       (if details?
         [:div.col-span-2.self-start.text-sm description])]
 
@@ -194,7 +182,7 @@
         {:keys [navn description location number
                 slot expert kind]} data]
     [:div.grid.gap-x-2.h-10.w-full
-     {:style {:grid-template-columns "2.5rem 8rem 1fr"
+     {:style {:grid-template-columns "3rem min-content 1fr 1fr 1fr min-content"
               :grid-auto-rows        "auto"}
       :class (if selected?
                (if overlapping?
@@ -208,30 +196,29 @@
                 "text-gray-700"
                 "hover:bg-gray-200"])}
      [:div.self-center.justify-self-end.font-oswald.text-xl.font-medium
-      (number-view number)
-      #_[:div.font-sans number]]
+      (number-view number)]
+     [:div.self-center (slot-view slot)]
      [:div.text-base.font-sans.self-center.truncate
       {:class ["dark:text-gray-100"]}
       navn]
 
-     [:div.bg-gray-400.h-6.self-center
+     [:div.self-center.truncate (normalize-kind kind)]
+
+     [:div.bg-gray-400.h-6.self-center.max-w-xs
       (when booking-db
         (draw-graph
           {:window    window
            :list      status-list
-           :time-slot slot'}))]]))
+           :time-slot slot'}))]
+     (when (and insert-after (fn? insert-after))
+       (insert-after id))]))
 
-(defn list-line [{:keys [selected?
-
-                         offset time-slot details? data
-                         id on-click remove? insert-before graph? compact?
-                         insert-after]
-                  :or   {graph? true}
-                  :as   m}]
-  [:div.flex
-
-   {:class (concat [:first:rounded-t :overflow-clip] (if (some? selected?)
-                                                       (if-not selected? [:ml-4] [:ml-2])))}
+(defn list-line [{:keys [selected? id on-click  insert-before  compact?] :as m}]
+  [:div
+   {:class (concat [:first:rounded-t :overflow-clip]
+                   ;fixme introduce a param to tell if we are to do selecting AT ALL
+                   (if (some? selected?)
+                     (if-not selected? [:ml-4] [:ml-2])))}
    (when insert-before insert-before)
    [:div
     {:on-click #(on-click id)}
@@ -395,79 +382,15 @@
           (button #(f 15) disabled? "15")
           (button #(f 17) disabled? "17")])])]])
 
-(defn toggle-favorite [id]
-  (let [user-auth (rf/subscribe [::db/user-auth])]
-    (tap> ["toggle-fav" id (:uid @user-auth)])))
-
-(defn modal-title
-  "A view that is a presentation of the boat with some details and a Star to click on"
-  [{:keys [toggle-favorite-fn read-db-fn]}]
-  (let [star [:div {:on-click #(toggle-favorite-fn)
-                    :class    ["text-amber-500"]} [icon/small :filled-star]]
-        {:keys [slot number navn kind description]} (read-db-fn)]
-
-    [:div.grid.gap-2.p-4.text-base.font-normal.w-full
-     {:class ["dark:text-white" :text-black]
-      :style {:grid-template-columns "3rem 1fr min-content"}}
-     [:div.self-start.justify-self-center (number-view number)]
-     [:div.leading-snug
-      [:div.font-semibold.text-lg navn]
-      [:div.text-sm.font-normal (normalize-kind kind)]]
-     [:div (slot-view slot)]
-     [:div.justify-self-center.self-start.pt-px star]
-     [:div.col-span-2.font-normal.text-base description]]))
-
-(defn modal-form [& {:keys [store]}]
-  (let [ref (r/atom nil)]
-    (fn []
-      [fork/form {:prevent-default?    true
-                  :initial-values      {:feilmelding ""}
-                  :clean-on-unmount?   true
-                  :component-did-mount (fn [_]
-                                         (when-let [r @ref]
-                                           (.focus r)))
-                  :keywordize-keys     true
-                  :on-submit           (fn [{:keys [values]}]
-                                         (store values)
-                                         (eykt.fsm-helpers/send :e.hide))}
-       (fn [{:keys [dirty handle-submit form-id values] :as props}]
-         (if dirty
-           (eykt.fsm-helpers/send :e.dirty)
-           (eykt.fsm-helpers/send :e.clean))
-         [:form
-          {:id        form-id
-           :on-submit handle-submit}
-
-          [:div.space-y-4.p-4
-           (fields/textarea (-> props
-                                (save-ref ref)
-                                (placeholder "Kort beskrivelse")) "Meld om feil" :feilmelding)
-
-           [:div.flex.justify-end.gap-4
-            [:button.btn.btn-free
-             {:type     :button
-              :on-click #(eykt.fsm-helpers/send :e.hide)} "Avbryt"]
-            [:button.btn.btn-danger
-             {:disabled (not (some? dirty))
-              :type     :submit} "Lagre"]]]])])))
-
-(defn details-dialog-fn [id]
-  (modal/form-action
-    {:header  (modal-title
-                {:read-db-fn         (fn [] (get (logg.database/boat-db) id))
-                 :toggle-favorite-fn (fn [] (toggle-favorite id))})
-     :form-fn (modal-form :store (fn [values] (tap> ["save settings " values])))
-     :footer  "Trykk på stjernen for å markere som favoritt"}))
-
 (defn insert-after-fn [id]
   ^{:key (str id)}
   [:div.w-10.flex.flex-center
-   {:class    [:text-black "bg-gray-400"]
+   {:class    [:text-black "bg-gray-200"]
     :on-click #(do
                  ;intent Prevent selecting the item when clicking on the insert-after-button
                  (.stopPropagation %)
                  ;intent sends a config/declaration to the fsm to build the dialog and present it in a modal manner
-                 (details-dialog-fn id))}
+                 (schpaa.modal.readymade/details-dialog-fn id))}
    (icon/small :three-vertical-dots)])
 
 (defn boat-picker
@@ -487,7 +410,7 @@
     [:div
      [time-navigator {:my-state my-state} props]
 
-     [:div.flex.justify-end.gap-2.p-4.x-mx-4.bg-gray-500
+     [:div.flex.justify-end.gap-2.p-4.x-mx-4
       [:button.btn-small.btn-dim {:type     :button
                                   :on-click #(reset! selected #{})} "ingen"]
       [:button.btn-small.btn-dim {:type     :button

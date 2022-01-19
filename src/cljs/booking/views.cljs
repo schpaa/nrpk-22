@@ -4,7 +4,9 @@
             [re-frame.core :as rf]
             [schpaa.components.fields :as fields]
             [schpaa.components.views :as views :refer [goto-chevron general-footer
-                                                       open-details]]
+                                                       number-view
+                                                       slot-view]]
+            [schpaa.modal.readymade :refer [details-dialog-fn]]
             [times.api :refer [day-name day-number-in-year]]
             [tick.core :as t]
             [tick.alpha.interval :refer [relation]]
@@ -185,7 +187,7 @@
                                                    (assoc-in [:values :selected] @selected)
                                                    :values))}
      (fn [{:keys [form-id handle-submit] :as props}]
-       [:form.bg-gray-500
+       [:form.bg-gray-300
         {:id        form-id
          :on-submit handle-submit}
 
@@ -265,7 +267,7 @@
         [:div.grid.gap-y-2.gap-x-1.w-full.p-2
          {:style {:grid-template-columns "min-content min-content min-content min-content  min-content min-content 1fr"
                   :grid-auto-rows        ""}}
-         [:div.uppercase.w-10.text-center.self-center (booking.views.picker/slot-view day-name)]
+         [:div.uppercase.w-10.text-center.self-center (slot-view day-name)]
 
          [:<>
           [:div.debug.whitespace-nowrap (t/format "dd/MM" (t/date-time start))]
@@ -290,12 +292,18 @@
 
          [:div.col-span-1.debug.w-full.text-right.truncate
           {:class (:fg color-map)}
-          (booking.views.picker/number-view (first selected))]]]
+          (number-view (first selected))]]]
 
        ;(open-details 1)
        (when accepted-user?
          (when (and insert-after (fn? insert-after))
            (insert-after nil)))])))
+
+(defn open-details [id]
+  [:div.w-10.flex.flex-center
+   {:class    [:text-black "bg-gray-200"]
+    :on-click #(schpaa.modal.readymade/details-dialog-fn id)}
+   [icon/small :three-vertical-dots]])
 
 (defn booking-list [{:keys [uid today data accepted-user? class]}]
   (r/with-let [show-all (r/atom false)
