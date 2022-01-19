@@ -11,7 +11,7 @@
 
 (defn confirm-booking []
   #_(apply send
-           (modal/confirm-action
+           (modal/form-action
              {:primary "Ok"
               :title   "Bekreftet"
               :text    [:div.leading-normal

@@ -179,11 +179,13 @@
     (forced-scroll-lock (or (and @mobile? @menu-open?)
                             (or (:modal @s) (:modal-forced @s))))
     [modal/overlay-with
-     {:modal?   (or (:modal @s)
+     {:modal-dim (:modal-dim @s)
+      :modal?   (or (:modal @s)
                     (:modal-forced @s))
       ;intent No dismiss-fx on click when forced, must click on a button
-      :on-close (if-not
-                  (:modal-forced @s)
+      :on-close (if
+                  (or (:modal-dirty @s) (:modal-forced @s))
+                  nil
                   #(send :e.hide))}
      [:<>
       [modal/render

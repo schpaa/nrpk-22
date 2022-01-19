@@ -40,17 +40,22 @@
      :on-click #(js/alert "!")}]
    [:div.flex.justify-between
     [:button.btn.btn-danger
-     #_{:on-click #(apply send
-                          (modal/are-you-sure?
-                            {:on-primary (fn [] (tap> "confirmed!"))
-                             :primary    "Ja, slett"
-                             :secondary  "Avbryt"
-                             :title      "Avlys booking"
-                             :text       [:div.leading-relaxed
-                                          [:p.mb-2 "Dette vil slette bookingen."]
-                                          [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+     {:on-click #(modal/form-action
+                   {:flags   #{:no-icon :no-crossout :-timeout}
+                    :footer  "Du kan ikke angre dette"
+                    :title   "Avlys booking"
+                    :form-fn (fn [] [:div
+                                     [:div.p-4 "Er du sikker på at du vil avlyse denne bookingen?"]
+                                     [modal/just-buttons
+                                      [["Behold" [:btn-free] (fn [] (send :e.hide))]
+                                       ["Avlys" [:btn-danger] (fn []
+                                                                (tap> ["save settings " 123])
+                                                                (send :e.hide))]]]])})}
      "Avlys"]
-    [:button.btn.btn-free.shadow-none "Endre"]]])
+    [:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags    #{:timeout :error :weak-dim}
+                                                                      :icon :squares
+                                                                      :footer "footer"
+                                                                      :title    "Bekreftet!"})} "Endre"]]])
 
 (defn all-active-bookings []
   (let [user-auth (rf/subscribe [::db/user-auth])

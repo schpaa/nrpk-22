@@ -16,7 +16,7 @@
 
 (defn confirm-registry []
   #_(apply send
-           (modal/confirm-action
+           (modal/form-action
              {:primary "Ok"
               :title   "Bekreftet"
               :text    [:div.leading-normal
@@ -50,29 +50,38 @@
                                    [:div {:class (if-not b "text-black/25")} (or b "ingen")]]])]))
 
 (def loggout-command
-  [:button.btn.btn-danger
-   #_{:on-click #(apply send
-                        (modal/are-you-sure?
-                          {:on-primary (fn [] (db/sign-out))
-                           :primary    "Logg ut nå!"
-                           :secondary  "Avbryt"
-                           :title      "Logg ut"
-                           :text       [:div.leading-normal
-                                        [:p "Dette vil logge deg ut av kontoen på denne enheten."]]}))}
+  [:button.btn.btn-free
+   {:on-click
+    #(modal/form-action
+       {:flags   #{:timeout}
+        ;:footer  "Du kan ikke angre dette"
+        :title   "Avlys booking"
+        :form-fn (fn [] [:div
+                         [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
+                         [modal/just-buttons
+                          [["Avbryt" [:btn-free] (fn [] (send :e.hide))]
+                           ["Logg ut" [:btn-cta] (fn []
+                                                   ;(db/sign-out)
+                                                   (send :e.hide))]]]])})}
+
    "Logg ut"])
 
 (def removeaccount-command
   [:button.btn.btn-danger
-   #_{:type     :button
-      :on-click #(apply send
-                        (modal/are-you-sure?
-                          {:on-primary (fn [] (tap> "confirmed!"))
-                           :primary    "Ja, slett"
-                           :secondary  "Avbryt"
-                           :title      "Slett konto"
-                           :text       [:div.leading-normal
-                                        [:p.mb-2 "Dette vil slette kontoen din permanent."]
-                                        [:p "Er du sikker du vil dette? Du kan ikke angre etterpå!"]]}))}
+   {:type :button
+    :on-click
+    #(modal/form-action
+       {:flags   #{:tixmeout}
+        :footer  [
+                  [:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter. "]
+                  [:div "Etter 14 dager slettes alle data."]]
+        :title   "Slett konto"
+        :form-fn (fn [] [:div
+                         [:div.p-4 "Er du sikker på at du vil slette booking-kontoen din?"]
+                         [modal/just-buttons
+                          [["Avbryt" [:btn-free] (fn [] (send :e.hide))]
+                           ["Ja, slett!" [:btn-danger] (fn []
+                                                         (send :e.hide))]]]])})}
    "Slett konto"])
 
 
