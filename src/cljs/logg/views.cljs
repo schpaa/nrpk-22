@@ -9,14 +9,8 @@
     [schpaa.modal.readymade :refer [details-dialog-fn]]
     [booking.views.picker]
     [tick.core :as t]
-    [schpaa.icon :as icon]))
-
-;todo This is nonsense, migrate to the readymade in booking.views.picker/insert-after
-(defn open-details [id]
-  [:div.w-10.flex.flex-center
-   {:class    [:text-black "bg-gray-200"]
-    :on-click #(details-dialog-fn id)}
-   [icon/small :three-vertical-dots]])
+    [schpaa.icon :as icon]
+    [eykt.hov :as hov]))
 
 (defn all-boats [{:keys [data]}]
   (r/with-let [edit (r/atom false)
@@ -25,10 +19,9 @@
                     detail-level @(rf/subscribe [:app/details])
                     c (count selected-keys)]
                 [:div.w-full
-                 (into [:div {:class [:overflow-clip
-                                      :space-y-px
-                                      :first:rounded-t
-                                      :last:rounded-b]}]
+                 (into [:div {:class [:bg-gray-300
+                                      "dark:bg-gray-800"
+                                      :space-y-px]}]
                        (map (fn [[id data]]
                               (let [idx id]
                                 [booking.views.picker/list-line
@@ -46,7 +39,7 @@
                                                           [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
                                                                             :handle-change #(swap! markings update idx (fnil not false))}
                                                            "" nil]])
-                                        :insert-after  open-details})]))
+                                        :insert-after  hov/open-details})]))
                             data))
                  [general-footer
                   {:insert-before (fn []

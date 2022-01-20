@@ -92,7 +92,7 @@
                                      accepted? [:text-alt "Godkjent booking"]
                                      use-booking? [:text-amber-500 "Godkjenning venter"]
                                      :else [:text-rose-500 "Ikke påmeldt"])]
-    [:div.p-4.bg-gray-50.shadow.rounded.space-y-4.text-base
+    [:div.p-4.dark:bg-gray-700.bg-gray-50.shadow.rounded.space-y-4.text-base
      [:div.flex.justify-between.items-center
       name
       loggout-command]

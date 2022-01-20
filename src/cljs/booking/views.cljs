@@ -18,7 +18,8 @@
             [logg.database]
             [booking.views.picker :refer [boat-picker list-line]]
             [schpaa.icon :as icon]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [eykt.hov :as hov]))
 
 ;INTENT our desired timeslot, who is available in this slow?
 
@@ -187,7 +188,7 @@
                                                    (assoc-in [:values :selected] @selected)
                                                    :values))}
      (fn [{:keys [form-id handle-submit] :as props}]
-       [:form.bg-gray-300
+       [:form;.bg-gray-300
         {:id        form-id
          :on-submit handle-submit}
 
@@ -197,10 +198,11 @@
         ;intent two states
         (rs/match-state booking-state
           [:s.booking :s.basic-booking-info]
-          [boat-picker (conj main-m {:my-state my-state
-                                     :compact? compact?
-                                     :graph?   graph?
-                                     :details? details?}) props]
+          [boat-picker
+           (conj main-m {:my-state my-state
+                         :compact? compact?
+                         :graph?   graph?
+                         :details? details?}) props]
 
           [:s.booking :s.confirm]
           [confirmation props
@@ -218,14 +220,12 @@
 
           [:div "d?" booking-state])
 
-        [:div.flex.items-center.sticky.bottom-0.xh-16.panelx.p-4 ;.border-t.border-gray-500.shadow-xl
+        [:div.flex.items-center.sticky.bottom-0.xh-16.panelx.p-4
          {:class "bg-gray-400/90"
           :style {:box-shadow "rgba(0, 0, 0, 0.35) 0px 5px 15px"}}
 
          (when (= booking-state [:s.booking :s.confirm]))
-         [:div                                              ;.flex.justify-between.w-full.items-center
-          #_[:div.select-none.font-bold.px-2
-             {:on-click #(rf/dispatch [:app/next-detail])} (inc @(rf/subscribe [:app/details]))]]
+         [:div]
 
          [rs/match-state booking-state
           [:s.booking :s.confirm]
@@ -245,8 +245,8 @@
 (defn- booking-list-item [{:keys [accepted-user? today hide-name? insert-before insert-top-fn on-click insert-after]
                            :or   {today (t/new-date)}} item]
   (let [{:keys [navn book-for-andre sleepover description selected start end]} item
-        relation' (relation start today)
-        color-map (booking.views.picker/booking-list-item-color-map relation')]
+        relation (tick.alpha.interval/relation start today)
+        color-map (booking.views.picker/booking-list-item-color-map relation)]
     (let [navn (or navn "skult navn")
           day-name (times.api/day-name (t/date-time start))
           checkout-time start
@@ -299,12 +299,6 @@
          (when (and insert-after (fn? insert-after))
            (insert-after nil)))])))
 
-(defn open-details [id]
-  [:div.w-10.flex.flex-center
-   {:class    [:text-black "bg-gray-200"]
-    :on-click #(schpaa.modal.readymade/details-dialog-fn id)}
-   [icon/small :three-vertical-dots]])
-
 (defn booking-list [{:keys [uid today data accepted-user? class]}]
   (r/with-let [show-all (r/atom false)
                edit (r/atom false)
@@ -333,14 +327,28 @@
                                            [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
                                                              :handle-change #(swap! markings update idx (fnil not false))}
                                             "" nil]])
-                        :insert-after   open-details} e]))
+                        :insert-after   hov/open-details} e]))
                   data))
 
        [general-footer
-        {:accepted-user? accepted-user?
-         :data           data
-         :show-all       show-all
-         :key-fn         :id
-         :edit-state     edit
-         :markings       markings
-         :c              c}]])))
+        {:insert-before (fn []
+                          [:div (schpaa.components.tab/tab
+                                  (conj schpaa.components.tab/select-bar-bottom-config
+                                        {:selected @(rf/subscribe [:app/details])
+                                         :select   #()})
+                                  [0 "S" #(rf/dispatch [:app/set-detail 0])]
+                                  [1 "M" #(rf/dispatch [:app/set-detail 1])]
+                                  [2 "L" #(rf/dispatch [:app/set-detail 2])])])
+         :data          data
+         :key-fn        key
+         :edit-state    edit
+         :markings      markings
+         :c             c}]
+       #_[general-footer
+          {:accepted-user? accepted-user?
+           :data           data
+           :show-all       show-all
+           :key-fn         :id
+           :edit-state     edit
+           :markings       markings
+           :c              c}]])))
