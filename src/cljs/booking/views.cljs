@@ -16,29 +16,41 @@
             [times.api :refer [format]]
             [eykt.fsm-helpers :refer [send]]
             [logg.database]
-            [booking.views.picker :refer [boat-picker list-line]]
+            [booking.views.picker :refer [boat-picker list-line
+                                          has-selection available? convert]]
             [schpaa.icon :as icon]
+            [db.core]
             [schpaa.debug :as l]
-            [eykt.hov :as hov]))
+            [eykt.hov :as hov]
+            [clojure.set :as set]))
+
+(declare booking-list-item)
 
 ;INTENT our desired timeslot, who is available in this slow?
 
-(defn pick-list [{:keys [offset slot selected on-click boat-db details? graph?] :as m}]
-  (if (seq @selected)
-    [:div.space-y-px
-     {:class [:overflow-clip
-              :first:rounded-t
-              :last:rounded-b]}
-     (for [id @selected]
-       [list-line
-        (conj m
-              {:time-slot slot
-               :remove?   true
-               :on-click  #(on-click id)
-               :id        id
-               :data      (get boat-db id)})])]
+(defn- overlapping? [id time-slot offset]
+  (let [booking-db (filter (partial has-selection id) (booking.database/read))
+        status-list (mapv (fn [{:keys [start end]}]
+                            {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+                             :start (- (convert start) offset)
+                             :end   (- (convert end) offset)})
+                          booking-db)
+        overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))]
+    overlapping?))
 
-    [:div.h-12.flex.items-center.justify-center.bg-white "Velg båt"]))
+(defn pick-list
+  "shows only the elements that are in selected"
+  [{:keys [items on-click boat-db time-slot offset] :as m}]
+  [:div.space-y-px
+   (for [[id data] (filter (comp #(some #{%} items) key) boat-db)
+         #_#_:when (some #{id} items)]
+     [list-line
+      (conj m
+            {:overlap? (overlapping? id time-slot offset)
+             :remove?  true
+             :on-click #(on-click id)
+             :id       id
+             :data     data})])])
 
 (rf/reg-sub :app/details (fn ([db] (get db :details 2))))
 
@@ -142,32 +154,120 @@
                              (apply str (cond-> []
                                           (< 24 h) (conj "dager")))))]))
 
+(def this-color-map
+  {:bg  [:bg-gray-100 :dark:bg-gray-700]
+   :bgp [:bg-gray-200 :dark:bg-gray-700]
+   :bg2 [:bg-gray-100 :dark:bg-gray-800]
+   :bg3 [:bg-gray-300 :dark:bg-gray-800]})
+
 (defn confirmation [{:as props} {:keys [state selected boat-db] :as m}]
-  (let [{:keys [sleepover start end]} (some-> state deref :values)
-        slot (try
-               (tick.alpha.interval/bounds start end)
-               (catch js/Error _ nil))]
-    [:div.flex.flex-col.flex-1
-     ;fixme Fudging, to keep statusbar at bottom at all times
-     {:style {:min-height "calc(100vh - 12.8rem)"}}
-     [:div.space-y-4.p-4.text-xl
-      (when slot (format "Fra %s til %s %s"
-                         (t/format (t/formatter "d/M-yy hh:mm") start)
-                         (t/format (t/formatter "d/M-yy hh:mm") end)
-                         (if sleepover "(overnatter)")))
-      (when slot
-        ;todo a list where the elements remain when removed (but stay disabled) so you can undo removal
-        [pick-list
-         (conj m
-               {:offset   (day-number-in-year start)
-                :slot     slot
-                :boat-db  (into {} boat-db)
-                :selected selected
-                :on-click #(swap! selected disj %)})])
-      (fields/textarea
-        (fields/full-field props)
-        "Beskjed til tur-kamerater"
-        :description)]]))
+  (let [;intent want a copy of selected, not a reference
+        presented (r/atom @selected)
+        cm this-color-map]
+
+    (fn [{:as props} {:keys [state selected boat-db] :as m}]
+      (let [{:keys [sleepover start end]} (some-> state deref :values)
+            slot (try
+                   (tick.alpha.interval/bounds start end)
+                   (catch js/Error _ nil))]
+        [:div.flex.flex-col.flex-1
+         ;fixme Fudging, to keep statusbar at bottom at all times
+         {:class (cm :bg3)
+          :style {:min-height "calc(100vh - 12.8rem)"}}
+         [:div.space-y-4
+          #_[:div.p-4
+             {:class (cm :bgp)}
+             (when slot
+               (if (= (t/date start) (t/date end))
+                 [:div.flex.flex-col.items-center.w-full.text-xl.space-y-2
+                  [:div
+                   [:span.capitalize (times.api/day-name start)] " " (t/day-of-month start) ". "
+                   [:span (times.api/month-name start)]
+                   " kl. " [:span (times.api/time-format (t/time start))]
+                   "—"
+                   [:span.normal-nums (times.api/time-format (t/time end))]]]
+
+                 [:div.flex.flex-col.items-center.w-full.text-xl.space-y-2
+                  [:div
+                   [:span.capitalize (times.api/day-name start)] " " (t/day-of-month start) ". "
+                   [:span.normal-nums (times.api/month-name start)]
+                   " kl " [:span (times.api/time-format (t/time start))]
+                   " ---> "]
+                  [:div
+                   " <--- "
+                   [:span.capitalize (times.api/day-name end)] " " (t/day-of-month end) ". "
+                   [:span (times.api/month-name end)]
+                   " kl. " [:span.normal-nums (times.api/time-format (t/time end))]]
+
+
+                  #_(format "Fra %s til %s %s"
+                            (t/format (t/formatter "d/M-yy hh:mm") start)
+                            (t/format (t/formatter "d/M-yy hh:mm") end)
+                            (if sleepover "(overnatter)"))]))]
+
+          ;(defn- booking-list-item [{:keys [accepted-user? today hide-name? insert-before insert-top-fn on-click insert-after]
+          ;                           :or   {today (t/new-date)}} item]
+          ;  (let [{:keys [navn book-for-andre sleepover description selected start end]} item
+
+
+          (if (seq @selected)
+            (when slot
+              ;todo a list where the elements remain when removed (but stay disabled) so you can undo removal
+              (let [offset (times.api/day-number-in-year start)
+                    not-available (into #{} (filter #(overlapping? % slot offset) (set/union @selected @presented)))]
+                [:div.space-y-4
+                 {:class (cm :bg3)}
+
+                 (booking-list-item
+                   {:boat-db boat-db}
+                   {:selected (set/difference @selected not-available)
+                    :offset offset
+                    :time-slot slot
+                    :start    start
+                    :end      end
+                    :navn     (:display-name @(rf/subscribe [:db.core/user-auth]))})
+
+                 #_[pick-list
+                    (conj m
+                          {:insert-before (fn [id] (hov/toggle-selected' {:on? (some #{id} @presented)}))
+                           :insert-after  hov/open-details
+                           ;todo: Make something that controls how list-line will appear!!!
+                           :appearance    #{:extra}
+
+                           :offset        offset
+                           :time-slot     slot
+                           :boat-db       boat-db
+                           :items         (set/difference (set/union @selected @presented) not-available)
+                           :-on-click     (fn [e] (swap! presented
+                                                         (fn [sel] (if (some #{e} sel)
+                                                                     (set/difference sel #{e})
+                                                                     (set/union sel #{e})))))})]
+
+                 (when-not (empty? not-available)
+                   [:<>
+                    [:div.px-4.space-y-1
+                     [:div.font-semibold.text-base "Ikke tilgjengelige"]
+                     [:div.text-sm.text-gray-500 "Du kan endre tidspunktet for din booking for å gjøre disse tilgjengelige"]]
+                    [pick-list
+                     (conj m
+                           {:insert-before (fn [id] (hov/toggle-selected' {:not? true #_(some #{id} @presented)}))
+                            :insert-after  hov/open-details
+                            ;todo: Make something that controls how list-line will appear
+                            :appearance    #{:extra :unavailable}
+                            :offset        offset
+                            :time-slot     slot
+                            :boat-db       boat-db
+                            :items         not-available #_(set/union @selected @presented)
+                            :on-click      (fn [e] (swap! presented
+                                                          (fn [sel] (if (some #{e} sel)
+                                                                      (set/difference sel #{e})
+                                                                      (set/union sel #{e})))))})]])])))
+
+
+          [:div.p-4 (fields/textarea
+                      (fields/full-field props)
+                      "Beskjed til tur-kamerater"
+                      :description)]]]))))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))
@@ -188,24 +288,27 @@
                                                    (assoc-in [:values :selected] @selected)
                                                    :values))}
      (fn [{:keys [form-id handle-submit] :as props}]
-       [:form;.bg-gray-300
+       [:form
         {:id        form-id
          :on-submit handle-submit}
 
-        #_[views/rounded-view {:flat 1}
-           (navigation booking-state my-state)]
+        ;[l/ppre-x my-state props]
+        [booking.time-navigator/time-navigator {:my-state my-state} props]
 
         ;intent two states
         (rs/match-state booking-state
           [:s.booking :s.basic-booking-info]
           [boat-picker
-           (conj main-m {:my-state my-state
-                         :compact? compact?
-                         :graph?   graph?
-                         :details? details?}) props]
+           props
+           (conj main-m
+                 {:my-state my-state
+                  :compact? compact?
+                  :graph?   graph?
+                  :details? details?})]
 
           [:s.booking :s.confirm]
-          [confirmation props
+          [confirmation
+           props
            (conj
              {:compact? compact?
               :graph?   graph?
@@ -214,9 +317,6 @@
               :boat-db  boat-db
               :selected selected
               :state    my-state})]
-
-          [:s.booking :s.initial]
-          [:div "initial"]
 
           [:div "d?" booking-state])
 
@@ -242,44 +342,43 @@
            [:div]
            (push-button #(send :e.confirm) nil "Neste")]]]])]))
 
-(defn- booking-list-item [{:keys [accepted-user? today hide-name? insert-before insert-top-fn on-click insert-after]
+(defn- booking-list-item [{:keys [offset accepted-user? today hide-name? insert-before insert-top-fn on-click insert-after
+                                  time-slot
+                                  boat-db]
                            :or   {today (t/new-date)}} item]
   (let [{:keys [navn book-for-andre sleepover description selected start end]} item
-        relation (tick.alpha.interval/relation start today)
+        relation (try (tick.alpha.interval/relation start today)
+                      (catch js/Error _ nil))
         color-map (booking.views.picker/booking-list-item-color-map relation)]
     (let [navn (or navn "skult navn")
-          day-name (times.api/day-name (t/date-time start))
+          day-name (str (times.api/day-name (t/date-time start) :length 2) ".")
           checkout-time start
           multiday (or sleepover (not (t/= (t/date (t/date-time start)) (t/date (t/date-time end)))))]
 
       [:div.grid
-       {:style {:grid-template-columns "1fr min-content"}
-        :class    (concat
-                    (:bg color-map)
-                    #_[:first:rounded-t :overflow-hidden])
-        :on-click #(when on-click
-                     (on-click item))}
+       {:style    {:grid-template-columns "1fr min-content"}
+        :class    (concat (:bg color-map))
+        :on-click #(when on-click (on-click item))}
        (when insert-top-fn
          [:div (insert-top-fn item)])
        [:div.flex
-        ;{:class (:fg- color-map)}
         (when insert-before insert-before)
         [:div.grid.gap-y-2.gap-x-1.w-full.p-2
          {:style {:grid-template-columns "min-content min-content min-content min-content  min-content min-content 1fr"
                   :grid-auto-rows        ""}}
-         [:div.uppercase.w-10.text-center.self-center (slot-view day-name)]
+         [:div.w-10.text-center.self-center day-name]
 
          [:<>
-          [:div.debug.whitespace-nowrap (t/format "dd/MM" (t/date-time start))]
-          [:div.debug (str (t/time (t/date-time checkout-time)))]]
+          [:div.debug.whitespace-nowrap (t/format "d.MM" (t/date-time start))]
+          [:div.debug.whitespace-nowrap "kl. " (t/format "H.mm" (t/time (t/date-time checkout-time)))]]
          [:div.w-10.debug.self-center [icon/small (if multiday :moon-2 :minus)]]
          (try
            (if multiday
              [:<>
-              [:div.debug.w-12 (str (t/time (t/date-time end)))]
-              [:div.debug.w-12 (t/format "dd/MM" (t/date (t/date-time end))) " "]]
+              [:div.debug.w-12 (t/format "H.mm" (t/time (t/date-time end)))]
+              [:div.debug.w-12 (t/format "d.MM" (t/date (t/date-time end))) " "]]
              [:<>
-              [:div.debug.w-12 (str (t/time (t/date-time end)))]
+              [:div.debug.w-12 (t/format "H.mm" (t/time (t/date-time end)))]
               [:div.w-12]])
            (catch js/Error e (.-message e)))
 
@@ -287,19 +386,35 @@
           (when-not hide-name? #_(and hide-name? (not book-for-andre))
             [:div.flex.justify-end.truncate {:class (:fg- color-map)} navn])]
 
-         [:div]
-         [:div.debug.col-span-5.text-sm {:class (:fg color-map)} description]
+         [:div.flex-col.space-y-px.w-full.col-span-7
+          (for [id selected]
+            [:div
+             [list-line {:id         id
+                         :data       (get (into {} boat-db) id)
+                         :offset offset
+                         :time-slot time-slot
+                         :appearance #{:basic :extra :description} :overlap? false}]
+             #_[:<>
+                (map (fn [e] [:div.mr-1.mb-1.inline-block [:div.bg-white.px-1.py-px (number-view (:number (get (into {} boat-db) e)))]]) selected)]])]
 
-         [:div.col-span-1.debug.w-full.text-right.truncate
-          {:class (:fg color-map)}
-          (number-view (first selected))]]]
+         #_#_[:div]
+         (if (some? description)
+           [:div.debug.col-span-5.text-sm {:class (:fg color-map)} description]
+           [:div.debug.col-span-5.w-full "sample description comes here that spans several lines just to say something"])
+
+         ;[l/ppre boat-db]
+         #_[:div.col-span-1.debug.w-full.truncatex.flex.gap-1.justify-start.line-clamp-2
+            {;:style {:max-height "4.2rem"}
+             :class (:fg color-map)}
+            (map (fn [e] [:div.mr-1.mb-1.inline-block [:div.bg-white.px-1.py-px (number-view (:number (get (into {} boat-db) e)))]]) selected)]]]
+
 
        ;(open-details 1)
        (when accepted-user?
          (when (and insert-after (fn? insert-after))
            (insert-after nil)))])))
 
-(defn booking-list [{:keys [uid today data accepted-user? class]}]
+(defn booking-list [{:keys [uid today data accepted-user? class boat-db]}]
   (r/with-let [show-all (r/atom false)
                edit (r/atom false)
                markings (r/atom {})]
@@ -316,7 +431,8 @@
              (map (fn [e]
                     (let [idx (:id e)]
                       [booking-list-item
-                       {:accepted-user? accepted-user?
+                       {:boat-db boat-db
+                        :accepted-user? accepted-user?
                         :today          today
                         :hide-name?     (not (some? uid))
                         :on-click       (fn [e]

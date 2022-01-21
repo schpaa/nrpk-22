@@ -61,7 +61,8 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [booking.views/booking-list
-     {:accepted-user? @accepted-user?
+     {:boat-db (sort-by (comp :number val) < (logg.database/boat-db))
+      :accepted-user? @accepted-user?
       :data           (booking.database/read)
       :today          (t/new-date 2022 1 19)
       :uid            (:uid @user-auth)}]))
@@ -79,7 +80,8 @@
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:div.select-none
      [booking.views/booking-list
-      {:class          []
+      {:boat-db (sort-by (comp :number val) < (logg.database/boat-db))
+       :class          []
        :accepted-user? @accepted-user?
        :data           (booking.database/read)
        :today          (t/new-date 2022 1 4)

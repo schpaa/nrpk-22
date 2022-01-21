@@ -169,7 +169,7 @@
                   (or (:modal-dirty @s) (:modal-forced @s))
                   nil
                   #(send :e.hide))}
-     [:<>
+     [:div
       [modal/render
        {:show?     (or (:modal @s) (:modal-forced @s))
         :config-fn (:modal-config-fn @s)}]

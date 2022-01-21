@@ -101,8 +101,8 @@
       @(db/on-value-reaction {:path ["booking"]})
       (concat #_(take 4 @(db/on-value-reaction {:path ["booking"]}))
         {:xx       {
-                    :start     (str (t/at (t/new-date 2022 1 18) (t/new-time 14 0)))
-                    :end       (str (t/at (t/new-date 2022 1 19) (t/new-time 19 0)))
+                    :start     (str (t/at (t/new-date 2022 1 22) (t/new-time 14 0)))
+                    :end       (str (t/at (t/new-date 2022 1 23) (t/new-time 19 0)))
                     :selected  [:-MeAwP8CBm620L9pzVHY]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
@@ -110,8 +110,8 @@
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}
          :intern-a {
-                    :start     (str (t/at (t/new-date 2022 1 16) (t/new-time 10 0)))
-                    :end       (str (t/at (t/new-date 2022 1 16) (t/new-time 16 0)))
+                    :start     (str (t/at (t/new-date 2022 1 23) (t/new-time 10 0)))
+                    :end       (str (t/at (t/new-date 2022 1 23) (t/new-time 16 0)))
                     :selected  [:-MeAwP8CBm620L9pzVHY]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
@@ -119,8 +119,8 @@
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-a {
-                    :start     (str (t/at (t/new-date 2022 1 15) (t/new-time 0 0)))
-                    :end       (str (t/at (t/new-date 2022 1 17) (t/new-time 23 0)))
+                    :start     (str (t/at (t/new-date 2022 1 24) (t/new-time 0 0)))
+                    :end       (str (t/at (t/new-date 2022 1 25) (t/new-time 23 0)))
                     :selected  [:-Mi1VEvPzB7CwUKRFnuM]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
@@ -129,7 +129,7 @@
                                                      (t/new-time 10 0))))}}
         {:intern-a {
                     :start     (str (t/at (t/new-date 2022 1 15) (t/new-time 0 0)))
-                    :end       (str (t/at (t/new-date 2022 1 20) (t/new-time 23 0)))
+                    :end       (str (t/at (t/new-date 2022 1 25) (t/new-time 23 0)))
                     :selected  [:-Mi1SV8ndQjj8eWDnU4e]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
                     :navn      "navns"
@@ -137,8 +137,8 @@
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-a {:date       (str (t/new-date 2021 1 5))
-                    :start      (str (t/at (t/new-date 2022 1 16) (t/new-time 8 0)))
-                    :end        (str (t/at (t/new-date 2022 1 16) (t/new-time 20 0)))
+                    :start      (str (t/at (t/new-date 2022 1 22) (t/new-time 8 0)))
+                    :end        (str (t/at (t/new-date 2022 1 22) (t/new-time 20 0)))
                     :sleepover  false
                     :selected   [:-Mg5wRGchF2DP-S8n627]
                     :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
@@ -146,8 +146,8 @@
                     :version    2
                     :timestamp  (str (t/instant (t/at (t/new-date 2022 11 1)
                                                       (t/new-time 10 0))))}}
-        {:intern-a {:start      (str (t/at (t/new-date 2022 1 19) (t/new-time 23 0)))
-                    :end        (str (t/at (t/new-date 2022 1 20) (t/new-time 22 0)))
+        {:intern-a {:start      (str (t/at (t/new-date 2022 1 21) (t/new-time 23 0)))
+                    :end        (str (t/at (t/new-date 2022 1 22) (t/new-time 22 0)))
                     :sleepover  false
                     :selected   [:-Mg5wRGchF2DP-S8n627]
                     :uid        "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
@@ -166,8 +166,8 @@
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
 
-        {:intern-b {:start     (str (t/at (t/new-date 2022 1 1) (t/new-time 23 0)))
-                    :end       (str (t/at (t/new-date 2022 1 3) (t/new-time 12 0)))
+        {:intern-b {:start     (str (t/at (t/new-date 2022 1 21) (t/new-time 23 0)))
+                    :end       (str (t/at (t/new-date 2022 1 23) (t/new-time 12 0)))
                     :sleepover false
                     :selected  [501]
                     :deleted   false
@@ -177,8 +177,8 @@
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-c {
-                    :start     (str (t/at (t/new-date 2022 1 10) (t/new-time 11 0)))
-                    :end       (str (t/at (t/new-date 2022 1 11) (t/new-time 15 0)))
+                    :start     (str (t/at (t/new-date 2022 1 20) (t/new-time 11 0)))
+                    :end       (str (t/at (t/new-date 2022 1 21) (t/new-time 15 0)))
                     :sleepover false
                     :selected  [502]
                     :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
@@ -199,8 +199,8 @@
                      :version   2
                      :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                       (t/new-time 10 0))))}}
-        {:intern-d {:start     (str (t/at (t/new-date 2022 1 13) (t/new-time 9 0)))
-                    :end       (str (t/at (t/new-date 2022 1 15) (t/new-time 12 0)))
+        {:intern-d {:start     (str (t/at (t/new-date 2022 1 23) (t/new-time 9 0)))
+                    :end       (str (t/at (t/new-date 2022 1 25) (t/new-time 12 0)))
 
                     :sleepover false
                     :selected  [504]
@@ -209,8 +209,8 @@
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
-        {:intern-e {:start     (str (t/at (t/new-date 2022 1 5) (t/new-time 11 0)))
-                    :end       (str (t/at (t/new-date 2022 1 7) (t/new-time 12 0)))
+        {:intern-e {:start     (str (t/at (t/new-date 2022 1 25) (t/new-time 11 0)))
+                    :end       (str (t/at (t/new-date 2022 1 27) (t/new-time 12 0)))
 
                     :sleepover false
                     :selected  [401]
@@ -220,8 +220,8 @@
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
         {:intern-f {
-                    :start       (str (t/at (t/new-date 2022 1 14) (t/new-time 18 0)))
-                    :end         (str (t/at (t/new-date 2022 1 14) (t/new-time 21 0)))
+                    :start       (str (t/at (t/new-date 2022 1 24) (t/new-time 18 0)))
+                    :end         (str (t/at (t/new-date 2022 1 24) (t/new-time 21 0)))
 
                     :sleepover   false
                     :selected    [501]
@@ -262,8 +262,18 @@
                     :version     2
                     :timestamp   (str (t/instant (t/at (t/new-date 2022 4 20)
                                                        (t/new-time 10 0))))}}
-        {:intern-g {:start     (str (t/at (t/new-date 2022 1 15) (t/new-time 12 0)))
-                    :end       (str (t/at (t/new-date 2022 1 15) (t/new-time 17 0)))
+        {:intern-g {:start     (str (t/at (t/new-date 2022 1 17) (t/new-time 12 0)))
+                    :end       (str (t/at (t/new-date 2022 1 25) (t/new-time 17 0)))
+                    ;:description "Bursdagspadlings"
+                    ;:sleepover  true
+                    :selected  [:-Mg5wRGchF2DP-S8n627]
+                    :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
+                    :navn      "Peter Sekel Whatevernotsen"
+                    :version   2
+                    :timestamp (str (t/instant (t/at (t/new-date 2022 4 20)
+                                                     (t/new-time 10 0))))}}
+        {:intern-g {:start     (str (t/at (t/new-date 2022 1 22) (t/new-time 12 0)))
+                    :end       (str (t/at (t/new-date 2022 1 23) (t/new-time 17 0)))
                     ;:description "Bursdagspadlings"
                     ;:sleepover  true
                     :selected  [500 501]
@@ -272,18 +282,8 @@
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 4 20)
                                                      (t/new-time 10 0))))}}
-        {:intern-g {:start     (str (t/at (t/new-date 2022 1 15) (t/new-time 12 0)))
-                    :end       (str (t/at (t/new-date 2022 1 15) (t/new-time 17 0)))
-                    ;:description "Bursdagspadlings"
-                    ;:sleepover  true
-                    :selected  [500 501]
-                    :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn      "Peter Sekel Whatevernotsen"
-                    :version   2
-                    :timestamp (str (t/instant (t/at (t/new-date 2022 4 20)
-                                                     (t/new-time 10 0))))}}
-        {:intern-g {:start     (str (t/at (t/new-date 2022 1 5) (t/new-time 12 0)))
-                    :end       (str (t/at (t/new-date 2022 1 5) (t/new-time 17 0)))
+        {:intern-g {:start     (str (t/at (t/new-date 2022 1 21) (t/new-time 12 0)))
+                    :end       (str (t/at (t/new-date 2022 1 21) (t/new-time 17 0)))
                     :selected  [510]
                     :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
                     :navn      "Peter Sekel Whatevernotsen"

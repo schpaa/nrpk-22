@@ -23,7 +23,7 @@
       font-display: swap;
       font-style: oblique 0deg 10deg;
       src: url("fonts/Inter.var.woff2?v=3.19") format("woff2");
-      font-feature-settings: "zero", "ss01", "ss02", "salt", "calt";
+      font-feature-settings: "ss01","salt", "calt";
     }
 
 
@@ -197,5 +197,11 @@
     .flex-center {
         @apply items-center justify-center;
     }
-
+  .hide-scrollbar::-webkit-scrollbar {
+        box-sizing: border-box;
+        width: 0 !important;
+        display: none;
+        scrollbar-width: none;
+        scrollbar-height: none;
+    }
 }
