@@ -81,7 +81,8 @@
         text-xl
         font-medium
         tracking-normal
-        border-b-4 border-t-0 border-x-0 border-transparent text-center;
+        pb-1
+        border-b-2 border-t-0 border-x-0 border-gray-300 dark:border-gray-600 text-center;
     }
 
     .btn-tab h2 {
@@ -182,6 +183,10 @@
     }
     .btn-off {
         @apply bg-black/25 text-white/50;
+    }
+
+    button, input[type="text"], input[type="date"], input[type="time"], textarea {
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2
     }
 
 }

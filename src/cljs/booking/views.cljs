@@ -160,13 +160,13 @@
    :bg2 [:bg-gray-100 :dark:bg-gray-800]
    :bg3 [:bg-gray-300 :dark:bg-gray-800]})
 
-(defn confirmation [{:as props} {:keys [state selected boat-db] :as m}]
+(defn confirmation [_props {:keys [state selected boat-db] :as m}]
   (let [;intent want a copy of selected, not a reference
         presented (r/atom @selected)
         cm this-color-map]
 
     (fn [{:as props} {:keys [state selected boat-db] :as m}]
-      (let [{:keys [sleepover start end]} (some-> state deref :values)
+      (let [{:keys [start end]} (some-> state deref :values)
             slot (try
                    (tick.alpha.interval/bounds start end)
                    (catch js/Error _ nil))]
@@ -175,85 +175,38 @@
          {:class (cm :bg3)
           :style {:min-height "calc(100vh - 12.8rem)"}}
          [:div.space-y-4
-          #_[:div.p-4
-             {:class (cm :bgp)}
-             (when slot
-               (if (= (t/date start) (t/date end))
-                 [:div.flex.flex-col.items-center.w-full.text-xl.space-y-2
-                  [:div
-                   [:span.capitalize (times.api/day-name start)] " " (t/day-of-month start) ". "
-                   [:span (times.api/month-name start)]
-                   " kl. " [:span (times.api/time-format (t/time start))]
-                   "—"
-                   [:span.normal-nums (times.api/time-format (t/time end))]]]
-
-                 [:div.flex.flex-col.items-center.w-full.text-xl.space-y-2
-                  [:div
-                   [:span.capitalize (times.api/day-name start)] " " (t/day-of-month start) ". "
-                   [:span.normal-nums (times.api/month-name start)]
-                   " kl " [:span (times.api/time-format (t/time start))]
-                   " ---> "]
-                  [:div
-                   " <--- "
-                   [:span.capitalize (times.api/day-name end)] " " (t/day-of-month end) ". "
-                   [:span (times.api/month-name end)]
-                   " kl. " [:span.normal-nums (times.api/time-format (t/time end))]]
-
-
-                  #_(format "Fra %s til %s %s"
-                            (t/format (t/formatter "d/M-yy hh:mm") start)
-                            (t/format (t/formatter "d/M-yy hh:mm") end)
-                            (if sleepover "(overnatter)"))]))]
-
-          ;(defn- booking-list-item [{:keys [accepted-user? today hide-name? insert-before insert-top-fn on-click insert-after]
-          ;                           :or   {today (t/new-date)}} item]
-          ;  (let [{:keys [navn book-for-andre sleepover description selected start end]} item
-
-
           (if (seq @selected)
             (when slot
               ;todo a list where the elements remain when removed (but stay disabled) so you can undo removal
               (let [offset (times.api/day-number-in-year start)
                     not-available (into #{} (filter #(overlapping? % slot offset) (set/union @selected @presented)))]
-                [:div.space-y-4
+                [:div.space-y-2
                  {:class (cm :bg3)}
-
-                 (booking-list-item
-                   {:boat-db boat-db}
-                   {:selected (set/difference @selected not-available)
-                    :offset offset
-                    :time-slot slot
-                    :start    start
-                    :end      end
-                    :navn     (:display-name @(rf/subscribe [:db.core/user-auth]))})
-
-                 #_[pick-list
-                    (conj m
-                          {:insert-before (fn [id] (hov/toggle-selected' {:on? (some #{id} @presented)}))
-                           :insert-after  hov/open-details
-                           ;todo: Make something that controls how list-line will appear!!!
-                           :appearance    #{:extra}
-
-                           :offset        offset
-                           :time-slot     slot
-                           :boat-db       boat-db
-                           :items         (set/difference (set/union @selected @presented) not-available)
-                           :-on-click     (fn [e] (swap! presented
-                                                         (fn [sel] (if (some #{e} sel)
-                                                                     (set/difference sel #{e})
-                                                                     (set/union sel #{e})))))})]
+                 [booking-list-item
+                  {:boat-db      boat-db
+                   :appearance   #{:basic}
+                   :insert-below (fn [] [:div.px-4.pb-4 (fields/textarea
+                                                          (fields/full-field props)
+                                                          "Beskjed til tur-kamerater"
+                                                          :description)])}
+                  {:selected  (set/difference @selected not-available)
+                   :offset    offset
+                   :time-slot slot
+                   :start     start
+                   :end       end
+                   :navn      (:display-name @(rf/subscribe [:db.core/user-auth]))}]
 
                  (when-not (empty? not-available)
                    [:<>
                     [:div.px-4.space-y-1
-                     [:div.font-semibold.text-base "Ikke tilgjengelige"]
+                     [:div.font-semibold.text-base "Noe utstyr er ikke tilgjengelig"]
                      [:div.text-sm.text-gray-500 "Du kan endre tidspunktet for din booking for å gjøre disse tilgjengelige"]]
                     [pick-list
                      (conj m
                            {:insert-before (fn [id] (hov/toggle-selected' {:not? true #_(some #{id} @presented)}))
                             :insert-after  hov/open-details
                             ;todo: Make something that controls how list-line will appear
-                            :appearance    #{:extra :unavailable}
+                            :appearance    #{:extra :unavailable :timeline}
                             :offset        offset
                             :time-slot     slot
                             :boat-db       boat-db
@@ -261,13 +214,7 @@
                             :on-click      (fn [e] (swap! presented
                                                           (fn [sel] (if (some #{e} sel)
                                                                       (set/difference sel #{e})
-                                                                      (set/union sel #{e})))))})]])])))
-
-
-          [:div.p-4 (fields/textarea
-                      (fields/full-field props)
-                      "Beskjed til tur-kamerater"
-                      :description)]]]))))
+                                                                      (set/union sel #{e})))))})]])])))]]))))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))
@@ -291,8 +238,6 @@
        [:form
         {:id        form-id
          :on-submit handle-submit}
-
-        ;[l/ppre-x my-state props]
         [booking.time-navigator/time-navigator {:my-state my-state} props]
 
         ;intent two states
@@ -342,96 +287,116 @@
            [:div]
            (push-button #(send :e.confirm) nil "Neste")]]]])]))
 
-(defn- booking-list-item [{:keys [offset accepted-user? today hide-name? insert-before insert-top-fn on-click insert-after
+(defn- booking-list-item [{:keys [offset accepted-user? today hide-name? on-click
+                                  insert-top-fn
+                                  insert-before
+                                  insert-after
+                                  insert-below
+                                  appearance
                                   time-slot
                                   boat-db]
-                           :or   {today (t/new-date)}} item]
-  (let [{:keys [navn book-for-andre sleepover description selected start end]} item
+                           :or   {today (t/new-date)}}
+                          {:keys [navn sleepover description selected start end] :as item}]
+  (let [details @(rf/subscribe [:app/details])
         relation (try (tick.alpha.interval/relation start today)
                       (catch js/Error _ nil))
-        color-map (booking.views.picker/booking-list-item-color-map relation)]
+        {:keys [bg fg fg-]} (booking.views.picker/booking-list-item-color-map relation)]
     (let [navn (or navn "skult navn")
-          day-name (str (times.api/day-name (t/date-time start) :length 2) ".")
+          day-name (times.api/day-name (t/date-time start))
           checkout-time start
           multiday (or sleepover (not (t/= (t/date (t/date-time start)) (t/date (t/date-time end)))))]
 
       [:div.grid
        {:style    {:grid-template-columns "1fr min-content"}
-        :class    (concat (:bg color-map))
+        :class    (concat bg)
         :on-click #(when on-click (on-click item))}
+
        (when insert-top-fn
          [:div (insert-top-fn item)])
        [:div.flex
         (when insert-before insert-before)
-        [:div.grid.gap-y-2.gap-x-1.w-full.p-2
-         {:style {:grid-template-columns "min-content min-content min-content min-content  min-content min-content 1fr"
+        [:div.grid.gap-2.w-full.p-4
+         {:class (concat bg fg)
+          :style {:grid-template-columns "1.5rem 1fr min-content max-content 3rem"
                   :grid-auto-rows        ""}}
-         [:div.w-10.text-center.self-center day-name]
+
+         ;[:div.col-span-5 relation]
+         [:div.truncate.col-span-2
+          (when-not hide-name? #_(and hide-name? (not book-for-andre))
+            [:div.truncate {:class fg-} navn])]
 
          [:<>
-          [:div.debug.whitespace-nowrap (t/format "d.MM" (t/date-time start))]
-          [:div.debug.whitespace-nowrap "kl. " (t/format "H.mm" (t/time (t/date-time checkout-time)))]]
-         [:div.w-10.debug.self-center [icon/small (if multiday :moon-2 :minus)]]
-         (try
-           (if multiday
-             [:<>
-              [:div.debug.w-12 (t/format "H.mm" (t/time (t/date-time end)))]
-              [:div.debug.w-12 (t/format "d.MM" (t/date (t/date-time end))) " "]]
-             [:<>
-              [:div.debug.w-12 (t/format "H.mm" (t/time (t/date-time end)))]
-              [:div.w-12]])
-           (catch js/Error e (.-message e)))
+          [:div.justify-self-end.whitespace-nowrap (t/format (str "'" day-name " 'd.MM") (t/date-time start))]
+          [:div.debug.whitespace-nowrap (t/format "'kl.' H.mm" (t/time (t/date-time checkout-time)))]]
 
-         [:div.debug.truncate
-          (when-not hide-name? #_(and hide-name? (not book-for-andre))
-            [:div.flex.justify-end.truncate {:class (:fg- color-map)} navn])]
+         [:div.self-center.justify-self-end
+          (when multiday
+            [icon/small :moon-2])]
 
-         [:div.flex-col.space-y-px.w-full.col-span-7
-          (for [id selected]
-            [:div
-             [list-line {:id         id
-                         :data       (get (into {} boat-db) id)
-                         :offset offset
-                         :time-slot time-slot
-                         :appearance #{:basic :extra :description} :overlap? false}]
-             #_[:<>
-                (map (fn [e] [:div.mr-1.mb-1.inline-block [:div.bg-white.px-1.py-px (number-view (:number (get (into {} boat-db) e)))]]) selected)]])]
+         [:div.col-span-3]
 
-         #_#_[:div]
-         (if (some? description)
-           [:div.debug.col-span-5.text-sm {:class (:fg color-map)} description]
-           [:div.debug.col-span-5.w-full "sample description comes here that spans several lines just to say something"])
+         [:div.debug.whitespace-nowrap.self-start (t/format "'kl.' H.mm" (t/time (t/date-time end)))]
 
-         ;[l/ppre boat-db]
-         #_[:div.col-span-1.debug.w-full.truncatex.flex.gap-1.justify-start.line-clamp-2
-            {;:style {:max-height "4.2rem"}
-             :class (:fg color-map)}
-            (map (fn [e] [:div.mr-1.mb-1.inline-block [:div.bg-white.px-1.py-px (number-view (:number (get (into {} boat-db) e)))]]) selected)]]]
+         [:div.self-start.justify-self-end
+          (when multiday
+            (t/format "d.MM" (t/date (t/date-time end))))]
 
+         (case details
+           0 [:div.col-span-5
+              [:<>]]
+           1 (when-not (empty? selected)
+               [:div.col-span-5
+                [:div.flex.gap-1.justify-start.line-clamp-2
+                 {:class fg}
+                 (for [id selected
+                       :let [data (get (into {} boat-db) id)]
+                       :while (some? data)]
+                   [:div.mr-1.mb-1.inline-block
+                    [:div.bg-white.px-1.py-px
+                     (number-view (:number data))]])]])
+           2 (when-not (empty? selected)
+               [:div.col-span-5
+                [:div.space-y-px
+                 {:class [:first:rounded-t :overflow-clip :last:rounded-b]}
+                 (for [id selected
+                       :let [data (get (into {} boat-db) id)]
+                       :while (some? data)]
+                   [list-line {:id         id
+                               :data       data
+                               :offset     offset
+                               :time-slot  time-slot
+                               :appearance #{:basic :clear}
+                               :overlap?   false}])]])
+           [:<>])
 
-       ;(open-details 1)
+         (if (or (some #{:description} appearance) (< 1 details))
+           (if (some? description)
+             [:div.debug.col-span-3.text-sm {:class fg} description]
+             [:<>]))]]
+
+       (when insert-below
+         [:div.col-span-3 (insert-below)])
+
        (when accepted-user?
          (when (and insert-after (fn? insert-after))
-           (insert-after nil)))])))
+           (insert-after (:id item))))])))
 
-(defn booking-list [{:keys [uid today data accepted-user? class boat-db]}]
+(defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db]}]
   (r/with-let [show-all (r/atom false)
                edit (r/atom false)
                markings (r/atom {})]
     (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
           c (count selected-keys)
-          my-data data
-          data (cond->> (->> my-data
-                             (filter (partial booking.views.picker/after-and-including today))
-                             (sort-by :start <))
-                        (not @show-all) (take 10))]
+          data (->> booking-data
+                    (filter (comp (partial booking.views.picker/after-and-including today) val))
+                    (sort-by (comp :start val) <))]
       [:div
        (into [:div.space-y-px.shadow
               {:class class}]
-             (map (fn [e]
-                    (let [idx (:id e)]
+             (map (fn [[k item]]
+                    (let [idx (:id item)]
                       [booking-list-item
-                       {:boat-db boat-db
+                       {:boat-db        boat-db
                         :accepted-user? accepted-user?
                         :today          today
                         :hide-name?     (not (some? uid))
@@ -443,9 +408,9 @@
                                            [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
                                                              :handle-change #(swap! markings update idx (fnil not false))}
                                             "" nil]])
-                        :insert-after   hov/open-details} e]))
+                        :insert-after   hov/open-booking-details-button}
+                       item]))
                   data))
-
        [general-footer
         {:insert-before (fn []
                           [:div (schpaa.components.tab/tab
@@ -459,12 +424,5 @@
          :key-fn        key
          :edit-state    edit
          :markings      markings
-         :c             c}]
-       #_[general-footer
-          {:accepted-user? accepted-user?
-           :data           data
-           :show-all       show-all
-           :key-fn         :id
-           :edit-state     edit
-           :markings       markings
-           :c              c}]])))
+         :c             c}]])))
+

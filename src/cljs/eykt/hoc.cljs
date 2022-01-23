@@ -9,7 +9,8 @@
             [reagent.core :as r]
             [tick.core :as t]
             [schpaa.components.views :as views]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [schpaa.debug :as l]))
 
 ;region booking
 
@@ -28,44 +29,81 @@
 
 (defn last-active-booking []
   [:<>
-   [:h2 "Søndag 3 August"]
-   [:h2 "16:00 --> 21:00"]
-   [booking.views/pick-list
-    {:selected (r/atom #{})
-     :boat-db  (logg.database/boat-db)
-     :day      1
-     :slot     (tick.alpha.interval/bounds
-                 (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
-                 (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
-     :on-click #(js/alert "!")}]
-   [:div.flex.justify-between
-    [:button.btn.btn-danger
-     {:on-click #(modal/form-action
-                   {:flags   #{:no-icon :no-crossout :-timeout}
-                    :footer  "Du kan ikke angre dette"
-                    :title   "Avlys booking"
-                    :form-fn (fn [] [:div
-                                     [:div.p-4 "Er du sikker på at du vil avlyse denne bookingen?"]
-                                     [modal/just-buttons
-                                      [["Behold" [:btn-free] (fn [] (send :e.hide))]
-                                       ["Avlys" [:btn-danger] (fn []
-                                                                (tap> ["save settings " 123])
-                                                                (send :e.hide))]]]])})}
-     "Avlys"]
-    [:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags    #{:timeout :error :weak-dim}
-                                                                      :icon :squares
-                                                                      :footer "footer"
-                                                                      :title    "Bekreftet!"})} "Endre"]]])
+   #_(when-let [u @(rf/subscribe [::db/user-auth])]
+       [l/ppre (:uid u)])
+   (let [today (t/date)
+         data (->> (booking.database/read)
+                   (filter (fn [{:keys [uid]}] (= uid (:uid @(rf/subscribe [::db/user-auth])))))
+                   (filter (fn [{:keys [start]}] (t/<= today (t/date (t/date-time start)))))
+                   (sort-by :start <)
+                   first)]
+     (if (some? data)
+       [:<>
+        (r/with-let [st (r/atom true)]
+          [:button {:on-click #(swap! st not)
+                    :class    (concat
+                                (if @st [:bg-green-600 ] [:bg-gray-200])
+                                [:relative
+                                 :inline-flex :shrink-0
+                                 :focus:outline-none :focus:ring-2 :focus:ring-offset-2 ;:focus:ring-cyan-400
+                                 :rounded-full :border-2
+                                 :transition-colors :ease-in-out :duration-200
+                                 :h-6 :w-11])}
+           [:span {:class (concat
+                            (if @st [ :translate-x-5] [:translate-x-0])
+                            [:bg-white
+                             :transition :duration-200
+                             :inline-block :w-5 :h-5
+                             :ease-in-out
+                             :shadow :transform :ring-0
+
+                             :rounded-full])}]])
+
+        [:h2 (:start data)]
+        [:h2 (:end data)]
+        [:div.flex.justify-between
+         [:button.btn.btn-danger
+          {:on-click #(modal/form-action
+                        {:flags   #{:no-icon :no-crossout :-timeout}
+                         :footer  "Du kan ikke angre dette"
+                         :title   "Avlys booking"
+                         :form-fn (fn [] [:div
+                                          [:div.p-4 "Er du sikker på at du vil avlyse denne bookingen?"]
+                                          [modal/just-buttons
+                                           [["Behold" [:btn-free] (fn [] (send :e.hide))]
+                                            ["Avlys" [:btn-danger] (fn []
+                                                                     (tap> ["save settings " 123])
+                                                                     (send :e.hide))]]]])})}
+          "Avlys"]
+         [:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags  #{:timeout :error :weak-dim}
+                                                                           :icon   :squares
+                                                                           :footer "footer"
+                                                                           :title  "Bekreftet!"})} "Endre"]]]
+       [:div "Du har ingen bookinger"]))
+   #_[booking.views/pick-list
+      {:selected (r/atom #{})
+       :boat-db  (logg.database/boat-db)
+       :day      1
+       :slot     (tick.alpha.interval/bounds
+                   (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
+                   (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
+       :on-click #(js/alert "!")}]])
+
 
 (defn all-active-bookings []
   (let [user-auth (rf/subscribe [::db/user-auth])
         accepted-user? (rf/subscribe [:app/accepted-user?])]
-    [booking.views/booking-list
-     {:boat-db (sort-by (comp :number val) < (logg.database/boat-db))
-      :accepted-user? @accepted-user?
-      :data           (booking.database/read)
-      :today          (t/new-date 2022 1 19)
-      :uid            (:uid @user-auth)}]))
+    [:<>
+     [:div.flex.justify-between.p-4.bg-gray-50
+      [:button.btn.btn-free "Vis mine"]
+      [:button.btn.btn-free "Vis alle"]]
+     [booking.views/booking-list
+      {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
+       :class          [:bg-gray-400]
+       :accepted-user? @accepted-user?
+       :booking-data   (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read)) #_(booking.database/read)
+       :today          (t/new-date 2022 1 21)
+       :uid            (:uid @user-auth)}]]))
 
 (defn all-boats []
   [logg.views/all-boats
@@ -80,7 +118,7 @@
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:div.select-none
      [booking.views/booking-list
-      {:boat-db (sort-by (comp :number val) < (logg.database/boat-db))
+      {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
        :class          []
        :accepted-user? @accepted-user?
        :data           (booking.database/read)
@@ -89,7 +127,7 @@
 
 
 (defn debug []
-  [:div.p-4.space-y-4.columns-3xs.gap-4;.divide-x.divide-dashed.divide-black
+  [:div.p-4.space-y-4.columns-3xs.gap-4                     ;.divide-x.divide-dashed.divide-black
    [:div (str devtools.version/current-version)]
 
    (for [e [:text-sm :text-base :text-xl :text-4xl]]

@@ -22,22 +22,27 @@
 
 (defn- booking-list-item-color-map [relation]
   (case relation
-    :precedes {:bg  ["dark:bg-black/30" "bg-gray-200" :text-gray-400]
+    ;past
+    :precedes {:bg  ["dark:bg-black/30" "bg-gray-500" :text-gray-400]
                :fg  ["dark:text-gray-500/50" "text-gray-500"]
                :fg- ["dark:text-white/30"]}
 
-    :preceded-by {:bg  ["dark:bg-gray-400" "bg-gray-300"]
-                  :fg  ["dark:text-black" "text-black"]
-                  :fg- ["dark:text-black/40" "text-black/40"]}
-    {:bg  ["dark:bg-sky-500" "bg-sky-200"]
-     :fg  ["dark:text-black" "text-sky-600"]
+    ;future
+    :preceded-by {:bg  ["dark:bg-sky-100" "bg-sky-400"]
+                  :fg  ["dark:text-black" "text-white"]
+                  :fg- ["dark:text-black/40" "text-white/50"]}
+
+    ;today
+    {:bg  ["dark:bg-alt-600" "bg-green-100"]
+     :fg  ["dark:text-black" "text-green-600"]
      :fg- ["dark:text-white"]}))
 
 ;region utilities (pure)
 
 (defn after-and-including [today {:keys [start]}]
   (let [p (relation today start)]
-    (some #{p} [:equals :starts :during :meets :precedes])))
+    (tap> p)
+    (some #{p} [:equals :starts :during :meets :precedes :contains])))
 
 (defn- available? [slot boat]
   (try
@@ -158,12 +163,13 @@
      [:div.self-center.justify-self-end (slot-view slot)]
      [:div.self-center.justify-self-start.line-clamp-1 (name-view navn)]
      [:div.col-span-1.h-6.self-center.max-w-xs
-      (when booking-db
-        (draw-graph
-          {:date      (t/beginning time-slot)
-           :window    window
-           :list      status-list
-           :time-slot slot'}))]
+      (when (some #{:timeline} appearance)
+        (when booking-db
+          (draw-graph
+            {:date      (t/beginning time-slot)
+             :window    window
+             :list      status-list
+             :time-slot slot'})))]
 
      (when (some #{:extra} appearance)
        [:<>
@@ -224,19 +230,20 @@
                        (if-not selected? [:ml-4] [:ml-2])))}
    [:div.grid.gap-px
     {:class
-     (if selected?
-       (if (or overlap?)
-         ["bg-rose-500/50"]
-         ["bg-alt"
-          "dark:bg-gray-700"
-          "text-white"
-          "hover:bg-alt/80"])
-       (if (some #{:unavailable} appearance)
-         ["bg-rose-500/50"]
-         ["bg-gray-100"
-          "dark:bg-gray-700"
-          "text-gray-400"
-          "hover:bg-gray-50"]))
+     (when-not (some #{:clear} appearance)
+       (if selected?
+         (if (or overlap?)
+           ["bg-rose-500/50"]
+           ["bg-alt"
+            "dark:bg-gray-700"
+            "text-white"
+            "hover:bg-alt/80"])
+         (if (some #{:unavailable} appearance)
+           ["bg-rose-500/50"]
+           ["bg-gray-100"
+            "dark:bg-gray-700"
+            "text-gray-400"
+            "hover:bg-gray-50"])))
      :style {:grid-template-columns "min-content 1fr min-content"}}
 
     ;[l/ppre id]

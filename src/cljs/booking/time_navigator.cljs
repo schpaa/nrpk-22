@@ -204,7 +204,7 @@
     (fn [{:keys [my-state]}
          {:keys [set-values values] :as props}]
       (let [width (str "calc(100vw - " (if @menu-open? 20 0) "rem)")]
-        [:div.sticky.top-32.h-32.overflow-x-auto.grid.snap-x.snap-mandatory.z-10.bg-gray-100.hide-scrollbar
+        [:div.sticky.top-28.h-28.overflow-x-auto.grid.snap-x.snap-mandatory.z-10.bg-gray-100.dark:bg-gray-600.hide-scrollbar
          {:style {:width                 width
                   :max-width             width
                   :grid-template-columns "max-content max-content"}}

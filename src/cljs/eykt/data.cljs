@@ -12,7 +12,8 @@
    ["/baksiden" {:name :r.back :header "Baksiden"}]
    ["/om-meg" {:name :r.user :header "Om meg"}]
    ["/logg" {:name :r.logg :header "Min logg"}]
-   ["/debug" {:name :r.debug :header "Feilsøking"}]])
+   ["/debug" {:name :r.debug :header "Feilsøking"}]
+   ["/debug2" {:name :r.debug2 :header "Feilsøking2"}]])
 
 (def screen-breakpoints
   {:breakpoints [:mobile 640 :tablet 992 :small-monitor 1200 :large-monitor],

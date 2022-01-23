@@ -1,7 +1,7 @@
 (ns eykt.spa
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
-            ;[times.api :refer []]
+    ;[times.api :refer []]
             [re-statecharts.core :as rs]
             [kee-frame.router]
             [kee-frame.core :as k]
@@ -50,13 +50,13 @@
          [:div.p-4.max-w-md.mx-auto
           [user.views/logout-form
            {:user-auth @user-auth
-            :name (:display-name @user-auth)}]]
+            :name      (:display-name @user-auth)}]]
 
          [:div
-          (tab {:selected @(rf/subscribe [:app/current-page])}
-               [:r.user "Om meg"]
-               [:r.logg "Logg"]
-               [:r.debug "Feilsøking"])
+          [tab {:selected @(rf/subscribe [:app/current-page])}
+           [:r.user "Om meg" nil :icon :user]
+           [:r.logg "Logg" nil :icon :circle]
+           [:r.debug "Feilsøking" nil :icon :circle]]
 
           [k/case-route (fn [route] (-> route :data :name))
            :r.user
@@ -75,12 +75,16 @@
 (defn front []
   (let [user-auth (rf/subscribe [::db/user-auth])]
     [:div
-     (tab {:item ["w-1/3"]
+     [tab {:item     ["w-1/3"]
            :selected @(rf/subscribe [:app/current-page])}
-          [:r.new-booking "Ny"]
-          [:r.common "Siste"]
-          [:r.boatlist "Båtliste"])
+      [:r.new-booking "Ny" nil :icon :spark]
+      [:r.common "Siste" nil :icon :clock]
+      [:r.boatlist "Båtliste" nil :icon :list]
+      [:r.debug2 "Debug" nil :icon :eye]
+      [:r.debug2 "Debug2" nil :icon :eye]]
      [k/case-route (comp :name :data)
+      :r.debug2
+      [:div "Stuff"]
       :r.new-booking
       (if-not @user-auth
         [views/rounded-view {}
@@ -90,24 +94,25 @@
         [hoc/new-booking])
 
       :r.common
-      [:div.space-y-8
+      [:div.space-y-1
        {:class ["bg-gray-200"]}
        (when @user-auth
-         [views/rounded-view
-          {}
+         [:div.p-4.bg-gray-50
           [hoc/last-active-booking]])
+
        [hoc/all-active-bookings]]
 
       :r.boatlist
       [hoc/all-boats]]]))
 
 (def route-table
-  {:r.common       front
-   :r.new-booking  front
-   :r.boatlist     front
-   :r.user         user
-   :r.logg         user
-   :r.debug user})
+  {:r.common      front
+   :r.new-booking front
+   :r.boatlist    front
+   :r.user        user
+   :r.logg        user
+   :r.debug       user
+   :r.debug2      front})
 
 ;region events and subs
 
@@ -162,13 +167,13 @@
                             (or (:modal @s) (:modal-forced @s))))
     [modal/overlay-with
      {:modal-dim (:modal-dim @s)
-      :modal?   (or (:modal @s)
-                    (:modal-forced @s))
+      :modal?    (or (:modal @s)
+                     (:modal-forced @s))
       ;intent No dismiss-fx on click when forced, must click on a button
-      :on-close (if
-                  (or (:modal-dirty @s) (:modal-forced @s))
-                  nil
-                  #(send :e.hide))}
+      :on-close  (if
+                   (or (:modal-dirty @s) (:modal-forced @s))
+                   nil
+                   #(send :e.hide))}
      [:div
       [modal/render
        {:show?     (or (:modal @s) (:modal-forced @s))
