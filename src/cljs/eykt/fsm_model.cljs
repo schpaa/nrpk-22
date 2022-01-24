@@ -24,7 +24,7 @@
                                                     (js/alert (l/ppr ["@todo cancel booking" data]))
                                                     st))]
                                 :target  [:> :booking :s.booking :s.basic-booking-info]}
-             :e.confirm        [:> :booking]
+             ;:e.confirm        [:> :booking]
              :e.complete       {:target  [:> :booking :s.booking :s.basic-booking-info]
                                 :actions [(assign (fn [st {:keys [data] :as _event}]
                                                     (booking.database/write data)

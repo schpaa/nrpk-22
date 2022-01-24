@@ -13,7 +13,8 @@
    ["/om-meg" {:name :r.user :header "Om meg"}]
    ["/logg" {:name :r.logg :header "Min logg"}]
    ["/debug" {:name :r.debug :header "Feilsøking"}]
-   ["/debug2" {:name :r.debug2 :header "Feilsøking2"}]])
+   ["/debug2" {:name :r.debug2 :header "Feilsøking2"}]
+   ["/blog" {:name :r.blog :header "Blogg"}]])
 
 (def screen-breakpoints
   {:breakpoints [:mobile 640 :tablet 992 :small-monitor 1200 :large-monitor],

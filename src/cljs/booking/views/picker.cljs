@@ -159,9 +159,12 @@
 
      [:div.self-center.justify-self-start
       ;{:class (if selected? :w-16 :w-12)}
+      {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
       (number-view number)]
      [:div.self-center.justify-self-end (slot-view slot)]
-     [:div.self-center.justify-self-start.line-clamp-1 (name-view navn)]
+     [:div.self-center.justify-self-start.line-clamp-1
+      {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+      (name-view navn)]
      [:div.col-span-1.h-6.self-center.max-w-xs
       (when (some #{:timeline} appearance)
         (when booking-db
@@ -222,7 +225,7 @@
 
 (def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
 
-(defn list-line [{:keys [overlap? selected? id on-click insert-before insert-after compact? appearance] :as m}]
+(defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after compact? appearance] :as m}]
   [:div
    {:class (concat []
                    ;fixme introduce a param to tell if we are to do selecting AT ALL
@@ -230,7 +233,12 @@
                        (if-not selected? [:ml-4] [:ml-2])))}
    [:div.grid.gap-px
     {:class
-     (when-not (some #{:clear} appearance)
+
+     (if  (some #{:clear} appearance)
+
+       (if (some #{:error} appearance)
+         [:bg-rose-300]
+         [])
        (if selected?
          (if (or overlap?)
            ["bg-rose-500/50"]
@@ -247,8 +255,8 @@
      :style {:grid-template-columns "min-content 1fr min-content"}}
 
     ;[l/ppre id]
-    (if (and insert-before #_(fn? insert-before))
-      (insert-before id)
+    (if (and insert-before-line-item)
+      [insert-before-line-item id]
       [:div])
 
     [:div
@@ -318,14 +326,6 @@
     [:div
      {:class ["dark:bg-gray-800" "bg-gray-300"]}
 
-     [:div.flex.justify-end.gap-2.p-4.x-mx-4
-      [:button.btn-small.btn-dim {:type     :button
-                                  :on-click #(reset! selected #{})} "ingen"]
-      [:button.btn-small.btn-dim {:type     :button
-                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]
-      [:button.btn-small.btn-dim {:type     :button
-                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "siste"]]
-
      (boat-list
        {:graph?        graph?
         :compact?      compact?
@@ -347,4 +347,12 @@
         :on-click      (fn [e] (swap! selected
                                       (fn [sel] (if (some #{e} sel)
                                                   (set/difference sel #{e})
-                                                  (set/union sel #{e})))))})]))
+                                                  (set/union sel #{e})))))})
+     [:div.flex.justify-end.gap-2.p-4.x-mx-4.sticky.bottom-0
+      {:class [:bg-gray-300]}
+      [:button.btn-small.btn-dim {:type     :button
+                                  :on-click #(reset! selected #{})} "ingen"]
+      [:button.btn-small.btn-dim {:type     :button
+                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]
+      [:button.btn-small.btn-dim {:type     :button
+                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "siste"]]]))

@@ -77,12 +77,14 @@
     [:div
      [tab {:item     ["w-1/3"]
            :selected @(rf/subscribe [:app/current-page])}
+      [:r.blog "Blog" nil :icon :command]
       [:r.new-booking "Ny" nil :icon :spark]
       [:r.common "Siste" nil :icon :clock]
-      [:r.boatlist "Båtliste" nil :icon :list]
       [:r.debug2 "Debug" nil :icon :eye]
-      [:r.debug2 "Debug2" nil :icon :eye]]
+      [:r.boatlist "Båtliste" nil :icon :list]]
      [k/case-route (comp :name :data)
+      :r.blog [:div.bg-gray-100
+               [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]] #_[:div "blogg"]
       :r.debug2
       [:div "Stuff"]
       :r.new-booking
@@ -112,7 +114,8 @@
    :r.user        user
    :r.logg        user
    :r.debug       user
-   :r.debug2      front})
+   :r.debug2      front
+   :r.blog front})
 
 ;region events and subs
 
