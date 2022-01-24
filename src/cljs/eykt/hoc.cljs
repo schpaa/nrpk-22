@@ -27,6 +27,8 @@
       :my-state      schpaa.components.views/my-state
       :booking-data' (sort-by :date > (booking.database/read))}]))
 
+
+
 (defn last-active-booking []
   [:<>
    #_(when-let [u @(rf/subscribe [::db/user-auth])]
@@ -39,25 +41,9 @@
                    first)]
      (if (some? data)
        [:<>
-        (r/with-let [st (r/atom true)]
-          [:button {:on-click #(swap! st not)
-                    :class    (concat
-                                (if @st [:bg-green-600 ] [:bg-gray-200])
-                                [:relative
-                                 :inline-flex :shrink-0
-                                 :focus:outline-none :focus:ring-2 :focus:ring-offset-2 ;:focus:ring-cyan-400
-                                 :rounded-full :border-2
-                                 :transition-colors :ease-in-out :duration-200
-                                 :h-6 :w-11])}
-           [:span {:class (concat
-                            (if @st [ :translate-x-5] [:translate-x-0])
-                            [:bg-white
-                             :transition :duration-200
-                             :inline-block :w-5 :h-5
-                             :ease-in-out
-                             :shadow :transform :ring-0
+        #_(r/with-let [st (r/atom true)]
+            (views/modern-checkbox st))
 
-                             :rounded-full])}]])
 
         [:h2 (:start data)]
         [:h2 (:end data)]
@@ -88,7 +74,6 @@
                    (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
                    (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
        :on-click #(js/alert "!")}]])
-
 
 (defn all-active-bookings []
   (let [user-auth (rf/subscribe [::db/user-auth])

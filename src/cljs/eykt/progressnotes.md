@@ -15,6 +15,6 @@ eykt.spa/front
               booking.view.pickers/list-line
                 booking.view.pickers/compact-view
                 booking.view.pickers/expanded-view
-                  ...
+                  ..
                   booking.view.pickersdraw-graph 
 ```

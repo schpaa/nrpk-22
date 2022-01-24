@@ -28,9 +28,9 @@
                :fg- ["dark:text-white/30"]}
 
     ;future
-    :preceded-by {:bg  ["dark:bg-sky-100" "bg-sky-400"]
-                  :fg  ["dark:text-black" "text-white"]
-                  :fg- ["dark:text-black/40" "text-white/50"]}
+    :preceded-by {:bg  ["dark:bg-gray-100" "bg-gray-200"]
+                  :fg  ["dark:text-black" "text-gray-700"]
+                  :fg- ["dark:text-black/40" "text-gray-700/50"]}
 
     ;today
     {:bg  ["dark:bg-alt-600" "bg-green-100"]
@@ -226,48 +226,42 @@
 (def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
 
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after compact? appearance] :as m}]
-  [:div
-   {:class (concat []
-                   ;fixme introduce a param to tell if we are to do selecting AT ALL
-                   #_(if (some? selected?)
-                       (if-not selected? [:ml-4] [:ml-2])))}
-   [:div.grid.gap-px
-    {:class
+  [:div.grid.gap-px
+   {:class
+    (if (some #{:clear} appearance)
 
-     (if  (some #{:clear} appearance)
+      (if (some #{:error} appearance)
+        [:bg-rose-300]
+        [])
+      (if selected?
+        (if (or overlap?)
+          ["bg-rose-500/50"]
+          ["bg-gray-300"
+           "dark:bg-gray-700"
+           "text-white"
+           "hover:bg-gray-200/80"])
+        (if (some #{:unavailable} appearance)
+          ["bg-rose-500/50"]
+          ["bg-gray-100"
+           "dark:bg-gray-700"
+           "text-gray-400"
+           "hover:bg-gray-50"])))
+    :style {:grid-template-columns "min-content 1fr min-content"}}
 
-       (if (some #{:error} appearance)
-         [:bg-rose-300]
-         [])
-       (if selected?
-         (if (or overlap?)
-           ["bg-rose-500/50"]
-           ["bg-alt"
-            "dark:bg-gray-700"
-            "text-white"
-            "hover:bg-alt/80"])
-         (if (some #{:unavailable} appearance)
-           ["bg-rose-500/50"]
-           ["bg-gray-100"
-            "dark:bg-gray-700"
-            "text-gray-400"
-            "hover:bg-gray-50"])))
-     :style {:grid-template-columns "min-content 1fr min-content"}}
+   ;[l/ppre id]
+   (if (and insert-before-line-item)
+     [:div.px-4.flex.items-center [insert-before-line-item id]]
+     [:div])
 
-    ;[l/ppre id]
-    (if (and insert-before-line-item)
-      [insert-before-line-item id]
-      [:div])
+   [:div
+    {:on-click #(on-click id)}
+    (if compact?
+      (compact-view m)
+      (expanded-view m))]
 
-    [:div
-     {:on-click #(on-click id)}
-     (if compact?
-       (compact-view m)
-       (expanded-view m))]
-
-    (if (and insert-after (fn? insert-after))
-      (insert-after id)
-      [:div])]])
+   (if (and insert-after (fn? insert-after))
+     (insert-after id)
+     [:div])])
 
 (defn boat-list [{:keys [offset time-slot on-click boat-db selected] :as m}]
   [:div.space-y-px.select-none.overflow-clip
@@ -348,11 +342,12 @@
                                       (fn [sel] (if (some #{e} sel)
                                                   (set/difference sel #{e})
                                                   (set/union sel #{e})))))})
-     [:div.flex.justify-end.gap-2.p-4.x-mx-4.sticky.bottom-0
+     [:div.flex.justify-between.gap-2.px-4.py-2.sticky.bottom-0
       {:class [:bg-gray-300]}
-      [:button.btn-small.btn-dim {:type     :button
-                                  :on-click #(reset! selected #{})} "ingen"]
-      [:button.btn-small.btn-dim {:type     :button
-                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]
-      [:button.btn-small.btn-dim {:type     :button
-                                  :on-click #(reset! selected (into #{} (keys boat-db)))} "siste"]]]))
+      [:div.flex.gap-4.items-center
+       [:button.btn-small.btn-free.h-8 {:type     :button
+                                        :on-click #(reset! selected #{})} "ingen"]
+       [:button.btn-small.btn-free.h-8 {:type     :button
+                                        :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]]
+      [:button.btn.btn-cta {:type     :button
+                            :on-click #(reset! selected (into #{} (keys boat-db)))} "Book nå!"]]]))
