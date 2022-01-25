@@ -75,8 +75,10 @@
         {:style {:left "25%" :width "25%"}}
         [:div.flex.flex-col.items-center
          [:svg.text-sky-500.h-2 {:viewBox "0 0 6 6"}
-          [:path {:fill :currentColor
-                  :d    "M 3 0 l 3 6 l -6 0 z"}]]
+          ;[:g {:transform "translate(-10,0)"}]
+          [:path {
+                  :fill :currentColor
+                  :d    (str "M "3" 0 l 3 6 l -6 0 z")}]]
          [:div.text-gray-700.text-xs.mb-px (t/format "dd/MM" (t/date date))]]])
 
      [:svg.w-full.rounded-sm.h-fullx.h-4
@@ -86,6 +88,8 @@
        :height              "100%"
        :preserveAspectRatio "none"}
 
+
+
       [:g {:stroke :none}
        [:rect {:class  ["text-gray-600" "dark:text-gray-500"]
                :fill   "currentColor"
@@ -93,6 +97,7 @@
                :width  (- to from)
                :y      5
                :height 4}]
+
        (into [:<>] (map (fn [{:keys [start end r?]}]
                           [:rect {:class  (if r? ["text-alt"] ["text-rose-500" "dark:text-rose-600"])
                                   :fill   :currentColor
@@ -155,7 +160,7 @@
                 slot expert kind]} data]
     [:<>
      ;[l/ppre-x appearance time-slot slot']
-     [:div.grid.gap-2.py-2.px-2.w-full.text-black
+     [:div.grid.gap-2.py-2.px-2.w-full.text-blackx
       {:style {:grid-template-columns "min-content 1fr max-content min-content"
                :grid-auto-rows        "auto"}}
 
@@ -230,26 +235,25 @@
 (def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
 
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after compact? appearance] :as m}]
-  [:div.grid.gap-px.bg-gray-100
+  [:div.grid.gap-px
    {:class
     (if (some #{:clear} appearance)
-
       (if (some #{:error} appearance)
         [:bg-rose-300]
-        [])
+        [:bg-gray-100 :text-gray-700])
       (if selected?
         (if (or overlap?)
           ["bg-rose-500/50"]
-          ["bg-gray-300"
+          ["bg-gray-500"
            "dark:bg-gray-700"
            "text-white"
-           "hover:bg-gray-200/80"])
+           "hover:bg-gray-700/80"])
         (if (some #{:unavailable} appearance)
           ["bg-rose-500/50"]
           ["bg-gray-100"
            "dark:bg-gray-700"
-           "text-gray-400"
-           "hover:bg-gray-50"])))
+           "text-gray-700"
+           "hover:bg-gray-200"])))
     :style {:grid-template-columns "min-content 1fr min-content"}}
 
    (if (and insert-before-line-item)

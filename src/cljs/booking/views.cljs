@@ -17,6 +17,7 @@
             [logg.database]
             [booking.views.picker :refer [boat-picker list-line
                                           has-selection available? convert]]
+            [booking.time-navigator :refer [step]]
             [schpaa.icon :as icon]
             [db.core]
             [schpaa.debug :as l]
@@ -212,7 +213,7 @@
                                           (< 24 h) (conj "dager")))))]))
 
 (def this-color-map
-  {:bg  [:bg-gray-100 :dark:bg-gray-700]
+  {:bg  [:bg-gray-400 :dark:bg-gray-700]
    :bgp [:bg-gray-200 :dark:bg-gray-700]
    :bg2 [:bg-gray-100 :dark:bg-gray-800]
    :bg3 [:bg-gray-300 :dark:bg-gray-800]})
@@ -221,7 +222,6 @@
 (defn confirmation [_ {:keys [selected]}]
   (let [;intent want a copy of selected, not a reference
         presented (r/atom @selected)
-        cm this-color-map
         clicks-on-remove (r/atom {})]
 
     (fn [{:keys [values] :as props} {:keys [selected boat-db]}]
@@ -234,7 +234,7 @@
             not-available (into #{} (filter #(overlapping? % slot offset) (set/union @selected @presented)))]
         [:div.flex.flex-col.flex-1
          ;fixme Fudging, to keep statusbar at bottom at all times
-         {:class (cm :bg)
+         {:class (this-color-map :bg)
           :style {:min-height "calc(100vh - 12.8rem)"}}
          [:div.space-y-4
           (if-not (empty? @selected)
@@ -244,10 +244,10 @@
                :appearance   #{:basic :remove}
                :time-slot    slot
                :offset       offset
-               :insert-below (fn [] [:div.px-4.pb-4 (fields/textarea
-                                                      (fields/full-field props)
-                                                      "Beskjed til tur-kamerater"
-                                                      :description)])}
+               :insert-above (fn [] [:div.p-4 (fields/textarea
+                                                (fields/full-field props)
+                                                "Beskrivelse (valgfritt)"
+                                                :description)])}
               ;intent: for each item
               {:selected                @selected
                :not-available           not-available
@@ -256,22 +256,24 @@
                :navn                    (:display-name @(rf/subscribe [:db.core/user-auth]))
                :insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)}]])
 
-          [:div.p-4.space-y-4
+          [:div.xp-4.space-y-px
            (when (some not-available @selected)
-             [:div.p-2.space-y-1.bg-rose-500.text-white.rounded.shadow
-              [:div.font-semibold.text-base "Merk deg at noe utstyr er ikke tilgjengelig!"]
-              [:div.text-base.text-gray-500x "Ved å endre tidspunktet for din booking kan du gjøre disse tilgjengelige."]])
+             [:div.p-2.space-y-1.bg-rose-600.text-white
+              [:div.font-semibold.text-xl "OBS"]
+              [:div.text-base.space-y-2
+               [:div "Noe av utstyret du har valgt er ikke tilgjengelig på det tidspunktet du ønsker!"]
+               [:div "Tilpass tidspunktet for din booking eller fjern utstyret fra listen."]]])
            (for [[k v] (:errors props)
                  e v]
-             [:div e])]]]))))
+             [:div.text-white.bg-rose-600.p-2  e])]]]))))
 
 (defn stupid-bar [{:keys [selected not-available booking-state] :as props} s]
   [:<>
-   [booking.time-navigator/step 2 "Båter"
+   [step 2 "Velg utstyr"
     :active (= s 1)
     :complete (not (empty? @selected))
     :on-click #(eykt.fsm-helpers/send :e.pick-boat)]
-   [booking.time-navigator/step 3 "Oversikt"
+   [step 3 "Bekreftelse"
     :active (= s 2)
     :final true
     :complete (and (nil? (:errors props)) (nil? (some not-available @selected)))
@@ -294,13 +296,15 @@
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state] :as props}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
     [:<>
-     [:div.sticky.top-28.space-y-2x
-      [:div.grid.grid-cols-2.xpy-4.xpx-4.xgap-x-4.gap-y-2.bg-gray-100.z-10
+     [:div.sticky.top-60.z-50
+
+      [:div.grid.grid-cols-2.xpy-4.xpx-4.xgap-x-4.gap-y-2.bg-gray-100.z-10.border-b.border-gray-400
        (rs/match-state booking-state
          [:s.booking :s.basic-booking-info]
          [stupid-bar m 1]
          [:s.booking :s.confirm]
          [stupid-bar m 2])]]
+
      (rs/match-state booking-state
        [:s.booking :s.basic-booking-info]
        [:<>
@@ -442,6 +446,7 @@
                                   insert-before
                                   insert-after
                                   insert-below
+                                  insert-above
                                   appearance
                                   time-slot
                                   boat-db]
@@ -462,16 +467,16 @@
      (when insert-top-fn
        [:div.col-span-3 '(insert-top-fn item)])
 
+     (when insert-above [:div.col-span-3 (insert-above)])
      [:<>
-      ;(when insert-before insert-before)
       [:div]
       [:div
-       [time-segment-display {:start      start
-                              :end        end
-                              :relation   relation
-                              :hide-name? hide-name?
-                              :multiday   multiday
-                              :navn       navn}]
+       #_[time-segment-display {:start      start
+                                :end        end
+                                :relation   relation
+                                :hide-name? hide-name?
+                                :multiday   multiday
+                                :navn       navn}]
 
        (case details
          0 [:div.col-span-5

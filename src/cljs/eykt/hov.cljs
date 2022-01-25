@@ -22,7 +22,7 @@
   [:div.w-10.flex.flex-center
    {:class    [:hover:bg-gray-300
                :bg-gray-200 :text-black "bg-gray-200" "dark:bg-gray-600" "dark:text-gray-300"]
-    :on-click #(do
+    :on-click #(do ()
                  (.stopPropagation %)
                  (details-dialog-fn id))}
    [icon/small :three-vertical-dots]])

@@ -82,13 +82,13 @@
      n)])
 
 (defn step [n c & {:keys [complete on-click final active] :or {on-click #()}}]
-  [:div.px-4.py-2;.rounded-full.w-full
+  [:div.px-4.py-2
    {:sclass (if complete [:bg-alt :text-white] [:bg-rose-500 :text-white])
     :class (if active [:border-b-4 :border-alt])
     :on-click #(on-click) :type :button}
    [:div.flex.items-center.gap-2.col-span-1.border-none.outline-none.focus:outline-none.focus:ring-none
-    (point n complete)
-    [:div c]]])
+    ;(point n complete)
+    [:div.text-lg c]]])
 
 ;endregion
 
