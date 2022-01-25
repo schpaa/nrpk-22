@@ -128,7 +128,7 @@
      [fields/text (fields/normal-field props) "Telefon" :telefon]
      [fields/text (fields/large-field props) "Epost" :epost]]
     [:div.flex.gap-4.flex-wrap
-     [fields/date (-> props fields/date-field (assoc :readonly? true)) "Req booking" :request-booking]]]
+     [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]
 
    (when-not readonly?
      [:div.flex.gap-4.justify-between

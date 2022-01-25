@@ -186,7 +186,7 @@
     }
 
     button, input[type="text"], input[type="date"], input[type="time"], textarea {
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-alt focus:ring-offset-0
     }
 
 }
@@ -196,7 +196,7 @@
         max-width: 15rem;
     }
     .-debug {
-        /*@apply bg-rose-400/20;*/
+        @apply bg-rose-400/20;
         outline: #f448 solid 2px;
     }
     .flex-center {

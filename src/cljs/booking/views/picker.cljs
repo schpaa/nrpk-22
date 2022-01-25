@@ -77,7 +77,7 @@
          [:svg.text-sky-500.h-2 {:viewBox "0 0 6 6"}
           [:path {:fill :currentColor
                   :d    "M 3 0 l 3 6 l -6 0 z"}]]
-         [:div.text-gray-700.text-xs (t/format "dd/MM" (t/date date))]]])
+         [:div.text-gray-700.text-xs.mb-px (t/format "dd/MM" (t/date date))]]])
 
      [:svg.w-full.rounded-sm.h-fullx.h-4
       {:class               ["bg-gray-300" "dark:bg-gray-800"]
@@ -153,31 +153,35 @@
 
         {:keys [navn description location number
                 slot expert kind]} data]
-    [:div.grid.gap-2.p-2.w-full
-     {:style {:grid-template-columns "2rem 3rem 1fr  1fr"
-              :grid-auto-rows        "auto"}}
+    [:<>
+     ;[l/ppre-x appearance time-slot slot']
+     [:div.grid.gap-2.py-2.px-2.w-full.text-black
+      {:style {:grid-template-columns "min-content 1fr max-content min-content"
+               :grid-auto-rows        "auto"}}
 
-     [:div.self-center.justify-self-start
-      ;{:class (if selected? :w-16 :w-12)}
-      {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
-      (number-view number)]
-     [:div.self-center.justify-self-end (slot-view slot)]
-     [:div.self-center.justify-self-start.line-clamp-1
-      {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
-      (name-view navn)]
-     [:div.col-span-1.h-6.self-center.max-w-xs
-      (when (some #{:timeline} appearance)
-        (when booking-db
-          (draw-graph
-            {:date      (t/beginning time-slot)
-             :window    window
-             :list      status-list
-             :time-slot slot'})))]
 
-     (when (some #{:extra} appearance)
-       [:<>
-        [:div.col-span-2.self-start.text-sm.justify-self-start (normalize-kind kind)]
-        [:div.col-span-2.self-start.text-sm.line-clamp-2 description]])]))
+      [:div.self-center.justify-self-start
+       ;{:class (if selected? :w-16 :w-12)}
+       {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+       (number-view number)]
+      [:div.self-center.justify-self-start.line-clamp-1
+       {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+       (name-view navn)]
+
+      [:div.col-span-1.h-6.self-center.max-w-xs
+       (when (some #{:timeline} appearance)
+         (when booking-db
+           (draw-graph
+             {:date      (t/beginning time-slot)
+              :window    window
+              :list      status-list
+              :time-slot slot'})))]
+      [:div.self-center.justify-self-end (slot-view slot)]
+
+      (when (some #{:extra} appearance)
+        [:<>
+         [:div.col-span-2.self-start.text-sm.justify-self-start (normalize-kind kind)]
+         [:div.col-span-2.self-start.text-sm.line-clamp-2 description]])]]))
 
 (defn- compact-view [{:keys [selected?
                              offset time-slot id on-click remove? data insert-before graph? details? compact?
@@ -226,7 +230,7 @@
 (def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
 
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after compact? appearance] :as m}]
-  [:div.grid.gap-px
+  [:div.grid.gap-px.bg-gray-100
    {:class
     (if (some #{:clear} appearance)
 
@@ -248,22 +252,19 @@
            "hover:bg-gray-50"])))
     :style {:grid-template-columns "min-content 1fr min-content"}}
 
-   ;[l/ppre id]
    (if (and insert-before-line-item)
-     [:div.px-4.flex.items-center [insert-before-line-item id]]
+     [:div.flex.items-center.debug [insert-before-line-item id]]
      [:div])
 
    [:div
     {:on-click #(on-click id)}
-    (if compact?
-      (compact-view m)
-      (expanded-view m))]
+    (expanded-view (assoc m :appearance (conj appearance #{:timeline})))]
 
    (if (and insert-after (fn? insert-after))
      (insert-after id)
      [:div])])
 
-(defn boat-list [{:keys [offset time-slot on-click boat-db selected] :as m}]
+(defn boat-list [{:keys [boat-db selected] :as m}]
   [:div.space-y-px.select-none.overflow-clip
    {:class (:bg list-color-map)}
    (doall (for [[id data] boat-db]
@@ -321,10 +322,7 @@
      {:class ["dark:bg-gray-800" "bg-gray-300"]}
 
      (boat-list
-       {:graph?        graph?
-        :compact?      compact?
-        :details?      details?
-        :offset        offset
+       {:offset        offset
         :time-slot     slot
         :boat-db       boat-db
         :selected      selected
@@ -341,13 +339,5 @@
         :on-click      (fn [e] (swap! selected
                                       (fn [sel] (if (some #{e} sel)
                                                   (set/difference sel #{e})
-                                                  (set/union sel #{e})))))})
-     [:div.flex.justify-between.gap-2.px-4.py-2.sticky.bottom-0
-      {:class [:bg-gray-300]}
-      [:div.flex.gap-4.items-center
-       [:button.btn-small.btn-free.h-8 {:type     :button
-                                        :on-click #(reset! selected #{})} "ingen"]
-       [:button.btn-small.btn-free.h-8 {:type     :button
-                                        :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]]
-      [:button.btn.btn-cta {:type     :button
-                            :on-click #(reset! selected (into #{} (keys boat-db)))} "Book nå!"]]]))
+                                                  (set/union sel #{e})))))})]))
+
