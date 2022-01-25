@@ -12,6 +12,7 @@
             [user.database]
             [booking.views]
             [booking.views.picker]
+            [booking.bookinglist]
             [tick.core :as t]))
 
 (defn confirm-registry []
@@ -110,7 +111,7 @@
 (defn my-bookings [{:keys [uid bookings]}]
   [:ul.space-y-px.shadow
    (for [e bookings]
-     [booking.views/booking-list-item {} e])])
+     [booking.bookinglist/booking-list-item {} e])])
 
 ;endregion
 

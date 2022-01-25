@@ -88,8 +88,6 @@
        :height              "100%"
        :preserveAspectRatio "none"}
 
-
-
       [:g {:stroke :none}
        [:rect {:class  ["text-gray-600" "dark:text-gray-500"]
                :fill   "currentColor"
@@ -169,9 +167,16 @@
        ;{:class (if selected? :w-16 :w-12)}
        {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
        (number-view number)]
-      [:div.self-center.justify-self-start.line-clamp-1
-       {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
-       (name-view navn)]
+
+      (if (some #{:tall} appearance)
+        [:div.self-center.justify-self-start.space-y-0.truncate
+         {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+         (name-view navn)
+         [:div.text-xs (normalize-kind kind)]]
+
+        [:div.self-center.justify-self-start.line-clamp-1.whitespace-nowrap.truncate
+         {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+         (name-view navn)])
 
       [:div.col-span-1.h-6.self-center.max-w-xs
        (when (some #{:timeline} appearance)
@@ -181,7 +186,8 @@
               :window    window
               :list      status-list
               :time-slot slot'})))]
-      [:div.self-center.justify-self-end (slot-view slot)]
+      (when-not (some #{:hide-location} appearance)
+        [:div.self-center.justify-self-end (slot-view slot)])
 
       (when (some #{:extra} appearance)
         [:<>
@@ -237,23 +243,13 @@
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after compact? appearance] :as m}]
   [:div.grid.gap-px
    {:class
-    (if (some #{:clear} appearance)
-      (if (some #{:error} appearance)
-        [:bg-rose-300]
-        [:bg-gray-100 :text-gray-700])
-      (if selected?
-        (if (or overlap?)
-          ["bg-rose-500/50"]
-          ["bg-gray-500"
-           "dark:bg-gray-700"
-           "text-white"
-           "hover:bg-gray-700/80"])
-        (if (some #{:unavailable} appearance)
-          ["bg-rose-500/50"]
-          ["bg-gray-100"
-           "dark:bg-gray-700"
-           "text-gray-700"
-           "hover:bg-gray-200"])))
+    (cond
+      (or (some #{:unavailable} appearance)
+          (some #{:error} appearance)
+          overlap?) [:bg-red-200]
+      selected? [:bg-alt :text-white]
+      (some #{:clear} appearance) []
+      :else [:bg-gray-100])
     :style {:grid-template-columns "min-content 1fr min-content"}}
 
    (if (and insert-before-line-item)
@@ -344,4 +340,3 @@
                                       (fn [sel] (if (some #{e} sel)
                                                   (set/difference sel #{e})
                                                   (set/union sel #{e})))))})]))
-

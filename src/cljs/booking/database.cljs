@@ -10,15 +10,16 @@
 (def path ["booking"])
 
 (defn write [{:keys [uid value] :as m}]
-  (let [id (.-key (db/database-push {:path  path
-                                     :value (assoc value
-                                              :uid uid
-                                              :version 2
-                                              :timestamp (str (t'/instant)))}))]
+  (let [value (assoc value
+                :uid uid
+                :version 2
+                :timestamp (str (t'/instant)))
+        id (.-key (db/database-push {:path  path
+                                     :value value}))]
     ;intent Perform a backup to the users doc
 
-    (js/alert (l/ppr m))
-    (db/firestore-set {:path (conj path uid "trans" id) :value value})
+    ;(js/alert (l/ppr m))
+    (db/firestore-set {:path (conj path uid "transactions" id) :value value})
     id))
 
 (defn v1->v2 [{:keys [version timestamp uid date bid navn checkin checkout
@@ -93,18 +94,18 @@
   (transduce
     (comp
       (map (fn [[k v]] (assoc (v1->v2 v) :id k)))
-      (map upgrade)
+      ;(map upgrade)
       (remove :deleted))
     conj
     []
-    (if false
+    (if true
       @(db/on-value-reaction {:path ["booking"]})
       (concat #_(take 4 @(db/on-value-reaction {:path ["booking"]}))
         {:xx {:start     (str (t/at (t/new-date 2022 1 25) (t/new-time 14 0)))
               :end       (str (t/at (t/new-date 2022 1 27) (t/new-time 19 0)))
               :selected  [:-MeAwP8CBm620L9pzVHY]
               :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
-              :navn      "navn xsxs"
+              :navn      "Arne Johannessen"
               :version   2
               :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                (t/new-time 10 0))))}}
@@ -112,7 +113,7 @@
                :end       (str (t/at (t/new-date 2022 1 23) (t/new-time 16 0)))
                :selected  [:-MeAwP8CBm620L9pzVHY]
                :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
-               :navn      "navns not even here"
+               :navn      "Jens Brekhus"
                :version   2
                :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                 (t/new-time 10 0))))}}
@@ -121,7 +122,7 @@
                     :end       (str (t/at (t/new-date 2022 1 25) (t/new-time 23 0)))
                     :selected  [:-Mi1VEvPzB7CwUKRFnuM]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
-                    :navn      "navns"
+                    :navn      "Laura Opdal"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
@@ -130,7 +131,7 @@
                     :end       (str (t/at (t/new-date 2022 1 25) (t/new-time 23 0)))
                     :selected  [:-Mi1SV8ndQjj8eWDnU4e]
                     :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
-                    :navn      "navns"
+                    :navn      "Peter Pan"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
@@ -203,7 +204,7 @@
                     :sleepover false
                     :selected  []
                     :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn      "navn futurez"
+                    :navn      "Zlodan Mitch"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
@@ -213,7 +214,7 @@
                     :sleepover false
                     :selected  []
                     :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn      "navn futures"
+                    :navn      "Nina Nurtures"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
@@ -224,7 +225,7 @@
                     :sleepover   false
                     :selected    []
                     :uid         "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn        "navn future"
+                    :navn        "Arne Bo"
                     :description "Onsdagspadling, vel møtt!"
                     :version     2
                     :timestamp   (str (t/instant (t/at (t/new-date 2022 11 1)
@@ -234,7 +235,7 @@
                            :sleepover   false
                            :selected    [:-Mi1VEvPzB7CwUKRFnuM]
                            :uid         "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                           :navn        "Longy Trippy"
+                           :navn        "Herodes Falsk"
                            :version     2
                            :description "Første turen i år, hvem har lyst å bli med? Vi skal grille på munkholmen så ta med mat og kull"
                            :timestamp   (str (t/instant (t/at (t/new-date 2022 11 1)
@@ -266,7 +267,7 @@
                     ;:sleepover  true
                     :selected  [:-Mg5wRGchF2DP-S8n627]
                     :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn      "Peter Sekel Whatevernotsen"
+                    :navn      "Peter Sekel"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 4 20)
                                                      (t/new-time 10 0))))}}
@@ -275,7 +276,7 @@
 
                     :selected  [500 501]
                     :uid       "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn      "Peter Wessa "
+                    :navn      "Peter Wessel"
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 4 20)
                                                      (t/new-time 10 0))))}}
@@ -284,7 +285,7 @@
                     :selected    [:-Mi1VEvPzB7CwUKRFnuM
                                   :-Mg5wRGchF2DP-S8n627]
                     :uid         "F4tA4hUnFZd7jcTJVmNE6ZSoQ8t2"
-                    :navn        "Peter Sekel"
+                    :navn        "Arne Bo"
                     :description "Bursdagspadlings"
                     :version     2
                     :timestamp   (str (t/instant (t/at (t/new-date 2022 4 20)

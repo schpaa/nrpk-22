@@ -77,11 +77,12 @@
     [:div
      [tab {:item     ["w-1/3"]
            :selected @(rf/subscribe [:app/current-page])}
-      [:r.blog "Blog" nil :icon :command]
-      [:r.new-booking "Ny" nil :icon :spark]
+      [:r.blog "Info" nil :icon :command]
+      [:r.new-booking "Ny booking" nil :icon :spark]
       [:r.common "Siste" nil :icon :clock]
-      [:r.debug2 "Debug" nil :icon :eye]
-      [:r.boatlist "Båtliste" nil :icon :list]]
+      [:r.boatlist "Båtliste" nil :icon :list]
+      [:r.debug2 "Debug" nil :icon :eye]]
+
      [k/case-route (comp :name :data)
       :r.blog [:div.bg-gray-100
                [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]] #_[:div "blogg"]
@@ -96,13 +97,16 @@
         [hoc/new-booking])
 
       :r.common
-      [:div.space-y-1
-       {:class ["bg-gray-200"]}
-       (when @user-auth
-         [:div.p-4.bg-gray-50
-          [hoc/last-active-booking]])
-
-       [hoc/all-active-bookings]]
+      [:<>
+       [:div.space-y-1
+        (when @user-auth
+          [:div.p-4.bg-gray-50
+           [hoc/last-active-booking]])
+        [:div
+         {:style {:min-height "calc(100vh - 19.5rem)"}
+          :class ["bg-gray-200"]}
+         [hoc/all-active-bookings]]
+        [booking.views/last-bookings-footer {}]]]
 
       :r.boatlist
       [hoc/all-boats]]]))

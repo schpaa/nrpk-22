@@ -10,7 +10,8 @@
             [tick.core :as t]
             [schpaa.components.views :as views]
             [schpaa.icon :as icon]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [booking.bookinglist]))
 
 ;region booking
 
@@ -79,10 +80,10 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:<>
-     [:div.flex.justify-between.p-4.bg-gray-50
-      [:button.btn.btn-free "Vis mine"]
-      [:button.btn.btn-free "Vis alle"]]
-     [booking.views/booking-list
+     #_[:div.flex.justify-between.p-4.bg-gray-50
+        [:button.btn.btn-free "Vis mine"]
+        [:button.btn.btn-free "Vis alle"]]
+     [booking.bookinglist/booking-list
       {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
        :class          [:bg-gray-400]
        :accepted-user? @accepted-user?
@@ -102,7 +103,7 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:div.select-none
-     [booking.views/booking-list
+     [booking.bookinglist/booking-list
       {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
        :class          []
        :accepted-user? @accepted-user?

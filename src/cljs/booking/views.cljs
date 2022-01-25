@@ -23,9 +23,10 @@
             [schpaa.debug :as l]
             [eykt.hov :as hov]
             [clojure.set :as set]
+            [booking.bookinglist]
             [times.api :refer [day-number-in-year day-name]]))
 
-(declare booking-list-item)
+
 
 ;INTENT our desired timeslot, who is available in this slow?
 
@@ -88,8 +89,6 @@
       (and
         (= :precedes (relation t1 t2))
         (< (t/hours (t/duration (tick.alpha.interval/new-interval t1 t2))) 1)))))
-
-
 
 (defn booking-validation [{:keys [start-date start-time end-date end-time sleepover]}]
   (try
@@ -215,9 +214,13 @@
 (def this-color-map
   {:bg  [:bg-gray-400 :dark:bg-gray-700]
    :bgp [:bg-gray-200 :dark:bg-gray-700]
-   :bg2 [:bg-gray-100 :dark:bg-gray-800]
+   :bg2 [:bg-gray-50 :dark:bg-gray-800]
    :bg3 [:bg-gray-300 :dark:bg-gray-800]})
 
+(defn error-item [text]
+  [:div.p-2.space-y-1.bg-red-300.text-black.flex.gap-4.items-baseline
+   [:div.rounded-full.bg-rose-600.text-white.w-6.aspect-square.flex.items-center.justify-center "!"]
+   [:div text]])
 
 (defn confirmation [_ {:keys [selected]}]
   (let [;intent want a copy of selected, not a reference
@@ -234,38 +237,63 @@
             not-available (into #{} (filter #(overlapping? % slot offset) (set/union @selected @presented)))]
         [:div.flex.flex-col.flex-1
          ;fixme Fudging, to keep statusbar at bottom at all times
-         {:class (this-color-map :bg)
-          :style {:min-height "calc(100vh - 12.8rem)"}}
+         {:class (this-color-map :bg2)
+          :style {:min-height "calc(100vh - 22rem)"}}
+         [:div.p-4 (fields/textarea
+                     (fields/full-field props)
+                     "Beskrivelse (valgfritt)"
+                     :description)]
          [:div.space-y-4
           (if-not (empty? @selected)
-            [:div.space-y-2
-             [booking-list-item
-              {:boat-db      boat-db
-               :appearance   #{:basic :remove}
-               :time-slot    slot
-               :offset       offset
-               :insert-above (fn [] [:div.p-4 (fields/textarea
-                                                (fields/full-field props)
-                                                "Beskrivelse (valgfritt)"
-                                                :description)])}
-              ;intent: for each item
-              {:selected                @selected
-               :not-available           not-available
-               :start                   start
-               :end                     end
-               :navn                    (:display-name @(rf/subscribe [:db.core/user-auth]))
-               :insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)}]])
+            [:div.space-y-px
+             #_[booking.bookinglist/booking-list-item
+                {:boat-db      boat-db
+                 :appearance   #{:basic :remove :tall}
+                 :time-slot    slot
+                 :offset       offset
+                 :insert-above (fn [] [:div.p-4 (fields/textarea
+                                                  (fields/full-field props)
+                                                  "Beskrivelse (valgfritt)"
+                                                  :description)])}
+                ;intent: for each item
+                {:selected                @selected
+                 :not-available           not-available
+                 :start                   start
+                 :end                     end
+                 :navn                    (:display-name @(rf/subscribe [:db.core/user-auth]))
+                 :insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)}]
+             [:div.space-y-px
+              (let [appearance #{:tall :timeline}
+                    time-slot slot
+                    insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)]
+                (doall (for [id @selected
+                             :let [data (get (into {} boat-db) id)]
+                             :while (some? data)]
+                         [list-line
+                          {:insert-before-line-item insert-before-line-item ;; for removal of items
+                           :insert-after            hov/open-details
+                           :id                      id
+                           :data                    data
+                           :offset                  offset
+                           :time-slot               time-slot
+                           :appearance              (set/union #{:basic :xclear :xhide-location} appearance)
+                           :overlap?                (some #{id} not-available)}])))]])
 
-          [:div.xp-4.space-y-px
+          ;intent ERRORS
+          [:div.space-y-px
+           (when (empty? @selected)
+             (error-item "Ingen båter er valgt for booking!"))
+
            (when (some not-available @selected)
-             [:div.p-2.space-y-1.bg-rose-600.text-white
-              [:div.font-semibold.text-xl "OBS"]
-              [:div.text-base.space-y-2
-               [:div "Noe av utstyret du har valgt er ikke tilgjengelig på det tidspunktet du ønsker!"]
-               [:div "Tilpass tidspunktet for din booking eller fjern utstyret fra listen."]]])
-           (for [[k v] (:errors props)
+             (error-item
+               [:div.space-y-2
+                [:div.font-semibold.text-xl "OBS"]
+                [:div.text-base.space-y-1
+                 [:div "Noe av utstyret du har valgt er ikke tilgjengelig på det tidspunktet du ønsker!"]
+                 [:div "Tilpass tidspunktet for din booking eller fjern utstyret fra listen."]]]))
+           (for [[_k v] (:errors props)
                  e v]
-             [:div.text-white.bg-rose-600.p-2  e])]]]))))
+             (error-item e))]]]))))
 
 (defn stupid-bar [{:keys [selected not-available booking-state] :as props} s]
   [:<>
@@ -279,7 +307,7 @@
     :complete (and (nil? (:errors props)) (nil? (some not-available @selected)))
     :on-click #(eykt.fsm-helpers/send :e.confirm)]])
 
-(defn booking-footer [{:keys [selected boat-db booking-ready?]}]
+(defn booking-footer [{:keys [selected boat-db booking-ready? booking-record]}]
   [:div.flex.justify-between.items-centers.gap-2.px-4.py-2.sticky.bottom-0
    {:class [:bg-gray-300]}
    [:button.btn-small.btn-free.h-8 {:type     :button
@@ -291,9 +319,25 @@
                                      :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]]
    [:button.btn.btn-cta.grow-1 {:type     :button
                                 :disabled (not booking-ready?)
-                                :on-click #()} "Book nå!"]])
+                                :on-click #(schpaa.modal.readymade/confirm-booking booking-record)} "Book nå!"]])
 
-(defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state] :as props}]
+(defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
+  [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16
+   {:class [:bg-gray-100]}
+   (r/with-let [st (r/atom false)]
+     (schpaa.components.views/modern-checkbox st [:div.flex.flex-col
+                                                  [:div.font-medium "Visning"]
+                                                  [:div.text-xs "Vis alle bookinger"]]))
+   #_[:button.btn.btn-free {:type     :button
+                            :on-click #()} "detailjer"]
+   [:div.flex.gap-2.items-centers.shrink-1
+    [:button.btn.btn-free {:type     :button
+                           :on-click #()} "a"]
+    [:button.btn.btn-free {:type     :button
+                           :on-click #()} "b"]]])
+
+
+(defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
     [:<>
      [:div.sticky.top-60.z-50
@@ -321,7 +365,10 @@
           :boat-db  boat-db
           :selected selected
           :state    state}]
-        [booking-footer {:selected selected :boat-db boat-db :booking-ready? booking-ready?}]]
+        [booking-footer {:booking-record {:start    (str (t/at (t/date (values :start-date)) (t/time (values :start-time))))
+                                          :end      (str (t/at (t/date (values :end-date)) (t/time (values :end-time))))
+                                          :selected @selected}
+                         :selected       selected :boat-db boat-db :booking-ready? booking-ready?}]]
        [:div "d?" booking-state])]))
 
 (defn time-input [{:keys [errors form-id handle-submit handle-change values set-values] :as props} admin]
@@ -386,7 +433,7 @@
         detail-level @(rf/subscribe [:app/details])]
     [fork/form {:initial-touched   {:start-date  (t/date "2022-01-26")
                                     :start-time  (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
-                                    :end-time    (t/time "08:20" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
+                                    :end-time    (t/time "12:30" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
                                     :end-date    (t/date "2022-01-26")
                                     :description ""}
                 :validation        booking-validation
@@ -418,149 +465,3 @@
                         :boat-db        boat-db
                         :booking-ready? booking-ready?
                         :not-available  not-available} props]]))]))
-
-(defn time-segment-display [{:keys [hide-name? multiday navn start end relation]}]
-  (let [day-name (times.api/day-name (t/date-time start))
-        {:keys [bg fg fg-]} (booking.views.picker/booking-list-item-color-map relation)]
-    [:div.grid.gap-2.w-full.p-4
-     {:class (concat bg fg)
-      :style {:grid-template-columns "1.5rem 1fr min-content max-content 3rem"
-              :grid-auto-rows        ""}}
-     [:div.truncate.col-span-2
-      (when-not hide-name?
-        [:div.truncate {:class fg-} navn])]
-     [:<>
-      [:div.justify-self-end.whitespace-nowrap (t/format (str "'" day-name " 'd.MM") (t/date-time start))]
-      [:div.debug.whitespace-nowrap (t/format "'kl.' H.mm" (t/time (t/date-time start)))]]
-     [:div.self-center.justify-self-end
-      (when multiday
-        [icon/small :moon-2])]
-     [:div.col-span-3]
-     [:div.debug.whitespace-nowrap.self-start (t/format "'kl.' H.mm" (t/time (t/date-time end)))]
-     [:div.self-start.justify-self-end
-      (when multiday
-        (t/format "d.MM" (t/date (t/date-time end))))]]))
-
-(defn- booking-list-item [{:keys [offset today hide-name? on-click
-                                  insert-top-fn
-                                  insert-before
-                                  insert-after
-                                  insert-below
-                                  insert-above
-                                  appearance
-                                  time-slot
-                                  boat-db]
-                           :or   {today (t/new-date)}}
-                          ;intent FOR EACH ITEM
-                          {:keys [navn sleepover insert-before-line-item description selected not-available start end] :as item}]
-  (let [details @(rf/subscribe [:app/details])
-        relation (try (tick.alpha.interval/relation start today)
-                      (catch js/Error _ nil))
-        {:keys [bg fg fg-]} (booking.views.picker/booking-list-item-color-map relation)
-        navn (or navn "skult navn")
-        multiday (or sleepover (not (t/= (t/date (t/date-time start)) (t/date (t/date-time end)))))]
-
-    [:div.grid.w-full
-     {:style    {:grid-template-columns "min-content 1fr min-content"}
-      :class    (concat bg)
-      :on-click #(when on-click (on-click item))}
-     (when insert-top-fn
-       [:div.col-span-3 '(insert-top-fn item)])
-
-     (when insert-above [:div.col-span-3 (insert-above)])
-     [:<>
-      [:div]
-      [:div
-       #_[time-segment-display {:start      start
-                                :end        end
-                                :relation   relation
-                                :hide-name? hide-name?
-                                :multiday   multiday
-                                :navn       navn}]
-
-       (case details
-         0 [:div.col-span-5
-            [:<>]]
-         1 (when-not (empty? selected)
-             [:div.col-span-5
-              [:div.flex.gap-1.justify-start.line-clamp-2
-               {:class fg}
-               (for [id selected
-                     :let [data (get (into {} boat-db) id)]
-                     :while (some? data)]
-                 [:div.mr-1.mb-1.inline-block
-                  [:div.bg-white.px-1.py-px
-                   (number-view (:number data))]])]])
-         2 (when-not (empty? selected)
-             [:div.col-span-5
-              [:div.space-y-px
-               {:class [:first:rounded-t :overflow-clip :last:rounded-b]}
-               (doall (for [id selected
-                            :let [data (get (into {} boat-db) id)]
-                            :while (some? data)]
-                        [list-line
-                         {:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
-                          :insert-after  hov/open-details
-                          :id                      id
-                          :data                    data
-                          :offset                  offset
-                          :time-slot               time-slot
-                          :appearance              (set/union #{:basic :clear :timeline} (if (some #{id} not-available) #{:error}))
-                          :overlap?                false}]))]])
-         [:<>])
-
-       (if (or (some #{:description} appearance) (< 1 details))
-         (if (some? description)
-           [:div.debug.col-span-3.text-sm {:class fg} description]
-           [:<>]))]
-
-      [:div #_"BACK"]
-      #_(when (and insert-after (fn? insert-after))
-          (insert-after (:id item)))]
-     (when insert-below
-       [:div.col-span-3 (insert-below)])]))
-
-(defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db]}]
-  (r/with-let [show-all (r/atom false)
-               edit (r/atom false)
-               markings (r/atom {})]
-    (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
-          c (count selected-keys)
-          data (->> booking-data
-                    (filter (comp (partial booking.views.picker/after-and-including today) val))
-                    (sort-by (comp :start val) <))]
-      [:div
-       (into [:div.space-y-px.shadow
-              {:class class}]
-             (map (fn [[k item]]
-                    (let [idx (:id item)]
-                      [booking-list-item
-                       {:boat-db        boat-db
-                        :accepted-user? accepted-user?
-                        :today          today
-                        :hide-name?     (not (some? uid))
-                        :on-click       (fn [e]
-                                          (swap! markings update idx (fnil not false))
-                                          (.stopPropagation e))
-                        :insert-before  (when @edit
-                                          [:div.flex.items-center.px-2.bg-gray-400
-                                           [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
-                                                             :handle-change #(swap! markings update idx (fnil not false))}
-                                            "" nil]])
-                        :insert-after   hov/open-booking-details-button}
-                       item]))
-                  data))
-       [general-footer
-        {:insert-before (fn []
-                          [:div (schpaa.components.tab/tab
-                                  (conj schpaa.components.tab/select-bar-bottom-config
-                                        {:selected @(rf/subscribe [:app/details])
-                                         :select   #()})
-                                  [0 "S" #(rf/dispatch [:app/set-detail 0])]
-                                  [1 "M" #(rf/dispatch [:app/set-detail 1])]
-                                  [2 "L" #(rf/dispatch [:app/set-detail 2])])])
-         :data          data
-         :key-fn        key
-         :edit-state    edit
-         :markings      markings
-         :c             c}]])))
