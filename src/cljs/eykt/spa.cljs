@@ -78,16 +78,17 @@
      [tab {:item     ["w-1/3"]
            :selected @(rf/subscribe [:app/current-page])}
       [:r.blog "Info" nil :icon :command]
-      [:r.new-booking "Ny booking" nil :icon :spark]
+      [:r.new-booking "Booking" nil :icon :spark]
       [:r.common "Siste" nil :icon :clock]
       [:r.boatlist "Båtliste" nil :icon :list]
       [:r.debug2 "Debug" nil :icon :eye]]
 
      [k/case-route (comp :name :data)
-      :r.blog [:div.bg-gray-100
-               [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]] #_[:div "blogg"]
+      :r.blog [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]
+
       :r.debug2
       [:div "Stuff"]
+
       :r.new-booking
       (if-not @user-auth
         [views/rounded-view {}

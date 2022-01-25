@@ -28,8 +28,6 @@
       :my-state      schpaa.components.views/my-state
       :booking-data' (sort-by :date > (booking.database/read))}]))
 
-
-
 (defn last-active-booking []
   [:<>
    #_(when-let [u @(rf/subscribe [::db/user-auth])]

@@ -78,7 +78,7 @@
           ;[:g {:transform "translate(-10,0)"}]
           [:path {
                   :fill :currentColor
-                  :d    (str "M "3" 0 l 3 6 l -6 0 z")}]]
+                  :d    (str "M " 3 " 0 l 3 6 l -6 0 z")}]]
          [:div.text-gray-700.text-xs.mb-px (t/format "dd/MM" (t/date date))]]])
 
      [:svg.w-full.rounded-sm.h-fullx.h-4
@@ -139,7 +139,7 @@
         overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))]
     overlapping?))
 
-(defn- expanded-view [{:keys [appearance offset time-slot id data details?]}]
+(defn- expanded-view [{:keys [appearance offset time-slot id data]}]
   (let [window {:width  (* 24 4)
                 :offset (* 24 offset)}
         offset (* 24 (dec offset))
@@ -152,19 +152,16 @@
                              :start (- (convert start) offset)
                              :end   (- (convert end) offset)})
                           booking-db)
-        #_#_overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))
+
 
         {:keys [navn description location number
                 slot expert kind]} data]
     [:<>
-     ;[l/ppre-x appearance time-slot slot']
      [:div.grid.gap-2.py-2.px-2.w-full.text-blackx
       {:style {:grid-template-columns "min-content 1fr max-content min-content"
                :grid-auto-rows        "auto"}}
 
-
       [:div.self-center.justify-self-start
-       ;{:class (if selected? :w-16 :w-12)}
        {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
        (number-view number)]
 
@@ -184,8 +181,8 @@
            (draw-graph
              {:date      (t/beginning time-slot)
               :window    window
-              :list      status-list
-              :time-slot slot'})))]
+              :time-slot slot'
+              :list      status-list})))]
       (when-not (some #{:hide-location} appearance)
         [:div.self-center.justify-self-end (slot-view slot)])
 
@@ -240,16 +237,16 @@
 
 (def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
 
-(defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after compact? appearance] :as m}]
+(defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after appearance] :as m}]
   [:div.grid.gap-px
    {:class
     (cond
       (or (some #{:unavailable} appearance)
           (some #{:error} appearance)
-          overlap?) [:bg-red-200]
+          overlap?) [:bg-red-200 :text-black :dark:bg-rose-500 :dark:text-white]
       selected? [:bg-alt :text-white]
       (some #{:clear} appearance) []
-      :else [:bg-gray-100])
+      :else [:bg-gray-100 :dark:bg-gray-700])
     :style {:grid-template-columns "min-content 1fr min-content"}}
 
    (if (and insert-before-line-item)
@@ -264,16 +261,20 @@
      (insert-after id)
      [:div])])
 
-(defn boat-list [{:keys [boat-db selected] :as m}]
+(defn boat-list [{:keys [boat-db selected only-show-selected? offset time-slot] :as m}]
   [:div.space-y-px.select-none.overflow-clip
    {:class (:bg list-color-map)}
-   (doall (for [[id data] boat-db]
+   (doall (for [[id data] boat-db
+                :when (if only-show-selected?
+                        (some #{id} @selected)
+                        true)]
             ^{:key (str id)}
             [list-line
              (conj m
-                   {:selected? (some #{id} @selected)
-                    :id        id
-                    :data      data})]))])
+                   {:appearance (if (some #{id} @selected) #{:timeline})
+                    :selected?  (some #{id} @selected)
+                    :id         id
+                    :data       data})]))])
 
 ;endregion drawing
 
@@ -311,32 +312,57 @@
   other relations must fail. Since there isn't any allowance for abutting
   entries (1 hour minimum between each booking), :met-by and :meets are therefore
   rejected."
-  [_props {:keys [details? compact? graph? my-state boat-db selected]}]
-  (let [start (get-in @my-state [:values :start])
-        end (get-in @my-state [:values :end])
+  [{:keys [values] :as props} {:keys [details? compact? graph? my-state boat-db selected]}]
+  (let [;fixme You've done this many times now
+        start (t/at (t/date (values :start-date)) (t/time (values :start-time)))
+        end (t/at (t/date (values :end-date)) (t/time (values :end-time)))
         offset (if start (times.api/day-number-in-year (t/date start)) 0)
         slot (try
                (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
     [:div
-     {:class ["dark:bg-gray-800" "bg-gray-300"]}
+     {:style {:min-height "calc(100vh - 22rem)"}
+      :class ["dark:bg-gray-900" "bg-gray-500"]}
 
-     (boat-list
-       {:offset        offset
-        :time-slot     slot
-        :boat-db       boat-db
-        :selected      selected
-        :insert-before (fn [id]
-                         (let [id #{id}]
-                           (hov/toggle-selected'
-                             {:on?      (some id @selected)
-                              :on-click #(swap! selected
-                                                (fn [sel] (if (some id sel)
-                                                            (set/difference sel id)
-                                                            (set/union sel id))))})))
+     [boat-list
+      {:offset              offset
+       :time-slot           slot
+       :boat-db             boat-db
+       :only-show-selected? @(rf/subscribe [:boatpickerlist/details])
+       :selected            selected
+       :insert-before       (fn [id]
+                              (let [id #{id}]
+                                (hov/toggle-selected'
+                                  {:on?      (some id @selected)
+                                   :on-click #(swap! selected
+                                                     (fn [sel] (if (some id sel)
+                                                                 (set/difference sel id)
+                                                                 (set/union sel id))))})))
 
-        :insert-after  hov/open-details
-        :on-click      (fn [e] (swap! selected
-                                      (fn [sel] (if (some #{e} sel)
-                                                  (set/difference sel #{e})
-                                                  (set/union sel #{e})))))})]))
+       :insert-after        hov/open-details
+       :on-click            (fn [e] (swap! selected
+                                           (fn [sel] (if (some #{e} sel)
+                                                       (set/difference sel #{e})
+                                                       (set/union sel #{e})))))}]]))
+
+
+;todo rename "utvalg"
+(rf/reg-sub :boatpickerlist/details :-> :boatpicker-list-details)
+
+(rf/reg-event-db :boatpickerlist/set-details (fn [db [_ args]]
+                                               (assoc db :boatpicker-list-details args)))
+
+(defn boat-picker-footer []
+  [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
+   {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
+   (schpaa.components.views/modern-checkbox'
+     {:set-details #(rf/dispatch [:boatpickerlist/set-details %])
+      :get-details #(-> (rf/subscribe [:boatpickerlist/details]) deref)}
+     (fn [checkbox]
+       [:div.flex.items-center.gap-4
+        checkbox
+        [:div.flex.flex-col
+         [:div.font-medium "Utvalg"]
+         [:div.text-xs "Begrens visning til utvalg"]]]))])
+
+

@@ -15,7 +15,9 @@
             [times.api :refer [format]]
             [eykt.fsm-helpers :refer [send]]
             [logg.database]
-            [booking.views.picker :refer [boat-picker list-line
+            [booking.views.picker :refer [boat-picker
+                                          boat-picker-footer
+                                          list-line
                                           has-selection available? convert]]
             [booking.time-navigator :refer [step]]
             [schpaa.icon :as icon]
@@ -25,8 +27,6 @@
             [clojure.set :as set]
             [booking.bookinglist]
             [times.api :refer [day-number-in-year day-name]]))
-
-
 
 ;INTENT our desired timeslot, who is available in this slow?
 
@@ -219,7 +219,7 @@
 
 (defn error-item [text]
   [:div.p-2.space-y-1.bg-red-300.text-black.flex.gap-4.items-baseline
-   [:div.rounded-full.bg-rose-600.text-white.w-6.aspect-square.flex.items-center.justify-center "!"]
+   [:div.rounded-full.bg-rose-600.text-white.h-6.aspect-square.flex.items-center.justify-center "!"]
    [:div text]])
 
 (defn confirmation [_ {:keys [selected]}]
@@ -239,10 +239,10 @@
          ;fixme Fudging, to keep statusbar at bottom at all times
          {:class (this-color-map :bg2)
           :style {:min-height "calc(100vh - 22rem)"}}
-         [:div.p-4 (fields/textarea
-                     (fields/full-field props)
-                     "Beskrivelse (valgfritt)"
-                     :description)]
+         #_[:div.p-4 (fields/textarea
+                       (fields/full-field props)
+                       "Beskrivelse (valgfritt)"
+                       :description)]
          [:div.space-y-4
           (if-not (empty? @selected)
             [:div.space-y-px
@@ -309,7 +309,7 @@
 
 (defn booking-footer [{:keys [selected boat-db booking-ready? booking-record]}]
   [:div.flex.justify-between.items-centers.gap-2.px-4.py-2.sticky.bottom-0
-   {:class [:bg-gray-300]}
+   {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
    [:button.btn-small.btn-free.h-8 {:type     :button
                                     :on-click #()} "detailjer"]
    [:div.flex.gap-2.items-centers.shrink-1
@@ -321,28 +321,45 @@
                                 :disabled (not booking-ready?)
                                 :on-click #(schpaa.modal.readymade/confirm-booking booking-record)} "Book nå!"]])
 
-(defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
-  [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16
-   {:class [:bg-gray-100]}
-   (r/with-let [st (r/atom false)]
-     (schpaa.components.views/modern-checkbox st [:div.flex.flex-col
-                                                  [:div.font-medium "Visning"]
-                                                  [:div.text-xs "Vis alle bookinger"]]))
-   #_[:button.btn.btn-free {:type     :button
-                            :on-click #()} "detailjer"]
-   [:div.flex.gap-2.items-centers.shrink-1
-    [:button.btn.btn-free {:type     :button
-                           :on-click #()} "a"]
-    [:button.btn.btn-free {:type     :button
-                           :on-click #()} "b"]]])
+(rf/reg-sub :bookinglist/details :-> :booking-list-details)
+(rf/reg-sub :bookinglist/personal :-> :booking-list-personal)
 
+(rf/reg-event-db :bookinglist/set-details (fn [db [_ args]]
+                                            (assoc db :booking-list-details args)))
+
+(rf/reg-event-db :bookinglist/set-personal (fn [db [_ args]]
+                                             (assoc db :booking-list-personal args)))
+
+(defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
+  [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
+   {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
+   (schpaa.components.views/modern-checkbox'
+     {:set-details #(rf/dispatch [:bookinglist/set-details %])
+      :get-details #(-> (rf/subscribe [:bookinglist/details]) deref)}
+     (fn [checkbox]
+       [:div.flex.items-center.gap-4
+        checkbox
+        [:div.flex.flex-col
+         [:div.font-medium "Detaljer"]
+         [:div.text-xs "Vis alle båtdetaljer"]]]))
+
+   (schpaa.components.views/modern-checkbox'
+     {:set-details #(rf/dispatch [:bookinglist/set-personal %])
+      :get-details #(-> (rf/subscribe [:bookinglist/personal]) deref)}
+     (fn [checkbox]
+       [:div.flex.items-center.gap-4.w-full
+        [:div.flex.flex-col.items-end
+         [:div.font-medium.text-right "Alle"]
+         [:div.text-xs "Vis alle bookinger"]]
+        checkbox]))])
 
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
     [:<>
      [:div.sticky.top-60.z-50
 
-      [:div.grid.grid-cols-2.xpy-4.xpx-4.xgap-x-4.gap-y-2.bg-gray-100.z-10.border-b.border-gray-400
+      [:div.grid.grid-cols-2.gap-y-2.bg-gray-100.z-10.border-b.border-gray-400
+       {:class [:dark:bg-gray-700 :bg-gray-100]}
        (rs/match-state booking-state
          [:s.booking :s.basic-booking-info]
          [stupid-bar m 1]
@@ -351,12 +368,10 @@
 
      (rs/match-state booking-state
        [:s.booking :s.basic-booking-info]
-       [:<>
-        [boat-picker
-         props
-         (conj main-m
-               {:my-state state})]
-        [booking-footer {:selected selected :boat-db boat-db :booking-ready? false #_booking-ready?}]]
+       [:div
+        [boat-picker props (conj main-m {:my-state state})]
+        [boat-picker-footer]]
+
        [:s.booking :s.confirm]
        [:<>
         [confirmation
@@ -372,7 +387,8 @@
        [:div "d?" booking-state])]))
 
 (defn time-input [{:keys [errors form-id handle-submit handle-change values set-values] :as props} admin]
-  [:div.p-4.bg-gray-100.space-y-2.sticky.top-28.z-50
+  [:div.p-4.space-y-2.sticky.top-28.z-50
+   {:class [:dark:bg-gray-700 :bg-gray-100]}
    ;[booking.time-navigator/step 1 "Tidspunkt" :complete (nil? (:errors props))]
    [:div.grid.w-full.gap-2
     {:style {:grid-template-columns "1fr 1fr"}}
@@ -395,7 +411,7 @@
 
     [:div.flex.items-center.gap-2
      (r/with-let [st (r/atom false)]
-       [views/modern-checkbox st "Overnatting"])
+       [views/modern-checkbox' {:get-details #(-> @st) :set-details #(reset! st %)} (fn [checkbox] [:div.flex.gap-4 checkbox [:div "Overnatting"]])])
      #_#_[:label {:for "sleepover"} "Overnatting"]
          [:input                                            ;.btn.btn-free
           {:type      :checkbox
@@ -459,7 +475,7 @@
           {:id        form-id
            :on-submit handle-submit}
           [time-input props admin]
-          [main-2-tabs {:my-state          my-state
+          [main-2-tabs {:my-state       my-state
                         :selected       selected
                         :main-m         main-m
                         :boat-db        boat-db

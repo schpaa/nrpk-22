@@ -33,16 +33,16 @@
                       start-time end-time selected] :as m}]
   (case (or version 1)
     2 {:timestamp      timestamp
-       :date           (when date (str (t/date date)))
-       :start-time     (when start-time start-time)
-       :end-time       (when end-time end-time)
+       ;:date           (when date (str (t/date date)))
+       ;:start-time     (when start-time start-time)
+       ;:end-time       (when end-time end-time)
 
        :start          (if-not start (str (t/at (t/date date) start-time)) start)
        :end            (if-not end (str (t/at (t/date date) end-time)) end)
 
        :description    description
        :sleepover      sleepover
-       :selected       selected
+       :selected       (map keyword selected)
        :uid            uid
        :book-for-andre book-for-andre
        :navn           navn
@@ -94,7 +94,7 @@
   (transduce
     (comp
       (map (fn [[k v]] (assoc (v1->v2 v) :id k)))
-      ;(map upgrade)
+      (map upgrade)
       (remove :deleted))
     conj
     []
@@ -292,7 +292,8 @@
                                                        (t/new-time 10 0))))}}))))
 
 (comment
-  (read))
+  (do
+   (read)))
 
 (comment
   (comment
