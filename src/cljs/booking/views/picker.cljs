@@ -50,6 +50,7 @@
     (tick.alpha.interval/relation boat slot)
     (catch js/Error t (.-message t))))
 
+;fixme Only considers the first in the list, should consider all
 (defn has-selection [id x]
   ;(tap> ["has-selection" id (first (:selected x))])
   (= id (first (:selected x))))
@@ -140,14 +141,18 @@
         overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))]
     overlapping?))
 
-(defn- expanded-view [{:keys [appearance offset time-slot id data]}]
-  (let [window {:width  (* 24 4)
+(defn- expanded-view [{:keys [appearance offset time-slot id data fetch-bookingdata]}]
+  (let [fetch-bookingdata (if fetch-bookingdata
+                            fetch-bookingdata
+                            booking.database/read)
+
+        window {:width  (* 24 4)
                 :offset (* 24 offset)}
         offset (* 24 (dec offset))
         slot' (when time-slot
                 {:from (- (convert (t/beginning time-slot)) offset)
                  :to   (- (convert (t/end time-slot)) offset)})
-        booking-db (filter (partial has-selection id) (booking.database/read))
+        booking-db (filter (partial has-selection id) (fetch-bookingdata) #_ (booking.database/read))
         status-list (mapv (fn [{:keys [start end]}]
                             {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
                              :start (- (convert start) offset)
@@ -158,6 +163,13 @@
         {:keys [navn description location number
                 weight length width
                 slot expert kind]} data]
+    #_[:div
+       [:div "EXPANDED VIEW"]
+       [l/ppre-x
+        data
+        (if fetch-bookingdata
+          (fetch-bookingdata)
+          :empty)]]
     [:<>
      [:div.grid.gap-2.p-2.w-full.text-blackx
       {:style {:grid-template-columns "min-content min-content 1fr max-content"

@@ -8,7 +8,11 @@
             [booking.bookinglist]
             [schpaa.state]
             [tick.core :as t]
-            [eykt.hov :as hov]))
+            [eykt.hov :as hov]
+            [booking.views.picker]
+            [booking.views]
+            [fork.re-frame :as fork]
+            [schpaa.debug :as l]))
 
 (js/goog.exportSymbol "hljs" hljs)
 (js/goog.exportSymbol "DevcardsSyntaxHighlighter" hljs)
@@ -23,9 +27,9 @@
   [:div.w-96
    [form
     {:dialog-type :message
-     :header  [:div.p-4 "header"]
-     :footer  [:div.p-4 "footer"]
-     :form-fn (schpaa.modal.readymade/simple-ok-form)}]])
+     :header      [:div.p-4 "header"]
+     :footer      [:div.p-4 "footer"]
+     :form-fn     (schpaa.modal.readymade/simple-ok-form)}]])
 
 (defcard-rg three
   [:div.w-96
@@ -50,8 +54,99 @@
                                   [:div.flex
                                    (when my-own? (hov/remove-booking-details-button id []))
                                    (hov/open-booking-details-button id)])}
-           {:start (t/>> (t/now) (t/new-duration 1 :hours))
-            :end   (t/>> (t/now) (t/new-duration 114 :hours))
+           {:start       (t/>> (t/now) (t/new-duration 1 :hours))
+            :end         (t/>> (t/now) (t/new-duration 114 :hours))
             :description "sample"
-            :selected ["a1" "a2"]}]]))
+            :selected    ["a1" "a2"]}]]))
 
+(defcard-rg list-line
+  [:div
+   [booking.views.picker/list-line
+    {:selected?         true
+     :fetch-bookingdata (fn [] [{:id          :xyz
+                                 :description "test"
+                                 :selected    [:-Me9qQ8av-rpbV1utrgS]
+                                 :start       (str (t/at (t/new-date 2022 1 26) (t/new-time 10 0)) #_(t/date-time))
+                                 :end         (str (t/at (t/new-date 2022 1 26) (t/new-time 13 0)) #_(t/date-time)) #_(str (t/>> (t/date-time) (t/new-duration 1 :hours)))}])
+     :appearance        #{:extra :timeline}
+     :offset            0
+     :data              {:description   "Senkekjøl og knekkspant. For personer 65-100 kg.",
+                         :boat-type     "-Me9qQ8av-rpbV1utrgS",
+                         :slot          "B 1",
+                         :stability     "1",
+                         :number        "484",
+                         :aquired-year  "2017",
+                         :width         "56,5 cm",
+                         :type          "",
+                         :aquired-price "9990",
+                         :last-update   "20210709T124742",
+                         :weight        "28 kg",
+                         :status        "0",
+                         :id            :-Me9qQ8av-rpbV1utrgS
+                         :kind          "havkayak",
+                         :comment       "",
+                         :material      "0",
+                         :length        "518 cm",
+                         :location      "1",
+                         :navn          "Baffin P2"}
+
+     :time-slot         (tick.alpha.interval/bounds (t/at (t/new-date 2022 1 26) (t/new-time 10 0))
+                                                    (t/at (t/new-date 2022 1 27) (t/new-time 12 0)))}]
+   [booking.views.picker/list-line
+    {:selected?         false
+     :fetch-bookingdata (fn [] [{:id          :xyz
+                                 :description "test"
+                                 :selected    [:-Me9qQ8av-rpbV1utrgS]
+                                 :start       (str (t/at (t/new-date 2022 1 26) (t/new-time 10 0)) #_(t/date-time))
+                                 :end         (str (t/at (t/new-date 2022 1 26) (t/new-time 13 0)) #_(t/date-time)) #_(str (t/>> (t/date-time) (t/new-duration 1 :hours)))}])
+     :insert-after (fn [id] (hov/open-details id))
+     :appearance        #{:extrax :xtimeline :tall}
+     :offset            0
+     :data              {:description   "Senkekjøl og knekkspant. For personer 65-100 kg.",
+                         :boat-type     "-Me9qQ8av-rpbV1utrgS",
+                         :slot          "B 1",
+                         :stability     "1",
+                         :number        "484",
+                         :aquired-year  "2017",
+                         :width         "56,5 cm",
+                         :type          "",
+                         :aquired-price "9990",
+                         :last-update   "20210709T124742",
+                         :weight        "28 kg",
+                         :status        "0",
+                         :id            :-Me9qQ8av-rpbV1utrgS
+                         :kind          "havkayak",
+                         :comment       "",
+                         :material      "0",
+                         :length        "518 cm",
+                         :location      "1",
+                         :navn          "Baffin P2"}
+
+     :time-slot         (tick.alpha.interval/bounds (t/at (t/new-date 2022 1 26) (t/new-time 10 0))
+                                                    (t/at (t/new-date 2022 1 27) (t/new-time 12 0)))}]])
+
+(defcard-rg time-navigator
+  [:div
+   [fork/form {:initial-touched    {} #_ {:start-date  (str (t/date "2022-01-27"))
+                                          :start-time  (str (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                          :end-time    (str (t/time "08:30" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                          :end-date    (str (t/date "2022-01-28"))
+                                          ;:sleepover true
+                                          :description ""}
+               :validation        booking.views/booking-validation
+               ;:state             my-state
+               :prevent-default?  true
+               :clean-on-unmount? true
+               :keywordize-keys   true
+               :on-submit         #(tap> %)}
+    (fn [{:keys [state form-id handle-submit values errors] :as props}]
+      [:form.space-y-1
+       {:id        form-id
+        :on-submit handle-submit}
+       [booking.views/time-input props false]
+       [l/ppre (-> @state :values)]
+       [l/ppre errors]
+       #_[l/ppre (t/days (t/duration (tick.alpha.interval/new-interval (t/at (values :start-date)
+                                                                             (values :start-time))
+                                                                       (t/at (values :end-date)
+                                                                             (values :end-time)))))]])]])
