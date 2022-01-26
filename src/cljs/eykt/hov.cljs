@@ -3,10 +3,12 @@
   (:require [schpaa.modal.readymade :as readymade]
             [schpaa.icon :as icon]
             [logg.database]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [schpaa.debug :as l]))
 
 (def color-map
-  {:normal ["bg-gray-200/50" "hover:bg-gray-100" :text-black]})
+  {:normal ["bg-gray-200/50" "hover:bg-gray-100" :text-black]
+   :danger [:bg-red-500 :text-white :active:bg-red-600]})
 
 (defn open-booking-details-button [id]
   [:div.w-10.flex.flex-center
@@ -15,6 +17,20 @@
                  (.stopPropagation %)
                  (readymade/booking-details-dialog-fn (readymade/modal-booking-details-dialogcontent id)))}
    [icon/small :three-vertical-dots]])
+
+(defn remove-booking-details-button [id]
+  [:div.w-10.flex.flex-center
+   {:class    (concat (:danger color-map))
+    :on-click #(do
+                 (.stopPropagation %)
+                 (readymade/are-you-sure {:title  [:div.space-y-2
+                                                   [:h2 "Denne bookingen vil bli slettet!"]
+                                                   [l/ppre (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read))]]
+                                          :footer (str id)
+
+                                          :action (fn [] (js/alert id))}))}
+
+   [icon/small :cross-out]])
 
 (defn open-details [id]
   [:div.w-10.flex.flex-center

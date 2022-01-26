@@ -40,47 +40,46 @@
                    first)]
      (if (some? data)
        [:<>
-        [:h2 (:start data)]
-        [:h2 (:end data)]
+        ;[:h2 (:start data)]
+        ;[:h2 (:end data)]
+
+        #_[booking.bookinglist/booking-list-item
+           {:boat-db      (sort-by (comp :number val) < (logg.database/boat-db))
+            ;:accepted-user? accepted-user?
+            :details? true
+            :today        today
+            :hide-name?   false ;(not (some? uid))
+            #_#_:on-click (fn [e]
+                            (swap! markings update id (fnil not false))
+                            (.stopPropagation e))
+            #_#_:insert-before (when @edit
+                                 [:div.flex.items-center.px-2.bg-gray-400
+                                  [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
+                                                    :handle-change #(swap! markings update id (fnil not false))}
+                                   "" nil]])
+            :insert-after hov/open-booking-details-button}
+           data]
 
 
-        [booking.bookinglist/booking-list-item
-         {:boat-db      (sort-by (comp :number val) < (logg.database/boat-db))
-          ;:accepted-user? accepted-user?
-          :details? true
-          :today        today
-          :hide-name?   false ;(not (some? uid))
-          #_#_:on-click (fn [e]
-                          (swap! markings update id (fnil not false))
-                          (.stopPropagation e))
-          #_#_:insert-before (when @edit
-                               [:div.flex.items-center.px-2.bg-gray-400
-                                [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
-                                                  :handle-change #(swap! markings update id (fnil not false))}
-                                 "" nil]])
-          :insert-after hov/open-booking-details-button}
-         data]
-
-
-        [:div.flex.justify-between
-         [:div]
-         [:button.btn.btn-danger
-          {:on-click #(modal/form-action
-                        {:flags   #{:no-icon :no-crossout :-timeout}
-                         :footer  "Du kan ikke angre dette"
-                         :title   "Avlys booking"
-                         :form-fn (fn [] [:div
-                                          [:div.p-4 "Er du sikker på at du vil avlyse denne bookingen?"]
-                                          [modal/just-buttons
-                                           [["Behold" [:btn-free] (fn [] (send :e.hide))]
-                                            ["Avlys" [:btn-danger] (fn []
-                                                                     (tap> ["save settings " 123])
-                                                                     (send :e.hide))]]]])})}
-          "Avlys booking"]
-         #_[:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags  #{:timeout :error :weak-dim}
-                                                                             :icon   :squares
-                                                                             :footer "footer"
-                                                                             :title  "Bekreftet!"})} "Endre"]]]
+        #_[:div.flex.justify-between
+           [:div]
+           [:button.btn.btn-danger
+            {:on-click #(modal/form-action
+                          {:flags   #{:no-icon :no-crossout :-timeout}
+                           :footer  "Du kan ikke angre dette"
+                           :title   "Avlys booking"
+                           :form-fn (fn [] [:div
+                                            [:div.p-4 "Er du sikker på at du vil avlyse denne bookingen?"]
+                                            [modal/just-buttons
+                                             [["Behold" [:btn-free] (fn [] (send :e.hide))]
+                                              ["Avlys" [:btn-danger] (fn []
+                                                                       (tap> ["save settings " 123])
+                                                                       (send :e.hide))]]]])})}
+            "Avlys booking"]
+           #_[:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags  #{:timeout :error :weak-dim}
+                                                                               :icon   :squares
+                                                                               :footer "footer"
+                                                                               :title  "Bekreftet!"})} "Endre"]]]
        [:div "Du har ingen bookinger"]))])
 
 (defn all-active-bookings []
@@ -101,8 +100,7 @@
     :data (sort-by (comp :number val) < (logg.database/boat-db))}])
 
 (defn all-boats-footer [_]
-  (r/with-let [
-               opt2 (r/atom false)]
+  (r/with-let [opt2 (r/atom false)]
     [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
      {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
      (schpaa.components.views/modern-checkbox'

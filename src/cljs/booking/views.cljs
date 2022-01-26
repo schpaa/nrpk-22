@@ -15,10 +15,10 @@
             [times.api :refer [format]]
             [eykt.fsm-helpers :refer [send]]
             [logg.database]
-            [booking.views.picker :refer [boat-picker
-                                          boat-picker-footer
-                                          list-line
-                                          has-selection available? convert]]
+            [booking.views.picker :as picker :refer [
+                                                     boat-picker-footer
+                                                     list-line
+                                                     has-selection available? convert]]
             [booking.time-navigator :refer [step]]
             [schpaa.icon :as icon]
             [db.core]
@@ -266,8 +266,8 @@
               (let [appearance #{:tall :timeline}
                     time-slot slot
                     insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)]
-                (doall (for [id @selected
-                             :let [data (get (into {} boat-db) id)]
+                (doall (for [[id data] (sort-by (comp :number val) < boat-db)
+                             :when (some #{id} @selected)
                              :while (some? data)]
                          [list-line
                           {:insert-before-line-item insert-before-line-item ;; for removal of items
@@ -337,20 +337,20 @@
      {:set-details #(rf/dispatch [:bookinglist/set-details %])
       :get-details #(-> (rf/subscribe [:bookinglist/details]) deref)}
      (fn [checkbox]
-       [:div.flex.items-center.gap-4
+       [:div.flex.items-center.gap-2
         checkbox
         [:div.text-base.font-normal.space-y-0
          [:div.font-medium "Detaljer"]
          [:div.text-xs "Vis alle båtdetaljer"]]]))
 
    (schpaa.components.views/modern-checkbox'
-     {:set-details #(rf/dispatch [:bookinglist/set-personal %])
-      :get-details #(-> (rf/subscribe [:bookinglist/personal]) deref)}
+     {:set-details #(schpaa.state/change :opt/show-only-my-own %)
+      :get-details #(-> (schpaa.state/listen :opt/show-only-my-own) deref)}
      (fn [checkbox]
-       [:div.flex.items-end.gap-4.w-full
+       [:div.flex.items-center.gap-2.w-full
         [:div.text-base.font-normal.space-y-0
          [:div.font-medium.text-right "Alle"]
-         [:div.text-xs "Vis alle bookinger"]]
+         [:div.text-xs "Vis bookinger fra andre også"]]
         checkbox]))])
 
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]
@@ -369,7 +369,7 @@
      (rs/match-state booking-state
        [:s.booking :s.basic-booking-info]
        [:div
-        [boat-picker props (conj main-m {:my-state state})]
+        [picker/boat-picker props (conj main-m {:my-state state})]
         [boat-picker-footer]]
 
        [:s.booking :s.confirm]

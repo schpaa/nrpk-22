@@ -78,11 +78,11 @@
 
      [tab {:item     ["w-1/3"]
            :selected @(rf/subscribe [:app/current-page])}
-      [:r.blog "Info" nil :icon :command]
+      ;[:r.blog "Info" nil :icon :command]
       [:r.new-booking "Booking" nil :icon :spark]
       [:r.common "Siste" nil :icon :clock]
       [:r.boatlist "Båtliste" nil :icon :list]
-      [:r.debug2 "Debug" nil :icon :eye]]
+      #_[:r.debug2 "Debug" nil :icon :eye]]
 
      [k/case-route (comp :name :data)
       :r.blog [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]
@@ -102,10 +102,10 @@
       [:<>
        [:div.space-y-px.flex.flex-col
         {:style {:min-height "calc(100vh - 7rem)"}}
-        (when @user-auth
-          [:div.p-4.bg-gray-50
-           {:class (concat [:dark:bg-gray-700])}
-           (hoc/last-active-booking {:uid (:uid @user-auth)})])
+        #_(when @user-auth
+            [:div.p-4.bg-gray-50
+             {:class (concat [:dark:bg-gray-700])}
+             (hoc/last-active-booking {:uid (:uid @user-auth)})])
         [:div.flex-1
          {:class (concat [:dark:bg-gray-900 :bg-gray-500])}
          [hoc/all-active-bookings]]

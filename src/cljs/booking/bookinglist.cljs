@@ -26,7 +26,7 @@
 
     ;today
     {:br  [:border-l-8 :border-alt]
-     :bg  ["dark:bg-alt-600" "bg-gray-200"]
+     :bg  ["dark:bg-alt-600" "bg-gray-100"]
      :fg  ["dark:text-black" "text-gray-700"]
      :fg- ["dark:text-white" :text-gray-400]}))
 
@@ -86,6 +86,7 @@
 (defn- booking-list-item [{:keys [offset today hide-name? on-click
                                   details?
                                   insert-top-fn
+                                  insert-before
                                   insert-below
                                   insert-above
                                   insert-after
@@ -101,85 +102,102 @@
         {:keys [bg fg fg- br]} (booking-list-item-color-map relation)]
 
 
-    [:div.grid.w-full
-     {:style    {:grid-template-columns "min-content 1fr min-content min-content"}
-      :class    (concat fg bg br)
-      :on-click #(when on-click (on-click item))}
-     (when insert-top-fn [:div.col-span-3 '(insert-top-fn item)])
-     (when insert-above [:div.col-span-3 (insert-above)])
-     [:<>
-      [:div]
-      [:div.py-1.space-y-1
-       [time-segment-display item]
-       (if details?
-         (if (some? description)
-           [:div.col-span-3.text-sm.px-2
-            {:class (concat fg- bg)} description]
-           [:<>]))
+    [:div.flex
+     (when insert-before
+       (insert-before id))
+     [:div.grid.w-full
+      {:style    {:grid-template-columns "min-content 1fr min-content min-content"}
+       :class    (concat fg bg br)
+       :on-click #(when on-click (on-click item))}
 
-       (when-not (empty? selected)
-         [:div.col-span-5
-          {:class (concat bg)}
-          (if details?
-            [:div.space-y-px.grid
-             {:style {:grid-template-columns "repeat(auto-fill,minmax(15rem,1fr))"}
-              :class [:first:rounded-t :overflow-clip :last:rounded-b]}
-             (doall (for [id selected
-                          :let [data (get (into {} boat-db) id)]
-                          :while (some? data)]
-                      [list-line
-                       {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
-                        :insert-after            hov/open-details
-                        :id         id
-                        :data       data
-                        :offset     offset
-                        :time-slot  time-slot
-                        :appearance (set/union #{:basic :xclear :hide-location} appearance)
-                        :overlap?   false}]))]
-            [:div
-             (let [items (sort (map (fn [id] (:number (get (into {} boat-db) id))) selected))]
-               (cond
-                 (< 2 (count items)) [:div.flex.gap-1.flex-wrap.px-2
-                                      (for [number (take 2 items)]
-                                        [:div (schpaa.components.views/number-view number)])
-                                      (schpaa.components.views/show-more-number-view)]
-                 :else [:div.flex.gap-1.flex-wrap.px-2
-                        (for [number items]
-                          [:div (schpaa.components.views/number-view number)])]))])])]
-      [:div]]
+      (when insert-top-fn [:div.col-span-3 '(insert-top-fn item)])
+      (when insert-above [:div.col-span-3 (insert-above)])
+      [:<>
 
-     (when insert-below
-       [:div.col-span-3 (insert-below)])
-     (if insert-after
-       (insert-after id)
-       [:div])]))
+       [:div]
+       [:div.py-1.space-y-1
+        [time-segment-display item]
+        (if details?
+          (if (some? description)
+            [:div.col-span-3.text-sm.px-2
+             {:class (concat fg- bg)} description]
+            [:<>]))
+
+        (when-not (empty? selected)
+          [:div.col-span-5
+           {:class (concat bg)}
+           (if false; details?
+             [:div.space-y-px.grid
+              {:style {:grid-template-columns "repeat(auto-fill,minmax(15rem,1fr))"}
+               :class [:first:rounded-t :overflow-clip :last:rounded-b]}
+              (doall (for [id selected
+                           :let [data (get (into {} boat-db) id)]
+                           :while (some? data)]
+                       [list-line
+                        {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
+                         :insert-after            hov/open-details
+                         :id         id
+                         :data       data
+                         :offset     offset
+                         :time-slot  time-slot
+                         :appearance (set/union #{:basic :xclear :hide-location :extra} appearance)
+                         :overlap?   false}]))]
+             [:div
+              (let [items (sort (map (fn [id] (:number (get (into {} boat-db) id))) selected))]
+                (cond
+                  (< 2 (count items)) [:div.flex.gap-1.flex-wrap.px-2
+                                       (for [number (take 2 items)]
+                                         [:div (schpaa.components.views/number-view number)])
+                                       (schpaa.components.views/show-more-number-view)]
+                  :else [:div.flex.gap-1.flex-wrap.px-2
+                         (for [number items]
+                           [:div (schpaa.components.views/number-view number)])]))])])]
+       [:div]]
+
+      (when insert-below
+        [:div.col-span-3 (insert-below)])
+      (if insert-after
+        (insert-after id)
+        [:div])]]))
 
 (defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db details?]}]
   (r/with-let [edit (r/atom false)
                markings (r/atom {})]
     (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
           c (count selected-keys)
+          show-only-my-own? @(schpaa.state/listen :opt/show-only-my-own)
           data (->> booking-data
                     (filter (comp (partial booking.views.picker/after-and-including today) val))
+                    ;fixme BAD CODE
+                    (filter (fn [[id data]] (if show-only-my-own?
+                                              true
+                                              (= uid (:uid data)))))
                     (sort-by (comp :start val) <))]
       [:<>
        (into [:div.space-y-px.bg-gray-500.dark:bg-gray-900
               {:class class}]
              (map (fn [[{:keys [id]} item]]
-                    [booking-list-item
-                     {:details? details?
-                      :boat-db        boat-db
-                      :accepted-user? accepted-user?
-                      :today          today
-                      :hide-name?     (not (some? uid))
-                      :on-click       (fn [e]
-                                        (swap! markings update id (fnil not false))
-                                        (.stopPropagation e))
-                      :insert-before  (when @edit
-                                        [:div.flex.items-center.px-2.bg-gray-400
-                                         [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
-                                                           :handle-change #(swap! markings update id (fnil not false))}
-                                          "" nil]])
-                      :insert-after   hov/open-booking-details-button}
-                     item])
+                    (let [my-own? (= uid (:uid item))]
+                      [booking-list-item
+                       {:details?       details?
+                        :boat-db        boat-db
+                        :accepted-user? accepted-user?
+                        :today          today
+                        :hide-name?     (not (some? uid))
+                        :on-click       (fn [e]
+                                          (swap! markings update id (fnil not false))
+                                          (.stopPropagation e))
+                        ;:insert-before  (when my-own? hov/remove-booking-details-button)
+                        ;hov/remove-from-list-actions
+                        ;(hov/remove-from-list-actions clicks-on-remove selected)
+                        #_(when true                         ;@edit
+                            (fn [_] [:div.flex.items-center.px-2.bg-gray-400
+                                     [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
+                                                       :handle-change #(swap! markings update id (fnil not false))}
+                                      "" nil]]))
+                        :insert-after   (fn [id]
+                                          [:div.flex
+                                           (when my-own? (hov/remove-booking-details-button id))
+                                           (hov/open-booking-details-button id)])}
+                       item]))
                   data))])))

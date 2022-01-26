@@ -268,7 +268,7 @@
      (insert-after id)
      [:div])])
 
-(defn boat-list [{:keys [boat-db selected only-show-selected? offset time-slot] :as m}]
+(defn boat-list [{:keys [boat-db selected only-show-selected?] :as m}]
   [:div.space-y-px.select-none.overflow-clip
    {:class (:bg list-color-map)}
    (doall (for [[id data] boat-db
@@ -278,7 +278,9 @@
             ^{:key (str id)}
             [list-line
              (conj m
-                   {:appearance (if (some #{id} @selected) #{:timeline})
+                   {:appearance (set/union
+                                  (if @(schpaa.state/listen :opt1) #{:extra})
+                                  (if (some #{id} @selected) #{:timeline}))
                     :selected?  (some #{id} @selected)
                     :id         id
                     :data       data})]))])
@@ -363,11 +365,21 @@
   [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
    {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
    (schpaa.components.views/modern-checkbox'
+     {:set-details #(schpaa.state/change :opt1 %)
+      :get-details #(-> (schpaa.state/listen :opt1) deref)}
+     (fn [checkbox]
+       [:div.flex.items-center.gap-4
+        checkbox
+        [:div.text-base.font-normal.space-y-0
+         [:div.font-medium "Detaljer"]
+         [:div.text-xs "Vis alle båtdetaljer"]]]))
+
+   (schpaa.components.views/modern-checkbox'
      {:set-details #(rf/dispatch [:boatpickerlist/set-details %])
       :get-details #(-> (rf/subscribe [:boatpickerlist/details]) deref)}
      (fn [checkbox]
        [:div.flex.items-center.gap-4
-        checkbox
         [:div.flex.flex-col
-         [:div.font-medium "Utvalg"]
-         [:div.text-xs "Begrens visning til utvalg"]]]))])
+         [:div.font-medium.text-right "Utvalg"]
+         [:div.text-xs.text-right "Begrens visning til utvalg"]]
+        checkbox]))])
