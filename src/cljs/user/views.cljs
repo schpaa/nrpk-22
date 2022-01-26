@@ -56,14 +56,14 @@
     #(modal/form-action
        {:flags   #{:timeout}
         ;:footer  "Du kan ikke angre dette"
-        :title   "Avlys booking"
+        :title   "Logg ut"
         :form-fn (fn [] [:div
                          [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
                          [modal/just-buttons
                           [["Avbryt" [:btn-free] (fn [] (send :e.hide))]
-                           ["Logg ut" [:btn-cta] (fn []
-                                                   (db/sign-out)
-                                                   (send :e.hide))]]]])})}
+                           ["Det er greit" [:btn-cta] (fn []
+                                                        (db/sign-out)
+                                                        (send :e.hide))]]]])})}
 
    "Logg ut"])
 

@@ -27,6 +27,7 @@
                   -dev:browser (do
                                  (shell "open http://localhost:8010")
                                  (shell "open http://localhost:9630/build/eykt"))
+                  -devcards:css    (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
                   -dev:css    (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
                   -dev:watch  (clojure (str "-M:shadow-cljs watch " -app-name))
                   -dev        {:depends [-dev:watch -dev:browser]}

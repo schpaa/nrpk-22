@@ -5,7 +5,9 @@ module.exports = {
     "./public/eykt/index.html",
     "./public/eykt/js/cljs-runtime/**/*.js",
     "./public/eykt/**/*.{html,js}",
-    "./lib/**/*.{cljs,js}"
+    "./lib/**/*.{cljs,js}",
+    "./public/devcards/**/*.{html,js}",
+    "./public/devcards/js/cljs-runtime/**/*.js",
     ],
     darkMode: 'class',
   theme: {

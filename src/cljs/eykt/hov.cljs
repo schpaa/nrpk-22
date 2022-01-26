@@ -18,14 +18,14 @@
                  (readymade/booking-details-dialog-fn (readymade/modal-booking-details-dialogcontent id)))}
    [icon/small :three-vertical-dots]])
 
-(defn remove-booking-details-button [id]
+(defn remove-booking-details-button [id input-data]
   [:div.w-10.flex.flex-center
    {:class    (concat (:danger color-map))
     :on-click #(do
                  (.stopPropagation %)
                  (readymade/are-you-sure {:title  [:div.space-y-2
                                                    [:h2 "Denne bookingen vil bli slettet!"]
-                                                   [l/ppre (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read))]]
+                                                   [l/ppre input-data]]
                                           :footer (str id)
 
                                           :action (fn [] (js/alert id))}))}

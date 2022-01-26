@@ -83,7 +83,8 @@
 
        [:div.debug.whitespace-nowrap.self-start (t/format "'—' H.mm" (t/time (t/date-time end)))]])))
 
-(defn- booking-list-item [{:keys [offset today hide-name? on-click
+(defn- booking-list-item [{:keys [fetch-boatdata-for
+                                  offset today hide-name? on-click
                                   details?
                                   insert-top-fn
                                   insert-before
@@ -131,27 +132,29 @@
               {:style {:grid-template-columns "repeat(auto-fill,minmax(15rem,1fr))"}
                :class [:first:rounded-t :overflow-clip :last:rounded-b]}
               (doall (for [id selected
-                           :let [data (get (into {} boat-db) id)]
+                           :let [data (when fetch-boatdata-for (fetch-boatdata-for id))]
                            :while (some? data)]
                        [list-line
                         {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
                          :insert-after            hov/open-details
                          :id         id
-                         :data       data
+                         :data       {:number "A"}; fixme data ;(get (into {} boat-db) id)
                          :offset     offset
                          :time-slot  time-slot
                          :appearance (set/union #{:basic :xclear :hide-location :extra} appearance)
                          :overlap?   false}]))]
-             [:div
-              (let [items (sort (map (fn [id] (:number (get (into {} boat-db) id))) selected))]
-                (cond
-                  (< 2 (count items)) [:div.flex.gap-1.flex-wrap.px-2
-                                       (for [number (take 2 items)]
-                                         [:div (schpaa.components.views/number-view number)])
-                                       (schpaa.components.views/show-more-number-view)]
-                  :else [:div.flex.gap-1.flex-wrap.px-2
-                         (for [number items]
-                           [:div (schpaa.components.views/number-view number)])]))])])]
+             (when fetch-boatdata-for
+               [:div
+                (let [items (sort (map (fn [id] (:number (fetch-boatdata-for id))) selected))
+                      #_(sort (map (fn [id] (:number (get (into {} boat-db) id))) selected))]
+                  (cond
+                    (< 2 (count items)) [:div.flex.gap-1.flex-wrap.px-2
+                                         (for [number (take 2 items)]
+                                           [:div (schpaa.components.views/number-view number)])
+                                         (schpaa.components.views/show-more-number-view)]
+                    :else [:div.flex.gap-1.flex-wrap.px-2
+                           (for [number items]
+                             [:div (schpaa.components.views/number-view number)])]))]))])]
        [:div]]
 
       (when insert-below
@@ -179,14 +182,15 @@
              (map (fn [[{:keys [id]} item]]
                     (let [my-own? (= uid (:uid item))]
                       [booking-list-item
-                       {:details?       details?
-                        :boat-db        boat-db
-                        :accepted-user? accepted-user?
-                        :today          today
-                        :hide-name?     (not (some? uid))
-                        :on-click       (fn [e]
-                                          (swap! markings update id (fnil not false))
-                                          (.stopPropagation e))
+                       {:fetch-boatdata-for (fn [id] (get (into {} boat-db) id))
+                        :details?           details?
+                        :boat-db            boat-db
+                        :accepted-user?     accepted-user?
+                        :today              today
+                        :hide-name?         (not (some? uid))
+                        :on-click           (fn [e]
+                                              (swap! markings update id (fnil not false))
+                                              (.stopPropagation e))
                         ;:insert-before  (when my-own? hov/remove-booking-details-button)
                         ;hov/remove-from-list-actions
                         ;(hov/remove-from-list-actions clicks-on-remove selected)
@@ -195,9 +199,11 @@
                                      [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
                                                        :handle-change #(swap! markings update id (fnil not false))}
                                       "" nil]]))
-                        :insert-after   (fn [id]
-                                          [:div.flex
-                                           (when my-own? (hov/remove-booking-details-button id))
-                                           (hov/open-booking-details-button id)])}
+                        :insert-after       (fn [id]
+                                              [:div.flex
+                                               (when my-own? (hov/remove-booking-details-button
+                                                               id
+                                                               (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read))))
+                                               (hov/open-booking-details-button id)])}
                        item]))
                   data))])))

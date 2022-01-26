@@ -14,6 +14,7 @@
             [clojure.set :as set]
             [schpaa.debug :as l]
             [schpaa.modal :as modal]
+            [schpaa.state]
             [fork.re-frame :as fork]
             [booking.time-navigator]
             [re-frame.core :as rf]

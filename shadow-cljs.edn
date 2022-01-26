@@ -2,8 +2,23 @@
 {:open-file-command ["idea" :pwd "--line" :line :file]
  :deps              {:aliases [:shadow-cljs]}
  :nrepl             {:port 9000}
- :dev-http          {8010 "public/eykt"}
- :builds            {:logg    {:target :browser}
+ :dev-http          {8010 "public/eykt"
+                     3001 ["public/devcards" "public"]}
+ :builds            {:devcards
+                     {:target           :browser            ; using :browser-test to pickup all files that match `-test$`
+                      ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
+                      :output-dir       "public/devcards/js"
+                      ;:runner-ns        example.devcards ; must have init fn to run
+                      :modules           {:main {:init-fn example.devcards/init!}}
+                      :after-load        example.devcards/reload!
+                      :compiler-options {:devcards           true
+                                         :output-feature-set :es8}
+                      :js-options       {:resolve
+                                         {"devcards-marked"
+                                          {:target :npm :require "marked"}
+                                          "devcards-syntax-highlighter"
+                                          {:target :npm :require "highlight.js"}}}}
+                     :logg    {:target :browser}
                      :booking {:target :browser}
                      :eykt    {:target            :browser
                                :output-dir        "public/eykt/js"
