@@ -1,8 +1,6 @@
 (ns eykt.hov
   "higher order views"
-  (:require [schpaa.modal.readymade :refer [details-dialog-fn
-                                            modal-booking-title
-                                            booking-details-dialog-fn]]
+  (:require [schpaa.modal.readymade :as readymade]
             [schpaa.icon :as icon]
             [logg.database]
             [clojure.set :as set]))
@@ -15,7 +13,7 @@
    {:class    (concat (:normal color-map))
     :on-click #(do
                  (.stopPropagation %)
-                 (booking-details-dialog-fn (modal-booking-title id)))}
+                 (readymade/booking-details-dialog-fn (readymade/modal-booking-details-dialogcontent id)))}
    [icon/small :three-vertical-dots]])
 
 (defn open-details [id]
@@ -24,7 +22,7 @@
                :bg-gray-200 :text-black "bg-gray-200" "dark:bg-gray-600" "dark:text-gray-300"]
     :on-click #(do ()
                  (.stopPropagation %)
-                 (details-dialog-fn id))}
+                 (readymade/details-dialog-fn id))}
    [icon/small :three-vertical-dots]])
 
 (defn toggle-selected [id]

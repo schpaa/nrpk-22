@@ -331,7 +331,7 @@
                                              (assoc db :booking-list-personal args)))
 
 (defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
-  [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
+  [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
    {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
    (schpaa.components.views/modern-checkbox'
      {:set-details #(rf/dispatch [:bookinglist/set-details %])
@@ -339,7 +339,7 @@
      (fn [checkbox]
        [:div.flex.items-center.gap-4
         checkbox
-        [:div.flex.flex-col
+        [:div.text-base.font-normal.space-y-0
          [:div.font-medium "Detaljer"]
          [:div.text-xs "Vis alle båtdetaljer"]]]))
 
@@ -347,8 +347,8 @@
      {:set-details #(rf/dispatch [:bookinglist/set-personal %])
       :get-details #(-> (rf/subscribe [:bookinglist/personal]) deref)}
      (fn [checkbox]
-       [:div.flex.items-center.gap-4.w-full
-        [:div.flex.flex-col.items-end
+       [:div.flex.items-end.gap-4.w-full
+        [:div.text-base.font-normal.space-y-0
          [:div.font-medium.text-right "Alle"]
          [:div.text-xs "Vis alle bookinger"]]
         checkbox]))])

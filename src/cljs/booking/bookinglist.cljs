@@ -84,25 +84,25 @@
        [:div.debug.whitespace-nowrap.self-start (t/format "'—' H.mm" (t/time (t/date-time end)))]])))
 
 (defn- booking-list-item [{:keys [offset today hide-name? on-click
+                                  details?
                                   insert-top-fn
                                   insert-below
                                   insert-above
+                                  insert-after
                                   appearance
                                   time-slot
                                   boat-db]
                            :or   {today (t/new-date)}}
                           ;intent FOR EACH ITEM
-                          {:keys [navn insert-before-line-item description selected not-available start end] :as item}]
-  (let [details @(rf/subscribe [:app/details])
-        selected (map keyword selected)                     ;;selected must be a keyword
+                          {:keys [id navn insert-before-line-item description selected not-available start end] :as item}]
+  (let [selected (map keyword selected)                     ;;selected must be a keyword
         relation (try (tick.alpha.interval/relation start today)
-
                       (catch js/Error _ nil))
-        {:keys [bg fg fg- br]} (booking-list-item-color-map relation)
-        multiday true]
+        {:keys [bg fg fg- br]} (booking-list-item-color-map relation)]
+
 
     [:div.grid.w-full
-     {:style    {:grid-template-columns "min-content 1fr min-content"}
+     {:style    {:grid-template-columns "min-content 1fr min-content min-content"}
       :class    (concat fg bg br)
       :on-click #(when on-click (on-click item))}
      (when insert-top-fn [:div.col-span-3 '(insert-top-fn item)])
@@ -110,16 +110,8 @@
      [:<>
       [:div]
       [:div.py-1.space-y-1
-       [time-segment-display item #_{:start      start
-                                     :end        end
-                                     :relation   relation
-                                     :hide-name? hide-name?
-                                     :multiday   multiday
-                                     :navn       navn}]
-
-
-       ;[l/ppre-x @(rf/subscribe [:bookinglist/details]) selected]
-       (if (or true (some #{:description} appearance) (< 1 details))
+       [time-segment-display item]
+       (if details?
          (if (some? description)
            [:div.col-span-3.text-sm.px-2
             {:class (concat fg- bg)} description]
@@ -128,8 +120,8 @@
        (when-not (empty? selected)
          [:div.col-span-5
           {:class (concat bg)}
-          (if @(rf/subscribe [:bookinglist/details])
-            [:div.space-y-px.grid.xgap-1.bg-alt
+          (if details?
+            [:div.space-y-px.grid
              {:style {:grid-template-columns "repeat(auto-fill,minmax(15rem,1fr))"}
               :class [:first:rounded-t :overflow-clip :last:rounded-b]}
              (doall (for [id selected
@@ -137,7 +129,7 @@
                           :while (some? data)]
                       [list-line
                        {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
-                        ;:insert-after            hov/open-details
+                        :insert-after            hov/open-details
                         :id         id
                         :data       data
                         :offset     offset
@@ -154,13 +146,15 @@
                  :else [:div.flex.gap-1.flex-wrap.px-2
                         (for [number items]
                           [:div (schpaa.components.views/number-view number)])]))])])]
-
       [:div]]
 
      (when insert-below
-       [:div.col-span-3 (insert-below)])]))
+       [:div.col-span-3 (insert-below)])
+     (if insert-after
+       (insert-after id)
+       [:div])]))
 
-(defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db]}]
+(defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db details?]}]
   (r/with-let [edit (r/atom false)
                markings (r/atom {})]
     (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
@@ -168,12 +162,13 @@
           data (->> booking-data
                     (filter (comp (partial booking.views.picker/after-and-including today) val))
                     (sort-by (comp :start val) <))]
-      [:div
+      [:<>
        (into [:div.space-y-px.bg-gray-500.dark:bg-gray-900
               {:class class}]
              (map (fn [[{:keys [id]} item]]
                     [booking-list-item
-                     {:boat-db        boat-db
+                     {:details? details?
+                      :boat-db        boat-db
                       :accepted-user? accepted-user?
                       :today          today
                       :hide-name?     (not (some? uid))

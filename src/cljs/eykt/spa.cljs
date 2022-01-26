@@ -75,6 +75,7 @@
 (defn front []
   (let [user-auth (rf/subscribe [::db/user-auth])]
     [:div
+
      [tab {:item     ["w-1/3"]
            :selected @(rf/subscribe [:app/current-page])}
       [:r.blog "Info" nil :icon :command]
@@ -99,18 +100,24 @@
 
       :r.common
       [:<>
-       [:div.space-y-1
+       [:div.space-y-px.flex.flex-col
+        {:style {:min-height "calc(100vh - 7rem)"}}
         (when @user-auth
           [:div.p-4.bg-gray-50
-           [hoc/last-active-booking]])
-        [:div
-         {:style {:min-height "calc(100vh - 19.5rem)"}
-          :class ["bg-gray-200"]}
+           {:class (concat [:dark:bg-gray-700])}
+           (hoc/last-active-booking {:uid (:uid @user-auth)})])
+        [:div.flex-1
+         {:class (concat [:dark:bg-gray-900 :bg-gray-500])}
          [hoc/all-active-bookings]]
         [booking.views/last-bookings-footer {}]]]
 
       :r.boatlist
-      [hoc/all-boats]]]))
+      [:<>
+       [:div.flex.flex-col
+        {:style {:min-height "calc(100vh - 7rem)"}}
+        [hoc/all-boats
+         {:details? @(schpaa.state/listen :opt1)}]]
+       [hoc/all-boats-footer {}]]]]))
 
 (def route-table
   {:r.common      front

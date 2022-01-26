@@ -11,7 +11,8 @@
             [schpaa.components.views :as views]
             [schpaa.icon :as icon]
             [schpaa.debug :as l]
-            [booking.bookinglist]))
+            [booking.bookinglist]
+            [eykt.hov :as hov]))
 
 ;region booking
 
@@ -28,25 +29,41 @@
       :my-state      schpaa.components.views/my-state
       :booking-data' (sort-by :date > (booking.database/read))}]))
 
-(defn last-active-booking []
+(defn last-active-booking [{:keys [uid] :as m}]
+  [l/ppre-x ((juxt map? vector? list?) m)]
   [:<>
-   #_(when-let [u @(rf/subscribe [::db/user-auth])]
-       [l/ppre (:uid u)])
    (let [today (t/date)
          data (->> (booking.database/read)
-                   (filter (fn [{:keys [uid]}] (= uid (:uid @(rf/subscribe [::db/user-auth])))))
+                   (filter (fn [{:keys [] :as item}] (= (:uid item) uid)))
                    (filter (fn [{:keys [start]}] (t/<= today (t/date (t/date-time start)))))
                    (sort-by :start <)
                    first)]
      (if (some? data)
        [:<>
-        #_(r/with-let [st (r/atom true)]
-            (views/modern-checkbox st))
-
-
         [:h2 (:start data)]
         [:h2 (:end data)]
+
+
+        [booking.bookinglist/booking-list-item
+         {:boat-db      (sort-by (comp :number val) < (logg.database/boat-db))
+          ;:accepted-user? accepted-user?
+          :details? true
+          :today        today
+          :hide-name?   false ;(not (some? uid))
+          #_#_:on-click (fn [e]
+                          (swap! markings update id (fnil not false))
+                          (.stopPropagation e))
+          #_#_:insert-before (when @edit
+                               [:div.flex.items-center.px-2.bg-gray-400
+                                [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
+                                                  :handle-change #(swap! markings update id (fnil not false))}
+                                 "" nil]])
+          :insert-after hov/open-booking-details-button}
+         data]
+
+
         [:div.flex.justify-between
+         [:div]
          [:button.btn.btn-danger
           {:on-click #(modal/form-action
                         {:flags   #{:no-icon :no-crossout :-timeout}
@@ -59,39 +76,55 @@
                                             ["Avlys" [:btn-danger] (fn []
                                                                      (tap> ["save settings " 123])
                                                                      (send :e.hide))]]]])})}
-          "Avlys"]
-         [:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags  #{:timeout :error :weak-dim}
-                                                                           :icon   :squares
-                                                                           :footer "footer"
-                                                                           :title  "Bekreftet!"})} "Endre"]]]
-       [:div "Du har ingen bookinger"]))
-   #_[booking.views/pick-list
-      {:selected (r/atom #{})
-       :boat-db  (logg.database/boat-db)
-       :day      1
-       :slot     (tick.alpha.interval/bounds
-                   (t/at (t/new-date 2022 1 3) (t/new-time 14 0))
-                   (t/at (t/new-date 2022 1 4) (t/new-time 13 0)))
-       :on-click #(js/alert "!")}]])
+          "Avlys booking"]
+         #_[:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags  #{:timeout :error :weak-dim}
+                                                                             :icon   :squares
+                                                                             :footer "footer"
+                                                                             :title  "Bekreftet!"})} "Endre"]]]
+       [:div "Du har ingen bookinger"]))])
 
 (defn all-active-bookings []
-  (let [user-auth (rf/subscribe [::db/user-auth])
-        accepted-user? (rf/subscribe [:app/accepted-user?])]
-    [:<>
-     #_[:div.flex.justify-between.p-4.bg-gray-50
-        [:button.btn.btn-free "Vis mine"]
-        [:button.btn.btn-free "Vis alle"]]
-     [booking.bookinglist/booking-list
-      {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
-       :class          [:bg-gray-400]
-       :accepted-user? @accepted-user?
-       :booking-data   (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read)) #_(booking.database/read)
-       :today          (t/new-date 2022 1 21)
-       :uid            (:uid @user-auth)}]]))
+  (let [user-auth @(rf/subscribe [::db/user-auth])
+        accepted-user? @(rf/subscribe [:app/accepted-user?])]
+    [booking.bookinglist/booking-list
+     {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
+      ;:class          [:bg-gray-400]
+      :details? @(rf/subscribe [:bookinglist/details])
+      :accepted-user? accepted-user?
+      :booking-data   (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read)) #_(booking.database/read)
+      :today          (t/new-date 2022 1 26)
+      :uid            (:uid user-auth)}]))
 
-(defn all-boats []
+(defn all-boats [{:keys [details?]}]
   [logg.views/all-boats
-   {:data (sort-by (comp :number val) < (logg.database/boat-db))}])
+   {:details? details?
+    :data (sort-by (comp :number val) < (logg.database/boat-db))}])
+
+(defn all-boats-footer [_]
+  (r/with-let [
+               opt2 (r/atom false)]
+    [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
+     {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
+     (schpaa.components.views/modern-checkbox'
+       {:set-details #(schpaa.state/change :opt1 %)
+        :get-details #(-> (schpaa.state/listen :opt1) deref)}
+       (fn [checkbox]
+         [:div.flex.items-center.gap-4
+          checkbox
+          [:div.text-base.font-normal.space-y-0
+           [:div.font-medium "Detaljer"]
+           [:div.text-xs "Vis alle båtdetaljer"]]]))
+
+     (schpaa.components.views/modern-checkbox'
+       {:disabled? true
+        :set-details #(reset! opt2 %)
+        :get-details #(-> opt2 deref)}
+       (fn [checkbox]
+         [:div.flex.items-center.gap-4.w-full.opacity-20
+          [:div.text-base.font-normal.space-y-0
+           [:div.font-medium.text-right "Grupper"]
+           [:div.text-xs "Grupper etter merke"]]
+          checkbox]))]))
 
 ;endregion
 

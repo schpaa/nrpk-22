@@ -12,7 +12,7 @@
     [schpaa.icon :as icon]
     [eykt.hov :as hov]))
 
-(defn all-boats [{:keys [data]}]
+(defn all-boats [{:keys [data details?]}]
   (r/with-let [edit (r/atom false)
                markings (r/atom {})]
               (let [selected-keys (keep (fn [[k v]] (if v k)) @markings)
@@ -26,12 +26,9 @@
                               (let [idx id]
                                 [booking.views.picker/list-line
                                  (conj {:offset (times.api/day-number-in-year (t/date))}
-                                       {:graph?        (or
-                                                         (= detail-level 2)
-                                                         (< detail-level 1))
-                                        :details?      (= detail-level 2)
-                                        :compact?      (= detail-level 0)
+                                       {:details?      details?
                                         :id            id
+                                        :appearance (if details? #{:timeline :tall :extra})
                                         :on-click      #(swap! markings update idx (fnil not false))
                                         :data          data
                                         :insert-before (when @edit
@@ -40,18 +37,5 @@
                                                                             :handle-change #(swap! markings update idx (fnil not false))}
                                                            "" nil]])
                                         :insert-after  hov/open-details})]))
-                            data))
-                 [general-footer
-                  {:insert-before (fn []
-                                    [:div (schpaa.components.tab/tab
-                                            (conj schpaa.components.tab/select-bar-bottom-config
-                                                  {:selected @(rf/subscribe [:app/details])
-                                                   :select   #()})
-                                            [0 "S" #(rf/dispatch [:app/set-detail 0])]
-                                            [1 "M" #(rf/dispatch [:app/set-detail 1])]
-                                            [2 "L" #(rf/dispatch [:app/set-detail 2])])])
-                   :data          data
-                   :key-fn        key
-                   :edit-state    edit
-                   :markings      markings
-                   :c             c}]])))
+                            data))])))
+

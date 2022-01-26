@@ -155,23 +155,26 @@
 
 
         {:keys [navn description location number
+                weight length width
                 slot expert kind]} data]
     [:<>
-     [:div.grid.gap-2.py-2.px-2.w-full.text-blackx
-      {:style {:grid-template-columns "min-content 1fr max-content min-content"
+     [:div.grid.gap-2.p-2.w-full.text-blackx
+      {:style {:grid-template-columns "min-content min-content 1fr max-content"
                :grid-auto-rows        "auto"}}
 
       [:div.self-center.justify-self-start
        {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
        (number-view number)]
 
-      (if (some #{:tall} appearance)
-        [:div.self-center.justify-self-start.space-y-0.truncate
+      (when-not (some #{:hide-location} appearance)
+        [:div.self-center.justify-self-end (slot-view slot)])
+
+      (if (and (not (some #{:extra} appearance)) (some #{:tall} appearance))
+        [:div.self-center.space-y-0.truncate
          {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
          (name-view navn)
-         [:div.text-xs (normalize-kind kind)]]
-
-        [:div.self-center.justify-self-start.line-clamp-1.whitespace-nowrap.truncate
+         (normalize-kind kind)]
+        [:div.self-center.truncate
          {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
          (name-view navn)])
 
@@ -183,13 +186,17 @@
               :window    window
               :time-slot slot'
               :list      status-list})))]
-      (when-not (some #{:hide-location} appearance)
-        [:div.self-center.justify-self-end (slot-view slot)])
 
       (when (some #{:extra} appearance)
         [:<>
-         [:div.col-span-2.self-start.text-sm.justify-self-start (normalize-kind kind)]
-         [:div.col-span-2.self-start.text-sm.line-clamp-2 description]])]]))
+         [:div.col-span-2.self-start.text-sm.justify-self-start.leading-6 (normalize-kind kind)]
+         [:div.col-span-2.self-start.text-base.line-clamp-x2.leading-6 description]
+         [:div.col-span-2]
+         [:div.col-span-2.text-sm.flex.justify-start
+          (interpose [:div.w-2 ", "]
+                     (remove nil? [(when (seq weight) [:div weight])
+                                   (when (seq length) [:div "lengde " length])
+                                   (when (seq width) [:div "bredde " width])]))]])]]))
 
 (defn- compact-view [{:keys [selected?
                              offset time-slot id on-click remove? data insert-before graph? details? compact?
@@ -364,5 +371,3 @@
         [:div.flex.flex-col
          [:div.font-medium "Utvalg"]
          [:div.text-xs "Begrens visning til utvalg"]]]))])
-
-
