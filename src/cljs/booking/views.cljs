@@ -339,7 +339,7 @@
 
 (defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
   [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
-   {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
+   {:class [:bg-gray-300 :dark:bg-gray-800 :dark:text-gray-500 :text-black]}
    (schpaa.components.views/modern-checkbox'
      {:set-details #(rf/dispatch [:bookinglist/set-details %])
       :get-details #(-> (rf/subscribe [:bookinglist/details]) deref)}
@@ -348,7 +348,7 @@
         checkbox
         [:div.text-base.font-normal.space-y-0
          [:div.font-medium "Detaljer"]
-         [:div.text-xs "Vis alle båtdetaljer"]]]))
+         [:div.text-xs "Vis alle detaljer"]]]))
 
    (schpaa.components.views/modern-checkbox'
      {:set-details #(schpaa.state/change :opt/show-only-my-own %)
@@ -357,13 +357,13 @@
        [:div.flex.items-center.gap-2.w-full
         [:div.text-base.font-normal.space-y-0
          [:div.font-medium.text-right "Alle"]
-         [:div.text-xs "Vis bookinger fra andre også"]]
+         [:div.text-xs "Inkluder alle bookinger"]]
         checkbox]))])
 
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]
   (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
     [:<>
-     [:div.sticky.top-60.z-50
+     [:div.sticky.top-64.z-50
 
       [:div.grid.grid-cols-2.gap-y-2.bg-gray-100.z-10.border-b.border-gray-400
        {:class [:dark:bg-gray-700 :bg-gray-100]}
@@ -464,10 +464,10 @@
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [admin false
         detail-level @(rf/subscribe [:app/details])]
-    [fork/form {:initial-touched   {:start-date  (t/date "2022-01-26")
-                                    :start-time  (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
-                                    :end-time    (t/time "12:30" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
-                                    :end-date    (t/date "2022-01-26")
+    [fork/form {:initial-touched   {:start-date  (str (t/new-date))
+                                    :start-time  (str (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                    :end-time    (str (t/time "17:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                    :end-date    (str (t/new-date))
                                     :description ""}
                 :validation        booking-validation
                 :state             my-state

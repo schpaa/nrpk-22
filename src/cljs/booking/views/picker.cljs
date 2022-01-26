@@ -152,7 +152,7 @@
         slot' (when time-slot
                 {:from (- (convert (t/beginning time-slot)) offset)
                  :to   (- (convert (t/end time-slot)) offset)})
-        booking-db (filter (partial has-selection id) (fetch-bookingdata) #_ (booking.database/read))
+        booking-db (filter (partial has-selection id) (fetch-bookingdata) #_(booking.database/read))
         status-list (mapv (fn [{:keys [start end]}]
                             {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
                              :start (- (convert start) offset)
@@ -342,30 +342,36 @@
         slot (try
                (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
-    [:div
-     {:style {:min-height "calc(100vh - 22rem)"}
-      :class ["dark:bg-gray-900" "bg-gray-500"]}
+    [:div.flex.flex-col
+     {:style {:min-height "calc(100vh - 25rem)"}
+      :class ["dark:bg-gray-900" "bg-gray-600"]}
 
-     [boat-list
-      {:offset              offset
-       :time-slot           slot
-       :boat-db             boat-db
-       :only-show-selected? @(rf/subscribe [:boatpickerlist/details])
-       :selected            selected
-       :insert-before       (fn [id]
-                              (let [id #{id}]
-                                (hov/toggle-selected'
-                                  {:on?      (some id @selected)
-                                   :on-click #(swap! selected
-                                                     (fn [sel] (if (some id sel)
-                                                                 (set/difference sel id)
-                                                                 (set/union sel id))))})))
+     (if (seq boat-db)
+       [:div.flex-1
+        [boat-list
+         {:offset              offset
+          :time-slot           slot
+          :boat-db             boat-db
+          :only-show-selected? @(rf/subscribe [:boatpickerlist/details])
+          :selected            selected
+          :insert-before       (fn [id]
+                                 (let [id #{id}]
+                                   (hov/toggle-selected'
+                                     {:on?      (some id @selected)
+                                      :on-click #(swap! selected
+                                                        (fn [sel] (if (some id sel)
+                                                                    (set/difference sel id)
+                                                                    (set/union sel id))))})))
 
-       :insert-after        hov/open-details
-       :on-click            (fn [e] (swap! selected
-                                           (fn [sel] (if (some #{e} sel)
-                                                       (set/difference sel #{e})
-                                                       (set/union sel #{e})))))}]]))
+          :insert-after        hov/open-details
+          :on-click            (fn [e] (swap! selected
+                                              (fn [sel] (if (some #{e} sel)
+                                                          (set/difference sel #{e})
+                                                          (set/union sel #{e})))))}]]
+       [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
+        {:class "text-white/20"}
+        [:div.text-2xl.font-black "Båt-listen er tom"]
+        [:div.text-xl.font-semibold "Ta kontakt med administrator"]])]))
 
 
 ;todo rename "utvalg"
@@ -376,22 +382,22 @@
 
 (defn boat-picker-footer []
   [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
-   {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
+   {:class [:bg-gray-300 :dark:bg-gray-800 :dark:text-white :text-black]}
    (schpaa.components.views/modern-checkbox'
      {:set-details #(schpaa.state/change :opt1 %)
       :get-details #(-> (schpaa.state/listen :opt1) deref)}
      (fn [checkbox]
-       [:div.flex.items-center.gap-4
+       [:div.flex.items-center.gap-2
         checkbox
         [:div.text-base.font-normal.space-y-0
          [:div.font-medium "Detaljer"]
-         [:div.text-xs "Vis alle båtdetaljer"]]]))
+         [:div.text-xs "Vis alle detaljer"]]]))
 
    (schpaa.components.views/modern-checkbox'
      {:set-details #(rf/dispatch [:boatpickerlist/set-details %])
       :get-details #(-> (rf/subscribe [:boatpickerlist/details]) deref)}
      (fn [checkbox]
-       [:div.flex.items-center.gap-4
+       [:div.flex.items-center.gap-2
         [:div.flex.flex-col
          [:div.font-medium.text-right "Utvalg"]
          [:div.text-xs.text-right "Begrens visning til utvalg"]]

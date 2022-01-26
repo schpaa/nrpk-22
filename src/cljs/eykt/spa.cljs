@@ -72,6 +72,12 @@
 
            [:div "other " @route]]]]))))
 
+(defn empty-list-message [msg]
+  [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
+   {:class "text-white/20"}
+   [:div.text-2xl.font-black msg]
+   [:div.text-xl.font-semibold "Ta kontakt med administrator"]])
+
 (defn front []
   (let [user-auth (rf/subscribe [::db/user-auth])]
     [:div
@@ -99,25 +105,32 @@
         [hoc/new-booking])
 
       :r.common
-      [:<>
-       [:div.space-y-px.flex.flex-col
-        {:style {:min-height "calc(100vh - 7rem)"}}
-        #_(when @user-auth
-            [:div.p-4.bg-gray-50
-             {:class (concat [:dark:bg-gray-700])}
-             (hoc/last-active-booking {:uid (:uid @user-auth)})])
-        [:div.flex-1
-         {:class (concat [:dark:bg-gray-900 :bg-gray-500])}
-         [hoc/all-active-bookings]]
-        [booking.views/last-bookings-footer {}]]]
+      (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
+        [:div
+         {:class ["dark:bg-gray-900" "bg-gray-600"]}
+         [:div.space-y-px.flex.flex-col
+          {:style {:min-height "calc(100vh - 7rem)"}}
+          (if (seq data)
+            [:div.flex-1
+             {:class (concat [:dark:bg-gray-700 :bg-gray-500])}
+             [hoc/all-active-bookings {:data data}]]
+            [empty-list-message "Booking-listen er tom"])
+          [booking.views/last-bookings-footer {}]]])
 
       :r.boatlist
-      [:<>
-       [:div.flex.flex-col
-        {:style {:min-height "calc(100vh - 7rem)"}}
-        [hoc/all-boats
-         {:details? @(schpaa.state/listen :opt1)}]]
-       [hoc/all-boats-footer {}]]]]))
+      (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
+        [:div
+         {:class (concat [:dark:bg-gray-900 :bg-gray-600])}
+         [:div.space-y-px.flex.flex-col
+          {:style {:min-height "calc(100vh - 7rem)"}}
+          (if (seq data)
+            [:div.flex-1
+
+             [hoc/all-boats
+              {:data data
+               :details? @(schpaa.state/listen :opt1)}]]
+            [empty-list-message "Båt-listen er tom"])
+          [hoc/all-boats-footer {}]]])]]))
 
 (def route-table
   {:r.common      front

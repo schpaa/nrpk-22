@@ -82,43 +82,44 @@
                                                                                :title  "Bekreftet!"})} "Endre"]]]
        [:div "Du har ingen bookinger"]))])
 
-(defn all-active-bookings []
+(defn all-active-bookings [{:keys [data]}]
   (let [user-auth @(rf/subscribe [::db/user-auth])
         accepted-user? @(rf/subscribe [:app/accepted-user?])]
     [booking.bookinglist/booking-list
-     {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
-      ;:class          [:bg-gray-400]
-      :details? @(rf/subscribe [:bookinglist/details])
+     {:boat-db        data
+      :details?       @(rf/subscribe [:bookinglist/details])
       :accepted-user? accepted-user?
       :booking-data   (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read)) #_(booking.database/read)
       :today          (t/new-date 2022 1 26)
       :uid            (:uid user-auth)}]))
 
-(defn all-boats [{:keys [details?]}]
+
+
+(defn all-boats [{:keys [details? data]}]
   [logg.views/all-boats
    {:details? details?
-    :data (sort-by (comp :number val) < (logg.database/boat-db))}])
+    :data data}])
 
 (defn all-boats-footer [_]
   (r/with-let [opt2 (r/atom false)]
     [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
-     {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
+     {:class [:bg-gray-300 :dark:bg-gray-800 :dark:text-gray-500 :text-black]}
      (schpaa.components.views/modern-checkbox'
        {:set-details #(schpaa.state/change :opt1 %)
         :get-details #(-> (schpaa.state/listen :opt1) deref)}
        (fn [checkbox]
-         [:div.flex.items-center.gap-4
+         [:div.flex.items-center.gap-2
           checkbox
           [:div.text-base.font-normal.space-y-0
            [:div.font-medium "Detaljer"]
-           [:div.text-xs "Vis alle båtdetaljer"]]]))
+           [:div.text-xs "Vis alle detaljer"]]]))
 
      (schpaa.components.views/modern-checkbox'
        {:disabled? true
         :set-details #(reset! opt2 %)
         :get-details #(-> opt2 deref)}
        (fn [checkbox]
-         [:div.flex.items-center.gap-4.w-full.opacity-20
+         [:div.flex.items-center.gap-2.w-full.opacity-20
           [:div.text-base.font-normal.space-y-0
            [:div.font-medium.text-right "Grupper"]
            [:div.text-xs "Grupper etter merke"]]
@@ -143,12 +144,13 @@
 
 (defn debug []
   [:div.p-4.space-y-4.columns-3xs.gap-4                     ;.divide-x.divide-dashed.divide-black
-   [:div (str devtools.version/current-version)]
+
 
    (for [e [:text-sm :text-base :text-xl :text-4xl]]
-     [:div.font-sans
+     [:div.xtabular-nums.slashed-zero.lining-enums.ordinal.font-sans.lining-nums
       {:class e}
       [:div e]
+      [:div "1st"]
       [:div.font-thin "0123456789"]
       [:div.font-extralight "0123456789"]
       [:div.font-light "0123456789"]

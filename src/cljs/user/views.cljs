@@ -121,13 +121,13 @@
     :on-submit handle-submit}
    [:div.space-y-4
     [:div.flex.gap-4.flex-wrap
-     [fields/text (-> props fields/large-field (assoc :readonly? true)) "UID" :uid]]
+     [fields/text (-> props fields/large-field (assoc :readonly? true)) :label "UID" :name :uid]]
     [:div.flex.gap-4.flex-wrap
-     [fields/text (fields/large-field props) "Navn" :navn]
-     [fields/text (fields/small-field props) "Alias" :alias]
-     [fields/text (fields/small-field props) "Våttkort #" :våttkortnr]
-     [fields/text (fields/normal-field props) "Telefon" :telefon]
-     [fields/text (fields/large-field props) "Epost" :epost]]
+     [fields/text (fields/large-field props) :label "Navn" :name :navn]
+     [fields/text (fields/small-field props) :label "Alias" :name :alias]
+     [fields/text (fields/small-field props) :label "Våttkort #" :name :våttkortnr]
+     [fields/text (fields/normal-field props) :label "Telefon" :name :telefon]
+     [fields/text (fields/large-field props) :label "Epost" :name :epost]]
     [:div.flex.gap-4.flex-wrap
      [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]
 

@@ -7,7 +7,7 @@
             [re-frame.core :as rf]
             [schpaa.debug :as l]))
 
-(def path ["booking"])
+(def path ["booking2"])
 
 (defn write [{:keys [uid value] :as m}]
   (let [value (assoc value
@@ -99,7 +99,7 @@
     conj
     []
     (if true
-      @(db/on-value-reaction {:path ["booking"]})
+      @(db/on-value-reaction {:path path})
       (concat #_(take 4 @(db/on-value-reaction {:path ["booking"]}))
         {:xx {:start     (str (t/at (t/new-date 2022 1 25) (t/new-time 14 0)))
               :end       (str (t/at (t/new-date 2022 1 27) (t/new-time 19 0)))
