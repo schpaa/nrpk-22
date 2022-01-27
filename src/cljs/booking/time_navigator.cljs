@@ -66,12 +66,6 @@
             :stroke-width  4
             :d             "M 0 0 L 5 10 L 0 20"}]]])
 
-(comment
-  (do
-    (let [a (atom {:vals {:start (str (t/date-time))}})]
-      (when-let [x ((juxt (comp t/date-time :start)) (get @a :vals))]
-        x))))
-
 ;region small helpers
 
 (defn point [n complete]

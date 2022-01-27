@@ -22,23 +22,6 @@
             [eykt.hov :as hov]
             [schpaa.style :as st]))
 
-(defn- booking-list-item-color-map [relation]
-  (case relation
-    ;past
-    :precedes {:bg  ["dark:bg-black/30" "bg-gray-500" :text-gray-400]
-               :fg  ["dark:text-gray-500/50" "text-gray-500"]
-               :fg- ["dark:text-white/30"]}
-
-    ;future
-    :preceded-by {:bg  ["dark:bg-gray-100" "bg-gray-200"]
-                  :fg  ["dark:text-black" "text-gray-700"]
-                  :fg- ["dark:text-black/40" "text-gray-700/50"]}
-
-    ;today
-    {:bg  ["dark:bg-alt-600" "bg-green-100"]
-     :fg  ["dark:text-black" "text-green-600"]
-     :fg- ["dark:text-white"]}))
-
 ;region utilities (pure)
 
 (defn after-and-including [today {:keys [start]}]
