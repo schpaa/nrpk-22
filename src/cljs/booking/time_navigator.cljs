@@ -5,7 +5,8 @@
             [re-frame.core :as rf]
             [re-statecharts.core :as rs]
             [schpaa.icon :as icon]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style :as st]))
 
 (defn naked [props]
   (assoc props :naked? true))
@@ -82,13 +83,15 @@
      n)])
 
 (defn step [n c & {:keys [complete on-click final active] :or {on-click #()}}]
-  [:div.px-4.py-2
-   {:sclass (if complete [:bg-alt :text-white] [:bg-rose-500 :text-white])
-    :class (if active [:border-b-4 :border-alt])
-    :on-click #(on-click) :type :button}
-   [:div.flex.items-center.gap-2.col-span-1.border-none.outline-none.focus:outline-none.focus:ring-none
-    ;(point n complete)
-    [:div.text-lg c]]])
+  (let [{:keys [bg bg+ hd fg fg- fg+ p p-]} (st/fbg' :surface)]
+    [:div.px-4.py-2
+     {:class    (if active
+                  (concat fg+ [:border-b-4 :border-alt])
+                  fg)
+      :on-click #(on-click) :type :button}
+     [:div.flex.items-center.gap-2.col-span-1.border-none.outline-none.focus:outline-none.focus:ring-none
+      {:class (concat p)}
+      [:div c]]]))
 
 ;endregion
 

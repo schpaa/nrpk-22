@@ -13,7 +13,8 @@
             [booking.views]
             [booking.views.picker]
             [booking.bookinglist]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [schpaa.style :as st]))
 
 (defn confirm-registry []
   #_(apply send
@@ -87,13 +88,15 @@
 
 
 (defn logout-form [{:keys [user-auth name]}]
-  (let [accepted? (true? (:booking-godkjent (user.database/lookup-userinfo (:uid user-auth))))
+  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' 3)
+        accepted? (true? (:booking-godkjent (user.database/lookup-userinfo (:uid user-auth))))
         use-booking? (true? (:bruke-booking (user.database/lookup-userinfo (:uid user-auth))))
         [status-color status-text] (cond
                                      accepted? [:text-alt "Godkjent booking"]
                                      use-booking? [:text-amber-500 "Godkjenning venter"]
                                      :else [:text-rose-500 "Ikke påmeldt"])]
-    [:div.p-4.dark:bg-gray-700.bg-gray-50.shadow.rounded.space-y-4.text-base
+    [:div.p-4.shadow.rounded.space-y-4
+     {:class (concat bg fg+)}
      [:div.flex.justify-between.items-center
       name
       loggout-command]
@@ -116,32 +119,34 @@
 ;endregion
 
 (defn my-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
-  [:form.space-y-8
-   {:id        form-id
-    :on-submit handle-submit}
-   [:div.space-y-4
-    [:div.flex.gap-4.flex-wrap
-     [fields/text (-> props fields/large-field (assoc :readonly? true)) :label "UID" :name :uid]]
-    [:div.flex.gap-4.flex-wrap
-     [fields/text (fields/large-field props) :label "Navn" :name :navn]
-     [fields/text (fields/small-field props) :label "Alias" :name :alias]
-     [fields/text (fields/small-field props) :label "Våttkort #" :name :våttkortnr]
-     [fields/text (fields/normal-field props) :label "Telefon" :name :telefon]
-     [fields/text (fields/large-field props) :label "Epost" :name :epost]]
-    [:div.flex.gap-4.flex-wrap
-     [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]
+  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 3)]
+    [:form.space-y-8
+     {:id        form-id
+      :on-submit handle-submit}
+     [:div.space-y-4
+      [:div.flex.gap-4.flex-wrap
+       [fields/text (-> props fields/large-field (assoc :readonly? true)) :label "UID" :name :uid]]
+      [:div.flex.gap-4.flex-wrap
+       [fields/text (fields/large-field props) :label "Navn" :name :navn]
+       [fields/text (fields/small-field props) :label "Alias" :name :alias]
+       [fields/text (fields/small-field props) :label "Våttkort #" :name :våttkortnr]
+       [fields/text (fields/normal-field props) :label "Telefon" :name :telefon]
+       [fields/text (fields/large-field props) :label "Epost" :name :epost]]
+      [:div.flex.gap-4.flex-wrap
+       [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]
 
-   (when-not readonly?
-     [:div.flex.gap-4.justify-between
-      removeaccount-command
-      [:div.flex.gap-4
-       [:button.btn.btn-free {:type     :button
-                              :on-click #(send :e.cancel-useredit)} "Avbryt"]
-       [:button.btn.btn-cta {:disabled (not (some? dirty))
-                             :type     :submit} "Lagre"]]])])
+     (when-not readonly?
+       [:div.flex.gap-4.justify-between
+        removeaccount-command
+        [:div.flex.gap-4
+         [:button.btn.btn-free {:type     :button
+                                :on-click #(send :e.cancel-useredit)} "Avbryt"]
+         [:button.btn.btn-cta {:disabled (not (some? dirty))
+                               :type     :submit} "Lagre"]]])]))
 
 (defn my-info [{:keys []}]
-  (let [*st-all (rf/subscribe [::rs/state :main-fsm])
+  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' 3)
+        *st-all (rf/subscribe [::rs/state :main-fsm])
         user-auth (rf/subscribe [::db/user-auth])
         uid (:uid @user-auth)
         s (db/on-value-reaction {:path ["users" uid]})]
@@ -159,7 +164,7 @@
            (if-let [tm (:timestamp @s)]
              (try [:div.text-sm "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
                   (catch js/Error e (.-message e)))
-             [:h2.text-xs "Ikke registrert"])]]
+             [:h2.text-xs {:class fg} "Ikke registrert"])]]
          (rs/match-state (:user @*st-all)
            [:s.initial] [:div.space-y-8
                          (if loaded-data'

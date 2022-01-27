@@ -53,7 +53,8 @@
             :insert-after       (fn [id]
                                   [:div.flex
                                    (when my-own? (hov/remove-booking-details-button id []))
-                                   (hov/open-booking-details-button id)])}
+                                   (hov/open-booking-details-button id)])
+            :details?           true}
            {:start       (t/>> (t/now) (t/new-duration 1 :hours))
             :end         (t/>> (t/now) (t/new-duration 114 :hours))
             :description "sample"

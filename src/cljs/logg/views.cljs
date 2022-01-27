@@ -16,9 +16,7 @@
   (r/with-let [edit (r/atom false)
                markings (r/atom {})]
     [:div.w-full
-     (into [:div {:class [:bg-gray-300
-                          "dark:bg-gray-800"
-                          :space-y-px]}]
+     (into [:div {:class [:space-y-px]}]
            (map (fn [[id data]]
                   (let [idx id]
                     [booking.views.picker/list-line

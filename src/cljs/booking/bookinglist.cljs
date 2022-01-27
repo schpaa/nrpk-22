@@ -8,7 +8,8 @@
             [clojure.set :as set]
             [schpaa.components.fields :as fields]
             [schpaa.icon :as icon]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style :as st]))
 
 (defn- booking-list-item-color-map [relation]
   (case relation
@@ -52,36 +53,39 @@
       (when multiday
         (t/format "d.MM" (t/date (t/date-time end))))]]))
 
-(defn time-segment-display [{:keys [hide-name? multiday navn start end relation]}]
-  (let [multiday (< 0 (t/days (t/duration (tick.alpha.interval/new-interval start end))))
+(defn time-segment-display [{:keys [hide-name? navn start end relation]}]
+  (let [{:keys [fg p-]} (st/fbg' 2)
+        multiday (< 0 (t/days (t/duration (tick.alpha.interval/new-interval start end))))
         day-name (times.api/day-name (t/date-time start))
         end-day-name (times.api/day-name (t/date-time end))
-        {:keys [bg fg fg-]} (booking-list-item-color-map relation)]
+        {:keys []} (booking-list-item-color-map relation)]
     (if multiday
-      [:div.grid.gap-2.w-full.px-2
-       {;:class (concat bg fg)
-        :style {:grid-template-columns "min-content min-content min-content"}}
-       [:div.justify-self-end.whitespace-nowrap (t/format (str "'" day-name " 'd.MM") (t/date-time start))]
-       [:div.debug.whitespace-nowrap (t/format "'kl.' H.mm" (t/time (t/date-time start)))]
-       [:div.self-start.justify-self-end.whitespace-nowrap
-        (t/format (str "'" end-day-name " 'd.MM") (t/date (t/date-time end)))
+      [:div.grid.gap-1.tabular-nums
+       {:class (concat fg p-)
+        :style {:grid-template-columns "min-content min-content min-content 1fr"}}
+       [:div day-name]
+       [:div.justify-self-startx.whitespace-nowrap (t/format "d.MM" (t/date-time start))]
+       [:div.whitespace-nowrap (t/format "'kl.' H.mm" (t/time (t/date-time start)))]
+       [:div]
+       [:div end-day-name]
+       [:div.self-start.justify-self-start.whitespace-nowrap
 
-        (t/format "' — kl.' H.mm" (t/time (t/date-time end)))]]
+        (t/format "d.MM" (t/date (t/date-time end)))]
+       [:div.whitespace-nowrap (t/format "'kl.' H.mm" (t/time (t/date-time end)))]
+       [:div]]
+
       ;;----------------------
-      [:div.grid.gap-2.w-full.px-2
-       {;:xclass (concat bg fg)
+      [:div.grid.gap-2.tabular-nums
+       {:class (concat fg p-)
         :style {:grid-template-columns "min-content min-content"
                 :grid-auto-rows        ""}}
-       #_[:div.truncate.col-span-2
-          (when-not hide-name?
-            [:div.truncate {:class fg-} navn])]
-
        [:div.justify-self-end.whitespace-nowrap
+
         (t/format (str "'" day-name " 'd.MM") (t/date-time start))
         " "
-        (t/format "'kl.' H.mm" (t/time (t/date-time start)))]
+        (t/format "'kl. 'H.mm" (t/time (t/date-time start)))
+        (t/format "'—'H.mm" (t/time (t/date-time end)))]])))
 
-       [:div.debug.whitespace-nowrap.self-start (t/format "'—' H.mm" (t/time (t/date-time end)))]])))
 
 (defn- booking-list-item [{:keys [fetch-boatdata-for
                                   offset today hide-name? on-click
@@ -100,68 +104,66 @@
   (let [selected (map keyword selected)                     ;;selected must be a keyword
         relation (try (tick.alpha.interval/relation start today)
                       (catch js/Error _ nil))
-        {:keys [bg fg fg- br]} (booking-list-item-color-map relation)]
-
+        {:keys [bg fg fg- fg+ p p-]} (st/fbg' 2)
+        {:keys [br]} (booking-list-item-color-map relation)]
 
     [:div.flex
      (when insert-before
        (insert-before id))
-     [:div.grid.w-full
-      {:style    {:grid-template-columns "min-content 1fr min-content min-content"}
+     [:div.grid.w-full.p-1.gap-1
+      {:style    {:grid-template-columns "1fr max-content"}
        :class    (concat fg bg br)
        :on-click #(when on-click (on-click item))}
 
-      (when insert-top-fn [:div.col-span-3 '(insert-top-fn item)])
-      (when insert-above [:div.col-span-3 (insert-above)])
-      [:<>
+      ;(when insert-top-fn [:div.col-span-3 '(insert-top-fn item)])
+      ;(when insert-above [:div.col-span-3 (insert-above)])
 
-       [:div]
-       [:div.py-1.space-y-1
-        [time-segment-display item]
-        (if details?
-          (if (some? description)
-            [:div.col-span-3.text-sm.px-2
-             {:class (concat fg- bg)} description]
-            [:<>]))
+      [:div 'navn]
 
-        (when-not (empty? selected)
-          [:div.col-span-5
-           {:class (concat bg)}
-           (if false; details?
-             [:div.space-y-px.grid
-              {:style {:grid-template-columns "repeat(auto-fill,minmax(15rem,1fr))"}
-               :class [:first:rounded-t :overflow-clip :last:rounded-b]}
-              (doall (for [id selected
-                           :let [data (when fetch-boatdata-for (fetch-boatdata-for id))]
-                           :while (some? data)]
-                       [list-line
-                        {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
-                         :insert-after            hov/open-details
-                         :id         id
-                         :data       {:number "A"}; fixme data ;(get (into {} boat-db) id)
-                         :offset     offset
-                         :time-slot  time-slot
-                         :appearance (set/union #{:basic :xclear :hide-location :extra} appearance)
-                         :overlap?   false}]))]
-             (when fetch-boatdata-for
-               [:div
-                (let [items (sort (map (fn [id] (:number (fetch-boatdata-for id))) selected))
-                      #_(sort (map (fn [id] (:number (get (into {} boat-db) id))) selected))]
-                  (cond
-                    (< 2 (count items)) [:div.flex.gap-1.flex-wrap.px-2
-                                         (for [number (take 2 items)]
-                                           [:div (schpaa.components.views/number-view number)])
-                                         (schpaa.components.views/show-more-number-view)]
-                    :else [:div.flex.gap-1.flex-wrap.px-2
-                           (for [number items]
-                             [:div (schpaa.components.views/number-view number)])]))]))])]
-       [:div]]
+      [:div.justify-self-end
+       (when-not (empty? selected)
+         [:div.col-span-5
+          {:class (concat bg)}
+          (if false                                         ; details?
+            [:div.grid
+             {:style {:grid-template-columns "repeat(auto-fill,minmax(15rem,1fr))"}
+              :class [:first:rounded-t :overflow-clip :last:rounded-b]}
+             (doall (for [id selected
+                          :let [data (when fetch-boatdata-for (fetch-boatdata-for id))]
+                          :while (some? data)]
+                      [list-line
+                       {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
+                        :insert-after hov/open-details
+                        :id           id
+                        :data         {:number "A"}         ; fixme data ;(get (into {} boat-db) id)
+                        :offset       offset
+                        :time-slot    time-slot
+                        :appearance   (set/union #{:basic :xclear :hide-location :extra} appearance)
+                        :overlap?     false}]))]
+            (when fetch-boatdata-for
+              (let [items (sort (map (fn [id] (:number (fetch-boatdata-for id))) selected))]
+                (if (< 2 (count items))
+                  [:div.flex.gap-1.flex-wrap.px-1
+                   (for [number (take 2 items)]
+                     (schpaa.components.views/number-view number))
+                   (schpaa.components.views/show-more-number-view)]
+                  [:div.flex.gap-1.flex-wrap.px-1
+                   (for [number items]
+                     (schpaa.components.views/number-view number))]))))])]
 
-      (when insert-below
-        [:div.col-span-3 (insert-below)])
-      (if insert-after
-        (insert-after id)
-        [:div])]]))
+      [:div.col-span-2
+       [time-segment-display item]]
+      (if details?
+        (if (some? description)
+          [:div.col-span-3
+           {:class (concat fg+ p)}
+           description]))]
+
+     (when insert-below
+       [:div.col-span-3 (insert-below)])
+     (if insert-after
+       (insert-after id)
+       [:div])]))
 
 (defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db details?]}]
   (r/with-let [edit (r/atom false)
@@ -194,7 +196,7 @@
                         ;:insert-before  (when my-own? hov/remove-booking-details-button)
                         ;hov/remove-from-list-actions
                         ;(hov/remove-from-list-actions clicks-on-remove selected)
-                        #_(when true                         ;@edit
+                        #_(when true                        ;@edit
                             (fn [_] [:div.flex.items-center.px-2.bg-gray-400
                                      [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
                                                        :handle-change #(swap! markings update id (fnil not false))}

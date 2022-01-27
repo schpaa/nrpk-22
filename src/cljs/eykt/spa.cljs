@@ -26,7 +26,9 @@
             [booking.views]
             [user.views]
             [tick.core :as t]
-            [eykt.hoc :as hoc]))
+            [eykt.hoc :as hoc]
+            [schpaa.style :as st]))
+
 
 (defn view-info [{:keys [username]}]
   [:div username])
@@ -39,14 +41,22 @@
 
 ;endregion
 
+(defn empty-list-message [msg]
+  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 0)]
+    [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
+     {:class (concat fg-)}
+     [:div.text-2xl.font-black msg]
+     [:div.text-xl.font-semibold "Ta kontakt med administrator"]]))
+
 (defn user []
   (let [route (rf/subscribe [:app/current-page])
-        user-auth (rf/subscribe [::db/user-auth])]
+        user-auth (rf/subscribe [::db/user-auth])
+        {:keys [bg fg- fg+ hd p p- he]} (st/fbg' :surface)]
     (fn []
       (if-not @user-auth
         [:div.p-2
          [rounded-view {:float 1} [db.signin/login]]]
-        [:div.bg-gray-200.dark:bg-gray-800
+        [:div {:class bg}
          [:div.p-4.max-w-md.mx-auto
           [user.views/logout-form
            {:user-auth @user-auth
@@ -60,26 +70,22 @@
 
           [k/case-route (fn [route] (-> route :data :name))
            :r.user
-           [:div.space-y-4.dark:bg-gray-900.bg-gray-50
-            [user.views/my-info]]
+           (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 3)]
+             [:div.space-y-4
+              {:class bg}
+              [user.views/my-info]])
 
            :r.logg
            [hoc/user-logg]
 
            :r.debug
-           [:div.space-y-4.dark:bg-gray-900.bg-gray-50
-            [hoc/debug]]
+           [hoc/debug]
 
-           [:div "other " @route]]]]))))
-
-(defn empty-list-message [msg]
-  [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
-   {:class "text-white/20"}
-   [:div.text-2xl.font-black msg]
-   [:div.text-xl.font-semibold "Ta kontakt med administrator"]])
+           [:div @route]]]]))))
 
 (defn front []
-  (let [user-auth (rf/subscribe [::db/user-auth])]
+  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 0)
+        user-auth (rf/subscribe [::db/user-auth])]
     [:div
 
      [tab {:item     ["w-1/3"]
@@ -107,12 +113,12 @@
       :r.common
       (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
         [:div
-         {:class ["dark:bg-gray-900" "bg-gray-600"]}
+         {:class bg}
          [:div.space-y-px.flex.flex-col
           {:style {:min-height "calc(100vh - 7rem)"}}
           (if (seq data)
             [:div.flex-1
-             {:class (concat [:dark:bg-gray-700 :bg-gray-500])}
+             {:class bg}                                    ;{:class (concat [:dark:bg-gray-700 :bg-gray-500])}
              [hoc/all-active-bookings {:data data}]]
             [empty-list-message "Booking-listen er tom"])
           [booking.views/last-bookings-footer {}]]])
@@ -120,17 +126,19 @@
       :r.boatlist
       (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
         [:div
-         {:class (concat [:dark:bg-gray-900 :bg-gray-600])}
+         {:class bg}
+
          [:div.space-y-px.flex.flex-col
           {:style {:min-height "calc(100vh - 7rem)"}}
           (if (seq data)
             [:div.flex-1
-
              [hoc/all-boats
-              {:data data
+              {:data     data
                :details? @(schpaa.state/listen :opt1)}]]
             [empty-list-message "Båt-listen er tom"])
           [hoc/all-boats-footer {}]]])]]))
+
+
 
 (def route-table
   {:r.common      front

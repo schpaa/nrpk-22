@@ -4,15 +4,11 @@
             [re-frame.core :as rf]
             [booking.views]
             [logg.views]
-            [schpaa.modal :as modal]
             [eykt.fsm-helpers :refer [send]]
             [reagent.core :as r]
             [tick.core :as t]
-            [schpaa.components.views :as views]
-            [schpaa.icon :as icon]
-            [schpaa.debug :as l]
             [booking.bookinglist]
-            [eykt.hov :as hov]))
+            [schpaa.style :as st]))
 
 ;region booking
 
@@ -30,7 +26,6 @@
       :booking-data' (sort-by :date > (booking.database/read))}]))
 
 (defn last-active-booking [{:keys [uid] :as m}]
-  [l/ppre-x ((juxt map? vector? list?) m)]
   [:<>
    (let [today (t/date)
          data (->> (booking.database/read)
@@ -39,47 +34,7 @@
                    (sort-by :start <)
                    first)]
      (if (some? data)
-       [:<>
-        ;[:h2 (:start data)]
-        ;[:h2 (:end data)]
-
-        #_[booking.bookinglist/booking-list-item
-           {:boat-db      (sort-by (comp :number val) < (logg.database/boat-db))
-            ;:accepted-user? accepted-user?
-            :details? true
-            :today        today
-            :hide-name?   false ;(not (some? uid))
-            #_#_:on-click (fn [e]
-                            (swap! markings update id (fnil not false))
-                            (.stopPropagation e))
-            #_#_:insert-before (when @edit
-                                 [:div.flex.items-center.px-2.bg-gray-400
-                                  [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
-                                                    :handle-change #(swap! markings update id (fnil not false))}
-                                   "" nil]])
-            :insert-after hov/open-booking-details-button}
-           data]
-
-
-        #_[:div.flex.justify-between
-           [:div]
-           [:button.btn.btn-danger
-            {:on-click #(modal/form-action
-                          {:flags   #{:no-icon :no-crossout :-timeout}
-                           :footer  "Du kan ikke angre dette"
-                           :title   "Avlys booking"
-                           :form-fn (fn [] [:div
-                                            [:div.p-4 "Er du sikker på at du vil avlyse denne bookingen?"]
-                                            [modal/just-buttons
-                                             [["Behold" [:btn-free] (fn [] (send :e.hide))]
-                                              ["Avlys" [:btn-danger] (fn []
-                                                                       (tap> ["save settings " 123])
-                                                                       (send :e.hide))]]]])})}
-            "Avlys booking"]
-           #_[:button.btn.btn-free.shadow-none {:on-click #(modal/form-action {:flags  #{:timeout :error :weak-dim}
-                                                                               :icon   :squares
-                                                                               :footer "footer"
-                                                                               :title  "Bekreftet!"})} "Endre"]]]
+       [:<>]
        [:div "Du har ingen bookinger"]))])
 
 (defn all-active-bookings [{:keys [data]}]
@@ -93,37 +48,37 @@
       :today          (t/new-date 2022 1 26)
       :uid            (:uid user-auth)}]))
 
-
-
 (defn all-boats [{:keys [details? data]}]
   [logg.views/all-boats
    {:details? details?
-    :data data}])
+    :data     data}])
 
 (defn all-boats-footer [_]
-  (r/with-let [opt2 (r/atom false)]
-    [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
-     {:class [:bg-gray-300 :dark:bg-gray-800 :dark:text-gray-500 :text-black]}
-     (schpaa.components.views/modern-checkbox'
-       {:set-details #(schpaa.state/change :opt1 %)
-        :get-details #(-> (schpaa.state/listen :opt1) deref)}
-       (fn [checkbox]
-         [:div.flex.items-center.gap-2
-          checkbox
-          [:div.text-base.font-normal.space-y-0
-           [:div.font-medium "Detaljer"]
-           [:div.text-xs "Vis alle detaljer"]]]))
+  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :surface)]
+    (r/with-let [opt2 (r/atom false)]
+      [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
+       {:class (concat fg bg)}
+       (schpaa.components.views/modern-checkbox'
+         {:set-details #(schpaa.state/change :opt1 %)
+          :get-details #(-> (schpaa.state/listen :opt1) deref)}
+         (fn [checkbox]
+           [:div.flex.items-center.gap-2
+            checkbox
+            [:div.text-base.font-normal.space-y-0
+             [:div {:class (concat fg+ p)} "Detaljer"]
+             [:div {:class (concat fg p-)} "Vis alle detaljer"]]]))
 
-     (schpaa.components.views/modern-checkbox'
-       {:disabled? true
-        :set-details #(reset! opt2 %)
-        :get-details #(-> opt2 deref)}
-       (fn [checkbox]
-         [:div.flex.items-center.gap-2.w-full.opacity-20
-          [:div.text-base.font-normal.space-y-0
-           [:div.font-medium.text-right "Grupper"]
-           [:div.text-xs "Grupper etter merke"]]
-          checkbox]))]))
+       (schpaa.components.views/modern-checkbox'
+         {:disabled?   true
+          :set-details #(reset! opt2 %)
+          :get-details #(-> opt2 deref)}
+         (fn [checkbox]
+           [:div.flex.items-center.gap-2.w-full
+            {:class (concat fg-)}
+            [:div.text-base.font-normal.space-y-0
+             [:div.text-right {:class p} "Grupper"]
+             [:div {:class p-} "Grupper etter merke"]]
+            checkbox]))])))
 
 ;endregion
 
@@ -141,23 +96,44 @@
        :today          (t/new-date 2022 1 4)
        :uid            (:uid @user-auth)}]]))
 
+(comment
+  (do
+    (fbg 0 0 [:space-y-4])))
 
 (defn debug []
-  [:div.p-4.space-y-4.columns-3xs.gap-4                     ;.divide-x.divide-dashed.divide-black
+  [:div
 
+   [:div.grid.gap-1.py-1
+    {:class ["bg-black/50"]
+     :style {:grid-template-columns "repeat(auto-fit,minmax(15rem,1fr))"}}
+    ;intent dark panel
 
-   (for [e [:text-sm :text-base :text-xl :text-4xl]]
-     [:div.xtabular-nums.slashed-zero.lining-enums.ordinal.font-sans.lining-nums
-      {:class e}
-      [:div e]
-      [:div "1st"]
-      [:div.font-thin "0123456789"]
-      [:div.font-extralight "0123456789"]
-      [:div.font-light "0123456789"]
-      [:div.font-normal "0123456789"]
-      [:div.font-medium "0123456789"]
-      [:div.font-semibold "0123456789"]
-      [:div.font-bold "0123456789"]
-      [:div.font-extrabold "0123456789"]
-      [:div.font-black "0123456789"]])])
+    (for [b '(:void :surface 2 3)]
+      (let [{:keys [bg bg+ fg- fg fg+ hd p p- he]} (st/fbg' b)]
+        [:div
+         [:div.p-4.space-y-1 {:class bg}
+          [:div {:class (concat fg- he)} b]
+          [:div.flex.justify-between {:class (concat fg hd)} [:div "fg hd"] [:div "Normal header"]]
+          [:div.flex.justify-between {:class (concat p fg+)} [:div "p fg+"] [:div "strong"]]
+          [:div.flex.justify-between {:class (concat p fg)} [:div "p fg"] [:div "neutral normal"]]
+          [:div.flex.justify-between {:class (concat p fg-)} [:div "p fg-"] [:div "disabled or unimportant"]]]
+         [:div.p-4 {:class bg+}
+          [:div.flex.justify-between {:class (concat p- fg+)} [:div "p- fg+"] [:div "strong"]]
+          [:div.flex.justify-between {:class (concat p- fg)} [:div "p- fg"] [:div "neutral normal"]]
+          [:div.flex.justify-between {:class (concat p- fg-)} [:div "p- fg-"] [:div "disabled or unimportant"]]]]))]
+
+   [:div.antialiased.grid.gap-1
+    {:class ["bg-black/50"]
+     :style {:grid-template-columns "repeat(auto-fit, minmax(15rem,1fr))"}}
+    (for [b '(:void :surface 2 3)
+          :let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' b)]]
+      [:div.p-2.space-y-2 {:class bg}
+       [:div {:class (concat fg- p-)} "Never mix strong and weak, they define semantics"]
+       [:div.h-4]
+       [:div {:class (concat he fg-)} "Primary HEADER"]
+       [:div {:class (concat hd fg+)} "Normal headers can wrap lines"]
+       [:div {:class (concat p fg+)} "Primary text can contain " [:span.font-extrabold "bold"] " words too, but it does not happen very often."]
+       [:div {:class (concat p fg+)} "Too many variations on a page can " [:span.italic "clutter"] " the appearance and make it hard to..."]
+       [:div {:class (concat p- fg)} "Secondary text goes like this " [:span.font-extrabold "with"] " bold words too spanning several lines demonstrated by this specific text. It is sometimes smaller in size too but not much smaller, just a point or two."]])]])
+
 ;endregion

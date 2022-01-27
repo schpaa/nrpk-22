@@ -26,7 +26,8 @@
             [eykt.hov :as hov]
             [clojure.set :as set]
             [booking.bookinglist]
-            [times.api :refer [day-number-in-year day-name]]))
+            [times.api :refer [day-number-in-year day-name]]
+            [schpaa.style :as st]))
 
 ;INTENT our desired timeslot, who is available in this slow?
 
@@ -246,45 +247,24 @@
          ;fixme Fudging, to keep statusbar at bottom at all times
          {:class (this-color-map :bg2)
           :style {:min-height "calc(100vh - 22rem)"}}
-         #_[:div.p-4 (fields/textarea
-                       (fields/full-field props)
-                       "Beskrivelse (valgfritt)"
-                       :description)]
          [:div.space-y-4
           (if-not (empty? @selected)
             [:div.space-y-px
-             #_[booking.bookinglist/booking-list-item
-                {:boat-db      boat-db
-                 :appearance   #{:basic :remove :tall}
-                 :time-slot    slot
-                 :offset       offset
-                 :insert-above (fn [] [:div.p-4 (fields/textarea
-                                                  (fields/full-field props)
-                                                  "Beskrivelse (valgfritt)"
-                                                  :description)])}
-                ;intent: for each item
-                {:selected                @selected
-                 :not-available           not-available
-                 :start                   start
-                 :end                     end
-                 :navn                    (:display-name @(rf/subscribe [:db.core/user-auth]))
-                 :insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)}]
-             [:div.space-y-px
-              (let [appearance #{:tall :timeline}
-                    time-slot slot
-                    insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)]
-                (doall (for [[id data] (sort-by (comp :number val) < boat-db)
-                             :when (some #{id} @selected)
-                             :while (some? data)]
-                         [list-line
-                          {:insert-before-line-item insert-before-line-item ;; for removal of items
-                           :insert-after            hov/open-details
-                           :id                      id
-                           :data                    data
-                           :offset                  offset
-                           :time-slot               time-slot
-                           :appearance              (set/union #{:basic :xclear :xhide-location} appearance)
-                           :overlap?                (some #{id} not-available)}])))]])
+             (let [appearance #{:tall :timeline}
+                   time-slot slot
+                   insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)]
+               (doall (for [[id data] (sort-by (comp :number val) < boat-db)
+                            :when (some #{id} @selected)
+                            :while (some? data)]
+                        [list-line
+                         {:insert-before-line-item insert-before-line-item ;; for removal of items
+                          :insert-after            hov/open-details
+                          :id                      id
+                          :data                    data
+                          :offset                  offset
+                          :time-slot               time-slot
+                          :appearance              (set/union #{:basic :xclear :xhide-location} appearance)
+                          :overlap?                (some #{id} not-available)}])))])
 
           ;intent ERRORS
           [:div.space-y-px
@@ -338,35 +318,38 @@
                                              (assoc db :booking-list-personal args)))
 
 (defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
-  [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
-   {:class [:bg-gray-300 :dark:bg-gray-800 :dark:text-gray-500 :text-black]}
-   (schpaa.components.views/modern-checkbox'
-     {:set-details #(rf/dispatch [:bookinglist/set-details %])
-      :get-details #(-> (rf/subscribe [:bookinglist/details]) deref)}
-     (fn [checkbox]
-       [:div.flex.items-center.gap-2
-        checkbox
-        [:div.text-base.font-normal.space-y-0
-         [:div.font-medium "Detaljer"]
-         [:div.text-xs "Vis alle detaljer"]]]))
+  (let [{:keys [bg fg fg+ p p-]} (st/fbg' :surface)]
+    [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
+     {:class bg}
+     (schpaa.components.views/modern-checkbox'
+       {:set-details #(rf/dispatch [:bookinglist/set-details %])
+        :get-details #(-> (rf/subscribe [:bookinglist/details]) deref)}
+       (fn [checkbox]
+         [:div.flex.items-center.gap-2
+          checkbox
+          [:div.space-y-0
+           [:div {:class (concat p fg+)} "Detaljer"]
+           [:div {:class (concat p- fg)} "Vis alle detaljer"]]]))
 
-   (schpaa.components.views/modern-checkbox'
-     {:set-details #(schpaa.state/change :opt/show-only-my-own %)
-      :get-details #(-> (schpaa.state/listen :opt/show-only-my-own) deref)}
-     (fn [checkbox]
-       [:div.flex.items-center.gap-2.w-full
-        [:div.text-base.font-normal.space-y-0
-         [:div.font-medium.text-right "Alle"]
-         [:div.text-xs "Inkluder alle bookinger"]]
-        checkbox]))])
+     (schpaa.components.views/modern-checkbox'
+       {:set-details #(schpaa.state/change :opt/show-only-my-own %)
+        :get-details #(-> (schpaa.state/listen :opt/show-only-my-own) deref)}
+       (fn [checkbox]
+         [:div.flex.items-center.gap-2.w-full
+          [:div.space-y-0
+           [:div.text-right {:class (concat p fg+)} "Alle"]
+           [:div {:class (concat p- fg)} "Inkluder alle bookinger"]]
+          checkbox]))]))
 
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]
-  (let [booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
+  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' :surface)
+        booking-state (:booking @(rf/subscribe [::rs/state :main-fsm]))]
     [:<>
      [:div.sticky.top-64.z-50
 
-      [:div.grid.grid-cols-2.gap-y-2.bg-gray-100.z-10.border-b.border-gray-400
-       {:class [:dark:bg-gray-700 :bg-gray-100]}
+      [:div.grid.grid-cols-2.gap-y-2.bg-gray-100.z-10.border-b.border-gray-300
+       ;{:class [:dark:bg-gray-700 :bg-gray-100]}
+       {:class bg}
        (rs/match-state booking-state
          [:s.booking :s.basic-booking-info]
          [stupid-bar m 1]
@@ -394,72 +377,75 @@
        [:div "d?" booking-state])]))
 
 (defn time-input [{:keys [errors form-id handle-submit handle-change values set-values] :as props} admin]
-  [:div.px-2.pt-4.pb-6.space-y-2.sticky.top-28.z-50
-   {:class [:dark:bg-gray-700 :bg-gray-100]}
-   [:div.grid.gap-y-4.gap-x-2
-    {:style {:grid-template-columns "min-content 1fr"}}
-    [:div.flex.flex-col.justify-self-start.relative
-     [fields/date (-> props
-                      booking.time-navigator/naked
-                      fields/date-field
-                      (assoc :handle-change #(let [v (-> % .-target .-value)
-                                                   diff (if (values :sleepover) 1 0)]
-                                               (if-not admin
-                                                 (set-values {:end-date (try
-                                                                          (str (t/>> (t/date v) (t/new-period diff :days)))
-                                                                          (catch js/Error _ ""))}))
-                                               (handle-change %))))
-      :name :start-date
-      :error-type :marker]
-     (when-not admin
-       [:div.absolute.-bottom-4.right-0
-        [:div.text-xs (try (times.api/day-name (t/date (values :start-date))) (catch js/Error _ nil))]])]
-    [fields/time (-> props
-                     booking.time-navigator/naked
-                     fields/time-field)
-     :name :start-time
-     :error-type :marker]
-
-    (if admin
-      [:div.h-10
+  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' 3)]
+    [:div.px-2.pt-4.pb-6.space-y-2.sticky.top-28.z-50
+     {:class bg}                                            ;{:class [:dark:bg-gray-700 :bg-gray-100]}
+     [:div.grid.gap-y-4.gap-x-2
+      {:style {:grid-template-columns "min-content 1fr"}}
+      [:div.flex.flex-col.justify-self-start.relative
        [fields/date (-> props
                         booking.time-navigator/naked
                         fields/date-field
-                        (assoc :handle-change #(let [v (-> % .-target .-value)]
-                                                 (try
-                                                   (set-values {:end-date  (str (t/date v))
-                                                                :sleepover (t/< (t/date (values :start-date))
-                                                                                (t/date v))})
-                                                   (catch js/Error _ ""))
+                        (assoc :handle-change #(let [v (-> % .-target .-value)
+                                                     diff (if (values :sleepover) 1 0)]
+                                                 (if-not admin
+                                                   (set-values {:end-date (try
+                                                                            (str (t/>> (t/date v) (t/new-period diff :days)))
+                                                                            (catch js/Error _ ""))}))
                                                  (handle-change %))))
+        :name :start-date
+        :error-type :marker]
+       (when-not admin
+         [:div.absolute.-bottom-5.right-0
+          {:class (concat p- fg-)}
+          (try (times.api/day-name (t/date (values :start-date))) (catch js/Error _ nil))])]
+      [fields/time (-> props
+                       booking.time-navigator/naked
+                       fields/time-field)
+       :name :start-time
+       :error-type :marker]
 
-        :name :end-date
-        :error-type :marker]]
-      [:div.flex.items-center.gap-2
-       [views/modern-checkbox'
-        {:get-details #(-> (values :sleepover))
-         :set-details #(set-values
-                         {:sleepover %
-                          :end-date  (try (str (t/>> (t/date (values :start-date))
-                                                     (t/new-period (if % 1 0) :days)))
-                                          (catch js/Error _ ""))})}
-        (fn [checkbox] [:div.flex.items-center.gap-2 checkbox [:div "Overnatting"]])]])
+      (if admin
+        [:div.h-10
+         [fields/date (-> props
+                          booking.time-navigator/naked
+                          fields/date-field
+                          (assoc :handle-change #(let [v (-> % .-target .-value)]
+                                                   (try
+                                                     (set-values {:end-date  (str (t/date v))
+                                                                  :sleepover (t/< (t/date (values :start-date))
+                                                                                  (t/date v))})
+                                                     (catch js/Error _ ""))
+                                                   (handle-change %))))
+
+          :name :end-date
+          :error-type :marker]]
+        [:div.flex.items-center.gap-2
+         [views/modern-checkbox'
+          {:get-details #(-> (values :sleepover))
+           :set-details #(set-values
+                           {:sleepover %
+                            :end-date  (try (str (t/>> (t/date (values :start-date))
+                                                       (t/new-period (if % 1 0) :days)))
+                                            (catch js/Error _ ""))})}
+          (fn [checkbox] [:div.flex.items-center.gap-2 checkbox [:div {:class fg+} "Overnatting"]])]])
 
 
-    [:div.flex.flex-col.justify-self-start.relative
-     [fields/time (-> props
-                      booking.time-navigator/naked
-                      fields/time-field)
-      :name :end-time
-      :error-type :marker]
-     (when-not admin
-       [:div.text-xs.absolute.-bottom-4.right-0
-        (if (values :sleepover)
-          (try (str (t/format (str "'"
-                                   (times.api/day-name (t/date (values :end-date)))
-                                   "' dd.MM") (t/date (values :end-date))))
-               (catch js/Error _ nil))
-          "samme dag")])]]])
+      [:div.flex.flex-col.justify-self-start.relative
+       [fields/time (-> props
+                        booking.time-navigator/naked
+                        fields/time-field)
+        :name :end-time
+        :error-type :marker]
+       (when-not admin
+         [:div.absolute.-bottom-5.right-0
+          {:class (concat p- fg-)}
+          (if (values :sleepover)
+            (try (str (t/format (str "'"
+                                     (times.api/day-name (t/date (values :end-date)))
+                                     "' dd.MM") (t/date (values :end-date))))
+                 (catch js/Error _ nil))
+            "samme dag")])]]]))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [admin false

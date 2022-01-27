@@ -19,7 +19,8 @@
             [booking.time-navigator]
             [re-frame.core :as rf]
             [db.core :as db]
-            [eykt.hov :as hov]))
+            [eykt.hov :as hov]
+            [schpaa.style :as st]))
 
 (defn- booking-list-item-color-map [relation]
   (case relation
@@ -142,10 +143,10 @@
     overlapping?))
 
 (defn- expanded-view [{:keys [appearance offset time-slot id data fetch-bookingdata]}]
-  (let [fetch-bookingdata (if fetch-bookingdata
+  (let [{:keys [bg bg+ hd fg fg- fg+ p p-]} (st/fbg' 2)
+        fetch-bookingdata (if fetch-bookingdata
                             fetch-bookingdata
                             booking.database/read)
-
         window {:width  (* 24 4)
                 :offset (* 24 offset)}
         offset (* 24 (dec offset))
@@ -158,18 +159,7 @@
                              :start (- (convert start) offset)
                              :end   (- (convert end) offset)})
                           booking-db)
-
-
-        {:keys [navn description location number
-                weight length width
-                slot expert kind]} data]
-    #_[:div
-       [:div "EXPANDED VIEW"]
-       [l/ppre-x
-        data
-        (if fetch-bookingdata
-          (fetch-bookingdata)
-          :empty)]]
+        {:keys [navn description number weight length width slot expert kind]} data]
     [:<>
      [:div.grid.gap-2.p-2.w-full.text-blackx
       {:style {:grid-template-columns "min-content min-content 1fr max-content"
@@ -184,11 +174,14 @@
 
       (if (and (not (some #{:extra} appearance)) (some #{:tall} appearance))
         [:div.self-center.space-y-0.truncate
-         {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+         {:class (concat hd (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500]))}
          (name-view navn)
          (normalize-kind kind)]
         [:div.self-center.truncate
-         {:class (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500])}
+         {:class
+          (concat fg+
+                  hd
+                  (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500]))}
          (name-view navn)])
 
       [:div.col-span-1.h-6.self-center.max-w-xs
@@ -202,88 +195,47 @@
 
       (when (some #{:extra} appearance)
         [:<>
-         [:div.col-span-2.self-start.text-sm.justify-self-start.leading-6 (normalize-kind kind)]
-         [:div.col-span-2.self-start.text-base.line-clamp-x2.leading-6 description]
+         [:div.col-span-2.self-start.justify-self-start.leading-6
+          {:class p-}
+          (normalize-kind kind)]
+         [:div.col-span-2.self-start.leading-6 {:class (concat p fg)} description]
          [:div.col-span-2]
-         [:div.col-span-2.text-sm.flex.justify-start
+         [:div.col-span-2.flex.justify-start
+          {:class (concat p- fg)}
           (interpose [:div.w-2 ", "]
                      (remove nil? [(when (seq weight) [:div weight])
                                    (when (seq length) [:div "lengde " length])
                                    (when (seq width) [:div "bredde " width])]))]])]]))
 
-(defn- compact-view [{:keys [selected?
-                             offset time-slot id on-click remove? data insert-before graph? details? compact?
-                             insert-after]}]
-  (let [window {:width  (* 24 4)
-                :offset (* 24 offset)}
-        offset (* 24 (dec offset))
-        slot' (when time-slot
-                {:from (- (convert (t/beginning time-slot)) offset)
-                 :to   (- (convert (t/end time-slot)) offset)})
-        booking-db (filter (partial has-selection id) (booking.database/read))
-        status-list (mapv (fn [{:keys [start end]}]
-                            {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
-                             :start (- (convert start) offset)
-                             :end   (- (convert end) offset)})
-                          booking-db)
-        overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))
-        {:keys [navn description location number
-                slot expert kind]} data]
-
-    [:div.grid.gap-x-2.h-10x.w-fullx
-     {:style {:grid-template-columns "3rem min-content 1fr 1fr 1fr"
-              :grid-auto-rows        "auto"}
-      :class (if selected?
-               (if overlapping?
-                 ["bg-rose-500/50"]
-                 ["bg-alt"
-                  "dark:bg-gray-700"
-                  "text-white"
-                  "hover:bg-alt/80"])
-               ["bg-gray-100"
-                "dark:bg-gray-700"
-                "text-gray-400"
-                "hover:bg-gray-200"])}
-     [:div.self-center.justify-self-center (number-view number)]
-     [:div.self-center (slot-view slot)]
-     [:div.self-center.truncate (name-view navn)]
-     [:div.self-center.truncate (normalize-kind kind)]
-     [:div.h-6.self-center.max-w-xs
-      (when booking-db
-        (draw-graph
-          {:window    window
-           :list      status-list
-           :time-slot slot'}))]]))
-
 (def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
 
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after appearance] :as m}]
-  [:div.grid.gap-px
-   {:class
-    (cond
-      (or (some #{:unavailable} appearance)
-          (some #{:error} appearance)
-          overlap?) [:bg-red-200 :text-black :dark:bg-rose-500 :dark:text-white]
-      selected? [:bg-alt :text-white]
-      (some #{:clear} appearance) []
-      :else [:bg-gray-100 :dark:bg-gray-700])
-    :style {:grid-template-columns "min-content 1fr min-content"}}
+  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' 2)]
+    [:div.grid.gap-px
+     {:class
+      (cond
+        (or (some #{:unavailable} appearance)
+            (some #{:error} appearance)
+            overlap?) [:bg-red-200 :text-black :dark:bg-rose-500 :dark:text-white]
+        selected? bg+
+        (some #{:clear} appearance) []
+        :else bg #_[:bg-gray-100 :dark:bg-gray-700])
+      :style {:grid-template-columns "min-content 1fr min-content"}}
 
-   (if (and insert-before-line-item)
-     [:div.flex.items-center.debug [insert-before-line-item id]]
-     [:div])
+     (if (and insert-before-line-item)
+       [:div.flex.items-center.debug [insert-before-line-item id]]
+       [:div])
 
-   [:div
-    {:on-click #(on-click id)}
-    (expanded-view (assoc m :appearance (conj appearance #{:timeline})))]
+     [:div
+      {:on-click #(on-click id)}
+      (expanded-view (assoc m :appearance (conj appearance #{:timeline})))]
 
-   (if (and insert-after (fn? insert-after))
-     (insert-after id)
-     [:div])])
+     (if (and insert-after (fn? insert-after))
+       (insert-after id)
+       [:div])]))
 
 (defn boat-list [{:keys [boat-db selected only-show-selected?] :as m}]
   [:div.space-y-px.select-none.overflow-clip
-   {:class (:bg list-color-map)}
    (doall (for [[id data] boat-db
                 :when (if only-show-selected?
                         (some #{id} @selected)
@@ -334,8 +286,9 @@
   other relations must fail. Since there isn't any allowance for abutting
   entries (1 hour minimum between each booking), :met-by and :meets are therefore
   rejected."
-  [{:keys [values] :as props} {:keys [details? compact? graph? my-state boat-db selected]}]
-  (let [;fixme You've done this many times now
+  [{:keys [values]} {:keys [boat-db selected]}]
+  (let [{:keys [bg fg-]} (st/fbg' :void)
+        ;fixme You've done this many times now
         start (t/at (t/date (values :start-date)) (t/time (values :start-time)))
         end (t/at (t/date (values :end-date)) (t/time (values :end-time)))
         offset (if start (times.api/day-number-in-year (t/date start)) 0)
@@ -343,8 +296,8 @@
                (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
     [:div.flex.flex-col
-     {:style {:min-height "calc(100vh - 25rem)"}
-      :class ["dark:bg-gray-900" "bg-gray-600"]}
+     {:style {:min-height "calc(100vh - 23rem)"}
+      :class bg}
 
      (if (seq boat-db)
        [:div.flex-1
@@ -369,7 +322,7 @@
                                                           (set/difference sel #{e})
                                                           (set/union sel #{e})))))}]]
        [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
-        {:class "text-white/20"}
+        {:class fg-}
         [:div.text-2xl.font-black "Båt-listen er tom"]
         [:div.text-xl.font-semibold "Ta kontakt med administrator"]])]))
 
@@ -381,24 +334,25 @@
                                                (assoc db :boatpicker-list-details args)))
 
 (defn boat-picker-footer []
-  [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
-   {:class [:bg-gray-300 :dark:bg-gray-800 :dark:text-white :text-black]}
-   (schpaa.components.views/modern-checkbox'
-     {:set-details #(schpaa.state/change :opt1 %)
-      :get-details #(-> (schpaa.state/listen :opt1) deref)}
-     (fn [checkbox]
-       [:div.flex.items-center.gap-2
-        checkbox
-        [:div.text-base.font-normal.space-y-0
-         [:div.font-medium "Detaljer"]
-         [:div.text-xs "Vis alle detaljer"]]]))
+  (let [{:keys [bg fg fg+ p p-]} (st/fbg' :surface)]
+    [:div.flex.justify-between.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
+     {:class bg}
+     (schpaa.components.views/modern-checkbox'
+       {:set-details #(schpaa.state/change :opt1 %)
+        :get-details #(-> (schpaa.state/listen :opt1) deref)}
+       (fn [checkbox]
+         [:div.flex.items-center.gap-2
+          checkbox
+          [:div.space-y-0
+           [:div {:class (concat p fg+)} "Detaljer"]
+           [:div {:class (concat p- fg)} "Vis alle detaljer"]]]))
 
-   (schpaa.components.views/modern-checkbox'
-     {:set-details #(rf/dispatch [:boatpickerlist/set-details %])
-      :get-details #(-> (rf/subscribe [:boatpickerlist/details]) deref)}
-     (fn [checkbox]
-       [:div.flex.items-center.gap-2
-        [:div.flex.flex-col
-         [:div.font-medium.text-right "Utvalg"]
-         [:div.text-xs.text-right "Begrens visning til utvalg"]]
-        checkbox]))])
+     (schpaa.components.views/modern-checkbox'
+       {:set-details #(rf/dispatch [:boatpickerlist/set-details %])
+        :get-details #(-> (rf/subscribe [:boatpickerlist/details]) deref)}
+       (fn [checkbox]
+         [:div.flex.items-center.gap-2
+          [:div.flex.flex-col
+           [:div.text-right {:class (concat p fg+)} "Utvalg"]
+           [:div.text-right {:class (concat p- fg)} "Begrens visning til utvalg"]]
+          checkbox]))]))
