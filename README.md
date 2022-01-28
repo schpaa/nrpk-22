@@ -6,3 +6,5 @@ Hoved-repo for alt relatert NRPK
 - [ ] [Eykt - Nøkkelvaktliste](/docs/eykt/README.md)
 
 - [ ] [Logg - Båtloggen på Nøklevann](/docs/logg/README.md)
+
+Se forøvrig i [issues](https://github.com/schpaa/nrpk-22/issues) for registrering av oppgaver etc.
