@@ -102,9 +102,13 @@
        :uid            (:uid @user-auth)}]
      (letfn [(open-message []
                (readymade/message
-                 {:title   "some message"
+                 {:header  "some message22"
                   :content "Hi there"
                   :footer  "Footer"}))
+             (open-popup [type]
+               (readymade/popup {:type    type
+                                 :content [[:div.grid.h-24
+                                            [:div.self-start "Pop from space"]]]}))
              (open-dialog []
                (readymade/dialog
                  {:flags           #{:weak-dim :-timeout}
@@ -115,26 +119,14 @@
                   :buttons-caption (fn [_] "Okay then")
                   :title           "Hi there"
                   :content         [[:div "Hang out"]
-                                    [:div "Just a message to ya"]]}))
-             (open-complex []
-               (readymade/dialog
-                 {:flags           #{:weak-dim :-timeout}
-                  :buttons-cb      (fn [id] (get {:ok     "Lagre"
-                                                  :cancel "Avbryt"} id))
-                  :buttons         #{:ok :cancel}
-                  :ok              #(js/alert "!")
-                  :buttons-caption (fn [_] "Okay then")
-                  :title           "Hi there"
-                  :content         [[:div.-m-4 (readymade/modal-header {:toggle-favorite-fn #(js/alert "!")
-                                                                        :read-db-fn         #(-> {:slot        "A1"
-                                                                                                  :number      "123"
-                                                                                                  :navn        "Boatname"
-                                                                                                  :kind        "Jolle"
-                                                                                                  :description "Fin og fjong"})})]]}))]
-       [:div.flex.p-4.gap-4
-        [bu/regular-button {:on-click open-dialog} "Dialog"]
+                                    [:div "Just a message to ya"]]}))]
+
+       [:div.flex.p-4.gap-4.flex-wrap
+        [bu/regular-button {:on-click #(open-popup :message)} "Message"]
+        [bu/regular-button {:on-click #(open-popup :error)} "Error"]
         [bu/regular-button {:on-click open-message} "Message"]
-        [bu/regular-button {:on-click open-complex} "Complex"]])]))
+        [bu/regular-button {:on-click open-dialog} "Dialog"]
+        [bu/regular-button {:on-click readymade/open-complex} "Complex"]])]))
 
 (comment
   (do
