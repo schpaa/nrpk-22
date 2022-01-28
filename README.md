@@ -7,4 +7,4 @@ Hoved-repo for alt relatert NRPK
 
 - [ ] [Logg - Båtloggen på Nøklevann](/docs/logg/README.md)
 
-Se forøvrig i [issues](https://github.com/schpaa/nrpk-22/issues) for registrering av oppgaver, problemer og andre spørsmål.
+Se forøvrig i [issues](https://github.com/schpaa/nrpk-22/issues) for registrering av oppgaver, problemer og [discussions](https://github.com/schpaa/nrpk-22/discussions) for andre spørsmål.
