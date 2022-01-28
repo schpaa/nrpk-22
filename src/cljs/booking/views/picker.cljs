@@ -1,24 +1,14 @@
 (ns booking.views.picker
-  (:require [schpaa.components.views :as views]
-            [schpaa.modal.readymade]
-
-            [schpaa.components.fields :as fields :refer [save-ref placeholder]]
-            [schpaa.components.views :as views :refer [goto-chevron general-footer]]
+  (:require [schpaa.modal.readymade]
             [schpaa.components.views :refer [number-view slot-view normalize-kind name-view]]
             [tick.alpha.interval :refer [relation]]
             [logg.database]
-            [reagent.core :as r]
             [times.api :refer [day-name day-number-in-year format]]
             [tick.core :as t]
-            [schpaa.icon :as icon]
             [clojure.set :as set]
-            [schpaa.debug :as l]
-            [schpaa.modal :as modal]
             [schpaa.state]
-            [fork.re-frame :as fork]
             [booking.time-navigator]
             [re-frame.core :as rf]
-            [db.core :as db]
             [eykt.hov :as hov]
             [schpaa.style :as st]))
 
@@ -115,7 +105,7 @@
            :d             (apply str "M " d " 10 h " (- 24 n) " v -12 h -" (- 24 n) " z")}])]
       #_[:text {:x 0 :y 5 :style {:font "normal 7px sans-serif"}} (t/format "dd/MM" (t/date date))]]]))
 
-(defn- overlapping? [id time-slot offset]
+(defn- ^:deprecated overlapping? [id time-slot offset]
   (let [booking-db (filter (partial has-selection id) (booking.database/read))
         status-list (mapv (fn [{:keys [start end]}]
                             {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
@@ -126,7 +116,7 @@
     overlapping?))
 
 (defn- expanded-view [{:keys [appearance offset time-slot id data fetch-bookingdata]}]
-  (let [{:keys [bg bg+ hd fg fg- fg+ p p-]} (st/fbg' 2)
+  (let [{:keys [bg bg+ hd fg fg- fg+ p p-]} (st/fbg' :listitem)
         fetch-bookingdata (if fetch-bookingdata
                             fetch-bookingdata
                             booking.database/read)
@@ -145,7 +135,7 @@
         {:keys [navn description number weight length width slot expert kind]} data]
     [:<>
      [:div.grid.gap-2.p-2.w-full.text-blackx
-      {:style {:grid-template-columns "min-content min-content 1fr max-content"
+      {:style {:grid-template-columns "min-content min-content 1fr minmax(4rem,max-content)"
                :grid-auto-rows        "auto"}}
 
       [:div.self-center.justify-self-start
@@ -157,7 +147,7 @@
 
       (if (and (not (some #{:extra} appearance)) (some #{:tall} appearance))
         [:div.self-center.space-y-0.truncate
-         {:class (concat hd (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500]))}
+         {:class (concat p- (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500]))}
          (name-view navn)
          (normalize-kind kind)]
         [:div.self-center.truncate
@@ -167,14 +157,14 @@
                   (if (some #{:error} appearance) [:underline :decoration-wavy :decoration-rose-500]))}
          (name-view navn)])
 
-      [:div.col-span-1.h-6.self-center.max-w-xs
-       (when (some #{:timeline} appearance)
+      (when (some #{:timeline} appearance)
+        [:div.col-span-1.h-6.self-center.max-w-xs.justify-self-end.w-full
          (when booking-db
            (draw-graph
              {:date      (t/beginning time-slot)
               :window    window
               :time-slot slot'
-              :list      status-list})))]
+              :list      status-list}))])
 
       (when (some #{:extra} appearance)
         [:<>
@@ -183,17 +173,15 @@
           (normalize-kind kind)]
          [:div.col-span-2.self-start.leading-6 {:class (concat p fg)} description]
          [:div.col-span-2]
-         [:div.col-span-2.flex.justify-start
-          {:class (concat p- fg)}
+         [:div.col-span-2.flex.justify-start.flex-wrap
+          {:class (concat p- fg-)}
           (interpose [:div.w-2 ", "]
-                     (remove nil? [(when (seq weight) [:div weight])
-                                   (when (seq length) [:div "lengde " length])
-                                   (when (seq width) [:div "bredde " width])]))]])]]))
-
-(def list-color-map {:bg [:bg-gray-300 "dark:bg-gray-800"]})
+                     (remove nil? [(when (seq weight) [:div.whitespace-nowrap weight])
+                                   (when (seq length) [:div.whitespace-nowrap "lengde " length])
+                                   (when (seq width) [:div.whitespace-nowrap "bredde " width])]))]])]]))
 
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after appearance] :as m}]
-  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' 2)]
+  (let [{:keys [bg bg+]} (st/fbg' :listitem)]
     [:div.grid.gap-px
      {:class
       (cond
@@ -202,20 +190,14 @@
             overlap?) [:bg-red-200 :text-black :dark:bg-rose-500 :dark:text-white]
         selected? bg+
         (some #{:clear} appearance) []
-        :else bg #_[:bg-gray-100 :dark:bg-gray-700])
+        :else bg)
       :style {:grid-template-columns "min-content 1fr min-content"}}
-
-     (if (and insert-before-line-item)
-       [:div.flex.items-center.debug [insert-before-line-item id]]
-       [:div])
-
+     (when insert-before-line-item [insert-before-line-item id])
      [:div
       {:on-click #(on-click id)}
       (expanded-view (assoc m :appearance (conj appearance #{:timeline})))]
-
-     (if (and insert-after (fn? insert-after))
-       (insert-after id)
-       [:div])]))
+     (when (and insert-after (fn? insert-after))
+       [insert-after id])]))
 
 (defn boat-list [{:keys [boat-db selected only-show-selected?] :as m}]
   [:div.space-y-px.select-none.overflow-clip
@@ -235,7 +217,7 @@
 
 ;endregion drawing
 
-(defn- button
+(defn- ^:deprecated button
   ([a disabled? c]
    [:button.bg-gray-200.shadow-inside
     {:class    (if disabled? [:text-gray-300])
@@ -250,7 +232,7 @@
      :on-click a}
     (if (keyword? c) [schpaa.icon/small c] c)]))
 
-(defn adjust [state f field d]
+(defn ^:deprecated adjust [state f field d]
   (fn []
     (let [has-time? (try (t/time (get-in @state [:values field])) (catch js/Error _ false))]
       (if has-time?
@@ -279,36 +261,34 @@
                (tick.alpha.interval/bounds start end)
                (catch js/Error _ nil))]
     [:div.flex.flex-col
-     {:style {:min-height "calc(100vh - 23rem)"}
+     {:style {:min-height "calc(100vh - 22.9rem)"}
       :class bg}
 
      (if (seq boat-db)
        [:div.flex-1
         [boat-list
-         {:offset              offset
-          :time-slot           slot
-          :boat-db             boat-db
-          :only-show-selected? @(rf/subscribe [:boatpickerlist/details])
-          :selected            selected
-          :insert-before       (fn [id]
-                                 (let [id #{id}]
-                                   (hov/toggle-selected'
-                                     {:on?      (some id @selected)
-                                      :on-click #(swap! selected
-                                                        (fn [sel] (if (some id sel)
-                                                                    (set/difference sel id)
-                                                                    (set/union sel id))))})))
-
-          :insert-after        hov/open-details
-          :on-click            (fn [e] (swap! selected
-                                              (fn [sel] (if (some #{e} sel)
-                                                          (set/difference sel #{e})
-                                                          (set/union sel #{e})))))}]]
+         {:offset                  offset
+          :time-slot               slot
+          :boat-db                 boat-db
+          :only-show-selected?     @(rf/subscribe [:boatpickerlist/details])
+          :selected                selected
+          :insert-before-line-item hov/open-details
+          :insert-after            (fn [id]
+                                     (let [id #{id}]
+                                       (hov/toggle-selected'
+                                         {:on?      (some id @selected)
+                                          :on-click #(swap! selected
+                                                            (fn [sel] (if (some id sel)
+                                                                        (set/difference sel id)
+                                                                        (set/union sel id))))})))
+          :on-click                (fn [e] (swap! selected
+                                                  (fn [sel] (if (some #{e} sel)
+                                                              (set/difference sel #{e})
+                                                              (set/union sel #{e})))))}]]
        [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
         {:class fg-}
         [:div.text-2xl.font-black "Båt-listen er tom"]
         [:div.text-xl.font-semibold "Ta kontakt med administrator"]])]))
-
 
 ;todo rename "utvalg"
 (rf/reg-sub :boatpickerlist/details :-> :boatpicker-list-details)

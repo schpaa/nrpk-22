@@ -70,7 +70,7 @@
 
           [k/case-route (fn [route] (-> route :data :name))
            :r.user
-           (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 3)]
+           (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :form)]
              [:div.space-y-4
               {:class bg}
               [user.views/my-info]])

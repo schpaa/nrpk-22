@@ -14,7 +14,9 @@
             [booking.views.picker]
             [booking.bookinglist]
             [tick.core :as t]
-            [schpaa.style :as st]))
+            [schpaa.style :as st]
+            [schpaa.button :refer [danger-button regular-button cta-button]]
+            [schpaa.button :as bu]))
 
 (defn confirm-registry []
   #_(apply send
@@ -52,43 +54,43 @@
                                    [:div {:class (if-not b "text-black/25")} (or b "ingen")]]])]))
 
 (def loggout-command
-  [:button.btn.btn-free
-   {:on-click
-    #(modal/form-action
-       {:flags   #{:timeout}
-        ;:footer  "Du kan ikke angre dette"
-        :title   "Logg ut"
-        :form-fn (fn [] [:div
-                         [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
-                         [modal/just-buttons
-                          [["Avbryt" [:btn-free] (fn [] (send :e.hide))]
-                           ["Det er greit" [:btn-cta] (fn []
-                                                        (db/sign-out)
-                                                        (send :e.hide))]]]])})}
-
-   "Logg ut"])
+  (regular-button
+    {:on-click
+     #(modal/form-action
+        {:flags   #{:timeout}
+         ;:footer  "Du kan ikke angre dette"
+         :title   "Logg ut"
+         :form-fn (fn [] [:div
+                          [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
+                          [bu/just-buttons
+                           [["Avbryt" :button (fn [] (send :e.hide))]
+                            ["Logg ut!" :button-danger (fn []
+                                                         (db/sign-out)
+                                                         (send :e.hide))]]]])})}
+    "Logg ut"))
 
 (def removeaccount-command
-  [:button.btn.btn-danger
-   {:type :button
-    :on-click
-    #(modal/form-action
-       {:flags   #{:tixmeout}
-        :footer  [
-                  [:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter. "]
-                  [:div "Etter 14 dager slettes alle data."]]
-        :title   "Slett konto"
-        :form-fn (fn [] [:div
-                         [:div.p-4 "Er du sikker på at du vil slette booking-kontoen din?"]
-                         [modal/just-buttons
-                          [["Avbryt" [:btn-free] (fn [] (send :e.hide))]
-                           ["Ja, slett!" [:btn-danger] (fn []
-                                                         (send :e.hide))]]]])})}
-   "Slett konto"])
+  (danger-button {:type :button
+                  :on-click
+                  #(modal/form-action
+                     {:flags   #{:tixmeout}
+                      :footer  [
+                                [:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter. "]
+                                [:div "Etter 14 dager slettes alle data."]]
+                      :title   "Slett konto"
+                      :form-fn (fn [] [:div
+                                       [:div.p-4 "Er du sikker på at du vil slette booking-kontoen din?"]
+                                       [bu/just-buttons
+                                        [["Avbryt" :button (fn [] (send :e.hide))]
+                                         ["Ja, slett!" :button-danger (fn []
+                                                                        (send :e.hide))]]]])})}
+                 "Slett konto"))
+
+
 
 
 (defn logout-form [{:keys [user-auth name]}]
-  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' 3)
+  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
         accepted? (true? (:booking-godkjent (user.database/lookup-userinfo (:uid user-auth))))
         use-booking? (true? (:bruke-booking (user.database/lookup-userinfo (:uid user-auth))))
         [status-color status-text] (cond
@@ -107,8 +109,9 @@
        [:circle {:fill :currentColor
                  :cx   5 :cy 5 :r 4}]]
       [:div.flex-grow status-text]
-      [:button.btn.btn-free {:disabled true
-                             :on-click #(js/alert "!")} "Hjelp"]]]))
+      (regular-button {:disabled true
+                       :on-click #(js/alert "!")} "Hjelp")]]))
+
 
 
 (defn my-bookings [{:keys [uid bookings]}]
@@ -119,7 +122,7 @@
 ;endregion
 
 (defn my-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
-  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 3)]
+  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :form)]
     [:form.space-y-8
      {:id        form-id
       :on-submit handle-submit}
@@ -139,13 +142,15 @@
        [:div.flex.gap-4.justify-between
         removeaccount-command
         [:div.flex.gap-4
-         [:button.btn.btn-free {:type     :button
-                                :on-click #(send :e.cancel-useredit)} "Avbryt"]
-         [:button.btn.btn-cta {:disabled (not (some? dirty))
-                               :type     :submit} "Lagre"]]])]))
+         (regular-button {:type     :button
+                          :on-click #(send :e.cancel-useredit)} "Avbryt")
+         (cta-button {:type     :submit
+                      :disabled (not (some? dirty))} "Lagre")
+         #_[:button.btn.btn-cta {:disabled (not (some? dirty))
+                                 :type     :submit} "Lagre"]]])]))
 
 (defn my-info [{:keys []}]
-  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' 3)
+  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
         *st-all (rf/subscribe [::rs/state :main-fsm])
         user-auth (rf/subscribe [::db/user-auth])
         uid (:uid @user-auth)
@@ -171,15 +176,10 @@
                            (my-form {:values loaded-data' :readonly? true})
                            [:div "Ingen data"])
                          [:div.flex.justify-between
-                          [:button.btn.btn-danger
-                           {:disabled true
-                            :type     :button
-                            :on-click #(send :e.edit)}
-                           "Slett konto"]
-                          [:button.btn.btn-free.btn-cta
-                           {:type     :button
-                            :on-click #(send :e.edit)}
-                           "Rediger"]]]
+                          (danger-button {:disabled true} "Slett konto")
+                          (regular-button {:type     :button
+                                           :on-click #(send :e.edit)} "Rediger")]]
+
            [:s.editing] [fork/form {:initial-values    loaded-data'
                                     :prevent-default?  true
                                     :clean-on-unmount? true

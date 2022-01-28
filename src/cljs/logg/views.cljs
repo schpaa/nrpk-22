@@ -21,16 +21,11 @@
                   (let [idx id]
                     [booking.views.picker/list-line
                      (conj {:offset (times.api/day-number-in-year (t/date))}
-                           {:details?      details?
-                            :id            id
-                            :appearance    (if details? #{:timeline :tall :extra})
-                            :on-click      #(swap! markings update idx (fnil not false))
-                            :data          data
-                            :insert-before (when @edit
-                                             [:div.flex.items-center.px-2.bg-gray-500
-                                              [fields/checkbox {:values        (fn [_] (get-in @markings [idx] false))
-                                                                :handle-change #(swap! markings update idx (fnil not false))}
-                                               "" nil]])
-                            :insert-after  hov/open-details})]))
+                           {:details?                details?
+                            :id                      id
+                            :appearance              (if details? #{:timeline :tall :extra})
+                            :on-click                #(swap! markings update idx (fnil not false))
+                            :data                    data
+                            :insert-before-line-item hov/open-details})]))
                 data))]))
 

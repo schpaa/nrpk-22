@@ -54,7 +54,7 @@
         (t/format "d.MM" (t/date (t/date-time end))))]]))
 
 (defn time-segment-display [{:keys [hide-name? navn start end relation]}]
-  (let [{:keys [fg p-]} (st/fbg' 2)
+  (let [{:keys [fg p-]} (st/fbg' :listitem)
         multiday (< 0 (t/days (t/duration (tick.alpha.interval/new-interval start end))))
         day-name (times.api/day-name (t/date-time start))
         end-day-name (times.api/day-name (t/date-time end))
@@ -87,24 +87,14 @@
         (t/format "'—'H.mm" (t/time (t/date-time end)))]])))
 
 
-(defn- booking-list-item [{:keys [fetch-boatdata-for
-                                  offset today hide-name? on-click
-                                  details?
-                                  insert-top-fn
-                                  insert-before
-                                  insert-below
-                                  insert-above
-                                  insert-after
-                                  appearance
-                                  time-slot
-                                  boat-db]
+(defn- booking-list-item [{:keys [fetch-boatdata-for offset today on-click details? insert-before insert-below insert-after appearance time-slot]
                            :or   {today (t/new-date)}}
                           ;intent FOR EACH ITEM
                           {:keys [id navn insert-before-line-item description selected not-available start end] :as item}]
   (let [selected (map keyword selected)                     ;;selected must be a keyword
         relation (try (tick.alpha.interval/relation start today)
                       (catch js/Error _ nil))
-        {:keys [bg fg fg- fg+ p p-]} (st/fbg' 2)
+        {:keys [bg fg fg+ p]} (st/fbg' :listitem)
         {:keys [br]} (booking-list-item-color-map relation)]
 
     [:div.flex
@@ -114,9 +104,6 @@
       {:style    {:grid-template-columns "1fr max-content"}
        :class    (concat fg bg br)
        :on-click #(when on-click (on-click item))}
-
-      ;(when insert-top-fn [:div.col-span-3 '(insert-top-fn item)])
-      ;(when insert-above [:div.col-span-3 (insert-above)])
 
       [:div 'navn]
 
@@ -133,20 +120,20 @@
                           :while (some? data)]
                       [list-line
                        {;:insert-before-line-item (when insert-before-line-item insert-before-line-item) ;; for removal of items
-                        :insert-after hov/open-details
-                        :id           id
-                        :data         {:number "A"}         ; fixme data ;(get (into {} boat-db) id)
-                        :offset       offset
-                        :time-slot    time-slot
-                        :appearance   (set/union #{:basic :xclear :hide-location :extra} appearance)
-                        :overlap?     false}]))]
+                        :insert-before-line-item hov/open-details
+                        :id                      id
+                        :data                    {:number "A"} ; fixme data ;(get (into {} boat-db) id)
+                        :offset                  offset
+                        :time-slot               time-slot
+                        :appearance              (set/union #{:basic :xclear :hide-location :extra} appearance)
+                        :overlap?                false}]))]
             (when fetch-boatdata-for
               (let [items (sort (map (fn [id] (:number (fetch-boatdata-for id))) selected))]
                 (if (< 2 (count items))
                   [:div.flex.gap-1.flex-wrap.px-1
+                   (schpaa.components.views/show-more-number-view)
                    (for [number (take 2 items)]
-                     (schpaa.components.views/number-view number))
-                   (schpaa.components.views/show-more-number-view)]
+                     (schpaa.components.views/number-view number))]
                   [:div.flex.gap-1.flex-wrap.px-1
                    (for [number items]
                      (schpaa.components.views/number-view number))]))))])]
@@ -190,22 +177,13 @@
                         :accepted-user?     accepted-user?
                         :today              today
                         :hide-name?         (not (some? uid))
-                        :on-click           (fn [e]
-                                              (swap! markings update id (fnil not false))
-                                              (.stopPropagation e))
-                        ;:insert-before  (when my-own? hov/remove-booking-details-button)
-                        ;hov/remove-from-list-actions
-                        ;(hov/remove-from-list-actions clicks-on-remove selected)
-                        #_(when true                        ;@edit
-                            (fn [_] [:div.flex.items-center.px-2.bg-gray-400
-                                     [fields/checkbox {:values        (fn [_] (get-in @markings [id] false))
-                                                       :handle-change #(swap! markings update id (fnil not false))}
-                                      "" nil]]))
+                        :insert-before      hov/open-booking-details-button
                         :insert-after       (fn [id]
                                               [:div.flex
-                                               (when my-own? (hov/remove-booking-details-button
-                                                               id
-                                                               (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read))))
-                                               (hov/open-booking-details-button id)])}
+                                               (when my-own?
+                                                 (hov/remove-booking-details-button
+                                                   id
+                                                   (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read))))])}
+
                        item]))
                   data))])))

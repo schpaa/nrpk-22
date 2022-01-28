@@ -226,12 +226,15 @@
    :bg3 [:bg-gray-300 :dark:bg-gray-800]})
 
 (defn error-item [text]
-  [:div.p-2.space-y-1.bg-red-300.text-black.flex.gap-4.items-baseline
-   [:div.rounded-full.bg-rose-600.text-white.h-6.aspect-square.flex.items-center.justify-center "!"]
-   [:div text]])
+  (let [{:keys [bg fg+]} (st/fbg' :error)]
+    [:div.p-2.space-y-1.flex.gap-4.items-baseline
+     {:class (concat fg+ bg)}
+     [:div.rounded-full.bg-rose-600.text-white.h-6.aspect-square.flex.items-center.justify-center "!"]
+     [:div text]]))
 
 (defn confirmation [_ {:keys [selected]}]
   (let [;intent want a copy of selected, not a reference
+        {:keys [bg bg+ fg+]} (st/fbg' :void)
         presented (r/atom @selected)
         clicks-on-remove (r/atom {})]
 
@@ -245,25 +248,23 @@
             not-available (into #{} (filter #(overlapping? % slot offset) (set/union @selected @presented)))]
         [:div.flex.flex-col.flex-1
          ;fixme Fudging, to keep statusbar at bottom at all times
-         {:class (this-color-map :bg2)
+         {:class bg
           :style {:min-height "calc(100vh - 22rem)"}}
          [:div.space-y-4
           (if-not (empty? @selected)
             [:div.space-y-px
-             (let [appearance #{:tall :timeline}
-                   time-slot slot
-                   insert-before-line-item (hov/remove-from-list-actions clicks-on-remove selected)]
+             (let [appearance #{:tall :timeline}]
                (doall (for [[id data] (sort-by (comp :number val) < boat-db)
                             :when (some #{id} @selected)
                             :while (some? data)]
                         [list-line
-                         {:insert-before-line-item insert-before-line-item ;; for removal of items
-                          :insert-after            hov/open-details
+                         {:insert-after            (hov/remove-from-list-actions clicks-on-remove selected)
+                          :insert-before-line-item hov/open-details
                           :id                      id
                           :data                    data
                           :offset                  offset
-                          :time-slot               time-slot
-                          :appearance              (set/union #{:basic :xclear :xhide-location} appearance)
+                          :time-slot               slot
+                          :appearance              (set/union #{:basic} appearance)
                           :overlap?                (some #{id} not-available)}])))])
 
           ;intent ERRORS
@@ -273,11 +274,10 @@
 
            (when (some not-available @selected)
              (error-item
-               [:div.space-y-2
+               [:div.space-y-1
                 [:div.font-semibold.text-xl "OBS"]
-                [:div.text-base.space-y-1
-                 [:div "Noe av utstyret du har valgt er ikke tilgjengelig på det tidspunktet du ønsker!"]
-                 [:div "Tilpass tidspunktet for din booking eller fjern utstyret fra listen."]]]))
+                [:div "Noe av utstyret du har valgt er ikke tilgjengelig på det tidspunktet du ønsker!"]
+                [:div "Tilpass tidspunktet for din booking eller fjern utstyret fra listen."]]))
            (for [[k v] (:errors props)
                  e v]
              (when-not (= k :general) (error-item e)))]]]))))
@@ -377,7 +377,7 @@
        [:div "d?" booking-state])]))
 
 (defn time-input [{:keys [errors form-id handle-submit handle-change values set-values] :as props} admin]
-  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' 3)]
+  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' :form)]
     [:div.px-2.pt-4.pb-6.space-y-2.sticky.top-28.z-50
      {:class bg}                                            ;{:class [:dark:bg-gray-700 :bg-gray-100]}
      [:div.grid.gap-y-4.gap-x-2
@@ -448,8 +448,7 @@
             "samme dag")])]]]))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
-  (let [admin false
-        detail-level @(rf/subscribe [:app/details])]
+  (let [admin false]
     [fork/form {:initial-touched   {:start-date  (str (t/new-date))
                                     :start-time  (str (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
                                     :end-time    (str (t/time "17:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))

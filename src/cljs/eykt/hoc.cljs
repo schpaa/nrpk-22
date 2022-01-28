@@ -8,7 +8,11 @@
             [reagent.core :as r]
             [tick.core :as t]
             [booking.bookinglist]
-            [schpaa.style :as st]))
+            [schpaa.style :as st]
+            [schpaa.debug :as l]
+            [schpaa.button :as bu]
+            [schpaa.modal :as modal]
+            [schpaa.modal.readymade :as readymade]))
 
 ;region booking
 
@@ -88,13 +92,49 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:div.select-none
+     [l/ppre user-auth]
      [booking.bookinglist/booking-list
       {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
        :class          []
        :accepted-user? @accepted-user?
        :data           (booking.database/read)
-       :today          (t/new-date 2022 1 4)
-       :uid            (:uid @user-auth)}]]))
+       ;:today          (t/new-date 2022 1 4)
+       :uid            (:uid @user-auth)}]
+     (letfn [(open-message []
+               (readymade/message
+                 {:title   "some message"
+                  :content "Hi there"
+                  :footer  "Footer"}))
+             (open-dialog []
+               (readymade/dialog
+                 {:flags           #{:weak-dim :-timeout}
+                  :buttons-cb      (fn [id] (get {:ok     "Okay then"
+                                                  :cancel "Back out"} id))
+                  :buttons         #{:ok :cancel}
+                  :ok              #(js/alert "!")
+                  :buttons-caption (fn [_] "Okay then")
+                  :title           "Hi there"
+                  :content         [[:div "Hang out"]
+                                    [:div "Just a message to ya"]]}))
+             (open-complex []
+               (readymade/dialog
+                 {:flags           #{:weak-dim :-timeout}
+                  :buttons-cb      (fn [id] (get {:ok     "Lagre"
+                                                  :cancel "Avbryt"} id))
+                  :buttons         #{:ok :cancel}
+                  :ok              #(js/alert "!")
+                  :buttons-caption (fn [_] "Okay then")
+                  :title           "Hi there"
+                  :content         [[:div.-m-4 (readymade/modal-header {:toggle-favorite-fn #(js/alert "!")
+                                                                        :read-db-fn         #(-> {:slot        "A1"
+                                                                                                  :number      "123"
+                                                                                                  :navn        "Boatname"
+                                                                                                  :kind        "Jolle"
+                                                                                                  :description "Fin og fjong"})})]]}))]
+       [:div.flex.p-4.gap-4
+        [bu/regular-button {:on-click open-dialog} "Dialog"]
+        [bu/regular-button {:on-click open-message} "Message"]
+        [bu/regular-button {:on-click open-complex} "Complex"]])]))
 
 (comment
   (do
@@ -108,7 +148,7 @@
      :style {:grid-template-columns "repeat(auto-fit,minmax(15rem,1fr))"}}
     ;intent dark panel
 
-    (for [b '(:void :surface 2 3)]
+    (for [b '(:void :surface 2 3 :error :button :button-danger)]
       (let [{:keys [bg bg+ fg- fg fg+ hd p p- he]} (st/fbg' b)]
         [:div
          [:div.p-4.space-y-1 {:class bg}

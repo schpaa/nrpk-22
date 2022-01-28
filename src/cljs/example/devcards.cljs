@@ -12,7 +12,8 @@
             [booking.views.picker]
             [booking.views]
             [fork.re-frame :as fork]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.button :as bu]))
 
 (js/goog.exportSymbol "hljs" hljs)
 (js/goog.exportSymbol "DevcardsSyntaxHighlighter" hljs)
@@ -23,25 +24,40 @@
 (defn reload! []
   (init!))
 
-(defcard-rg two
+#_(defcard-rg two
+    [:div.w-96
+     [form
+      {:dialog-type :message
+       :header      [:div.p-4 "header"]
+       :footer      [:div.p-4 "footer"]
+       :form-fn     (schpaa.modal.readymade/simple-ok-form)}]])
+
+(defcard-rg three
   [:div.w-96
-   [form
-    {:dialog-type :message
-     :header      [:div.p-4 "header"]
-     :footer      [:div.p-4 "footer"]
-     :form-fn     (schpaa.modal.readymade/simple-ok-form)}]])
+   [form {:header      ":dialog-type :message title"
+          :dialog-type :message
+          :form-fn     (fn [] [:div
+                               [:div.p-4 "Contents"]
+                               [bu/just-buttons
+                                [["Ok" :button-cta (fn [])]]]])
+          :footer      "footer"}]])
 
 (defcard-rg three
   [:div.w-96
    [form {:header      [:h2.p-4 "header"]
           :dialog-type :form
-          :form-fn
-          (modal/ok-cancel-buttons
-            {:on-ok     #(do
-                           (eykt.fsm-helpers/send :e.hide)
-                           #_(action))
-             :on-cancel #(eykt.fsm-helpers/send :e.hide)})
-          ;(fn [] [:div "Form"])
+          :form-fn     (bu/just-buttons
+                         [["Avbryt" :button (fn [])]
+                          ["Ok" :button-danger (fn [])]])
+          :footer      [:div.p-4 "footer"]}]])
+
+(defcard-rg three
+  [:div.w-96
+   [form {:header      [:h2.p-4 "header"]
+          :dialog-type :error
+          :form-fn     (bu/just-buttons
+                         [["Avbryt" :button (fn [])]
+                          ["Ok" :button-danger (fn [])]])
           :footer      [:div.p-4 "footer"]}]])
 
 (defcard-rg four
@@ -100,7 +116,7 @@
                                  :selected    [:-Me9qQ8av-rpbV1utrgS]
                                  :start       (str (t/at (t/new-date 2022 1 26) (t/new-time 10 0)) #_(t/date-time))
                                  :end         (str (t/at (t/new-date 2022 1 26) (t/new-time 13 0)) #_(t/date-time)) #_(str (t/>> (t/date-time) (t/new-duration 1 :hours)))}])
-     :insert-after (fn [id] (hov/open-details id))
+     :insert-after      (fn [id] (hov/open-details id))
      :appearance        #{:extrax :xtimeline :tall}
      :offset            0
      :data              {:description   "Senkekjøl og knekkspant. For personer 65-100 kg.",
@@ -128,12 +144,12 @@
 
 (defcard-rg time-navigator
   [:div
-   [fork/form {:initial-touched    {} #_ {:start-date  (str (t/date "2022-01-27"))
-                                          :start-time  (str (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
-                                          :end-time    (str (t/time "08:30" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
-                                          :end-date    (str (t/date "2022-01-28"))
-                                          ;:sleepover true
-                                          :description ""}
+   [fork/form {:initial-touched   {} #_{:start-date  (str (t/date "2022-01-27"))
+                                        :start-time  (str (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                        :end-time    (str (t/time "08:30" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                        :end-date    (str (t/date "2022-01-28"))
+                                        ;:sleepover true
+                                        :description ""}
                :validation        booking.views/booking-validation
                ;:state             my-state
                :prevent-default?  true
