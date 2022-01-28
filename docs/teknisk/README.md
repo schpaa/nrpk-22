@@ -1,9 +1,4 @@
-# nrpk-22
-
-Hoved-repo for alt relatert NRPK
-
 @TODO Lage skript som setter opp utviklingsmiljø fra grunnen av fra
-en [github-gist]()...
 
 ## Forutsetninger
 
