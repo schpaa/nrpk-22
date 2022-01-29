@@ -24,13 +24,7 @@
 (defn reload! []
   (init!))
 
-#_(defcard-rg two
-    [:div.w-96
-     [form
-      {:dialog-type :message
-       :header      [:div.p-4 "header"]
-       :footer      [:div.p-4 "footer"]
-       :form-fn     (schpaa.modal.readymade/simple-ok-form)}]])
+
 
 (defcard-rg three
   [:div.w-96

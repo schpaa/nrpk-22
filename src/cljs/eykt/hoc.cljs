@@ -92,41 +92,15 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         accepted-user? (rf/subscribe [:app/accepted-user?])]
     [:div.select-none
-     [l/ppre user-auth]
+
      [booking.bookinglist/booking-list
       {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
        :class          []
        :accepted-user? @accepted-user?
        :data           (booking.database/read)
        ;:today          (t/new-date 2022 1 4)
-       :uid            (:uid @user-auth)}]
-     (letfn [(open-message []
-               (readymade/message
-                 {:header  "some message22"
-                  :content "Hi there"
-                  :footer  "Footer"}))
-             (open-popup [type]
-               (readymade/popup {:type    type
-                                 :content [[:div.grid.h-24
-                                            [:div.self-start "Pop from space"]]]}))
-             (open-dialog []
-               (readymade/dialog
-                 {:flags           #{:weak-dim :-timeout}
-                  :buttons-cb      (fn [id] (get {:ok     "Okay then"
-                                                  :cancel "Back out"} id))
-                  :buttons         #{:ok :cancel}
-                  :ok              #(js/alert "!")
-                  :buttons-caption (fn [_] "Okay then")
-                  :title           "Hi there"
-                  :content         [[:div "Hang out"]
-                                    [:div "Just a message to ya"]]}))]
+       :uid            (:uid @user-auth)}]]))
 
-       [:div.flex.p-4.gap-4.flex-wrap
-        [bu/regular-button {:on-click #(open-popup :message)} "Message"]
-        [bu/regular-button {:on-click #(open-popup :error)} "Error"]
-        [bu/regular-button {:on-click open-message} "Message"]
-        [bu/regular-button {:on-click open-dialog} "Dialog"]
-        [bu/regular-button {:on-click readymade/open-complex} "Complex"]])]))
 
 (comment
   (do
@@ -135,12 +109,39 @@
 (defn debug []
   [:div
 
+   (letfn [(open-message []
+             (readymade/message
+               {:header  "some message22"
+                :content "Hi there"
+                :footer  "Footer"}))
+           (open-popup [type]
+             (readymade/popup {:type    type
+                               :content [[:div.grid.h-24
+                                          [:div.self-start "Pop from space"]]]}))
+           (open-dialog []
+             (readymade/ok-cancel
+               {:flags           #{:weak-dim :-timeout}
+                :button-captions (fn [id] (get {:ok     "Okay then"
+                                                :cancel "Back out"} id))
+                :buttons         #{:ok :cancel}
+                :ok              #(js/alert "!")
+                :title           "Hi there"
+                :content         [[:div "Hang out"]
+                                  [:div "Just a message to ya"]]}))]
+
+     [:div.flex.p-4.gap-4.flex-wrap
+      [bu/regular-button {:on-click #(open-popup :message)} "Message"]
+      [bu/regular-button {:on-click #(open-popup :error)} "Error"]
+      [bu/regular-button {:on-click open-message} "Message"]
+      [bu/regular-button {:on-click open-dialog} "Dialog"]
+      [bu/regular-button {:on-click readymade/open-complex} "Complex"]])
+
    [:div.grid.gap-1.py-1
     {:class ["bg-black/50"]
      :style {:grid-template-columns "repeat(auto-fit,minmax(15rem,1fr))"}}
     ;intent dark panel
 
-    (for [b '(:void :surface 2 3 :error :button :button-danger)]
+    (for [b '(:void :surface :listitem :dialog :error :button-cta :button :button-danger :form :field :field-label)]
       (let [{:keys [bg bg+ fg- fg fg+ hd p p- he]} (st/fbg' b)]
         [:div
          [:div.p-4.space-y-1 {:class bg}

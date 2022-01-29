@@ -17,7 +17,8 @@
      {:class    (concat bg fg)
       :on-click #(do
                    (.stopPropagation %)
-                   (readymade/booking-details-dialog-fn (readymade/modal-booking-details-dialogcontent id)))}
+                   (readymade/message {:flags   #{}
+                                       :content [(readymade/modal-booking-details-dialogcontent id)]}))}
      [icon/small :three-vertical-dots]]))
 
 (defn remove-booking-details-button [id input-data]
@@ -26,14 +27,11 @@
      {:class    (concat bg fg)
       :on-click #(do
                    (.stopPropagation %)
-                   (readymade/are-you-sure
-                     {:header  "Vil du virkelig slette denne ?"
-                      :content "some content"
-                      :-title  [:div.space-y-2
-                                [:h2 "Vil du virkelig slette denne bookingen?"]
+                   (readymade/ok-cancel
+                     {:header  "Vil du virkelig slette denne bookingen?"
+                      :content [[:div "some content"]
                                 [l/ppre input-data]]
-                      :-footer (str id)
-                      :action  (fn [] (js/alert id))}))}
+                      :ok      (fn [] (js/alert (l/ppr ["DELETE" id])))}))}
      [icon/small :cross-out]]))
 
 (defn open-details [id]
@@ -44,12 +42,6 @@
                      (.stopPropagation %)
                      (readymade/details-dialog-fn id))}
      [icon/small :three-vertical-dots]]))
-
-(defn toggle-selected [id]
-  [:div.w-10.flex.flex-center
-   {:class    [:text-black "bg-gray-300/50" "dark:bg-gray-800/50" "dark:text-gray-300"]
-    :on-click #()}
-   [icon/small :checked-circle]])
 
 (defn toggle-selected' [{:keys [on? not? on-click]}]
   [:div.w-10.flex.flex-center

@@ -16,7 +16,8 @@
             [tick.core :as t]
             [schpaa.style :as st]
             [schpaa.button :refer [danger-button regular-button cta-button]]
-            [schpaa.button :as bu]))
+            [schpaa.button :as bu]
+            [schpaa.modal.readymade :as readymade]))
 
 (defn confirm-registry []
   #_(apply send
@@ -56,34 +57,42 @@
 (def loggout-command
   (regular-button
     {:on-click
-     #(modal/form-action
-        {:flags   #{:timeout}
-         ;:footer  "Du kan ikke angre dette"
-         :title   "Logg ut"
-         :form-fn (fn [] [:div
-                          [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
-                          [bu/just-buttons
-                           [["Avbryt" :button (fn [] (send :e.hide))]
-                            ["Logg ut!" :button-danger (fn []
-                                                         (db/sign-out)
-                                                         (send :e.hide))]]]])})}
+     #(readymade/ok-cancel
+        {:type    :form
+         :flags   #{:timeout :weak-dim}
+         :content "Dette vil logge deg ut av kontoen på denne enheten."
+         :ok      (fn [] (js/alert "Logging out"))
+         ;:title   "Logg ut"
+         #_#_:form-fn (fn [_]
+                        [:div
+                         [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
+                         [bu/just-buttons
+                          [["Avbryt" :button (fn [] (send :e.hide))]
+                           ["Logg ut!" :button-danger (fn []
+                                                        (db/sign-out)
+                                                        (send :e.hide))]]]])})}
     "Logg ut"))
 
 (def removeaccount-command
   (danger-button {:type :button
                   :on-click
-                  #(modal/form-action
-                     {:flags   #{:tixmeout}
-                      :footer  [
-                                [:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter. "]
-                                [:div "Etter 14 dager slettes alle data."]]
-                      :title   "Slett konto"
-                      :form-fn (fn [] [:div
-                                       [:div.p-4 "Er du sikker på at du vil slette booking-kontoen din?"]
-                                       [bu/just-buttons
-                                        [["Avbryt" :button (fn [] (send :e.hide))]
-                                         ["Ja, slett!" :button-danger (fn []
-                                                                        (send :e.hide))]]]])})}
+                  #(readymade/ok-cancel
+                     {:flags           #{:wide}
+                      :button-captions (fn [id] (get {:ok     "Slett konto!"
+                                                      :cancel "Avbryt"} id))
+                      :ok              (fn [] (js/alert "!"))
+                      :footer          [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
+                                        [:div "Etter 14 dager slettes alle data."]]
+                      :content         "Er du sikker på at du vil slette booking-kontoen din?"
+                      #_#_:form-fn (fn [_] [:div
+                                            [:div "Er du sikker på at du vil slette booking-kontoen din?"]
+                                            [bu/build-buttonbar-content
+                                             {:button-captions (fn [id] (get {:ok     "Okay then"
+                                                                              :cancel "Back out"} id))
+                                              :buttons         #{:ok :cancel}}
+                                             #_[["Avbryt" :button (fn [] (send :e.hide))]
+                                                ["Ja, slett!" :button-danger (fn []
+                                                                               (send :e.hide))]]]])})}
                  "Slett konto"))
 
 
