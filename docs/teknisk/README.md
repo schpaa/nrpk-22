@@ -2,36 +2,36 @@
 
 ## Prerequisites
 
-A modern unix-shell with the following installed
+A modern unix-shell with the following installed, all current versions (or newer)
 
-- java/jdk 15 (or never)
-- clojure 1.11 (or never)
-- node package manager
+- Java/JDK 15 
+- Clojure 1.10
+- Node (npm) 12.0
 
 Run `npm i` to install all the js-related stuff
 
 This project is hosted on googlecloud using Firebase (both firestore and the
 realtime-database). To experiment locally install firebase-tools and ditto
 emulators. Run the dev.sh script for dev-development. It will open the browser
-at :8010 (the app) and a shadow-cljs dashboard at :9630 (all the usual goodies).
+at [:8010](http://localhost:8010) (the app) and a shadow-cljs dashboard at [:9630](http://localhost:9630) (all the usual goodies).
 
 The firebase-emulators starts by running the fbe.sh script, run it in a
-different terminal-window and forget about it. Reach the dashboard at :4000 in
+different terminal-window and forget about it. Reach the dashboard at [:4000](http://localhost:4000) in
 your browser.
 
-My workflow consists of doing the above and then having a browser window (:8010)
-showing the app which will hot-reload everything and preserve state between
-reloads (ideally) while I write in the editor, hot reload is triggered when
-saving - normal clojure/script stuff.
+My workflow consists of doing the above and then having a browser window
+showing the app which hot-reloads (and preserve state between
+reloads ideally) while writing code in the editor. Hot reload is triggered when
+saving - basic clojure/script stuff.
 
 ## Development
 
 Entrypoint in namespace at `eykt.core/init!` located
-in `src/cljs/eykt/core.cljs`. See shadow-cljs.edn for project-setup, look at the
-key ':eykt' (which should be renamed according to #10)
+in `src/cljs/eykt/core.cljs`. See `shadow-cljs.edn` for project-setup, look at the
+key `:eykt` (which should be renamed according to [#10](https://github.com/schpaa/nrpk-22/issues/10))
 
 Html and CSS templates (as well as fonts) located in `template` and are copied
-and hydrated into public before deployment.
+into `public/eykt` and hydrated before deployment.
 
 ## Deployment
 
