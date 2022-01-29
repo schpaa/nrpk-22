@@ -53,14 +53,16 @@
         user-auth (rf/subscribe [::db/user-auth])
         {:keys [bg fg- fg+ hd p p- he]} (st/fbg' :surface)]
     (fn []
+      ;[:div.bg-alt.h-32.w-full "X"]
       (if-not @user-auth
-        [:div.p-2
+        [:div.xp-4.xmax-w-md.mx-autox
          [rounded-view {:float 1} [db.signin/login]]]
-        [:div {:class bg}
-         [:div.p-4.max-w-md.mx-auto
-          [user.views/userstatus-form
-           {:user-auth @user-auth
-            :name      (:display-name @user-auth)}]]
+
+        [:div.xw-full {:class bg}
+         [:div.xp-4.xmax-w-md.mx-autox
+          #_[user.views/userstatus-form
+             {:user-auth @user-auth
+              :name      (:display-name @user-auth)}]]
 
          [:div
           [tab {:selected @(rf/subscribe [:app/current-page])}
@@ -77,11 +79,11 @@
 
            :r.logg
            (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :void)]
-             [:div
-              [:div.space-y-px.flex.flex-col
+             [:div.w-screenx
+              [:div.space-y-px.flex.flex-col.w-full
                {:class  :min-h-screen
                 :-style {:min-height "calc(100vh + 3rem)"}}
-               [:div.flex-1
+               [:div.flex-1.w-fullx
                 {:class bg}
                 [hoc/user-logg]]]
               [hoc/all-boats-footer {}]])
@@ -206,29 +208,30 @@
         s (rf/subscribe [::rs/state-full :main-fsm])]
     (forced-scroll-lock (or (and @mobile? @menu-open?)
                             (or (:modal @s) (:modal-forced @s))))
-    [modal/overlay-with
-     {:modal-dim (:modal-dim @s)
-      :modal?    (or (:modal @s)
-                     (:modal-forced @s))
-      ;intent No dismiss-fx on click when forced, must click on a button
-      :on-close  (if
-                   (or (:modal-dirty @s) (:modal-forced @s))
-                   nil
-                   #(send :e.hide))}
-     [:div
-      [modal/render
-       {:show?     (or (:modal @s) (:modal-forced @s))
-        :config-fn (:modal-config-fn @s)}]
-      [components.screen/render
-       {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
-        :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))
-        :navigate-to-home   (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
-        :navigate-to-user   (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
-        :current-page-title (fn [] @(rf/subscribe [:app/current-page-title]))
-        :get-menuopen-fn    (fn [] @(rf/subscribe [:app/menu-open?]))
-        :get-writingmode-fn (fn [] false)}
-       web-content
-       nil]]]))
+    [:div
+     [modal/overlay-with
+      {:modal-dim (:modal-dim @s)
+       :modal?    (or (:modal @s)
+                      (:modal-forced @s))
+       ;intent No dismiss-fx on click when forced, must click on a button
+       :on-close  (if
+                    (or (:modal-dirty @s) (:modal-forced @s))
+                    nil
+                    #(send :e.hide))}
+      [:div
+       [modal/render
+        {:show?     (or (:modal @s) (:modal-forced @s))
+         :config-fn (:modal-config-fn @s)}]
+       [components.screen/render
+        {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
+         :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))
+         :navigate-to-home   (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
+         :navigate-to-user   (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
+         :current-page-title (fn [] @(rf/subscribe [:app/current-page-title]))
+         :get-menuopen-fn    (fn [] @(rf/subscribe [:app/menu-open?]))
+         :get-writingmode-fn (fn [] false)}
+        web-content]]]]))
+
 
 (defn app-wrapper
   "takes care of light/dark-mode and loading-states"
