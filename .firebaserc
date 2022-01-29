@@ -1,6 +1,7 @@
 {
   "projects": {
-    "booking-22": "nrpk-vakt"
+    "booking-22": "nrpk-vakt",
+    "eyktv-22": "nrpk-vakt"
   },
   "targets": {}
 }

@@ -15,6 +15,8 @@ Hoved-repo for alt relatert NRPK
 
 - [ ] [Dokumentasjon](/docs/eykt/README.md)
 
+- [x] Lenke til [eykt app](https://eyktv-22.web.app)
+
 ### Logg
 
 - [ ] [Dokumentasjon](/docs/logg/README.md)

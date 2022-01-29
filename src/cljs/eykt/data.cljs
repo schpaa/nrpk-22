@@ -45,7 +45,7 @@
    :projectId         "nrpk-vakt",
    :storageBucket     "nrpk-vakt.appspot.com",
    :messagingSenderId "461903557643",
-   :appId             "1:461903557643:web:f51109ad017ed61a6c430e",
-   :measurementId     "G-FYD8HLS5C1"})
+   :appId             "1:461903557643:web:d55f65e5806d7d106c430e",
+   :measurementId     "G-TDX1PWHMCN"})
 
 ;endregion
