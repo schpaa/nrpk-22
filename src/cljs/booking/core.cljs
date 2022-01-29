@@ -1,6 +1,7 @@
 (ns booking.core
   (:require [re-frame.core :as rf]
             [kee-frame.core :as k]
+            [booking.fsm-model]                             ; passively registers the fsm
             [booking.spa :as spa]
             [re-statecharts.core :as rs]
             [booking.data :as app-data]

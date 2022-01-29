@@ -37,6 +37,7 @@
                                              (user.database/write (:values data))
                                              (confirm-registry)
                                              st)]}}
+
    :states  {:s.initial {}
              :s.editing {}
              :s.store   {:after [{:delay  1000
@@ -61,45 +62,25 @@
         {:type    :form
          :flags   #{:timeout :weak-dim}
          :content "Dette vil logge deg ut av kontoen på denne enheten."
-         :ok      (fn [] (db/sign-out) #_(js/alert "Logging out"))
-         ;:title   "Logg ut"
-         #_#_:form-fn (fn [_]
-                        [:div
-                         [:div.p-4 "Dette vil logge deg ut av kontoen på denne enheten."]
-                         [bu/just-buttons
-                          [["Avbryt" :button (fn [] (send :e.hide))]
-                           ["Logg ut!" :button-danger (fn []
-                                                        (db/sign-out)
-                                                        (send :e.hide))]]]])})}
+         :ok      (fn [] (db/sign-out))})}
     "Logg ut"))
 
 (def removeaccount-command
-  (danger-button {:type :button
-                  :on-click
-                  #(readymade/ok-cancel
-                     {:flags           #{:wide}
-                      :button-captions (fn [id] (get {:ok     "Slett konto!"
-                                                      :cancel "Avbryt"} id))
-                      :ok              (fn [] (js/alert "!"))
-                      :footer          [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
-                                        [:div "Etter 14 dager slettes alle data."]]
-                      :content         "Er du sikker på at du vil slette booking-kontoen din?"
-                      #_#_:form-fn (fn [_] [:div
-                                            [:div "Er du sikker på at du vil slette booking-kontoen din?"]
-                                            [bu/build-buttonbar-content
-                                             {:button-captions (fn [id] (get {:ok     "Okay then"
-                                                                              :cancel "Back out"} id))
-                                              :buttons         #{:ok :cancel}}
-                                             #_[["Avbryt" :button (fn [] (send :e.hide))]
-                                                ["Ja, slett!" :button-danger (fn []
-                                                                               (send :e.hide))]]]])})}
-                 "Slett konto"))
+  (danger-button
+    {:type :button
+     :on-click
+     #(readymade/ok-cancel
+        {:flags           #{:wide}
+         :button-captions (fn [id] (get {:ok     "Slett konto!"
+                                         :cancel "Avbryt"} id))
+         :ok              (fn [] (js/alert "!"))
+         :footer          [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
+                           [:div "Etter 14 dager slettes alle data."]]
+         :content         "Er du sikker på at du vil slette booking-kontoen din?"})}
+    "Slett konto"))
 
-
-
-
-(defn logout-form [{:keys [user-auth name]}]
-  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
+(defn userstatus-form [{:keys [user-auth name]}]
+  (let [{:keys [bg fg+]} (st/fbg' :form)
         accepted? (true? (:booking-godkjent (user.database/lookup-userinfo (:uid user-auth))))
         use-booking? (true? (:bruke-booking (user.database/lookup-userinfo (:uid user-auth))))
         [status-color status-text] (cond
@@ -120,8 +101,6 @@
       [:div.flex-grow status-text]
       (regular-button {:disabled true
                        :on-click #(js/alert "!")} "Hjelp")]]))
-
-
 
 (defn my-bookings [{:keys [uid bookings]}]
   [:ul.space-y-px.shadow
@@ -179,6 +158,7 @@
              (try [:div.text-sm "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
                   (catch js/Error e (.-message e)))
              [:h2.text-xs {:class fg} "Ikke registrert"])]]
+
          (rs/match-state (:user @*st-all)
            [:s.initial] [:div.space-y-8
                          (if loaded-data'
@@ -200,4 +180,4 @@
 
            [:div
             [:h2 "unhandled state"]
-            [l/ppre-x :state @*st-all]])]))))
+            [l/ppre-x @*st-all]])]))))

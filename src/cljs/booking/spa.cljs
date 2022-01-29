@@ -58,7 +58,7 @@
          [rounded-view {:float 1} [db.signin/login]]]
         [:div {:class bg}
          [:div.p-4.max-w-md.mx-auto
-          [user.views/logout-form
+          [user.views/userstatus-form
            {:user-auth @user-auth
             :name      (:display-name @user-auth)}]]
 
