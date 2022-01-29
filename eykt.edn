@@ -1,0 +1,53 @@
+{:paths          ["script"]
+ :min-bb-version "0.5.0"
+ :tasks          {:enter        (println "Entering " (:name (current-task)))
+
+                  :requires     ([babashka.fs :as fs]
+                                 [clojure.java.shell :refer [sh]])
+
+                  :init         (do
+                                  (def -app-name "eykt")
+
+                                  (def -dist-dir "dist")
+
+                                  (def -css-output (str -dist-dir "/" -app-name "/css/output.css"))
+
+                                  (defn replacer [{:keys [path manifest-file index-file title]}]
+                                    (let [output-name-js (:output-name (first (read-string (slurp (str path manifest-file)))))
+                                          output-name-css "output.css"
+                                          html (slurp (str "template/" -app-name "/index.html"))]
+                                      (spit (str path index-file)
+                                        (-> (slurp (str "template/" -app-name "/index.html"))
+                                          (.replace "{title}" title)
+                                          (.replace "{css-source}" output-name-css)
+                                          (.replace "{js-source}" output-name-js))))))
+
+                  fb:emu        {:doc  "Starts the firebase-emulator for database and hosting"
+                                 :task (shell {:continue true} "firebase emulators:start --only database,firestore")}
+                  -dev:browser  (do
+                                  (shell "open http://localhost:8020")
+                                  (shell "open http://localhost:9630/build/eykt"))
+                  -devcards:css (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
+                  -dev:css      (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
+                  -dev:watch    (clojure (str "-M:shadow-cljs watch " -app-name))
+                  -dev          {:depends [-dev:watch -dev:browser]}
+                  stats         {:depends []
+                                 :task    (do
+                                            (sh "bash" "-c" "ls -l ./dist/eykt/js/*.js >> ./history.md")
+                                            (shell {:continue true} "cat ./history.md")
+                                            (shell "say done"))}
+                  template      {:depends []
+                                 :task    (do
+                                            (replacer
+                                              {:app-name      -app-name
+                                               :path          "dist/eykt"
+                                               :manifest-file "/js/manifest.edn"
+                                               :index-file    "/index.html"
+                                               :title         "NRPK-22 Eykt"}))}
+                  dev           {:task (run '-dev {:parallel true})}
+                  css           {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
+                  clean         {:task (fs/delete-tree -dist-dir)}
+                  build         {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
+                  fonts         {:task (fs/copy-tree "template/eykt/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)}
+                  deploy        {:depends [clean build template css fonts stats]
+                                 :task    (shell "firebase deploy --only hosting:eykt-22")}}}
