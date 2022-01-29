@@ -2,9 +2,9 @@ const colors = require('tailwindcss/colors')
 
 module.exports = {
     content: [
-    "./public/eykt/index.html",
-    "./public/eykt/js/cljs-runtime/**/*.js",
-    "./public/eykt/**/*.{html,js}",
+    "./public/booking/index.html",
+    "./public/booking/js/cljs-runtime/**/*.js",
+    "./public/booking/**/*.{html,js}",
     "./lib/**/*.{cljs,js}",
     "./public/devcards/**/*.{html,js}",
     "./public/devcards/js/cljs-runtime/**/*.js",
@@ -30,10 +30,8 @@ module.exports = {
         yellow: colors.yellow,
         green: colors.lime,
         white: colors.white,
-        gray: colors.stone,
+        gray: colors.slate,
 //         slate stone sinc neutral gray
-
-
         emerald: colors.emerald,
         indigo: colors.indigo,
         amber: colors.amber,
