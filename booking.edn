@@ -6,7 +6,7 @@
                                  [clojure.java.shell :refer [sh]])
 
                   :init         (do
-                                  (def -app-name "eykt")
+                                  (def -app-name "booking")
 
                                   (def -dist-dir "dist")
 
@@ -26,28 +26,28 @@
                                  :task (shell {:continue true} "firebase emulators:start --only database,firestore")}
                   -dev:browser  (do
                                   (shell "open http://localhost:8010")
-                                  (shell "open http://localhost:9630/build/eykt"))
+                                  (shell "open http://localhost:9630/build/booking"))
                   -devcards:css (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
-                  -dev:css      (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
+                  -dev:css      (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/booking/css/output.css --watch")
                   -dev:watch    (clojure (str "-M:shadow-cljs watch " -app-name))
                   -dev          {:depends [-dev:watch -dev:browser]}
                   stats         {:depends []
                                  :task    (do
-                                            (sh "bash" "-c" "ls -l ./dist/eykt/js/*.js >> ./history.md")
+                                            (sh "bash" "-c" "ls -l ./dist/booking/js/*.js >> ./history.md")
                                             (shell {:continue true} "cat ./history.md")
                                             (shell "say done"))}
                   template      {:depends []
                                  :task    (do
                                             (replacer
-                                              {:app-name      "eykt"
-                                               :path          "dist/eykt"
+                                              {:app-name      "booking"
+                                               :path          "dist/booking"
                                                :manifest-file "/js/manifest.edn"
                                                :index-file    "/index.html"
-                                               :title         "EYKT-22"}))}
+                                               :title         "NRPK-22 Booking"}))}
                   dev           {:task (run '-dev {:parallel true})}
                   css           {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
                   clean         {:task (fs/delete-tree -dist-dir)}
                   build         {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
-                  fonts         {:task (fs/copy-tree "template/eykt/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)}
+                  fonts         {:task (fs/copy-tree "template/booking/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)}
                   deploy        {:depends [clean build template css fonts stats]
-                                 :task    (shell "firebase deploy --only hosting:eykt-22")}}}
+                                 :task    (shell "firebase deploy --only hosting:eykt-22")}}} ;todo #10

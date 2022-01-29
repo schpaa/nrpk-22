@@ -1,7 +1,12 @@
 # nrpk-22
+
 Hoved-repo for alt relatert NRPK
 
 1. [Booking - NRPK på sjøbasen](/docs/booking/README.md)
+
+   Forklaring på visualiseringen
+   av [tidslinja](https://github.com/schpaa/nrpk-22/issues/9) i Booking
+
 
 2. [Eykt - Nøkkelvaktliste](/docs/eykt/README.md)
 

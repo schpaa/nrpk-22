@@ -4,9 +4,7 @@
   "description": "Main repo for all tools at NRPK",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tailwind": "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch",
-    "dev": "clj -A:shadow-cljs watch eykt"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

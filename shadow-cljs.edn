@@ -2,15 +2,15 @@
 {:open-file-command ["idea" :pwd "--line" :line :file]
  :deps              {:aliases [:shadow-cljs]}
  :nrepl             {:port 9000}
- :dev-http          {8010 "public/eykt"
+ :dev-http          {8010 "public/booking"
                      3001 ["public/devcards" "public"]}
  :builds            {:devcards
                      {:target           :browser            ; using :browser-test to pickup all files that match `-test$`
                       ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
                       :output-dir       "public/devcards/js"
                       ;:runner-ns        example.devcards ; must have init fn to run
-                      :modules           {:main {:init-fn example.devcards/init!}}
-                      :after-load        example.devcards/reload!
+                      :modules          {:main {:init-fn example.devcards/init!}}
+                      :after-load       example.devcards/reload!
                       :compiler-options {:devcards           true
                                          :output-feature-set :es8}
                       :js-options       {:resolve
@@ -19,14 +19,14 @@
                                           "devcards-syntax-highlighter"
                                           {:target :npm :require "highlight.js"}}}}
                      :logg    {:target :browser}
-                     :booking {:target :browser}
-                     :eykt    {:target            :browser
-                               :output-dir        "public/eykt/js"
+                     :eykt    {:target :browser}
+                     :booking {:target            :browser
+                               :output-dir        "public/booking/js"
                                :asset-path        "/js"
                                :after-load        eykt.core/reload!
-                               :modules           {:main {:init-fn eykt.core/init!}}
+                               :modules           {:main {:init-fn eykt.core/init!}} ;todo #10
                                :module-hash-names 4
-                               :release           {:output-dir       "dist/eykt/js"
+                               :release           {:output-dir       "dist/booking/js"
                                                    :compiler-options {:closure-defines {goog.DEBUG false}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :advanced}}
