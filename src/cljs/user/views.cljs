@@ -61,7 +61,7 @@
         {:type    :form
          :flags   #{:timeout :weak-dim}
          :content "Dette vil logge deg ut av kontoen på denne enheten."
-         :ok      (fn [] (js/alert "Logging out"))
+         :ok      (fn [] (db/sign-out) #_(js/alert "Logging out"))
          ;:title   "Logg ut"
          #_#_:form-fn (fn [_]
                         [:div

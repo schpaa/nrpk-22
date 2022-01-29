@@ -337,8 +337,8 @@
        (fn [checkbox]
          [:div.flex.items-center.gap-2.w-full
           [:div.space-y-0
-           [:div.text-right {:class (concat p fg+)} "Alle"]
-           [:div {:class (concat p- fg)} "Inkluder alle bookinger"]]
+           [:div.text-right {:class (concat p fg+)} "Mine"]
+           [:div {:class (concat p- fg)} "Bare vis mine bookinger"]]
           checkbox]))]))
 
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]

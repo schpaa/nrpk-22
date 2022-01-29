@@ -182,17 +182,19 @@
 
 (defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-after appearance] :as m}]
   (let [{:keys [bg bg+]} (st/fbg' :listitem)]
-    [:div.grid.gap-px
-     {:class
+    [:div.grid.gap-px.w-full
+     {:style {:grid-template-columns "min-content 1fr min-content"}
+      :class
       (cond
         (or (some #{:unavailable} appearance)
             (some #{:error} appearance)
             overlap?) [:bg-red-200 :text-black :dark:bg-rose-500 :dark:text-white]
         selected? bg+
         (some #{:clear} appearance) []
-        :else bg)
-      :style {:grid-template-columns "min-content 1fr min-content"}}
-     (when insert-before-line-item [insert-before-line-item id])
+        :else bg)}
+     (if insert-before-line-item
+       [insert-before-line-item id]
+       [:div])
      [:div
       {:on-click #(on-click id)}
       (expanded-view (assoc m :appearance (conj appearance #{:timeline})))]

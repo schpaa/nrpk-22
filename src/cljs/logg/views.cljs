@@ -10,7 +10,8 @@
     [booking.views.picker]
     [tick.core :as t]
     [schpaa.icon :as icon]
-    [eykt.hov :as hov]))
+    [eykt.hov :as hov]
+    [schpaa.debug :as l]))
 
 (defn all-boats [{:keys [data details?]}]
   (r/with-let [edit (r/atom false)
@@ -28,4 +29,5 @@
                             :data                    data
                             :insert-before-line-item hov/open-details})]))
                 data))]))
+
 

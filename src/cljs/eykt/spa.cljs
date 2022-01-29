@@ -65,7 +65,7 @@
          [:div
           [tab {:selected @(rf/subscribe [:app/current-page])}
            [:r.user "Om meg" nil :icon :user]
-           [:r.logg "Logg" nil :icon :circle]
+           [:r.logg "Turlogg" nil :icon :circle]
            [:r.debug "Feilsøking" nil :icon :circle]]
 
           [k/case-route (fn [route] (-> route :data :name))
@@ -76,7 +76,15 @@
               [user.views/my-info]])
 
            :r.logg
-           [hoc/user-logg]
+           (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :void)]
+             [:div
+              [:div.space-y-px.flex.flex-col
+               {:class  :min-h-screen
+                :-style {:min-height "calc(100vh + 3rem)"}}
+               [:div.flex-1
+                {:class bg}
+                [hoc/user-logg]]]
+              [hoc/all-boats-footer {}]])
 
            :r.debug
            [hoc/debug]
@@ -118,7 +126,7 @@
           {:style {:min-height "calc(100vh - 7rem)"}}
           (if (seq data)
             [:div.flex-1
-             {:class bg}                                    ;{:class (concat [:dark:bg-gray-700 :bg-gray-500])}
+             {:class bg}
              [hoc/all-active-bookings {:data data}]]
             [empty-list-message "Booking-listen er tom"])
           [booking.views/last-bookings-footer {}]]])
@@ -127,7 +135,6 @@
       (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
         [:div
          {:class bg}
-
          [:div.space-y-px.flex.flex-col
           {:style {:min-height "calc(100vh - 7rem)"}}
           (if (seq data)
@@ -137,8 +144,6 @@
                :details? @(schpaa.state/listen :opt1)}]]
             [empty-list-message "Båt-listen er tom"])
           [hoc/all-boats-footer {}]]])]]))
-
-
 
 (def route-table
   {:r.common      front

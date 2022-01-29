@@ -48,8 +48,10 @@
      {:boat-db        data
       :details?       @(rf/subscribe [:bookinglist/details])
       :accepted-user? accepted-user?
-      :booking-data   (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read)) #_(booking.database/read)
-      :today          (t/new-date 2022 1 26)
+      :booking-data
+      ;intent Convert the vector to a map
+      (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read)) #_(booking.database/read)
+      :today          (t/date)                              ;(t/new-date 2022 1 26)
       :uid            (:uid user-auth)}]))
 
 (defn all-boats [{:keys [details? data]}]
@@ -90,17 +92,21 @@
 
 (defn user-logg []
   (let [user-auth (rf/subscribe [::db/user-auth])
-        accepted-user? (rf/subscribe [:app/accepted-user?])]
+        accepted-user? (rf/subscribe [:app/accepted-user?])
+        boat-db (sort-by (comp :number val) < (logg.database/boat-db))
+        data-map (reduce (fn [a e] (assoc a (:id e) e)) {} (booking.database/read))]
     [:div.select-none
-
+     #_[schpaa.components.views/empty-list-message
+        [:div "firsts"]
+        [:div "Ta kontakt med administrator"]
+        [:div.justify-self-start.items-start "asdasdseneer"]]
      [booking.bookinglist/booking-list
-      {:boat-db        (sort-by (comp :number val) < (logg.database/boat-db))
+      {:boat-db        boat-db
        :class          []
        :accepted-user? @accepted-user?
-       :data           (booking.database/read)
-       ;:today          (t/new-date 2022 1 4)
+       :booking-data   data-map
+       :today          (t/new-date 2022 1 29)
        :uid            (:uid @user-auth)}]]))
-
 
 (comment
   (do
