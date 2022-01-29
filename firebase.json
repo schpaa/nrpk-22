@@ -8,7 +8,7 @@
   },
   "hosting": [
     {
-      "site": "eykt-22",
+      "site": "booking-22",
       "public": "dist/booking",
       "cleanUrls": true,
       "rewrites": [

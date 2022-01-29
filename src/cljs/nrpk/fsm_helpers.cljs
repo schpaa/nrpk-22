@@ -1,4 +1,4 @@
-(ns eykt.fsm-helpers
+(ns nrpk.fsm-helpers
   (:require [re-frame.core :as rf]
             [re-statecharts.core]))
 

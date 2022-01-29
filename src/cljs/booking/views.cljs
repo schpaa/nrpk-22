@@ -13,7 +13,7 @@
             [booking.database]
             [fork.re-frame :as fork]
             [times.api :refer [format]]
-            [eykt.fsm-helpers :refer [send]]
+            [nrpk.fsm-helpers :refer [send]]
             [logg.database]
             [booking.views.picker :as picker :refer [
                                                      boat-picker-footer
@@ -23,7 +23,7 @@
             [schpaa.icon :as icon]
             [db.core]
             [schpaa.debug :as l]
-            [eykt.hov :as hov]
+            [nrpk.hov :as hov]
             [clojure.set :as set]
             [booking.bookinglist]
             [times.api :refer [day-number-in-year day-name]]
@@ -287,12 +287,12 @@
    [step 2 "Velg utstyr"
     :active (= s 1)
     :complete (not (empty? @selected))
-    :on-click #(eykt.fsm-helpers/send :e.pick-boat)]
+    :on-click #(nrpk.fsm-helpers/send :e.pick-boat)]
    [step 3 "Bekreftelse"
     :active (= s 2)
     :final true
     :complete (and (nil? (:errors props)) (nil? (some not-available @selected)))
-    :on-click #(eykt.fsm-helpers/send :e.confirm)]])
+    :on-click #(nrpk.fsm-helpers/send :e.confirm)]])
 
 (defn booking-footer [{:keys [selected boat-db booking-ready? booking-record]}]
   [:div.flex.justify-between.items-centers.gap-2.px-4.py-2.sticky.bottom-0

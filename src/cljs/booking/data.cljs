@@ -1,4 +1,4 @@
-(ns eykt.data
+(ns booking.data
   (:require [re-frame.core :refer [reg-sub]]
             [cljs.reader :refer [read-string]]))
 
@@ -30,7 +30,7 @@
   {:startup       true,
    :app/show-help {1 false, 2 false, 5 false, 6 false, 9 true}})
 
-(def localstorage-key "nrpk-22-eykt")
+(def localstorage-key "nrpk-22-booking")
 
 (defn initialize
   [db ls-key]
@@ -46,7 +46,7 @@
 
 ;region firebase
 
-(def eykt-firebaseconfig
+(def booking-firebaseconfig
   ;eykt-22
   {:apiKey            "AIzaSyD2iU_6-1pre0lbYERk8jDdzMgrs-3QVlY",
    :authDomain        "nrpk-vakt.firebaseapp.com",

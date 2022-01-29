@@ -1,10 +1,10 @@
-(ns eykt.fsm-model
+(ns booking.fsm-model
   (:require [re-frame.core :as rf]
             [re-statecharts.core :as rs]
             [statecharts.core :refer [assign]]
             [schpaa.debug :as l]
             [schpaa.modal :as modal]
-            [eykt.fsm-helpers :refer [send]]
+            [nrpk.fsm-helpers :refer [send]]
             [booking.database]
             [user.database]
             [user.views]))

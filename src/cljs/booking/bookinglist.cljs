@@ -4,7 +4,7 @@
             [re-frame.core :as rf]
             [booking.views.picker :refer [list-line]]
             [schpaa.components.views :refer [number-view]]
-            [eykt.hov :as hov]
+            [nrpk.hov :as hov]
             [clojure.set :as set]
             [schpaa.components.fields :as fields]
             [schpaa.icon :as icon]

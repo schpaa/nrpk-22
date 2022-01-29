@@ -22,6 +22,6 @@
   (rf/dispatch [:app/setup-handlers]))
 
 (defn init! []
-  (db/init! {:config app-data/firebaseconfig})
+  (db/init! {:config app-data/eykt-firebaseconfig})
   (reload!)
   (rf/dispatch [::rs/transition :main :e.restart]))

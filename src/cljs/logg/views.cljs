@@ -10,7 +10,7 @@
     [booking.views.picker]
     [tick.core :as t]
     [schpaa.icon :as icon]
-    [eykt.hov :as hov]
+    [nrpk.hov :as hov]
     [schpaa.debug :as l]))
 
 (defn all-boats [{:keys [data details?]}]

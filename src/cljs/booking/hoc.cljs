@@ -1,10 +1,10 @@
-(ns eykt.hoc
+(ns booking.hoc
   "higher-order components"
   (:require [db.core :as db]
             [re-frame.core :as rf]
             [booking.views]
             [logg.views]
-            [eykt.fsm-helpers :refer [send]]
+            [nrpk.fsm-helpers :refer [send]]
             [reagent.core :as r]
             [tick.core :as t]
             [booking.bookinglist]

@@ -9,7 +9,7 @@
             [schpaa.state]
             [booking.time-navigator]
             [re-frame.core :as rf]
-            [eykt.hov :as hov]
+            [nrpk.hov :as hov]
             [schpaa.style :as st]))
 
 ;region utilities (pure)

@@ -7,7 +7,7 @@
             [schpaa.components.fields :as fields]
             [schpaa.components.views :refer [rounded-view]]
             [schpaa.modal :as modal]
-            [eykt.fsm-helpers :refer [send]]
+            [nrpk.fsm-helpers :refer [send]]
             [fork.re-frame :as fork]
             [user.database]
             [booking.views]
