@@ -29,7 +29,6 @@
             [booking.hoc :as hoc]
             [schpaa.style :as st]))
 
-
 (defn view-info [{:keys [username]}]
   [:div username])
 
@@ -155,42 +154,7 @@
    :r.logg        user
    :r.debug       user
    :r.debug2      front
-   :r.blog front})
-
-;region events and subs
-
-(rf/reg-sub :route-name
-            :<- [:kee-frame/route]
-            (fn [route _]
-              (-> route :data :name)))
-
-(rf/reg-sub :app/menu-open? :-> :menu-open?)
-
-(rf/reg-sub :app/current-page
-            :<- [:kee-frame/route]
-            (fn [r _]
-              (some-> r :data :name)))
-
-(rf/reg-sub :app/current-page-title
-            :<- [:kee-frame/route]
-            (fn [r _]
-              (some-> r :data :header)))
-
-(rf/reg-event-db :toggle-menu-open
-                 (fn [db]
-                   (update db :menu-open? (fnil not false))))
-
-(rf/reg-event-db :app/open-menu-at
-                 (fn [db [_ tab]]
-                   (assoc db :menu-open? true
-                             :tab tab)))
-
-(rf/reg-event-fx :app/navigate-to
-                 [rf/trim-v]
-                 (fn [_ [page]]
-                   {:fx [[:navigate-to page]]}))
-
-;endregion
+   :r.blog        front})
 
 (defn- forced-scroll-lock
   [locked?]
@@ -223,13 +187,13 @@
         {:show?     (or (:modal @s) (:modal-forced @s))
          :config-fn (:modal-config-fn @s)}]
        [components.screen/render
-        {:current-page       (fn [] @(rf/subscribe [:app/current-page]))
-         :toggle-menu-open   (fn [] (rf/dispatch [:toggle-menu-open]))
-         :navigate-to-home   (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
-         :navigate-to-user   (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
-         :current-page-title (fn [] @(rf/subscribe [:app/current-page-title]))
-         :get-menuopen-fn    (fn [] @(rf/subscribe [:app/menu-open?]))
-         :get-writingmode-fn (fn [] false)}
+        {:current-page          (fn [] @(rf/subscribe [:app/current-page]))
+         :toggle-menu-open      (fn [] (rf/dispatch [:toggle-menu-open]))
+         :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
+         :navigate-to-user      (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
+         :current-page-title    (fn [] @(rf/subscribe [:app/current-page-title]))
+         :current-page-subtitle (fn [] @(rf/subscribe [:app/current-page-subtitle]))
+         :get-menuopen-fn       (fn [] @(rf/subscribe [:app/menu-open?]))}
         web-content]]]]))
 
 

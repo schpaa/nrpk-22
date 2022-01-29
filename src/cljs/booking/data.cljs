@@ -3,7 +3,7 @@
             [cljs.reader :refer [read-string]]))
 
 (def routes
-  [["/" {:name :r.common :header "Siste bookinger"}]
+  [["/" {:name :r.common :header "Siste bookinger" :subheader ""}]
    ["/batlist" {:name :r.boatlist :header "Oversikt over båter"}]
    ["/init" {:name :r.init :header "Init"}]
    ["/innhold" {:name :r.content :header "Innhold"}]

@@ -6,7 +6,8 @@
             [re-statecharts.core :as rs]
             [booking.data :as app-data]
             [schpaa.darkmode]
-            [db.core :as db]))
+            [db.core :as db]
+            [nrpk.core]))
 
 (defn kee-start []
   (k/start! {:routes         app-data/routes,
