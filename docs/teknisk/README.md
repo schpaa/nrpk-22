@@ -1,12 +1,12 @@
-# Overview
+# Overview BOOKING
 
 ## Prerequisites
 
 A modern unix-shell with the following installed, all current versions (or newer)
 
-- Java/JDK 15 
+- Java/JDK 15
 - Clojure 1.10
-- Node (npm) 12.0
+- Node (with NPM) 12.0
 
 Run `npm i` to install all the js-related stuff
 
@@ -26,17 +26,17 @@ saving - basic clojure/script stuff.
 
 ## Development
 
-Entrypoint in namespace at `eykt.core/init!` located
-in `src/cljs/eykt/core.cljs`. See `shadow-cljs.edn` for project-setup, look at the
-key `:eykt` (which should be renamed according to [#10](https://github.com/schpaa/nrpk-22/issues/10))
+Entrypoint at namespace `booking.core/init!` located
+in `src/cljs/booking/core.cljs`. See `shadow-cljs.edn` for project-setup, look
+at the key `:booking`.
 
 Html and CSS templates (as well as fonts) located in `template` and are copied
-into `public/eykt` and hydrated before deployment.
+into `public/booking` and hydrated before deployment.
 
 ## Deployment
 
 Deployment at google/firebase - serials and identites located
-in `src/cljs/eykt/data.cljs` replace these with your own if needed.
+in `src/cljs/booking/data.cljs` replace these with your own if needed.
 
 ```
 bb --config booking.edn deploy

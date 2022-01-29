@@ -19,4 +19,4 @@ spørsmål.
 
 ## Teknisk
 
-[Teknisk dokumentasjon](/docs/teknisk/README.md) foregår stort sett på engelsk
+[Teknisk dokumentasjon](/docs/teknisk/README.md) skrives stort sett på engelsk.
