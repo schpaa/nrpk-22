@@ -45,24 +45,27 @@
         d (+ 24 (- (+ 1 (* 24 (times.api/day-number-in-year (t/date)))
                       (t/hour (t/time)))
                    offset))]
-    [:div.relative.z-0.h-8.space-y-0.overflow-clip
+    [:div.relative.z-0.h-10.space-y-0.overflow-clip
      (when-some [date date]
        [:div.absolute.-bottom-1.left-0
         {:style {:left "25%" :width "25%"}}
         [:div.flex.flex-col.items-center
          [:svg.text-sky-500.h-2 {:viewBox "0 0 6 6"}
           ;[:g {:transform "translate(-10,0)"}]
-          [:path {
-                  :fill :currentColor
+          [:path {:fill :currentColor
                   :d    (str "M " 3 " 0 l 3 6 l -6 0 z")}]]
          [:div.text-gray-700.text-xs.mb-px (t/format "dd/MM" (t/date date))]]])
 
-     [:svg.w-full.rounded-sm.h-fullx.h-4
-      {:class               ["bg-gray-300" "dark:bg-gray-800"]
-       :viewBox             (str "0 0 " width " 10")
-       :width               "auto"
-       :height              "100%"
-       :preserveAspectRatio "none"}
+     [:svg.w-full.rounded-sm.h-full.h-5
+      {:xclass               ["bg-gray-300" "dark:bg-gray-800"]
+       :viewBox              (str "0 0 " width " 14")
+       ;:width               "auto"
+       ;:height              "100%"
+       :xpreserveAspectRatio "none"}
+
+      [:g {:class ["text-gray-400" "dark:text-gray-800"]}
+       [:rect {:fill :currentColor
+               :x    0 :y 0 :width width :height 10}]]
 
       [:g {:stroke :none}
        [:rect {:class  ["text-gray-600" "dark:text-gray-500"]
@@ -90,19 +93,19 @@
                           (apply str "M 0 0 " (repeat 3 " m 24 0 v 3 v -3 "))
                           (apply str "M 0 10 " (repeat 3 " m 24 0 v -3 v 3 ")))}]
        ;intent TODAY
-       [:path
-        {:class         ["dark:text-amber-500" "text-amber-700"]
-         :vector-effect :non-scaling-stroke
-         :stroke-width  2
-         :stroke        :currentColor
-         :d             (apply str "M " d " 0 v 10")}]
+       #_[:path
+          {:class         ["dark:text-amber-500" "text-amber-700"]
+           :vector-effect :non-scaling-stroke
+           :stroke-width  2
+           :stroke        :currentColor
+           :d             (apply str "M " d " 0 v 10")}]
        ;intent REST OF THE DAY
        (let [n (inc (t/hour (t/time)))]
          [:path
-          {:class         "text-amber-500/30"
+          {:class         "text-amber-500"
            :vector-effect :non-scaling-stroke
            :fill          :currentColor
-           :d             (apply str "M " d " 10 h " (- 24 n) " v -12 h -" (- 24 n) " z")}])]
+           :d             (apply str "M " d " 14 h " (- 24 n) " v -4 h -" (- 24 n) " z")}])]
       #_[:text {:x 0 :y 5 :style {:font "normal 7px sans-serif"}} (t/format "dd/MM" (t/date date))]]]))
 
 (defn- ^:deprecated overlapping? [id time-slot offset]
@@ -158,7 +161,7 @@
          (name-view navn)])
 
       (when (some #{:timeline} appearance)
-        [:div.col-span-1.h-6.self-center.max-w-xs.justify-self-end.w-full
+        [:div.col-span-1.h-10.self-center.max-w-xs.justify-self-end.w-full
          (when booking-db
            (draw-graph
              {:date      (t/beginning time-slot)

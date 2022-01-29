@@ -158,7 +158,7 @@
                                          :selected           selected})]
             [:div])
           (when details?
-            [:div.col-span-2
+            [:div.col-span-2.space-y-px
              (when-not (empty? selected)
                (doall (for [id selected
                             :let [data (when fetch-boatdata-for (fetch-boatdata-for id))]

@@ -35,7 +35,7 @@
      [icon/small :cross-out]]))
 
 (defn open-details [id]
-  (let [{:keys [bg fg]} (st/fbg' :button)]
+  (let [{:keys [bg fg]} (st/fbg' :side-button)]
     [:div.w-12.flex.flex-center
      {:class    (concat bg fg)
       :on-click #(do ()

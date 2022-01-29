@@ -1,68 +1,53 @@
-@TODO Lage skript som setter opp utviklingsmiljø fra grunnen av fra
+# Overview
 
-## Forutsetninger
+## Deployment
 
-Du trenger terminal-tilgang til et unix-miljø (WSL/Windows, MacOS eller Linux).
+Deployment at google/firebase
 
-Hovedaktivetene skjer i Clojure/Clojurescript så dette må være på plass. Dette
-bygger igjen på Java, så JDK 15 eller nyere må være installert. Node (og npm) må
-også installeres, versjon 8 eller høyere. Når Node/npm og Java/Clojure er
-installert kjører du `npm i` fra prosjekt-mappen for å sette igang resten.
-
-Babashka brukes som oppgave-kjører (som erstatning for `Make`).
-
-## Vanlige oppgaver
-
-##### Oppstart
-
-Utfør fra terminalen
-
-```bash
-bb eykt-dev
+```
+bb --config booking.edn deploy
 ```
 
-for å starte kompilator-prosessen, åpne nettleseren
-på [http://localhost:9630/build/eykt](http://localhost:9630) og trykk `start`.
+## Development
 
-Nå kan du redigere kode fra `/src/cljs/eykt/...` og kompilatoren oppdaterer
-innholdet automatisk. Tilstand bevares mellom oppdateringene.
+Entrypoint in namespace at `eykt.core/init!` located
+in `src/cljs/eykt/core.cljs`
 
-##### Publisering
-
-For å publisere endringer kjører du følgende fra terminalen
-
-```bash
-bb eykt-publish
+```
+bb --config booking.edn tasks
 ```
 
-Dette skal ideelt sett lagre endringene på github og sette igang skript som
-utfører 2 sett med tester, en lokal som må være ok, og en CI som også må være ok
-før publisering. CI blir ikke satt igang dersom den lokale testen feiler.
+yields
 
-Dersom alle tester er ok publiseres app'en som du så kan nå
-på [https://eykt.nrpk.no](https://eykt.nrpk.no)
-
-## Verktøy som brukes
-
-For å komme i gang, installer node og npm:
-
-- [node/npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-
-Skap utviklingsmiljø (etter `git clone`, se til at også node/npm er installert):
-
-```bash
-npm i
+```
+stats
+template
+dev
+css
+clean
+build
+fonts
+deploy
 ```
 
-Annet
+To run a task (use `dev` for development):
 
-- [babashka](https://book.babashka.org/)
-- [babashka task runner](https://book.babashka.org/#tasks)
-- [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html)
+```
+bb --config booking.edn <task-name>
+```
+
+## References
+
+#### Development
+
 - [firebase](https://firebase.google.com/)
+- [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html)
 - [clojurescript](https://clojurescript.org/)
 - [clojure](https://clojure.org/)
 - [tailwind](https://tailwindcss.com/)
 
-@TODO Ideelt vil det være en docker-container som inneholder alt sammen
-inkludert utviklingsmiljø. 
+#### Build-tools
+
+- [babashka](https://book.babashka.org/)
+- [babashka task runner](https://book.babashka.org/#tasks)
+
