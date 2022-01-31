@@ -3,17 +3,35 @@
             [cljs.reader :refer [read-string]]))
 
 (def routes
-  [["/" {:name      :r.common
-         :header    ["Long header form" "Short form"]
-         :subheader "Subheader"}]])
+  [
+   ["/min-side"
+    {:name      :r.user
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Min side"}]
 
-(def screen-breakpoints
-  {:breakpoints [:mobile 640 :tablet 992 :small-monitor 1200 :large-monitor],
-   :debounce-ms 166})
+   ["/mine-vakter"
+    {:name      :r.mine-vakter
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Min side"}]
 
-#_(reg-sub :app/user-screenmode
-           (fn [db]
-             (get-in db [:settings :pref-screenmode] :auto)))
+   ["/feilsoking"
+    {:name      :r.debug
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Min side"}]
+
+   ["/"
+    {:name      :r.common
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Kalender"}]
+
+   ["/c2"
+    {:name      :r.common2
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Kalender 2"}]
+   ["/c3"
+    {:name      :r.common3
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Kalender 3"}]])
 
 ;region initial-state
 

@@ -1,14 +1,12 @@
 (ns booking.spa
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
-    ;[times.api :refer []]
             [re-statecharts.core :as rs]
             [kee-frame.router]
             [kee-frame.core :as k]
             [cljs.pprint :refer [pprint]]
-            [booking.data :as data :refer [screen-breakpoints start-db routes]]
+            [booking.data :as data :refer [start-db routes]]
             [schpaa.modal :as modal]
-
             [schpaa.components.screen :as components.screen]
             [schpaa.components.views :as views :refer [rounded-view]]
             [schpaa.components.tab :refer [tab]]
@@ -58,10 +56,10 @@
          [rounded-view {:float 1} [db.signin/login]]]
 
         [:div.xw-full {:class bg}
-         [:div.xp-4.xmax-w-md.mx-autox
-          #_[user.views/userstatus-form
-             {:user-auth @user-auth
-              :name      (:display-name @user-auth)}]]
+         [:div.p-4.max-w-md.mx-auto
+          [user.views/userstatus-form
+           {:user-auth @user-auth
+            :name      (:display-name @user-auth)}]]
 
          [:div
           [tab {:selected @(rf/subscribe [:app/current-page])}
@@ -175,14 +173,12 @@
     [:div
      [modal/overlay-with
       {:modal-dim (:modal-dim @s)
-       :modal?    (or (:modal @s)
-                      (:modal-forced @s))
-       ;intent No dismiss-fx on click when forced, must click on a button
-       :on-close  (if
-                    (or (:modal-dirty @s) (:modal-forced @s))
-                    nil
+       :modal?    (or (:modal @s) (:modal-forced @s))
+       ;When forced, a click on the  background will noe dismiss the modal
+       ;the user must click on a button in the modal to dismiss it
+       :on-close  (when-not (or (:modal-dirty @s) (:modal-forced @s))
                     #(send :e.hide))}
-      [:div
+      [:<>
        [modal/render
         {:show?     (or (:modal @s) (:modal-forced @s))
          :config-fn (:modal-config-fn @s)}]

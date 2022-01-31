@@ -12,7 +12,7 @@
 (defn kee-start []
   (k/start! {:routes         app-data/routes,
              :initial-db     app-data/initial-db,
-             :screen         app-data/screen-breakpoints
+             :screen         nrpk.core/screen-breakpoints
              :root-component spa/root-component
              :not-found      "/fant-ikke",
              :hash-routing?  false}))

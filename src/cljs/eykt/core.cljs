@@ -6,13 +6,14 @@
             [eykt.data :as app-data]
             [schpaa.darkmode]
             [db.core :as db]
+            [eykt.fsm-model]
             [nrpk.core]))
 
 (defn kee-start []
   (k/start! {:routes         app-data/routes,
              :initial-db     app-data/initial-db,
-             :screen         app-data/screen-breakpoints
-             :root-component spa/root-component
+             :screen         nrpk.core/screen-breakpoints
+             :root-component [spa/app-wrapper]
              :not-found      "/fant-ikke",
              :hash-routing?  false}))
 

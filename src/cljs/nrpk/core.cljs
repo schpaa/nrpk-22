@@ -1,6 +1,10 @@
 (ns nrpk.core
   (:require [re-frame.core :as rf]))
 
+(def screen-breakpoints
+  {:breakpoints [:mobile 768 :tablet 992 :small-monitor 1200 :large-monitor],
+   :debounce-ms 166})
+
 ;region events and subs
 
 (rf/reg-sub :route-name
@@ -40,3 +44,6 @@
                    {:fx [[:navigate-to page]]}))
 
 ;endregion
+
+(rf/reg-sub :app/menu-direction (fn [db]
+                                  (get db :menu-direction false)))

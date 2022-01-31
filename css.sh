@@ -1,1 +1,1 @@
-bb --config booking.edn -dev:css
+bb --config eykt.edn -dev:css

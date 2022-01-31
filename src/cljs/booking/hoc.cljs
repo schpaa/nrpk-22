@@ -113,8 +113,7 @@
     (fbg 0 0 [:space-y-4])))
 
 (defn debug []
-  [:div
-
+  [:div.z-100
    (letfn [(open-message []
              (readymade/message
                {:header  "some message22"
