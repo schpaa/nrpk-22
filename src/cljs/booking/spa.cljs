@@ -1,29 +1,20 @@
 (ns booking.spa
   (:require [re-frame.core :as rf]
-            [reagent.core :as r]
             [re-statecharts.core :as rs]
             [kee-frame.router]
             [kee-frame.core :as k]
             [cljs.pprint :refer [pprint]]
             [booking.data :as data :refer [start-db routes]]
-            [schpaa.modal :as modal]
-            [schpaa.components.screen :as components.screen]
             [schpaa.components.views :as views :refer [rounded-view]]
             [schpaa.components.tab :refer [tab]]
             [schpaa.time]
             [schpaa.darkmode]
-            [schpaa.icon :as icon]
-            [schpaa.components.fields :as fields]
-            [schpaa.debug :as l]
-            ["body-scroll-lock" :as body-scroll-lock]
             [nrpk.fsm-helpers :as state :refer [send]]
-            [fork.re-frame :as fork]
             [db.core :as db]
             [db.signin]
             [eykt.content.pages]
             [booking.views]
             [user.views]
-            [tick.core :as t]
             [booking.hoc :as hoc]
             [schpaa.style :as st]))
 
@@ -153,55 +144,3 @@
    :r.debug       user
    :r.debug2      front
    :r.blog        front})
-
-(defn- forced-scroll-lock
-  [locked?]
-  (let [body (aget (.getElementsByTagName js/document "body") 0)]
-    (if locked?
-      (.disableBodyScroll body-scroll-lock body)
-      (.enableBodyScroll body-scroll-lock body))))
-
-(defn dispatch-main []
-  (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
-        menu-open? (rf/subscribe [:app/menu-open?])
-        route-name @(rf/subscribe [:route-name])
-        web-content (when-let [page (get route-table route-name)]
-                      (kee-frame.router/make-route-component page @(rf/subscribe [:kee-frame/route])))
-        s (rf/subscribe [::rs/state-full :main-fsm])]
-    (forced-scroll-lock (or (and @mobile? @menu-open?)
-                            (or (:modal @s) (:modal-forced @s))))
-    [:div
-     [modal/overlay-with
-      {:modal-dim (:modal-dim @s)
-       :modal?    (or (:modal @s) (:modal-forced @s))
-       ;When forced, a click on the  background will noe dismiss the modal
-       ;the user must click on a button in the modal to dismiss it
-       :on-close  (when-not (or (:modal-dirty @s) (:modal-forced @s))
-                    #(send :e.hide))}
-      [:<>
-       [modal/render
-        {:show?     (or (:modal @s) (:modal-forced @s))
-         :config-fn (:modal-config-fn @s)}]
-       [components.screen/render
-        {:current-page          (fn [] @(rf/subscribe [:app/current-page]))
-         :toggle-menu-open      (fn [] (rf/dispatch [:toggle-menu-open]))
-         :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
-         :navigate-to-user      (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
-         :current-page-title    (fn [] @(rf/subscribe [:app/current-page-title]))
-         :current-page-subtitle (fn [] @(rf/subscribe [:app/current-page-subtitle]))
-         :get-menuopen-fn       (fn [] @(rf/subscribe [:app/menu-open?]))}
-        web-content]]]]))
-
-
-(defn app-wrapper
-  "takes care of light/dark-mode and loading-states"
-  [content]
-  (let [user-screenmode (rf/subscribe [:app/user-screenmode])
-        html (aget (.getElementsByTagName js/document "html") 0)
-        body (aget (.getElementsByTagName js/document "body") 0)]
-    (.setAttribute html "class" (if (= :dark @user-screenmode) "dark" ""))
-    (.setAttribute body "class" "font-sans bg-gray-600 dark:bg-gray-800 min-h-screen")
-    content))
-
-(def root-component
-  [app-wrapper [dispatch-main]])

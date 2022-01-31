@@ -1,19 +1,20 @@
 (ns booking.core
   (:require [re-frame.core :as rf]
             [kee-frame.core :as k]
-            [booking.fsm-model]                             ; passively registers the fsm
+            [re-statecharts.core :as rs]                    ; passively registers the fsm
             [booking.spa :as spa]
-            [re-statecharts.core :as rs]
             [booking.data :as app-data]
+            [booking.fsm-model]
             [schpaa.darkmode]
             [db.core :as db]
-            [nrpk.core]))
+            [nrpk.core]
+            [nrpk.spa]))
 
 (defn kee-start []
   (k/start! {:routes         app-data/routes,
              :initial-db     app-data/initial-db,
              :screen         nrpk.core/screen-breakpoints
-             :root-component spa/root-component
+             :root-component [nrpk.spa/app-wrapper spa/route-table]
              :not-found      "/fant-ikke",
              :hash-routing?  false}))
 

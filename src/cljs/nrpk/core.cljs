@@ -46,4 +46,4 @@
 ;endregion
 
 (rf/reg-sub :app/menu-direction (fn [db]
-                                  (get db :menu-direction false)))
+                                  (get db :menu-direction true)))
