@@ -1,91 +1,146 @@
 (ns eykt.calendar.views
   (:require [schpaa.debug :as l]
             [eykt.calendar.actions :as actions]
+            [times.api :as ta]
             [db.core :as db]
             [tick.core :as t]
             [re-frame.core :as rf]
             [times.api :refer [format]]
-            [schpaa.button :as bu]))
+            [schpaa.button :as bu]
+            [schpaa.style :as st]))
 
 (defn table [{:keys [base data]}]
-  (let [uid @(rf/subscribe [::db/root-auth :uid])]
-    [:<>
-     ;[l/ppre-x base]
-     (into [:div.gap-1
-            {:style {:grid-template-columns "min-content min-content min-content 1fr 1fr 1fr"}}]
-           (doall (for [each (filter (fn [[e]] (< 0 (:slots e))) data)
-                        ;cartesian product!
-                        [{:keys [description dt slots]} group] (group-by #(select-keys % [:dt :description :slots]) each)]
+  (let [uid @(rf/subscribe [::db/root-auth :uid])
+        {:keys [bg+ bg fg+ fg fg- p- p]} (st/fbg' :calender-table)]
 
-                    [:div.grid.text-xs.gap-12
-                     {:style {:grid-template-columns "2rem 2rem 2rem min-content 5rem 10rem 1fr"}}
+    [:div.space-y-2.bg-white
+     ;[l/ppre base]
+
+     (into [:div.space-y-1]
+           (for [e (keys base)
+                 :let [e (keyword e)]]
+             (schpaa.components.views/modern-checkbox'
+               {:set-details #(schpaa.state/change [:opt1 e] %)
+                :get-details #(-> (schpaa.state/listen [:opt1 e]) deref)}
+               (fn [checkbox]
+                 [:div.flex.items-center.justify-end.gap-2.w-full.px-2
+                  [:div.text-base.font-normal.space-y-0
+                   [:div {:class (concat fg p)} e]]
+                  checkbox]))))
+
+     [:div.space-y-4.bg-white
+      (doall (for [each (filter (fn [[e]] (< 0 (:slots e))) data)
+                   [{:keys [description dt slots] :as b} group] (group-by #(select-keys % [:dt :description :slots]) each)]
+               [:div {:class fg-}
+                [:div (ta/date-format (t/date dt))]
+                [:div description]
+                (for [{:keys [starttime endtime]} (sort-by :starttime < group)
+                      :let [key (-> (t/date dt) (t/at starttime) str keyword)
+                            slots-taken (sort-by second < (get-in base [(keyword description) key]))
+                            n (- slots (count slots-taken))]]
+                  [:div.space-y-1
+                   [:div "Plasser: " slots " (" (if (pos? n) (str n " ledig") "ingen ledige") ")"]
+                   [l/ppre [(keyword description) key (keyword uid)]]
+                   [:div.flex.gap-2
+                    [:div (str starttime) "–" (str endtime)]
+                    (if (get-in base [(keyword description) (keyword uid) key])
+                      [bu/danger-button-small {:on-click #(actions/delete {:uid uid :group description :timeslot key})} "fjern"]
+                      (if (pos? n)
+                        [bu/regular-button-small {:on-click #(actions/add {:uid uid :group description :timeslot key})} "legg til"]))
+
+                    (into [:div.flex.gap-2]
+                          (concat
+                            (map (fn [[idx [a påmeldt-dato]]]
+                                   [:div.flex.gap-2.w-16.overflow-clip
+                                    {:class (concat bg (if (< (dec slots) idx) [:text-red-500] fg))}
+                                    [:div {:class (if (= (keyword uid) a) (concat bg+ fg+))}
+                                     [:div.truncate a]
+                                     [:div {:class p-} (ta/datetime-format (t/date-time (t/instant påmeldt-dato)))]]])
+                                 (map-indexed vector slots-taken))
+                            (map (fn [e] [:div.w-16 {:class bg} "ledig"]) (range n))))]])]
+               #_[:div.grid.text-xs.gap-2
+                  {:style {:grid-template-columns "2rem 2rem 2rem min-content 5rem 10rem 1fr"}}
+                  [:<>
+                   (if dt [:div.self-center.justify-self-start (times.api/day-name dt :length 3)])
+                   (if dt [:div.self-center.justify-self-end (t/format "d.MM" dt)])
+                   [:div.self-center slots]
+
+                   (for [{:keys [starttime endtime]} (sort-by :starttime < group)
+                         :let [key (-> (t/date dt) (t/at starttime) str keyword)]]
                      [:<>
-                      (when dt [:div.self-center.justify-self-start (times.api/day-name dt :length 3)])
-                      (when dt [:div.self-center.justify-self-end (t/format "d.MM" dt)])
-                      [:div.self-center slots]
-                      (for [{:keys [starttime endtime]} (sort-by :starttime < group)
-                            :let [key (-> (t/date dt) (t/at starttime) str keyword)]]
-                        [:<>
-                         [:div.bg-whitewhite
-                          (if (get (get base key) (keyword uid))
-                            [bu/regular-button-small {:on-click #(actions/delete {:uid uid :timeslot key})} "rem"]
-                            [bu/regular-button-small {:on-click #(actions/add {:uid uid :timeslot key})} "add"])]
+                      [:div]
+                      [:div]
+                      [:div]
+                      [:div]
+                      [:div (str starttime) "–" (str endtime)]
 
-                         [:div (str starttime) "–" (str endtime)]
-                         (into [:div.grid.grid-cols-2.gap-x-2
-                                {:style {:grid-template-columns "5rem 1fr"}}]
-                               (map (fn [[index [uid' påmeldt-dato]]]
-                                      (tap> påmeldt-dato)
-                                      [:<>
-                                       [:div.truncate {:class (if (= uid (name uid')) :text-alt :text-gray-500)} uid']
-                                       [:div.truncate
-                                        {:class (if (<= slots index) :text-gray-300)}
-                                        (t/format "dd/MM HH:mm:ss" (t/date-time (t/instant påmeldt-dato)))]])
-                                    (map-indexed vector (sort-by second < (get base key)))))])
-                      [:div.truncate description]]])))]))
+                      (if (get (get base key) (keyword uid))
+                        [bu/regular-button-small {:on-click #(actions/delete {:uid uid :timeslot key})} "rem"]
+                        [bu/regular-button-small {:on-click #(actions/add {:uid uid :timeslot key})} "add"])
+
+                      (into [:div.grid.grid-cols-2.gap-x-1.bg-alt
+                             {:style {:grid-template-columns "5rem 1fr"}}]
+                            (map (fn [[index [uid' påmeldt-dato]]]
+                                   (tap> påmeldt-dato)
+                                   [:<>
+                                    [:div.truncate {:class (if (= uid (name uid')) :text-alt :text-gray-500)} uid']
+                                    [:div.truncate
+                                     {:class (if (<= slots index) :text-gray-300)}
+                                     (t/format "dd/MM HH:mm:ss" (t/date-time (t/instant påmeldt-dato)))]])
+                                 (map-indexed vector (sort-by second < (get base key)))))])
+
+
+
+
+                   [:div.truncate description]]]))]]))
 
 ; region
 
 (defn calendar-month-header [ldom]
-  [:div (str (t/year ldom) " " (times.api/month-name ldom))])
+  (let [{:keys [hd bg]} (st/fbg' :form)]
+    [:div.sticky.top-28.h-12
+     {:class (concat bg hd)}
+     (str (t/year ldom) " " (times.api/month-name ldom))]))
 
 (defn day-cell-with-content [{:keys [slots base lookup-date uid]}]
-  [:div.-debug.text-xs.overflow-clip
-   ;intent HEADER
-   [:div.xp-1.col-span-full.h-8
-    [:div.flex.h-full
-     {:class [:text-xl
-              :text-gray-900 :bg-gray-300 :justify-center :items-center]}
-     (str (t/format "d" (:dt (first slots))))]]
+  (let [{:keys [hd bg bg+ bg- fg p p- hd]} (st/fbg' :form)]
+    [:div.text-xs.overflow-clip
+     ;intent HEADER
+     [:div.col-span-full.h-8
+      [:div.flex.h-full
+       {:class (concat p bg fg [:justify-center :items-center])}
+       (str (t/format "d" (:dt (first slots))))]]
 
-   ;intent DESC
-   [:div.col-span-full.bg-sky-300.text-black.h-10 (:description (first slots))]
+     ;intent DESC
+     [:div.col-span-full
+      {:class (concat p- bg-)}
+      (:description (first slots))]
 
-   ;intent CONTENT
-   (for [[starttime endtime slot] (sort-by :starttime (mapv (juxt :starttime :endtime :slots) slots))
-         :let [lookup-date-time (str (-> (t/date (name lookup-date)) (t/at starttime)))]]
-     [:<>
-      [:div.bg-gray-300.col-span-full.overflow-hidden
-       {:class [:place-content-center]}
-       (t/format "HH:" starttime) "—" (t/format "HH:" endtime)]
-      (let [cnt (count (get base (keyword lookup-date-time)))
-            am-i-here? (get-in base [(keyword lookup-date-time) (keyword uid)])
-            cnt (if am-i-here? (dec cnt) cnt)]
-        (if am-i-here?
-          [:<>
-           (for [e (range cnt)]
-             [:div
-              {:class
-               (if (< e cnt)
-                 :bg-gray-400 :bg-white)}])
-           [:div {:class [:bg-danger]}]
-           (for [e (range (- (dec slot) cnt))]
-             [:div {:class [:bg-white]}])]
-          (for [e (range slot)]
-            [:div
-             {:class
-              (if (< e cnt)
-                :bg-gray-400 :bg-white)}])))])])
+     ;intent CONTENT
+     (for [[starttime endtime slot] (sort-by :starttime (mapv (juxt :starttime :endtime :slots) slots))
+           :let [lookup-date-time (str (-> (t/date (name lookup-date)) (t/at starttime)))]]
+       [:<>
+        [:div.bg-gray-300.col-span-full.overflow-hidden
+         {:class [:place-content-center]}
+         (t/format "HH:" starttime) "—" (t/format "HH:" endtime)]
+        (let [cnt (count (get base (keyword lookup-date-time)))
+              am-i-here? (get-in base [(keyword lookup-date-time) (keyword uid)])
+              cnt (if am-i-here? (dec cnt) cnt)]
+          (if am-i-here?
+            [:<>
+             (for [e (range cnt)]
+               [:div
+                {:class
+                 (if (< e cnt)
+                   :bg-gray-400 :bg-white)}])
+             [:div {:class [:bg-danger]}]
+             (for [e (range (- (dec slot) cnt))]
+               [:div {:class [:bg-white]} e])]
+            (for [e (range slot)]
+              [:div
+               {:class
+                (if (< e cnt)
+                  :bg-gray-400 :bg-white)}])))])]))
 
 
 (defn calendar [{:keys [base data]}]

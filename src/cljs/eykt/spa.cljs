@@ -23,4 +23,4 @@
    :r.user        eykt.content.pages/user
    :r.common      eykt.content.pages/common
    :r.common2     eykt.content.pages/common
-   :r.common3     eykt.content.pages/common})
+   :r.oppsett     eykt.content.pages/common})

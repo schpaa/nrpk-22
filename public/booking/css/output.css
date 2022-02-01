@@ -1844,6 +1844,10 @@ h2 {
   right: 2rem;
 }
 
+.top-24 {
+  top: 6rem;
+}
+
 .isolate {
   isolation: isolate;
 }
@@ -2479,6 +2483,11 @@ h2 {
 .gap-x-10 {
   -moz-column-gap: 2.5rem;
        column-gap: 2.5rem;
+}
+
+.gap-x-1 {
+  -moz-column-gap: 0.25rem;
+       column-gap: 0.25rem;
 }
 
 .space-y-px > :not([hidden]) ~ :not([hidden]) {

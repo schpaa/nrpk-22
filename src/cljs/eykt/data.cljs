@@ -29,7 +29,7 @@
      :header    ["Eykt Vaktliste" "Eykt"]
      :subheader "Kalender 2"}]
    ["/c3"
-    {:name      :r.common3
+    {:name      :r.oppsett
      :header    ["Eykt Vaktliste" "Eykt"]
      :subheader "Kalender 3"}]])
 

@@ -4,8 +4,6 @@
             [tick.core :as t]
             [times.api :as ta]
             [schpaa.time]
-    ;[app.system.misc :as misc]
-    ;["firebase/firestore" :refer [Timestamp]]
             [schpaa.debug :as l]
             [eykt.calendar.views :as views]
             [eykt.calendar.widgets :as widgets]
@@ -20,19 +18,58 @@
 (def all-week [t/MONDAY t/TUESDAY t/WEDNESDAY t/THURSDAY t/FRIDAY t/SATURDAY t/SUNDAY])
 
 (def short-rules
-  [{:description "Dugnad2"
-    :startdate   #time/date "2022-01-30"
-    :enddate     #time/date "2022-03-03"
-    :weekdays    all-week
-    :times       [{:starttime #time/time "10:00" :endtime #time/time "12:00" :slots 1}
-                  {:starttime #time/time "12:00" :endtime #time/time "14:10" :slots 3}]}
-   {:description "ONSDAGSGRUPPA"
-    :startdate   #time/date "2022-01-30"
-    :enddate     #time/date "2022-02-03"
-    :weekdays    [t/WEDNESDAY]
-    :times       [{:starttime #time/time "10:00" :endtime #time/time "12:00" :slots 1}
-                  {:starttime #time/time "12:00" :endtime #time/time "14:10" :slots 3}]}])
+  [;intent This is not really a rule, since it is a one-time-happening
+   {:group       :c
+    :description "aftermath"
+    :startdate   #time/date "2022-01-31"
+    :enddate     #time/date "2022-02-13"
+    :weekdays    [t/MONDAY t/SUNDAY]
+    :times       [{:starttime #time/time "06:00"
+                   :endtime   #time/time "07:00"
+                   :slots     1}]}
+   {:group       :b
+    :description "Party"
+    :startdate   #time/date "2022-01-31"
+    :enddate     #time/date "2022-02-13"
+    ;:weekdays    [t/THURSDAY] ;t/SATURDAY t/SUNDAY
+    :weekdays    [t/MONDAY t/SUNDAY]
+    :times       [{:starttime #time/time "07:00"
+                   :endtime   #time/time "10:00"
+                   :slots     2}]}
+   {:group       :a
+    :description "SIMPLE test"
+    :startdate   #time/date "2022-01-31"
+    :enddate     #time/date "2022-02-13"
+    :weekdays    [t/MONDAY t/SUNDAY]
+    :times       [{:starttime #time/time "11:00"
+                   :endtime   #time/time "14:00"
+                   :slots     3}
+                  {:starttime #time/time "14:00"
+                   :endtime   #time/time "17:00"
+                   :slots     3}
+                  {:starttime #time/time "17:00"
+                   :endtime   #time/time "17:16"
+                   :slots     2}]}
 
+   #_#_#_{:description "helg"
+          :startdate   #time/date "2022-01-30"
+          :enddate     #time/date "2022-03-03"
+          :weekdays    [t/SATURDAY t/SUNDAY]
+          :times       [{:starttime #time/time "11:00" :endtime #time/time "14:00" :slots 3}
+                        {:starttime #time/time "14:00" :endtime #time/time "17:00" :slots 3}]}
+
+       {:description "uke"
+        :startdate   #time/date "2022-01-30"
+        :enddate     #time/date "2022-03-03"
+        :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+        :times       [{:starttime #time/time "18:00" :endtime #time/time "21:00" :slots 2}]}
+
+       {:description "ONSDAGSGRUPPA"
+        :startdate   #time/date "2022-01-30"
+        :enddate     #time/date "2022-02-03"
+        :weekdays    [t/WEDNESDAY]
+        :times       [{:starttime #time/time "10:00" :endtime #time/time "12:00" :slots 1}
+                      {:starttime #time/time "12:00" :endtime #time/time "14:10" :slots 3}]}])
 
 (def long-rules'
   [#_{:description "Dugnad"
@@ -87,6 +124,8 @@
 
 (def rules' short-rules)
 
+;region
+
 (defn expanded-times [r]
   (-> (fn [a {:keys [times] :as e}]
         (conj a (map #(merge (dissoc e :times) %) times)))
@@ -94,7 +133,7 @@
       flatten))
 
 (defn expanded-days [r]
-  (-> (fn [a {:keys [weekdays] :as e}]
+  (-> (fn [a {:keys [weekdays] :as e :or {weekdays all-week}}]
         (conj a (map #(assoc (dissoc e :weekdays) :weekday %) weekdays)))
       (reduce [] r)
       flatten))
@@ -104,43 +143,44 @@
 (defn matches [dt {:keys [startdate enddate weekday] :as timerange}]
   (and
     (= weekday (t/day-of-week dt))
-    (<= startdate dt enddate)))
+    (if (not-any? some? [startdate enddate])
+      true
+      (if-not enddate
+        (t/= startdate dt)
+        (t/<= startdate dt enddate)))))
 
 (defn calculate [{:keys [utc-start utc-end rules] :as config} n]
-  (let [dt (t/>> utc-start (t/new-duration n :days))
-        r (filter #(matches dt %1) rules)]
+  (let [dt (t/>> utc-start (t/new-period n :days))
+        r (filter (partial matches dt) rules)]
     (if (and (t/<= dt utc-end) utc-end)
       (if (seq r)
-        (mapv #(assoc (dissoc % :xstartdate :xenddate :weekday) :dt dt) r)
-        [{:dt    dt
-          :slots 0}])
-      ;:weekday     (t/day-of-week dt)
-      ;:description "?"
-      ;:startdate   utc-start
-      ;:enddate     utc-end
-      ;:starttime   (t/time t/noon)
-      ;:endtime     (t/time t/noon)})
+        (mapv #(assoc (dissoc % :startdate :enddate :weekday) :dt dt) r)
+        [{:dt dt}])
       nil)))
 
-(defn initial-name [config n]
+(defn iterate-dates [config n]
   (lazy-seq
     (when-let [c (calculate config n)]
-      (cons c (initial-name config (inc n))))))
+      (cons c (iterate-dates config (inc n))))))
 
 (defn expand-date-range []
   (let [config {:rules     (expand rules')
-                :utc-start (t/at (t/date "2022-01-01") "00:00")
-                :utc-end   (t/at (t/date "2022-12-30") "00:00")}]
+                :utc-start (t/at (t/date "2022-01-21") "00:00")
+                :utc-end   (t/at (t/date "2022-03-14") "00:00")}]
 
     #_(filter (fn [[e]] (< 0 (:slots e)))
-              (initial-name config 0))
-    (initial-name config 0)))
+              (iterate-dates config 0))
+    (iterate-dates config 0)))
+
+;endregion
 
 (defn routine
-  "worked hard for this one, called on each update to transform db, must be fast
-  or have limitation of data-scope"
-  [input]
-  (loop [xs input
+  "
+  Takes input (from db) and dislocates the keys of the parent and the immediate child.
+  Unsure where and how to use this, (if at all useful?)
+  "
+  [db-input]
+  (loop [xs db-input
          r {}]
     (if xs
       (let [[id vs] (first xs)]
@@ -148,6 +188,65 @@
                (reduce-kv (fn [a k v] (update a k #(assoc % id v)))
                           r vs)))
       r)))
+
+(defn z
+  "?"
+  [data]
+  (reduce (fn [a e] (update a (str (:dt e)) update (:group e) (fnil conj []) e)) {} data))
+
+(comment
+  (do
+    (let [data [{:description "SIMPLE test",
+                 :starttime   #time/time"11:00",
+                 :endtime     #time/time"14:00",
+                 :ugh         "?",
+                 :slots       3,
+                 :dt          #time/date"2022-10-02"}
+                {:description "SIMPLE test",
+                 :starttime   #time/time"14:00",
+                 :endtime     #time/time"17:00",
+                 :slots       3,
+                 :dt          #time/date"2022-10-02"}
+                {:description "Party",
+                 :starttime   #time/time"11:00",
+                 :endtime     #time/time"14:00",
+                 :ugh         "?",
+                 :slots       2,
+                 :dt          #time/date"2022-10-02"}]]
+      (z data))))
+
+(defn massage [data]
+  (reduce (fn [a e-vecblock] (conj a (z e-vecblock))) {} data))
+
+(comment
+  (do
+    (->> (iterate-dates {:rules     (expand rules')
+                         :utc-start (t/date "2022-01-31")
+                         :utc-end   (t/date "2022-02-06")} 0)
+         (massage))))
+
+(defn grab-for-graph [date-bounds]
+  (->> (iterate-dates {:rules     (expand rules')
+                       :utc-start (t/date (t/beginning date-bounds)) ;(t/date "2022-09-30")
+                       :utc-end   (t/date (t/end date-bounds)) #_(t/date "2022-10-04")} 0)
+       (massage)))
+
+
+(comment
+  (do
+    (grab-for-graph
+      (tick.alpha.interval/new-interval
+        (t/date "2022-01-31")
+        (t/date "2022-02-05")))))
+
+(comment
+  (do
+    (expanded-days rules')))
+
+(comment
+  (do
+    (let [listener @(db/on-value-reaction {:path ["calendar"]})]
+      (routine listener))))
 
 (def render-tab-data
   {:table    {:text "Tabell"}

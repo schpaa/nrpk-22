@@ -7,9 +7,18 @@
             [schpaa.style :as st]
             [db.core :as db]
             [user.views]
+            [times.api :as ta]
             [eykt.calendar.views]
             [eykt.calendar.core]
-            [schpaa.components.views :as views :refer [rounded-view]]))
+            [schpaa.components.views :as views :refer [rounded-view]]
+            [schpaa.debug :as l]
+            [eykt.content.oppsett]
+            [eykt.calendar.fiddle]
+            [schpaa.button :as bu]
+            [schpaa.components.fields :as fields]
+            [reagent.core :as r]
+            [tick.core :as t]
+            [eykt.calendar.actions :as actions]))
 
 (defn new-designed-content [{:keys [desktop?] :as m}]
   [:div
@@ -63,60 +72,194 @@
         (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :form)]
           [:div.p-4
            {:class bg}
-           [:div "en liste over mine vakter"]]
-          #_[:div.w-screenx
-             [:div.space-y-px.flex.flex-col.w-full
-              {:class  :min-h-screen
-               :-style {:min-height "calc(100vh + 3rem)"}}
-              [:div.flex-1.w-fullx
-               {:class bg}
-               #_[hoc/user-logg]]]
-             #_[hoc/all-boats-footer {}]])
+           [:div "en liste over mine vakter"]
+           (l/ppre-x @(db/on-value-reaction {:path ["calendar" (:uid @user-auth)]}))])
+
 
         :r.debug
         [:div.z-100 [hoc/debug]]
 
         [:div @route]]])))
 
+(defn render-tab-bar []
+  [:div.sticky.top-16.z-200
+   [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
+    [:r.common "Måned" nil :icon :calendar]
+    [:r.common2 "Uke" nil :icon :calendar]
+    [:r.oppsett "Oppsett" nil :icon :cog]]])
+
+#_(defn config-for [b]
+    (eykt.calendar.core/grab-for-graph b))
+
+(defn status-for [dt]
+  (get {"2022-02-02" {"11:00" {:slots 3
+                               :items [["cps" "2022-01-02T12:31:50"]
+                                       ["abe" "2022-01-02T12:31:50"]
+                                       ["pop" "2022-01-02T12:31:50"]
+                                       ["eve" "2021-01-02T12:31:50"]]}
+                      "15:00" {:slots 3
+                               :items [["cps" "2022-01-02T12:31:50"]
+                                       ["abe" "2022-01-02T12:31:50"]
+                                       ["pop" "2022-01-02T12:31:51"]
+                                       ["eve" "2022-01-02T12:31:50"]]}
+                      "06:00" {:slots 1
+                               :items [["cps" "2022-01-02T12:31:50"]
+                                       ["eve" "2022-01-02T12:31:50"]]}}
+        "2022-02-04" {"18:00" {:slots 2
+                               :items [["pop" "2022-01-02T12:31:50"]
+                                       ["eve" "2022-01-02T12:31:50"]]}}
+        "2022-04-27" {}} (str dt))
+
+  #_(cond-> {:x "12:20"}
+      (some #{(t/int (t/day-of-week dt))} #{2 3 4}) (assoc :rows 1)
+      (some #{(t/int (t/day-of-week dt))} #{6 7}) (assoc :rows 2)))
+
 (defn common [r]
-  [:<>                                                      ;<> ;div ;.flex.flex-col.w-screen.h-full.overflow-clip.sticky;.<> ;div.sticky.top-16
+  (let [uid @(rf/subscribe [::db/root-auth :uid])]
+    [:<>
+     (render-tab-bar)
+
+     [k/case-route (fn [route] (-> route :data :name))
+      :r.oppsett
+      [eykt.content.oppsett/render r]
+
+      :r.common (let [listener (db/on-value-reaction {:path ["calendar"]})
+                      {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
+                  [:div.p-2
+                   {:class bg}
+                   [eykt.calendar.views/calendar
+                    {:base (eykt.calendar.core/routine @listener)
+                     :data (eykt.calendar.core/expand-date-range)}]])
+      :r.common2
+      (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
+        (r/with-let [week (r/atom (ta/week-number (t/date)))]
+          [:div.p-4.space-y-2
+           {:class bg}
+           [:div.flex.gap-1
+            [bu/regular-button-small {:on-click #(swap! week dec)} :chevron-left]
+            [fields/text (-> {:naked?        true
+                              :values        #(-> @week)
+                              :handle-change #(reset! week (-> % .-target .-value))}
+                             fields/number-field) :label "" :name :week]
+            [bu/regular-button-small {:on-click #(swap! week inc)} :chevron-right]]
+           [:div (ta/week-number (t/date))]
+
+           (into [:div.grid.gap-px.place-content-centerx.sticky.top-28.bg-white
+                  {:style {:grid-template-columns "2rem repeat(7,1fr)"}}]
+                 (map #(vector :div %) '(u ma ti on to fr lø sø)))
+
+           (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :calender-table)
+                 first-date-of-week (ta/calc-first-day-at-week @week)]
+             (into [:div.grid.gap-px
+                    {:style {:grid-template-columns "repeat(auto-fit,minmax(20rem,1fr))"}}]
+                   (for [i (range 1)]
+                     (let [the-week-interval (tick.alpha.interval/new-interval
+                                               first-date-of-week
+                                               (t/>> first-date-of-week (t/new-period 7 :days)))
+                           this-weeks-config (eykt.calendar.core/grab-for-graph the-week-interval)]
+                       [:div
+                        [l/ppre-x
+                         the-week-interval]
+
+                        (count this-weeks-config)
+                        (into [:div.grid.gap-px.place-content-centerx
+                               {:style {:grid-template-columns "2rem repeat(7,minmax(6rem,min-content))"}}]
+                              (concat [[:div.flex.justify-center
+                                        {:class (concat [:border-r :border-black :p-1] p- fg-)}
+                                        (str (+ (js/parseInt @week) i))]]
+
+                                      (for [e (range 7)
+                                            :let [e (+ (* i 7) e)
+                                                  dt (t/>> first-date-of-week (t/new-period e :days))]]
+                                        (let [s (status-for dt)]
+
+                                          [:div
+                                           [:div (str (t/day-of-week dt))]
+                                           [:div
+                                            (for [[k e] (get this-weeks-config (str dt))]
+                                              [:div
+                                               [:div (:description (first e))]
+                                               (for [each (sort-by :starttime < e)]
+                                                 (let [render (fn [e]
+                                                                [:div
+                                                                 [:div {:class fg-} (str (:starttime e))]
+                                                                 [:div.space-y-1
+                                                                  [:div.space-y-px
+                                                                   (for [e (range (:slots e))]
+                                                                     [:div {:class bg-} (str e)])]
+                                                                  [bu/regular-button-small
+                                                                   {:on-click
+                                                                    #(actions/add' {:uid      uid
+                                                                                    :group    (name k)
+                                                                                    :timeslot (str (:starttime e))
+                                                                                    :dateslot dt})}
+                                                                   "legg til"]]])]
+
+                                                   (render each)))])]
+
+                                           #_(for [[k groups] (into {} (get this-weeks-config (str dt)))
+                                                   ;e (sort-by :starttime < groups)
+                                                   :while (some? k)]
+                                               (let [render (fn [e]
+                                                              [:div.-debug
+                                                               [:div (str (:starttime e))]
+                                                               (for [e (range (:slots e))]
+                                                                 [:div (str e)])])]
+                                                 [:div.space-y-1
+
+                                                  (for [e groups]
+                                                    (do
+                                                      (tap> groups)
+                                                      [:div.p-1 (count groups) #_[l/ppre e]]))
+
+                                                  #_(render e)]
+
+                                                 #_(do
+                                                     ;(tap> groups)
+                                                     ;[l/ppre-x e]
+                                                     [:div
+                                                      [:div k]
+                                                      (:description e)
+                                                      " "
+                                                      (str (:starttime e))
+                                                      " "
+                                                      (str (:slots e))])))
+
+                                           #_(if (empty? s)
+                                               [:div
+                                                {:class (concat p- bg fg+)}
+                                                [:div.flex.justify-start
+                                                 {:class (concat [:hover:bg-gray-50] bg fg)} (ta/short-date-format dt)]]
+
+                                               [:div
+                                                {:class (concat p- bg fg)}
+
+                                                [:div.flex.justify-start
+                                                 {:class (concat [:hover:bg-gray-50] bg fg)} (ta/short-date-format dt)]
+
+                                                (for [[k {:keys [slots items]}] (sort-by key < s)]
+                                                  [:div.space-y-1
+                                                   [:div {:class fg-} k]
+                                                   (for [[idx [a b]] (map-indexed vector (sort-by second < items))]
+                                                     [:div.ml-1 {:class (concat (if (<= slots idx) [:text-red-500] fg) bg-)} a])])
+
+                                                #_[:div.space-y-px
+
+                                                   [:div.px-1 {:class (concat p bg- fg-)}
+                                                    [:div (if (= 1 (:rows s)) "18:00" "11:00")]
+                                                    #_[:div.space-y-px
+                                                       (for [e (range 3)]
+                                                         [:div {:class (concat p bg- fg)} e])]]
+
+                                                   (when (= 2 (:rows s))
+                                                     [:div.px-1 {:class (concat p bg- fg-)}
+                                                      [:div "14:00"]
+                                                      #_[:div.space-y-px
+                                                         (for [e (range 3)]
+                                                           [:div {:class (concat p bg- fg)} e])]])]])]))))]))))]))
 
 
-   #_[:div.sticky.top-16
-      [:div.z-300.bg-pink-400.h-12
-       [:div.xpt-32 "Hey 1"]]]
-
-   #_[:div.sticky.top-16
-      [:div.z-300.bg-alt.h-12
-       [:div.xpt-32 "Hey 2"]]]
-
-   ;[:div.h-64.bg-pink-500.sticky.top-16.z-300 "x"]
-
-   [:div.sticky.top-16.z-200                                ;32.z-100.bg-alt.h-96.z-200 "."
-    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-     [:r.common "Kalender" nil :icon :square]
-     [:r.common2 "Kalender 2" nil :icon :square]
-     [:r.common3 "Uke" nil :icon :square]]]
-
-   [k/case-route (fn [route] (-> route :data :name))
-    :r.common3
-    (let [{:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-      [:div.p-4.space-y-1
-       {:class (concat fg bg)}
-       [:div {:class (concat he fg-)} "Kalender"]
-       [:div {:class (concat hd fg+)} "Kalender"]
-       [:div {:class (concat p fg+)} (interpose " " (take 25 (repeatedly #(rand-nth '(her er litt av hvert)))))]
-       [:div {:class (concat p fg-)} (interpose " " (take 15 (repeatedly #(rand-nth '(her er litt av hvert)))))]
-       [:div {:class (concat p fg+)} (interpose " " (take 35 (repeatedly #(rand-nth '(her er litt av hvert)))))]])
-    :r.common (let [listener (db/on-value-reaction {:path ["calendar"]})
-                    {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-                [:div.p-2
-                 {:class bg}
-                 [eykt.calendar.views/calendar
-                  {:base (eykt.calendar.core/routine @listener)
-                   :data (eykt.calendar.core/expand-date-range)}]])
-    :r.common2
-    (let [{:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-      [:div.p-4.space-y-1
-       {:class (concat fg bg)}
-       [:div.p-4 [eykt.calendar.core/render r]]])]])
+      #_(let [{:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
+          [:div.p-4.space-y-1
+           {:class (concat fg bg)}
+           [:div.p-4 [eykt.calendar.core/render r]]])]]))
