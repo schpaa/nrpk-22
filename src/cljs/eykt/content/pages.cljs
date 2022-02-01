@@ -131,7 +131,8 @@
                     {:base (eykt.calendar.core/routine @listener)
                      :data (eykt.calendar.core/expand-date-range)}]])
       :r.common2
-      (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
+      (let [
+            {:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
         (r/with-let [week (r/atom (ta/week-number (t/date)))]
           [:div.p-4.space-y-2
            {:class bg}
@@ -157,6 +158,7 @@
                                                first-date-of-week
                                                (t/>> first-date-of-week (t/new-period 7 :days)))
                            this-weeks-config (eykt.calendar.core/grab-for-graph the-week-interval)]
+
                        [:div
                         [l/ppre-x
                          the-week-interval]
@@ -171,9 +173,11 @@
                                       (for [e (range 7)
                                             :let [e (+ (* i 7) e)
                                                   dt (t/>> first-date-of-week (t/new-period e :days))]]
-                                        (let [s (status-for dt)]
-
+                                        (let [s (status-for dt)
+                                              listener (db/on-value-reaction {:path ["calendar" (str dt)]})]
+                                          (when (zero? e) (tap> @listener))
                                           [:div
+                                           [l/ppre (eykt.calendar.core/rooo @listener)]
                                            [:div (str (t/day-of-week dt))]
                                            [:div
                                             (for [[k e] (get this-weeks-config (str dt))]
@@ -187,13 +191,11 @@
                                                                   [:div.space-y-px
                                                                    (for [e (range (:slots e))]
                                                                      [:div {:class bg-} (str e)])]
-                                                                  [bu/regular-button-small
-                                                                   {:on-click
-                                                                    #(actions/add' {:uid      uid
-                                                                                    :group    (name k)
-                                                                                    :timeslot (str (:starttime e))
-                                                                                    :dateslot dt})}
-                                                                   "legg til"]]])]
+                                                                  [bu/regular-button-small {:on-click
+                                                                                            #(actions/add' {:uid      uid ; ;"b-person"
+                                                                                                            :group    (name k)
+                                                                                                            :timeslot (str (:starttime e))
+                                                                                                            :dateslot dt})} "legg til"]]])]
 
                                                    (render each)))])]
 
@@ -263,3 +265,79 @@
           [:div.p-4.space-y-1
            {:class (concat fg bg)}
            [:div.p-4 [eykt.calendar.core/render r]]])]]))
+
+(comment
+  (do
+    (let [data {:Ri0...
+                {:a {:11:00 "1",
+                     :14:00 "2",
+                     :17:00 "3"},
+                 :b {:07:00 "4"},
+                 :c {:06:00 "5"}},
+                :b-person
+                {:a {:11:00 "6",
+                     :14:00 "7"}
+                 :c {:06:00 "8"}},
+                :uid
+                {:a {:11:00 "9",
+                     :14:00 "10",
+                     :17:00 "11"},
+                 :c {:06:00 "12"}}}
+
+          want {:a {:11:00 {:Ri0...   "..."
+                            :b-person "..."
+                            :uid      "..."}
+                    :14:00 {:Ri0      "..."
+                            :b-person "..."
+                            :uid      "..."}
+                    :17:00 {:Ri0... "..."
+                            :uid    "..."}}
+                :b {:07:00 {:Ri0 "..."
+                            :uid "..."}}
+                :c {:06:00 {:Ri0 "..."}}}
+          #_(group-by (comp keys val) data)
+          #_(reduce (fn [a [uid groups]]
+                      (conj a (reduce (fn [a [group-name time-slots]]
+                                        (assoc a group-name
+                                                 (reduce (fn [a [time clicked-time]]
+                                                           (update a time (fnil conj []) {uid clicked-time}))
+                                                         a
+                                                         time-slots)))
+                                      {}
+                                      groups)))
+                    {}
+                    data)
+
+          f'' (fn [a' time-slots user-id]
+                (reduce (fn [a [time click-time]] (assoc a time (assoc a' user-id click-time))) {} time-slots))
+          f' (fn [a' user-id groups]
+               (tap> a')
+               (reduce (fn [a [group-id time-slots]] (assoc a group-id (f'' {} time-slots user-id))) a' groups))]
+
+      (reduce (fn [a [user-id groups]] (conj a (f' a user-id groups))) {} data)
+      (defn routine
+        "
+        Takes input (from db) and dislocates the keys of the parent and the immediate child.
+        Unsure where and how to use this, (if at all useful?)
+        "
+        [db-input]
+        (loop [xs db-input
+               r {}]
+          (if xs
+            (let [[id vs] (first xs)]
+              (recur (next xs)
+                     (reduce-kv (fn [a k v] (update a k #(assoc % id v)))
+                                r vs)))
+            r)))
+
+      (let [source (routine data)]
+        (reduce (fn [a group-id] (update a group-id routine)) source (keys source))
+        #_(map (fn [[a e]] (conj e (routine e))) source)))))
+
+(comment
+  (let [data {:a {:11:00 "2022-02-01T14:01:09.032Z",
+                  :14:00 "2022-02-01T14:01:09.583Z",
+                  :17:00 "2022-02-01T14:01:10.158Z"},
+              :b {:07:00 "2022-02-01T14:01:08.301Z"},
+              :c {:06:00 "2022-02-01T14:01:07.389Z"}}]
+    (reduce (fn [a [group time-slots]] (assoc a group 1)) {} data)))

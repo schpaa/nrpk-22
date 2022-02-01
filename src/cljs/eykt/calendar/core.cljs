@@ -189,6 +189,10 @@
                           r vs)))
       r)))
 
+(defn rooo [data]
+  (let [source (routine data)]
+    (reduce (fn [a group-id] (update a group-id routine)) source (keys source))))
+
 (defn z
   "?"
   [data]
