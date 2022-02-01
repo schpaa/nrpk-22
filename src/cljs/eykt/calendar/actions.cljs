@@ -38,6 +38,12 @@
   (let [path ["calendar" dateslot (name uid) group]]
     (database-update {:path path :value {(name timeslot) (str (t/now))}})))
 
+(defn delete'
+  "delete from database at [calendar uid timeslot]"
+  [{:keys [uid group timeslot dateslot]}]
+  (let [path ["calendar" dateslot (name uid) group timeslot]]
+    (database-set {:path path :value {}})))
+
 ;region
 
 ;intent helpers, development for further usage

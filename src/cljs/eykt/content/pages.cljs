@@ -69,17 +69,114 @@
            [user.views/my-info]])
 
         :r.mine-vakter
-        (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :form)]
+        (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :form)
+              data (db/on-value-reaction {:path ["calendar"]})
+              uid (:uid @user-auth)]
           [:div.p-4
            {:class bg}
            [:div "en liste over mine vakter"]
-           (l/ppre-x @(db/on-value-reaction {:path ["calendar" (:uid @user-auth)]}))])
+
+           ;(l/ppre-x (filter (fn [[k v]] (= k uid) ) listener))
+           (l/ppre-x (filter (fn [[k v]] (contains? v (keyword uid))) @data))])
 
 
         :r.debug
         [:div.z-100 [hoc/debug]]
 
         [:div @route]]])))
+
+(comment
+  (do
+    (let [data {:2022-01-31
+                {:2Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:a
+                  {:11:00 "2022-02-01T17:30:39.829Z",
+                   :14:00 "2022-02-01T17:27:44.193Z"}},
+                 :Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:a
+                  {:11:00 "2022-02-01T17:33:19.556Z",
+                   :14:00 "2022-02-01T17:33:21.289Z",
+                   :17:00 "2022-02-01T17:33:22.200Z"},
+                  :b {:07:00 "2022-02-01T17:32:48.789Z"},
+                  :c {:06:00 "2022-02-01T17:31:51.795Z"}}},
+                :2022-02-01
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:37:52.236Z"}}},
+                :2022-02-02
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:37:53.169Z"}}},
+                :2022-02-03
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:37:53.731Z"}}},
+                :2022-02-04
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:37:54.252Z"}}},
+                :2022-02-05
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:37:55.094Z"}}},
+                :2022-02-06
+                {:2Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:b {:07:00 "2022-02-01T17:22:57.149Z"},
+                  :c {:06:00 "2022-02-01T17:23:02.886Z"}},
+                 :Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:a
+                  {:11:00 "2022-02-01T17:32:54.334Z",
+                   :14:00 "2022-02-01T17:09:25.267Z",
+                   :17:00 "2022-02-01T17:09:23.783Z"}}},
+                :2022-02-07
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:b {:07:00 "2022-02-01T17:10:18.401Z"},
+                  :c {:06:00 "2022-02-01T17:10:17.614Z"}}},
+                :2022-02-10
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:38:04.632Z"}}},
+                :2022-02-11
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:38:04.975Z"}}},
+                :2022-02-12
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:c {:06:00 "2022-02-01T17:38:05.525Z"}}},
+                :2022-03-22
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z1 {:18:00 "2022-02-01T17:46:53.756Z"}}},
+                :2022-03-23
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z1 {:18:00 "2022-02-01T17:46:54.274Z"}}},
+                :2022-03-26
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z2
+                  {:11:00 "2022-02-01T17:47:45.112Z",
+                   :14:00 "2022-02-01T17:47:02.632Z"}}},
+                :2022-03-27
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z2 {:14:00 "2022-02-01T17:47:01.395Z"}}},
+                :2022-05-03
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z1 {:18:00 "2022-02-01T17:48:38.301Z"}}},
+                :2022-05-04
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z1 {:18:00 "2022-02-01T17:48:38.841Z"}}},
+                :2022-05-10
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z1 {:18:00 "2022-02-01T17:48:35.951Z"}}},
+                :2022-05-11
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:z1 {:18:00 "2022-02-01T17:48:36.287Z"}}},
+                :Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                {:ONSDAGSGRUPPA {:2022-02-02T10:00 "2022-01-31T13:55:09.679Z"},
+                 :a             {:11:00 "2022-02-01T13:56:17.780Z"},
+                 :helg
+                 {:2022-01-30T11:00 "2022-01-31T14:04:38.469Z",
+                  :2022-01-30T14:00 "2022-01-31T14:01:59.134Z",
+                  :2022-02-05T11:00 "2022-01-31T13:49:19.219Z",
+                  :2022-02-05T14:00 "2022-01-31T13:49:19.870Z"},
+                 :uke
+                 {:2022-02-01T18:00 "2022-01-31T14:19:15.758Z",
+                  :2022-02-03T18:00 "2022-01-31T13:49:16.619Z",
+                  :2022-02-09T18:00 "2022-01-31T14:19:09.402Z",
+                  :2022-02-10T18:00 "2022-01-31T14:19:11.146Z"}}}]
+      (filter (fn [[k v]] (contains? v :Ri0icn4bbffkwB3sQ1NWyTxoGmo1)) data))))
+
 
 (defn render-tab-bar []
   [:div.sticky.top-16.z-200
@@ -174,97 +271,59 @@
                                             :let [e (+ (* i 7) e)
                                                   dt (t/>> first-date-of-week (t/new-period e :days))]]
                                         (let [s (status-for dt)
-                                              listener (db/on-value-reaction {:path ["calendar" (str dt)]})]
+                                              listener (db/on-value-reaction {:path ["calendar" (str dt)]})
+                                              roo (eykt.calendar.core/rooo @listener)]
                                           (when (zero? e) (tap> @listener))
                                           [:div
-                                           [l/ppre (eykt.calendar.core/rooo @listener)]
+                                           ;[l/ppre-x roo]
                                            [:div (str (t/day-of-week dt))]
                                            [:div
-                                            (for [[k e] (get this-weeks-config (str dt))]
+                                            (for [[group-id e'] (get this-weeks-config (str dt))]
                                               [:div
-                                               [:div (:description (first e))]
-                                               (for [each (sort-by :starttime < e)]
-                                                 (let [render (fn [e]
-                                                                [:div
+                                               ;[l/ppre (:slots (first e'))]
+                                               [:div (:description (first e'))]
+                                               (for [each (sort-by :starttime < e')]
+                                                 (let [r' (get-in roo [group-id (keyword (str (:starttime each)))])
+                                                       render (fn [e]
+                                                                [:div.-debugx
+                                                                 ;[l/ppre-x group-id (:starttime each) r']
                                                                  [:div {:class fg-} (str (:starttime e))]
                                                                  [:div.space-y-1
                                                                   [:div.space-y-px
-                                                                   (for [e (range (:slots e))]
-                                                                     [:div {:class bg-} (str e)])]
-                                                                  [bu/regular-button-small {:on-click
-                                                                                            #(actions/add' {:uid      uid ; ;"b-person"
-                                                                                                            :group    (name k)
-                                                                                                            :timeslot (str (:starttime e))
-                                                                                                            :dateslot dt})} "legg til"]]])]
 
-                                                   (render each)))])]
+                                                                   (concat
+                                                                     (for [[idx [k v]] (map-indexed vector (sort-by second < r')) #_(range (:slots e))]
+                                                                       [:div.flex.flex-col.gap-2
+                                                                        {:class (if (< idx (:slots (first e')))
+                                                                                  (concat bg-)
+                                                                                  (concat bg- [:text-red-500]))}
 
-                                           #_(for [[k groups] (into {} (get this-weeks-config (str dt)))
-                                                   ;e (sort-by :starttime < groups)
-                                                   :while (some? k)]
-                                               (let [render (fn [e]
-                                                              [:div.-debug
-                                                               [:div (str (:starttime e))]
-                                                               (for [e (range (:slots e))]
-                                                                 [:div (str e)])])]
-                                                 [:div.space-y-1
+                                                                        [:div.w-16.truncate {:class p-} (str k)]
+                                                                        [:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
 
-                                                  (for [e groups]
-                                                    (do
-                                                      (tap> groups)
-                                                      [:div.p-1 (count groups) #_[l/ppre e]]))
+                                                                     (let [c (- (:slots (first e')) (count r'))]
+                                                                       (when (pos? c)
+                                                                         (map (fn [e] [:div
+                                                                                       {:class (concat bg-)}
+                                                                                       (inc e)]) (range c)))))]
 
-                                                  #_(render e)]
+                                                                  (if (get r' (keyword uid))
+                                                                    [bu/danger-button-small
+                                                                     {:on-click
+                                                                      #(actions/delete' {:uid      uid ; ;"b-person"
+                                                                                         :group    (name group-id)
+                                                                                         :timeslot (str (:starttime e))
+                                                                                         :dateslot dt})} "fjern"]
 
-                                                 #_(do
-                                                     ;(tap> groups)
-                                                     ;[l/ppre-x e]
-                                                     [:div
-                                                      [:div k]
-                                                      (:description e)
-                                                      " "
-                                                      (str (:starttime e))
-                                                      " "
-                                                      (str (:slots e))])))
+                                                                    [bu/regular-button-small
+                                                                     {:on-click
+                                                                      #(actions/add' {:uid      uid ; ;"b-person"
+                                                                                      :group    (name group-id)
+                                                                                      :timeslot (str (:starttime e))
+                                                                                      :dateslot dt})} "legg til"])]])]
 
-                                           #_(if (empty? s)
-                                               [:div
-                                                {:class (concat p- bg fg+)}
-                                                [:div.flex.justify-start
-                                                 {:class (concat [:hover:bg-gray-50] bg fg)} (ta/short-date-format dt)]]
+                                                   (render each)))])]]))))]))))]))]]))
 
-                                               [:div
-                                                {:class (concat p- bg fg)}
-
-                                                [:div.flex.justify-start
-                                                 {:class (concat [:hover:bg-gray-50] bg fg)} (ta/short-date-format dt)]
-
-                                                (for [[k {:keys [slots items]}] (sort-by key < s)]
-                                                  [:div.space-y-1
-                                                   [:div {:class fg-} k]
-                                                   (for [[idx [a b]] (map-indexed vector (sort-by second < items))]
-                                                     [:div.ml-1 {:class (concat (if (<= slots idx) [:text-red-500] fg) bg-)} a])])
-
-                                                #_[:div.space-y-px
-
-                                                   [:div.px-1 {:class (concat p bg- fg-)}
-                                                    [:div (if (= 1 (:rows s)) "18:00" "11:00")]
-                                                    #_[:div.space-y-px
-                                                       (for [e (range 3)]
-                                                         [:div {:class (concat p bg- fg)} e])]]
-
-                                                   (when (= 2 (:rows s))
-                                                     [:div.px-1 {:class (concat p bg- fg-)}
-                                                      [:div "14:00"]
-                                                      #_[:div.space-y-px
-                                                         (for [e (range 3)]
-                                                           [:div {:class (concat p bg- fg)} e])]])]])]))))]))))]))
-
-
-      #_(let [{:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-          [:div.p-4.space-y-1
-           {:class (concat fg bg)}
-           [:div.p-4 [eykt.calendar.core/render r]]])]]))
 
 (comment
   (do

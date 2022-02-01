@@ -144,43 +144,43 @@
 
 
 (defn calendar [{:keys [base data]}]
-  (let [uid @(rf/subscribe [::db/root-auth :uid])]
-    [:div.grid.gap-1
-     {:style {:grid-template-columns "repeat(auto-fill,minmax(20rem,1fr))"}}
-     (for [[[m ldom] e] (sort (group-by (juxt (comp t/month :dt)
-                                              (comp t/last-day-of-month t/date :dt))
-                                        (flatten (filter (fn [[e]] (< 0 (:slots e))) data))))
-           :let [first-weekday-of-month (dec (t/int (t/day-of-week (t/first-day-of-month ldom))))
-                 last-day-of-month (inc (t/day-of-month (t/last-day-of-month ldom)))
-                 table (->>
-                         (sort (group-by (juxt (comp t/day-of-month :dt) :dt) e))
-                         (reduce (fn [a e] (assoc a (ffirst e) (last e))) {}))]]
-       [:div
-        [calendar-month-header ldom]
+  #_(let [uid @(rf/subscribe [::db/root-auth :uid])]
+      [:div.grid.gap-1
+       {:style {:grid-template-columns "repeat(auto-fill,minmax(20rem,1fr))"}}
+       (for [[[m ldom] e] (sort (group-by (juxt (comp t/month :dt)
+                                                (comp t/last-day-of-month t/date :dt))
+                                          (flatten (filter (fn [[e]] (< 0 (:slots e))) data))))
+             :let [first-weekday-of-month (dec (t/int (t/day-of-week (t/first-day-of-month ldom))))
+                   last-day-of-month (inc (t/day-of-month (t/last-day-of-month ldom)))
+                   table (->>
+                           (sort (group-by (juxt (comp t/day-of-month :dt) :dt) e))
+                           (reduce (fn [a e] (assoc a (ffirst e) (last e))) {}))]]
+         [:div
+          [calendar-month-header ldom]
 
-        [:div.grid.gap-px.bg-gray-200
-         {:style {:grid-template-columns "repeat(7,1fr)"
-                  :grid-auto-rows        "minmax(2rem,min-content)"}}
-         (when (pos? first-weekday-of-month) [:div {:style {:grid-column-start first-weekday-of-month}}])
-         (for [day-number (range 1 last-day-of-month)]
-           (let [lookup-date (keyword (str (t/new-date (t/year ldom) (t/int m) day-number)))]
-             (if-let [slots (get table day-number)]
-               (if (< 0 (:slots (first slots)))
-                 [:div.text-black.grid.gap-px
-                  {:on-click #(tap> slots)
-                   :style    {:grid-template-columns "repeat(auto-fit,minmax(20px,1fr))"
-                              :grid-auto-rows        "minmax(8px,max-content)"}}
-                  [day-cell-with-content
-                   {:slots       slots
-                    :base        base
-                    :lookup-date lookup-date
-                    :uid         uid}]]
+          [:div.grid.gap-px.bg-gray-200
+           {:style {:grid-template-columns "repeat(7,1fr)"
+                    :grid-auto-rows        "minmax(2rem,min-content)"}}
+           (when (pos? first-weekday-of-month) [:div {:style {:grid-column-start first-weekday-of-month}}])
+           (for [day-number (range 1 last-day-of-month)]
+             (let [lookup-date (keyword (str (t/new-date (t/year ldom) (t/int m) day-number)))]
+               (if-let [slots (get table day-number)]
+                 (if (< 0 (:slots (first slots)))
+                   [:div.text-black.grid.gap-px
+                    {:on-click #(tap> slots)
+                     :style    {:grid-template-columns "repeat(auto-fit,minmax(20px,1fr))"
+                                :grid-auto-rows        "minmax(8px,max-content)"}}
+                    [day-cell-with-content
+                     {:slots       slots
+                      :base        base
+                      :lookup-date lookup-date
+                      :uid         uid}]]
 
-                 [:div.bg-gray-100.p-px
-                  {:class (if (get base lookup-date) :bg-danger :bg-white)}])
-               [:div.p-1.text-xl.flex.h-8
-                {:class [:justify-center :items-start (if (get base lookup-date) :bg-alt :bg-gray-300)]}
-                day-number])))]])]))
+                   [:div.bg-gray-100.p-px
+                    {:class (if (get base lookup-date) :bg-danger :bg-white)}])
+                 [:div.p-1.text-xl.flex.h-8
+                  {:class [:justify-center :items-start (if (get base lookup-date) :bg-alt :bg-gray-300)]}
+                  day-number])))]])]))
 
 ;endregion
 
