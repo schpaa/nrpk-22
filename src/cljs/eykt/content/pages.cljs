@@ -70,20 +70,137 @@
 
         :r.mine-vakter
         (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :form)
-              data (db/on-value-reaction {:path ["calendar"]})
-              uid (:uid @user-auth)]
+              source (db/on-value-reaction {:path ["calendar"]})
+              uid (:uid @user-auth)
+              data (filter (fn [[k v]] (contains? v (keyword uid))) @source)
+              rules (group-by :group eykt.calendar.core/rules')
+
+              straightened-rules (fn [a [k v]]
+                                   (if (< 1 (count (seq v)))
+                                     (reduce (fn [a [k' v]] (conj a [k k' v])) a v)
+                                     (conj a (vec (flatten [k (first v)])))))
+              prep-data (into {} (map (fn [[k v]] [k (reduce straightened-rules [] (first (vals v)))]) data))
+              lookup (fn [x] (reduce (fn [a e]
+                                       (let [f (fn [itm]
+                                                 (t/hours (t/duration (tick.alpha.interval/new-interval
+                                                                        (t/time (:starttime itm))
+                                                                        (t/time (:endtime itm))))))]
+                                         (assoc a (str (:starttime e)) (f e)))) {} x))
+              sum (reduce (fn [a [date rule-refs]]
+                            (+ a (reduce (fn [a [group starttime clicked-time]]
+                                           (tap> (name starttime))
+                                           (+ a (get (lookup (:times (first (get rules group))))
+                                                     (name starttime)))) 0 rule-refs)))
+                          0 prep-data)]
           [:div.p-4
            {:class bg}
            [:div "en liste over mine vakter"]
 
+           [:div {:class hd} sum " timer"]
            ;(l/ppre-x (filter (fn [[k v]] (= k uid) ) listener))
-           (l/ppre-x (filter (fn [[k v]] (contains? v (keyword uid))) @data))])
+
+           #_(let [sum (reduce (fn [a e] a) 0 data)] [l/ppre-x data])
+
+           (into [:div] (for [[date vs] data]
+                          [:div
+                           [:div date]
+
+                           ;[l/ppre-x ">> " (vals vs)]
+
+                           #_[:div.flex.gap-2 (map #(vector :div %) (keys (first (vals vs))))]
+
+                           (for [e (keys (first (vals vs)))
+                                 z (vals vs)
+                                 :let [x (:times (first (get-in rules [e])))
+                                       lookup (reduce (fn [a e]
+                                                        (let [f (fn [itm]
+                                                                  (t/hours (t/duration (tick.alpha.interval/new-interval
+                                                                                         (t/time (:starttime itm))
+                                                                                         (t/time (:endtime itm))))))]
+                                                          (assoc a (str (:starttime e)) (f e)))) {} x)]]
+                             [:<>
+                              ;[l/ppre-x x]
+                              ;[l/ppre-x (get lookup "11:00" "?")]
+                              ;[:div.h-1]
+                              ;[l/ppre-x lookup]
+                              ;[:div.text-sky-500  "+" e]
+                              [:div.text-sky-500 (reduce (fn [a e]
+                                                           (+ a (get lookup (name e)))) 0
+                                                         (map key (into {} (vals z))))]
+                              #_[:div.text-red-500 "k " (str (mapv keys (vals z)))]])]))])
 
 
         :r.debug
         [:div.z-100 [hoc/debug]]
 
         [:div @route]]])))
+
+(comment
+  (do
+    (let [rules (group-by :group eykt.calendar.core/rules')
+          lookup (fn [x] (reduce (fn [a e]
+                                   (let [f (fn [itm]
+                                             (t/hours (t/duration (tick.alpha.interval/new-interval
+                                                                    (t/time (:starttime itm))
+                                                                    (t/time (:endtime itm))))))]
+                                     (assoc a (str (:starttime e)) (f e)))) {} x))
+          uid :Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+          data (filter (fn [[k v]] (contains? v (keyword uid))) @(db/on-value-reaction {:path ["calendar"]}))
+          straightened-rules (fn [a [k v]]
+                               (if (< 1 (count (seq v)))
+                                 (reduce (fn [a [k' v]] (conj a [k k' v])) a v)
+                                 (conj a (vec (flatten [k (first v)])))))
+          prep-data (into {} (map (fn [[k v]] [k (reduce straightened-rules [] (first (vals v)))]) data))
+          sum (reduce (fn [a [date rule-refs]]
+                        (+ a (reduce (fn [a [group starttime clicked-time]]
+                                       (tap> (name starttime))
+                                       (+ a (get (lookup (:times (first (get rules group))))
+                                                 (name starttime)))) 0 rule-refs)))
+                      0 prep-data)]
+      sum
+      #_[prep-data
+         rules]
+      #_(lookup [{:starttime #time/time"11:00",
+                  :endtime   #time/time"14:00",
+                  :slots     3}
+                 {:starttime #time/time"14:00",
+                  :endtime   #time/time"17:00",
+                  :slots     3}]))))
+
+
+
+(comment
+  (comment
+    ;intent target
+    [[:c :06:00 "2022-02-01T22:02:37.320Z"]
+     [:z2 :11:00 "2022-02-01T20:59:31.963Z"]
+     [:z2 :14:00 "2022-02-01T20:59:33.875Z"]])
+
+  (reduce (fn [a [k v]]
+            (if (< 1 (count (seq v)))
+              (reduce (fn [a [k' v]] (conj a [k [k' v]])) a v)
+              (conj a [k (first v)])))
+          []
+          {:c  {:06:00 "2022-02-01T22:02:37.320Z"},
+           :z3 {:11:00 "2022-02-01T20:59:31.963Z"
+                :12:00 "2022-02-01T20:59:31.963Z",
+                :14:00 "2022-02-01T20:59:33.875Z"}
+           :z2 {:11:00 "2022-02-01T20:59:31.963Z"
+                :12:00 "2022-02-01T20:59:31.963Z",
+                :14:00 "2022-02-01T20:59:33.875Z"}}))
+
+
+(comment
+  (let [data {:a  {:17:00 "2022-02-01T19:55:03.368Z"},
+              :z2 {:11:00 "2022-02-01T19:54:57.755Z", :14:00 "2022-02-01T19:54:58.800Z"}}]
+    (map (comp keys val) data)))
+
+(comment
+  (let [data {:a {:17:00 "2022-02-01T19:55:03.368Z"},
+              :z2
+              {:11:00 "2022-02-01T19:54:57.755Z",
+               :14:00 "2022-02-01T19:54:58.800Z"}}]
+    (select-keys data [:a :z2])))
 
 (comment
   (do

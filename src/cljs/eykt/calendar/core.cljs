@@ -46,29 +46,29 @@
     :times       [{:starttime #time/time "06:00"
                    :endtime   #time/time "07:00"
                    :slots     1}]}
-   {:group       :b
-    :description "Party"
-    :startdate   #time/date "2022-01-31"
-    :enddate     #time/date "2022-02-13"
-    ;:weekdays    [t/THURSDAY] ;t/SATURDAY t/SUNDAY
-    :weekdays    [t/MONDAY t/SUNDAY]
-    :times       [{:starttime #time/time "07:00"
-                   :endtime   #time/time "10:00"
-                   :slots     2}]}
-   {:group       :a
-    :description "SIMPLE test"
-    :startdate   #time/date "2022-01-31"
-    :enddate     #time/date "2022-02-13"
-    :weekdays    [t/MONDAY t/SUNDAY]
-    :times       [{:starttime #time/time "11:00"
-                   :endtime   #time/time "14:00"
-                   :slots     3}
-                  {:starttime #time/time "14:00"
-                   :endtime   #time/time "17:00"
-                   :slots     3}
-                  {:starttime #time/time "17:00"
-                   :endtime   #time/time "17:16"
-                   :slots     2}]}
+   #_{:group       :b
+      :description "Party"
+      :startdate   #time/date "2022-01-31"
+      :enddate     #time/date "2022-02-13"
+      ;:weekdays    [t/THURSDAY] ;t/SATURDAY t/SUNDAY
+      :weekdays    [t/MONDAY t/SUNDAY]
+      :times       [{:starttime #time/time "07:00"
+                     :endtime   #time/time "10:00"
+                     :slots     2}]}
+   #_{:group       :a
+      :description "SIMPLE test"
+      :startdate   #time/date "2022-01-31"
+      :enddate     #time/date "2022-02-13"
+      :weekdays    [t/MONDAY t/SUNDAY]
+      :times       [{:starttime #time/time "11:00"
+                     :endtime   #time/time "14:00"
+                     :slots     3}
+                    {:starttime #time/time "14:00"
+                     :endtime   #time/time "17:00"
+                     :slots     3}
+                    {:starttime #time/time "17:00"
+                     :endtime   #time/time "17:16"
+                     :slots     2}]}
 
    #_#_#_{:description "helg"
           :startdate   #time/date "2022-01-30"
