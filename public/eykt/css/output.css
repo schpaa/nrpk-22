@@ -1849,6 +1849,18 @@ h2 {
   right: 2rem;
 }
 
+.top-12 {
+  top: 3rem;
+}
+
+.top-20 {
+  top: 5rem;
+}
+
+.top-44 {
+  top: 11rem;
+}
+
 .isolate {
   isolation: isolate;
 }
@@ -2619,6 +2631,10 @@ h2 {
 
 .border {
   border-width: 1px;
+}
+
+.border-0 {
+  border-width: 0px;
 }
 
 .border-l-8 {

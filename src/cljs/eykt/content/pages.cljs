@@ -50,8 +50,6 @@
     [:r.mine-vakter "Mine vakter" nil :icon :calendar]
     [:r.debug "Feilsøking" nil :icon :eye]]])
 
-
-
 (defn user [r]
   (let [route (rf/subscribe [:app/current-page])
         user-auth (rf/subscribe [::db/user-auth])
@@ -246,8 +244,6 @@
     [:r.forsiden "Forsiden" nil :icon :document]
     [:r.mine-vakter "Mine vakter" nil :icon :calendar]
     [:r.common2 "Kalender" nil :icon :calendar]]])
-
-
 
 (defn common [r]
   (let [uid @(rf/subscribe [::db/root-auth :uid])]
