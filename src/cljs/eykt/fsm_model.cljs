@@ -1,6 +1,7 @@
 (ns eykt.fsm-model
   (:require [re-frame.core :as rf]
             [re-statecharts.core :as rs]
+            [user.views]
             [schpaa.modal :as modal]))
 
 (def main

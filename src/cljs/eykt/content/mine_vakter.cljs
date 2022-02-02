@@ -1,7 +1,8 @@
 (ns eykt.content.mine-vakter
   (:require [db.core :as db]
             [schpaa.style :as st]
-            [tick.core :as t]))
+            [tick.core :as t]
+            eykt.calendar.core))
 
 (defn mine-vakter [{:keys [uid]}]
   (fn [{:keys [uid]}]

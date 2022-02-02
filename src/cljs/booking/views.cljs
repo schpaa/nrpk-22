@@ -319,7 +319,7 @@
 
 (defn last-bookings-footer [{:keys [selected boat-db booking-ready?]}]
   (let [{:keys [bg fg fg+ p p-]} (st/fbg' :surface)]
-    [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16
+    [:div.flex.justify-between.items-center.gap-x-2.px-4.sticky.bottom-0.h-16.border-t.border-gray-500
      {:class bg}
      (schpaa.components.views/modern-checkbox'
        {:set-details #(rf/dispatch [:bookinglist/set-details %])

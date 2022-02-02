@@ -50,4 +50,4 @@
                   build         {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
                   fonts         {:task (fs/copy-tree "template/eykt/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)}
                   deploy        {:depends [clean build template css fonts stats]
-                                 :task    (shell "firebase deploy --only hosting:eykt-22")}}}
+                                 :task    (shell "firebase deploy --only hosting:eyktv-22")}}}

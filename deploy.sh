@@ -1,1 +1,1 @@
-bb --config booking.edn deploy
+bb --config eykt.edn deploy

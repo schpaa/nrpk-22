@@ -141,6 +141,7 @@
       [bu/regular-button {:on-click open-dialog} "Dialog"]
       [bu/regular-button {:on-click readymade/open-complex} "Complex"]])
 
+   [:div.font-inter.text-white.text-4xl "0123456789"]
    [:div.grid.gap-1.py-1
     {:class ["bg-black/50"]
      :style {:grid-template-columns "repeat(auto-fit,minmax(15rem,1fr))"}}

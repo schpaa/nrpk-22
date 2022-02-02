@@ -11,17 +11,24 @@
             [eykt.calendar.actions :as actions]
             [schpaa.debug :as l]))
 
+(defn- cell
+  ([c]
+   [cell nil c])
+  ([attr & c]
+   [:div.h-6.flex.items-center.px-px {;:style {:min-width "2rem"}
+                                      :class (if (vector? attr) (flatten attr) attr)} c]))
+
 (defn render-block-column [{:keys [e' r' group-id uid e dt]}]
   (let [{:keys [bg- bg+ bg hd he fg+ fg p p- p+ fg-]} (st/fbg' :calender-table)
         c (- (:slots (first e')) (count r'))]
-    [:div                                                   ;.border.border-alt
+    [:div
      ;[l/ppre-x group-id (:starttime each) r']
-     [:div {:class (concat fg+ p-)} (str (:starttime e))]
+     [cell [fg+ p-] (str (:starttime e))]
      [:div.space-y-px
       (if (get r' (keyword uid))
         [bu/danger-button-small
          {:on-click
-          #(actions/delete' {:uid      uid                  ; ;"b-person"
+          #(actions/delete' {:uid      uid
                              :group    (name group-id)
                              :timeslot (str (:starttime e))
                              :dateslot dt})} "fjern"]
@@ -29,11 +36,11 @@
         (if (pos? c)
           [bu/hollow-button-small
            {:on-click
-            #(actions/add' {:uid      uid                   ; ;"b-person"
+            #(actions/add' {:uid      uid
                             :group    (name group-id)
                             :timeslot (str (:starttime e))
                             :dateslot dt})} "velg"]
-          [:div.h-6.flex.flex-center {:class bg-} "Full"]))
+          [cell [bg-] "komplett"]))
 
       [:div.space-y-px
 
@@ -44,11 +51,11 @@
                       (concat bg-)
                       (concat bg- [:text-red-500]))}
 
-            [:div.w-12.truncate.h-6 {:class p-} (str k)]
+            [cell [fg+ p- :overflow-hidden :text-ellipsis] (str k)]
             #_[:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
 
          (when (pos? c)
-           (map (fn [e] [:div.h-6 {:class (concat bg- p-)} " " ""]) (range c))))]]]))
+           (map (fn [e] [cell [bg- p-] " " ""]) (range c))))]]]))
 
 (defn uke-kalender [{:keys [uid]}]
   (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
@@ -82,13 +89,11 @@
                               :grid-auto-rows        "1fr"}}]
                     (doall (for [i (range 1)]
                              (into [:div.grid.gap-px.min-w-screen
-                                    {:style {:grid-template-columns "1.2rem repeat(7,minmax(1rem,1fr ))"
+                                    {:style {:grid-template-columns "min-content repeat(7,minmax(1rem,1fr ))"
                                              :grid-auto-rows        "1fr"}}]
                                    (concat [
                                             ;intent WEEKS
-                                            [:div.flex.flex-col.flex-center.h-20.sticky.top-44
-                                             {:class (concat p- fg (:bg (st/fbg' :form)))}
-                                             (str "u" (+ (js/parseInt @week) i))]]
+                                            [cell [:h-20 :sticky :top-44 p- fg (:bg (st/fbg' :form))] (str "u" (+ (js/parseInt @week) i))]]
 
                                            (doall (for [e (range 7)
                                                         :let [first-date-of-week (ta/calc-first-day-at-week (+ (js/parseInt @week) i))
@@ -111,11 +116,11 @@
                                                                   (if (= 1 (t/day-of-month dt)) [:border-l-2 :border-gray-500] [:border-l]))}
                                                         [:div.shrink-0.grow-1.h-6 {:class (concat p fg+)}
                                                          (if first-in-month?
-                                                           [:div (ta/month-name dt :length 3)]
-                                                           [:div ""])]
+                                                           [cell (ta/month-name dt :length 3)]
+                                                           [:div])]
                                                         [:div.grow.shrink-0
-                                                         [:div (t/format "d." dt)]
-                                                         [:div.text-center {:class (concat p- fg)} (ta/day-name dt :length 3)]]])
+                                                         [cell (t/format "d." dt)]
+                                                         [cell [p- fg] (ta/day-name dt :length 3)]]])
 
                                                      (doall (for [[group-id e'] (get this-weeks-config (str dt))
                                                                   :while (some? group-id)]
@@ -126,8 +131,7 @@
                                                                ;[:div.text-red-500 (ta/short-date-format dt)]
                                                                ;[:div.text-red-500 day-offset]
 
-                                                               [:div {:class (concat fg bg [:truncate])}
-                                                                (:description (first e'))]
+                                                               [cell [fg bg :truncate] (:description (first e'))]
                                                                (doall (for [each (sort-by :starttime < e')
                                                                             :let [r' (get-in roo [group-id (keyword (str (:starttime each)))])]]
                                                                         [render-block-column

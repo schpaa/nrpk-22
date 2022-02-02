@@ -39,7 +39,7 @@
         :current-page-title    (fn [] @(rf/subscribe [:app/current-page-title]))
         :current-page-subtitle (fn [] @(rf/subscribe [:app/current-page-subtitle]))
         :get-menuopen-fn       (fn [] @(rf/subscribe [:app/menu-open?]))
-        :menu-direction        @(rf/subscribe [:app/menu-direction])}
+        :menu-direction        @(schpaa.state/listen :app/menu-direction) #_@(rf/subscribe [:app/menu-direction])}
        web-content]]]))
 
 (defn app-wrapper [route-table]

@@ -21,31 +21,31 @@
   [;intent This is not really a rule, since it is a one-time-happening
    {:group       :z1
     :description "UKE"
-    :startdate   #time/date "2022-01-31"
+    :startdate   #time/date "2022-01-30"
     :enddate     #time/date "2022-05-13"
     :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
     :times       [{:starttime #time/time "18:00"
                    :endtime   #time/time "21:00"
-                   :slots     2}]}
-   {:group       :z2
-    :description "HELG"
-    :startdate   #time/date "2022-01-31"
-    :enddate     #time/date "2022-05-13"
-    :weekdays    [t/SATURDAY t/SUNDAY]
-    :times       [{:starttime #time/time "11:00"
-                   :endtime   #time/time "14:00"
-                   :slots     3}
-                  {:starttime #time/time "14:00"
-                   :endtime   #time/time "17:00"
-                   :slots     3}]}
-   {:group       :c
-    :description "aftermath is a long title"
-    :startdate   #time/date "2022-01-31"
-    :enddate     #time/date "2022-02-13"
-    :weekdays    all-week                                   ;[t/MONDAY t/SUNDAY]
-    :times       [{:starttime #time/time "06:00"
-                   :endtime   #time/time "07:00"
-                   :slots     1}]}
+                   :slots     12}]}
+   #_{:group       :z2
+      :description "HELG"
+      :startdate   #time/date "2022-01-31"
+      :enddate     #time/date "2022-05-13"
+      :weekdays    [t/SATURDAY t/SUNDAY]
+      :times       [{:starttime #time/time "11:00"
+                     :endtime   #time/time "14:00"
+                     :slots     3}
+                    {:starttime #time/time "14:00"
+                     :endtime   #time/time "17:00"
+                     :slots     3}]}
+   #_{:group       :c
+      :description "aftermath is a long title"
+      :startdate   #time/date "2022-01-31"
+      :enddate     #time/date "2022-02-13"
+      :weekdays    all-week                                 ;[t/MONDAY t/SUNDAY]
+      :times       [{:starttime #time/time "06:00"
+                     :endtime   #time/time "07:00"
+                     :slots     1}]}
    #_{:group       :b
       :description "Party"
       :startdate   #time/date "2022-01-31"
