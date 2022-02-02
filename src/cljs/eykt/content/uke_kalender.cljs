@@ -11,28 +11,13 @@
             [eykt.calendar.actions :as actions]
             [schpaa.debug :as l]))
 
-(defn render-day-column [{:keys [e' r' group-id uid e dt]}]
+(defn render-block-column [{:keys [e' r' group-id uid e dt]}]
   (let [{:keys [bg- bg+ bg hd he fg+ fg p p- p+ fg-]} (st/fbg' :calender-table)
         c (- (:slots (first e')) (count r'))]
-    [:div.-debugx
+    [:div                                                   ;.border.border-alt
      ;[l/ppre-x group-id (:starttime each) r']
-     [:div {:class (concat fg- p-)} (str (:starttime e))]
-     [:div.space-y-1
-      [:div.space-y-px
-
-       (concat
-         (for [[idx [k v]] (map-indexed vector (sort-by second < r'))]
-           [:div.flex.flex-col.gap-2
-            {:class (if (< idx (:slots (first e')))
-                      (concat bg-)
-                      (concat bg- [:text-red-500]))}
-
-            [:div.w-12.truncate {:class p-} (str k)]
-            #_[:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
-
-         (when (pos? c)
-           (map (fn [e] [:div {:class (concat bg- p-)} "-" #_(inc e) " ledig"]) (range c))))]
-
+     [:div {:class (concat fg+ p-)} (str (:starttime e))]
+     [:div.space-y-px
       (if (get r' (keyword uid))
         [bu/danger-button-small
          {:on-click
@@ -48,115 +33,95 @@
                             :group    (name group-id)
                             :timeslot (str (:starttime e))
                             :dateslot dt})} "velg"]
-          [bu/regular-button-small {} "Full"]))]]))
+          [:div.h-6.flex.flex-center {:class bg-} "Full"]))
 
-#_(defn uke-kalender [{:keys [uid]}]
-    (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
-      (r/with-let [week (r/atom (ta/week-number (t/date)))]
-        [:div.p-4.space-y-2
-         {:class bg}
-         [:div.flex.gap-1
-          [bu/regular-button-small {:on-click #(swap! week dec)} :chevron-left]
-          #_[fields/text (-> {:naked?        true
-                              :values        #(-> @week)
-                              :handle-change #(reset! week (-> % .-target .-value))}
-                             fields/number-field)
-             :label "" :name :week]
-          [bu/regular-button-small {:on-click #(swap! week inc)} :chevron-right]]
-         [:div (ta/week-number (t/date))]
+      [:div.space-y-px
 
-         #_(into [:div.grid.gap-px.place-content-centerx.sticky.top-28.bg-white
-                  {:style {:grid-template-columns "2rem repeat(7,1fr)"}}
-                  (map #(vector :div %) '(u ma ti on to fr lø sø))])
+       (concat
+         (for [[idx [k v]] (map-indexed vector (sort-by second < r'))]
+           [:div.flex.flex-col.gap-2
+            {:class (if (< idx (:slots (first e')))
+                      (concat bg-)
+                      (concat bg- [:text-red-500]))}
 
-         (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :calender-table)
-               first-date-of-week (ta/calc-first-day-at-week @week)]
-           (into [:div.grid.gap-px
-                  {:style {:grid-template-columns "repeat(auto-fit,minmax(20rem,1fr))"}}]
-                 (for [i (range 1)]
-                   (let [the-week-interval (tick.alpha.interval/new-interval
-                                             first-date-of-week
-                                             (t/>> first-date-of-week (t/new-period 7 :days)))
-                         this-weeks-config (eykt.calendar.core/grab-for-graph the-week-interval)]
-                     (into [:div.grid.gap-px.place-content-centerx]
-                           {:style {:grid-template-columns "2rem repeat(7,minmax(min-content,1fr))"}})
-                     (concat [[:div.flex.justify-center
-                               {:class (concat [:border-r :border-black :p-1] p- fg-)}
-                               (str (+ (js/parseInt @week) i))]
+            [:div.w-12.truncate.h-6 {:class p-} (str k)]
+            #_[:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
 
-                              (for [e (range 7)
-                                    :let [e (+ (* i 7) e)
-                                          dt (t/>> first-date-of-week (t/new-period e :days))]]
-                                (let [listener (db/on-value-reaction {:path ["calendar" (str dt)]})
-                                      roo (eykt.calendar.core/rooo @listener)]
-                                  (when (zero? e) (tap> @listener))
-                                  [:div
-                                   ;[l/ppre-x roo]
-                                   [:div (ta/day-name dt :length 3)]
-                                   [:div
-                                    (for [[group-id e'] (get this-weeks-config (str dt))]
-                                      [:div
-                                       ;[l/ppre (:slots (first e'))]
-                                       [:div {:class (concat p- [:truncate])} (:description (first e'))]
-                                       (for [each (sort-by :starttime < e')]
-                                         (let [r' (get-in roo [group-id (keyword (str (:starttime each)))])]
-                                           (render-day-column
-                                             {:e        each
-                                              :e'       e'
-                                              :r'       r'
-                                              :group-id group-id
-                                              :uid      uid
-                                              :dt       dt})))])]]))])))))])))
+         (when (pos? c)
+           (map (fn [e] [:div.h-6 {:class (concat bg- p-)} " " ""]) (range c))))]]]))
 
 (defn uke-kalender [{:keys [uid]}]
-  (let [
-        {:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
+  (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
     (r/with-let [week (r/atom (ta/week-number (t/date)))]
-      [:div.p-4.space-y-2
-       {:class bg}
-       [:div.flex.gap-1
-        [bu/regular-button-small {:on-click #(swap! week dec)} :chevron-left]
+      [:div.space-y-2
+       {:class (concat bg fg)}
+
+       [:div.flex.gap-1.justify-start.p-4
+        {:class bg-}
+        [bu/regular-button {:on-click #(swap! week dec)} :chevron-left]
         [fields/text (-> {:naked?        true
                           :values        #(-> @week)
                           :handle-change #(reset! week (-> % .-target .-value))}
                          fields/number-field) :label "" :name :week]
-        [bu/regular-button-small {:on-click #(swap! week inc)} :chevron-right]]
-       [:div (ta/week-number (t/date))]
+        [bu/regular-button {:on-click #(swap! week inc)} :chevron-right]]
 
-       (into [:div.grid.gap-px.place-content-centerx.sticky.top-28.bg-white
-              {:style {:grid-template-columns "2rem repeat(7,1fr)"}}]
-             (map #(vector :div %) '(u ma ti on to fr lø sø)))
+       (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :calender-table)]
 
-       (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :calender-table)
-             first-date-of-week (ta/calc-first-day-at-week @week)]
-         (into [:div.grid.gap-px
-                {:style {:grid-template-columns "repeat(auto-fit,minmax(20rem,1fr))"}}]
-               (for [i (range 1)]
-                 (let [the-week-interval (tick.alpha.interval/new-interval
-                                           first-date-of-week
-                                           (t/>> first-date-of-week (t/new-period 7 :days)))
-                       this-weeks-config (eykt.calendar.core/grab-for-graph the-week-interval)]
-                   (into [:div.grid.gap-px.place-content-centerx
-                          {:style {:grid-template-columns "2rem repeat(7,minmax(min-content,1fr))"}}]
-                         (concat [[:div.flex.justify-center
-                                   {:class (concat [:border-r :border-black :p-1] p- fg-)}
-                                   (str (+ (js/parseInt @week) i))]]
-                                 (for [e (range 7)
-                                       :let [e (+ (* i 7) e)
-                                             dt (t/>> first-date-of-week (t/new-period e :days))]]
-                                   (let [listener (db/on-value-reaction {:path ["calendar" (str dt)]})
-                                         roo (eykt.calendar.core/rooo @listener)]
-                                     (when (zero? e) (tap> @listener))
-                                     [:div.space-y-12.flex.flex-col.justify-between
-                                      (for [[group-id e'] (get this-weeks-config (str dt))]
-                                        [:div {:class (conj p-)}
-                                         [:div {:class (concat fg+ bg+)} (:description (first e'))]
-                                         (for [each (sort-by :starttime < e')
-                                               :let [r' (get-in roo [group-id (keyword (str (:starttime each)))])]]
-                                           (render-day-column
-                                             {:e        each
-                                              :e'       e'
-                                              :r'       r'
-                                              :group-id group-id
-                                              :uid      uid
-                                              :dt       dt}))])]))))))))])))
+         (into [:div.grid.gap-4.px-2.place-content-center
+                {:style {:grid-template-columns "repeat(auto-fit,minmax(16rem,40rem) )"
+                         :grid-auto-rows        "1fr"}}]
+               (doall (for [i (range 2)]
+                        (into [:div.grid.gap-px.min-w-screen
+                               {:style {:grid-template-columns "1.2rem repeat(7,minmax(1rem,1fr ))"
+                                        :grid-auto-rows        "1fr"}}]
+                              (concat [
+                                       ;intent WEEKS
+                                       [:div.flex.flex-col.flex-center.h-20.sticky.top-32.bg-white
+                                        {:class (concat p- fg)}
+                                        (str "u" (+ (js/parseInt @week) i))]]
+
+                                      (doall (for [e (range 7)
+                                                   :let [first-date-of-week (ta/calc-first-day-at-week (+ (js/parseInt @week) i))
+                                                         the-week-interval (tick.alpha.interval/new-interval
+                                                                             first-date-of-week
+                                                                             (t/>> first-date-of-week (t/new-period 7 :days)))
+                                                         this-weeks-config (eykt.calendar.core/grab-for-graph the-week-interval)
+                                                         day-offset (+ (* i 7) e)
+                                                         dt (t/>> first-date-of-week (t/new-period e :days))
+                                                         listener (db/on-value-reaction {:path ["calendar" (str dt)]})
+                                                         roo (eykt.calendar.core/rooo @listener)]]
+                                               [:div.flex.flex-col.justify-start.h-full.space-y-1
+                                                {:class (concat p fg)}
+
+                                                ;intent CALENDAR-STRIP
+                                                (let [first-in-month? (or (zero? e) (= 1 (t/day-of-month dt)))]
+                                                  [:div.flex.flex-col.justify-between.items-center.h-20.truncate.sticky.top-28.bg-white
+                                                   {:class (if (= 1 (t/day-of-month dt)) [:border-l-2 :border-gray-500] [:border-l])}
+                                                   [:div.shrink-0.grow-1.h-6 {:class (concat p fg+)}
+                                                    (if first-in-month?
+                                                      [:div (ta/month-name dt :length 3)]
+                                                      [:div ""])]
+                                                   [:div.grow.shrink-0
+                                                    [:div (t/format "d." dt)]
+                                                    [:div.text-center {:class (concat p- fg)} (ta/day-name dt :length 3)]]])
+
+                                                (doall (for [[group-id e'] (get this-weeks-config (str dt))
+                                                             #_#_:while (some? group-id)]
+                                                         [:div {:class (conj p-)}
+
+                                                          ;[:div.text-red-500 group-id]
+                                                          [:div.text-red-500 (ta/short-date-format first-date-of-week)]
+                                                          [:div.text-red-500 (ta/short-date-format dt)]
+                                                          ;[:div.text-red-500 day-offset]
+
+                                                          [:div {:class (concat fg bg [:truncate])}
+                                                           (:description (first e'))]
+                                                          (doall (for [each (sort-by :starttime < e')
+                                                                       :let [r' (get-in roo [group-id (keyword (str (:starttime each)))])]]
+                                                                   [render-block-column
+                                                                    {:uid      uid
+                                                                     :dt       dt
+                                                                     :e        each
+                                                                     :e'       e'
+                                                                     :r'       r'
+                                                                     :group-id group-id}]))]))]))))))))])))

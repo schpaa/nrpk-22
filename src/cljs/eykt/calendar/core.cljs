@@ -39,7 +39,7 @@
                    :endtime   #time/time "17:00"
                    :slots     3}]}
    {:group       :c
-    :description "aftermath"
+    :description "aftermath is a long title"
     :startdate   #time/date "2022-01-31"
     :enddate     #time/date "2022-02-13"
     :weekdays    all-week                                   ;[t/MONDAY t/SUNDAY]

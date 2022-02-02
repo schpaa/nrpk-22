@@ -625,8 +625,8 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 0.125rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   font-size: 0.75rem;
@@ -2129,6 +2129,10 @@ h2 {
   height: auto;
 }
 
+.h-20 {
+  height: 5rem;
+}
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -2510,12 +2514,6 @@ h2 {
   margin-bottom: calc(2rem * var(--tw-space-y-reverse));
 }
 
-.space-y-12 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(3rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(3rem * var(--tw-space-y-reverse));
-}
-
 .self-start {
   align-self: flex-start;
 }
@@ -2643,8 +2641,12 @@ h2 {
   border-right-width: 0px;
 }
 
-.border-r {
-  border-right-width: 1px;
+.border-l-2 {
+  border-left-width: 2px;
+}
+
+.border-l {
+  border-left-width: 1px;
 }
 
 .border-none {
@@ -2713,11 +2715,6 @@ h2 {
 .border-gray-400 {
   --tw-border-opacity: 1;
   border-color: rgb(148 163 184 / var(--tw-border-opacity));
-}
-
-.border-rose-500 {
-  --tw-border-opacity: 1;
-  border-color: rgb(244 63 94 / var(--tw-border-opacity));
 }
 
 .border-sky-500 {
@@ -4062,6 +4059,11 @@ h2 {
 .dark .dark\:text-sky-200 {
   --tw-text-opacity: 1;
   color: rgb(186 230 253 / var(--tw-text-opacity));
+}
+
+.dark .dark\:text-amber-400 {
+  --tw-text-opacity: 1;
+  color: rgb(251 191 36 / var(--tw-text-opacity));
 }
 
 .dark .dark\:text-amber-500 {
