@@ -10,7 +10,7 @@
      :subheader "Min side"}]
 
    ["/mine-vakter"
-    {:name      :r.mine-vakter
+    {:name      :r.mine-vakter'
      :header    ["Eykt Vaktliste" "Eykt"]
      :subheader "Min side"}]
 
@@ -20,18 +20,19 @@
      :subheader "Min side"}]
 
    ["/"
-    {:name      :r.common
+    {:name      :r.mine-vakter
      :header    ["Eykt Vaktliste" "Eykt"]
      :subheader "Kalender"}]
 
    ["/c2"
     {:name      :r.common2
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Kalender 2"}]
-   ["/c3"
-    {:name      :r.oppsett
+     :subheader "Kalender"}]
+
+   ["/forsiden"
+    {:name      :r.forsiden
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Kalender 3"}]])
+     :subheader "Forsiden"}]])
 
 ;region initial-state
 

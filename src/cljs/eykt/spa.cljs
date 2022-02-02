@@ -18,9 +18,9 @@
             [kee-frame.core :as k]))
 
 (def route-table
-  {:r.mine-vakter eykt.content.pages/user
-   :r.debug       eykt.content.pages/user
-   :r.user        eykt.content.pages/user
-   :r.common      eykt.content.pages/common
-   :r.common2     eykt.content.pages/common
-   :r.oppsett     eykt.content.pages/common})
+  {:r.mine-vakter' eykt.content.pages/user
+   :r.debug        eykt.content.pages/user
+   :r.user         eykt.content.pages/user
+   :r.mine-vakter  eykt.content.pages/common
+   :r.common2      eykt.content.pages/common
+   :r.forsiden     eykt.content.pages/common})

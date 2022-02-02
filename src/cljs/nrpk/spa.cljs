@@ -34,7 +34,7 @@
       [components.screen/render
        {:current-page          (fn [] @(rf/subscribe [:app/current-page]))
         :toggle-menu-open      (fn [] (rf/dispatch [:toggle-menu-open]))
-        :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to [:r.common]]))
+        :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to [:r.mine-vakter]]))
         :navigate-to-user      (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
         :current-page-title    (fn [] @(rf/subscribe [:app/current-page-title]))
         :current-page-subtitle (fn [] @(rf/subscribe [:app/current-page-subtitle]))

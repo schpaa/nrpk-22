@@ -18,7 +18,10 @@
             [schpaa.components.fields :as fields]
             [reagent.core :as r]
             [tick.core :as t]
-            [eykt.calendar.actions :as actions]))
+            [eykt.calendar.actions :as actions]
+    ;;
+            [eykt.content.mine-vakter :as content.mine-vakter]
+            [eykt.content.uke-kalender :as content.uke-kalender]))
 
 (defn new-designed-content [{:keys [desktop?] :as m}]
   [:div
@@ -40,6 +43,15 @@
 
    (md->html (inline "./about.md"))])
 
+(defn render-back-tabbar []
+  [:div.sticky.top-16.z-100.z-200
+   [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
+    [:r.user "Om meg" nil :icon :user]
+    [:r.mine-vakter "Mine vakter" nil :icon :calendar]
+    [:r.debug "Feilsøking" nil :icon :eye]]])
+
+
+
 (defn user [r]
   (let [route (rf/subscribe [:app/current-page])
         user-auth (rf/subscribe [::db/user-auth])
@@ -55,11 +67,7 @@
           {:user-auth @user-auth
            :name      (:display-name @user-auth)}]]]
 
-       [:div.sticky.top-16.z-100.z-200
-        [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-         [:r.user "Om meg" nil :icon :user]
-         [:r.mine-vakter "Mine vakter" nil :icon :calendar]
-         [:r.debug "Feilsøking" nil :icon :eye]]]
+       [render-back-tabbar]
 
        [k/case-route (fn [route] (-> route :data :name))
         :r.user
@@ -69,66 +77,7 @@
            [user.views/my-info]])
 
         :r.mine-vakter
-        (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :form)
-              source (db/on-value-reaction {:path ["calendar"]})
-              uid (:uid @user-auth)
-              data (filter (fn [[k v]] (contains? v (keyword uid))) @source)
-              rules (group-by :group eykt.calendar.core/rules')
-
-              straightened-rules (fn [a [k v]]
-                                   (if (< 1 (count (seq v)))
-                                     (reduce (fn [a [k' v]] (conj a [k k' v])) a v)
-                                     (conj a (vec (flatten [k (first v)])))))
-              prep-data (into {} (map (fn [[k v]] [k (reduce straightened-rules [] (first (vals v)))]) data))
-              lookup (fn [x] (reduce (fn [a e]
-                                       (let [f (fn [itm]
-                                                 (t/hours (t/duration (tick.alpha.interval/new-interval
-                                                                        (t/time (:starttime itm))
-                                                                        (t/time (:endtime itm))))))]
-                                         (assoc a (str (:starttime e)) (f e)))) {} x))
-              sum (reduce (fn [a [date rule-refs]]
-                            (+ a (reduce (fn [a [group starttime clicked-time]]
-                                           (tap> (name starttime))
-                                           (+ a (get (lookup (:times (first (get rules group))))
-                                                     (name starttime)))) 0 rule-refs)))
-                          0 prep-data)]
-          [:div.p-4
-           {:class bg}
-           [:div "en liste over mine vakter"]
-
-           [:div {:class hd} sum " timer"]
-           ;(l/ppre-x (filter (fn [[k v]] (= k uid) ) listener))
-
-           #_(let [sum (reduce (fn [a e] a) 0 data)] [l/ppre-x data])
-
-           (into [:div] (for [[date vs] data]
-                          [:div
-                           [:div date]
-
-                           ;[l/ppre-x ">> " (vals vs)]
-
-                           #_[:div.flex.gap-2 (map #(vector :div %) (keys (first (vals vs))))]
-
-                           (for [e (keys (first (vals vs)))
-                                 z (vals vs)
-                                 :let [x (:times (first (get-in rules [e])))
-                                       lookup (reduce (fn [a e]
-                                                        (let [f (fn [itm]
-                                                                  (t/hours (t/duration (tick.alpha.interval/new-interval
-                                                                                         (t/time (:starttime itm))
-                                                                                         (t/time (:endtime itm))))))]
-                                                          (assoc a (str (:starttime e)) (f e)))) {} x)]]
-                             [:<>
-                              ;[l/ppre-x x]
-                              ;[l/ppre-x (get lookup "11:00" "?")]
-                              ;[:div.h-1]
-                              ;[l/ppre-x lookup]
-                              ;[:div.text-sky-500  "+" e]
-                              [:div.text-sky-500 (reduce (fn [a e]
-                                                           (+ a (get lookup (name e)))) 0
-                                                         (map key (into {} (vals z))))]
-                              #_[:div.text-red-500 "k " (str (mapv keys (vals z)))]])]))])
-
+        [content.mine-vakter/mine-vakter {:uid (:uid @user-auth)}]
 
         :r.debug
         [:div.z-100 [hoc/debug]]
@@ -167,8 +116,6 @@
                   :endtime   #time/time"17:00",
                   :slots     3}]))))
 
-
-
 (comment
   (comment
     ;intent target
@@ -188,7 +135,6 @@
            :z2 {:11:00 "2022-02-01T20:59:31.963Z"
                 :12:00 "2022-02-01T20:59:31.963Z",
                 :14:00 "2022-02-01T20:59:33.875Z"}}))
-
 
 (comment
   (let [data {:a  {:17:00 "2022-02-01T19:55:03.368Z"},
@@ -294,152 +240,36 @@
                   :2022-02-10T18:00 "2022-01-31T14:19:11.146Z"}}}]
       (filter (fn [[k v]] (contains? v :Ri0icn4bbffkwB3sQ1NWyTxoGmo1)) data))))
 
-
-(defn render-tab-bar []
+(defn render-front-tabbar []
   [:div.sticky.top-16.z-200
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-    [:r.common "Måned" nil :icon :calendar]
-    [:r.common2 "Uke" nil :icon :calendar]
-    [:r.oppsett "Oppsett" nil :icon :cog]]])
+    [:r.forsiden "Forsiden" nil :icon :document]
+    [:r.mine-vakter "Mine vakter" nil :icon :calendar]
+    [:r.common2 "Kalender" nil :icon :calendar]]])
 
-#_(defn config-for [b]
-    (eykt.calendar.core/grab-for-graph b))
 
-(defn status-for [dt]
-  (get {"2022-02-02" {"11:00" {:slots 3
-                               :items [["cps" "2022-01-02T12:31:50"]
-                                       ["abe" "2022-01-02T12:31:50"]
-                                       ["pop" "2022-01-02T12:31:50"]
-                                       ["eve" "2021-01-02T12:31:50"]]}
-                      "15:00" {:slots 3
-                               :items [["cps" "2022-01-02T12:31:50"]
-                                       ["abe" "2022-01-02T12:31:50"]
-                                       ["pop" "2022-01-02T12:31:51"]
-                                       ["eve" "2022-01-02T12:31:50"]]}
-                      "06:00" {:slots 1
-                               :items [["cps" "2022-01-02T12:31:50"]
-                                       ["eve" "2022-01-02T12:31:50"]]}}
-        "2022-02-04" {"18:00" {:slots 2
-                               :items [["pop" "2022-01-02T12:31:50"]
-                                       ["eve" "2022-01-02T12:31:50"]]}}
-        "2022-04-27" {}} (str dt))
-
-  #_(cond-> {:x "12:20"}
-      (some #{(t/int (t/day-of-week dt))} #{2 3 4}) (assoc :rows 1)
-      (some #{(t/int (t/day-of-week dt))} #{6 7}) (assoc :rows 2)))
 
 (defn common [r]
   (let [uid @(rf/subscribe [::db/root-auth :uid])]
     [:<>
-     (render-tab-bar)
+     (render-front-tabbar)
 
      [k/case-route (fn [route] (-> route :data :name))
-      :r.oppsett
+      :r.forsiden
       [eykt.content.oppsett/render r]
 
-      :r.common (let [listener (db/on-value-reaction {:path ["calendar"]})
-                      {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-                  [:div.p-2
-                   {:class bg}
-                   [eykt.calendar.views/calendar
-                    {:base (eykt.calendar.core/routine @listener)
-                     :data (eykt.calendar.core/expand-date-range)}]])
-      :r.common2
-      (let [
-            {:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
-        (r/with-let [week (r/atom (ta/week-number (t/date)))]
-          [:div.p-4.space-y-2
+      :r.mine-vakter
+      [content.mine-vakter/mine-vakter {:uid uid}]
+      #_(let [listener (db/on-value-reaction {:path ["calendar"]})
+              {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
+          [:div.p-2
            {:class bg}
-           [:div.flex.gap-1
-            [bu/regular-button-small {:on-click #(swap! week dec)} :chevron-left]
-            [fields/text (-> {:naked?        true
-                              :values        #(-> @week)
-                              :handle-change #(reset! week (-> % .-target .-value))}
-                             fields/number-field) :label "" :name :week]
-            [bu/regular-button-small {:on-click #(swap! week inc)} :chevron-right]]
-           [:div (ta/week-number (t/date))]
+           [eykt.calendar.views/calendar
+            {:base (eykt.calendar.core/routine @listener)
+             :data (eykt.calendar.core/expand-date-range)}]])
+      :r.common2
+      [content.uke-kalender/uke-kalender {:uid uid}]]]))
 
-           (into [:div.grid.gap-px.place-content-centerx.sticky.top-28.bg-white
-                  {:style {:grid-template-columns "2rem repeat(7,1fr)"}}]
-                 (map #(vector :div %) '(u ma ti on to fr lø sø)))
-
-           (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :calender-table)
-                 first-date-of-week (ta/calc-first-day-at-week @week)]
-             (into [:div.grid.gap-px
-                    {:style {:grid-template-columns "repeat(auto-fit,minmax(20rem,1fr))"}}]
-                   (for [i (range 1)]
-                     (let [the-week-interval (tick.alpha.interval/new-interval
-                                               first-date-of-week
-                                               (t/>> first-date-of-week (t/new-period 7 :days)))
-                           this-weeks-config (eykt.calendar.core/grab-for-graph the-week-interval)]
-
-                       [:div
-                        [l/ppre-x
-                         the-week-interval]
-
-                        (count this-weeks-config)
-                        (into [:div.grid.gap-px.place-content-centerx
-                               {:style {:grid-template-columns "2rem repeat(7,minmax(6rem,min-content))"}}]
-                              (concat [[:div.flex.justify-center
-                                        {:class (concat [:border-r :border-black :p-1] p- fg-)}
-                                        (str (+ (js/parseInt @week) i))]]
-
-                                      (for [e (range 7)
-                                            :let [e (+ (* i 7) e)
-                                                  dt (t/>> first-date-of-week (t/new-period e :days))]]
-                                        (let [s (status-for dt)
-                                              listener (db/on-value-reaction {:path ["calendar" (str dt)]})
-                                              roo (eykt.calendar.core/rooo @listener)]
-                                          (when (zero? e) (tap> @listener))
-                                          [:div
-                                           ;[l/ppre-x roo]
-                                           [:div (str (t/day-of-week dt))]
-                                           [:div
-                                            (for [[group-id e'] (get this-weeks-config (str dt))]
-                                              [:div
-                                               ;[l/ppre (:slots (first e'))]
-                                               [:div (:description (first e'))]
-                                               (for [each (sort-by :starttime < e')]
-                                                 (let [r' (get-in roo [group-id (keyword (str (:starttime each)))])
-                                                       render (fn [e]
-                                                                [:div.-debugx
-                                                                 ;[l/ppre-x group-id (:starttime each) r']
-                                                                 [:div {:class fg-} (str (:starttime e))]
-                                                                 [:div.space-y-1
-                                                                  [:div.space-y-px
-
-                                                                   (concat
-                                                                     (for [[idx [k v]] (map-indexed vector (sort-by second < r')) #_(range (:slots e))]
-                                                                       [:div.flex.flex-col.gap-2
-                                                                        {:class (if (< idx (:slots (first e')))
-                                                                                  (concat bg-)
-                                                                                  (concat bg- [:text-red-500]))}
-
-                                                                        [:div.w-16.truncate {:class p-} (str k)]
-                                                                        [:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
-
-                                                                     (let [c (- (:slots (first e')) (count r'))]
-                                                                       (when (pos? c)
-                                                                         (map (fn [e] [:div
-                                                                                       {:class (concat bg-)}
-                                                                                       (inc e)]) (range c)))))]
-
-                                                                  (if (get r' (keyword uid))
-                                                                    [bu/danger-button-small
-                                                                     {:on-click
-                                                                      #(actions/delete' {:uid      uid ; ;"b-person"
-                                                                                         :group    (name group-id)
-                                                                                         :timeslot (str (:starttime e))
-                                                                                         :dateslot dt})} "fjern"]
-
-                                                                    [bu/regular-button-small
-                                                                     {:on-click
-                                                                      #(actions/add' {:uid      uid ; ;"b-person"
-                                                                                      :group    (name group-id)
-                                                                                      :timeslot (str (:starttime e))
-                                                                                      :dateslot dt})} "legg til"])]])]
-
-                                                   (render each)))])]]))))]))))]))]]))
 
 
 (comment
