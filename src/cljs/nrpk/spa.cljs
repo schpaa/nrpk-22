@@ -20,7 +20,7 @@
         get-menuopen-fn (rf/subscribe [:app/menu-open?])]
     [:div.h-full
      [modal/overlay-with
-      {:short-timeout false                                 ;;todo When showing a popup with short-timeout (< 2 seconds auto-closes), just bypass the click to dismiss
+      {:short-timeout (:modal-short-timeout @s)             ;;todo When showing a popup with short-timeout (< 2 seconds auto-closes), just bypass the click to dismiss
        :modal-dim     (:modal-dim @s)
        :modal?        (or (:modal @s)
                           (:modal-forced @s))
