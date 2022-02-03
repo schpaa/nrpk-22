@@ -19,10 +19,12 @@
             [reagent.core :as r]
             [tick.core :as t]
             [eykt.calendar.actions :as actions]
-    ;;
             [eykt.content.mine-vakter :as content.mine-vakter]
+
+    ;;
             [eykt.content.uke-kalender :as content.uke-kalender]
-            [schpaa.modal.readymade :as readymade]))
+            [schpaa.modal.readymade :as readymade]
+            [eykt.content.rapport-side]))
 
 (defn new-designed-content [{:keys [desktop?] :as m}]
   [:div
@@ -90,24 +92,6 @@
     [:r.mine-vakter "Mine vakter" nil :icon :calendar]
     [:r.common2 "Kalender" nil :icon :calendar]]])
 
-(defn empty-list-message [msg]
-  (let [{:keys [bg fg- fg fg+ p p- hd hd- hl]} (st/fbg' :void)]
-    [:div.flex.xpt-8.mb-32.mt-8.flex-col.space-y-4
-     {:class (concat fg+ hl)}
-     [:div {:class hd} msg]
-
-     #_[:div.text-base.font-semibold.font-inter.font-light.leading-relaxed
-        {:class (concat fg)}
-        "message in the middle"]
-
-     [:div
-      {:class    (concat fg hd-)
-       :on-click #(readymade/popup
-                    {:dialog-type :message
-                     :flags       #{:weak-dim :timeout}
-                     :content     [[:div.text-xl "Takk, vi vet..."]]})}
-      "Ta kontakt med administrator"]]))
-
 (defn common [r]
   (let [uid @(rf/subscribe [::db/root-auth :uid])]
     [:<>
@@ -115,23 +99,9 @@
 
      [k/case-route (fn [route] (-> route :data :name))
       :r.forsiden
+      [eykt.content.rapport-side/rapport-side]
       ;[eykt.content.oppsett/render r]
       ;[new-designed-content]
-      (let [{:keys [bg bg+ fg+]} (st/fbg' :void)]
-        [:div
-         {:class (concat bg+ fg+)}
-         [:div.space-y-px.flex.flex-col
-          {:style {:min-height "calc(100vh - 7rem)"}}
-          (if false                                         ;(seq eykt.calendar.core/rules')
-            [:div.flex-1
-             {:class bg}
-             [:div [(-> schpaa.components.sidebar/tabs-data :bar-chart :content-fn)]]]
-            [:div.flex-col.grow.flex.items-center.justify-center
-             [empty-list-message [:div.text-center {:style {:max-width "66vw"}} "Hei, ingen har laget en forside som passer"] "..."]
-             [:div.flex.gap-4.flex-center
-              [bu/regular-button {} "1"]
-              [bu/regular-button {} "2"]]])
-          #_[booking.views/last-bookings-footer {}]]])
 
       :r.mine-vakter
       [content.mine-vakter/mine-vakter {:uid uid}]
@@ -152,7 +122,7 @@
             [:div.flex-1
              {:class bg}
              [content.uke-kalender/uke-kalender {:uid uid}]]
-            [empty-list-message "Booking-listen er tom"])
+            '[empty-list-message "Booking-listen er tom"])
           [booking.views/last-bookings-footer {}]]])
 
       #_[:div.min-h-screen
