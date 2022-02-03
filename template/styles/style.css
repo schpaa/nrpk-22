@@ -36,17 +36,15 @@
         min-width: 6rem;
     }
     .btn-small {
-        @apply flex w-full justify-between items-center px-1 py-1 text-xs active:shadow disabled:cursor-default  truncate
+        @apply flex flex-center w-full  text-xs active:shadow disabled:cursor-default truncate
         h-6
         rounded-sm
-/*
-        border-2
-        border-black
-*/
         cursor-pointer
         dark:bg-gray-700
         dark:text-gray-300;
+
         min-width: 2rem;
+        max-width: 4rem;
     }
 
     .btn-menu {
