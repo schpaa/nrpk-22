@@ -2223,10 +2223,6 @@ h2 {
   width: 24rem;
 }
 
-.w-24 {
-  width: 6rem;
-}
-
 .max-w-md {
   max-width: 28rem;
 }
@@ -2459,10 +2455,6 @@ h2 {
 
 .gap-px {
   gap: 1px;
-}
-
-.gap-10 {
-  gap: 2.5rem;
 }
 
 .gap-x-2 {
@@ -3748,6 +3740,11 @@ h2 {
 .prose-h1\:text-2xl :is(:where(h1):not(:where([class~="not-prose"] *))) {
   font-size: 1.5rem;
   line-height: 2rem;
+}
+
+.prose-h1\:text-xl :is(:where(h1):not(:where([class~="not-prose"] *))) {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
 }
 
 .prose-h2\:mb-2 :is(:where(h2):not(:where([class~="not-prose"] *))) {

@@ -1,6 +1,9 @@
 (ns eykt.content.pages
   (:require [shadow.resource :refer [inline]]
             [schpaa.markdown :refer [md->html]]
+    ;[cljs.core.async.interop :refer [p->c] :refer-macros [<p!]]
+    ;[cljs.core.async :as async :refer [go]]
+    ;[promesa.core :as p]
             [kee-frame.core :as k]
             [booking.hoc :as hoc]
             [re-frame.core :as rf]
@@ -93,41 +96,54 @@
     [:r.common2 "Kalender" nil :icon :calendar]]])
 
 (defn common [r]
-  (let [uid @(rf/subscribe [::db/root-auth :uid])]
-    [:<>
-     (render-front-tabbar)
-
-     [k/case-route (fn [route] (-> route :data :name))
-      :r.forsiden
-      [eykt.content.rapport-side/rapport-side]
-      ;[eykt.content.oppsett/render r]
-      ;[new-designed-content]
-
-      :r.mine-vakter
-      [content.mine-vakter/mine-vakter {:uid uid}]
-      #_(let [listener (db/on-value-reaction {:path ["calendar"]})
-              {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-          [:div.p-2
-           {:class bg}
-           [eykt.calendar.views/calendar
-            {:base (eykt.calendar.core/routine @listener)
-             :data (eykt.calendar.core/expand-date-range)}]])
-      :r.common2
-      (let [{:keys [bg]} (st/fbg' :form)]
+  (let [uid @(rf/subscribe [::db/root-auth :uid])
+        v (db/on-value-reaction {:path ["report"]})]
+    (fn [r]
+      [:<>
+       (render-front-tabbar)
+       [k/case-route (fn [route] (-> route :data :name))
+        :r.forsiden
         [:div
-         {:class bg}
-         [:div.space-y-px.flex.flex-col
-          {:style {:min-height "calc(100vh - 7rem)"}}
-          (if (seq eykt.calendar.core/rules')
-            [:div.flex-1
-             {:class bg}
-             [content.uke-kalender/uke-kalender {:uid uid}]]
-            '[empty-list-message "Booking-listen er tom"])
-          [booking.views/last-bookings-footer {}]]])
+         [l/ppre-x @v]
+         (if-let [v @v]
+           [eykt.content.rapport-side/rapport-side]
+           [eykt.content.rapport-side/no-content-message])]
+        #_(r/with-let [v (db/on-value-reaction {:path ["report"]})]
+            [:div
+             ;[l/ppre-x @(db/database-get {:path ["report"]})]
+             ;[l/ppre-x v]
+             (if-let [v @v]
+               [eykt.content.rapport-side/rapport-side]
+               [eykt.content.rapport-side/no-content-message])]
+            (finally (tap> "Finally")))
+        ;[eykt.content.oppsett/render r]
+        ;[new-designed-content]
 
-      #_[:div.min-h-screen
-         [content.uke-kalender/uke-kalender {:uid uid}]
-         [booking.views/last-bookings-footer {}]]]]))
+        :r.mine-vakter
+        [content.mine-vakter/mine-vakter {:uid uid}]
+        #_(let [listener (db/on-value-reaction {:path ["calendar"]})
+                {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
+            [:div.p-2
+             {:class bg}
+             [eykt.calendar.views/calendar
+              {:base (eykt.calendar.core/routine @listener)
+               :data (eykt.calendar.core/expand-date-range)}]])
+        :r.common2
+        (let [{:keys [bg]} (st/fbg' :form)]
+          [:div
+           {:class bg}
+           [:div.space-y-px.flex.flex-col
+            {:style {:min-height "calc(100vh - 7rem)"}}
+            (if (seq eykt.calendar.core/rules')
+              [:div.flex-1
+               {:class bg}
+               [content.uke-kalender/uke-kalender {:uid uid}]]
+              '[empty-list-message "Booking-listen er tom"])
+            [booking.views/last-bookings-footer {}]]])
+
+        #_[:div.min-h-screen
+           [content.uke-kalender/uke-kalender {:uid uid}]
+           [booking.views/last-bookings-footer {}]]]])))
 
 (comment
   (comment
@@ -360,3 +376,6 @@
                 :b {:07:00 "2022-02-01T14:01:08.301Z"},
                 :c {:06:00 "2022-02-01T14:01:07.389Z"}}]
       (reduce (fn [a [group time-slots]] (assoc a group 1)) {} data))))
+
+
+

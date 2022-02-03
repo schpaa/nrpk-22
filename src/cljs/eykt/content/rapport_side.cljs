@@ -10,7 +10,8 @@
             [reagent.core :as r]
             [tick.core :as t]
             [schpaa.markdown :as markdown]
-            [times.api :as ta]))
+            [times.api :as ta]
+            [db.core :as db]))
 
 (defn- empty-list-message [msg]
   (let [{:keys [bg fg- fg fg+ p p- hd hd- hl]} (st/fbg' :void)]
@@ -18,9 +19,9 @@
      {:class (concat fg+ hl)}
      [:div.text-center {:style {:max-width "66vw"} :class hd} msg]
 
-     [:div.text-base.font-semibold.font-inter.font-light.leading-relaxed
-      {:class (concat fg)}
-      "message in the middle"]
+     #_[:div.text-base.font-semibold.font-inter.font-light.leading-relaxed
+        {:class (concat fg)}
+        "message in the middle"]
 
      [:div
       {:class    (concat fg hd-)
@@ -28,7 +29,7 @@
                     {:dialog-type :message
                      :flags       #{:weak-dim :timeout}
                      :content     [[:div.text-xl "Takk, vi vet..."]]})}
-      "Ta kontakt med administrator"]]))
+      "Legg til en prøve"]]))
 
 ;region api-surface for db
 
@@ -54,11 +55,22 @@
                                      :style   :x
                                      :created (t/at (t/date) (t/time "11:00"))}}))
 
-(defn store-item [{:keys [data] :as event}]
-  (let [id (random-uuid)
-        {:keys [content]} data]
-    (swap! rapport-state assoc id {:created (t/now)
-                                   :content content})))
+(defn get-content []
+  (if-let [data (some-> (db/on-value-reaction {:path ["report" "articles"]}))]
+    @data
+    [{}]))
+
+(defn store-item [st {:keys [data] :as event}]
+  (let [{:keys [content]} data
+        id (.-key (db/database-push {:path  ["report" "articles"]
+                                     :value {:created (str (t/now))
+                                             :content content}}))]
+    (assoc-in st [:rapport :new-id] id)
+    #_(let [id (random-uuid)
+            {:keys [content]} data]
+        (swap! rapport-state assoc id {:created (t/now)
+                                       :content content})
+        (assoc-in st [:rapport :new-id] id))))
 
 (defn update-item [{:keys [data] :as event}]
   (tap> event)
@@ -90,8 +102,8 @@
 ;region fsm-helpers
 
 (defn has-content-guard [state event]
-  (not (empty? (remove (fn [[_ v]] (:hidden v)) @rapport-state))))
-
+  (pos? (count @(db/on-value-reaction {:path ["report" "articles"]})))
+  #_(not (empty? (remove (fn [[_ v]] (:hidden v)) (get-content)))))
 
 (defn confirmed [msg]
   (fn [_ _] (readymade/popup {:dialog-type :message
@@ -107,9 +119,18 @@
 (def rapport-fsm
   {:initial :s.initial
    :states  {:s.initial                  {:entry (confirmed "startup")
-                                          :on    {:e.startup [{:guard  has-content-guard
+                                          :on    {:e.waiting [{:guard  has-content-guard
+                                                               :target :s.some-content}
+                                                              {:target :s.empty-content}]
+                                                  :e.startup [{:guard  has-content-guard
                                                                :target :s.some-content}
                                                               {:target :s.empty-content}]}}
+             :s.wait-for-a-moment        {:entry [{:guard  has-content-guard
+                                                   :target :s.some-content}
+                                                  {:target :s.empty-content}
+                                                  #_{:delay  500
+                                                     :target :s.some-content}]}
+
              :s.empty-content            {:on {:e.add            {:target :s.adding}
                                                :e.start-managing {:target  :s.manage-content
                                                                   :actions (confirmed "managing started")}}}
@@ -144,30 +165,49 @@
                                                                           (fn [_ event] (remove-item event))]
                                                                 :target  :s.manage-content}}}
              ;todo Editing from the manager
-             :s.editing                  {:on {:e.save   {:target  :s.storing
-                                                          :actions [(confirmed "saved old entry")
-                                                                    (fn [_ event]
-                                                                      (update-item event))]}
+             :s.editing                  {:on {:e.save   {:target  :s.return-from-edit-or-add
+                                                          :actions [(fn [_ event]
+                                                                      (update-item event))
+                                                                    (assign (fn [st event]
+                                                                              (let [k (-> event :data :id)]
+                                                                                (readymade/popup {:dialog-type :message
+                                                                                                  :flags       #{:popup :short-timeout}
+                                                                                                  :content     "saved old entry"
+                                                                                                  :footer      k}))
+                                                                              (update st :rapport dissoc :currently-editing-id)))]}
                                                :e.cancel {:target  :s.return-from-edit-or-add
                                                           :actions (assign (fn [st _]
                                                                              (update st :rapport dissoc :currently-editing-id)))}}}
              ;todo When coming from the frontpage, ending editing must return to the frontpage, thus the state :s.editing'
-             :s.editing'                 {:on {:e.save   {:target  :s.storing'
-                                                          :actions [(confirmed "saved old entry")
-                                                                    (fn [_ event]
-                                                                      (update-item event))]}
+             :s.editing'                 {:on {:e.save   [{:target  :s.return-from-edit-or-add' ;:s.storing'
+                                                           :actions [(fn [_ event]
+                                                                       (update-item event))
+                                                                     (assign (fn [st event]
+                                                                               (let [k (-> event :data :id)]
+                                                                                 (readymade/popup {:dialog-type :message
+                                                                                                   :flags       #{:popup :short-timeout}
+                                                                                                   :content     "saved old entry"
+                                                                                                   :footer      k}))
+                                                                               (update st :rapport dissoc :currently-editing-id)))]}]
+
                                                :e.cancel {:target  :s.return-from-edit-or-add'
                                                           :actions (assign (fn [st _]
                                                                              (update st :rapport dissoc :currently-editing-id)))}}}
-             :s.adding                   {:on {:e.save   {:target  :s.storing
-                                                          :actions [(confirmed "saved new entry")
-                                                                    (fn [st event]
-                                                                      (store-item event))]}
+             :s.adding                   {:on {:e.save   {:target  :s.return-from-edit-or-add
+                                                          :actions [;(confirmed "saved new entry")
+                                                                    (assign (fn [st event]
+                                                                              (store-item st event)))
+                                                                    (assign (fn [st event]
+                                                                              (let [k (-> st :rapport :new-id str)]
+                                                                                (readymade/popup {:dialog-type :message
+                                                                                                  :flags       #{:popup :short-timeout}
+                                                                                                  :content     "saved new entry"
+                                                                                                  :footer      k}))
+                                                                              (update-in st [:rapport] dissoc :new-id)))]}
                                                :e.cancel :s.return-from-edit-or-add}}
-             :s.storing'                 {:after [{:delay  1000
-                                                   :target :s.return-from-edit-or-add'}]}
-             :s.storing                  {:after [{:delay  1000
-                                                   :target :s.return-from-edit-or-add}]}
+
+             #_#_:s.storing {:after [{:delay  1000
+                                      :target :s.return-from-edit-or-add}]}
              :s.ending-managing          {:always [{:guard  has-content-guard
                                                     :target [:> :rapport :s.some-content]}
                                                    {:target [:> :rapport :s.empty-content]}]}
@@ -181,35 +221,55 @@
              :s.ready                    {}
              :s.error                    {}}})
 
+(defn no-content-message []
+  (let [{:keys [bg bg+ fg+]} (st/fbg' :void)]
+    [:div
+     {:class (concat bg+ fg+)}
+     [:div.space-y-px.flex.flex-col
+      {:style {:min-height "calc(100vh - 7rem)"}}
+      [:div.flex.flex-center.h-32 [schpaa.icon/spinning :spinner]]
+      #_(if false                                           ;(seq eykt.calendar.core/rules')
+          [:div.flex-1
+           {:class bg}
+           [:div [(-> schpaa.components.sidebar/tabs-data :bar-chart :content-fn)]]]
+          [:div.flex-col.grow.flex.items-center.justify-center.space-y-8
+           [empty-list-message
+            "Yo, ingen har skrevet\u00ad noe ennå" "..."]
+           [:div.flex.gap-4.flex-center
+            [bu/regular-hollow-button {:on-click #(store-item {} {:data {:content "sample post"}})
+                                       :class    [:rounded :h-12 :w-20]} :plus]
+            #_[bu/regular-hollow-button {:on-click #(send :e.start-managing)
+                                         :class    [:rounded :h-12 :w-20]} "Rediger"]]])
+      #_[booking.views/last-bookings-footer {}]]]))
+
 (defn rapport-side []
   (let [{:keys [bg bg+ fg+]} (st/fbg' :void)
         *fsm-rapport (:rapport @(rf/subscribe [::rs/state :main-fsm]))]
     [:div
-     [l/ppre-x
-      #_(map (fn [[k v]] {(subs (str k) 0 6) v}) @rapport-state)
-      @(rf/subscribe [::rs/state-full :main-fsm])
-      *fsm-rapport]
+     [:div.sticky.top-28
+      [l/ppre-x
+       #_(map (fn [[k v]] {(subs (str k) 0 6) v}) @rapport-state)
+       ;@(rf/subscribe [::rs/state-full :main-fsm])
+       *fsm-rapport]]
      (rs/match-state *fsm-rapport
        [:s.initial]
-       (send :e.startup)
+       (if-let [data (get-content)]
+         (send :e.startup)
+         (send :e.waiting))
 
        [:s.empty-content]
        [:div
         {:class (concat bg+ fg+)}
         [:div.space-y-px.flex.flex-col
          {:style {:min-height "calc(100vh - 7rem)"}}
-         (if false                                          ;(seq eykt.calendar.core/rules')
-           [:div.flex-1
-            {:class bg}
-            [:div [(-> schpaa.components.sidebar/tabs-data :bar-chart :content-fn)]]]
-           [:div.flex-col.grow.flex.items-center.justify-center.space-y-8
-            [empty-list-message
-             "Hei, ingen har laget en forside som passer" "..."]
-            [:div.flex.gap-4.flex-center
-             [bu/regular-hollow-button {:on-click #(send :e.add)
-                                        :class    [:rounded :h-12 :w-20]} :plus]
-             [bu/regular-hollow-button {:on-click #(send :e.start-managing)
-                                        :class    [:rounded :h-12 :w-20]} "Rediger"]]])
+         [:div.flex-col.grow.flex.items-center.justify-center.space-y-8
+          [empty-list-message
+           "Hei, ingen har laget en forside som passer" "..."]
+          [:div.flex.gap-4.flex-center
+           [bu/regular-hollow-button {:on-click #(send :e.add)
+                                      :class    [:rounded :h-12 :w-20]} :plus]
+           [bu/regular-hollow-button {:on-click #(send :e.start-managing)
+                                      :class    [:rounded :h-12 :w-20]} "Rediger"]]]
 
          #_[booking.views/last-bookings-footer {}]]]
 
@@ -248,11 +308,12 @@
 
        [:s.some-content]
        (let [{:keys [fg bg bg-]} (st/fbg' :form)]
+         (tap> "HERE")
          [:div.space-y-4
           ;{:class (concat fg bg)}
           (into [:div.flex.flex-col.space-y-px
                  {:class (concat [])}]
-                (for [[k {:keys [style content created updated] :as v}] (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) @rapport-state)]
+                (for [[k {:keys [style content created updated] :as v}] (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content))]
                   [:div.prose.mx-auto.w-full
                    {:class (concat
                              [:p-4]
@@ -318,15 +379,15 @@
           (into [:div.space-y-px.grow]
                 (concat
                   (for [[k {:keys [content created deleted updated hidden] :as v}] (if @show-deleted-posts
-                                                                                     @rapport-state
-                                                                                     (remove (fn [[k v]] (:deleted v)) @rapport-state))]
+                                                                                     (get-content)
+                                                                                     (remove (fn [[k v]] (:deleted v)) (get-content)))]
                     [:div.flex.justify-between.gap-4.p-2
                      {:class (if (or hidden deleted) bg bg-)}
                      [:div.grow.flex.justify-between
                       ;[:div.w-12.whitespace-nowrap.truncate {:class (concat fg-)} (str k)]
-                      [:div.w-32.truncate.grow {:class (concat (if (or hidden deleted) fg- fg+) (if deleted [:line-through]))} (str content)]
-                      [:div (when created (ta/short-time-format (t/time created)))]
-                      [:div (when updated (ta/short-time-format (t/time updated)))]]
+                      [:div.w-32.truncate.grow {:class (concat (if (or hidden deleted) fg- fg+) (if deleted [:line-through]))} (str content)]]
+                     ;[:div (when created (ta/short-time-format (t/time (str created))))]
+                     ;[:div (when updated (ta/short-time-format (t/time (str updated))))]]
                      [:div.flex.gap-1
                       (when-not deleted (if hidden
                                           [bu/regular-button-small {:on-click #(send :e.show-entry k)} :eye]
@@ -360,4 +421,14 @@
        [:s.storing]
        [:div "Lagrer, et øyeblikk"]
 
-       [:div.text-white.bg-black "OTHER " (str *fsm-rapport)])]))
+       [:s.wait-for-a-moment]
+       [:div.flex.flex-center.h-screen
+        ;[:div "vent litt"]
+        [schpaa.icon/spinning :spinner]
+        #_(if-let [v (some-> (db/database-get {:path ["report"]}) deref)]
+            (send :e.))]
+
+
+       (do
+         (tap> [:>>>s *fsm-rapport])
+         [:div.text-white.bg-black "OTHER " (str *fsm-rapport)]))]))
