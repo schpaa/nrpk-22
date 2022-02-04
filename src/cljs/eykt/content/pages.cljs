@@ -96,7 +96,7 @@
     [:r.common2 "Kalender" nil :icon :calendar]]])
 
 (defn common [r]
-  (let [uid @(rf/subscribe [::db/root-auth :uid])
+  (let [user-auth (rf/subscribe [::db/root-auth])
         v (db/on-value-reaction {:path ["report"]})]
     (fn [r]
       [:<>
@@ -109,7 +109,7 @@
            [eykt.content.rapport-side/no-content-message])]
 
         :r.mine-vakter
-        [content.mine-vakter/mine-vakter {:uid uid}]
+        [content.mine-vakter/mine-vakter @user-auth]
         #_(let [listener (db/on-value-reaction {:path ["calendar"]})
                 {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
             [:div.p-2
@@ -126,7 +126,9 @@
             (if (seq eykt.calendar.core/rules')
               [:div.flex-1
                {:class bg}
-               [content.uke-kalender/uke-kalender {:uid uid}]]
+               ;[l/ppre @user-auth]
+               (when @user-auth
+                 [content.uke-kalender/uke-kalender @user-auth])]
               '[empty-list-message "Booking-listen er tom"])
             [booking.views/last-bookings-footer {}]]])
 

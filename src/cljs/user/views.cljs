@@ -132,8 +132,8 @@
         [:div.flex.gap-4
          (regular-button {:type     :button
                           :on-click #(send :e.cancel-useredit)} "Avbryt")
-         (cta-button {:type     :submit
-                      :disabled (not (some? dirty))} "Lagre")
+         (regular-button {:type     :submit
+                          :disabled (not (some? dirty))} "Lagre")
          #_[:button.btn.btn-cta {:disabled (not (some? dirty))
                                  :type     :submit} "Lagre"]]])]))
 

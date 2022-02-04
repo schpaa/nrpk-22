@@ -203,14 +203,45 @@
          r {}]
     (if xs
       (let [[id vs] (first xs)]
+        ;(tap> ["rooo4" id vs])
         (recur (next xs)
-               (reduce-kv (fn [a k v] (update a k #(assoc % id v)))
+               (reduce-kv (fn [a k v] (update a (if (keyword? k) (name k) k) #(assoc % id v)))
                           r vs)))
       r)))
 
+(comment
+  (do
+    (routine
+      {:z2 {:11:00 "202x"
+            :12:00 "202x"
+            :19:00 "202x"
+            :18:00 "2022"}
+       :z1 {:13:00 "202x"
+            :12:00 "202x"
+            :19:00 "202x"
+            :18:00 "2022"}})))
+
 (defn rooo [data]
-  (let [source (routine data)]
-    (reduce (fn [a group-id] (update a group-id routine)) source (keys source))))
+  (tap> ["rooo" data])
+  (let [source (routine data)
+        ;_ (tap> ["source" source])
+        ;_ (tap> ["keys source" (keys source)])
+        r (reduce (fn [a group-id]
+                    ;(tap> [">>" (get a group-id) (routine (get a group-id))])
+                    (update a group-id routine)) source (keys source))]
+    #_(tap> ["rooo2" source])
+    #_(tap> ["rooo3" r])
+    r))
+
+(comment
+  (do
+    (routine {:z1 "2022-02-04T14:15:06.952"})))
+
+(comment
+  (do
+    (rooo
+      {:z1 {"19:00" "2022-02-04T14:15:06.952"
+            "18:00" "2022-02-04T14:15:06.952"}})))
 
 (defn z
   "?"

@@ -94,7 +94,7 @@
                               :grid-auto-rows        "1fr"}}]
                     (doall (for [i (range 1)]
                              (into [:div.grid.gap-px.min-w-screen
-                                    {:style {:grid-template-columns "min-content repeat(7,minmax(1rem,1fr ))"
+                                    {:style {:grid-template-columns "2rem repeat(7,minmax(1rem,1fr ))"
                                              :grid-auto-rows        "1fr"}}]
                                    (concat [
                                             ;intent WEEKS
