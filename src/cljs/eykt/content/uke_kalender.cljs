@@ -9,7 +9,8 @@
             [db.core :as db]
             [eykt.calendar.core]
             [eykt.calendar.actions :as actions]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [clojure.walk :as walk]))
 
 (defn- cell
   ([c]
@@ -18,18 +19,21 @@
    [:div.h-6.flex.items-center.px-px {;:style {:min-width "2rem"}
                                       :class (if (vector? attr) (flatten attr) attr)} c]))
 
-(defn render-block-column [{:keys [e' r' group-id uid e dt]}]
+(defn render-block-column [{:keys [each e' r' group-id uid e dt]}]
+  {:pre [(some? uid) (string? uid)]}
   (let [{:keys [bg- bg+ bg hd he fg+ fg p p- p+ fg-]} (st/fbg' :calender-table)
         c (- (:slots (first e')) (count r'))]
     [:div
      ;[l/ppre-x group-id (:starttime each) r']
+     ;[l/ppre-x  (count e') c group-id]
+     ;[l/ppre-x r']
      [cell [fg+ p-] (str (:starttime e))]
      [:div.space-y-px
-      (if (get r' (keyword uid))
+      (if (get r' uid)
         [bu/danger-button-small
          {:on-click
           #(actions/delete' {:uid      uid
-                             :group    (name group-id)
+                             :group    group-id
                              :timeslot (str (:starttime e))
                              :dateslot dt})} "fjern"]
 
@@ -37,7 +41,7 @@
           [bu/hollow-button-small
            {:on-click
             #(actions/add' {:uid      uid
-                            :group    (name group-id)
+                            :group    group-id
                             :timeslot (str (:starttime e))
                             :dateslot dt})} "velg"]
           [cell [bg-] "komplett"]))
@@ -58,6 +62,7 @@
            (map (fn [e] [cell [bg- p-] " " ""]) (range c))))]]]))
 
 (defn uke-kalender [{:keys [uid]}]
+  {:pre [(some? uid) (string? uid)]}
   (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :form)]
     (r/with-let [week (r/atom (ta/week-number (t/date)))]
       [:div.space-y-2
@@ -104,7 +109,7 @@
                                                               day-offset (+ (* i 7) e)
                                                               dt (t/>> first-date-of-week (t/new-period e :days))
                                                               listener (db/on-value-reaction {:path ["calendar" (str dt)]})
-                                                              roo (eykt.calendar.core/rooo @listener)]]
+                                                              roo (eykt.calendar.core/rooo (walk/stringify-keys @listener))]]
                                                     [:div.flex.flex-col.justify-start.h-full.space-y-1
                                                      {:class (concat p fg)}
 
@@ -123,7 +128,8 @@
                                                          [cell [p- fg] (ta/day-name dt :length 3)]]])
 
                                                      (doall (for [[group-id e'] (get this-weeks-config (str dt))
-                                                                  :while (some? group-id)]
+                                                                  :while (some? group-id)
+                                                                  :let [group-id (name group-id)]]
                                                               [:div {:class (conj p-)}
 
                                                                ;[:div.text-red-500 group-id]
@@ -133,12 +139,16 @@
 
                                                                [cell [fg bg :truncate] (:description (first e'))]
                                                                (doall (for [each (sort-by :starttime < e')
-                                                                            :let [r' (get-in roo [group-id (keyword (str (:starttime each)))])]]
-                                                                        [render-block-column
-                                                                         {:uid      uid
-                                                                          :dt       dt
-                                                                          :e        each
-                                                                          :e'       e'
-                                                                          :r'       r'
-                                                                          :group-id group-id}]))]))])))))))))
+                                                                            :let [r' (get-in roo [group-id (str (:starttime each))])]]
+                                                                        [:div
+                                                                         ;[l/ppre-x r']
+                                                                         ;[:div "-"]
+                                                                         [render-block-column
+                                                                          {:each     each
+                                                                           :uid      uid
+                                                                           :dt       dt
+                                                                           :e        each
+                                                                           :e'       e'
+                                                                           :r'       r'
+                                                                           :group-id (name group-id)}]]))]))])))))))))
           [:div.p-2 {:class (concat p- fg-)} "@todo Better navigational aids "]])])))
