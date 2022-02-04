@@ -104,20 +104,9 @@
        [k/case-route (fn [route] (-> route :data :name))
         :r.forsiden
         [:div
-         [l/ppre-x @v]
          (if-let [v @v]
            [eykt.content.rapport-side/rapport-side]
            [eykt.content.rapport-side/no-content-message])]
-        #_(r/with-let [v (db/on-value-reaction {:path ["report"]})]
-            [:div
-             ;[l/ppre-x @(db/database-get {:path ["report"]})]
-             ;[l/ppre-x v]
-             (if-let [v @v]
-               [eykt.content.rapport-side/rapport-side]
-               [eykt.content.rapport-side/no-content-message])]
-            (finally (tap> "Finally")))
-        ;[eykt.content.oppsett/render r]
-        ;[new-designed-content]
 
         :r.mine-vakter
         [content.mine-vakter/mine-vakter {:uid uid}]

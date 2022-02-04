@@ -33,7 +33,8 @@ module.exports = {
         yellow: colors.yellow,
         green: colors.lime,
         white: colors.white,
-        gray: colors.stone,
+        gray: colors.indigo,
+        info: colors.gray,
 //         slate stone sinc neutral gray
         emerald: colors.emerald,
         indigo: colors.indigo,
