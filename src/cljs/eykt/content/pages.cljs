@@ -1,9 +1,6 @@
 (ns eykt.content.pages
   (:require [shadow.resource :refer [inline]]
             [schpaa.markdown :refer [md->html]]
-    ;[cljs.core.async.interop :refer [p->c] :refer-macros [<p!]]
-    ;[cljs.core.async :as async :refer [go]]
-    ;[promesa.core :as p]
             [kee-frame.core :as k]
             [booking.hoc :as hoc]
             [re-frame.core :as rf]
@@ -24,12 +21,13 @@
             [tick.core :as t]
             [eykt.calendar.actions :as actions]
             [eykt.content.mine-vakter :as content.mine-vakter]
-
-    ;;
             [eykt.content.uke-kalender :as content.uke-kalender]
             [schpaa.modal.readymade :as readymade]
             [eykt.content.rapport-side]
-            [eykt.content.rapport-side :refer [top-bottom-view]]))
+            [eykt.content.rapport-side :refer [top-bottom-view]]
+            [nrpk.hov]
+            [booking.views])
+  (:import [goog.async Debouncer]))
 
 (defn new-designed-content [{:keys [desktop?] :as m}]
   [:div
@@ -109,7 +107,72 @@
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
     [:r.forsiden "Forsiden" register-front :icon :document]
     [:r.kalender "Kalender" register-front :icon :calendar]
-    [:r.annet "Annet" register-front :icon :square]]])
+    [:r.annet "Lister" register-front :icon :list]]])
+
+(rf/reg-sub :vakt/vis-inne :-> :vis-inne)
+(rf/reg-sub :vakt/vis-ute :-> :vis-ute)
+
+(rf/reg-event-db :vakt/vis-ute (fn [db [_ arg]] (assoc db :vis-ute arg)))
+(rf/reg-event-db :vakt/vis-inne (fn [db [_ arg]] (assoc db :vis-inne arg)))
+
+(defn tester [searchfield]
+  (let [p (try
+            (re-pattern (str "(?i)" searchfield))
+            (catch js/SyntaxError x nil))]
+    (fn [e]
+      (and e p (or (some? (re-find p (or (:navn e " ") "")))
+                   #_(and (:telefon e) (some? (re-find p (or (:telefon e " ") ""))))
+                   #_(some? (re-find p (or (:epost e " ") ""))))))))
+
+(defn debounce [f interval]
+  (let [dbnc (Debouncer. f interval)]
+    ;; We use apply here to support functions of various arities
+    (fn [& args] (.apply (.-fire dbnc) dbnc (to-array args)))))
+
+(defn std-person-listitem [v]
+  (let [selected? (< 5 (rand-int 10))
+        {:keys [bg bg- bg+ fg p- fg-]} (st/fbg' (if selected?
+                                                  :listitem-button-selected
+                                                  :listitem-button-unselected))]
+    [:div.flex.w-full.gap-px.pr-px
+     {:class (concat bg- fg)}
+     [nrpk.hov/open-user-details (:uid v)]
+     [:div
+      (when selected?
+        (bu/listitem-button-small-clear {:color-map :listitem-button-selected} :cross-out))]
+     [:div.h-12.flex.items-center.xs:px-4.px-2.grow.truncate
+      [:div.flex.flex-col.space-y-0
+       [:div.grow.truncate.leading-normal (:navn v)]
+       [:div.flex.gap-4.grow.whitespace-nowrap
+        [:div {:class (concat p- fg-)} (:telefon v)]]]]
+     ;[:div.w-16.truncate {:class (concat p- fg-)} (:uid v)]]]]
+     [:div
+      (when-not selected?
+        (bu/listitem-button-small-clear {:color-map :listitem-button-unselected} :checked))]]))
+
+#_(defn std-person-listitem [v]
+    (let [selected? (< 5 (rand-int 10))
+          {:keys [bg bg- bg+ fg p- fg-]} (st/fbg' (if selected?
+                                                    :listitem-button-selected
+                                                    :listitem-button-unselected))]
+      [:div.flex.w-full.gap-px.pr-px
+       {:class (concat bg- fg)}
+       [:div
+        (when selected?
+          (bu/listitem-button-small-clear {:color-map :listitem-button-selected} :cross-out))]
+       [:div.h-12.flex.items-center.xs:px-4.px-2.grow.truncate
+        [:div.flex.flex-col.space-y-0
+         [:div.grow.truncate.leading-normal (:navn v)]
+         [:div.flex.gap-4.grow.whitespace-nowrap
+          [:div {:class (concat p- fg-)} (:medlem-fra-år v)]
+          (if (:request-booking v)
+            [:div {:class (concat p- fg-)} "Booking"]
+            [:div {:class (concat p- fg-)} "Nope"])
+          [:div {:class (concat p- fg-)} (:nøkkelnummer v)]
+          [:div.w-16.truncate {:class (concat p- fg-)} (:uid v)]]]]
+       [:div
+        (when-not selected?
+          (bu/listitem-button-small-clear {:color-map :listitem-button-unselected} :checked))]]))
 
 (defn common [r]
   (let [user-auth (rf/subscribe [::db/root-auth])
@@ -123,19 +186,67 @@
          (if-let [v @v]
            [eykt.content.rapport-side/rapport-side]
            [eykt.content.rapport-side/no-content-message])]
-
         :r.annet
-        [:div "Annet"]
+        (let [vis-inne (rf/subscribe [:vakt/vis-inne])
+              vis-ute (rf/subscribe [:vakt/vis-ute])]
+          (r/with-let [search-field (r/atom "")
+                       search-field' (r/atom "")]
+            (let [t (tester @search-field')
+                  bouncer (debounce #(reset! search-field' %) 750)]
+              (top-bottom-view
+                [:div
+                 [:div.sticky.top-28.bg-gray-800.text-white.h-16.items-center.justify-between.px-2.gap-4.grid.grid-cols-2
+                  [:div.grow (fields/select {:naked?      true
+                                             :class       []
+                                             :placeholder "søk"
+                                             :values      (fn [_])}
+                                            :items {"a" "first list"
+                                                    "b" "second list"}
+                                            :default-text "velg liste"
+                                            :name :list)]
+                  [:div.grow (fields/text {:naked?        true
+                                           :class         []
+                                           :auto-focus    true
+                                           :placeholder   "søkefelt"
+                                           :values        (fn [_] @search-field)
+                                           :handle-change #(let [v (-> % .-target .-value)]
+                                                             (bouncer v)
+                                                             (reset! search-field v))}
+                                          :name :search)]]
+                 (let [{:keys [bg fg]} (st/fbg' :void)
+                       data (db/on-value-reaction {:path ["users"]})
+                       data (into {} (comp (filter (fn [[k v]] (t v)))) @data)
+                       c (count data)]
+                   [:div
+                    {:class (concat bg fg)}
+                    (let [{:keys [bg bg- bg+ fg p- fg-]} (st/fbg' :listitem)]
+                      (into [:div.space-y-px]
+                            (concat
+                              (for [[k v] (sort-by (comp :updated val) data)]
+                                ^{:key (str k)} [std-person-listitem v])
+                              [[:div.flex.flex-center.h-16 c]])))])]
+                (let [{:keys [bg fg fg+ p p-]} (st/fbg' :tabbar)]
+                  [:div.h-12.px-4.flex.items-center.justify-between.truncate
+                   (schpaa.components.views/modern-checkbox'
+                     {:set-details #(rf/dispatch [:vakt/vis-inne %])
+                      :get-details #(-> @vis-inne)}
+                     (fn [checkbox]
+                       [:div.flex.items-center.gap-4
+                        checkbox
+                        [:div.space-y-0.truncate.shrink-0
+                         [:div {:class (concat p fg+)} "Skjul merkede"]
+                         [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-inne "Skjuler nå de markerte" "Viser nå alle")]]]))
+                   (schpaa.components.views/modern-checkbox'
+                     {:set-details #(rf/dispatch [:vakt/vis-ute %])
+                      :get-details #(-> @vis-ute)}
+                     (fn [checkbox]
+                       [:div.flex.items-center.gap-4
+                        [:div.space-y-0.truncate.shrink-0
+                         [:div.text-right {:class (concat p fg+)} "Ute"]
+                         [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-ute "Bare de som er ute" "Viser alle")]]
+                        checkbox]))])))))
 
-        #_#_:r.mine-vakter
-            [content.mine-vakter/mine-vakter @user-auth]
-        #_(let [listener (db/on-value-reaction {:path ["calendar"]})
-                {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
-            [:div.p-2
-             {:class bg}
-             [eykt.calendar.views/calendar
-              {:base (eykt.calendar.core/routine @listener)
-               :data (eykt.calendar.core/expand-date-range)}]])
+
         :r.kalender
         (let [{:keys [bg]} (st/fbg' :form)]
           [:div

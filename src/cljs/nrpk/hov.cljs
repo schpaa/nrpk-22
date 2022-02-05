@@ -43,6 +43,15 @@
                      (readymade/details-dialog-fn id))}
      [icon/small :three-vertical-dots]]))
 
+(defn open-user-details [id]
+  (let [{:keys [bg fg]} (st/fbg' :side-button)]
+    [:div.w-12.flex.flex-center
+     {:class    (concat bg fg)
+      :on-click #(do ()
+                     (.stopPropagation %)
+                     (readymade/user-details-dialog-fn id))}
+     [icon/small :three-vertical-dots]]))
+
 (defn toggle-selected' [{:keys [on? not? on-click]}]
   [:div.w-12.flex.flex-center
    {:sclass   [:text-black "bg-gray-200" "dark:bg-gray-600" "dark:text-gray-300"]
