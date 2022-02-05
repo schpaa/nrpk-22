@@ -27,7 +27,8 @@
     ;;
             [eykt.content.uke-kalender :as content.uke-kalender]
             [schpaa.modal.readymade :as readymade]
-            [eykt.content.rapport-side]))
+            [eykt.content.rapport-side]
+            [eykt.content.rapport-side :refer [top-bottom-view]]))
 
 (defn new-designed-content [{:keys [desktop?] :as m}]
   [:div
@@ -53,38 +54,46 @@
   [:div.sticky.top-16.z-100.z-200
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
     [:r.user "Om meg" nil :icon :user]
-    [:r.mine-vakter "Mine vakter" nil :icon :calendar]
+    [:r.debug "Meldinger" nil :icon :chat-bubble]
     [:r.debug "Feilsøking" nil :icon :eye]]])
 
 (defn user [r]
   (let [route (rf/subscribe [:app/current-page])
-        user-auth (rf/subscribe [::db/user-auth])
-        {:keys [bg fg- fg+ hd p p- he]} (st/fbg' :surface)]
+        user-auth (rf/subscribe [::db/user-auth])]
+
     (if-not @user-auth
       [:div.p-4.max-w-md.mx-auto
        [rounded-view {:float 1} [db.signin/login]]]
       [:<>
-       [:div.w-full
-        {:class bg}
-        [:div.p-4.max-w-md.mx-auto
-         [user.views/userstatus-form
-          {:user-auth @user-auth
-           :name      (:display-name @user-auth)}]]]
+
+       (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :surface)]
+         [:div.w-full
+          {:class bg}
+          [:div.p-4.max-w-md.mx-auto
+           [user.views/userstatus-form
+            {:user-auth @user-auth
+             :name      (:display-name @user-auth)}]]])
 
        [render-back-tabbar]
 
        [k/case-route (fn [route] (-> route :data :name))
         :r.user
-        (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :form)]
-          [:div.space-y-4
-           {:class bg}
-           [user.views/my-info]])
+        [user.views/my-info]
 
         :r.mine-vakter
         [content.mine-vakter/mine-vakter {:uid (:uid @user-auth)}]
 
         :r.debug
-        [:div.z-100 [hoc/debug]]
+        (top-bottom-view
+          [:div.z-100 [hoc/debug]]
+          (let [{:keys [fg fg- p p-]} (st/fbg' :surface)]
+            (schpaa.components.views/modern-checkbox'
+              {:set-details #(schpaa.state/change :app/sample-options %)
+               :get-details #(-> (schpaa.state/listen :app/sample-options) deref)}
+              (fn [checkbox]
+                [:div.flex.items-center.justify-start.gap-4.w-full.px-4.h-12
+                 checkbox
+                 [:div {:class (concat fg p)} "Sample options here"]]))))
 
         [:div @route]]])))
 
@@ -92,8 +101,8 @@
   [:div.sticky.top-16.z-200
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
     [:r.forsiden "Forsiden" nil :icon :document]
-    [:r.mine-vakter "Mine vakter" nil :icon :calendar]
-    [:r.common2 "Kalender" nil :icon :calendar]]])
+    [:r.common2 "Kalender" nil :icon :calendar]
+    [:r.mine-vakter "Mine vakter" nil :icon :calendar]]])
 
 (defn common [r]
   (let [user-auth (rf/subscribe [::db/root-auth])

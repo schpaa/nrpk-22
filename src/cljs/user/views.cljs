@@ -17,7 +17,8 @@
             [schpaa.style :as st]
             [schpaa.button :refer [danger-button regular-button cta-button]]
             [schpaa.button :as bu]
-            [schpaa.modal.readymade :as readymade]))
+            [schpaa.modal.readymade :as readymade]
+            [eykt.content.rapport-side :refer [top-bottom-view]]))
 
 (defn confirm-registry []
   #_(apply send
@@ -87,7 +88,7 @@
                                      accepted? [:text-alt "Godkjent booking"]
                                      use-booking? [:text-amber-500 "Godkjenning venter"]
                                      :else [:text-rose-500 "Ikke påmeldt"])]
-    [:div.p-4.shadow.rounded.space-y-4
+    [:div.p-4.shadow.rounded.space-y-2
      {:class (concat bg fg+)}
      [:div.flex.justify-between.items-center
       name
@@ -124,60 +125,79 @@
        [fields/text (fields/normal-field props) :label "Telefon" :name :telefon]
        [fields/text (fields/large-field props) :label "Epost" :name :epost]]
       [:div.flex.gap-4.flex-wrap
-       [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]
-
-     (when-not readonly?
-       [:div.flex.gap-4.justify-between
-        removeaccount-command
-        [:div.flex.gap-4
-         (regular-button {:type     :button
-                          :on-click #(send :e.cancel-useredit)} "Avbryt")
-         (regular-button {:type     :submit
-                          :disabled (not (some? dirty))} "Lagre")
-         #_[:button.btn.btn-cta {:disabled (not (some? dirty))
-                                 :type     :submit} "Lagre"]]])]))
+       [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]]))
 
 (defn my-info [{:keys []}]
-  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
-        *st-all (rf/subscribe [::rs/state :main-fsm])
+  (let [*st-all (rf/subscribe [::rs/state :main-fsm])
         user-auth (rf/subscribe [::db/user-auth])
         uid (:uid @user-auth)
         s (db/on-value-reaction {:path ["users" uid]})]
     (fn []
-      (let [path {:path ["users" uid]}
+      (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)
+            path {:path ["users" uid]}
             loaded-data (db/on-value-reaction path)
             loaded-data' (-> (select-keys @loaded-data [:uid :last-update :navn :request-booking :alias :våttkortnr :telefon :epost :input])
                              (update :request-booking
                                      #(try
                                         (str (t/date (times.api/str->datetime %)))
                                         (catch js/Error _ %))))]
-        [:div.p-4.space-y-4
-         [:div.flex.items-center.justify-between
-          [:div.flex.flex-col
-           (if-let [tm (:timestamp @s)]
-             (try [:div.text-sm "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
-                  (catch js/Error e (.-message e)))
-             [:h2.text-xs {:class fg} "Ikke registrert"])]]
+        (top-bottom-view
+          "calc(100vh - 17rem)"
 
-         (rs/match-state (:user @*st-all)
-           [:s.initial] [:div.space-y-8
-                         (if loaded-data'
-                           (my-form {:values loaded-data' :readonly? true})
-                           [:div "Ingen data"])
-                         [:div.flex.justify-between
-                          (danger-button {:disabled true} "Slett konto")
-                          (regular-button {:type     :button
-                                           :on-click #(send :e.edit)} "Rediger")]]
+          [:div
+           (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)]
+             [:div.p-4.space-y-4
+              {:class bg}
+              (rs/match-state (:user @*st-all)
+                [:s.initial] [:div.space-y-8
+                              (if loaded-data'
+                                (my-form {:values loaded-data' :readonly? true})
+                                [:div "Ingen data"])
+                              #_[:div.flex.justify-between
+                                 (danger-button {:disabled true} "Slett konto")
+                                 (regular-button {:type     :button
+                                                  :on-click #(send :e.edit)} "Rediger")]]
 
-           [:s.editing] [fork/form {:initial-values    loaded-data'
-                                    :prevent-default?  true
-                                    :clean-on-unmount? true
-                                    :keywordize-keys   true
-                                    :on-submit         #(send :e.store (assoc-in % [:values :uid] uid))}
-                         my-form]
-           [:s.store] [rounded-view
-                       [:div "Lagrer, et øyeblikk"]]
+                [:s.editing] [fork/form {:initial-values    loaded-data'
+                                         :prevent-default?  true
+                                         :clean-on-unmount? true
+                                         :keywordize-keys   true
+                                         :on-submit         #(send :e.store (assoc-in % [:values :uid] uid))}
+                              my-form]
+                [:s.store] [rounded-view
+                            [:div "Lagrer, et øyeblikk"]]
 
-           [:div
-            [:h2 "unhandled state"]
-            [l/ppre-x @*st-all]])]))))
+                [:div
+                 [:h2 "unhandled state"]
+                 [l/ppre-x @*st-all]])])
+           [:div.h-16.flex.items-center.px-4
+            (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)]
+              [:div.flex.flex-col
+               {:class (concat fg p-)}
+               (if-let [tm (:timestamp @s)]
+                 (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
+                      (catch js/Error e (.-message e)))
+                 [:div "Ikke registrert"])])]]
+          (let [dirty false]
+            (rs/match-state (:user @*st-all)
+
+              [:s.initial]
+              [:div
+               #_(if loaded-data'
+                   (my-form {:values loaded-data' :readonly? true})
+                   [:div "Ingen data"])
+               [:div.flex.justify-between.px-4.h-12
+                (danger-button {:disabled true} "Slett konto")
+                (regular-button {:type     :button
+                                 :on-click #(send :e.edit)} "Rediger")]]
+
+              [:s.editing]
+              (when-not false                               ;readonly?
+                [:div.flex.justify-between.h-12.px-4
+                 removeaccount-command
+                 [:div.flex.gap-4
+                  (bu/regular-button {:type     :button
+                                      :on-click #(send :e.cancel-useredit)} "Avbryt")
+                  (bu/regular-button {:type     :submit
+                                      :disabled (not (some? dirty))} "Lagre")]]))))))))
+

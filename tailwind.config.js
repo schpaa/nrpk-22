@@ -34,7 +34,7 @@ module.exports = {
         green: colors.green,
         white: colors.white,
         gray: colors.gray,
-        info: colors.sky,
+        info: colors.amber,
 //         slate stone sinc neutral gray
         emerald: colors.emerald,
         indigo: colors.indigo,

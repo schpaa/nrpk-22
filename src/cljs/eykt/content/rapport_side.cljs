@@ -13,7 +13,8 @@
             [times.api :as ta]
             [db.core :as db]
             [fork.re-frame :as fork]
-            [schpaa.components.fields :as fields]))
+            [schpaa.components.fields :as fields]
+            [clojure.set :as set]))
 
 (defn- empty-list-message [msg]
   (let [{:keys [bg fg- fg fg+ p p- hd hd- hl]} (st/fbg' :void)]
@@ -267,97 +268,157 @@
                                        :class    [:rounded :h-12 :w-20]} "Rediger"]]])
       #_[booking.views/last-bookings-footer {}]]]))
 
-(defn top-bottom-view [content footer]
-  (let [{:keys [bg- bg bg+ fg+]} (st/fbg' :void)]
-    [:div.flex.flex-col
-     {:class bg
-      :style {:min-height "calc(100vh - 7rem)"}}
-     [:div.grow content]
-     (let [{:keys [bg bg+ fg+ br]} (st/fbg' :surface)]
-       [:div.sticky.bottom-0.pb-4 {:class (concat bg br [:border-t])} footer])]))
+(defn top-bottom-view
+  ([content footer]
+   (top-bottom-view "calc(100vh - 7rem)" content footer))
+  ([min-height content footer]
+   (let [{:keys [bg- bg bg+ fg+]} (st/fbg' :void)]
+     [:div.flex.flex-col
+      {:class bg
+       :style {:min-height min-height}}
+      [:div.grow content]
+      (let [{:keys [bg bg+ fg+ br]} (st/fbg' :surface)]
+        [:div.sticky.bottom-0.pb-4.pt-2
+         {:class (concat bg br [:border-t])}
+         [:div footer]])])))
+
+(defn map-difference [m1 m2]
+  (let [ks1 (set (keys m1))
+        ks2 (set (keys m2))
+        ks1-ks2 (set/difference ks1 ks2)
+        ks2-ks1 (set/difference ks2 ks1)
+        ks1*ks2 (set/intersection ks1 ks2)]
+    (merge (select-keys m1 ks1-ks2)
+           (select-keys m2 ks2-ks1)
+           (select-keys m1
+                        (remove (fn [k] (= (m1 k) (m2 k)))
+                                ks1*ks2)))))
+
+(defn preview [style content]
+  (case style
+    "a"
+    [:div.prose {:class [:prose :prose-stone :dark:prose-invert
+                         :prose-h2:mb-2
+                         :prose-headings:font-black
+                         :prose-headings:text-alt
+                         :prose-h1:text-xl
+                         :prose-h2:text-xl
+                         :prose-h3:text-lg
+                         :prose-p:font-serif
+                         :prose-li:font-sans
+                         "prose-li:text-black/50"
+                         "prose-li:italic"]}
+     (schpaa.markdown/md->html content)]
+    [:div.prose (schpaa.markdown/md->html content)]))
+
+;region form-input
+
+(defn test-func [{:keys [form-id values handle-submit errors handle-change set-values] :as props}]
+  [:form {:class     [:space-y-4]
+          :form-id   form-id
+          :on-submit handle-submit}
+   ;[l/ppre-x values]
+   ;[:div {:class p-} (str form-id)]
+
+   (when (some? (values :report-type))
+     [:div.flex.gap-4
+      [fields/select (-> props fields/regular-field)
+       :label "Rapport av"
+       :name :report-type
+       :items {"a" "vær" "b" "hsm/hendelse" "c" "materiell skade" "d" "materiell mangler" "e" "til info"}
+       :default-text "hva?"
+       :error-type :marker]])
+
+
+
+   (when (not= (values :report-type) "a")
+     [fields/text props :name :header :label "Overskrift"])
+
+   [:div.flex.gap-4
+    [fields/date (-> props fields/date-field) :name :created-date :label "Gjelder dato"]
+    [fields/time (-> props fields/time-field) :name :created-time :label "Klokke"]]
+
+   [:div.flex.gap-4
+    (when (not= (values :report-type) "a")
+      [:div.flex.gap-4
+       [fields/select (-> props fields/small-field)
+        :label "Utseende"
+        :name :style
+        :items {"a" "vanlig" "b" "flott" "c" "fin" "d" "info"}
+        :default-text "velg stil"
+        :error-type :marker]])
+
+    (when (not= (values :report-type) "a")
+      [fields/checkbox props :label "Forhåndsvis" :name :preview])]
+
+
+   (if (values :preview)
+     [:div
+      [:div {:class (concat [:uppercase] (fields/label-colors false))} "Innhold"]
+      [:div.px-2 [preview (values :style) (values :content)]]])
+   (when (not= (values :report-type) "a")
+     [:div {:class (if (values :preview) :hidden)}
+      [fields/textarea (-> props (assoc
+                                   :naked? false
+                                   :handle-blur #(do
+                                                   (when (empty? (values :header))
+                                                     (set-values {:header (first (clojure.string/split-lines (values :content)))})))
+                                   ;:handle-change #(handle-change %)
+                                   :class [:x-mx-2 :x-mb-4 :xs:mx-0 :xs:mb-0 :rounded-none :xs:rounded]))
+       :name :content
+       :label "Innhold"
+       :error-type :marker]])
+
+   (when (= (values :report-type) "a")
+     [:div.flex.gap-4
+      [fields/number (-> props fields/small-field) :label "Vann temp" :name :water-temp]
+      [fields/number (-> props fields/small-field) :label "Luft temp" :name :air-temp]])])
 
 (defn editing-form [id]
   (let [form-id (random-uuid)
+        form-state (r/atom nil)
         id (if (keyword? id) (name id) id)
         {:keys [p p- fg bg]} (st/fbg' :form)
         data (if id
                (db/on-value-reaction {:path (conj db-path id)})
-               (atom {:created (str (t/now))}))]
+               (atom {:created (str (t/now))}))
+        initial-state @data]
+    (fn [id]
+      [:div.overflow-clip
+       [top-bottom-view
+        [:div.py-4.px-2.xs:px-4
+         {:class (concat fg bg)}
+         ;[:div {:class p-} id]
+         [:div
+          [fork/form {:form-id             form-id
+                      :state               form-state
+                      :keywordize-keys     true
+                      :clear-on-umount     false
+                      #_#_:validation (fn [_] {:created-time ["wtf?"]
+                                               :created-date ["wtf?"]
+                                               :style        ["wtf?"]
+                                               :content      ["missing" "wrong"]})
+                      :component-did-mount (fn [{:keys [set-values]}]
+                                             (set-values (conj @data
+                                                               {:style        "a"
+                                                                :report-type  "e"
+                                                                :preview      true
+                                                                :content      "# This is it\n\nDoes it work?"
+                                                                :created-time (str (t/truncate (t/time (t/instant (:created @data))) :minutes))
+                                                                :created-date (str (t/date (t/instant (:created @data))))})))
+                      :prevent-default?    true}
+           test-func]]]
+        [:div
+         ;[l/ppre-x (map-difference initial-state (dissoc (:values @form-state) :style :created-time :created-date))]
+         [:div.flex.justify-between.items-center.px-4.gap-4.h-12
+          ;intent
+          [bu/cta-button {:disabled (empty? (map-difference initial-state (dissoc (:values @form-state) :style :created-time :created-date)))
+                          :on-click #(send :e.save {:id      id
+                                                    ;todo Fill out more fields as we go
+                                                    :content (-> @form-state :values :content)})} "Lagre"]
+          [bu/regular-button {:on-click #(send :e.cancel)} "Avbryt"]]]]])))
 
-    [:div.overflow-clip
-     [top-bottom-view
-      [:div.py-4.px-2.xs:px-4
-       {:class (concat fg bg)}
-       ;[:div {:class p-} id]
-       [:div
-        [fork/form {:form-id             form-id
-                    :keywordize-keys     true
-                    :clear-on-umount     false
-                    #_#_:validation (fn [_] {:created-time ["wtf?"]
-                                             :created-date ["wtf?"]
-                                             :style        ["wtf?"]
-                                             :content      ["missing" "wrong"]})
-                    :component-did-mount (fn [{:keys [set-values]}]
-                                           (set-values (conj @data
-                                                             {:style        "c"
-                                                              :report-type  "b"
-                                                              :created-time (str (t/truncate (t/time (t/instant (:created @data))) :minutes))
-                                                              :created-date (str (t/date (t/instant (:created @data))))})))
-                    :prevent-default?    true}
-         (fn [{:keys [form-id values handle-submit errors] :as props}]
-           [:form {:class     [:space-y-4]
-                   :form-id   form-id
-                   :on-submit handle-submit}
-            ;[l/ppre-x values errors]
-            ;[:div {:class p-} (str form-id)]
-
-            (when (some? (values :report-type))
-              [:div.flex.gap-4
-               [fields/select (-> props fields/regular-field)
-                :label "Rapport av"
-                :name :report-type
-                :items {"a" "vær" "b" "hsm/hendelse" "c" "materiell skade" "d" "materiell mangler" "e" "til info"}
-                :default-text "hva?"
-                :error-type :marker]])
-
-            [:div.flex.gap-4
-             (when (not= (values :report-type) "a")
-               [:div.flex.gap-4
-                [fields/select (-> props fields/small-field)
-                 :label "Utseende"
-                 :name :style
-                 :items {"a" "vanlig" "b" "flott" "c" "fin" "d" "info"}
-                 :default-text "velg stil"
-                 :error-type :marker]])
-
-             (when (not= (values :report-type) "a")
-               [fields/checkbox props :label "Forhåndsvis" :name :preview])]
-
-            (when (not= (values :report-type) "a")
-              [fields/text props :name :header :label "Overskrift"])
-
-
-            (when (not= (values :report-type) "a")
-              [fields/textarea (-> props (assoc
-                                           :naked? false
-                                           :class [:x-mx-2 :x-mb-4 :xs:mx-0 :xs:mb-0 :rounded-none :xs:rounded]))
-               :name :content
-               :label "Innhold"
-               :error-type :marker])
-
-            (when (= (values :report-type) "a")
-              [:div.flex.gap-4
-               [fields/number (-> props fields/small-field) :label "Vann temp" :name :water-temp]
-               [fields/number (-> props fields/small-field) :label "Luft temp" :name :air-temp]])
-
-            [:div.flex.gap-4
-             [fields/date (-> props fields/date-field) :name :created-date :label "Gjelder dato"]
-             [fields/time (-> props fields/time-field) :name :created-time :label "Klokke"]]])]]]
-
-      [:div.flex.justify-between.p-2.gap-4
-       [bu/regular-button {:on-click #(send :e.cancel)} "Avbryt"]
-       [bu/cta-button {:on-click #(send :e.save {:id      id
-                                                 :content :edited-entry})} "Lagre"]]]]))
+;endregion
 
 (defn rapport-side []
   (let [{:keys [bg bg+ fg+]} (st/fbg' :void)
@@ -440,61 +501,42 @@
          (let [{:keys [fg bg bg-]} (st/fbg' :form)]
            (into [:div.flex.flex-col.space-y-px.grow
                   {:class (concat [])}]
-                 (for [[k {:keys [style content created updated] :as v}] (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content))]
+                 (for [[k {:keys [header style content created updated] :as v}] (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content))]
                    [:div.prose.mx-auto.w-full
-                    {:class (concat
-                              [:p-2]
-                              (case style
-                                :a (concat
-                                     bg-
-                                     [:prose-h1:text-xl
-                                      :prose-h1:font-oswald
-                                      :prose-h3:text-base
-                                      :prose-h3:font-bold
-                                      :prose-h3:uppercase
-                                      ;"prose-h3:text-alt"
-                                      ;"prose-h3:dark:text-orange-300/90"
-                                      :prose-p:leading-relaxed
-                                      :prose-p:font-normal
-                                      :prose-p:font-serif
-                                      ;"prose-p:text-black/50"
-                                      ;"prose-a:text-sky-400"
-                                      :prose-a:leading-snug
-                                      :prose-p:m-0
-                                      :prose-p:mb-2
-                                      :prose-p:p-0
-                                      ;:prose-strong:text-white
-                                      ;"prose-strong:bg-black/50"
-                                      :prose-strong:py-1
-                                      :prose-strong:px-2
-                                      :prose-strong:rounded
-
-                                      :prose-ul:list-decimal
-                                      :prose-ul:list-outside])
-                                :b (concat
-                                     bg)
-                                :c (concat
-                                     bg-)
-                                (concat
-                                  [:bg-rose-500])))}
-                    [:div
-                     [:div.flex.justify-between
-                      [:div "Sample time"]
-                      #_[:div
-                         (if update
-                           (ta/time-format (t/time update)))
-                         (if created
-                           (ta/time-format (t/time created)))]
+                    {:class (concat bg fg [:px-2])}
+                    [:div.-debugx
+                     [:div.flex.justify-between.items-center.h-12.gap-2
+                      [:div.grow header]
+                      [:div.flex.justify-between.w-24
+                       (if updated
+                         [:div (ta/time-format (t/time (t/instant updated)))])
+                       (if created
+                         [:div (ta/time-format (t/time (t/instant created)))])]
                       [:div.flex.gap-0
                        [bu/listitem-button-small {:on-click #(send :e.hide-entry k)} :eye]
                        [bu/listitem-button-small {:on-click #(send :e.delete k)} :cross-out]
                        [bu/listitem-button-small {:on-click #(send :e.edit k)} :edit-state]]]
-                     (markdown/md->html content)]])))
+                     [:div.-debug (preview style content)]]])))
 
-         [:div.flex.justify-between.gap-4.p-2
-          [bu/regular-button {:on-click #(send :e.add)} "Ny"]
-          [bu/regular-button {:class    [:rounded]
-                              :on-click #(send :e.start-managing)} "Rediger"]])
+         [:div.flex.justify-between.gap-4.px-4
+          [:div (let [{:keys [fg- fg fg+ bg+ bg- bg p p+ p-]} (st/fbg' :surface)]
+                  (schpaa.components.views/modern-checkbox'
+                    {:set-details #(do
+                                     (if %
+                                       (send :e.start-managing)
+                                       (send :e.end-managing))
+                                     (schpaa.state/change :report/managing-mode %))
+                     :get-details #(-> @(schpaa.state/listen :report/managing-mode))}
+                    (fn [checkbox]
+                      [:div.flex.items-center.justify-between.gap-4.w-full.h-12
+                       checkbox
+                       [:div.space-y-0
+                        [:div {:class (concat fg p)} "Rediger innhold"]]])))]
+
+          [bu/regular-button {:on-click #(send :e.add)} :plus]
+
+          #_[bu/regular-button {:class    [:rounded]
+                                :on-click #(send :e.start-managing)} "Rediger"]])
 
        [:s.manage-content]
        (let [show-deleted-posts (schpaa.state/listen :report/show-deleted-posts)
@@ -535,33 +577,47 @@
                             [bu/listitem-button-danger-small {:on-click #(send :e.delete k)} :cross-out])
 
                           [bu/listitem-button-small {:on-click #(send :e.edit k)} :edit-state]]])
-                      [[:div.flex.flex-center.h-16 {:class fg} "Antall poster " (count data)]
-                       [:div.pb-8]]))])
+                      (let [{:keys [fg- fg p-]} (st/fbg' :void)]
+                        [[:div.flex.flex-center.h-16 {:class (concat p- fg)} "Antall poster " (count data)]
+                         [:div.pb-8]])))])
 
            (let [{:keys [fg- fg fg+ bg+ bg- bg p p+ p-]} (st/fbg' :surface)]
-             [:div
+             [:div.px-4
               (schpaa.components.views/modern-selectbox'
                 {:set-details #(schpaa.state/change :report/sort-order %)
                  :get-details #(-> @sort-order)}
                 (fn [checkbox]
-                  [:div.flex.items-center.justify-between.gap-4.w-full.h-16.p-4
-                   [:div.space-y-0.text-rightx
+                  [:div.flex.items-center.justify-start.gap-4.w-full.h-12
+                   checkbox
+                   [:div.space-y-0
                     [:div {:class (concat fg p)} (case @sort-order
-                                                   1 "Sortering, nyeste oppdaterte er nederst"
-                                                   0 "Sortering, siste opprettet er nederst"
-                                                   "Sortering, nyeste oppdaterte er øverst")]]
-                   checkbox]))
+                                                   1 "Siste oppdaterte er nederst"
+                                                   0 "Siste opprettede er nederst"
+                                                   "Siste oppdaterte er øverst")]]]))
               (schpaa.components.views/modern-checkbox'
                 {:set-details #(schpaa.state/change :report/show-deleted-posts %)
                  :get-details #(-> @show-deleted-posts)}
                 (fn [checkbox]
-                  [:div.flex.items-center.justify-between.gap-4.w-full.h-16.p-4
-                   [:div.space-y-0.text-rightx
-                    [:div {:class (concat fg p)} "Vis poster som er slettet"]]
-                   checkbox]))
-              [:div.flex.justify-between.gap-4.p-2
-               [bu/regular-button {:on-click #(send :e.add)} "Ny"]
-               [bu/regular-button {:on-click #(send :e.end-managing)} "Avslutt"]]])))
+                  [:div.flex.items-center.justify-start.gap-4.w-full.h-12
+                   checkbox
+                   [:div.space-y-0.text-right
+                    [:div {:class (concat fg p)} "Vis poster som er slettet"]]]))
+
+              [:div.flex.justify-between.gap-2
+               (schpaa.components.views/modern-checkbox'
+                 {:set-details #(do
+                                  (if %
+                                    (send :e.start-managing)
+                                    (send :e.end-managing))
+                                  (schpaa.state/change :report/managing-mode %))
+                  :get-details #(-> @(schpaa.state/listen :report/managing-mode))}
+                 (fn [checkbox]
+                   [:div.flex.items-center.justify-between.gap-4.w-full.h-12
+                    checkbox
+                    [:div.space-y-0
+                     [:div {:class (concat fg p)} "Rediger innhold"]]]))
+               [bu/regular-button {:on-click #(send :e.add)} :plus]
+               #_[bu/regular-button {:on-click #(send :e.end-managing)} "Avslutt"]]])))
 
        [:s.storing]
        [:div "Lagrer, et øyeblikk"]
@@ -572,7 +628,6 @@
         [schpaa.icon/spinning :spinner]
         #_(if-let [v (some-> (db/database-get {:path ["report"]}) deref)]
             (send :e.))]
-
 
        (do
          (tap> [:>>>s *fsm-rapport])
