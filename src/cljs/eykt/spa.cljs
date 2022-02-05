@@ -6,21 +6,15 @@
             [nrpk.fsm-helpers :refer [send]]
             [schpaa.modal :as modal]
             [schpaa.components.screen :as components.screen]
-            [schpaa.style :as st]
             [booking.spa]
-    ;;
             [eykt.content.pages]
-    ;[schpaa.components.tab]
-    ;[kee-frame.core :as k]
-    ;[booking.hoc :as hoc]
             [eykt.calendar.core]
-            [schpaa.debug :as l]
             [kee-frame.core :as k]))
 
 (def route-table
-  {:r.mine-vakter' eykt.content.pages/user
-   :r.debug        eykt.content.pages/user
-   :r.user         eykt.content.pages/user
-   :r.mine-vakter  eykt.content.pages/common
-   :r.common2      eykt.content.pages/common
-   :r.forsiden     eykt.content.pages/common})
+  {:r.user        eykt.content.pages/user
+   :r.mine-vakter eykt.content.pages/user
+   :r.debug       eykt.content.pages/user
+   :r.forsiden    eykt.content.pages/common
+   :r.kalender    eykt.content.pages/common
+   :r.annet       eykt.content.pages/common})

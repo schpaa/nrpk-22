@@ -20,24 +20,44 @@
 (def short-rules
   [;intent This is not really a rule, since it is a one-time-happening
    {:group       :z1
+    :description "Åpen dag"
+    :startdate   #time/date "2022-02-01"
+    :times       [{:starttime #time/time "10:00"
+                   :endtime   #time/time "16:00"
+                   :slots     8}]}
+   {:group       :z1
+    :description "Vår-dugnad"
+    :startdate   #time/date "2022-02-03"
+    :enddate     #time/date "2022-02-04"
+    ;:weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+    :times       [{:starttime #time/time "10:00"
+                   :endtime   #time/time "12:00"
+                   :slots     4}
+                  {:starttime #time/time "12:00"
+                   :endtime   #time/time "14:00"
+                   :slots     4}
+                  {:starttime #time/time "14:00"
+                   :endtime   #time/time "16:00"
+                   :slots     4}]}
+   {:group       :z1
     :description "UKE"
-    :startdate   #time/date "2022-01-30"
-    :enddate     #time/date "2022-05-13"
+    :startdate   #time/date "2022-01-12"
+    :enddate     #time/date "2022-06-13"
     :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-    :times       [{:starttime #time/time "18:00"
-                   :endtime   #time/time "21:00"
-                   :slots     12}]}
-   #_{:group       :z2
-      :description "HELG"
-      :startdate   #time/date "2022-01-31"
-      :enddate     #time/date "2022-05-13"
-      :weekdays    [t/SATURDAY t/SUNDAY]
-      :times       [{:starttime #time/time "11:00"
-                     :endtime   #time/time "14:00"
-                     :slots     3}
-                    {:starttime #time/time "14:00"
-                     :endtime   #time/time "17:00"
-                     :slots     3}]}
+    :times       [{:starttime #time/time "11:00"
+                   :endtime   #time/time "12:00"
+                   :slots     2}]}
+   {:group       :z2
+    :description "HELG"
+    :startdate   #time/date "2022-01-31"
+    :enddate     #time/date "2022-05-13"
+    :weekdays    [t/SATURDAY t/SUNDAY]
+    :times       [{:starttime #time/time "11:00"
+                   :endtime   #time/time "14:00"
+                   :slots     3}
+                  {:starttime #time/time "14:00"
+                   :endtime   #time/time "17:00"
+                   :slots     3}]}
    #_{:group       :c
       :description "aftermath is a long title"
       :startdate   #time/date "2022-01-31"

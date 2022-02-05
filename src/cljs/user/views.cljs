@@ -22,7 +22,10 @@
             [schpaa.state]
             [clojure.walk :as walk]
             [reagent.core :as r]
-            [times.api :as ta]))
+            [times.api :as ta]
+            [schpaa.markdown :refer [md->html]]
+            [shadow.resource :refer [inline]]
+            [clojure.string :as str]))
 
 (defn confirm-registry []
   #_(apply send
@@ -211,10 +214,39 @@
       (if-let [removal-date (some-> s deref :removal-date t/date)]
         [top-bottom-view
          "calc(100vh - 17rem)"
-         [:div.p-4.space-y-4 {:class (concat bg fg+)}
-          [:div (ta/format "Du har fortalt oss at du ønsker å slette denne kontoen. Dette skjer etter %s. Du kan også gjennopprette kontoen hvis du angrer." (ta/date-format removal-date))]
+         [:div {:class (concat bg fg)}
+          [:div.xs:px-4.px-2.pb-4.mx-auto {:class [;:lg:prose-xl
+                                                   ;:antialiased
+                                                   :prose-sm
+                                                   :prose
+                                                   :prose-slate
+                                                   :dark:prose-invert
+                                                   :prose-strong:font-black
+                                                   :prose-a:text-alt
+                                                   ;:prose-headings:text-gray-400
+                                                   :prose-p:font-lora
+                                                   :prose-p:leading-relaxed
+                                                   :prose-p:text-base
+                                                   :prose-pre:rounded-sm
+                                                   :prose-pre:bg-gray-200
+                                                   :prose-pre:text-gray-700
+                                                   :prose-headings:mt-0
+                                                   ;:prose-h2:pt-0
+                                                   :prose-h2:mt-0
 
-          [:div "Vi kan samle sammen alle data vi har lagret om deg og sende deg en e-post med innholdet."]]
+                                                   :prose-headings:pt-4
+                                                   :prose-h2:text-2xl
+                                                   :prose-h3:pb-0
+                                                   :prose-h3:mb-0
+                                                   :prose-h3:text-lg
+                                                   :prose-h3:font-bold]}
+           (md->html (str/replace (inline "./sletting.md") "@dato" (ta/date-format removal-date)))]
+          #_[:div.p-4.space-y-4.max-w-xl.mx-auto
+             {:class (concat bg fg+)}
+             [:div "Du har fortalt oss at du ønsker å slette denne kontoen. En permanent sletting fra vår side skjer først etter " [:span.font-bold (ta/date-format removal-date)]
+              ", du kan innen den tid gjennopprette kontoen hvis du angrer."]
+
+             [:div "Vi kan samle sammen alle data vi har lagret om deg og sende deg en e-post med innholdet."]]]
          [:div.flex.justify-between.h-12.px-4
           (removeaccount-command uid)
           [:div.flex.gap-4
@@ -229,7 +261,7 @@
                                                             [:div "Vi samler sammen alle data, dette kan ta litt tid – når vi er ferdige vil du få en e-post med en lenke du kan trykke på for å laste alt ned."]
                                                             [:div "Du vil motta den på " [:span.font-semibold (some-> s deref :epost)]]]]})}
 
-             "Motta mine data!")]]]
+             "Få epost!")]]]
 
         [top-bottom-view
          "calc(100vh - 17rem)"

@@ -4,7 +4,8 @@
             ["body-scroll-lock" :as body-scroll-lock]
             [schpaa.modal :as modal]
             [schpaa.components.screen :as components.screen]
-            [nrpk.fsm-helpers :as state :refer [send]]))
+            [nrpk.fsm-helpers :as state :refer [send]]
+            [schpaa.debug :as l]))
 
 (defn- forced-scroll-lock
   [locked? target]
@@ -19,6 +20,7 @@
   (let [s (rf/subscribe [::rs/state-full :main-fsm])
         get-menuopen-fn (rf/subscribe [:app/menu-open?])]
     [:div.h-full
+     ;[l/ppre-x @re-frame.db/app-db]
      [modal/overlay-with
       {:short-timeout (:modal-short-timeout @s)             ;;todo When showing a popup with short-timeout (< 2 seconds auto-closes), just bypass the click to dismiss
        :modal-dim     (:modal-dim @s)
@@ -35,8 +37,8 @@
       [components.screen/render
        {:current-page          (fn [] @(rf/subscribe [:app/current-page]))
         :toggle-menu-open      (fn [] (rf/dispatch [:toggle-menu-open]))
-        :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to [:r.mine-vakter]]))
-        :navigate-to-user      (fn [] (rf/dispatch [:app/navigate-to [:r.user]]))
+        :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to @(rf/subscribe [:app/previous :active-front :r.mine-vakter])]))
+        :navigate-to-user      (fn [] (rf/dispatch [:app/navigate-to @(rf/subscribe [:app/previous :active-back :r.user])]))
         :current-page-title    (fn [] @(rf/subscribe [:app/current-page-title]))
         :current-page-subtitle (fn [] @(rf/subscribe [:app/current-page-subtitle]))
         :get-menuopen-fn       (fn [] @(rf/subscribe [:app/menu-open?]))

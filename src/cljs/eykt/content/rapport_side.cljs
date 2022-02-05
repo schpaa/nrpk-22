@@ -277,7 +277,7 @@
       {:class bg
        :style {:min-height min-height}}
       [:div.grow content]
-      (let [{:keys [bg bg+ fg+ br]} (st/fbg' :surface)]
+      (let [{:keys [bg bg+ fg+ br]} (st/fbg' :tabbar)]
         [:div.sticky.bottom-0.pb-4.pt-2
          {:class (concat bg br [:border-t])}
          [:div footer]])])))

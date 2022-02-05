@@ -19,6 +19,11 @@
    [:div.h-6.flex.items-center.px-px {;:style {:min-width "2rem"}
                                       :class (if (vector? attr) (flatten attr) attr)} c]))
 
+(defn get-username [uid]
+  (or (some-> (db/on-value-reaction {:path ["users" uid]}) deref :alias) uid))
+
+(def memo-username (memoize get-username))
+
 (defn render-block-column [{:keys [each e' r' group-id uid e dt]}]
   {:pre [(some? uid) (string? uid)]}
   (let [{:keys [bg- bg+ bg hd he fg+ fg p p- p+ fg-]} (st/fbg' :calender-table)
@@ -49,13 +54,13 @@
       [:div.space-y-px
 
        (concat
-         (for [[idx [k v]] (map-indexed vector (sort-by second < r'))]
+         (for [[idx [uid v]] (map-indexed vector (sort-by second < r'))]
            [:div.flex.flex-col.gap-2
             {:class (if (< idx (:slots (first e')))
                       (concat bg-)
                       (concat bg- [:text-red-500]))}
 
-            [cell [fg+ p- :overflow-hidden :text-ellipsis] (str k)]
+            [cell [fg+ p- :overflow-hidden :text-ellipsis] (memo-username uid)]
             #_[:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
 
          (when (pos? c)

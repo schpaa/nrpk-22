@@ -10,29 +10,30 @@
      :subheader "Min side"}]
 
    ["/mine-vakter"
-    {:name      :r.mine-vakter'
+    {:name      :r.mine-vakter
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Min side"}]
+     :subheader "Kalender"}]
 
    ["/feilsoking"
     {:name      :r.debug
      :header    ["Eykt Vaktliste" "Eykt"]
      :subheader "Min side"}]
 
+
    ["/"
-    {:name      :r.mine-vakter
-     :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Kalender"}]
-
-   ["/c2"
-    {:name      :r.common2
-     :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Kalender"}]
-
-   ["/forsiden"
     {:name      :r.forsiden
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Forsiden"}]])
+     :subheader "Forsiden"}]
+
+   ["/kalender"
+    {:name      :r.kalender
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Kalender"}]
+
+   ["/annet"
+    {:name      :r.annet
+     :header    ["Eykt Vaktliste" "Eykt"]
+     :subheader "Min side"}]])
 
 ;region initial-state
 

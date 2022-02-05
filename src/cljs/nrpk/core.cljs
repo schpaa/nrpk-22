@@ -47,3 +47,17 @@
 
 (rf/reg-sub :app/menu-direction (fn [db]
                                   (get db :menu-direction true)))
+
+;region tab-memory for front and back
+
+(rf/reg-sub :app/previous
+            (fn [db [_ context default]]
+              {:pre [(some #{context} [:active-front :active-back])]}
+              [(get db context default)]))
+
+(rf/reg-event-db :app/register-entry
+                 (fn [db [_ context page]]
+                   {:pre [(some #{context} [:active-front :active-back])]}
+                   (assoc db context page)))
+
+;endregion

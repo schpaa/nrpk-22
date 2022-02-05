@@ -9,6 +9,7 @@
             [re-frame.core :as rf]
             [schpaa.style :as st]
             [db.core :as db]
+            [db.signin]
             [user.views]
             [times.api :as ta]
             [eykt.calendar.views]
@@ -50,12 +51,15 @@
 
    (md->html (inline "./about.md"))])
 
+(defn register-back "to :active-front" [page]
+  (rf/dispatch [:app/register-entry :active-back page]))
+
 (defn render-back-tabbar []
   [:div.sticky.top-16.z-100.z-200
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-    [:r.user "Om meg" nil :icon :user]
-    [:r.debug "Meldinger" nil :icon :chat-bubble]
-    [:r.debug "Feilsøking" nil :icon :eye]]])
+    [:r.user "Om meg" register-back :icon :user]
+    [:r.mine-vakter "Mine vakter" register-back :icon :chat-bubble]
+    [:r.debug "Feilsøking" register-back :icon :eye]]])
 
 (defn user [r]
   (let [route (rf/subscribe [:app/current-page])
@@ -86,7 +90,7 @@
         :r.debug
         (top-bottom-view
           [:div.z-100 [hoc/debug]]
-          (let [{:keys [fg fg- p p-]} (st/fbg' :surface)]
+          (let [{:keys [fg fg- br p p-]} (st/fbg' :tabbar)]
             (schpaa.components.views/modern-checkbox'
               {:set-details #(schpaa.state/change :app/sample-options %)
                :get-details #(-> (schpaa.state/listen :app/sample-options) deref)}
@@ -97,12 +101,15 @@
 
         [:div @route]]])))
 
+(defn register-front "to :active-front" [page]
+  (rf/dispatch [:app/register-entry :active-front page]))
+
 (defn render-front-tabbar []
   [:div.sticky.top-16.z-200
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-    [:r.forsiden "Forsiden" nil :icon :document]
-    [:r.common2 "Kalender" nil :icon :calendar]
-    [:r.mine-vakter "Mine vakter" nil :icon :calendar]]])
+    [:r.forsiden "Forsiden" register-front :icon :document]
+    [:r.kalender "Kalender" register-front :icon :calendar]
+    [:r.annet "Annet" register-front :icon :square]]])
 
 (defn common [r]
   (let [user-auth (rf/subscribe [::db/root-auth])
@@ -117,8 +124,11 @@
            [eykt.content.rapport-side/rapport-side]
            [eykt.content.rapport-side/no-content-message])]
 
-        :r.mine-vakter
-        [content.mine-vakter/mine-vakter @user-auth]
+        :r.annet
+        [:div "Annet"]
+
+        #_#_:r.mine-vakter
+            [content.mine-vakter/mine-vakter @user-auth]
         #_(let [listener (db/on-value-reaction {:path ["calendar"]})
                 {:keys [fg fg+ bg hd he p fg-]} (st/fbg' :form)]
             [:div.p-2
@@ -126,7 +136,7 @@
              [eykt.calendar.views/calendar
               {:base (eykt.calendar.core/routine @listener)
                :data (eykt.calendar.core/expand-date-range)}]])
-        :r.common2
+        :r.kalender
         (let [{:keys [bg]} (st/fbg' :form)]
           [:div
            {:class bg}
