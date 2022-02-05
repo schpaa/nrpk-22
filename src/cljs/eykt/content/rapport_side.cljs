@@ -424,11 +424,7 @@
   (let [{:keys [bg bg+ fg+]} (st/fbg' :void)
         *fsm-rapport (:rapport @(rf/subscribe [::rs/state :main-fsm]))]
     [:div
-     [:div.sticky.top-28
-      #_[l/ppre-x
-         #_(map (fn [[k v]] {(subs (str k) 0 6) v}) @rapport-state)
-         ;@(rf/subscribe [::rs/state-full :main-fsm])
-         *fsm-rapport]]
+     [:div.sticky.top-28]
      (rs/match-state *fsm-rapport
        [:s.initial]
        (if-let [data (get-content)]
@@ -453,48 +449,15 @@
 
        :s.adding
        [editing-form nil]
-       #_(top-bottom-view
-           [:div
-            [:div "CONTENT"]
-            [:div *fsm-rapport]]
-           (let [{:keys [fg]} (st/fbg' :void)]
-             [:div.space-y-4.p-2
-              {:class fg}
-
-              [:div.flex.justify-between.gap-4
-               [bu/regular-button {:on-click #(send :e.cancel)} "Avbryt"]
-               [bu/regular-button {:on-click #(send :e.save {:content :new-entry})} "Lagre"]]]))
 
        :s.adding-at-front
        [editing-form nil]
-       #_(top-bottom-view
-           [:div
-            [:div "CONTENT"]
-            [:div *fsm-rapport]]
-           (let [{:keys [fg]} (st/fbg' :void)]
-             [:div.space-y-4.p-2
-              {:class fg}
-
-              [:div.flex.justify-between.gap-4
-               [bu/regular-button {:on-click #(send :e.cancel)} "Avbryt"]
-               [bu/regular-button {:on-click #(send :e.save {:content :new-entry})} "Lagre"]]]))
 
        [:s.editing']
        [editing-form (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
-       #_(let [{:keys [fg]} (st/fbg' :void)
-               id (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
-           [:div.p-4.space-y-4
-            {:class fg}
-            [:div *fsm-rapport]
-            [:div (str id)]
-            [:div.flex.gap-4
-             [bu/regular-button {:on-click #(send :e.save {:id      id
-                                                           :content :edited-entry})} "Lagre"]
-             [bu/regular-button {:on-click #(send :e.cancel)} "Avbryt"]]])
 
        [:s.editing]
        [editing-form (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
-
 
        [:s.some-content]
        (top-bottom-view
