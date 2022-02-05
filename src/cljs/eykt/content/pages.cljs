@@ -26,7 +26,8 @@
             [eykt.content.rapport-side]
             [eykt.content.rapport-side :refer [top-bottom-view]]
             [nrpk.hov]
-            [booking.views])
+            [booking.views]
+            [clojure.set :as set])
   (:import [goog.async Debouncer]))
 
 (defn new-designed-content [{:keys [desktop?] :as m}]
@@ -129,17 +130,21 @@
     ;; We use apply here to support functions of various arities
     (fn [& args] (.apply (.-fire dbnc) dbnc (to-array args)))))
 
-(defn std-person-listitem [v]
-  (let [selected? (< 5 (rand-int 10))
+(defn std-person-listitem [selection v]
+  (let [selected? (some #{(:uid v)} @selection)
         {:keys [bg bg- bg+ fg p- fg-]} (st/fbg' (if selected?
                                                   :listitem-button-selected
                                                   :listitem-button-unselected))]
     [:div.flex.w-full.gap-px.pr-px
-     {:class (concat bg- fg)}
+     {:class (concat bg fg)}
      [nrpk.hov/open-user-details (:uid v)]
      [:div
       (when selected?
-        (bu/listitem-button-small-clear {:color-map :listitem-button-selected} :cross-out))]
+        (bu/listitem-button-small-clear {:on-click  #(do
+                                                       (readymade/popup {:dialog-type :error
+                                                                         :content     (:navn v)})
+                                                       (swap! selection set/difference #{(:uid v)}))
+                                         :color-map :listitem-button-selected} :cross-out))]
      [:div.h-12.flex.items-center.xs:px-4.px-2.grow.truncate
       [:div.flex.flex-col.space-y-0
        [:div.grow.truncate.leading-normal (:navn v)]
@@ -148,7 +153,11 @@
      ;[:div.w-16.truncate {:class (concat p- fg-)} (:uid v)]]]]
      [:div
       (when-not selected?
-        (bu/listitem-button-small-clear {:color-map :listitem-button-unselected} :checked))]]))
+        (bu/listitem-button-small-clear {:on-click  #(do
+                                                       (readymade/popup {:dialog-type :message
+                                                                         :content     (:navn v)})
+                                                       (swap! selection set/union #{(:uid v)}))
+                                         :color-map :listitem-button-unselected} :checked))]]))
 
 #_(defn std-person-listitem [v]
     (let [selected? (< 5 (rand-int 10))
@@ -174,6 +183,8 @@
         (when-not selected?
           (bu/listitem-button-small-clear {:color-map :listitem-button-unselected} :checked))]]))
 
+(defonce selection (r/atom #{}))
+
 (defn common [r]
   (let [user-auth (rf/subscribe [::db/root-auth])
         v (db/on-value-reaction {:path ["report"]})]
@@ -186,17 +197,19 @@
          (if-let [v @v]
            [eykt.content.rapport-side/rapport-side]
            [eykt.content.rapport-side/no-content-message])]
+
         :r.annet
         (let [vis-inne (rf/subscribe [:vakt/vis-inne])
               vis-ute (rf/subscribe [:vakt/vis-ute])]
-          (r/with-let [search-field (r/atom "")
+          (r/with-let [
+                       search-field (r/atom "")
                        search-field' (r/atom "")]
             (let [t (tester @search-field')
                   bouncer (debounce #(reset! search-field' %) 750)]
               (top-bottom-view
                 [:div
                  [:div.sticky.top-28.bg-gray-800.text-white.h-16.items-center.justify-between.px-2.gap-4.grid.grid-cols-2
-                  [:div.grow (fields/select {:naked?      true
+                  [:div.grow (fields/select {:naked?      false
                                              :class       []
                                              :placeholder "søk"
                                              :values      (fn [_])}
@@ -204,7 +217,7 @@
                                                     "b" "second list"}
                                             :default-text "velg liste"
                                             :name :list)]
-                  [:div.grow (fields/text {:naked?        true
+                  [:div.grow (fields/text {:naked?        false
                                            :class         []
                                            :auto-focus    true
                                            :placeholder   "søkefelt"
@@ -215,7 +228,12 @@
                                           :name :search)]]
                  (let [{:keys [bg fg]} (st/fbg' :void)
                        data (db/on-value-reaction {:path ["users"]})
-                       data (into {} (comp (filter (fn [[k v]] (t v)))) @data)
+                       data (into {} (comp
+                                       (if @vis-inne (filter (fn [[k v]] (some #{(:uid v)} @selection))) (map identity))
+                                       (filter (fn [[k v]]
+                                                 (or
+                                                   (some #{(:uid v)} @selection)
+                                                   (t v))))) @data)
                        c (count data)]
                    [:div
                     {:class (concat bg fg)}
@@ -223,7 +241,8 @@
                       (into [:div.space-y-px]
                             (concat
                               (for [[k v] (sort-by (comp :updated val) data)]
-                                ^{:key (str k)} [std-person-listitem v])
+                                ^{:key (str k)}
+                                [std-person-listitem selection v])
                               [[:div.flex.flex-center.h-16 c]])))])]
                 (let [{:keys [bg fg fg+ p p-]} (st/fbg' :tabbar)]
                   [:div.h-12.px-4.flex.items-center.justify-between.truncate
@@ -234,7 +253,7 @@
                        [:div.flex.items-center.gap-4
                         checkbox
                         [:div.space-y-0.truncate.shrink-0
-                         [:div {:class (concat p fg+)} "Skjul merkede"]
+                         [:div {:class (concat p fg+)} "Vis bare merkede"]
                          [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-inne "Skjuler nå de markerte" "Viser nå alle")]]]))
                    (schpaa.components.views/modern-checkbox'
                      {:set-details #(rf/dispatch [:vakt/vis-ute %])
