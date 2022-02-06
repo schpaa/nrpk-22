@@ -57,8 +57,9 @@
     (.setAttribute html "class" (if (= :dark @user-screenmode) "dark" ""))
     (.setAttribute body "class" "font-sans bg-gray-600 dark:bg-gray-800 ") ;fixme "min-h-screen overflow-x-hidden"
     (forced-scroll-lock (or @menu-open?
-                            (or (:modal @s)
-                                (:modal-forced @s))) "maint")
+                            (and (or (:modal @s)
+                                     (:modal-forced @s))
+                                 (not (:modal-short-timeout @s)))) "maint")
     [dispatch-main
      (when-let [page (get route-table @route-name)]
        (kee-frame.router/make-route-component page @route-entry))]))
