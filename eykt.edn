@@ -30,7 +30,7 @@
                   -devcards:css (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
                   -dev:css      (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/eykt/css/output.css --watch")
                   -dev:watch    (clojure (str "-M:shadow-cljs watch " -app-name))
-                  -dev          {:depends [-dev:watch -dev:browser]}
+                  -dev          {:depends [-dev:browser -dev:watch]}
                   stats         {:depends []
                                  :task    (do
                                             (sh "bash" "-c" "ls -l ./dist/eykt/js/*.js >> ./history.md")
@@ -48,6 +48,8 @@
                   css           {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
                   clean         {:task (fs/delete-tree -dist-dir)}
                   build         {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
-                  fonts         {:task (fs/copy-tree "template/eykt/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)}
+                  fonts         {:task (do
+                                         (fs/copy-tree "template/eykt/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)
+                                         (fs/copy-tree "template/eykt/img" (str -dist-dir "/" -app-name "/img") :replace-existing))}
                   deploy        {:depends [clean build template css fonts stats]
                                  :task    (shell "firebase deploy --only hosting:eyktv-22")}}}

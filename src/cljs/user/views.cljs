@@ -69,7 +69,9 @@
         {:type    :form
          :flags   #{:timeout :weak-dim}
          :content "Dette vil logge deg ut av kontoen på denne enheten."
-         :ok      (fn [] (db/sign-out))})}
+         :ok      (fn [] (do (db/sign-out)
+                             (rf/dispatch [:app/navigate-to [:r.forsiden]])
+                             #_(schpaa.modal.readymade/message {:content "Du har logget ut"})))})}
     "Logg ut"))
 
 (defn removeaccount-command [uid]
@@ -152,21 +154,39 @@
         [fields/text (fields/small-field props) :label "Telefon" :name :telefon]
         [fields/text (fields/large-field props) :label "Epost" :name :epost]]]
       [:div.flex.gap-4
-       [fields/select (fields/normal-field props) :label "Våttkort" :name :våttkort :items {"0" "Nei" "1" "Ja" "2" "Ja 2" "3" "Ja 3"}]]
+       [fields/select (fields/large-field props) :label "Våttkort" :name :våttkort :items {"0" "Jeg har ikke våttkort" "1" "Introkurs 3 timer" "2" "Grunnkurs 16 timer" "3" "Teknikk, sikkerhet eller grunnkurs-2" "4" "Aktivitetsleder, trener-1 eller høyere"}]]
       [:div.flex.gap-4.flex-wrap.justify-end
        [fields/text (-> props fields/large-field (assoc :readonly? true)) :label "Bruker-id" :name :uid]]]]))
 
-(defn my-booking-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
+(defn my-booking-form [{:keys [form-id handle-submit handle-change values set-values dirty readonly? values] :as props}]
   (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :form)]
     [:form.space-y-8
      {:class     bg
       :id        form-id
       :on-submit handle-submit}
+     ;[l/ppre-x values]
      [:div.space-y-4.p-4
+
       [:div.flex.gap-4.flex-wrap
-       [fields/text (fields/small-field props) :label "Våttkort #" :name :våttkortnr]]
+       [fields/checkbox (-> props
+                            fields/large-field
+                            (assoc
+                              :values #(some? (values :request-booking))
+                              :handle-change #(let [v (-> % .-target .-checked)]
+                                                (set-values {:request-booking (if v (str (t/now)) nil)})
+
+                                                #_(handle-change %)))) :label "Jeg ønsker å bruke booking på sjøbasen" :name :request-booking]
+       [fields/checkbox (fields/large-field props) :label "Jeg er ekspert og ønsker tilgang til de utfordrende båtene" :name :booking-expert]]
+
+      [:div.flex.gap-4.flex-wrap
+       [fields/text (fields/small-field props) :label "Våttkort-nr" :name :våttkortnr]]
+
       [:div.flex.gap-4.flex-wrap.justify-end
-       [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Req booking" :name :request-booking]]]]))
+       [fields/date (-> props fields/date-field (assoc :readonly? true
+                                                       :values #(if-let [v (values :request-booking)]
+                                                                  (try (t/date (t/instant v)) (catch js/Error _ nil))
+                                                                  "")))
+        :label "Req booking" :name :request-booking]]]]))
 
 (defn my-vakt-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
   (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :form)]
@@ -183,6 +203,7 @@
        [fields/text (fields/normal-field props) :label "Livredning" :name :årstall-livredningskurs]]
 
       [:div.flex.gap-4.flex-wrap
+       [fields/checkbox (fields/large-field props) :label "Jeg arbeider som instruktør for NRPK" :name :instruktør]
        [fields/checkbox (fields/large-field props) :label "Foretrekker helgevakt" :name :helgevakt]
        [fields/checkbox (fields/large-field props) :label "Kan stille som vikar" :name :vikar]
        [fields/checkbox (fields/large-field props) :label "Kort reisevei" :name :kort-reisevei]]
@@ -214,39 +235,13 @@
       (if-let [removal-date (some-> s deref :removal-date t/date)]
         [top-bottom-view
          "calc(100vh - 17rem)"
-         [:div {:class (concat bg fg)}
-          [:div.xs:px-4.px-2.pb-4.mx-auto {:class [;:lg:prose-xl
-                                                   ;:antialiased
-                                                   :prose-sm
-                                                   :prose
-                                                   :prose-slate
-                                                   :dark:prose-invert
-                                                   :prose-strong:font-black
-                                                   :prose-a:text-alt
-                                                   ;:prose-headings:text-gray-400
-                                                   :prose-p:font-lora
-                                                   :prose-p:leading-relaxed
-                                                   :prose-p:text-base
-                                                   :prose-pre:rounded-sm
-                                                   :prose-pre:bg-gray-200
-                                                   :prose-pre:text-gray-700
-                                                   :prose-headings:mt-0
-                                                   ;:prose-h2:pt-0
-                                                   :prose-h2:mt-0
+         (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :surface)]
+           [:div {:class (concat bg fg)}
+            [:div.xs:px-4.px-2.pb-4
+             [:div.prose.max-w-md.mx-auto
+              (st/prose-markdown-styles
+                (md->html (str/replace (inline "./sletting.md") "@dato" (ta/date-format removal-date))))]]])
 
-                                                   :prose-headings:pt-4
-                                                   :prose-h2:text-2xl
-                                                   :prose-h3:pb-0
-                                                   :prose-h3:mb-0
-                                                   :prose-h3:text-lg
-                                                   :prose-h3:font-bold]}
-           (md->html (str/replace (inline "./sletting.md") "@dato" (ta/date-format removal-date)))]
-          #_[:div.p-4.space-y-4.max-w-xl.mx-auto
-             {:class (concat bg fg+)}
-             [:div "Du har fortalt oss at du ønsker å slette denne kontoen. En permanent sletting fra vår side skjer først etter " [:span.font-bold (ta/date-format removal-date)]
-              ", du kan innen den tid gjennopprette kontoen hvis du angrer."]
-
-             [:div "Vi kan samle sammen alle data vi har lagret om deg og sende deg en e-post med innholdet."]]]
          [:div.flex.justify-between.h-12.px-4
           (removeaccount-command uid)
           [:div.flex.gap-4
@@ -266,19 +261,17 @@
         [top-bottom-view
          "calc(100vh - 17rem)"
          [:div.space-y-px
-          [details
-           :user/basic-section-open
-           "Grunnleggende"
-           [fork/form {:state                form-state
-                       :prevent-default?     true
-                       :clean-on-unmount?    true
-                       :keywordize-keys      true
-                       :xcomponent-did-mount (fn [{:keys [set-values]}]
-                                               (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                {:uid             uid
-                                                                 :request-booking (str (t/date))})]
-                                                 (set-values data)))
-                       :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
+          [details :user/basic-section-open "Grunnleggende"
+           [fork/form {:state               form-state
+                       :prevent-default?    true
+                       :clean-on-unmount?   false
+                       :keywordize-keys     true
+                       :component-did-mount (fn [{:keys [set-values]}]
+                                              (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                               {;:uid             uid
+                                                                #_#_:request-booking (str (t/date))})]
+                                                (set-values data)))
+                       :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
             my-basics-form]]
           [details
            :user/booking-section-open
@@ -288,31 +281,30 @@
                        :clean-on-unmount?    false
                        :keywordize-keys      true
                        :xcomponent-did-mount (fn [{:keys [set-values]}]
-
                                                (let [data (conj (if @s (walk/keywordize-keys @s) {})
                                                                 {:uid             uid
                                                                  :request-booking (str (t/date))})]
                                                  (set-values data)))
                        :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
             my-booking-form]]
-          [details
-           :user/vakt-section-open
-           "Nøkkelvakt"
-           [fork/form {:state               form-state
-                       :prevent-default?    true
-                       :clean-on-unmount?   false
-                       :keywordize-keys     true
-                       :component-did-mount (fn [{:keys [set-values]}]
-
-                                              (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                               {:uid             uid
-                                                                :request-booking (str (t/date))})]
-                                                (set-values data)))
-                       :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-            my-vakt-form]]
+          (when (= "eykt" @(rf/subscribe [:app/name]))
+            [details
+             :user/vakt-section-open
+             "Nøkkelvakt"
+             [fork/form {:state               form-state
+                         :prevent-default?    true
+                         :clean-on-unmount?   true
+                         :keywordize-keys     true
+                         :component-did-mount (fn [{:keys [set-values]}]
+                                                (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                 {:uid             uid
+                                                                  :request-booking (str (t/date))})]
+                                                  (set-values data)))
+                         :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
+              my-vakt-form]])
           [sist-oppdatert s]]
-         (let [fields [:kort-reisevei :medlem-fra-år :navn :alias :telefon :epost :våttkort :våttkortnr :kort-reisevei :fødselsår
-                       :årstall-førstehjelpskurs :årstall-livredningskurs :helgevakt :vikar]
+         (let [fields [:uid :kort-reisevei :medlem-fra-år :navn :alias :telefon :epost :våttkort :våttkortnr :kort-reisevei :fødselsår :nøkkelnummer
+                       :årstall-førstehjelpskurs :årstall-livredningskurs :helgevakt :vikar :booking-expert :request-booking :instruktør]
                diff (map-difference (select-keys (:values @form-state) fields)
                                     (select-keys (walk/keywordize-keys @s) fields))]
            [:<>
@@ -335,76 +327,10 @@
                                  "Lagre")]]])]))))
 
 (defn my-info [{:keys []}]
-  (let [*st-all (rf/subscribe [::rs/state :main-fsm])
-        user-auth (rf/subscribe [::db/user-auth])
-        uid (:uid @user-auth)
-        s (if uid
-            (db/on-value-reaction {:path ["users" uid]})
-            (atom {}))]
+  (let [user-auth (rf/subscribe [::db/user-auth])
+        uid (:uid @user-auth)]
     (fn []
-      (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)
-            path {:path ["users" uid]}
-            loaded-data (db/on-value-reaction path)
-            loaded-data' (-> (select-keys @loaded-data [:uid :last-update :navn :request-booking :alias :våttkortnr :telefon :epost :input])
-                             (update :request-booking
-                                     #(try
-                                        (str (t/date (times.api/str->datetime %)))
-                                        (catch js/Error _ %))))]
-        [user-form uid]
-        #_(top-bottom-view
-            "calc(100vh - 17rem)"
+      (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)]
+        [user-form uid]))))
 
-            [:div
-             (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)]
-               [:div.p-4.space-y-4
-                {:class bg}
-                (rs/match-state (:user @*st-all)
-                  [:s.initial] [:div.space-y-8
-                                (if loaded-data'
-                                  (my-form {:values loaded-data' :readonly? true})
-                                  [:div "Ingen data"])
-                                #_[:div.flex.justify-between
-                                   (danger-button {:disabled true} "Slett konto")
-                                   (regular-button {:type     :button
-                                                    :on-click #(send :e.edit)} "Rediger")]]
-
-                  [:s.editing]
-                  [user-form uid my-form]
-
-                  [:s.store] [rounded-view
-                              [:div "Lagrer, et øyeblikk"]]
-
-                  [:div
-                   [:h2 "unhandled state"]
-                   [l/ppre-x @*st-all]])])
-             [:div.h-16.flex.items-center.px-4
-              (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)]
-                [:div.flex.flex-col
-                 {:class (concat fg p-)}
-                 (if-let [tm (:timestamp @s)]
-                   (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
-                        (catch js/Error e (.-message e)))
-                   [:div "Ikke registrert"])])]]
-            (let [dirty false]
-              (rs/match-state (:user @*st-all)
-
-                [:s.initial]
-                [:div
-                 #_(if loaded-data'
-                     (my-form {:values loaded-data' :readonly? true})
-                     [:div "Ingen data"])
-                 [:div.flex.justify-between.px-4.h-12
-                  (danger-button {:disabled true} "Slett konto")
-                  (regular-button {:type     :button
-                                   :on-click #(send :e.edit)} "Rediger")]]
-
-                [:s.editing]
-                (when-not false                             ;readonly?
-                  [:div.flex.justify-between.h-12.px-4
-                   removeaccount-command
-                   [:div.flex.gap-4
-                    (bu/regular-button {:type     :button
-                                        :on-click #(send :e.cancel-useredit)} "Avbryt")
-                    (bu/regular-button {:type     :submit
-                                        :disabled (not (some? dirty))} "Lagre")]]))))))))
 

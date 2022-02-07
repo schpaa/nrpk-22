@@ -18,9 +18,11 @@
 
 (defn dispatch-main [web-content]
   (let [s (rf/subscribe [::rs/state-full :main-fsm])
+        expose-app-db @(schpaa.state/listen :app/expose-app-db)
         get-menuopen-fn (rf/subscribe [:app/menu-open?])]
     [:div.h-full
-     ;[l/ppre-x @re-frame.db/app-db]
+     (when expose-app-db
+       [l/ppre-x (dissoc @re-frame.db/app-db :kee-frame/route :re-statecharts.core/fsm-state)])
      [modal/overlay-with
       {:short-timeout (:modal-short-timeout @s)             ;;todo When showing a popup with short-timeout (< 2 seconds auto-closes), just bypass the click to dismiss
        :modal-dim     (:modal-dim @s)
@@ -35,9 +37,10 @@
        {:show?     (or (:modal @s) (:modal-forced @s))
         :config-fn (:modal-config-fn @s)}]
       [components.screen/render
-       {:current-page          (fn [] @(rf/subscribe [:app/current-page]))
+       {:user-auth             (fn [] @(rf/subscribe [:db.core/user-auth]))
+        :current-page          (fn [] @(rf/subscribe [:app/current-page]))
         :toggle-menu-open      (fn [] (rf/dispatch [:toggle-menu-open]))
-        :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to @(rf/subscribe [:app/previous :active-front :r.mine-vakter])]))
+        :navigate-to-home      (fn [] (rf/dispatch [:app/navigate-to @(rf/subscribe [:app/previous :active-front :r.forsiden])]))
         :navigate-to-user      (fn [] (rf/dispatch [:app/navigate-to @(rf/subscribe [:app/previous :active-back :r.user])]))
         :current-page-title    (fn [] @(rf/subscribe [:app/current-page-title]))
         :current-page-subtitle (fn [] @(rf/subscribe [:app/current-page-subtitle]))

@@ -1,4 +1,4 @@
-## Denne kontoen skal slettes
+### Denne kontoen skal slettes
 
 Du har fortalt oss at du ønsker å slette denne kontoen og dette kommer vi til å
 gjøre hvis du ikke foretar deg noe annet før **@dato**.

@@ -1,28 +1,30 @@
 (ns booking.data
   (:require [re-frame.core :refer [reg-sub]]
-            [cljs.reader :refer [read-string]]))
+            [cljs.reader :refer [read-string]]
+            [schpaa.state]))
 
 (def routes
-  [["/" {:name :r.common :header "NRPK Booking" :subheader "Booking"}]
-   ["/batlist" {:name :r.boatlist :header "Oversikt over båter" :subheader "Booking"}]
+  [["/" {:name :r.forsiden :header "NRPK Booking" :subheader "Forsiden"}]
+   ["/batlist" {:name :r.boatlist :header "Oversikt over båter" :subheader "Forsiden"}]
+   ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
+   ["/debug" {:name :r.debug :header "Feilsøking" :subheader "Baksiden"}]
+   ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
+   ["/om-meg" {:name :r.user :header "Om meg" :subheader "Baksiden"}]
+
+   ;;todo these?
    ["/init" {:name :r.init :header "Init" :subheader "Booking"}]
    ["/innhold" {:name :r.content :header "Innhold" :subheader "Booking"}]
-   ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Booking"}]
    ["/siste" {:name :r.last-booking :header "Siste booking" :subheader "Booking"}]
    ["/baksiden" {:name :r.back :header "Baksiden" :subheader "Booking"}]
-   ["/om-meg" {:name :r.user :header "Om meg" :subheader "Booking"}]
-   ["/logg" {:name :r.logg :header "Min logg" :subheader "Booking"}]
-   ["/debug" {:name :r.debug :header "Feilsøking" :subheader "Booking"}]
    ["/debug2" {:name :r.debug2 :header "Feilsøking2" :subheader "Booking"}]
    ["/blog" {:name :r.blog :header "Blogg" :subheader "Booking"}]])
 
 ;region initial-state
 
 (def start-db
-  {:startup       true,
-   :app/show-help {1 false, 2 false, 5 false, 6 false, 9 true}})
-
-(def localstorage-key "nrpk-22-booking")
+  {:version  "3.0.23"
+   :app/name "booking"
+   :tab      :cloud})
 
 (defn initialize
   [db ls-key]
@@ -32,7 +34,7 @@
                        (read-string)))))
 
 (def initial-db
-  (initialize start-db localstorage-key))
+  (initialize start-db schpaa.state/ls-key))
 
 ;endregion
 

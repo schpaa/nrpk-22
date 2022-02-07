@@ -16,6 +16,7 @@
             [booking.views]
             [user.views]
             [booking.hoc :as hoc]
+            [shadow.resource :refer [inline]]
             [schpaa.style :as st]))
 
 (defn view-info [{:keys [username]}]
@@ -36,6 +37,16 @@
      [:div.text-2xl.font-black msg]
      [:div.text-xl.font-semibold "Ta kontakt med administrator"]]))
 
+(defn register-back "to :active-front" [page]
+  (rf/dispatch [:app/register-entry :active-back page]))
+
+(defn render-back-tabbar []
+  [:div.sticky.top-16.z-200
+   [tab {:selected @(rf/subscribe [:app/current-page])}
+    [:r.user "Om meg" register-back :icon :user]
+    [:r.logg "Turlogg" register-back :icon :circle]
+    [:r.debug "Feilsøking" register-back :icon :circle]]])
+
 (defn user []
   (let [route (rf/subscribe [:app/current-page])
         user-auth (rf/subscribe [::db/user-auth])
@@ -53,10 +64,7 @@
             :name      (:display-name @user-auth)}]]
 
          [:div
-          [tab {:selected @(rf/subscribe [:app/current-page])}
-           [:r.user "Om meg" nil :icon :user]
-           [:r.logg "Turlogg" nil :icon :circle]
-           [:r.debug "Feilsøking" nil :icon :circle]]
+          [render-back-tabbar]
 
           [k/case-route (fn [route] (-> route :data :name))
            :r.user
@@ -81,62 +89,145 @@
 
            [:div @route]]]]))))
 
+(defn register-front "to :active-front" [page]
+  (rf/dispatch [:app/register-entry :active-front page]))
+
+(defn render-front-tabbar []
+  [:div.sticky.top-16.z-200
+   [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
+    [:r.new-booking "Booking" register-front :icon :document]
+    [:r.forsiden "Siste" register-front :icon :calendar]
+    [:r.boatlist "Båtliste" register-front :icon :list]]])
+
+(defn logo-type []
+  [:div.text-center.inset-0
+   {:class [
+            :drop-shadow-md
+            :leading-normal
+            :font-oswald
+            :font-normal
+            :text-3xl
+            :tracking-tight
+            :dark:text-alt
+            ;:bg-clip-text
+            ;:bg-gradient-to-r :from-rose-400 :via-sky-600 :to-alt
+            :xtext-transparent]}
+
+
+
+   [:span "booking."]
+   [:span.text-gray-500 "nrpk.no"]])
+
+(defn welcome []
+  (let [{:keys [bg bg+ bg- fg]} (st/fbg' :surface)]
+    [:<>
+     [:div.px-4.pt-16x.space-y-8.relative.xs:hidden
+      {:style {:min-height "calc(100vh - 3rem)"}
+       :class (concat fg bg)}
+
+      [:div.max-w-xs.mx-auto.opacity-75
+       [:div.group.transition.space-y-2.sticky.top-12.pt-16
+        {:class bg}
+        [:div.flex.flex-center
+         [:div.relative.w-24.h-24
+          [:div.absolute.rounded-full.-inset-1.blur
+           {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                    :sgroup-hover:-inset-1 :duration-500]}]
+          [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
+        (logo-type)]
+
+       [:div.max-w-xs.mx-auto
+        (-> "./frontpage.md"
+            inline
+            schpaa.markdown/md->html
+            st/prose-markdown-styles)]]]
+
+     [:div.px-4.space-y-8.relative.hidden.xs:block
+      {:style {:min-height "calc(100vh - 4rem)"}
+       :class (concat fg bg)}
+      [:div.max-w-xsx.mx-auto
+
+       [:div.grid.gap-x-10.max-w-md.mx-auto.space-y-8.pt-16
+        {:style {:grid-template-columns "min-content 1fr"}}
+
+        [:div.prose.col-span-2
+         (-> "./frontpage1.md"
+             inline
+             schpaa.markdown/md->html
+             st/prose-markdown-styles)]
+
+        [:div.group.transition.space-y-2.self-center
+         {:class bg}
+         [:div.flex.flex-center
+          [:div.relative.w-24.h-24
+           [:div.absolute.rounded-full.-inset-2.blur
+            {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                     :sgroup-hover:-inset-1 :duration-500]}]
+           [:div.relative [:img.object-cover {:src "/img/logo-m.png"}]]]]
+         (logo-type)]
+
+        [:div.prose.mx-auto.col-span-1.self-center
+         (-> "./frontpage2.md"
+             inline
+             schpaa.markdown/md->html
+             st/prose-markdown-styles)]]]
+
+      #_[:div.max-w-md.mx-auto.pb-8
+         (-> "./frontpage3.md"
+             inline
+             schpaa.markdown/md->html)]]]))
+
 (defn front []
   (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 0)
         user-auth (rf/subscribe [::db/user-auth])]
-    [:div
+    (if @user-auth
+      [:div
+       [render-front-tabbar]
 
-     [tab {:item     ["w-1/3"]
-           :selected @(rf/subscribe [:app/current-page])}
-      ;[:r.blog "Info" nil :icon :command]
-      [:r.new-booking "Booking" nil :icon :spark]
-      [:r.common "Siste" nil :icon :clock]
-      [:r.boatlist "Båtliste" nil :icon :list]
-      #_[:r.debug2 "Debug" nil :icon :eye]]
+       [k/case-route (comp :name :data)
+        :r.blog [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]
 
-     [k/case-route (comp :name :data)
-      :r.blog [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]
+        :r.debug2
+        [:div "Stuff"]
 
-      :r.debug2
-      [:div "Stuff"]
+        :r.new-booking
+        (if-not @user-auth
+          [views/rounded-view {}
+           [:div.p-4.space-y-4
+            [:h2 "Er du ny her?"]
+            [:a {:href (k/path-for [:r.user])} "Logg inn først"]]]
+          [hoc/new-booking])
 
-      :r.new-booking
-      (if-not @user-auth
-        [views/rounded-view {}
-         [:div.p-4.space-y-4
-          [:h2 "Er du ny her?"]
-          [:a {:href (k/path-for [:r.user])} "Logg inn først"]]]
-        [hoc/new-booking])
+        :r.forsiden
+        (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
+          [:div
+           {:class bg}
+           [:div.space-y-px.flex.flex-col
+            {:style {:min-height "calc(100vh - 7rem)"}}
+            (if (seq data)
+              [:div.flex-1
+               {:class bg}
+               [hoc/all-active-bookings {:data data}]]
+              [empty-list-message "Booking-listen er tom"])
+            [booking.views/last-bookings-footer {}]]])
 
-      :r.common
-      (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
-        [:div
-         {:class bg}
-         [:div.space-y-px.flex.flex-col
-          {:style {:min-height "calc(100vh - 7rem)"}}
-          (if (seq data)
-            [:div.flex-1
-             {:class bg}
-             [hoc/all-active-bookings {:data data}]]
-            [empty-list-message "Booking-listen er tom"])
-          [booking.views/last-bookings-footer {}]]])
-
-      :r.boatlist
-      (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
-        [:div
-         {:class bg}
-         [:div.space-y-px.flex.flex-col
-          {:style {:min-height "calc(100vh - 7rem)"}}
-          (if (seq data)
-            [:div.flex-1
-             [hoc/all-boats
-              {:data     data
-               :details? @(schpaa.state/listen :opt1)}]]
-            [empty-list-message "Båt-listen er tom"])
-          [hoc/all-boats-footer {}]]])]]))
+        :r.boatlist
+        (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
+          [:div
+           {:class bg}
+           [:div.space-y-px.flex.flex-col
+            {:style {:min-height "calc(100vh - 7rem)"}}
+            (if (seq data)
+              [:div.flex-1
+               [hoc/all-boats
+                {:data     data
+                 :details? @(schpaa.state/listen :opt1)}]]
+              [empty-list-message "Båt-listen er tom"])
+            [hoc/all-boats-footer {}]]])]]
+      [welcome])))
 
 (def route-table
-  {:r.common      front
+  {:r.forsiden    front
    :r.new-booking front
    :r.boatlist    front
    :r.user        user

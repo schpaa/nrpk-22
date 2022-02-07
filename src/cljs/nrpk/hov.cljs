@@ -36,7 +36,7 @@
 
 (defn open-details [id]
   (let [{:keys [bg fg]} (st/fbg' :side-button)]
-    [:div.w-12.flex.flex-center
+    [:div.w-10.flex.flex-center.shrink-0
      {:class    (concat bg fg)
       :on-click #(do ()
                      (.stopPropagation %)
@@ -45,7 +45,7 @@
 
 (defn open-user-details [id]
   (let [{:keys [bg fg]} (st/fbg' :side-button)]
-    [:div.w-12.flex.flex-center
+    [:div.w-10.flex.flex-center.shrink-0
      {:class    (concat bg fg)
       :on-click #(do ()
                      (.stopPropagation %)
@@ -53,7 +53,7 @@
      [icon/small :three-vertical-dots]]))
 
 (defn toggle-selected' [{:keys [on? not? on-click]}]
-  [:div.w-12.flex.flex-center
+  [:div.w-10.flex.flex-center.shrink-0
    {:sclass   [:text-black "bg-gray-200" "dark:bg-gray-600" "dark:text-gray-300"]
     :on-click #(on-click)}
    [icon/small (if on? :checked (if not? :cross-out :circle))]])

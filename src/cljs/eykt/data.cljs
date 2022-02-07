@@ -1,23 +1,23 @@
 (ns eykt.data
   (:require [re-frame.core :refer [reg-sub]]
-            [cljs.reader :refer [read-string]]))
+            [cljs.reader :refer [read-string]]
+            [schpaa.state]))
 
 (def routes
-  [
-   ["/min-side"
+  [["/min-side"
     {:name      :r.user
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Min side"}]
+     :subheader "Baksiden"}]
 
    ["/mine-vakter"
     {:name      :r.mine-vakter
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Kalender"}]
+     :subheader "Baksiden"}]
 
    ["/feilsoking"
     {:name      :r.debug
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Min side"}]
+     :subheader "Baksiden"}]
 
 
    ["/"
@@ -28,20 +28,19 @@
    ["/kalender"
     {:name      :r.kalender
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Kalender"}]
+     :subheader "Forsiden"}]
 
    ["/annet"
     {:name      :r.annet
      :header    ["Eykt Vaktliste" "Eykt"]
-     :subheader "Min side"}]])
+     :subheader "Forsiden"}]])
 
 ;region initial-state
 
 (def start-db
-  {:startup       true,
-   :app/show-help {1 false, 2 false, 5 false, 6 false, 9 true}})
-
-(def localstorage-key "nrpk-22-eykt")
+  {:version  "3.0.23"
+   :app/name "eykt"
+   :tab      :cloud})
 
 (defn initialize
   [db ls-key]
@@ -51,7 +50,7 @@
                        (read-string)))))
 
 (def initial-db
-  (initialize start-db localstorage-key))
+  (initialize start-db schpaa.state/ls-key))
 
 ;endregion
 

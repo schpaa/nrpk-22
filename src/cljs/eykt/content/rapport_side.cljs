@@ -14,6 +14,7 @@
             [db.core :as db]
             [fork.re-frame :as fork]
             [schpaa.components.fields :as fields]
+            [schpaa.components.sidebar]
             [clojure.set :as set]))
 
 (defn- empty-list-message [msg]
@@ -294,22 +295,75 @@
                         (remove (fn [k] (= (m1 k) (m2 k)))
                                 ks1*ks2)))))
 
-(defn preview [style content]
-  (case style
-    "a"
-    [:div.prose {:class [:prose :prose-stone :dark:prose-invert
-                         :prose-h2:mb-2
-                         :prose-headings:font-black
-                         :prose-headings:text-alt
-                         :prose-h1:text-xl
-                         :prose-h2:text-xl
-                         :prose-h3:text-lg
-                         :prose-p:font-serif
-                         :prose-li:font-sans
-                         "prose-li:text-black/50"
-                         "prose-li:italic"]}
-     (schpaa.markdown/md->html content)]
-    [:div.prose (schpaa.markdown/md->html content)]))
+(defn preview [style dt content]
+  (let [common [:xs:px-2 :px-2 :py-4 :my-px]
+        date [:div.sticky.top-32.relative
+              [:div.absolute.-top-4.right-0.bg-black.text-white.px-2.py-1.text-xs (ta/date-format (t/instant dt))]]]
+    (case style
+      "c"
+      [:div.bg-white.dark:bg-black
+       {:class common}
+       date
+       [:div.max-w-2xl.mx-auto.prose
+        {:class [:prose-stone
+                 :dark:prose-invert
+                 :prose-h2:mb-2
+                 :prose-headings:font-black
+                 :prose-headings:text-rose-500
+                 :prose-h1:text-xl
+                 :prose-h2:text-xl
+                 :prose-h3:text-lg
+                 :prose-p:font-serif
+                 :prose-li:font-sans
+                 "prose-li:text-black/50"
+                 "prose-li:italic"]}
+        (schpaa.markdown/md->html content)]]
+      "b"
+      [:div.bg-amber-100.dark:bg-gray-900
+       {:class common}
+       date
+       [:div.mx-auto.max-w-2xl.prose
+        {:class [:prose-stone :dark:prose-invert
+                 :prose-h2:mb-2
+                 :prose-headings:font-black
+                 :prose-headings:text-alt
+                 :prose-headings:py-0
+                 :prose-headings:my-0
+                 :prose-h1:text-4xl
+                 :prose-h2:text-4xl
+                 :prose-h3:text-lg
+                 :prose-p:font-lora
+                 :prose-p:text-base
+                 :prose-li:font-sans
+                 "prose-li:text-black/50"
+                 "prose-li:italic"]}
+        (schpaa.markdown/md->html content)]]
+      ;"c"
+      [:div.bg-sky-100.dark:bg-gray-800.relative
+       {:class common}
+       date
+       [:div.max-w-2xl.mx-auto.prose.z-10
+        {:class [:dark:prose-invert
+                 :prose-headings:text-sky-600
+                 :prose-gray
+                 :prose-h2:mb-2
+                 :prose-headings:font-black
+                 :prose-h1:text-4xl
+                 :prose-h1:my-0
+                 :prose-h1:py-0
+                 :prose-h2:my-0
+                 :prose-h2:py-0
+                 :prose-h2:text-4xl
+                 :prose-h3:text-lg
+                 :prose-p:font-serif
+                 ;:prose-p:columns-2xs
+                 :prose-li:font-sans
+                 "prose-li:text-black/50"
+                 "prose-li:italic"]}
+        (schpaa.markdown/md->html content)]]
+      #_[:div
+         [:div (str style)]
+         [:div.prose (schpaa.markdown/md->html content)]])))
 
 ;region form-input
 
@@ -328,8 +382,6 @@
        :items {"a" "vær" "b" "hsm/hendelse" "c" "materiell skade" "d" "materiell mangler" "e" "til info"}
        :default-text "hva?"
        :error-type :marker]])
-
-
 
    (when (not= (values :report-type) "a")
      [fields/text props :name :header :label "Overskrift"])
@@ -351,13 +403,8 @@
     (when (not= (values :report-type) "a")
       [fields/checkbox props :label "Forhåndsvis" :name :preview])]
 
-
-   (if (values :preview)
-     [:div
-      [:div {:class (concat [:uppercase] (fields/label-colors false))} "Innhold"]
-      [:div.px-2 [preview (values :style) (values :content)]]])
    (when (not= (values :report-type) "a")
-     [:div {:class (if (values :preview) :hidden)}
+     [:div {:xclass (if (values :preview) :hidden)}
       [fields/textarea (-> props (assoc
                                    :naked? false
                                    :handle-blur #(do
@@ -368,6 +415,10 @@
        :name :content
        :label "Innhold"
        :error-type :marker]])
+   (if (values :preview)
+     [:div
+      [:div {:class (concat [:uppercase] (fields/label-colors false))} "Innhold"]
+      [:div.px-2 [preview (values :style) (values :content)]]])
 
    (when (= (values :report-type) "a")
      [:div.flex.gap-4
@@ -402,8 +453,8 @@
                                              (set-values (conj @data
                                                                {:style        "a"
                                                                 :report-type  "e"
-                                                                :preview      true
-                                                                :content      "# This is it\n\nDoes it work?"
+                                                                :preview      false
+                                                                ;:content      "# This is it\n\nDoes it work?"
                                                                 :created-time (str (t/truncate (t/time (t/instant (:created @data))) :minutes))
                                                                 :created-date (str (t/date (t/instant (:created @data))))})))
                       :prevent-default?    true}
@@ -461,25 +512,30 @@
 
        [:s.some-content]
        (top-bottom-view
-         (let [{:keys [fg bg bg-]} (st/fbg' :form)]
-           (into [:div.flex.flex-col.space-y-px.grow
+         (let [{:keys [fg bg bg-]} (st/fbg' :report)]
+           (into [:div.flex.flex-col
                   {:class (concat [])}]
-                 (for [[k {:keys [header style content created updated] :as v}] (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content))]
-                   [:div.prose.mx-auto.w-full
-                    {:class (concat bg fg [:px-2])}
-                    [:div.-debugx
-                     [:div.flex.justify-between.items-center.h-12.gap-2
-                      [:div.grow header]
-                      [:div.flex.justify-between.w-24
-                       (if updated
-                         [:div (ta/time-format (t/time (t/instant updated)))])
-                       (if created
-                         [:div (ta/time-format (t/time (t/instant created)))])]
-                      [:div.flex.gap-0
-                       [bu/listitem-button-small {:on-click #(send :e.hide-entry k)} :eye]
-                       [bu/listitem-button-small {:on-click #(send :e.delete k)} :cross-out]
-                       [bu/listitem-button-small {:on-click #(send :e.edit k)} :edit-state]]]
-                     [:div.-debug (preview style content)]]])))
+                 (for [[k {:keys [header style content created updated] :as v}]
+                       (sort-by (comp :created val) > (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content)))]
+                   #_[:div
+                      {:class (concat bg fg [])}
+                      [:div
+                       #_[:div.flex.justify-between.items-center.h-12.gap-2
+                          [:div.grow header]
+                          [:div.flex.justify-between.w-24
+                           (if updated
+                             [:div (ta/time-format (t/time (t/instant updated)))])
+                           (if created
+                             [:div (ta/time-format (t/time (t/instant created)))])]
+                          [:div.flex.gap-0
+                           [bu/listitem-button-small {:on-click #(send :e.hide-entry k)} :eye]
+                           [bu/listitem-button-small {:on-click #(send :e.delete k)} :cross-out]
+                           [bu/listitem-button-small {:on-click #(send :e.edit k)} :edit-state]]]
+                       [:div                                ;.relative.w-full
+                        ;[:div.sticky.top-28.w-32.ml-auto.bg-black.text-white.xmt-8 "?"]
+                        #_[:div.absolute.top-0.inset-x-0.ml-auto.mr-4x.w-32.bg-black.text-white]]]]
+
+                   [:div.space-y-px (preview style created content)])))
 
          [:div.flex.justify-between.gap-4.px-4
           [:div (let [{:keys [fg- fg fg+ bg+ bg- bg p p+ p-]} (st/fbg' :surface)]
@@ -512,34 +568,37 @@
              [:div.space-y-4.flex.flex-col
               (into [:div.space-y-px.grow]
                     (concat
-                      (for [[k {:keys [content created deleted updated hidden] :as v}] (sort-by (case @sort-order
-                                                                                                  1 (comp (juxt :updated :created) val)
-                                                                                                  2 (comp (juxt :updated :created) val)
-                                                                                                  (comp (juxt :created) val))
-                                                                                                (case @sort-order
-                                                                                                  1 >
-                                                                                                  2 <
-                                                                                                  <) data)]
-                        [:div.flex.justify-between.items-center.gap-4.p-2.h-16.truncate
-                         {:class (if (or hidden deleted) bg- bg)}
-                         [:div.flex.flex-col
-                          [:div.truncate
-                           {:class (concat (if (or hidden deleted) fg- fg+) (if deleted [:line-through]))}
-                           (str content)]
-                          [:div {:class (concat fg- p-)} (str k)]]
-                         ;[:div {:class p-} (when created (ta/short-time-format (t/time (t/instant created))))]
-                         ;[:div {:class p-} (when updated (ta/short-date-format (t/date (t/instant updated))))]
-                         [:div.flex.gap-0
-                          (when-not deleted (if hidden
-                                              [bu/listitem-button-small {:on-click #(send :e.show-entry k)} :eye]
-                                              [bu/listitem-button-small {:on-click #(send :e.hide-entry k)} :eye-off]))
-                          (if @show-deleted-posts
-                            (if deleted
-                              [bu/listitem-button-small {:on-click #(send :e.undelete k)} :rotate-left]
-                              [bu/listitem-button-danger-small {:on-click #(send :e.delete k)} :cross-out])
-                            [bu/listitem-button-danger-small {:on-click #(send :e.delete k)} :cross-out])
+                      (for [[k {:keys [content created deleted updated hidden] :as v}]
+                            (sort-by (case @sort-order
+                                       1 (comp (juxt :updated :created) val)
+                                       2 (comp (juxt :updated :created) val)
+                                       (comp (juxt :created) val))
+                                     (case @sort-order
+                                       1 >
+                                       2 <
+                                       <) data)]
+                        [:div.flex.justify-between
+                         (nrpk.hov/open-details 1)
+                         [:div.flex.grow.justify-between.items-center.gap-4.p-2.h-16.truncate
+                          {:class (if (or hidden deleted) bg- bg)}
+                          [:div.flex.flex-col.truncate
+                           [:div.truncate
+                            {:class (concat (if (or hidden deleted) fg- fg+) (if deleted [:line-through]))}
+                            (str content)]
+                           [:div {:class (concat fg- p-)} (str k)]]
+                          ;[:div {:class p-} (when created (ta/short-time-format (t/time (t/instant created))))]
+                          ;[:div {:class p-} (when updated (ta/short-date-format (t/date (t/instant updated))))]
+                          [:div.flex.gap-0
+                           (when-not deleted (if hidden
+                                               [bu/listitem-button-small {:on-click #(send :e.show-entry k)} :eye]
+                                               [bu/listitem-button-small {:on-click #(send :e.hide-entry k)} :eye-off]))
+                           (if @show-deleted-posts
+                             (if deleted
+                               [bu/listitem-button-small {:on-click #(send :e.undelete k)} :rotate-left]
+                               [bu/listitem-button-danger-small {:on-click #(send :e.delete k)} :cross-out])
+                             [bu/listitem-button-danger-small {:on-click #(send :e.delete k)} :cross-out])
 
-                          [bu/listitem-button-small {:on-click #(send :e.edit k)} :edit-state]]])
+                           [bu/listitem-button-small {:on-click #(send :e.edit k)} :edit-state]]]])
                       (let [{:keys [fg- fg p-]} (st/fbg' :void)]
                         [[:div.flex.flex-center.h-16 {:class (concat p- fg)} "Antall poster " (count data)]
                          [:div.pb-8]])))])

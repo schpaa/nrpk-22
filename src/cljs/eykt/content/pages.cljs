@@ -106,7 +106,7 @@
 (defn render-front-tabbar []
   [:div.sticky.top-16.z-200
    [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-    [:r.forsiden "Forsiden" register-front :icon :document]
+    [:r.forsiden "Vaktrapport" register-front :icon :document]
     [:r.kalender "Kalender" register-front :icon :calendar]
     [:r.annet "Lister" register-front :icon :list]]])
 
@@ -135,7 +135,7 @@
         {:keys [bg bg- bg+ fg p- fg-]} (st/fbg' (if selected?
                                                   :listitem-button-selected
                                                   :listitem-button-unselected))]
-    [:div.flex.w-full.gap-px.pr-px
+    [:div.flex.w-full.gap-px.xs:pr-4.pr-2
      {:class (concat bg fg)}
      [nrpk.hov/open-user-details (:uid v)]
      [:div
@@ -144,20 +144,26 @@
                                                        (readymade/popup {:dialog-type :error
                                                                          :content     (:navn v)})
                                                        (swap! selection set/difference #{(:uid v)}))
-                                         :color-map :listitem-button-selected} :cross-out))]
+                                         :color-map (assoc (st/fbg' :listitem-button-selected)
+                                                      :bg [:bg-gray-700]
+                                                      :fg [:text-gray-200]
+                                                      :br [:border-gray-700 :border-2 :ps-2])} :cross-out))]
      [:div.h-12.flex.items-center.xs:px-4.px-2.grow.truncate
       [:div.flex.flex-col.space-y-0
        [:div.grow.truncate.leading-normal (:navn v)]
        [:div.flex.gap-4.grow.whitespace-nowrap
         [:div {:class (concat p- fg-)} (:telefon v)]]]]
-     ;[:div.w-16.truncate {:class (concat p- fg-)} (:uid v)]]]]
+
      [:div
       (when-not selected?
         (bu/listitem-button-small-clear {:on-click  #(do
                                                        (readymade/popup {:dialog-type :message
                                                                          :content     (:navn v)})
                                                        (swap! selection set/union #{(:uid v)}))
-                                         :color-map :listitem-button-unselected} :checked))]]))
+                                         :color-map (assoc (st/fbg' :listitem-button-unselected)
+                                                      :fg [:text-info-200]
+                                                      :bg [:bg-info-700]
+                                                      :br [:border-info-700 :border-2 :ps-2])} :checked))]]))
 
 #_(defn std-person-listitem [v]
     (let [selected? (< 5 (rand-int 10))
@@ -185,105 +191,217 @@
 
 (defonce selection (r/atom #{}))
 
+(defn logo-type []
+  [:div.text-center.inset-0
+   {:class [
+            :drop-shadow-md
+            :leading-normal
+            :font-oswald
+            :font-normal
+            :text-3xl
+            :tracking-tight
+            :dark:text-alt
+            ;:bg-clip-text
+
+            ;:bg-gradient-to-r :from-rose-400 :via-sky-600 :to-alt
+            :xtext-transparent]}
+
+
+   [:span "eykt"]
+   [:span.text-gray-500 ".nrpk.no"]])
+
 (defn common [r]
   (let [user-auth (rf/subscribe [::db/root-auth])
         v (db/on-value-reaction {:path ["report"]})]
     (fn [r]
-      [:<>
-       (render-front-tabbar)
-       [k/case-route (fn [route] (-> route :data :name))
-        :r.forsiden
-        [:div
-         (if-let [v @v]
-           [eykt.content.rapport-side/rapport-side]
-           [eykt.content.rapport-side/no-content-message])]
-
-        :r.annet
-        (let [vis-inne (rf/subscribe [:vakt/vis-inne])
-              vis-ute (rf/subscribe [:vakt/vis-ute])]
-          (r/with-let [
-                       search-field (r/atom "")
-                       search-field' (r/atom "")]
-            (let [t (tester @search-field')
-                  bouncer (debounce #(reset! search-field' %) 750)]
-              (top-bottom-view
-                [:div
-                 [:div.sticky.top-28.bg-gray-800.text-white.h-16.items-center.justify-between.px-2.gap-4.grid.grid-cols-2
-                  [:div.grow (fields/select {:naked?      false
-                                             :class       []
-                                             :placeholder "søk"
-                                             :values      (fn [_])}
-                                            :items {"a" "first list"
-                                                    "b" "second list"}
-                                            :default-text "velg liste"
-                                            :name :list)]
-                  [:div.grow (fields/text {:naked?        false
-                                           :class         []
-                                           :auto-focus    true
-                                           :placeholder   "søkefelt"
-                                           :values        (fn [_] @search-field)
-                                           :handle-change #(let [v (-> % .-target .-value)]
-                                                             (bouncer v)
-                                                             (reset! search-field v))}
-                                          :name :search)]]
-                 (let [{:keys [bg fg]} (st/fbg' :void)
-                       data (db/on-value-reaction {:path ["users"]})
-                       data (into {} (comp
-                                       (if @vis-inne (filter (fn [[k v]] (some #{(:uid v)} @selection))) (map identity))
-                                       (filter (fn [[k v]]
-                                                 (or
-                                                   (some #{(:uid v)} @selection)
-                                                   (t v))))) @data)
-                       c (count data)]
-                   [:div
-                    {:class (concat bg fg)}
-                    (let [{:keys [bg bg- bg+ fg p- fg-]} (st/fbg' :listitem)]
-                      (into [:div.space-y-px]
-                            (concat
-                              (for [[k v] (sort-by (comp :updated val) data)]
-                                ^{:key (str k)}
-                                [std-person-listitem selection v])
-                              [[:div.flex.flex-center.h-16 c]])))])]
-                (let [{:keys [bg fg fg+ p p-]} (st/fbg' :tabbar)]
-                  [:div.h-12.px-4.flex.items-center.justify-between.truncate
-                   (schpaa.components.views/modern-checkbox'
-                     {:set-details #(rf/dispatch [:vakt/vis-inne %])
-                      :get-details #(-> @vis-inne)}
-                     (fn [checkbox]
-                       [:div.flex.items-center.gap-4
-                        checkbox
-                        [:div.space-y-0.truncate.shrink-0
-                         [:div {:class (concat p fg+)} "Vis bare merkede"]
-                         [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-inne "Skjuler nå de markerte" "Viser nå alle")]]]))
-                   (schpaa.components.views/modern-checkbox'
-                     {:set-details #(rf/dispatch [:vakt/vis-ute %])
-                      :get-details #(-> @vis-ute)}
-                     (fn [checkbox]
-                       [:div.flex.items-center.gap-4
-                        [:div.space-y-0.truncate.shrink-0
-                         [:div.text-right {:class (concat p fg+)} "Ute"]
-                         [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-ute "Bare de som er ute" "Viser alle")]]
-                        checkbox]))])))))
+      (if @user-auth
+        [:<>
 
 
-        :r.kalender
-        (let [{:keys [bg]} (st/fbg' :form)]
+         (render-front-tabbar)
+         [k/case-route (fn [route] (-> route :data :name))
+          :r.forsiden
           [:div
-           {:class bg}
-           [:div.space-y-px.flex.flex-col
-            {:style {:min-height "calc(100vh - 7rem)"}}
-            (if (seq eykt.calendar.core/rules')
-              [:div.flex-1
-               {:class bg}
-               ;[l/ppre @user-auth]
-               (when @user-auth
-                 [content.uke-kalender/uke-kalender @user-auth])]
-              '[empty-list-message "Booking-listen er tom"])
-            [booking.views/last-bookings-footer {}]]])
+           (if-let [v @v]
+             [eykt.content.rapport-side/rapport-side]
+             [eykt.content.rapport-side/no-content-message])]
 
-        #_[:div.min-h-screen
-           [content.uke-kalender/uke-kalender {:uid uid}]
-           [booking.views/last-bookings-footer {}]]]])))
+          :r.annet
+          (let [vis-inne (rf/subscribe [:vakt/vis-inne])
+                vis-ute (rf/subscribe [:vakt/vis-ute])]
+            (r/with-let [search-field (r/atom "")
+                         search-field' (r/atom "")]
+              (let [t (tester @search-field')
+                    bouncer (debounce #(reset! search-field' %) 750)]
+                (top-bottom-view
+                  [:div
+                   (let [{:keys [bg bg+ fg]} (st/fbg' :surface)]
+                     [:div.sticky.top-28.h-16.justify-end.gap-4.grid.xs:px-4.px-2
+                      {:style {:grid-template-columns "1fr 1fr"}
+                       :class (concat bg+ fg)}
+                      [:div]
+                      #_[:div.grow (fields/select {:naked?      false
+                                                   :class       []
+                                                   :placeholder "søk"
+                                                   :values      (fn [_])}
+                                                  :items {"a" "first list"
+                                                          "b" "second list"}
+                                                  :default-text "velg liste"
+                                                  :name :list)]
+                      [:div.self-center.relative (fields/text
+                                                   {:naked?        true
+                                                    :class         (concat (fields/field-colors false)
+                                                                           [:h-10 :bg-gray-100 :border-none :active:outline-none :active:ring-0
+                                                                            :rounded-md])
+                                                    :auto-focus    true
+                                                    :placeholder   "søk"
+                                                    :values        (fn [_] @search-field)
+                                                    :handle-change #(let [v (-> % .-target .-value)]
+                                                                      (bouncer v)
+                                                                      (reset! search-field v))}
+                                                   :name :search)
+                       [:div.absolute.justify-self-center.inset-y-0.x-top-1.right-0
+                        (bu/listitem-button-small-justclear {:disabled  (empty? @search-field)
+                                                             :on-click  #(do
+                                                                           (reset! search-field' nil)
+                                                                           (reset! search-field nil))
+                                                             :color-map (assoc (st/fbg' :listitem-button-unselected)
+                                                                          ;:bg [:bg-alt]
+                                                                          :bg []
+                                                                          :bg- []
+                                                                          :fg [:text-gray-700]
+                                                                          :fg- [:text-gray-300]
+                                                                          :br [:border-info-700x :border-2x])} :cross-out)]]])
+                   (let [{:keys [bg fg]} (st/fbg' :void)
+                         data (db/on-value-reaction {:path ["users"]})
+                         data (into {} (comp
+                                         (if @vis-inne (filter (fn [[k v]] (some #{(:uid v)} @selection))) (map identity))
+                                         (filter (fn [[k v]]
+                                                   (or
+                                                     (some #{(:uid v)} @selection)
+                                                     (t v))))) @data)
+                         c (count data)]
+                     [:div
+                      {:class (concat bg fg)}
+                      (let [{:keys [bg bg- bg+ fg p- fg-]} (st/fbg' :listitem)]
+                        (into [:div.space-y-px]
+                              (concat
+                                [[:div.flex.flex-center.h-16 c]]
+                                (for [[k v] (sort-by (comp :updated val) data)]
+                                  ^{:key (str k)}
+                                  [std-person-listitem selection v])
+                                [[:div.flex.flex-center.h-16 c]])))])]
+                  (let [{:keys [bg fg fg+ p p-]} (st/fbg' :tabbar)]
+                    [:div.h-12.px-4.flex.items-center.justify-between.truncate
+                     (schpaa.components.views/modern-checkbox'
+                       {:set-details #(rf/dispatch [:vakt/vis-inne %])
+                        :get-details #(-> @vis-inne)}
+                       (fn [checkbox]
+                         [:div.flex.items-center.gap-4
+                          checkbox
+                          [:div.space-y-0.truncate.shrink-0
+                           [:div {:class (concat p fg+)} "Vis bare merkede"]
+                           [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-inne "Skjuler nå de markerte" "Viser nå alle")]]]))
+                     (schpaa.components.views/modern-checkbox'
+                       {:set-details #(rf/dispatch [:vakt/vis-ute %])
+                        :get-details #(-> @vis-ute)}
+                       (fn [checkbox]
+                         [:div.flex.items-center.gap-4
+                          [:div.space-y-0.truncate.shrink-0
+                           [:div.text-right {:class (concat p fg+)} "Ute"]
+                           [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-ute "Bare de som er ute" "Viser alle")]]
+                          checkbox]))])))))
+
+
+          :r.kalender
+          (let [{:keys [bg]} (st/fbg' :form)]
+            [:div
+             {:class bg}
+             [:div.space-y-px.flex.flex-col
+              {:style {:min-height "calc(100vh - 7rem)"}}
+              (if (seq eykt.calendar.core/rules')
+                [:div.flex-1
+                 {:class bg}
+                 ;[l/ppre @user-auth]
+                 (when @user-auth
+                   [content.uke-kalender/uke-kalender @user-auth])]
+                '[empty-list-message "Booking-listen er tom"])
+              [booking.views/last-bookings-footer {}]]])
+
+          #_[:div.min-h-screen
+             [content.uke-kalender/uke-kalender {:uid uid}]
+             [booking.views/last-bookings-footer {}]]]]
+        (let [{:keys [bg bg+ bg- fg]} (st/fbg' :surface)]
+
+          [:<>
+           [:div.px-4.pt-16x.space-y-8.relative.xs:hidden
+            {:style {:min-height "calc(100vh - 3rem)"}
+             :class (concat fg bg)}
+            [:div.max-w-xs.mx-auto.opacity-75
+             [:div.group.transition.space-y-2.sticky.top-12.pt-16.-mt-4
+              {:class bg}
+              [:div.flex.flex-center
+               [:div.relative.w-24.h-24
+                [:div.absolute.rounded-full.-inset-1.blur
+                 {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                          :sgroup-hover:-inset-1 :duration-500]}]
+                [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
+              (logo-type)]
+
+             [:div.prose.max-w-xs.mx-auto
+              {:class [:dark:prose-invert
+                       :prose-h3:font-bold
+                       :prose-h3:text-base
+                       :prose-p:pt-0
+                       :prose-p:pb-3
+                       :prose-p:my-0
+                       :prose-p:leading-relaxed
+                       :prose-blockquote:text-gray-500
+                       ;:prose-blockquote:text-gray-400
+                       :prose-blockquote:pb-1
+                       ;:prose-blockquote:py-0
+                       :prose-blockquote:pl-4
+                       :prose-blockquote:m-2
+                       ;:prose-blockquote:-ml-4
+                       :prose-blockquote:text-sm
+                       :prose-blockquote:font-light
+                       :prose-blockquote:leading-relaxed
+                       :prose-blockquote:font-serif
+                       :prose-blockquote:border-l-2
+                       :prose-blockquote:border-alt
+                       :prose-blockquote:border-dotted
+                       :prose-stone]}
+              (schpaa.markdown/md->html (shadow.resource/inline "./frontpage.md"))]]]
+           [:div.px-4.pt-16.space-y-8.relative.hidden.xs:block
+            {:style {:min-height "calc(100vh - 4rem)"}
+             :class (concat fg bg)}
+
+            [:div.max-w-md.mx-auto
+
+             [:div.grid.gap-x-10.max-w-md.mx-auto.space-y-8
+              {:style {:grid-template-columns "min-content 1fr"}}
+
+              [:div.col-span-2
+               (-> "./frontpage1.md"
+                   inline
+                   schpaa.markdown/md->html
+                   st/prose-markdown-styles)]
+
+              [:div.group.transition.space-y-2.self-center
+               {:class bg}
+               [:div.flex.flex-center
+                [:div.relative.w-24.h-24
+                 [:div.absolute.rounded-full.-inset-2.blur
+                  {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                           :sgroup-hover:-inset-1 :duration-500]}]
+                 [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
+               (logo-type)]
+
+              [:div.mx-auto.col-span-1.self-center
+               (-> "./frontpage2.md"
+                   inline
+                   schpaa.markdown/md->html
+                   st/prose-markdown-styles)]]]]])))))
 
 (comment
   (comment

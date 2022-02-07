@@ -7,6 +7,7 @@
             [schpaa.button :as bu]
             [schpaa.components.fields :as fields]
             [db.core :as db]
+            [nrpk.database :refer [get-username-memoed]]
             [eykt.calendar.core]
             [eykt.calendar.actions :as actions]
             [schpaa.debug :as l]
@@ -16,22 +17,15 @@
   ([c]
    [cell nil c])
   ([attr & c]
-   [:div.h-6.flex.items-center.px-px {;:style {:min-width "2rem"}
-                                      :class (if (vector? attr) (flatten attr) attr)} c]))
-
-(defn get-username [uid]
-  (or (some-> (db/on-value-reaction {:path ["users" uid]}) deref :alias) uid))
-
-(def memo-username (memoize get-username))
+   [:div.h-6.flex.items-center.px-px
+    {:class (if (vector? attr) (flatten attr) attr)}
+    c]))
 
 (defn render-block-column [{:keys [each e' r' group-id uid e dt]}]
   {:pre [(some? uid) (string? uid)]}
-  (let [{:keys [bg- bg+ bg hd he fg+ fg p p- p+ fg-]} (st/fbg' :calender-table)
+  (let [{:keys [bg- fg+ p-]} (st/fbg' :calender-table)
         c (- (:slots (first e')) (count r'))]
     [:div
-     ;[l/ppre-x group-id (:starttime each) r']
-     ;[l/ppre-x  (count e') c group-id]
-     ;[l/ppre-x r']
      [cell [fg+ p-] (str (:starttime e))]
      [:div.space-y-px
       (if (get r' uid)
@@ -52,7 +46,6 @@
           [cell [bg-] "komplett"]))
 
       [:div.space-y-px
-
        (concat
          (for [[idx [uid v]] (map-indexed vector (sort-by second < r'))]
            [:div.flex.flex-col.gap-2
@@ -60,7 +53,7 @@
                       (concat bg-)
                       (concat bg- [:text-red-500]))}
 
-            [cell [fg+ p- :overflow-hidden :text-ellipsis] (memo-username uid)]
+            [cell [fg+ p- :overflow-hidden :text-ellipsis] (get-username-memoed uid)]
             #_[:div {:class p-} (ta/time-format (t/time (t/instant v)))]])
 
          (when (pos? c)
@@ -72,7 +65,6 @@
     (r/with-let [week (r/atom (ta/week-number (t/date)))]
       [:div.space-y-2
        {:class (concat bg fg)}
-
        [:div.flex.gap-1.justify-center.items-center.xp-4.sticky.top-28.h-16.z-50
         {:class bg}
         [bu/regular-button {:on-click #(swap! week dec)} :chevron-left]
@@ -82,18 +74,12 @@
                             :handle-change #(reset! week (-> % .-target .-value))}
                            fields/number-field) :label "" :name :week]
         [bu/regular-button {:on-click #(swap! week inc)} :chevron-right]]
-       #_[:div (str (and (pos? (js/parseInt @week))
-                         (not (js/isNaN @week))
-                         (= "" (str @week))))]
        (let [ready? (and (pos? (js/parseInt @week))
                          (not (js/isNaN @week))
                          (not= "" (str @week)))]
-
          [:div
-          ;[l/ppre-x ready?]
           (when ready?
             (let [{:keys [fg fg+ bg- bg+ bg hd he p p- p+ fg-]} (st/fbg' :calender-table)]
-
               (into [:div.grid.gap-4.px-2.place-content-center
                      {:style {:grid-template-columns "repeat(auto-fit,minmax(16rem,40rem) )"
                               :grid-auto-rows        "1fr"}}]
@@ -104,7 +90,6 @@
                                    (concat [
                                             ;intent WEEKS
                                             [cell [:h-20 :sticky :top-44 p- fg (:bg (st/fbg' :form))] (str "u" (+ (js/parseInt @week) i))]]
-
                                            (doall (for [e (range 7)
                                                         :let [first-date-of-week (ta/calc-first-day-at-week (+ (js/parseInt @week) i))
                                                               the-week-interval (tick.alpha.interval/new-interval
@@ -136,24 +121,15 @@
                                                                   :while (some? group-id)
                                                                   :let [group-id (name group-id)]]
                                                               [:div {:class (conj p-)}
-
-                                                               ;[:div.text-red-500 group-id]
-                                                               ;[:div.text-red-500 (ta/short-date-format first-date-of-week)]
-                                                               ;[:div.text-red-500 (ta/short-date-format dt)]
-                                                               ;[:div.text-red-500 day-offset]
-
                                                                [cell [fg bg :truncate] (:description (first e'))]
                                                                (doall (for [each (sort-by :starttime < e')
                                                                             :let [r' (get-in roo [group-id (str (:starttime each))])]]
-                                                                        [:div
-                                                                         ;[l/ppre-x r']
-                                                                         ;[:div "-"]
-                                                                         [render-block-column
-                                                                          {:each     each
-                                                                           :uid      uid
-                                                                           :dt       dt
-                                                                           :e        each
-                                                                           :e'       e'
-                                                                           :r'       r'
-                                                                           :group-id (name group-id)}]]))]))])))))))))
+                                                                        [render-block-column
+                                                                         {:each     each
+                                                                          :uid      uid
+                                                                          :dt       dt
+                                                                          :e        each
+                                                                          :e'       e'
+                                                                          :r'       r'
+                                                                          :group-id (name group-id)}]))]))])))))))))
           [:div.p-2 {:class (concat p- fg-)} "@todo Better navigational aids "]])])))

@@ -30,7 +30,7 @@
                                                     (booking.database/write data)
                                                     (assoc st :last-booking data)))
                                           (fn [_ _]
-                                            (rf/dispatch [:app/navigate-to [:r.common]]))]}}
+                                            (rf/dispatch [:app/navigate-to [:r.forsiden]]))]}}
    :states  {:s.booking {:initial :s.basic-booking-info
                          :on      {:e.pick-boat {:target [:> :booking :s.booking :s.basic-booking-info]}
                                    :e.complete  {:target  [:> :booking :s.booking :s.basic-booking-info]
@@ -40,7 +40,7 @@
                                                            (fn [_ _]
                                                              (confirm-booking))
                                                            (fn [_ _]
-                                                             (rf/dispatch [:app/navigate-to [:r.common]]))]}}
+                                                             (rf/dispatch [:app/navigate-to [:r.forsiden]]))]}}
                          :states  {:s.basic-booking-info {:on {:e.confirm [:> :booking :s.booking :s.confirm]}}
                                    :s.confirm            {}
                                    :s.complete           {}}}
