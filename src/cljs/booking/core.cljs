@@ -15,7 +15,7 @@
              :initial-db     app-data/initial-db,
              :screen         nrpk.core/screen-breakpoints
              :root-component [nrpk.spa/app-wrapper spa/route-table]
-             :not-found      "/fant-ikke",
+             :not-found      "/not-found",
              :hash-routing?  false}))
 
 (defn ^:dev/after-load reload! []

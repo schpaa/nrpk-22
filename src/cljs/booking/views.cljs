@@ -295,18 +295,18 @@
     :on-click #(nrpk.fsm-helpers/send :e.confirm)]])
 
 (defn booking-footer [{:keys [selected boat-db booking-ready? booking-record]}]
-  [:div.flex.justify-between.items-centers.gap-2.px-4.py-2.sticky.bottom-0
+  [:div.flex.justify-between.items-center.gap-2.px-4.py-2.sticky.bottom-0
    {:class [:bg-gray-400 :dark:bg-gray-800 :dark:text-white :text-black]}
-   [:button.btn-small.btn-free.h-8 {:type     :button
-                                    :on-click #()} "detailjer"]
    [:div.flex.gap-2.items-centers.shrink-1
-    [:button.btn-small.btn-free.h-8 {:type     :button
-                                     :on-click #(reset! selected #{})} "ingen"]
-    [:button.btn-small.btn-free.h-8 {:type     :button
-                                     :on-click #(reset! selected (into #{} (keys boat-db)))} "alle"]]
-   [:button.btn.btn-cta.grow-1 {:type     :button
-                                :disabled (not booking-ready?)
-                                :on-click #(schpaa.modal.readymade/confirm-booking booking-record)} "Book nå!"]])
+    [:button.btn-small.btn-free.h-10.px-2 {:type     :button
+                                           :disabled (empty? @selected)
+                                           :on-click #(reset! selected #{})} "Ingen"]
+    [:button.btn-small.btn-free.h-10.px-2 {:type     :button
+                                           :on-click #(reset! selected (into #{} (keys boat-db)))} "Alle"]]
+   (when (pos? (count @selected)) [:div (count @selected)])
+   [:button.btn.btn-cta {:type     :button
+                         :disabled (not booking-ready?)
+                         :on-click #(schpaa.modal.readymade/confirm-booking booking-record)} "Book nå!"]])
 
 (rf/reg-sub :bookinglist/details :-> :booking-list-details)
 (rf/reg-sub :bookinglist/personal :-> :booking-list-personal)
@@ -329,7 +329,7 @@
           checkbox
           [:div.space-y-0
            [:div {:class (concat p fg+)} "Detaljer"]
-           [:div {:class (concat p- fg)} "Vis alle detaljer"]]]))
+           [:div.hidden.xs:block {:class (concat p- fg)} "Vis alle detaljer"]]]))
 
      (schpaa.components.views/modern-checkbox'
        {:set-details #(schpaa.state/change :opt/show-only-my-own %)
@@ -338,7 +338,7 @@
          [:div.flex.items-center.gap-2.w-full
           [:div.space-y-0
            [:div.text-right {:class (concat p fg+)} "Mine"]
-           [:div {:class (concat p- fg)} "Bare vis mine bookinger"]]
+           [:div.hidden.xs:block {:class (concat p- fg)} "Bare vis mine bookinger"]]
           checkbox]))]))
 
 (defn main-2-tabs [{:keys [selected booking-ready? boat-db main-m] :as m} {:keys [state values] :as props}]
@@ -360,7 +360,11 @@
        [:s.booking :s.basic-booking-info]
        [:div
         [picker/boat-picker props (conj main-m {:my-state state})]
-        [boat-picker-footer]]
+        [booking-footer {:booking-record {:start    (try (str (t/at (t/date (values :start-date)) (t/time (values :start-time)))) (catch js/Error _ nil))
+                                          :end      (try (str (t/at (t/date (values :end-date)) (t/time (values :end-time)))) (catch js/Error _ nil))
+                                          :selected @selected}
+                         :selected       selected :boat-db boat-db :booking-ready? booking-ready?}]
+        #_[boat-picker-footer]]
 
        [:s.booking :s.confirm]
        [:<>
@@ -381,7 +385,7 @@
     [:div.px-2.pt-4.pb-6.space-y-2.sticky.top-28.z-50
      {:class bg}                                            ;{:class [:dark:bg-gray-700 :bg-gray-100]}
      [:div.grid.gap-y-4.gap-x-2
-      {:style {:grid-template-columns "min-content 1fr"}}
+      {:style {:grid-template-columns "1fr 1fr"}}
       [:div.flex.flex-col.justify-self-start.relative
        [fields/date (-> props
                         booking.time-navigator/naked
@@ -450,8 +454,9 @@
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [admin false]
     [fork/form {:initial-touched   {:start-date  (str (t/new-date))
-                                    :start-time  (str (t/time "08:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
-                                    :end-time    (str (t/time "17:00" #_(t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours)))
+                                    :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration 2 :hours)) :hours))
+                                    ;todo adjust for 22-23
+                                    :end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 3 :hours)) :hours))
                                     :end-date    (str (t/new-date))
                                     :description ""}
                 :validation        booking-validation

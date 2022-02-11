@@ -217,7 +217,6 @@
       (if @user-auth
         [:<>
 
-
          (render-front-tabbar)
          [k/case-route (fn [route] (-> route :data :name))
           :r.forsiden

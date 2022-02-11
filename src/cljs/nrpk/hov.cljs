@@ -36,7 +36,7 @@
 
 (defn open-details [id]
   (let [{:keys [bg fg]} (st/fbg' :side-button)]
-    [:div.w-10.flex.flex-center.shrink-0
+    [:div.w-10.flex.justify-center.shrink-0
      {:class    (concat bg fg)
       :on-click #(do ()
                      (.stopPropagation %)

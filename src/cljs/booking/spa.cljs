@@ -196,7 +196,15 @@
            [:div.p-4.space-y-4
             [:h2 "Er du ny her?"]
             [:a {:href (k/path-for [:r.user])} "Logg inn først"]]]
-          [hoc/new-booking])
+          ;[hoc/new-booking]
+          [booking.views/booking-form
+           {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
+            :selected      hoc/selected
+            :uid           (:uid @user-auth)
+            :on-submit     #(send :e.complete %)
+            :cancel        #(send :e.cancel-booking)
+            :my-state      schpaa.components.views/my-state
+            :booking-data' (sort-by :date > (booking.database/read))}])
 
         :r.forsiden
         (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
@@ -227,11 +235,13 @@
       [welcome])))
 
 (def route-table
-  {:r.forsiden    front
-   :r.new-booking front
-   :r.boatlist    front
-   :r.user        user
-   :r.logg        user
-   :r.debug       user
-   :r.debug2      front
-   :r.blog        front})
+  {:r.forsiden       front
+   :r.new-booking    front
+   :r.boatlist       front
+   :r.user           user
+   :r.logg           user
+   :r.debug          user
+   :r.debug2         front
+   :r.blog           front
+   :r.page-not-found (fn [r] [:div "?"])})
+

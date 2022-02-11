@@ -17,7 +17,9 @@
    ["/siste" {:name :r.last-booking :header "Siste booking" :subheader "Booking"}]
    ["/baksiden" {:name :r.back :header "Baksiden" :subheader "Booking"}]
    ["/debug2" {:name :r.debug2 :header "Feilsøking2" :subheader "Booking"}]
-   ["/blog" {:name :r.blog :header "Blogg" :subheader "Booking"}]])
+   ["/blog" {:name :r.blog :header "Blogg" :subheader "Booking"}]
+   ["/not-found" {:name :r.page-not-found :header ":r.page-not-found" :subheader ":r.page-not-found"}]])
+
 
 ;region initial-state
 
