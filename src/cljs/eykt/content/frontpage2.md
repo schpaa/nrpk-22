@@ -1,1 +1,1 @@
-> ETYMOLOGI av norrønt eykt '3 timer', egentlig om den tiden et trekkdyr (eykr) er spent for plogen. En økt er en sammenhengende arbeidsperiode eller arbeidstiden mellom to måltider eller hvilepauser.
+> ETYMOLOGI: av norrønt eykt '3 timer', egentlig om den tiden et trekkdyr (eykr) er spent for plogen. En økt er en sammenhengende arbeidsperiode eller arbeidstiden mellom to måltider eller hvilepauser.
