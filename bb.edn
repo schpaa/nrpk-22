@@ -1,0 +1,59 @@
+{:paths          ["script"]
+ :min-bb-version "0.5.0"
+ :tasks
+ {:enter       (println "Entering " (:name (current-task)))
+
+  :requires    ([babashka.fs :as fs]
+                [clojure.java.shell :refer [sh]])
+
+  :init        (do
+                 (def -app-name (first *command-line-args*))
+
+                 (def -dist-dir "dist")
+
+                 (def -css-output (str -dist-dir "/" -app-name "/css/output.css"))
+
+                 (defn replacer [{:keys [dist manifest-file index-file title app-name]}]
+                   (let [output-name-js (:output-name (first (read-string (slurp (str dist "/" app-name "/" manifest-file)))))
+                         output-name-css "output.css"
+                         html (slurp (str "template/" app-name "/index.html"))]
+                     (spit (str dist "/" app-name "/" index-file)
+                       (-> (slurp (str "template/" app-name "/index.html"))
+                         (.replace "{title}" (str title " " app-name))
+                         (.replace "{css-source}" output-name-css)
+                         (.replace "{js-source}" output-name-js))))))
+
+  fb:emu       {:doc  "Starts the firebase-emulator for database and hosting"
+                :task (shell {:continue true} "firebase emulators:start --only database,firestore")}
+  -dev:browser (do
+
+                 ;(shell "open http://localhost:8010")
+                 (shell "open http://localhost:9630"))
+  ;-devcards:css (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
+  -dev:css     (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/booking/css/output.css -o ./public/eykt/css/output.css -o ./public/devcards/css/output.css --watch")
+  -dev:watch   (clojure (str "-M:shadow-cljs watch " project-name))
+  -dev         {:depends [-dev:watch -dev:browser]}
+  stats        {:depends []
+                :task    (do
+                           (sh "bash" "-c" (str "ls -l ./dist/" -app-name "/js/*.js >> ./history.md"))
+                           (shell {:continue true} "cat ./history.md")
+                           (shell "say done"))}
+  template     {:task (do
+                        (replacer
+                          {:app-name      -app-name
+                           :dist          "dist"
+                           :manifest-file "/js/manifest.edn"
+                           :index-file    "index.html"
+                           :title         "NRPK-22"}))}
+  dev          {:doc  "requires `booking` or `eykt`"
+                :task (run '-dev {:parallel true})}
+
+  css          {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
+  clean        {:task (fs/delete-tree -dist-dir)}
+  build        {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
+  fonts        {:task (do
+                        (fs/copy-tree "template/booking/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)
+                        (fs/copy-tree "template/booking/img" (str -dist-dir "/" -app-name "/img") :replace-existing))}
+  deploy       {:depends [clean build template css fonts stats]
+                :task    (let [app-name (case -app-name "eykt" "eyktv-22" "booking" "booking-22")]
+                           (shell (str "firebase deploy --only hosting:" app-name)))}}}
