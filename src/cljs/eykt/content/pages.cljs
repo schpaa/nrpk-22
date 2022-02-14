@@ -311,7 +311,6 @@
                            [:div.truncate.hidden.xs:block {:class (concat p- fg)} (if @vis-ute "Bare de som er ute" "Viser alle")]]
                           checkbox]))])))))
 
-
           :r.kalender
           (let [{:keys [bg]} (st/fbg' :form)]
             [:div
@@ -336,7 +335,7 @@
            [:div.px-4.pt-16x.space-y-8.relative.xs:hidden
             {:style {:min-height "calc(100vh - 3rem)"}
              :class (concat fg bg)}
-            [:div.max-w-xs.mx-auto.opacity-75
+            [:div.max-w-xs.mx-auto
              [:div.group.transition.space-y-2.sticky.top-12.pt-16.-mt-4
               {:class bg}
               [:div.flex.flex-center
@@ -347,31 +346,13 @@
                 [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
               (logo-type)]
 
-             [:div.prose.max-w-xs.mx-auto
-              {:class [:dark:prose-invert
-                       :prose-h3:font-bold
-                       :prose-h3:text-base
-                       :prose-p:pt-0
-                       :prose-p:pb-3
-                       :prose-p:my-0
-                       :prose-p:leading-relaxed
-                       :prose-blockquote:text-gray-500
-                       ;:prose-blockquote:text-gray-400
-                       :prose-blockquote:pb-1
-                       ;:prose-blockquote:py-0
-                       :prose-blockquote:pl-4
-                       :prose-blockquote:m-2
-                       ;:prose-blockquote:-ml-4
-                       :prose-blockquote:text-sm
-                       :prose-blockquote:font-light
-                       :prose-blockquote:leading-relaxed
-                       :prose-blockquote:font-serif
-                       :prose-blockquote:border-l-2
-                       :prose-blockquote:border-alt
-                       :prose-blockquote:border-dotted
-                       :prose-stone]}
-              (schpaa.markdown/md->html (shadow.resource/inline "./frontpage.md"))]]]
-           [:div.px-4.pt-16.space-y-8.relative.hidden.xs:block
+             [:div.max-w-xs.mx-auto
+              (-> "./frontpage.md"
+                  inline
+                  schpaa.markdown/md->html
+                  st/prose-markdown-styles)]]]
+
+           [:div.px-4.pt-12.space-y-8.relative.hidden.xs:block
             {:style {:min-height "calc(100vh - 4rem)"}
              :class (concat fg bg)}
 

@@ -47,7 +47,7 @@
         d (+ 24 (- (+ 1 (* 24 (times.api/day-number-in-year (t/date)))
                       (t/hour (t/time)))
                    offset))]
-    [:div.relative.z-0.h-10.space-y-0.overflow-clip
+    [:div.relative.z-0.h-8.space-y-0.overflow-clip.-debugx.shrink-0
      (when-some [date date]
        [:div.absolute.-bottom-1.left-0
         {:style {:left "25%" :width "25%"}}
@@ -120,7 +120,7 @@
         overlapping? (pos? (count (filter (fn [{:keys [r?]}] (nil? r?)) status-list)))]
     overlapping?))
 
-(defn- expanded-view [{:keys [appearance offset time-slot id data fetch-bookingdata]}]
+(defn- ^:deprecated expanded-view [{:keys [appearance offset time-slot id data fetch-bookingdata]}]
   (let [{:keys [bg bg+ hd fg fg- fg+ p p-]} (st/fbg' :listitem)
         fetch-bookingdata (if fetch-bookingdata
                             fetch-bookingdata
@@ -163,7 +163,7 @@
          (name-view navn)])
 
       (when (some #{:timeline} appearance)
-        [:div.col-span-1.h-10.self-center.max-w-xs.justify-self-end.w-full
+        [:div.col-span-1.h-10x.self-center.max-w-xs.justify-self-end.w-full
          (when booking-db
            (draw-graph
              {:date      (t/beginning time-slot)
@@ -185,88 +185,108 @@
                                    (when (seq length) [:div.whitespace-nowrap "lengde " length])
                                    (when (seq width) [:div.whitespace-nowrap "bredde " width])]))]])]]))
 
-(defn list-line [{:keys [overlap? selected? id on-click insert-before-line-item insert-before insert-after appearance] :as m}]
+(defn normal-view [{:keys [id data time-slot offset fetch-bookingdata selected?]}]
+  (let [{:keys [fg- fg fg+ p p-]} (st/fbg' :booking-listitem)
+        {:keys [navn number slot kind]} data]
+    [:div.grow
+     [:div.h-full.gap-2.pr-4.pl-2.grow
+      {:class (concat fg [:flex :items-center])}
+      (number-view number)
+      [:div.flex.flex-col.grow.space-y-1.truncate
+       [:div.leading-none.flex.items-center.gap-2.truncate
+        {:class (concat fg+ p)}
+        (slot-view slot)
+        (normalize-kind kind)]
+       [:div.flex.items-center
+        [:div.leading-none {:class (concat fg- p-)} navn]]]
+      (when selected?
+        (let [fetch-bookingdata (if fetch-bookingdata
+                                  fetch-bookingdata
+                                  booking.database/read)
+              offset (* 24 (dec offset))
+              window {:width  (* 24 4)
+                      :offset (* 24 offset)}
+              slot' (when time-slot
+                      {:from (- (convert (t/beginning time-slot)) offset)
+                       :to   (- (convert (t/end time-slot)) offset)})
+              booking-db (filter (partial has-selection id) (fetch-bookingdata) #_(booking.database/read))
+              status-list (mapv (fn [{:keys [start end]}]
+                                  {:r?    (some #{(available? time-slot (tick.alpha.interval/bounds start end))} [:precedes :preceded-by])
+                                   :start (- (convert start) offset)
+                                   :end   (- (convert end) offset)})
+                                booking-db)]
+          (draw-graph
+            {:date      (t/beginning time-slot)
+             :window    window
+             :time-slot slot'
+             :list      status-list})))]]))
+
+(defn list-line-classes [{:keys [overlap? selected? id on-click insert-before-line-item insert-before insert-after appearance] :as m}]
   (let [{:keys [bg bg+]} (if selected?
                            (st/fbg' :listitem-button-selected)
                            (st/fbg' :listitem-button-unselected))]
-    [:div.flex.items-stretch.justify-between
-     {:class bg}
-     (when (and insert-before-line-item (fn? insert-before-line-item))
-       (insert-before-line-item id))
+    (cond
+      (or (some #{:unavailable} appearance)
+          (some #{:error} appearance)
+          overlap?)
+      [:bg-red-300 :text-black :dark:bg-rose-500 :dark:text-white]
+      selected?
+      bg
+      (some #{:clear} appearance)
+      []
 
-     (when (and insert-before (fn? insert-before))
-       (insert-before id))
+      :else bg)))
 
-     [:div.grow
-      {:class
-       (cond
-         (or (some #{:unavailable} appearance)
-             (some #{:error} appearance)
-             overlap?) [:bg-red-200 :text-black :dark:bg-rose-500 :dark:text-white]
-         selected? bg
-         (some #{:clear} appearance) []
-         :else bg)}
-
-      [:div
-       {:on-click #(on-click id)}
-       (expanded-view (assoc m :appearance (conj appearance #{:timeline})))]]
-
-     (when (and insert-after (fn? insert-after))
-       (insert-after id))]))
-
-(defn boat-list [{:keys [boat-db selected only-show-selected?] :as m}]
-  [:div.space-y-px.select-none.overflow-clip
-   (doall (for [[id data] boat-db
-                :when (if only-show-selected?
-                        (some #{id} @selected)
-                        true)]
-            ^{:key (str id)}
-            [list-line
-             (conj m
-                   {:appearance (set/union
-                                  (if @(schpaa.state/listen :opt1) #{:extra})
-                                  (if (some #{id} @selected) #{:timeline}))
-                    :selected?  (some #{id} @selected)
-                    :id         id
-                    :data       data})]))])
+(defn list-line [{:keys [id insert-before-line-item insert-before insert-after] :as m}]
+  [:div.flex.items-stretch.justify-between
+   {:class (list-line-classes m)}
+   (when (and insert-before-line-item (fn? insert-before-line-item))
+     (insert-before-line-item id))
+   (when (and insert-before (fn? insert-before))
+     (insert-before id))
+   [normal-view m]
+   (when (and insert-after (fn? insert-after))
+     (insert-after id))])
 
 ;endregion drawing
 
-(defn- ^:deprecated button
-  ([a disabled? c]
-   [:button.bg-gray-200.shadow-inside
-    {:class    (if disabled? [:text-gray-300])
-     :type     :button
-     :disabled disabled?
-     :on-click a}
-    (if (keyword? c) [schpaa.icon/small c] c)])
-  ([a c]
-   [:button.bg-gray-200.shadow-inside
-    {:type     :button
-     :disabled false
-     :on-click a}
-    (if (keyword? c) [schpaa.icon/small c] c)]))
+(defn select-button [selected]
+  (fn [id] (let [selected? (some #{id} @selected)]
+             (when-not selected?
+               (bu/listitem-button-small-clear
+                 {:class     [:mr-5]
+                  :type      :button
+                  :on-click  #(do
+                                (readymade/popup {:dialog-type :message
+                                                  :content     (str id)})
+                                (swap! selected set/union #{id}))
+                  :color-map (assoc (st/fbg' :listitem-button-unselected)
+                               :fg [:text-info-200]
+                               :bg [:bg-info-700]
+                               :br [:border-info-700 :border-2 :ps-2])} :checked)))))
 
-(defn ^:deprecated adjust [state f field d]
-  (fn []
-    (let [has-time? (try (t/time (get-in @state [:values field])) (catch js/Error _ false))]
-      (if has-time?
-        (swap! state
-               #(-> %
-                    (update-in [:values :start] (fn [e] (f (t/date-time e) (t/new-duration 1 d))))
-                    (update-in [:values :end] (fn [e] (f (t/date-time e) (t/new-duration 1 d))))))
-        (swap! state
-               update-in [:values field] #(f (t/date %) (t/new-period 1 d)))))))
-
-(defn values' [props path f]
-  (assoc-in props path f))
+(defn unselect-button [selected]
+  (fn [id]
+    (let [selected? (some #{id} @selected)]
+      (when selected?
+        [:div.flex.items-center
+         (bu/listitem-button-small-clear
+           {:type      :button
+            :on-click  #(do
+                          (readymade/popup {:dialog-type :error
+                                            :content     (str id)})
+                          (swap! selected set/difference #{id}))
+            :color-map (assoc (st/fbg' :listitem-button-selected)
+                         :bg [:bg-gray-700]
+                         :fg [:text-gray-200]
+                         :br [:border-gray-700 :border-2 :ps-2])} :cross-out)]))))
 
 (defn boat-picker
   "Find all entries with a relation of :precedes or preceded-by, all the
   other relations must fail. Since there isn't any allowance for abutting
   entries (1 hour minimum between each booking), :met-by and :meets are therefore
   rejected."
-  [{:keys [values]} {:keys [boat-db selected]}]
+  [{:keys [values]} {:keys [boat-db selected not-available]}]
   (let [{:keys [bg fg-]} (st/fbg' :void)
         ;fixme You've done this many times now
         start (t/at (t/date (values :start-date)) (t/time (values :start-time)))
@@ -281,48 +301,29 @@
 
      (if (seq boat-db)
        [:div.flex-1
-        [boat-list
-         {:offset                  offset
-          :time-slot               slot
-          :boat-db                 boat-db
-          :only-show-selected?     @(rf/subscribe [:boatpickerlist/details])
-          :selected                selected
-          :insert-before-line-item hov/open-details
-          :insert-after            (fn [id] (let [selected? (some #{id} @selected)]
-                                              (when-not selected?
-                                                (bu/listitem-button-small-clear {:type      :button
-                                                                                 :on-click  #(do
-                                                                                               (readymade/popup {:dialog-type :message
-                                                                                                                 :content     (str id)})
-                                                                                               (swap! selected set/union #{id}))
-                                                                                 :color-map (assoc (st/fbg' :listitem-button-unselected)
-                                                                                              :fg [:text-info-200]
-                                                                                              :bg [:bg-info-700]
-                                                                                              :br [:border-info-700 :border-2 :ps-2])} :checked))))
-          :insert-before           (fn [id]
-                                     (let [selected? (some #{id} @selected)]
-                                       (when selected?
-                                         [:div.flex.items-center
-                                          (bu/listitem-button-small-clear {:type      :button :on-click #(do
-                                                                                                           (readymade/popup {:dialog-type :error
-                                                                                                                             :content     (str id)})
-                                                                                                           (swap! selected set/difference #{id}))
-                                                                           :color-map (assoc (st/fbg' :listitem-button-selected)
-                                                                                        :bg [:bg-gray-700]
-                                                                                        :fg [:text-gray-200]
-                                                                                        :br [:border-gray-700 :border-2 :ps-2])} :cross-out)]))
-
-                                     #_(let [id #{id}]
-                                         (hov/toggle-selected'
-                                           {:on?      (some id @selected)
-                                            :on-click #(swap! selected
-                                                              (fn [sel] (if (some id sel)
-                                                                          (set/difference sel id)
-                                                                          (set/union sel id))))})))
-          #_#_:on-click (fn [e] (swap! selected
-                                       (fn [sel] (if (some #{e} sel)
-                                                   (set/difference sel #{e})
-                                                   (set/union sel #{e})))))}]]
+        (let [only-show-selected? false]
+          (into [:div.space-y-px.select-none.overflow-clip]
+                (for [[id data] boat-db
+                      :when (if only-show-selected?
+                              (some #{id} @selected)
+                              true)]
+                  ^{:key (str id)}
+                  [list-line
+                   {:not-available           not-available
+                    :offset                  offset
+                    :time-slot               slot
+                    :boat-db                 boat-db
+                    :selected                selected
+                    :insert-before-line-item hov/open-details
+                    :insert-before           (unselect-button selected)
+                    :insert-after            (select-button selected)
+                    :overlap?                (some #{id} not-available)
+                    :appearance              (set/union
+                                               (if @(schpaa.state/listen :opt1) #{:extra})
+                                               (if (some #{id} @selected) #{:timeline}))
+                    :selected?               (some #{id} @selected)
+                    :id                      id
+                    :data                    data}])))]
        [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
         {:class fg-}
         [:div.text-2xl.font-black "Båt-listen er tom"]
@@ -338,16 +339,6 @@
   (let [{:keys [bg fg fg+ p p-]} (st/fbg' :surface)]
     [:div.flex.justify-end.items-center.gap-2.px-4.sticky.bottom-0.h-16.shadow
      {:class bg}
-     #_(schpaa.components.views/modern-checkbox'
-         {:set-details #(schpaa.state/change :opt1 %)
-          :get-details #(-> (schpaa.state/listen :opt1) deref)}
-         (fn [checkbox]
-           [:div.flex.items-center.gap-2
-            checkbox
-            [:div.space-y-0
-             [:div {:class (concat p fg+)} "Detaljer"]
-             [:div.hidden.xs:block {:class (concat p- fg)} "Vis alle detaljer"]]]))
-
      (schpaa.components.views/modern-checkbox'
        {:set-details #(rf/dispatch [:boatpickerlist/set-details %])
         :get-details #(-> (rf/subscribe [:boatpickerlist/details]) deref)}

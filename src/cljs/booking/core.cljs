@@ -1,14 +1,16 @@
 (ns booking.core
-  (:require [re-frame.core :as rf]
-            [kee-frame.core :as k]
-            [re-statecharts.core :as rs]                    ; passively registers the fsm
-            [booking.spa :as spa]
-            [booking.data :as app-data]
-            [booking.fsm-model]
-            [schpaa.darkmode]
-            [db.core :as db]
-            [nrpk.core]
-            [nrpk.spa]))
+  (:require
+    [re-frame.core :as rf]
+    [kee-frame.core :as k]
+    ;; passively registers the fsm
+    [re-statecharts.core :as rs]
+    [booking.spa :as spa]
+    [booking.data :as app-data]
+    [booking.fsm-model]
+    [schpaa.darkmode]
+    [db.core :as db]
+    [nrpk.core]
+    [nrpk.spa]))
 
 (defn kee-start []
   (k/start! {:routes         app-data/routes,

@@ -5,6 +5,7 @@
             [schpaa.modal :as modal]
             [schpaa.components.screen :as components.screen]
             [nrpk.fsm-helpers :as state :refer [send]]
+            [kee-frame.router :refer [make-route-component]]
             [schpaa.debug :as l]))
 
 (defn- forced-scroll-lock
@@ -30,7 +31,8 @@
                           (:modal-forced @s))
        ;When forced, a click on the  background will noe dismiss the modal
        ;the user must click on a button in the modal to dismiss it
-       :on-close      (when-not (or (:modal-dirty @s) (:modal-forced @s))
+       :on-close      (when-not (or (:modal-dirty @s)
+                                    (:modal-forced @s))
                         #(send :e.hide))}
       ;;content
       [modal/render
@@ -54,7 +56,6 @@
         user-screenmode (rf/subscribe [:app/user-screenmode])
         html (aget (.getElementsByTagName js/document "html") 0)
         body (aget (.getElementsByTagName js/document "body") 0)
-        mobile? (rf/subscribe [:breaking-point.core/mobile?])
         menu-open? (rf/subscribe [:app/menu-open?])
         s (rf/subscribe [::rs/state-full :main-fsm])]
     (.setAttribute html "class" (if (= :dark @user-screenmode) "dark" ""))
@@ -65,47 +66,4 @@
                                  (not (:modal-short-timeout @s)))) "maint")
     [dispatch-main
      (when-let [page (get route-table @route-name)]
-       (kee-frame.router/make-route-component page @route-entry))]))
-
-(comment
-  (defn testx []
-    (r/with-let [toggle (r/atom true)]
-                (forced-scroll-lock @toggle "maint")
-                [:div
-
-                 [:div#maint.px-2 {:class (concat
-                                            [:right-0 :z-30 :transform :duration-200]
-                                            (if @toggle
-                                              [:translate-x-0 :pointer-events-auto]
-                                              [:translate-x-full])
-                                            ["bg-black text-white"
-                                             :overflow-y-auto
-                                             "fixed z-20 w-80 h-screen"])}
-                  [:div {:class [:sticky :top-0 :bg-black :h-16]} "navigation"]
-                  [:div {:class [:bg-rose-300]}
-                   (into [:div] (map #(vector :div %) (range 100)))]]
-
-                 [:div.select-none.text-xl.relative
-                  ;{:class (if @toggle [:-translate-x-80])}
-
-                  [:div.fixed.inset-0.bg-black.z-20
-                   {:class    (if @toggle
-                                [:opacity-50 :pointer-events-auto]
-                                [:opacity-0 :pointer-events-none])
-                    :on-click #(swap! toggle not)}]
-
-                  [:div {:on-click #(swap! toggle not)
-                         :class    [:bg-white :h-16 "sticky top-0"]} "header"]
-
-                  [:div {:on-click #(swap! toggle not)
-                         :class    [:bg-amber-200 :h-32]} "middle"]
-
-                  [:div {:class [:bg-sky-300 :h-16 "sticky top-16"]} "tabbar"]
-
-                  [:div {:class [:bg-pink-300]}
-                   [:div "content"]
-                   (into [:div] (map #(vector :div %) (range 10)))]
-
-                  [:div {:class [:bg-pink-200]}
-                   [:div "content"]
-                   (into [:div] (map #(vector :div %) (range 100)))]]])))
+       (make-route-component page @route-entry))]))

@@ -19,6 +19,7 @@
             [shadow.resource :refer [inline]]
             [schpaa.style :as st]))
 
+;test                                 
 (defn view-info [{:keys [username]}]
   [:div username])
 
@@ -101,8 +102,7 @@
 
 (defn logo-type []
   [:div.text-center.inset-0
-   {:class [
-            :drop-shadow-md
+   {:class [:drop-shadow-md
             :leading-normal
             :font-oswald
             :font-normal
@@ -112,16 +112,13 @@
             ;:bg-clip-text
             ;:bg-gradient-to-r :from-rose-400 :via-sky-600 :to-alt
             :xtext-transparent]}
-
-
-
    [:span "booking."]
    [:span.text-gray-500 "nrpk.no"]])
 
 (defn welcome []
   (let [{:keys [bg bg+ bg- fg]} (st/fbg' :surface)]
     [:<>
-     [:div.px-4.pt-16x.space-y-8.relative.xs:hidden
+     [:div.px-4.space-y-8.relative.xs:hidden
       {:style {:min-height "calc(100vh - 3rem)"}
        :class (concat fg bg)}
 
@@ -147,7 +144,7 @@
        :class (concat fg bg)}
       [:div.max-w-xsx.mx-auto
 
-       [:div.grid.gap-x-10.max-w-md.mx-auto.space-y-8.pt-16
+       [:div.grid.gap-x-10.max-w-md.mx-auto.space-y-8.pt-12
         {:style {:grid-template-columns "min-content 1fr"}}
 
         [:div.prose.col-span-2
@@ -163,19 +160,14 @@
            [:div.absolute.rounded-full.-inset-2.blur
             {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
                      :sgroup-hover:-inset-1 :duration-500]}]
-           [:div.relative [:img.object-cover {:src "/img/logo-m.png"}]]]]
+           [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
          (logo-type)]
 
         [:div.prose.mx-auto.col-span-1.self-center
          (-> "./frontpage2.md"
              inline
              schpaa.markdown/md->html
-             st/prose-markdown-styles)]]]
-
-      #_[:div.max-w-md.mx-auto.pb-8
-         (-> "./frontpage3.md"
-             inline
-             schpaa.markdown/md->html)]]]))
+             st/prose-markdown-styles)]]]]]))
 
 (defn front []
   (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 0)
@@ -238,10 +230,10 @@
   {:r.forsiden       front
    :r.new-booking    front
    :r.boatlist       front
+   ;:r.debug2         front
+   ;:r.blog           front
    :r.user           user
    :r.logg           user
    :r.debug          user
-   :r.debug2         front
-   :r.blog           front
    :r.page-not-found (fn [r] [:div "?"])})
 
