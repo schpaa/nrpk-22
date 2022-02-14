@@ -21,7 +21,7 @@
            devcards/devcards                     {:mvn/version "0.2.7"}}
  :aliases {:shadow-cljs
            {:main-opts  ["-m" "shadow.cljs.devtools.cli"]
-            :extra-deps {thheller/shadow-cljs       {:mvn/version "2.16.12"}
+            :extra-deps {thheller/shadow-cljs       {:mvn/version "2.17.2"}
                          cider/piggieback           {:mvn/version "0.5.3"}
                          day8.re-frame/re-frame-10x {:mvn/version "1.2.1"}
                          binaryage/devtools         {:mvn/version "1.0.4"}}}}}
