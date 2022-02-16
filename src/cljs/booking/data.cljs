@@ -5,7 +5,7 @@
 
 (def routes
   [["/" {:name :r.forsiden :header "NRPK Booking" :subheader "Forsiden"}]
-   ["/batlist" {:name :r.boatlist :header "Oversikt over båter" :subheader "Forsiden"}]
+   ["/batlist" {:name :r.booking-blog :header "Oversikt over båter" :subheader "Forsiden"}]
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
    ["/debug" {:name :r.debug :header "Feilsøking" :subheader "Baksiden"}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]

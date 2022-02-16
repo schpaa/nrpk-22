@@ -8,7 +8,10 @@
 ;region
 
 (defn get-username [uid]
-  (or (some-> (db/on-value-reaction {:path ["users" uid]}) deref :alias) uid))
+  (let [u (db/on-value-reaction {:path ["users" uid]})]
+    (or (some-> u deref :alias)
+        (some-> u deref :navn)
+        (subs uid 0 10))))
 
 (def get-username-memoed (memoize get-username))
 

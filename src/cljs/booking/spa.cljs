@@ -1,5 +1,6 @@
 (ns booking.spa
   (:require [re-frame.core :as rf]
+            [reagent.core :as r]
             [re-statecharts.core :as rs]
             [kee-frame.router]
             [kee-frame.core :as k]
@@ -17,7 +18,13 @@
             [user.views]
             [booking.hoc :as hoc]
             [shadow.resource :refer [inline]]
-            [schpaa.style :as st]))
+            [schpaa.style :as st]
+            [booking.content.booking-blog :as content.booking-blog :refer [booking-blog]]
+            [booking.content.new-booking :as content.new-booking]
+            [booking.content.overview :as content.overview]
+            [schpaa.debug :as l]
+            [schpaa.button :as bu]
+            [tick.core :as t]))
 
 ;test                                 
 (defn view-info [{:keys [username]}]
@@ -93,12 +100,64 @@
 (defn register-front "to :active-front" [page]
   (rf/dispatch [:app/register-entry :active-front page]))
 
-(defn render-front-tabbar []
-  [:div.sticky.top-16.z-200
-   [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-    [:r.new-booking "Booking" register-front :icon :document]
-    [:r.forsiden "Siste" register-front :icon :calendar]
-    [:r.boatlist "Båtliste" register-front :icon :list]]])
+(defn temp-add-10 [uid]
+  [bu/regular-button-small {:on-click #(db/database-set {:path  ["booking-posts" "receipts" uid]
+                                                         :value {"articles" (str (t/<< (t/now) (t/new-duration 151 :hours)))}})} "10"])
+(defn temp-add-13 [uid]
+  [bu/regular-button-small {:on-click #(db/database-set {:path  ["booking-posts" "receipts" uid]
+                                                         :value {"articles" (str (t/<< (t/now) (t/new-duration 13 :hours)))}})} "13"])
+
+(defn temp-add-15 [uid]
+  [bu/regular-button-small {:on-click #(db/database-set {:path ["booking-posts" "receipts" uid] :value {}})} "15"])
+
+(defn render-front-tabbar [uid]
+  (let [vr (db/on-value-reaction {:path ["booking-posts" "receipts" uid "articles"]})
+        {date-of-last-seen :date id :id} @(db/on-value-reaction {:path ["booking-posts" "receipts" uid "articles"]})
+        path ["booking-posts" "articles"]
+        list-of-posts (db/on-value-reaction {:path path})]
+    (fn [uid]
+      (let [unseen (count (filter (fn [[k {:keys [] :as v}]] (pos? (compare (name k) (:id @vr)))) @list-of-posts))]
+        [:<>
+         [l/ppre-x
+          unseen
+          date-of-last-seen
+          id]
+
+         [:div.p-2.flex.gap-2
+          (temp-add-10 uid)
+          (temp-add-13 uid)
+          (temp-add-15 uid)
+
+          [bu/regular-button-small {:on-click #(db/database-push {:path  ["booking-posts" "articles"]
+                                                                  :value {:uid     uid
+                                                                          :content "old"
+                                                                          :date    (str (t/<< (t/now) (t/new-duration (rand-int 240) :hours)))}})}
+           [:div [:div "Add"] [:div "old"]]]
+          [bu/regular-button-small {:on-click #(db/database-push {:path  ["booking-posts" "articles"]
+                                                                  :value {:uid     uid
+                                                                          :content "recent"
+                                                                          :date    (str (t/>> (t/now) (t/new-duration (rand-int 3) :minutes)))}})}
+           [:div [:div "Add"] [:div "+3"]]]]
+
+         [:div.sticky.top-16.z-200
+          [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
+           [:r.new-booking "Ny booking" register-front :icon :ticket]
+           [:r.forsiden "Siste" register-front :icon :clock]
+           [:r.booking-blog
+            (fn [] [:div.flex.gap-2
+                    [:div "Nytt"]
+                    (let [unseen (count (filter (fn [[k {:keys [] :as v}]] (pos? (compare (name k) (:id @vr)))) @list-of-posts))]
+                      (when (pos? unseen)
+                        [:div
+                         [:div.rounded-full.bg-gray-100.xaspect-square.h-6.px-3.w-auto.flex.flex-center.text-black.font-semibold.text-sm
+                          unseen]]))])
+
+            #(do
+               (register-front %)
+               (booking.content.booking-blog/mark-last-seen uid))
+
+            :icon
+            :chat-square]]]]))))
 
 (defn logo-type []
   [:div.text-center.inset-0
@@ -174,13 +233,15 @@
         user-auth (rf/subscribe [::db/user-auth])]
     (if @user-auth
       [:div
-       [render-front-tabbar]
+       [render-front-tabbar (:uid @user-auth)]
 
        [k/case-route (comp :name :data)
-        :r.blog [(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]
+        :r.booking-blog
+        [content.booking-blog/err-boundary
+         [content.booking-blog/booking-blog (:uid @user-auth)]]
 
-        :r.debug2
-        [:div "Stuff"]
+        ;:r.blog
+        ;[(get-in schpaa.components.sidebar/tabs-data [:bar-chart :content-fn])]
 
         :r.new-booking
         (if-not @user-auth
@@ -188,48 +249,17 @@
            [:div.p-4.space-y-4
             [:h2 "Er du ny her?"]
             [:a {:href (k/path-for [:r.user])} "Logg inn først"]]]
-          ;[hoc/new-booking]
-          [booking.views/booking-form
-           {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
-            :selected      hoc/selected
-            :uid           (:uid @user-auth)
-            :on-submit     #(send :e.complete %)
-            :cancel        #(send :e.cancel-booking)
-            :my-state      schpaa.components.views/my-state
-            :booking-data' (sort-by :date > (booking.database/read))}])
+          [content.new-booking/new-booking @user-auth])
 
         :r.forsiden
-        (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
-          [:div
-           {:class bg}
-           [:div.space-y-px.flex.flex-col
-            {:style {:min-height "calc(100vh - 7rem)"}}
-            (if (seq data)
-              [:div.flex-1
-               {:class bg}
-               [hoc/all-active-bookings {:data data}]]
-              [empty-list-message "Booking-listen er tom"])
-            [booking.views/last-bookings-footer {}]]])
+        [content.overview/overview]]]
 
-        :r.boatlist
-        (let [data (sort-by (comp :number val) < (logg.database/boat-db))]
-          [:div
-           {:class bg}
-           [:div.space-y-px.flex.flex-col
-            {:style {:min-height "calc(100vh - 7rem)"}}
-            (if (seq data)
-              [:div.flex-1
-               [hoc/all-boats
-                {:data     data
-                 :details? @(schpaa.state/listen :opt1)}]]
-              [empty-list-message "Båt-listen er tom"])
-            [hoc/all-boats-footer {}]]])]]
       [welcome])))
 
 (def route-table
   {:r.forsiden       front
    :r.new-booking    front
-   :r.boatlist       front
+   :r.booking-blog   front
    ;:r.debug2         front
    ;:r.blog           front
    :r.user           user
