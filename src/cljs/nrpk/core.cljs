@@ -7,7 +7,7 @@
 
 ;region events and subs
 
-(rf/reg-sub :route-name
+(rf/reg-sub :app/route-name
             :<- [:kee-frame/route]
             (fn [route _]
               (-> route :data :name)))

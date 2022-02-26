@@ -18,7 +18,7 @@
 
 (defn after-and-including [today {:keys [start]}]
   (let [p (relation today start)]
-    (tap> p)
+    ;(tap> p)
     (some #{p} [:equals :starts :during :meets :precedes :contains])))
 
 (defn- available? [slot boat]

@@ -7,7 +7,9 @@
             [nrpk.fsm-helpers :refer [send]]
             [booking.database]
             [user.database]
-            [user.views]))
+            [user.views]
+            [booking.content.blog-support]
+            [booking.content.booking-blog]))
 
 (defn confirm-booking []
   #_(apply send
@@ -55,6 +57,7 @@
    :context {:modal false}
    :regions {:user    user.views/user-machine
              :booking booking-machine
+             :blog    booking.content.booking-blog/fsm
              :modal   modal/modal-machine}})
 
 (def *st

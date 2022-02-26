@@ -59,17 +59,15 @@
                                      :style   :x
                                      :created (t/at (t/date) (t/time "11:00"))}}))
 
-(def db-path ["report" "articles"])
-
-(defn get-content []
-  (if-let [data (some-> (db/on-value-reaction {:path db-path}))]
+(defn get-content [source-path]
+  (if-let [data (some-> (db/on-value-reaction {:path source-path}))]
     @data
     [{}]))
 
-(defn store-item [st {:keys [data] :as event}]
+(defn store-item [st {:keys [data source-path] :as event}]
   (tap> ["store-item" event])
   (let [{:keys [content]} data
-        id (.-key (db/database-push {:path  db-path
+        id (.-key (db/database-push {:path  source-path
                                      :value {:created (str (t/now))
                                              :content content}}))]
     (assoc-in st [:rapport :new-id] id)
@@ -81,32 +79,32 @@
 
 (defn update-item [{:keys [data] :as event}]
   (tap> event)
-  (let [{:keys [id content]} data]
-    (db/database-update {:path (conj db-path (name id)) :value {:updated (str (t/now))
-                                                                :content content}})
+  (let [{:keys [id content source-path]} data]
+    (db/database-update {:path (conj source-path (name id)) :value {:updated (str (t/now))
+                                                                    :content content}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:updated (t/now)
                                                             :content content})))))
 
 (defn set-item-to-visible [{:keys [data] :as event}]
   (tap> event)
-  (let [id data]
-    (db/database-update {:path (conj db-path (name id)) :value {:hidden false}})
+  (let [{:keys [id source-path]} data]
+    (db/database-update {:path (conj source-path (name id)) :value {:hidden false}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:hidden false})))))
 
 (defn set-item-to-hidden [{:keys [data] :as event}]
   (tap> event)
-  (let [id data]
-    (db/database-update {:path (conj db-path (name id)) :value {:hidden true}})
+  (let [{:keys [id source-path]} data]
+    (db/database-update {:path (conj source-path (name id)) :value {:hidden true}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:hidden true})))))
 
 (defn delete-item [{:keys [data] :as event}]
-  (let [id data]
-    (db/database-update {:path (conj db-path (name id)) :value {:deleted true}})
+  (let [{:keys [id source-path]} data]
+    (db/database-update {:path (conj source-path (name id)) :value {:deleted true}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:deleted true})))))
 
 (defn restore-item [{:keys [data] :as event}]
-  (let [id data]
-    (db/database-update {:path (conj db-path (name id)) :value {:deleted false}})
+  (let [{:keys [id source-path]} data]
+    (db/database-update {:path (conj source-path (name id)) :value {:deleted false}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:hidden  false
                                                             :deleted false})))))
 
@@ -115,8 +113,8 @@
 ;region fsm-helpers
 
 (defn has-content-guard [state event]
-  (pos? (count @(db/on-value-reaction {:path ["report" "articles"]})))
-  #_(not (empty? (remove (fn [[_ v]] (:hidden v)) (get-content)))))
+  (let [path (-> event :data :source-path)]
+    (pos? (count @(db/on-value-reaction {:path path})))))
 
 (defn confirmed [msg]
   (fn [_ _] (readymade/popup {:dialog-type :message
@@ -162,7 +160,7 @@
                                                                             (fn [_ event] (delete-item event))]}}}
 
              :s.manage-content           {:on {:e.show-entry   {:actions [(confirmed "content shown")
-                                                                          (fn [_ {:keys [data] :as event}]
+                                                                          (fn [_ event]
                                                                             (set-item-to-visible event))]}
                                                :e.hide-entry   {:actions [(confirmed "content hidden")
                                                                           (fn [_ {:keys [data] :as event}]
@@ -296,9 +294,9 @@
                                 ks1*ks2)))))
 
 (defn preview [style dt content]
-  (let [common [:xs:px-2 :px-2 :py-4 :my-px]
+  (let [common [:xs:px-2 :px-2 :pb-8 :my-px]
         date [:div.sticky.top-32.relative
-              [:div.absolute.-top-4.right-0.bg-black.text-white.px-2.py-1.text-xs (ta/date-format (t/instant dt))]]]
+              [:div.absolute.-top-4x.right-0.bg-black.text-white.px-2.py-1.text-xs (ta/date-format (t/instant dt))]]]
     (case style
       "c"
       [:div.bg-white.dark:bg-black
@@ -425,13 +423,13 @@
       [fields/number (-> props fields/small-field) :label "Vann temp" :name :water-temp]
       [fields/number (-> props fields/small-field) :label "Luft temp" :name :air-temp]])])
 
-(defn editing-form [id]
+(defn editing-form [source-path id]
   (let [form-id (random-uuid)
         form-state (r/atom nil)
         id (if (keyword? id) (name id) id)
         {:keys [p p- fg bg]} (st/fbg' :form)
         data (if id
-               (db/on-value-reaction {:path (conj db-path id)})
+               (db/on-value-reaction {:path (conj source-path id)})
                (atom {:created (str (t/now))}))
         initial-state @data]
     (fn [id]
@@ -471,16 +469,16 @@
 
 ;endregion
 
-(defn rapport-side []
+(defn rapport-side [{:keys [source-path]}]
   (let [{:keys [bg bg+ fg+]} (st/fbg' :void)
-        *fsm-rapport (:rapport @(rf/subscribe [::rs/state :main-fsm]))]
+        *fsm-rapport (:rapport @(rf/subscribe [::rs/state :main-fsm]) :none)]
     [:div
      [:div.sticky.top-28]
      (rs/match-state *fsm-rapport
        [:s.initial]
-       (if-let [data (get-content)]
-         (send :e.startup)
-         (send :e.waiting))
+       (if-let [data (get-content source-path)]
+         (send :e.startup {:source-path source-path})
+         (send :e.waiting {:source-path source-path}))
 
        [:s.empty-content]
        [:div
@@ -499,16 +497,16 @@
          #_[booking.views/last-bookings-footer {}]]]
 
        :s.adding
-       [editing-form nil]
+       [editing-form source-path nil]
 
        :s.adding-at-front
-       [editing-form nil]
+       [editing-form source-path nil]
 
        [:s.editing']
-       [editing-form (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
+       [editing-form source-path (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
 
        [:s.editing]
-       [editing-form (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
+       [editing-form source-path (-> (rf/subscribe [::rs/state-full :main-fsm]) deref :rapport :currently-editing-id)]
 
        [:s.some-content]
        (top-bottom-view
@@ -516,7 +514,7 @@
            (into [:div.flex.flex-col
                   {:class (concat [])}]
                  (for [[k {:keys [header style content created updated] :as v}]
-                       (sort-by (comp :created val) > (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content)))]
+                       (sort-by (comp :created val) > (remove (fn [[_ v]] (or (:deleted v) (:hidden v))) (get-content source-path)))]
                    #_[:div
                       {:class (concat bg fg [])}
                       [:div
@@ -561,8 +559,8 @@
        (let [show-deleted-posts (schpaa.state/listen :report/show-deleted-posts)
              sort-order (schpaa.state/listen :report/sort-order)
              data (if @show-deleted-posts
-                    (get-content)
-                    (remove (fn [[k v]] (:deleted v)) (get-content)))]
+                    (get-content source-path)
+                    (remove (fn [[k v]] (:deleted v)) (get-content source-path)))]
          (top-bottom-view
            (let [{:keys [fg- fg fg+ bg+ bg- bg p+ p-]} (st/fbg' :listitem)]
              [:div.space-y-4.flex.flex-col
@@ -590,8 +588,8 @@
                           ;[:div {:class p-} (when updated (ta/short-date-format (t/date (t/instant updated))))]
                           [:div.flex.gap-0
                            (when-not deleted (if hidden
-                                               [bu/listitem-button-small {:on-click #(send :e.show-entry k)} :eye]
-                                               [bu/listitem-button-small {:on-click #(send :e.hide-entry k)} :eye-off]))
+                                               [bu/listitem-button-small {:on-click #(send :e.show-entry {:id k :source-path source-path})} :eye]
+                                               [bu/listitem-button-small {:on-click #(send :e.hide-entry {:id k :source-path source-path})} :eye-off]))
                            (if @show-deleted-posts
                              (if deleted
                                [bu/listitem-button-small {:on-click #(send :e.undelete k)} :rotate-left]

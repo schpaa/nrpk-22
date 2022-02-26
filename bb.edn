@@ -32,7 +32,7 @@
   ;-devcards:css (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
   ; -o ./public/eykt/css/output.css
   -dev:css     (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/booking/css/output.css  --watch")
-  -dev:watch   (clojure (str "-M:shadow-cljs watch " project-name))
+  -dev:watch   (clojure (str "-M:shadow-cljs watch " -app-name))
   -dev         {:depends [-dev:watch -dev:browser]}
   stats        {:depends []
                 :task    (do
