@@ -20,7 +20,7 @@
     [:div
      {:class bg}
      [:div.space-y-px.flex.flex-col
-      {:style {:min-height "calc(100vh - 7rem)"}}
+      {:style {:min-height "100vh" #_"calc(100vh - 7rem)"}}
       (if (seq data)
         [:div.flex-1
          {:class bg}

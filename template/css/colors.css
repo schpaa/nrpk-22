@@ -15,14 +15,25 @@
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
 
-   --brand-dim: var(--blue-3);
+   --brand000-dim: var(--blue-9);
+   --brand00-dim: var(--blue-8);
+   --brand0-dim: var(--blue-7);
+   --brand1-dim: var(--blue-4);
+   --brand2-dim: var(--blue-1);
+
    --text1-dim: var(--gray-3);
    --text2-dim: var(--gray-6);
    --label-dim: var(--green-5);
-   --surface1-dim: var(--gray-8); /* surface-background of entities and elements */
-   --surface2-dim: var(--gray-7); /* content-background of slidein menu, can contain entities and elements */
-   --surface3-dim: var(--gray-9); /* surface-background of slidein menu, contains the content above */
-   --surface4-dim: var(--green-4);
+
+   --surface000-dim: var(--gray-9);
+   --surface00-dim: var(--gray-8);
+   --surface0-dim: var(--gray-7);
+   --surface1-dim: var(--gray-6); /* surface-background of entities and elements */
+   --surface2-dim: var(--gray-6); /* content-background of slidein menu, can contain entities and elements */
+   --surface3-dim: var(--gray-5); /* surface-background of slidein menu, contains the content above */
+   --surface4-dim: var(--gray-4);
+   --surface5-dim: var(--gray-3);
+
    --buttoncta0-dim: var(--green-3);
    --buttoncta1-dim: var(--green-7);
    --buttoncta2-dim: var(--green-8);
@@ -33,14 +44,25 @@
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
-   --brand-light: var(--blue-4);
+   --brand000-light: var(--blue-1);
+   --brand00-light: var(--blue-2);
+   --brand0-light: var(--blue-3);
+   --brand1-light: var(--blue-6);
+   --brand2-light: var(--blue-9);
+
    --text1-light: var(--gray-9);
    --text2-light: var(--gray-7);
    --label-light: var(--gray-5);
-   --surface1-light: var(--gray-4); /* surface-background of entities and elements */
-   --surface2-light: var(--gray-1); /* content-background of slidein menu, a platform for content (on top of system-background) */
-   --surface3-light: var(--gray-3); /* surface-background of slidein menu, toolbar, system-background etc */
-   --surface4-light: var(--gray-5);
+
+   --surface000-light: var(--gray-0);
+   --surface00-light: var(--gray-1);
+   --surface0-light: var(--gray-2);
+   --surface1-light: var(--gray-3); /* surface-background of entities and elements */
+   --surface2-light: var(--gray-4); /* content-background of slidein menu, a platform for content (on top of system-background) */
+   --surface3-light: var(--gray-5); /* surface-background of slidein menu, toolbar, system-background etc */
+   --surface4-light: var(--gray-6);
+   --surface5-light: var(--gray-9);
+
    --buttoncta0-light: var(--green-1);
    --buttoncta1-light: var(--green-5);
    --buttoncta2-light: var(--green-6);
@@ -56,14 +78,24 @@
 
 @media (prefers-color-scheme: light) {
     :root {
-       --brand: var(--brand-light);
+       --brand000: var(--brand000-light);
+       --brand00: var(--brand00-light);
+       --brand0: var(--brand0-light);
+       --brand1: var(--brand1-light);
+       --brand2: var(--brand2-light);
+
        --text1: var(--text1-light);
        --text2: var(--text2-light);
        --label: var(--label-light);
+       --surface000: var(--surface000-light);
+       --surface00: var(--surface00-light);
+       --surface0: var(--surface0-light);
        --surface1: var(--surface1-light);
        --surface2: var(--surface2-light);
        --surface3: var(--surface3-light);
        --surface4: var(--surface4-light);
+       --surface5: var(--surface5-light);
+       
        --buttoncta0: var(--buttoncta0-light);
        --buttoncta1: var(--buttoncta1-light);
        --buttoncta2: var(--buttoncta2-light);
@@ -78,14 +110,25 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-      --brand: var(--brand-dim);
+   --brand000: var(--brand000-dim);
+   --brand00: var(--brand00-dim);
+   --brand0: var(--brand0-dim);
+   --brand1: var(--brand1-dim);
+   --brand2: var(--brand2-dim);
+
       --text1: var(--text1-dim);
       --text2: var(--text2-dim);
       --label: var(--label-dim);
+
+      --surface000: var(--surface000-dim);
+      --surface00: var(--surface00-dim);
+      --surface0: var(--surface0-dim);
       --surface1: var(--surface1-dim);
       --surface2: var(--surface2-dim);
       --surface3: var(--surface3-dim);
       --surface4: var(--surface4-dim);
+      --surface5: var(--surface5-dim);
+
       --buttoncta0: var(--buttoncta0-dim);
       --buttoncta1: var(--buttoncta1-dim);
       --buttoncta2: var(--buttoncta2-dim);

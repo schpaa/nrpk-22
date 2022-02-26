@@ -3,9 +3,6 @@
             [cljs.reader :refer [read-string]]
             [schpaa.state]))
 
-
-
-
 ;region initial-state
 
 (def start-db

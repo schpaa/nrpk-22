@@ -353,7 +353,7 @@
 
 (defn time-input [{:keys [errors form-id handle-submit handle-change values set-values] :as props} admin]
   (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' :form)]
-    [:div.px-2.pt-4.pb-6.space-y-2.sticky.top-28.z-50.border-b
+    [:div.px-2.pt-4.pb-6.space-y-2.sticky.top-0.z-50.border-b
      {:class bg}
      [:div.grid.gap-4
       {:style {:grid-template-columns "1fr 1fr"}}

@@ -15,14 +15,25 @@
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
 
-   --brand-dim: var(--blue-3);
+   --brand000-dim: var(--blue-9);
+   --brand00-dim: var(--blue-8);
+   --brand0-dim: var(--blue-7);
+   --brand1-dim: var(--blue-4);
+   --brand2-dim: var(--blue-1);
+
    --text1-dim: var(--gray-3);
    --text2-dim: var(--gray-6);
    --label-dim: var(--green-5);
-   --surface1-dim: var(--gray-8); /* surface-background of entities and elements */
-   --surface2-dim: var(--gray-7); /* content-background of slidein menu, can contain entities and elements */
-   --surface3-dim: var(--gray-9); /* surface-background of slidein menu, contains the content above */
-   --surface4-dim: var(--green-4);
+
+   --surface000-dim: var(--gray-9);
+   --surface00-dim: var(--gray-8);
+   --surface0-dim: var(--gray-7);
+   --surface1-dim: var(--gray-6); /* surface-background of entities and elements */
+   --surface2-dim: var(--gray-6); /* content-background of slidein menu, can contain entities and elements */
+   --surface3-dim: var(--gray-5); /* surface-background of slidein menu, contains the content above */
+   --surface4-dim: var(--gray-4);
+   --surface5-dim: var(--gray-3);
+
    --buttoncta0-dim: var(--green-3);
    --buttoncta1-dim: var(--green-7);
    --buttoncta2-dim: var(--green-8);
@@ -33,14 +44,25 @@
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
-   --brand-light: var(--blue-4);
+   --brand000-light: var(--blue-1);
+   --brand00-light: var(--blue-2);
+   --brand0-light: var(--blue-3);
+   --brand1-light: var(--blue-6);
+   --brand2-light: var(--blue-9);
+
    --text1-light: var(--gray-9);
    --text2-light: var(--gray-7);
    --label-light: var(--gray-5);
-   --surface1-light: var(--gray-4); /* surface-background of entities and elements */
-   --surface2-light: var(--gray-1); /* content-background of slidein menu, a platform for content (on top of system-background) */
-   --surface3-light: var(--gray-3); /* surface-background of slidein menu, toolbar, system-background etc */
-   --surface4-light: var(--gray-5);
+
+   --surface000-light: var(--gray-0);
+   --surface00-light: var(--gray-1);
+   --surface0-light: var(--gray-2);
+   --surface1-light: var(--gray-3); /* surface-background of entities and elements */
+   --surface2-light: var(--gray-4); /* content-background of slidein menu, a platform for content (on top of system-background) */
+   --surface3-light: var(--gray-5); /* surface-background of slidein menu, toolbar, system-background etc */
+   --surface4-light: var(--gray-6);
+   --surface5-light: var(--gray-9);
+
    --buttoncta0-light: var(--green-1);
    --buttoncta1-light: var(--green-5);
    --buttoncta2-light: var(--green-6);
@@ -56,14 +78,24 @@
 
 @media (prefers-color-scheme: light) {
     :root {
-       --brand: var(--brand-light);
+       --brand000: var(--brand000-light);
+       --brand00: var(--brand00-light);
+       --brand0: var(--brand0-light);
+       --brand1: var(--brand1-light);
+       --brand2: var(--brand2-light);
+
        --text1: var(--text1-light);
        --text2: var(--text2-light);
        --label: var(--label-light);
+       --surface000: var(--surface000-light);
+       --surface00: var(--surface00-light);
+       --surface0: var(--surface0-light);
        --surface1: var(--surface1-light);
        --surface2: var(--surface2-light);
        --surface3: var(--surface3-light);
        --surface4: var(--surface4-light);
+       --surface5: var(--surface5-light);
+       
        --buttoncta0: var(--buttoncta0-light);
        --buttoncta1: var(--buttoncta1-light);
        --buttoncta2: var(--buttoncta2-light);
@@ -78,14 +110,25 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-      --brand: var(--brand-dim);
+   --brand000: var(--brand000-dim);
+   --brand00: var(--brand00-dim);
+   --brand0: var(--brand0-dim);
+   --brand1: var(--brand1-dim);
+   --brand2: var(--brand2-dim);
+
       --text1: var(--text1-dim);
       --text2: var(--text2-dim);
       --label: var(--label-dim);
+
+      --surface000: var(--surface000-dim);
+      --surface00: var(--surface00-dim);
+      --surface0: var(--surface0-dim);
       --surface1: var(--surface1-dim);
       --surface2: var(--surface2-dim);
       --surface3: var(--surface3-dim);
       --surface4: var(--surface4-dim);
+      --surface5: var(--surface5-dim);
+
       --buttoncta0: var(--buttoncta0-dim);
       --buttoncta1: var(--buttoncta1-dim);
       --buttoncta2: var(--buttoncta2-dim);
@@ -324,4 +367,15 @@ body {
   font-feature-settings: 'cv10', 'salt', 'zero';
 }
 
-.nrpk_spa__nicer_tab_SINGLEQUOTE_{user-select:none}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.selected{padding:var(--size-2);background:var(--surface1);color:var(--text1)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.regular{padding:var(--size-2);background:var(--surface2);color:var(--text2)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.item>*+*{margin-top:.5rem}
+.nrpk_spa__nicer_tab_SINGLEQUOTE_{padding:var(--size-1)}.nrpk_spa__nicer_tab_SINGLEQUOTE_{user-select:none}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.selected{padding:var(--size-1);border-radius:var(--radius-2);background:var(--brand2);color:var(--brand00)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.regular{padding:var(--size-1);border-radius:var(--radius-2);color:var(--surface5)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.regular:hover{color:var(--brand2)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.unavailable{padding:var(--size-1);color:var(--surface3)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.item>*+*{margin-top:.25rem}
+.schpaa_style_ornament__base_button{--gi-shadow:0 1px 2px 0 rgba(0,0,0,0.05);box-shadow:var(--gi-ring-offset-shadow,0 0 #0000),var(--gi-ring-shadow,0 0 #0000),var(--gi-shadow);justify-content:center;align-items:center;outline-offset:2px;outline:2px solid transparent;padding-inline:var(--size-2);font-weight:var(--font-weight-5);font-size:var(--font-size-1);border-radius:var(--radius-2);display:flex;padding-block:var(--size-2)}.schpaa_style_ornament__base_button:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_ornament__base_button:disabled{opacity:.25}
+.schpaa_style_ornament__button,button{outline:2px solid transparent;outline-offset:2px;background-color:var(--surface000);color:var(--surface5);--gi-shadow:0 1px 2px 0 rgba(0,0,0,0.05);box-shadow:var(--gi-ring-offset-shadow,0 0 #0000),var(--gi-ring-shadow,0 0 #0000),var(--gi-shadow);justify-content:center;align-items:center;outline-offset:2px;outline:2px solid transparent;padding-inline:var(--size-2);font-weight:var(--font-weight-5);font-size:var(--font-size-1);border-radius:var(--radius-2);display:flex;padding-block:var(--size-2)}.schpaa_style_ornament__button:focus,button:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_ornament__button:focus,button:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_ornament__button:disabled,button:disabled{opacity:.25}
+.booking_spa__menu_items{--gi-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);width:8rem;right:0;--gi-ring-opacity:.05;--gi-ring-color:rgba(0,0,0,var(--gi-ring-opacity));position:absolute;box-shadow:var(--gi-ring-inset) 0 0 0 calc(1px+var(--gi-ring-offset-width)) var(--gi-ring-color);overflow:visible;border-radius:.375rem;outline:2px var(--surface2) solid}.booking_spa__menu_items:focus{outline:2px solid transparent;outline-offset:2px}
+.booking_spa__menu_item{background:var(--surface000);color:var(--surface5)}.booking_spa__menu_item:focus{outline:2px solid transparent;outline-offset:2px}.booking_spa__menu_item .icon-color{color:var(--text1)}.booking_spa__menu_item button.active-color{background-color:var(--surface5);color:var(--surface000)}
+.booking_spa__menu_items_up{--gi-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);width:8rem;right:0;--gi-ring-opacity:.05;--gi-ring-color:rgba(0,0,0,var(--gi-ring-opacity));position:absolute;box-shadow:var(--gi-ring-inset) 0 0 0 calc(1px+var(--gi-ring-offset-width)) var(--gi-ring-color);overflow:visible;border-radius:.375rem;outline:2px var(--surface2) solid;bottom:3rem;margin-bottom:.5rem}.booking_spa__menu_items_up:focus{outline:2px solid transparent;outline-offset:2px}
+.booking_spa__menu_items_down{--gi-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);width:8rem;right:0;--gi-ring-opacity:.05;--gi-ring-color:rgba(0,0,0,var(--gi-ring-opacity));position:absolute;box-shadow:var(--gi-ring-inset) 0 0 0 calc(1px+var(--gi-ring-offset-width)) var(--gi-ring-color);overflow:visible;border-radius:.375rem;outline:2px var(--surface2) solid;top:3rem;margin-top:.5rem}.booking_spa__menu_items_down:focus{outline:2px solid transparent;outline-offset:2px}
+.schpaa_style_ornament__button_round{--gi-shadow:0 1px 2px 0 rgba(0,0,0,0.05);box-shadow:var(--gi-ring-offset-shadow,0 0 #0000),var(--gi-ring-shadow,0 0 #0000),var(--gi-shadow);justify-content:center;align-items:center;outline-offset:2px;outline:2px solid transparent;padding-inline:var(--size-2);font-weight:var(--font-weight-5);font-size:var(--font-size-1);border-radius:var(--radius-2);display:flex;padding-block:var(--size-2);border-radius:9999px;height:3rem;width:3rem;background-color:var(--surface000);color:var(--surface5)}.schpaa_style_ornament__button_round:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_ornament__button_round:disabled{opacity:.25}.schpaa_style_ornament__button_round:hover{background-color:var(--surface5);color:var(--surface000)}
+.schpaa_style_menu__menu_item{background:var(--surface000);color:var(--surface5)}.schpaa_style_menu__menu_item .icon-color{color:var(--surface3)}.schpaa_style_menu__menu_item button.active-color{background-color:var(--surface2);color:var(--surface000)}
+.schpaa_style_menu__menu_items{position:absolute;right:.25rem;overflow:visible;width:14rem;border-radius:.125rem;box-shadow:var(--gi-ring-inset) 0 0 0 calc(1px+var(--gi-ring-offset-width)) var(--gi-ring-color);--gi-ring-color:rgba(0,0,0,var(--gi-ring-opacity));--gi-ring-opacity:.05;outline:2px var(--surface1) solid}.schpaa_style_menu__menu_items:focus{outline:2px solid transparent;outline-offset:2px}
+.schpaa_style_menu__menu_items_up{position:absolute;right:.25rem;overflow:visible;width:14rem;border-radius:.125rem;box-shadow:var(--gi-ring-inset) 0 0 0 calc(1px+var(--gi-ring-offset-width)) var(--gi-ring-color);--gi-ring-color:rgba(0,0,0,var(--gi-ring-opacity));--gi-ring-opacity:.05;outline:2px var(--surface1) solid;bottom:3rem;margin-bottom:.5rem}.schpaa_style_menu__menu_items_up:focus{outline:2px solid transparent;outline-offset:2px}
+.schpaa_style_menu__menu_items_down{position:absolute;right:.25rem;overflow:visible;width:14rem;border-radius:.125rem;box-shadow:var(--gi-ring-inset) 0 0 0 calc(1px+var(--gi-ring-offset-width)) var(--gi-ring-color);--gi-ring-color:rgba(0,0,0,var(--gi-ring-opacity));--gi-ring-opacity:.05;outline:2px var(--surface1) solid;top:3rem;margin-top:.5rem}.schpaa_style_menu__menu_items_down:focus{outline:2px solid transparent;outline-offset:2px}

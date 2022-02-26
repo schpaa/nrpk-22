@@ -20,13 +20,20 @@
             [shadow.resource :refer [inline]]
             [schpaa.style :as st]
             [booking.content.booking-blog :as content.booking-blog :refer [booking-blog]]
-            [booking.content.new-booking :as content.new-booking]
             [booking.content.overview :as content.overview]
             [schpaa.debug :as l]
             [schpaa.button :as bu]
             [tick.core :as t]
             [eykt.content.rapport-side]
-            [booking.content.blog-support :refer [err-boundary]]))
+            [booking.content.blog-support :refer [err-boundary]]
+
+            [schpaa.style.menu]
+    ;[headlessui-reagent.core :as ui]
+            ["@heroicons/react/solid" :as solid]
+            ["@heroicons/react/outline" :as outline]))
+;[lambdaisland.ornament :as o]
+;[schpaa.style.ornament :as sc]))
+
 
 ;region related to flex-date and how to display relative time
 
@@ -176,26 +183,48 @@
              schpaa.markdown/md->html
              st/prose-markdown-styles)]]]]]))
 
+(defn page-boundry [& c]
+  [err-boundary
+   [:div.max-w-mdx.mr-auto
+    c]])
+
+(declare menu-example-with-args standard-menu standard-menu-2)
+
+
+
 (def routing-table
-  {:r.forsiden
+  {:r.welcome
+   (fn [r]
+     [page-boundry
+      [db.signin/login]
+      [welcome]])
+
+   :r.forsiden
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [err-boundary
-        [render-front-tabbar (:uid @user-auth)]
+       [page-boundry
+        ;[render-front-tabbar (:uid @user-auth)]
         [content.overview/overview]]))
 
    :r.new-booking
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [err-boundary
-        [render-front-tabbar (:uid @user-auth)]
-        [content.new-booking/new-booking @user-auth]]))
+       [page-boundry
+        ;[render-front-tabbar (:uid @user-auth)]
+        [booking.views/booking-form
+         {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
+          :selected      hoc/selected
+          :uid           (:uid user-auth)
+          :on-submit     #(send :e.complete %)
+          :cancel        #(send :e.cancel-booking)
+          :my-state      schpaa.components.views/my-state
+          :booking-data' (sort-by :date > (booking.database/read))}]]))
 
    :r.booking-blog
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [err-boundary
-        [render-front-tabbar (:uid @user-auth)]
+       [page-boundry
+        ;[render-front-tabbar (:uid @user-auth)]
         [content.booking-blog/booking-blog
          {:fsm  {}
           :uid  (:uid @user-auth)
@@ -204,19 +233,19 @@
    :r.user
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [err-boundary
+       [page-boundry
         [user.views/userstatus-form user-auth]
-        [render-back-tabbar]
+        ;[render-back-tabbar]
         [user.views/my-info]]))
 
    :r.logg
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [err-boundary
+       [page-boundry
         [user.views/userstatus-form user-auth]
-        [render-back-tabbar]
+        ;[render-back-tabbar]
         (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :void)]
-          [:div.w-screenx
+          [:div.max-w-md.mr-auto
            [:div.space-y-px.flex.flex-col.w-full
             {:class  :min-h-screen
              :-style {:min-height "calc(100vh + 3rem)"}}
@@ -228,9 +257,38 @@
    :r.debug
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [err-boundary
-        [user.views/userstatus-form user-auth]
-        [render-back-tabbar]
-        [hoc/debug]]))
+       [page-boundry
+        [:div.absolute.top-1.right-1.m-1
+         [:div.flex.justify-end.items-center
+          [schpaa.style.menu/menu-example-with-args
+           {:dir         :down
+            :data        (standard-menu (r/atom nil))
+            :always-show nil}]]]
+
+        [:div.p-4 (for [e (range 25)]
+                    [:div e])]
+
+        [:div.absolute.bottom-1.right-1.m-1
+         [:div.flex.justify-end.items-center
+          [schpaa.style.menu/menu-example-with-args
+           {:dir         :up
+            :data        (standard-menu-2 (r/atom nil))
+            :always-show nil}]]]]))
 
    :r.page-not-found (fn [r] [:div "?"])})
+
+
+(defn standard-menu [data]
+  [[solid/TrashIcon "Fjern alle" #(reset! data (reduce (fn [a [k v]] (assoc-in a [k :st] false)) @data @data))]
+   [solid/CursorClickIcon "Velg alle" #(reset! data (reduce (fn [a [k v]] (assoc-in a [k :st] true)) @data @data))]
+   nil
+   [solid/PencilIcon "Rediger" #()]
+   nil
+   [solid/DuplicateIcon "Dupliser" #()]])
+
+(defn standard-menu-2 [data]
+  [[solid/TrashIcon "Fjern alle" #()]
+   [solid/CursorClickIcon "Siste valg" #()]
+   nil
+   ;[solid/PencilIcon "Rediger" #()]
+   [solid/CogIcon "Book nå" #()]])
