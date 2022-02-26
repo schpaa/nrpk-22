@@ -1,0 +1,99 @@
+:root {
+
+    --gray-0: #fafaf9;
+    --gray-1: #f5f5f4;
+    --gray-2: #e7e5e4;
+    --gray-3: #d6d3d1;
+    --gray-4: #a8a29e;
+    --gray-5: #78716c;
+    --gray-6: #57534e;
+    --gray-7: #44403c;
+    --gray-8: #292524;
+    --gray-9: #1c1917;
+
+    --tw-ring-inset: 2;
+    --tw-ring-offset-width: 2;
+    --tw-ring-color: green;
+
+   --brand-dim: var(--blue-3);
+   --text1-dim: var(--gray-3);
+   --text2-dim: var(--gray-6);
+   --label-dim: var(--green-5);
+   --surface1-dim: var(--gray-8); /* surface-background of entities and elements */
+   --surface2-dim: var(--gray-7); /* content-background of slidein menu, can contain entities and elements */
+   --surface3-dim: var(--gray-9); /* surface-background of slidein menu, contains the content above */
+   --surface4-dim: var(--green-4);
+   --buttoncta0-dim: var(--green-3);
+   --buttoncta1-dim: var(--green-7);
+   --buttoncta2-dim: var(--green-8);
+   --buttondanger0-dim: var(--red-3);
+   --buttondanger1-dim: var(--red-7);
+   --buttondanger2-dim: var(--red-8);
+   --button0-dim: var(--gray-1);
+   --button1-dim: var(--gray-8);
+   --button2-dim: var(--gray-9);
+
+   --brand-light: var(--blue-4);
+   --text1-light: var(--gray-9);
+   --text2-light: var(--gray-7);
+   --label-light: var(--gray-5);
+   --surface1-light: var(--gray-4); /* surface-background of entities and elements */
+   --surface2-light: var(--gray-1); /* content-background of slidein menu, a platform for content (on top of system-background) */
+   --surface3-light: var(--gray-3); /* surface-background of slidein menu, toolbar, system-background etc */
+   --surface4-light: var(--gray-5);
+   --buttoncta0-light: var(--green-1);
+   --buttoncta1-light: var(--green-5);
+   --buttoncta2-light: var(--green-6);
+   --buttondanger0-light: var(--red-1);
+   --buttondanger1-light: var(--red-5);
+   --buttondanger2-light: var(--red-6);
+
+   /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
+   --button0-light: var(--gray-9);
+   --button1-light: var(--gray-3);
+   --button2-light: var(--gray-2);
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+       --brand: var(--brand-light);
+       --text1: var(--text1-light);
+       --text2: var(--text2-light);
+       --label: var(--label-light);
+       --surface1: var(--surface1-light);
+       --surface2: var(--surface2-light);
+       --surface3: var(--surface3-light);
+       --surface4: var(--surface4-light);
+       --buttoncta0: var(--buttoncta0-light);
+       --buttoncta1: var(--buttoncta1-light);
+       --buttoncta2: var(--buttoncta2-light);
+       --buttondanger0: var(--buttondanger0-light);
+       --buttondanger1: var(--buttondanger1-light);
+       --buttondanger2: var(--buttondanger2-light);
+       --button0: var(--button0-light);
+       --button1: var(--button1-light);
+       --button2: var(--button2-light);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+      --brand: var(--brand-dim);
+      --text1: var(--text1-dim);
+      --text2: var(--text2-dim);
+      --label: var(--label-dim);
+      --surface1: var(--surface1-dim);
+      --surface2: var(--surface2-dim);
+      --surface3: var(--surface3-dim);
+      --surface4: var(--surface4-dim);
+      --buttoncta0: var(--buttoncta0-dim);
+      --buttoncta1: var(--buttoncta1-dim);
+      --buttoncta2: var(--buttoncta2-dim);
+      --buttondanger0: var(--buttondanger0-dim);
+      --buttondanger1: var(--buttondanger1-dim);
+      --buttondanger2: var(--buttondanger2-dim);
+      --button0: var(--button0-dim);
+      --button1: var(--button1-dim);
+      --button2: var(--button2-dim);
+  }
+}

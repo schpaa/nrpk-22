@@ -9,6 +9,7 @@
             [nrpk.fsm-helpers :as state :refer [send]]
             [kee-frame.router :refer [make-route-component]]
             [schpaa.debug :as l]
+            [lambdaisland.ornament :as o]
             [db.core :as db]))
 
 (defn- forced-scroll-lock
@@ -81,40 +82,51 @@
 
 ; region
 
-#_(o/defstyled nicer-tab :div
-               [:& :select-none]
-               [:div.selected :p-2 :bg-red-500]
-               [:div.regular :p-2]
-               ([{:keys [selected]} ch]
-                [:<>
-                 [:div {:class (if selected :selected :regular)} ch]]))
+(o/defstyled nicer-tab' :div
+  [:& :select-none]
+  [:div.selected
+   {:padding    "var(--size-2)"
+    :background "var(--surface1)"
+    :color      "var(--text1)"}]
+  [:div.regular
+   {:padding    "var(--size-2)"
+    :background "var(--surface2)"
+    :color      "var(--text2)"}]
+  [:div.item :space-y-2]
+  ([{:keys [selected icon route-name text]}]
+   [:div.item
+    {:class    (if selected :selected :regular)
+     :on-click #(rf/dispatch [:app/navigate-to [route-name]])}
+    icon
+    [:div.text-center.text-xs text]]))
 
-(defn nicer-tab
-  [{:keys [selected icon route-name text]}]
-  (let [selected- [:p-2 :bg-red-500]
-        regular- [:p-2]]
-    [:div {:style (if selected {:padding    "var(--size-1)"
-                                :background "var(--surface1)"})
-           #_#_:class (if selected selected- regular-)}
-     [:div.flex.flex-col
-      {:on-click #(rf/dispatch [:app/navigate-to [route-name]])}
-      [:> icon]
-      [:div.text-center.text-xs text]]]))
+#_(defn nicer-tab
+    [{:keys [selected icon route-name text]}]
+    (let [selected- [:p-2 :bg-red-500]
+          regular- [:p-2]]
+      [:div {:style (if selected {:padding    "var(--size-1)"
+                                  :background "var(--surface2)"}
+                                 {:padding    "var(--size-2)"
+                                  :background "var(--surface3)"})
+             #_#_:class (if selected selected- regular-)}
+       [:div.flex.flex-col
+        {:on-click #(rf/dispatch [:app/navigate-to [route-name]])}
+        [:> icon]
+        [:div.text-center.text-xs text]]]))
 
 (defn app-wrapper-sidebar
   [route-table]
   (let [route-name (rf/subscribe [:app/route-name])
         route @(rf/subscribe [:kee-frame/route])
-        data [{:id -1 :route-name :r.new-booking :icon solid/PlusCircleIcon :text "booking"}
-              {:id 1 :route-name :r.baksiden :icon solid/ClockIcon :text "siste"}
-
-              {:id 4 :route-name :r.user :icon solid/UserCircleIcon :text "bruker"}
-              {:id 0 :route-name :r.forsiden :icon solid/CalendarIcon :text "nytt"}
-              {:id 2 :route-name :r.oppsett :icon solid/CogIcon :text "oppsett"}
-              {:id 3 :route-name :r.oppsett :icon solid/ViewListIcon :text "utstyr"}]
+        data [{:id 0 :route-name :r.new-booking :icon [:> solid/PlusCircleIcon] :text "booking"}
+              {:id 1 :route-name :r.forsiden :icon [:> solid/ClockIcon] :text "siste"}
+              {:id 2 :route-name :r.user :icon [:> solid/UserCircleIcon] :text "bruker"}
+              {:id 3 :route-name :r.booking-blog :icon [:> solid/CalendarIcon] :text "nytt"}
+              {:id 4 :route-name :r.debug :icon [:> solid/CogIcon] :text "oppsett"}
+              {:id 5 :route-name :r.oppsett :icon [:> solid/ViewListIcon] :text "utstyr"}]
         data-get (fn [id] (get (zipmap (map :id data) data) id))
         tab (fn [id] (let [{:keys [icon text route-name]} (data-get id)]
-                       (nicer-tab
+                       (nicer-tab'
                          {:icon       icon
                           :text       text
                           :route-name route-name

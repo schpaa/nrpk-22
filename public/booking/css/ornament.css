@@ -1,0 +1,327 @@
+:root {
+
+    --gray-0: #fafaf9;
+    --gray-1: #f5f5f4;
+    --gray-2: #e7e5e4;
+    --gray-3: #d6d3d1;
+    --gray-4: #a8a29e;
+    --gray-5: #78716c;
+    --gray-6: #57534e;
+    --gray-7: #44403c;
+    --gray-8: #292524;
+    --gray-9: #1c1917;
+
+    --tw-ring-inset: 2;
+    --tw-ring-offset-width: 2;
+    --tw-ring-color: green;
+
+   --brand-dim: var(--blue-3);
+   --text1-dim: var(--gray-3);
+   --text2-dim: var(--gray-6);
+   --label-dim: var(--green-5);
+   --surface1-dim: var(--gray-8); /* surface-background of entities and elements */
+   --surface2-dim: var(--gray-7); /* content-background of slidein menu, can contain entities and elements */
+   --surface3-dim: var(--gray-9); /* surface-background of slidein menu, contains the content above */
+   --surface4-dim: var(--green-4);
+   --buttoncta0-dim: var(--green-3);
+   --buttoncta1-dim: var(--green-7);
+   --buttoncta2-dim: var(--green-8);
+   --buttondanger0-dim: var(--red-3);
+   --buttondanger1-dim: var(--red-7);
+   --buttondanger2-dim: var(--red-8);
+   --button0-dim: var(--gray-1);
+   --button1-dim: var(--gray-8);
+   --button2-dim: var(--gray-9);
+
+   --brand-light: var(--blue-4);
+   --text1-light: var(--gray-9);
+   --text2-light: var(--gray-7);
+   --label-light: var(--gray-5);
+   --surface1-light: var(--gray-4); /* surface-background of entities and elements */
+   --surface2-light: var(--gray-1); /* content-background of slidein menu, a platform for content (on top of system-background) */
+   --surface3-light: var(--gray-3); /* surface-background of slidein menu, toolbar, system-background etc */
+   --surface4-light: var(--gray-5);
+   --buttoncta0-light: var(--green-1);
+   --buttoncta1-light: var(--green-5);
+   --buttoncta2-light: var(--green-6);
+   --buttondanger0-light: var(--red-1);
+   --buttondanger1-light: var(--red-5);
+   --buttondanger2-light: var(--red-6);
+
+   /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
+   --button0-light: var(--gray-9);
+   --button1-light: var(--gray-3);
+   --button2-light: var(--gray-2);
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+       --brand: var(--brand-light);
+       --text1: var(--text1-light);
+       --text2: var(--text2-light);
+       --label: var(--label-light);
+       --surface1: var(--surface1-light);
+       --surface2: var(--surface2-light);
+       --surface3: var(--surface3-light);
+       --surface4: var(--surface4-light);
+       --buttoncta0: var(--buttoncta0-light);
+       --buttoncta1: var(--buttoncta1-light);
+       --buttoncta2: var(--buttoncta2-light);
+       --buttondanger0: var(--buttondanger0-light);
+       --buttondanger1: var(--buttondanger1-light);
+       --buttondanger2: var(--buttondanger2-light);
+       --button0: var(--button0-light);
+       --button1: var(--button1-light);
+       --button2: var(--button2-light);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+      --brand: var(--brand-dim);
+      --text1: var(--text1-dim);
+      --text2: var(--text2-dim);
+      --label: var(--label-dim);
+      --surface1: var(--surface1-dim);
+      --surface2: var(--surface2-dim);
+      --surface3: var(--surface3-dim);
+      --surface4: var(--surface4-dim);
+      --buttoncta0: var(--buttoncta0-dim);
+      --buttoncta1: var(--buttoncta1-dim);
+      --buttoncta2: var(--buttoncta2-dim);
+      --buttondanger0: var(--buttondanger0-dim);
+      --buttondanger1: var(--buttondanger1-dim);
+      --buttondanger2: var(--buttondanger2-dim);
+      --button0: var(--button0-dim);
+      --button1: var(--button1-dim);
+      --button2: var(--button2-dim);
+  }
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.root {
+  -moz-tab-size: 4;
+  tab-size: 4;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+hr {
+  height: 0;
+  color: inherit;
+}
+
+abbr[title] {
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}
+
+b, strong {
+  font-weight: bolder;
+}
+
+code, kbd, samp, pre {
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 1em;
+}
+
+small {
+  font-size: 80%;
+}
+
+sub, sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+table {
+  text-indent: 0;
+  border-color: inherit;
+}
+
+button, input, optgroup, select, textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
+button, select {
+  text-transform: none;
+}
+
+button, [type="button"], [type="reset"], [type="submit"] {
+  -webkit-appearance: button;
+}
+
+::-moz-focus-inner {
+  border-style: none;
+  padding: 0;
+}
+
+:-moz-focusring {
+  outline: 1px dotted ButtonText;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+legend {
+  padding: 0;
+}
+
+progress {
+  vertical-align: baseline;
+}
+
+::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+  height: auto;
+}
+
+[type="search"] {
+  -webkit-appearance: textfield;
+  outline-offset: -2px;
+}
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  font: inherit;
+}
+
+summary {
+  display: list-item;
+}
+
+blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+  margin: 0;
+}
+
+button {
+  background-color: transparent;
+  background-image: none;
+}
+
+button:focus {
+  outline: 1px dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+ol, ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  line-height: 1.5;
+}
+
+html {
+  font-family: inherit;
+  line-height: inherit;
+}
+
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+hr {
+  border-top-width: 1px;
+}
+
+img {
+  border-style: solid;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input::placeholder, textarea::placeholder {
+  opacity: 1;
+  color: #9ca3af;
+}
+
+button, [role="button"] {
+  cursor: pointer;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+button, input, optgroup, select, textarea {
+  padding: 0;
+  line-height: inherit;
+  color: inherit;
+}
+
+pre, code, kbd, samp {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+img, svg, video, canvas, audio, iframe, embed, object {
+  display: block;
+  vertical-align: middle;
+}
+
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+body {
+  font-family: Inter;
+  font-weight: 400;
+  font-size: 1rem;
+  font-feature-settings: 'cv10', 'salt', 'zero';
+}
+
+.nrpk_spa__nicer_tab_SINGLEQUOTE_{user-select:none}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.selected{padding:var(--size-2);background:var(--surface1);color:var(--text1)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.regular{padding:var(--size-2);background:var(--surface2);color:var(--text2)}.nrpk_spa__nicer_tab_SINGLEQUOTE_ div.item>*+*{margin-top:.5rem}
