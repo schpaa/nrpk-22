@@ -27,12 +27,13 @@
             [eykt.content.rapport-side]
             [booking.content.blog-support :refer [err-boundary]]
 
-            [schpaa.style.menu]
-    ;[headlessui-reagent.core :as ui]
             ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]))
-;[lambdaisland.ornament :as o]
-;[schpaa.style.ornament :as sc]))
+            ["@heroicons/react/outline" :as outline]
+            [lambdaisland.ornament :as o]
+            [schpaa.style.ornament :as sc]
+            [schpaa.style.menu]
+            [schpaa.style.booking]
+            [clojure.set :as set]))
 
 
 ;region related to flex-date and how to display relative time
@@ -190,7 +191,38 @@
 
 (declare menu-example-with-args standard-menu standard-menu-2)
 
+;region temp helpers
 
+(defn complex-menu [settings]
+  (let [show-1 #(swap! settings assoc :setting-1 %)
+        select-2 #(swap! settings assoc :setting-2 %)]
+    (concat [[(fn [v] (sc/icon-large (when v [:> solid/ShieldCheckIcon])))
+              (fn [e] (if e "Long" "Short"))
+              #(show-1 (not (:setting-1 @settings)))
+              false
+              #(:setting-1 @settings)]]
+            [nil]
+            (let [data [["small" 1]
+                        ["medium" 2]
+                        ["large" 3]]]
+              (map (fn [[caption value]]
+                     [(fn [v] (sc/icon-large (when (= value v) [:> outline/CheckIcon])))
+                      caption
+                      #(select-2 value)
+                      false
+                      #(:setting-2 @settings)])
+                   data))
+            [nil]
+            [[(sc/icon-large [:> solid/BadgeCheckIcon])
+              "Badge"
+              nil
+              true
+              #()]
+             [(sc/icon-large [:> solid/LightBulbIcon])
+              "Bulba?"
+              nil
+              true
+              #()]])))
 
 (def routing-table
   {:r.welcome
@@ -257,23 +289,75 @@
    :r.debug
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [page-boundry
-        [:div.absolute.top-1.right-1.m-1
-         [:div.flex.justify-end.items-center
-          [schpaa.style.menu/menu-example-with-args
-           {:dir         :down
-            :data        (standard-menu (r/atom nil))
-            :always-show nil}]]]
+       (r/with-let [settings (r/atom {:setting-1 false
+                                      :setting-2 1
+                                      :selection #{2 5}})]
 
-        [:div.p-4 (for [e (range 25)]
-                    [:div e])]
+         (let []
+           [page-boundry
+            [:div.right-4.p-4
+             ;[l/ppre-x @settings]
+             [:div.flex.justify-end.items-center
+              [schpaa.style.menu/menu-example-with-args
+               {:dir         :down
+                :data        (complex-menu settings)
+                :always-show false
+                :button      (fn [open]
+                               [sc/normal-floating
+                                ;{:class [:w-32]}
+                                [sc/row {:class [:gap-4 :px-2]}
+                                 [sc/text "Visning"]
+                                 [sc/icon [:> (if open outline/XIcon outline/ChevronDownIcon)]]]])}]]]
 
-        [:div.absolute.bottom-1.right-1.m-1
-         [:div.flex.justify-end.items-center
-          [schpaa.style.menu/menu-example-with-args
-           {:dir         :up
-            :data        (standard-menu-2 (r/atom nil))
-            :always-show nil}]]]]))
+            [:div.px-4.space-y-4
+             [sc/grid-wide
+              (doall (for [e (range 5)]
+                       [schpaa.style.booking/line {:content  {:category "Grønnlandskayakk"
+                                                              :number   e
+                                                              :location (str "A" e)}
+                                                   :on-click #(if (some #{e} (:selection @settings))
+                                                                (swap! settings update :selection set/difference #{e})
+                                                                (swap! settings update :selection set/union #{e}))
+                                                   :expanded (= 2 (:setting-2 @settings))
+                                                   :selected (some #{e} (:selection @settings))}]))]
+
+             (let [section [:div.p-4.space-y-4
+                            [:div.gap-1.flex.gap-4.flex-wrap
+
+                             (sc/round-normal [:> solid/HeartIcon])
+                             (sc/round-cta [:> solid/HeartIcon])
+                             (sc/round-danger [:> solid/HeartIcon])
+
+                             [sc/normal "normal button"]
+                             [sc/button-cta "cta button"]
+                             [sc/button-danger "danger button"]]
+
+                            [sc/col
+                             [sc/hero-p "Some Title Here"]
+                             [sc/title-p "Some Title Here"]
+                             [sc/row {:class [:gap-1]}
+                              [sc/badge-author "Author of this post"]
+                              [sc/badge-date {:class [:tabular-nums]} "1 uke siden"]]
+                             [sc/subtitle "subtitle lorem ipsum dolores etceterum among many lines and so forth"]
+                             [sc/text-p "text subtext subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum"]
+                             [sc/subtext-p "subtext subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum"]]]]
+
+               [:<>
+                [sc/surface-a section]
+                ;[sc/surface-b section]
+                [sc/surface-c section]])]
+
+
+            [:div.fixed.-absolute.bottom-2.right-4
+             [:div.flex.justify-end.items-center
+              [schpaa.style.menu/menu-example-with-args
+               {:dir         :up
+                :data        (complex-menu settings)        ;(standard-menu-2 (r/atom nil))
+                :always-show false
+                :button      (fn [open]
+                               [sc/round-normal-floating
+                                [sc/icon [:> (if open solid/DotsVerticalIcon
+                                                      solid/DotsHorizontalIcon)]]])}]]]]))))
 
    :r.page-not-found (fn [r] [:div "?"])})
 
@@ -287,8 +371,7 @@
    [solid/DuplicateIcon "Dupliser" #()]])
 
 (defn standard-menu-2 [data]
-  [[solid/TrashIcon "Fjern alle" #()]
-   [solid/CursorClickIcon "Siste valg" #()]
+  [[(sc/icon-large [:> solid/TrashIcon]) "Fjern alle" #()]
+   [(sc/icon-large [:> solid/CursorClickIcon]) "Siste valg" #()]
    nil
-   ;[solid/PencilIcon "Rediger" #()]
-   [solid/CogIcon "Book nå" #()]])
+   [(sc/icon-large [:> solid/CogIcon]) "Book nå" #()]])

@@ -1,5 +1,6 @@
 (ns my.hooks
   (:require                                                 ;[my.tokens]
+    [my.tokens]
     [lambdaisland.ornament :as o]
     [garden.stylesheet :refer [at-font-face]]
     [garden.def :refer [defcssfn]]

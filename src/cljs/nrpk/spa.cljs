@@ -85,45 +85,39 @@
 ; region ui without headers and with a sidebar that is always visible
 
 (o/defstyled nicer-tab' :div
-  {:padding "var(--size-1)"}
+  [:& :w-full :flex :flex-col :items-center :justify-center]
+  [:.item :flex :flex-col :items-center :justify-center :space-y-1
+   {:height  "var(--size-10)"
+    :padding "var(--size-1)"}]
+
+  :pl-1
+  ;{:padding "var(--size-1)"}
+
   [:& :select-none]
-  [:div.selected
-   {:padding       "var(--size-1)"
-    :border-radius "var(--radius-2)"
-    :background    "var(--brand2)"
-    :color         "var(--brand00)"}]
-  [:div.regular
-   {:padding       "var(--size-1)"
-    :border-radius "var(--radius-2)"
+  [:div.selected :w-full :rounded-l
+   {;:border-radius "var(--radius-1)"
+    :background "var(--surface0)"
+    :color      "var(--brand2)"}]
+
+  [:div.regular :w-full
+   {:border-radius "var(--radius-1)"
     :color         "var(--surface5)"}
-   [:&:hover {:color "var(--brand2)"}]]
+   [:&:hover
+    {:color      "var(--brand2)"
+     :background "gray"}]]
+
   [:div.unavailable
-   {:padding "var(--size-1)"
-    :color   "var(--surface3)"}]
-  [:div.item :space-y-1]
+   {:color "var(--surface3)"}]
+
   ([{:keys [available selected icon route-name text]}]
-   [:div.item.flex.items-center.flex-col
+   [:div.item
     (conj
       {:class (if available
                 (if selected :selected :regular)
                 :unavailable)}
       (when available {:on-click #(rf/dispatch [:app/navigate-to [route-name]])}))
-    [:div {:class [:w-8 :h-8]} icon]
-    [:div.text-center.text-xs text]]))
-
-#_(defn nicer-tab
-    [{:keys [selected icon route-name text]}]
-    (let [selected- [:p-2 :bg-red-500]
-          regular- [:p-2]]
-      [:div {:style (if selected {:padding    "var(--size-1)"
-                                  :background "var(--surface2)"}
-                                 {:padding    "var(--size-2)"
-                                  :background "var(--surface3)"})
-             #_#_:class (if selected selected- regular-)}
-       [:div.flex.flex-col
-        {:on-click #(rf/dispatch [:app/navigate-to [route-name]])}
-        [:> icon]
-        [:div.text-center.text-xs text]]]))
+    [:div.icon {:class [:w-8 :h-8]} icon]
+    [:div.text-xs text]]))
 
 (defn screen-render [{:keys [get-menuopen-fn menu-direction] :as m} web-content]
   (let [direction (if menu-direction :-translate-x-80 :translate-x-80)
@@ -198,7 +192,7 @@
         tab (fn [d]
               (cond
                 (= :grow d) [:div.flex-grow]
-                (= :space d) [:div.h-10]
+                (= :space d) [:div.h-4]
                 :else (when-let [{:keys [login icon text route-name]} d]
                         (nicer-tab'
                           {:available  (or (not login) (and login (some? @user-auth))) ;(or (not (or login (some? @user-auth))))
@@ -213,10 +207,10 @@
     [:div.fixed.inset-0
      [:div.grid.h-full
       {:style {:background            "var(--surface2)"
-               :column-gap            "var(--size-0)"
+               ;:column-gap            "var(--size-2)"
                :grid-template-columns "min-content 1fr"
                :grid-auto-rows        "1fr"}}
-      (into [:div.h-full.mr-1.flex.flex-col.overflow-y-scroll]
+      (into [:div.h-full.flex.flex-col.overflow-y-scroll.space-y-0]
             (map tab data))
       [:div.bg-white.h-full.overflow-y-auto
        {:style {:background "var(--surface0)"}}

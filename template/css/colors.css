@@ -64,16 +64,17 @@
    --surface5-light: var(--gray-9);
 
    --buttoncta0-light: var(--green-1);
-   --buttoncta1-light: var(--green-5);
-   --buttoncta2-light: var(--green-6);
+   --buttoncta1-light: var(--green-6);
+   --buttoncta2-light: var(--green-5);
    --buttondanger0-light: var(--red-1);
-   --buttondanger1-light: var(--red-5);
-   --buttondanger2-light: var(--red-6);
+   --buttondanger1-light: var(--red-6);
+   --buttondanger2-light: var(--red-5);
 
    /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
+   --button00-light: var(--gray-0);
    --button0-light: var(--gray-9);
-   --button1-light: var(--gray-3);
-   --button2-light: var(--gray-2);
+   --button1-light: var(--gray-4);
+   --button2-light: var(--gray-3);
 }
 
 @media (prefers-color-scheme: light) {
@@ -102,6 +103,7 @@
        --buttondanger0: var(--buttondanger0-light);
        --buttondanger1: var(--buttondanger1-light);
        --buttondanger2: var(--buttondanger2-light);
+       --button00: var(--button00-light);
        --button0: var(--button0-light);
        --button1: var(--button1-light);
        --button2: var(--button2-light);
