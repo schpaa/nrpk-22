@@ -329,6 +329,21 @@
 
                 :on-click #()
                 :expanded true
+                :selected false}]
+              [schpaa.style.booking/line
+               {:content  {:category    "Grønnlandskayakk"
+                           :number      "600"
+                           :location    "E5"
+                           :material    "Epoxy"
+                           :stability   4
+                           :description "Ufattelig lang beskrivelse som går over flere linjer og som sier en hel drøss om hva dette er godt for og at du burde prøve den!"
+                           :brand       "Rebel Naja"
+                           :weight      "33 kg"
+                           :width       "50 cm"
+                           :length      "490 cm"}
+
+                :on-click #()
+                :expanded true
                 :selected false}]]
 
              [:div.flex.justify-end.items-center

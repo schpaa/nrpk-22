@@ -12,7 +12,8 @@
             [nrpk.hov :as hov]
             [schpaa.style :as st]
             [schpaa.button :as bu]
-            [schpaa.modal.readymade :as readymade]))
+            [schpaa.modal.readymade :as readymade]
+            [schpaa.style.ornament :as sc]))
 
 ;region utilities (pure)
 
@@ -47,30 +48,24 @@
         d (+ 24 (- (+ 1 (* 24 (times.api/day-number-in-year (t/date)))
                       (t/hour (t/time)))
                    offset))]
-    [:div.relative.z-0.h-8.space-y-0.overflow-clip.-debugx.shrink-0
-     (when-some [date date]
-       [:div.absolute.-bottom-1.left-0
-        {:style {:left "25%" :width "25%"}}
-        [:div.flex.flex-col.items-center
-         [:svg.text-sky-500.h-2 {:viewBox "0 0 6 6"}
-          ;[:g {:transform "translate(-10,0)"}]
-          [:path {:fill :currentColor
-                  :d    (str "M " 3 " 0 l 3 6 l -6 0 z")}]]
-         [:div.text-gray-700.text-xs.mb-px (t/format "dd/MM" (t/date date))]]])
+    [:div.flex.flex-col.relative.h-full.w-full.shadow-md
+     ;:div.relative.z-0.h-full.space-y-0.overflow-clip.-debug.shrink-0
 
-     [:svg.w-full.rounded-sm.h-full.h-5
-      {:xclass               ["bg-gray-300" "dark:bg-gray-800"]
-       :viewBox              (str "0 0 " width " 14")
-       ;:width               "auto"
-       ;:height              "100%"
-       :xpreserveAspectRatio "none"}
+     [:svg
+      {:class               [:h-full]
+       :viewBox             (str "0 0 " width " 10")
+       :width               "100%"
+       :height              "auto"
+       :preserveAspectRatio "none"}
 
-      [:g {:class ["text-gray-400" "dark:text-gray-800"]}
+      ;intent SOLID BACKGROUND
+      [:g {:style {:color "var(--surface0)"}}
        [:rect {:fill :currentColor
                :x    0 :y 0 :width width :height 10}]]
 
       [:g {:stroke :none}
-       [:rect {:class  ["text-gray-600" "dark:text-gray-500"]
+       [:rect {
+               :style  {:color "var(--brand1)"}
                :fill   "currentColor"
                :x      from
                :width  (- to from)
@@ -78,37 +73,47 @@
                :height 4}]
 
        (into [:<>] (map (fn [{:keys [start end r?]}]
-                          [:rect {:class  (if r? ["text-alt"] ["text-rose-500" "dark:text-rose-600"])
+                          [:rect {:style  {:color (if r? "var(--surface-5)" "var(--red-5)")}
                                   :fill   :currentColor
                                   :x      start
                                   :width  (- end start)
                                   :y      0
                                   :height 4}])
                         list))
-       [:path
-        {:class         ["dark:text-gray-600"
-                         "text-gray-100"]
-         :vector-effect :non-scaling-stroke
-         :stroke-width  2
-         :stroke        :currentColor
-         :d             (str
-                          (apply str "M 0 0 " (repeat 3 " m 24 0 v 3 v -3 "))
-                          (apply str "M 0 10 " (repeat 3 " m 24 0 v -3 v 3 ")))}]
-       ;intent TODAY
-       #_[:path
-          {:class         ["dark:text-amber-500" "text-amber-700"]
-           :vector-effect :non-scaling-stroke
-           :stroke-width  2
-           :stroke        :currentColor
-           :d             (apply str "M " d " 0 v 10")}]
+
        ;intent REST OF THE DAY
        (let [n (inc (t/hour (t/time)))]
          [:path
           {:class         "text-amber-500"
            :vector-effect :non-scaling-stroke
            :fill          :currentColor
-           :d             (apply str "M " d " 14 h " (- 24 n) " v -4 h -" (- 24 n) " z")}])]
-      #_[:text {:x 0 :y 5 :style {:font "normal 7px sans-serif"}} (t/format "dd/MM" (t/date date))]]]))
+           :d             (apply str "M " d " 14 h " (- 24 n) " v -4 h -" (- 24 n) " z")}])]]
+
+     (when-some [date date]
+       [:div.relative.h-full
+        [:div.absolute.inset-0
+         {:style {:display               :grid
+                  :grid-template-columns "repeat(4,1fr)"}}
+         (for [e (range 4)
+               :let [s (t/format "dd/MM" (t/>> date (t/new-period (dec e) :days)))]]
+           [sc/small
+            {:style {:display       :grid
+                     :justify-items :center
+                     :align-items   :end}}
+            (if (zero? e) [sc/dim s] s)])]
+
+        [:div.absolute.inset-0
+         [:svg {:class               [:h-full]
+                :style               {:color "var(--surface2)"}
+                :stroke              :currentColor
+                :viewBox             (str "0 0 " width " 10")
+                :width               "100%"
+                :height              "auto"
+                :preserveAspectRatio "none"}
+          [:path
+           {:vector-effect :non-scaling-stroke
+            :stroke-width  2
+            :d             (str (apply str "M 0 10 " (repeat 3 " m 24 0 v -4 v 4 ")))}]]]])]))
 
 (defn- ^:deprecated overlapping? [id time-slot offset]
   (let [booking-db (filter (partial has-selection id) (booking.database/read))

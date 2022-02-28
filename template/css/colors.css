@@ -21,8 +21,9 @@
    --brand1-dim: var(--blue-4);
    --brand2-dim: var(--blue-1);
 
-   --text1-dim: var(--gray-3);
-   --text2-dim: var(--gray-6);
+   --text1-dim: var(--gray-2);
+   --text2-dim: var(--gray-4);
+   --text3-dim: var(--gray-5);
    --label-dim: var(--green-5);
 
    --surface000-dim: var(--gray-9);
@@ -51,7 +52,8 @@
    --brand2-light: var(--blue-9);
 
    --text1-light: var(--gray-9);
-   --text2-light: var(--gray-7);
+   --text2-light: var(--gray-6);
+   --text3-light: var(--gray-4);
    --label-light: var(--gray-5);
 
    --surface000-light: var(--gray-0);
@@ -94,6 +96,7 @@
 
        --text1: var(--text1-light);
        --text2: var(--text2-light);
+       --text3: var(--text3-light);
        --label: var(--label-light);
        --surface000: var(--surface000-light);
        --surface00: var(--surface00-light);
@@ -129,6 +132,7 @@
 
       --text1: var(--text1-dim);
       --text2: var(--text2-dim);
+      --text3: var(--text3-dim);
       --label: var(--label-dim);
 
       --surface000: var(--surface000-dim);
