@@ -33,7 +33,8 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.menu]
             [schpaa.style.booking]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [schpaa.style.button :as scb]))
 
 
 ;region related to flex-date and how to display relative time
@@ -295,15 +296,51 @@
 
          (let []
            [page-boundry
-            [:div.right-4.p-4
+            [:div.right-4.p-4.space-y-4
              ;[l/ppre-x @settings]
+
+             [sc/grid-wide
+              [schpaa.style.booking/line
+               {:content  {:category    "Havkayakk"
+                           :number      "310"
+                           :location    "C3"
+                           :material    "Epoxy"
+                           :stability   4
+                           :description "Passer best for de som liker å padle på vann og land."
+                           :brand       "P3 Baffin Boreal"
+                           :weight      "23 kg"
+                           :width       "50 cm"
+                           :length      "490 cm"}
+
+                :on-click #()
+                :expanded true
+                :selected false}]
+              [schpaa.style.booking/line
+               {:content  {:category  "Havkayakk"
+                           :number    "310"
+                           :location  "C3"
+                           :material  "Plast"
+                           :stability 1
+                           ;:description ""
+                           :brand     "P3 Baffin Boreal"
+                           ;:weight      "23 kg"
+                           :width     "50 cm"
+                           :length    "490 cm"}
+
+                :on-click #()
+                :expanded true
+                :selected false}]]
+
              [:div.flex.justify-end.items-center
+
+
+
               [schpaa.style.menu/menu-example-with-args
                {:dir         :down
                 :data        (complex-menu settings)
                 :always-show false
                 :button      (fn [open]
-                               [sc/normal-floating
+                               [scb/normal-floating
                                 ;{:class [:w-32]}
                                 [sc/row {:class [:gap-4 :px-2]}
                                  [sc/text "Visning"]
@@ -324,13 +361,13 @@
              (let [section [:div.p-4.space-y-4
                             [:div.gap-1.flex.gap-4.flex-wrap
 
-                             (sc/round-normal [:> solid/HeartIcon])
-                             (sc/round-cta [:> solid/HeartIcon])
-                             (sc/round-danger [:> solid/HeartIcon])
+                             (scb/round-normal [:> solid/HeartIcon])
+                             (scb/round-cta [:> solid/HeartIcon])
+                             (scb/round-danger [:> solid/HeartIcon])
 
-                             [sc/normal "normal button"]
-                             [sc/button-cta "cta button"]
-                             [sc/button-danger "danger button"]]
+                             [scb/normal "normal button"]
+                             [scb/button-cta "cta button"]
+                             [scb/button-danger "danger button"]]
 
                             [sc/col
                              [sc/hero-p "Some Title Here"]
@@ -355,7 +392,7 @@
                 :data        (complex-menu settings)        ;(standard-menu-2 (r/atom nil))
                 :always-show false
                 :button      (fn [open]
-                               [sc/round-normal-floating
+                               [scb/round-normal-floating
                                 [sc/icon [:> (if open solid/DotsVerticalIcon
                                                       solid/DotsHorizontalIcon)]]])}]]]]))))
 

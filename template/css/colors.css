@@ -75,6 +75,13 @@
    --button0-light: var(--gray-9);
    --button1-light: var(--gray-4);
    --button2-light: var(--gray-3);
+
+   --buttonbase-disabled-light: var(--gray-1);
+   --buttonbase-light: var(--gray-3);
+   --buttontext-light: var(--gray-7);
+   --buttonbase-hover-light: var(--gray-4);
+   --buttonbase-active-light: var(--gray-5);
+
 }
 
 @media (prefers-color-scheme: light) {
@@ -103,10 +110,12 @@
        --buttondanger0: var(--buttondanger0-light);
        --buttondanger1: var(--buttondanger1-light);
        --buttondanger2: var(--buttondanger2-light);
-       --button00: var(--button00-light);
-       --button0: var(--button0-light);
-       --button1: var(--button1-light);
-       --button2: var(--button2-light);
+
+       --buttonbase-disabled: var(--buttonbase-disabled-light);
+       --buttonbase: var(--buttonbase-light);
+       --buttontext: var(--buttontext-light);
+       --buttonbase-hover: var(--buttonbase-hover-light);
+       --buttonbase-active: var(--buttonbase-active-light);
     }
 }
 
