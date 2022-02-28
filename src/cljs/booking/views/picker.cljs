@@ -73,7 +73,7 @@
                :height 4}]
 
        (into [:<>] (map (fn [{:keys [start end r?]}]
-                          [:rect {:style  {:color (if r? "var(--surface-5)" "var(--red-5)")}
+                          [:rect {:style  {:color (if r? "var(--surface3)" "var(--orange-5)")}
                                   :fill   :currentColor
                                   :x      start
                                   :width  (- end start)

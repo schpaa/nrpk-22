@@ -34,7 +34,8 @@
             [schpaa.style.menu]
             [schpaa.style.booking]
             [clojure.set :as set]
-            [schpaa.style.button :as scb]))
+            [schpaa.style.button :as scb]
+            [fork.re-frame :as fork]))
 
 
 ;region related to flex-date and how to display relative time
@@ -299,6 +300,47 @@
             [:div.right-4.p-4.space-y-4
              ;[l/ppre-x @settings]
 
+             [fork/form {:initial-values    {:start-date  (str (t/new-date))
+                                             :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration -2 :hours)) :hours))
+                                             ;todo adjust for 22-23
+                                             ;:end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
+                                             :end-date    (str (t/new-date))
+                                             :id          0
+                                             :description ""}
+                         :form-id           "sample-form"
+                         :prevent-default?  true
+                         :state             (r/atom {})
+                         :clean-on-unmount? true
+                         :keywordize-keys   true
+                         :on-submit         (fn [e] (tap> e))
+                         :validation        (fn [e] {:start-date (cond-> nil
+                                                                   (empty? (:start-date e)) ((fnil conj []) "mangler")
+                                                                   (and (not (empty? (:start-date e)))
+                                                                        (some #{(tick.alpha.interval/relation
+                                                                                  (t/date (:start-date e)) (t/date))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+
+                                                     :start-time (cond-> nil
+                                                                   (empty? (:start-time e)) ((fnil conj []) "mangler")
+                                                                   (and (not (empty? (:start-date e)))
+                                                                        (not (empty? (:start-time e)))
+                                                                        (some #{(tick.alpha.interval/relation
+                                                                                  (t/at (t/date (:start-date e)) (t/time (:start-time e)))
+                                                                                  (t/date-time (t/now)))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+                                                     :end-time   (cond-> nil
+                                                                   (empty? (:end-time e)) ((fnil conj []) "mangler")
+                                                                   (and (not (empty? (:start-date e)))
+                                                                        (not (empty? (:end-time e)))
+                                                                        (some #{(tick.alpha.interval/relation
+                                                                                  (t/at (t/date (:end-date e)) (t/time (:end-time e)))
+                                                                                  (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "før avreise"))})}
+
+              (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
+                [:form.space-y-1
+                 {:id        form-id
+                  :on-submit handle-submit}
+                 ;[l/ppre-x {:errors errors} values]
+                 [booking.views/time-input props false]])]
+
              [sc/grid-wide
               [schpaa.style.booking/line
                {:content  {:category    "Havkayakk"
@@ -329,7 +371,7 @@
 
                 :on-click #()
                 :expanded true
-                :selected false}]
+                :selected true}]
               [schpaa.style.booking/line
                {:content  {:category    "Grønnlandskayakk"
                            :number      "600"
@@ -343,7 +385,7 @@
                            :length      "490 cm"}
 
                 :on-click #()
-                :expanded true
+                :expanded false
                 :selected false}]]
 
              [:div.flex.justify-end.items-center
