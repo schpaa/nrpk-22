@@ -18,16 +18,16 @@
 
 (defonce selected (r/atom #{}))
 
-(defn new-booking []
-  (let [user-auth (rf/subscribe [::db/user-auth])]
-    [booking.views/booking-form
-     {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
-      :selected      selected
-      :uid           (:uid @user-auth)
-      :on-submit     #(send :e.complete %)
-      :cancel        #(send :e.cancel-booking)
-      :my-state      schpaa.components.views/my-state
-      :booking-data' (sort-by :date > (booking.database/read))}]))
+#_(defn new-booking []
+    (let [user-auth (rf/subscribe [::db/user-auth])]
+      [booking.views/booking-form
+       {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
+        :selected      selected
+        :uid           (:uid @user-auth)
+        :on-submit     #(send :e.complete %)
+        :cancel        #(send :e.cancel-booking)
+        :my-state      schpaa.components.views/my-state
+        :booking-data' (sort-by :date > (booking.database/read))}]))
 
 (defn last-active-booking [{:keys [uid] :as m}]
   [:<>

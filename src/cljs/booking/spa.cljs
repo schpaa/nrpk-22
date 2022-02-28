@@ -35,7 +35,8 @@
             [schpaa.style.booking]
             [clojure.set :as set]
             [schpaa.style.button :as scb]
-            [fork.re-frame :as fork]))
+            [fork.re-frame :as fork]
+            [schpaa.style.popover]))
 
 
 ;region related to flex-date and how to display relative time
@@ -297,7 +298,35 @@
 
          (let []
            [page-boundry
-            [:div.right-4.p-4.space-y-4
+            [:div.relative
+             [:div.fixed.top-1.right-1.z-50
+              [schpaa.style.popover/popover-example [{:id      1
+                                                      :content [schpaa.style.booking/line
+                                                                {:content  {:category    "Havkayakk"
+                                                                            :number      "310"
+                                                                            :location    "C3"
+                                                                            :material    "Epoxy"
+                                                                            :stability   4
+                                                                            :description "Passer best for de som liker å padle på vann og land."
+                                                                            :brand       "P3 Baffin Boreal"
+                                                                            :weight      "23 kg"
+                                                                            :width       "50 cm"
+                                                                            :length      "490 cm"}
+
+                                                                 :on-click #()
+                                                                 :expanded true
+                                                                 :selected false}]}]]
+              #_[schpaa.style.menu/menu-example-with-args
+                 {:dir         :down
+                  :data        (complex-menu settings)
+                  :always-show false
+                  :button      (fn [open]
+                                 [scb/round-normal-floating
+                                  ;{:class [:w-32]}
+                                  [sc/row {:class [:gap-4 :px-2]}
+                                   #_[sc/text "Visning"]
+                                   [sc/icon [:> (if open outline/XIcon outline/DotsHorizontalIcon)]]]])}]]]
+            [:div.p-4                                       ;.right-4.p-4.space-y-4
              ;[l/ppre-x @settings]
 
              [fork/form {:initial-values    {:start-date  (str (t/new-date))
@@ -332,14 +361,18 @@
                                                                         (not (empty? (:end-time e)))
                                                                         (some #{(tick.alpha.interval/relation
                                                                                   (t/at (t/date (:end-date e)) (t/time (:end-time e)))
-                                                                                  (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "før avreise"))})}
+                                                                                  (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "er før 'fra kl'"))})}
 
               (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
-                [:form.space-y-1
-                 {:id        form-id
-                  :on-submit handle-submit}
-                 ;[l/ppre-x {:errors errors} values]
-                 [booking.views/time-input props false]])]
+                [sc/surface-a {:class [:w-full :overflow-x-auto]}
+                 [:form.space-y-1
+                  {:id        form-id
+                   :on-submit handle-submit}]
+                 [sc/row {:class [:shrink-0]}
+                  [:div.grow [booking.views/time-input props false]]
+
+                  [:div.relative.absolute.top-1.right-1.px-2.z-500]]])]
+
 
              [sc/grid-wide
               [schpaa.style.booking/line
@@ -389,8 +422,6 @@
                 :selected false}]]
 
              [:div.flex.justify-end.items-center
-
-
 
               [schpaa.style.menu/menu-example-with-args
                {:dir         :down

@@ -85,7 +85,6 @@
   (do
     (some #{(tick.alpha.interval/relation (t/time) (t/time))} [:meets])))
 
-
 (comment
   (do
     (let [t1 (t/time)
@@ -94,78 +93,71 @@
         (= :precedes (relation t1 t2))
         (< (t/hours (t/duration (tick.alpha.interval/new-interval t1 t2))) 1)))))
 
-(defn booking-validation [{:keys [start-date start-time end-date end-time sleepover]}]
-  (try
-    (let []
-      (tap> {:start-date (some? start-date)})
-      (cond-> {}
-
-        (not (some? start-date))
-        (update :start-date (fnil conj []) "Trenger start-dato")
-
-        #_#_(and
-              (every? some? [start-date end-date])
-              (some #{(relation (t/date end-date) (t/date start-date))} [:precedes :meets]
-                    (update :start-date (fnil conj []) "Start-dato må komme før slutt-dato")))
-
-                (and
-                  (every? some? [start-date end-date])
-                  (some #{(relation (t/date end-date) (t/date start-date))} [:precedes :meets]))
-        (update :end-date (fnil conj []) "Slutt-dato må komme etter start-dato")
-
-        (and (every? some? [start-date end-date])
-             ;(not= "" (str start-date))
-             (some #{(relation (t/date end-date) (t/date start-date))} [:precedes :meets]))
-        (update :end-date (fnil conj []) "Slutt-dato må være samme som start-dato eller senere")
-
-        (and
-          (some? end-date)
-          (some #{(relation (t/date end-date) (t/date))} [:precedes :meets]))
-        (update :end-date (fnil conj []) "Slutt-dato må være i dag eller senere")
-
-        (and (every? some? [start-date])
-             (not= "" (str start-date))
-             (some #{(relation (t/date start-date) (t/date))} [:precedes :meets]))
-        (update :start-date (fnil conj []) "Start-dato må være i dag eller senere")
-
-        (and (every? some? [start-date start-time end-time end-date])
-             (let [rel (relation (t/at (t/date start-date) (t/time start-time)) (t/date-time))]
-               (some #{rel} [:precedes :meets])))
-        (update :start-time (fnil conj []) "Start-tid må være nå eller senere")
-
-        (= "" (str start-time))
-        (update :start-time (fnil conj []) "Trenger start-tid")
-
-        (= "" (str end-time))
-        (update :end-time (fnil conj []) "Trenger slutt-tid")
-
-        (and
-          (not sleepover)
-          (every? some? [start-date start-time end-time end-date])
-          (some #{(relation (t/at (t/date end-date) (t/time end-time))
-                            (t/at (t/date start-date) (t/time start-time)))} [:precedes]))
-        (update :end-time (fnil conj []) "Slutt-tid må komme etter start-tid")
-
-        #_#_(and
-              (every? some? [start-time end-time])
-              (< (t/hours (tick.alpha.interval/new-interval (t/time end-time) (t/time start-time))) 1
-                 (update :end-time (fnil conj []) "Start og slutt er likt1")))
-
-                (let [t1 (t/at (t/date start-date) (t/time start-time))
-                      t2 (t/at (t/date end-date) (t/time end-time))]
-                  (and
-                    (= :precedes (relation t1 t2))
-                    (< (t/hours (t/duration (tick.alpha.interval/new-interval t1 t2))) 1)))
-        (update :end-time (fnil conj []) "Minste tid for booking er 1 time")
-
-        (and
-          (every? some? [start-time end-time start-date end-date])
-          (= :meets (some #{(relation (t/at (t/date end-date) (t/time end-time))
-                                      (t/at (t/date start-date) (t/time start-time)))} [:meets])))
-        (update :end-time (fnil conj []) "Start-tid og slutt-tid er like")))
-    (catch js/Error e
-      (tap> (.-message e))
-      {:general [(.-message e)]})))
+;(defn booking-validation [{:keys [start-date start-time end-date end-time sleepover]}]
+;  (try
+;    (let []
+;      (tap> {:start-date (some? start-date)})
+;      (cond-> {}
+;
+;        (not (some? start-date))
+;        (update :start-date (fnil conj []) "Trenger start-dato")
+;
+;
+;        (update :end-date (fnil conj []) "Slutt-dato må komme etter start-dato")
+;
+;        (and (every? some? [start-date end-date])
+;             ;(not= "" (str start-date))
+;             (some #{(relation (t/date end-date) (t/date start-date))} [:precedes :meets]))
+;        (update :end-date (fnil conj []) "Slutt-dato må være samme som start-dato eller senere")
+;
+;        (and
+;          (some? end-date)
+;          (some #{(relation (t/date end-date) (t/date))} [:precedes :meets]))
+;        (update :end-date (fnil conj []) "Slutt-dato må være i dag eller senere")
+;
+;        (and (every? some? [start-date])
+;             (not= "" (str start-date))
+;             (some #{(relation (t/date start-date) (t/date))} [:precedes :meets]))
+;        (update :start-date (fnil conj []) "Start-dato må være i dag eller senere")
+;
+;        (and (every? some? [start-date start-time end-time end-date])
+;             (let [rel (relation (t/at (t/date start-date) (t/time start-time)) (t/date-time))]
+;               (some #{rel} [:precedes :meets])))
+;        (update :start-time (fnil conj []) "Start-tid må være nå eller senere")
+;
+;        (= "" (str start-time))
+;        (update :start-time (fnil conj []) "Trenger start-tid")
+;
+;        (= "" (str end-time))
+;        (update :end-time (fnil conj []) "Trenger slutt-tid")
+;
+;        (and
+;          (not sleepover)
+;          (every? some? [start-date start-time end-time end-date])
+;          (some #{(relation (t/at (t/date end-date) (t/time end-time))
+;                            (t/at (t/date start-date) (t/time start-time)))} [:precedes]))
+;        (update :end-time (fnil conj []) "Slutt-tid må komme etter start-tid")
+;
+;        #_#_(and
+;              (every? some? [start-time end-time])
+;              (< (t/hours (tick.alpha.interval/new-interval (t/time end-time) (t/time start-time))) 1
+;                 (update :end-time (fnil conj []) "Start og slutt er likt1")))
+;
+;                (let [t1 (t/at (t/date start-date) (t/time start-time))
+;                      t2 (t/at (t/date end-date) (t/time end-time))]
+;                  (and
+;                    (= :precedes (relation t1 t2))
+;                    (< (t/hours (t/duration (tick.alpha.interval/new-interval t1 t2))) 1)))
+;        (update :end-time (fnil conj []) "Minste tid for booking er 1 time")
+;
+;        (and
+;          (every? some? [start-time end-time start-date end-date])
+;          (= :meets (some #{(relation (t/at (t/date end-date) (t/time end-time))
+;                                      (t/at (t/date start-date) (t/time start-time)))} [:meets])))
+;        (update :end-time (fnil conj []) "Start-tid og slutt-tid er like")))
+;    (catch js/Error e
+;      (tap> (.-message e))
+;      {:general [(.-message e)]})))
 
 (comment
   (booking-validation {:start-time (t/time) :end-time (t/time)}))
@@ -354,19 +346,26 @@
                       :selected       selected :boat-db boat-db :booking-ready? booking-ready?}]]))
 
 (defn time-input [{:keys [set-handle-change errors form-id handle-submit handle-change values set-values] :as props} admin]
-  (let [{:keys [bg bg+ fg fg- fg+ p p-]} (st/fbg' :form)]
+  (let [data [{:id   0
+               :text #(str "Ingen")
+               :fn   #(t/>> % (t/new-duration 0 :days))}
+              {:id   1
+               :text #(-> "1")
+               :fn   #(try
+                        (when % (t/>> % (t/new-period 1 :days)))
+                        (catch js/Error _ nil))}
+              {:id   2
+               :text #(-> "2")
+               :fn   #(when % (t/>> % (t/new-period 2 :days)))}]]
     [:div.sticky.top-4
-     [sc/surface-a
-      [l/ppre-x values]
+     [:<>
+      ;[l/ppre-x values]
       [:div.p-2
-       [:div                                                ;.xpx-2.xpt-4.pb-2.space-y-2.z-50
-        ;{:class bg}
-
-        [:div                                               ;.grid.gap-4
-         ;{:style {:grid-template-columns "1fr 1fr"}}
+       [:div
+        [:div
          [:div.flex.flex-col.justify-self-endx.relative
 
-          [:div.space-y-4
+          [:div.space-y-2
            [sc/row {:class [:gap-4 :flex-wrap]}
 
             [sc/col {:class [:w-48 :gap-1]}
@@ -376,25 +375,25 @@
                 [sc/label-error (first (:start-date errors))])]
              [sci/date {:type      "date"
                         :value     (:start-date values)
-                        :on-change #(do
-                                      (handle-change %)
-                                      (set-handle-change {:path :end-date :value nil}))
+                        :on-change #(let [z (-> % .-target .-value)]
+                                      (do
+                                        (handle-change %)
+                                        (tap> {:id      (:id values)
+                                               "value"  %
+                                               "z"      z
+                                               "value'" (values :start-date)})
+                                        (let [v (if (seq z)
+                                                  (some-> z
+                                                          (t/date)
+                                                          ((:fn (get (zipmap (map :id data) data) (:id values))))
+                                                          str)
+                                                  nil)]
+                                          (tap> {"v" v})
+                                          (set-handle-change
+                                            {:path  :end-date
+                                             :value v}))))
                         :errors    (:start-date errors)
-                        :name      :start-date}]
-
-             #_[fields/date (-> props
-                                booking.time-navigator/naked
-                                fields/date-field
-                                (assoc :handle-change #(let [v (-> % .-target .-value)
-                                                             diff (if (values :sleepover) 1 0)]
-                                                         (if-not admin
-                                                           (set-values {:end-date (try
-                                                                                    (str (t/>> (t/date v) (t/new-period diff :days)))
-                                                                                    (catch js/Error _ ""))}))
-                                                         (handle-change %))))
-                :name :start-date
-                :error-type :marker]
-             ]
+                        :name      :start-date}]]
 
             [sc/col {:class [:w-32 :gap-1]}
              [sc/row {:class [:gap-2]}
@@ -410,56 +409,34 @@
            [sc/row {:class [:gap-4 :flex-wrap]}
 
             [sc/col {:class [:gap-1]}
+             [sc/label "Overnattinger"]
+             [:div.w-48.space-y-2
+              [schpaa.style.radio/radio-group-example
+               #(do
+                  (tap> {:a %})
+                  (set-values {:id %})
+                  (let [v (if (seq (values :start-date))
+                            (some-> (values :start-date)
+                                    (t/date)
+                                    ((:fn (get (zipmap (map :id data) data) %)))
+                                    str))]
+                    (tap> v)
+                    (set-values {:end-date v})))
+
+               (try (some-> (values :start-date) t/date) (catch js/Error _ nil))
+               data]]]]
+           [sc/row {:class [:gap-4 :flex-wrap]}
+            [sc/col {:class [:w-48 :gap-1]}
              [sc/row {:class [:gap-2]}
-              [sc/label "Overnattinger"]]
-             (let [data [{:id   0
-                          :text #(str "Ingen")
-                          :fn   #(t/>> % (t/new-duration 0 :days))}
-                         {:id   1
-                          :text #(-> "1")  #_(if % (str (t/format "dd.MM" %) " (1 natt)") "Neste dag")
-                          :fn   #(try
-                                   (when % (t/>> % (t/new-period 1 :days)))
-                                   (catch js/Error _ nil))}
-                         {:id   2
-                          :text #(-> "2") #_#(if % (str (t/format "dd.MM" %) " (2 netter)") "2 dager etter")
-                          :fn   #(when % (t/>> % (t/new-period 2 :days)))}]]
-               [:div.w-48.space-y-2
-                (let []
-                  [schpaa.style.radio/radio-group-example
-                   #(do
-                      (tap> {:a %})
-
-                      (set-values {:id %})
-                      (let [v (if (seq (values :start-date))
-                                (some-> (values :start-date)
-                                        (t/date)
-                                        ((:fn (get (zipmap (map :id data) data) % #_(values :id))))
-                                        str))]
-                        (tap> v)
-                        ;(set-handle-change {:path :end-date :value v #_"2033-01-01"})
-                        ;(handle-change v)
-                        (set-values {:end-date v})
-                        ))
-                   (try (some-> (values :start-date) t/date) (catch js/Error _ nil))
-                   data])
-
-                [sc/col {:class [:w-48 :gap-1]}
-                 [sc/row {:class [:gap-2]}
-                  [sc/label "Til dato"]
-                  (if (:start-time errors)
-                    [sc/label-error (first (:start-time errors))])]
-                 ;FIELD
-                 [sci/date {:type      "date"
-                            :read-only true
-                            :value     (:end-date values)
-                            #_(if (seq (values :start-date))
-                                (some-> (values :start-date)
-                                        (t/date)
-                                        ((:fn (get (zipmap (map :id data) data) (values :id))))))
-                            :on-change handle-change
-                            :errors    (:end-date errors)
-                            :name      :end-date}]]])]
-
+              [sc/label "Til dato"]
+              (if (:start-time errors)
+                [sc/label-error (first (:end-date errors))])]
+             [sci/date {:type      "date"
+                        :read-only true
+                        :value     (:end-date values)
+                        :on-change handle-change
+                        :errors    (:end-date errors)
+                        :name      :end-date}]]
             [sc/col {:class [:w-32 :gap-1]}
              [sc/row {:class [:gap-2]}
               [sc/label "Til kl"]
@@ -469,60 +446,7 @@
                         :values    values
                         :on-change handle-change
                         :errors    (:end-time errors)
-                        :name      :end-time}]]]]
-
-          #_(when-not admin
-              [:div.absolute.-bottom-5.right-0
-               {:class (concat p- fg-)}
-               (try (times.api/day-name (t/date (values :start-date))) (catch js/Error _ nil))])]
-         #_[fields/time (-> props
-                            booking.time-navigator/naked
-                            fields/time-field)
-            :name :start-time
-            :error-type :marker]
-         #_(if admin
-             [:div.h-10
-              [fields/date (-> props
-                               booking.time-navigator/naked
-                               fields/date-field
-                               (assoc :handle-change #(let [v (-> % .-target .-value)]
-                                                        (try
-                                                          (set-values {:end-date  (str (t/date v))
-                                                                       :sleepover (t/< (t/date (values :start-date))
-                                                                                       (t/date v))})
-                                                          (catch js/Error _ ""))
-                                                        (handle-change %))))
-               :name :end-date
-               :error-type :marker]]
-             [:div.flex.items-center.justify-self-end
-              [views/modern-checkbox'
-               {:get-details #(-> (values :sleepover))
-                :set-details #(set-values
-                                {:sleepover %
-                                 :end-date  (try (str (t/>> (t/date (values :start-date))
-                                                            (t/new-period (if % 1 0) :days)))
-                                                 (catch js/Error _ ""))})}
-               (fn [checkbox]
-                 [:div.flex.items-center.gap-2
-                  [:div {:class fg+} "Overnatting"]
-                  checkbox])]])
-
-
-         #_[:div.flex.flex-col.justify-self-start.relative
-            [fields/time (-> props
-                             booking.time-navigator/naked
-                             fields/time-field)
-             :name :end-time
-             :error-type :marker]
-            (when-not admin
-              [:div.absolute.-bottom-5.right-0
-               {:class (concat p- fg-)}
-               (if (values :sleepover)
-                 (try (str (t/format (str "'"
-                                          (times.api/day-name (t/date (values :end-date)))
-                                          "' dd.MM") (t/date (values :end-date))))
-                      (catch js/Error _ nil))
-                 "samme dag")])]]]]]]))
+                        :name      :end-time}]]]]]]]]]]))
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [admin false]
@@ -532,7 +456,7 @@
                                     :end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 3 :hours)) :hours))
                                     :end-date    (str (t/new-date))
                                     :description ""}
-                :validation        booking-validation
+                ;:validation        booking-validation
                 :state             my-state
                 :prevent-default?  true
                 :clean-on-unmount? true
