@@ -12,7 +12,8 @@
             [lambdaisland.ornament :as o]
             [schpaa.components.sidebar :as components.sidebar]
             [schpaa.components.widgets :as widgets]
-            [db.core :as db]))
+            [db.core :as db]
+            [schpaa.style.ornament :as sc]))
 
 (defn- forced-scroll-lock
   [locked? target]
@@ -85,39 +86,37 @@
 ; region ui without headers and with a sidebar that is always visible
 
 (o/defstyled nicer-tab' :div
-  [:& :w-full :flex :flex-col :items-center :justify-center]
-  [:.item :flex :flex-col :items-center :justify-center :space-y-1
+  [:& :p-1]
+
+  [:div.item
+   :flex :flex-col :items-center :justify-evenly :select-none
    {:height  "var(--size-10)"
     :padding "var(--size-1)"}]
 
-  :pl-1
-  ;{:padding "var(--size-1)"}
+  [:div.selected :rounded-l :-mr-2 :pr-2
+   {:background "var(--surface2)"
+    :color      "var(--surface7)"}]
 
-  [:& :select-none]
-  [:div.selected :w-full :rounded-l
-   {;:border-radius "var(--radius-1)"
-    :background "var(--surface0)"
-    :color      "var(--brand2)"}]
-
-  [:div.regular :w-full
-   {:border-radius "var(--radius-1)"
-    :color         "var(--surface5)"}
+  [:div.regular :rounded-l
+   {:background "var(--surface8)"
+    :color      "var(--surface3)"}
    [:&:hover
-    {:color      "var(--brand2)"
-     :background "gray"}]]
+    {:color      "var(--surface2)"
+     :background "var(--surface7)"}]]
 
   [:div.unavailable
    {:color "var(--surface3)"}]
 
   ([{:keys [available selected icon route-name text]}]
-   [:div.item
+   [:div.item.truncate
     (conj
       {:class (if available
                 (if selected :selected :regular)
                 :unavailable)}
       (when available {:on-click #(rf/dispatch [:app/navigate-to [route-name]])}))
-    [:div.icon {:class [:w-8 :h-8]} icon]
-    [:div.text-xs text]]))
+
+    [sc/icon-large icon]
+    [:div.text-base.tracking-wide.truncate.uppercase.font-oswald.font-normal text]]))
 
 (defn screen-render [{:keys [get-menuopen-fn menu-direction] :as m} web-content]
   (let [direction (if menu-direction :-translate-x-80 :translate-x-80)
@@ -177,43 +176,54 @@
         route-name (rf/subscribe [:app/route-name])
         route @(rf/subscribe [:kee-frame/route])
         logged-in (some? @user-auth)
-        data [(when logged-in {:login true :route-name :r.user :icon [:> solid/UserCircleIcon] :text [:div.whitespace-nowrap "om meg"]})
+        data [(when logged-in
+                {:login      true
+                 :route-name :r.user
+                 :icon       [:> solid/UserCircleIcon]
+                 :text       "meg"})
               (when-not logged-in {:login false :route-name :r.welcome :icon [:> solid/LoginIcon] :text "login"})
               (when-not logged-in :space)
-              (when logged-in {:login true :route-name :r.new-booking :icon [:> solid/CalendarIcon] :text "booking"})
-              (when logged-in {:login true :route-name :r.forsiden :icon [:> outline/TicketIcon] :text "siste"})
-              {:login true :route-name :r.booking-blog :icon [:> outline/NewspaperIcon] :text "nytt"}
-              {:login true :route-name :r.logg :icon [:> solid/ViewListIcon] :text "turlogg"}
-              :space
-              {:login true :route-name :r.debug :icon [:> outline/BeakerIcon] :text "debug"}
+              (when logged-in {:login true :route-name :r.new-booking :icon [:> solid/PlusIcon] :text "ny"})
+              ;(when logged-in {:login true :route-name :r.forsiden :icon [:> solid/TicketIcon] :text "siste"})
+              {:login true :route-name :r.booking-blog :icon [:> solid/NewspaperIcon] :text "info" :badge "1"}
+              ;{:login true :route-name :r.logg :icon [:> solid/ViewListIcon] :text "logg"}
+              ;:space
+              {:login true :route-name :r.debug :icon [:> outline/BeakerIcon] :text "lab"}
               :grow
-              {:login false :route-name :r.welcome :icon (schpaa.icon/adapt :command 3) :text "bruk"}]
+              {:login false :route-name :r.welcome :icon (schpaa.icon/adapt :command 3) :text "hjelp"}]
 
         tab (fn [d]
               (cond
                 (= :grow d) [:div.flex-grow]
                 (= :space d) [:div.h-4]
-                :else (when-let [{:keys [login icon text route-name]} d]
-                        (nicer-tab'
-                          {:available  (or (not login) (and login (some? @user-auth))) ;(or (not (or login (some? @user-auth))))
-                           :icon       icon
-                           :text       text
-                           :route-name route-name
-                           :selected   (= route-name (-> route :data :name))}))))
+                :else (when-let [{:keys [badge login icon text route-name]} d]
+                        [:div.relative
+                         (nicer-tab'
+                           {:available  (or (not login) (and login (some? @user-auth))) ;(or (not (or login (some? @user-auth))))
+                            :icon       icon
+                            :text       text
+                            :route-name route-name
+                            :selected   (= route-name (-> route :data :name))})
+                         (when (some? badge)
+                           [:div.absolute.top-px.left-px
+                            [:div.rounded-full.bg-white.text-black
+                             [:div.flex.items-center.justify-center.h-6.text-base.font-medium.font-oswald
+                              {:style {:aspect-ratio "1/1"}}
+                              badge]]])])))
 
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute body "class" "font-sans")
     (.setAttribute body "style" "background-color:var(--surface0)")
+
     [:div.fixed.inset-0
      [:div.grid.h-full
-      {:style {:background            "var(--surface2)"
-               ;:column-gap            "var(--size-2)"
-               :grid-template-columns "min-content 1fr"
+      {:style {:background            "var(--surface5)"
+               :grid-template-columns "4rem 1fr"
                :grid-auto-rows        "1fr"}}
       (into [:div.h-full.flex.flex-col.overflow-y-scroll.space-y-0]
             (map tab data))
-      [:div.bg-white.h-full.overflow-y-auto
-       {:style {:background "var(--surface0)"}}
+      [:div.h-full.overflow-y-auto
+       {:style {:background "var(--surface2)"}}
        [dispatch-main-sidebar
         (when-let [page (get route-table @route-name)]
           (make-route-component page route))]]]]))

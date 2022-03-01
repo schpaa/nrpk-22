@@ -1,15 +1,15 @@
 :root {
 
-    --gray-0: #fafaf9;
-    --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;
-    --gray-3: #d6d3d1;
-    --gray-4: #a8a29e;
-    --gray-5: #78716c;
-    --gray-6: #57534e;
-    --gray-7: #44403c;
-    --gray-8: #292524;
-    --gray-9: #1c1917;
+    --gray-0: #fafaf9; 
+    --gray-1: #f5f5f4; 
+    --gray-2: #e7e5e4; 
+    --gray-3: #d6d3d1; 
+    --gray-4: #a8a29e; 
+    --gray-5: #78716c; 
+    --gray-6: #57534e; 
+    --gray-7: #44403c; 
+    --gray-8: #292524; 
+    --gray-9: #1c1917; 
 
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
@@ -64,6 +64,10 @@
    --surface3-light: var(--gray-5); /* surface-background of slidein menu, toolbar, system-background etc */
    --surface4-light: var(--gray-6);
    --surface5-light: var(--gray-9);
+   --surface6-light: var(--gray-6);
+   --surface7-light: var(--gray-7);
+   --surface8-light: var(--gray-8);
+   --surface9-light: var(--gray-9);
 
    --buttoncta0-light: var(--green-1);
    --buttoncta1-light: var(--green-6);
@@ -106,6 +110,10 @@
        --surface3: var(--surface3-light);
        --surface4: var(--surface4-light);
        --surface5: var(--surface5-light);
+       --surface6: var(--surface6-light);
+       --surface7: var(--surface7-light);
+       --surface8: var(--surface8-light);
+       --surface9: var(--surface9-light);
        
        --buttoncta0: var(--buttoncta0-light);
        --buttoncta1: var(--buttoncta1-light);
@@ -155,3 +163,20 @@
       --button2: var(--button2-dim);
   }
 }
+
+button[type="submit"] {
+    color: var(--buttoncta0);
+    background: var(--buttoncta2);
+}
+button[type="submit"]:hover {
+    background: var(--buttoncta1);
+}
+
+button[type="button"] {
+    color: var(--buttontext);
+    background: var(--buttonbase);
+}
+button[type="button"]:hover {
+    background: var(--buttonbase-hover);
+}
+

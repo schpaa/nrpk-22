@@ -8,8 +8,9 @@
             [re-frame.core :as rf]
             [re-statecharts.core :as rs]
             [nrpk.fsm-helpers :refer [send]]
-            [schpaa.debug :as l]))
-
+            [schpaa.debug :as l]
+            [eykt.content.rapport-side]
+            [schpaa.style.ornament :as sc]))
 
 (defn not-yet-seen [last-visit-dt [k v]]
   (if last-visit-dt
@@ -55,46 +56,48 @@
 
 (defn lineitem [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
   ;(tap> [item-id id-of-last-seen])
-  (let [bg (if (pos? (compare (str item-id) (str id-of-last-seen))) :bg-white :bg-transparent)]
-    [:div.-mx-4
-     {:class bg}
-     (preview m)
 
-     #_(if (some? uid')
-         [:div.grid.gap-2 {:style {:grid-template-columns "min-content min-content 1fr 1fr 1fr "}}
-          [:div {:on-click #(mark-last-seen' item-id uid (str (t/now)))} "set"]
-          ;[:div (nrpk.database/get-username-memoed uid')]
-          [:div (compare item-id id-of-last-seen)]
-          [:div (str (not-yet-seen (t/now) kv))]
+  [sc/surface-c
+   (let [bg (if (pos? (compare (str item-id) (str id-of-last-seen))) :bg-white :bg-transparent)]
+     [:div
+      ;{:class bg}
+      (preview m)
 
-          ;[:div (str (t/now))]
+      #_(if (some? uid')
+          [:div.grid.gap-2 {:style {:grid-template-columns "min-content min-content 1fr 1fr 1fr "}}
+           [:div {:on-click #(mark-last-seen' item-id uid (str (t/now)))} "set"]
+           ;[:div (nrpk.database/get-username-memoed uid')]
+           [:div (compare item-id id-of-last-seen)]
+           [:div (str (not-yet-seen (t/now) kv))]
 
-          #_[:div (t/date-time (t/instant date))]
-          (let [beginning date-of-last-seen
-                end (t/date-time (t/instant date))]
-            (if (and beginning end)
-              (if (t/<= end beginning)
-                [:div {:class ["text-black/20"]}
-                 (t/hours (t/duration (tick.alpha.interval/new-interval end beginning)))]
-                [:div {:class ["text-black/100"]}
-                 (t/hours (t/duration (tick.alpha.interval/new-interval beginning end)))])
-              [:div ">?"]))
-          [:div.tabular-nums (apply ta/format "%02d -- %02d:%02d" ((juxt t/day-of-month t/hour t/minute) (t/date-time (t/instant date))))]]
-         [:div
-          (if (some? uid')
-            (str "> " (last-seen (keyword uid)))
-            (str "." uid'))
-          (if (not-yet-seen (t/now) kv)
-            [:div.flex.gap-4
-             [:div "not yet"]
-             [:div date]]
-            [:div "yet"])])]))
+           ;[:div (str (t/now))]
+
+           #_[:div (t/date-time (t/instant date))]
+           (let [beginning date-of-last-seen
+                 end (t/date-time (t/instant date))]
+             (if (and beginning end)
+               (if (t/<= end beginning)
+                 [:div {:class ["text-black/20"]}
+                  (t/hours (t/duration (tick.alpha.interval/new-interval end beginning)))]
+                 [:div {:class ["text-black/100"]}
+                  (t/hours (t/duration (tick.alpha.interval/new-interval beginning end)))])
+               [:div ">?"]))
+           [:div.tabular-nums (apply ta/format "%02d -- %02d:%02d" ((juxt t/day-of-month t/hour t/minute) (t/date-time (t/instant date))))]]
+          [:div
+           (if (some? uid')
+             (str "> " (last-seen (keyword uid)))
+             (str "." uid'))
+           (if (not-yet-seen (t/now) kv)
+             [:div.flex.gap-4
+              [:div "not yet"]
+              [:div date]]
+             [:div "yet"])])])])
 
 (defn initial-page [{:keys [path date-of-last-seen id uid pointer]}]
-  (let [{:keys [bg fg- fg+ fg hd p p- he]} (st/fbg' :surface)]
+  (let []                                                   ;{:keys [bg fg- fg+ fg hd p p- he]} (st/fbg' :surface)]
     [:div
-     {:class bg}
-     (into [:div.p-4]
+     ;{:class bg}
+     (into [:div.p-2.space-y-2]
            (concat
              (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse @(db/on-value-reaction {:path path})))
                    :let [uid' (:uid e)]]
@@ -155,7 +158,7 @@
                date-of-last-seen (some-> date-of-last-seen t/instant t/date-time)
                list-of-posts (db/on-value-reaction {:path path})
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
-           [:div {:class (concat fg+ bg)}
+           [:div
             ;[l/ppre datas]
             ;[:div *fsm-rapport]
 

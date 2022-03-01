@@ -1,5 +1,6 @@
 (ns my.tokens
-  (:require [lambdaisland.ornament :as o]))
+  (:require [lambdaisland.ornament :as o]
+            [garden.selectors :as s]))
 
 
 (o/set-tokens! {:components [{:id     :font-oswald
@@ -8,18 +9,20 @@
                              {:id     :tab
                               :garden [:& {:background-color "var(--button1)"
                                            :color            "var(--button0)"}]}
-                             {:id     :button
-                              :garden [:& {:background-color "var(--button1)"
-                                           :color            "var(--button0)"}
+                             {:id     :batton
+                              :garden [:&
+                                       ;(s/attr= :type "submit")
+                                       {:background-color "var(--button1)"
+                                        :color            "var(--button0)"}
                                        [:&:hover {:background-color "var(--button2)"}]]}
                              {:id     :button-danger
                               :garden [:& {:background-color "var(--buttondanger1)"
                                            :color            "var(--buttondanger0)"}
                                        [:&:hover {:background-color "var(--buttondanger2)"}]]}
-                             {:id     :button-cta
-                              :garden [:& {:background-color "var(--buttoncta1)"
-                                           :color            "var(--buttoncta0)"}
-                                       [:&:hover {:background-color "var(--buttoncta2)"}]]}]
+                             #_{:id     :button-cta
+                                :garden [:& {:background-color "var(--buttoncta1)"
+                                             :color            "var(--buttoncta0)"}
+                                         [:&:hover {:background-color "var(--buttoncta2)"}]]}]
                 :colors     {:ugh      "AA0099"
                              :primary  "FFAA00"
                              :bleu-900 "112123"

@@ -360,7 +360,7 @@
     [:div.sticky.top-4
      [:<>
       ;[l/ppre-x values]
-      [:div.p-2
+      [:div
        [:div
         [:div
          [:div.flex.flex-col.justify-self-endx.relative

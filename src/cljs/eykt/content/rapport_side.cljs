@@ -295,73 +295,76 @@
 
 (defn preview [style dt content]
   (let [common [:xs:px-2 :px-2 :pb-8 :my-px]
-        date [:div.sticky.top-32.relative
+        date [:div.relative.sticky.top-0
               [:div.absolute.-top-4x.right-0.bg-black.text-white.px-2.py-1.text-xs (ta/date-format (t/instant dt))]]]
-    (case style
-      "c"
-      [:div.bg-white.dark:bg-black
-       {:class common}
-       date
-       [:div.max-w-2xl.mx-auto.prose
-        {:class [:prose-stone
-                 :dark:prose-invert
-                 :prose-h2:mb-2
-                 :prose-headings:font-black
-                 :prose-headings:text-rose-500
-                 :prose-h1:text-xl
-                 :prose-h2:text-xl
-                 :prose-h3:text-lg
-                 :prose-p:font-serif
-                 :prose-li:font-sans
-                 "prose-li:text-black/50"
-                 "prose-li:italic"]}
-        (schpaa.markdown/md->html content)]]
-      "b"
-      [:div.bg-amber-100.dark:bg-gray-900
-       {:class common}
-       date
-       [:div.mx-auto.max-w-2xl.prose
-        {:class [:prose-stone :dark:prose-invert
-                 :prose-h2:mb-2
-                 :prose-headings:font-black
-                 :prose-headings:text-alt
-                 :prose-headings:py-0
-                 :prose-headings:my-0
-                 :prose-h1:text-4xl
-                 :prose-h2:text-4xl
-                 :prose-h3:text-lg
-                 :prose-p:font-lora
-                 :prose-p:text-base
-                 :prose-li:font-sans
-                 "prose-li:text-black/50"
-                 "prose-li:italic"]}
-        (schpaa.markdown/md->html content)]]
-      ;"c"
-      [:div.bg-sky-100.dark:bg-gray-800.relative
-       {:class common}
-       date
-       [:div.max-w-2xl.mx-auto.prose.z-10
-        {:class [:dark:prose-invert
-                 :prose-headings:text-sky-600
-                 :prose-gray
-                 :prose-h2:mb-2
-                 :prose-headings:font-black
-                 :prose-h1:text-4xl
-                 :prose-h1:my-0
-                 :prose-h1:py-0
-                 :prose-h2:my-0
-                 :prose-h2:py-0
-                 :prose-h2:text-4xl
-                 :prose-h3:text-lg
-                 :prose-p:font-serif
-                 ;:prose-p:columns-2xs
-                 :prose-li:font-sans
-                 "prose-li:text-black/50"
-                 "prose-li:italic"]}
-        (schpaa.markdown/md->html content)]]
-      #_[:div
-         [:div (str style)]
-         [:div.prose (schpaa.markdown/md->html content)]])))
+    [:div.h-64
+     [:div date]
+     [:div.p-2 (schpaa.markdown/md->html content)]]
+    #_(case style
+        "c"
+        [:div.bg-white.dark:bg-black
+         {:class common}
+         date
+         [:div.max-w-2xl.mx-auto.prose
+          {:class [:prose-stone
+                   :dark:prose-invert
+                   :prose-h2:mb-2
+                   :prose-headings:font-black
+                   :prose-headings:text-rose-500
+                   :prose-h1:text-xl
+                   :prose-h2:text-xl
+                   :prose-h3:text-lg
+                   :prose-p:font-serif
+                   :prose-li:font-sans
+                   "prose-li:text-black/50"
+                   "prose-li:italic"]}
+          (schpaa.markdown/md->html content)]]
+        "b"
+        [:div.bg-amber-100.dark:bg-gray-900
+         {:class common}
+         date
+         [:div.mx-auto.max-w-2xl.prose
+          {:class [:prose-stone :dark:prose-invert
+                   :prose-h2:mb-2
+                   :prose-headings:font-black
+                   :prose-headings:text-alt
+                   :prose-headings:py-0
+                   :prose-headings:my-0
+                   :prose-h1:text-4xl
+                   :prose-h2:text-4xl
+                   :prose-h3:text-lg
+                   :prose-p:font-lora
+                   :prose-p:text-base
+                   :prose-li:font-sans
+                   "prose-li:text-black/50"
+                   "prose-li:italic"]}
+          (schpaa.markdown/md->html content)]]
+        ;"c"
+        [:div.bg-sky-100.dark:bg-gray-800.relative
+         {:class common}
+         date
+         [:div.max-w-2xl.mx-auto.prose.z-10
+          {:class [:dark:prose-invert
+                   :prose-headings:text-sky-600
+                   :prose-gray
+                   :prose-h2:mb-2
+                   :prose-headings:font-black
+                   :prose-h1:text-4xl
+                   :prose-h1:my-0
+                   :prose-h1:py-0
+                   :prose-h2:my-0
+                   :prose-h2:py-0
+                   :prose-h2:text-4xl
+                   :prose-h3:text-lg
+                   :prose-p:font-serif
+                   ;:prose-p:columns-2xs
+                   :prose-li:font-sans
+                   "prose-li:text-black/50"
+                   "prose-li:italic"]}
+          (schpaa.markdown/md->html content)]]
+        #_[:div
+           [:div (str style)]
+           [:div.prose (schpaa.markdown/md->html content)]])))
 
 ;region form-input
 
