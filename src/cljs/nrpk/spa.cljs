@@ -281,7 +281,7 @@
         (into [:div.h-full.flex.flex-col.overflow-y-scroll.space-y-0]
               (map tab data))]]
     [:div.fixed.inset-0.overflow-y-auto                     ;.h-full.overflow-y-autox
-     {:style {:background "var(--surface2)"}}
+     {:style {:background "var(--surface000)"}}
      [dispatch-main-sidebar
       (when-let [page (get route-table @route-name)]
         (make-route-component page route))]]))

@@ -1934,6 +1934,11 @@ h2 {
   margin-right: 0.25rem;
 }
 
+.mx-8 {
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
 .mb-32 {
   margin-bottom: 8rem;
 }
@@ -1996,6 +2001,10 @@ h2 {
 
 .mb-px {
   margin-bottom: 1px;
+}
+
+.-ml-4 {
+  margin-left: -1rem;
 }
 
 .block {
@@ -2218,6 +2227,10 @@ h2 {
 
 .max-w-2xl {
   max-width: 42rem;
+}
+
+.max-w-lg {
+  max-width: 32rem;
 }
 
 .flex-1 {
@@ -3081,6 +3094,10 @@ h2 {
   padding: 1.75rem;
 }
 
+.p-8 {
+  padding: 2rem;
+}
+
 .px-2 {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -3124,6 +3141,16 @@ h2 {
 .px-1 {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
+}
+
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 .pt-16 {

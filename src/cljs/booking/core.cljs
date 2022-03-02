@@ -13,10 +13,10 @@
     [nrpk.spa]))
 
 (def routes
-  [["/" {:name :r.forsiden :header "NRPK Booking" :subheader "Forsiden"}]
-   ["/blog" {:name :r.booking-blog :header "Oversikt over båter" :subheader "Forsiden"}]
+  [["/" {:name :r.forsiden :header "Booking på Sjøbasen" :subheader "Forsiden"}]
+   ["/blog" {:name :r.booking-blog :header "Hva er nytt?" :subheader "Forsiden"}]
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
-   ["/debug" {:name :r.debug :header "Feilsøking" :subheader "Baksiden"}]
+   ["/debug" {:name :r.debug :header "Booking Labs" :subheader "Baksiden"}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
    ["/om-meg" {:name :r.user :header "Om meg" :subheader "Baksiden"}]
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]

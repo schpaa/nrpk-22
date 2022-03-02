@@ -188,10 +188,14 @@
              schpaa.markdown/md->html
              st/prose-markdown-styles)]]]]]))
 
-(defn page-boundry [& c]
-  [err-boundary
-   [:div.max-w-mdx.mr-auto
-    c]])
+(defn page-boundry [r & c]
+  (let [page-title (-> r :data :header)]
+    [err-boundary
+     [sc/row-stretch {:class [:px-4 :py-8 :mx-auto]}
+      [sc/hero-p (or page-title "no-title")]
+      (booking.lab/main-menu)]
+     [:div.max-w-mdx.mr-auto
+      c]]))
 
 (declare menu-example-with-args standard-menu standard-menu-2)
 
@@ -231,21 +235,20 @@
 (def routing-table
   {:r.welcome
    (fn [r]
-     [page-boundry
+     [page-boundry r
       [db.signin/login]
       [welcome]])
 
    :r.forsiden
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry
-        ;[render-front-tabbar (:uid @user-auth)]
+       [page-boundry r
         [content.overview/overview]]))
 
    :r.new-booking
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry
+       [page-boundry r
         ;[render-front-tabbar (:uid @user-auth)]
         [booking.views/booking-form
          {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
@@ -259,7 +262,7 @@
    :r.booking-blog
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry
+       [page-boundry r
         ;[render-front-tabbar (:uid @user-auth)]
         [content.booking-blog/booking-blog
          {:fsm  {}
@@ -269,7 +272,7 @@
    :r.user
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [page-boundry
+       [page-boundry r
         [user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
         [user.views/my-info]]))
@@ -277,7 +280,7 @@
    :r.logg
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [page-boundry
+       [page-boundry r
         [user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
         (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :void)]
@@ -291,7 +294,9 @@
            [hoc/all-boats-footer {}]])]))
 
    :r.debug
-   (fn [r] [booking.lab/render r])
+   (fn [r]
+     [page-boundry r
+      [booking.lab/render r]])
 
    :r.page-not-found (fn [r] [:div "?"])})
 

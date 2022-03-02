@@ -1,5 +1,6 @@
 (ns booking.lab
   (:require [reagent.core :as r]
+            [kee-frame.core]
             [re-frame.core :as rf]
             [schpaa.style.ornament :as sc]
             [schpaa.style.booking]
@@ -9,6 +10,7 @@
             [booking.content.blog-support :refer [err-boundary]]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
+            [schpaa.style.menu]
             [fork.re-frame :as fork]
             [tick.core :as t]
             [schpaa.debug :as l]
@@ -215,90 +217,122 @@
 ;- [ ] todo close menu
 
 (defn better-mainmenu-definition [settings-atom]
-  ;[icon label action disabled value]
-  [[:menuitem {:icon      (sc/icon [:> solid/CollectionIcon])
-               :label     "Forsiden"
-               :highlight true
-               :action    #(js/alert "!")
-               :disabled  false
-               :value     #()}]
-   [:menuitem {:icon      (sc/icon [:> solid/NewspaperIcon])
-               :label     "Hva er nytt?"
-               :highlight false
-               :action    nil
-               :disabled  true
-               :value     #()}]
-   [:hr]
-   [:menuitem {:icon      (sc/icon [:> solid/PlusIcon])
-               :label     "Ny booking"
-               :highlight false
-               :action    nil
-               :disabled  false
-               :value     #()}]
-   [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
-               :label     "Mine bookinger"
-               :highlight false
-               :action    nil
-               :disabled  false
-               :value     #()}]
-   [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
-               :label     "Turlogg"
-               :highlight false
-               :action    nil
-               :disabled  true
-               :value     #()}]
-   [:hr]
-   [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
-               :label     "Regler"
-               :highlight false
-               :action    nil
-               :disabled  true
-               :value     #()}]
-   #_#_#_[:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
-                     "Badge"
-                     nil
-                     true
-                     #()]]
-           [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
+    ;[icon label action disabled value]
+    [[:menuitem {:icon      (sc/icon [:> solid/CollectionIcon])
+                 :label     "Forsiden"
+                 :highlight (= :r.forsiden current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/NewspaperIcon])
+                 :label     "Hva er nytt?"
+                 :highlight (= :r.booking-blog current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+                 :disabled  false
+                 :value     #()}]
+     [:hr]
+     [:menuitem {:icon      (sc/icon [:> solid/PlusIcon])
+                 :label     "Ny booking"
+                 :highlight (= :r.debug current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.debug]])
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
+                 :label     "Mine bookinger"
+                 :highlight false
+                 :action    nil
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
+                 :label     "Turlogg"
+                 :highlight false
+                 :action    nil
+                 :disabled  true
+                 :value     #()}]
+     [:hr]
+     [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
+                 :label     "Regler"
+                 :highlight false
+                 :action    nil
+                 :disabled  true
+                 :value     #()}]
+     [:hr]
+     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
+                 :label     "Autoclosing dialog"
+                 :highlight false
+                 :action    #(rf/dispatch [:lab/modal-example-dialog2 true])
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
+                 :label     "Form dialog"
+                 :highlight false
+                 :action    #(rf/dispatch [:lab/modal-example-dialog true])
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
+                 :label     "Open popover"
+                 :highlight false
+                 :action    nil
+                 :disabled  true
+                 :value     #()}]
+     #_#_#_[:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
                        "Badge"
                        nil
                        true
                        #()]]
-           [:menuitem [(sc/icon-large #_[:> solid/BadgeCheckIcon])
-                       "Badge"
-                       nil
-                       true
-                       #()]]
-   ])
+             [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
+                         "Badge"
+                         nil
+                         true
+                         #()]]
+             [:menuitem [(sc/icon-large #_[:> solid/BadgeCheckIcon])
+                         "Badge"
+                         nil
+                         true
+                         #()]]
+     ]))
+(rf/reg-sub :lab/modal-example-dialog :-> (fn [db] (get db :lab/modal-example-dialog false)))
+(rf/reg-event-db :lab/modal-example-dialog (fn [db [_ arg]] (if arg
+                                                              (assoc db :lab/modal-example-dialog arg)
+                                                              (update db :lab/modal-example-dialog (fnil not true)))))
+
+(rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
+(rf/reg-event-db :lab/modal-example-dialog2 (fn [db [_ arg]] (if arg
+                                                               (assoc db :lab/modal-example-dialog2 arg)
+                                                               (update db :lab/modal-example-dialog2 (fnil not true)))))
 
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom nil)]
     (let [toggle-mainmenu #(do (tap> "TOGGLE!") (swap! mainmenu-visible (fnil not false)))]
-      [schpaa.style.menu/mainmenu-example-with-args
-       {:close-button (fn [open] [scb/small-corner {:on-click #(do (tap> "toggle") #_((:toggle-mainmenu @settings-atom)))} [sc/icon [:> solid/XIcon]]])
-        :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
-        :button       (fn [open]
-                        [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]]
-                        )}])))
+      [:<>
+       [schpaa.style.menu/mainmenu-example-with-args
+        {:close-button (fn [open] [scb/small-corner {:on-click #(do (tap> "toggle") #_((:toggle-mainmenu @settings-atom)))} [sc/icon [:> solid/XIcon]]])
+         :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
+         :button       (fn [open]
+                         [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]]
+                         )}]])))
 
 (defn render [r]
-  (let [user-auth @(rf/subscribe [::db/user-auth])]
+  (let [mmm (rf/subscribe [:lab/modal-example-dialog])
+        user-auth @(rf/subscribe [::db/user-auth])]
     (r/with-let [settings (r/atom {:setting-1 false
                                    :setting-2 1
                                    :selection #{2 5}})]
       [page-boundry
        [:div.p-2.space-y-4.mt-4x.relative
-
-        [sc/row-stretch {:class [:p-4 :items-center]}
-         [sc/hero "Booking på Sjøbasen"]
-         (main-menu)]
+        [l/ppre-x @mmm @(rf/subscribe [:lab/modal-example-dialog2])]
 
         [schpaa.style.dialog/modal-example-with-timeout
+         (rf/subscribe [:lab/modal-example-dialog2])
+         #(rf/dispatch [:lab/modal-example-dialog2 false])
          [:<>
           [sc/title-p "Autoclosing message"]
           [sc/text-p "Your payment has been successfully submitted. We’ve sent you an email with all of the details of your order."]]]
 
-        [schpaa.style.dialog/modal-example false]
+        [schpaa.style.dialog/modal-example
+         (rf/subscribe [:lab/modal-example-dialog])
+         #(rf/dispatch [:lab/modal-example-dialog false])]
 
         [popover-sample]
 
