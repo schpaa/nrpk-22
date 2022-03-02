@@ -3,6 +3,8 @@
             [cljs.reader :refer [read-string]]
             [schpaa.state]))
 
+(goog-define VERSION "?")
+
 ;region initial-state
 
 (def start-db
