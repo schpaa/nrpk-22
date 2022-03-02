@@ -26,7 +26,7 @@
   (k/start! {:routes         routes,
              :initial-db     app-data/initial-db,
              :screen         nrpk.core/screen-breakpoints
-             :root-component [nrpk.spa/app-wrapper-sidebar spa/routing-table]
+             :root-component [nrpk.spa/app-wrapper-clean spa/routing-table]
              :not-found      "/not-found",
              :hash-routing?  false}))
 

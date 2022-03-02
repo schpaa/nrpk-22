@@ -227,3 +227,61 @@
        [dispatch-main-sidebar
         (when-let [page (get route-table @route-name)]
           (make-route-component page route))]]]]))
+
+(defn app-wrapper-clean
+  [route-table]
+  (let [user-auth (rf/subscribe [::db/user-auth])
+        route-name (rf/subscribe [:app/route-name])
+        route @(rf/subscribe [:kee-frame/route])
+        logged-in (some? @user-auth)
+        data [(when logged-in
+                {:login      true
+                 :route-name :r.user
+                 :icon       [:> solid/UserCircleIcon]
+                 :text       "meg"})
+              (when-not logged-in {:login false :route-name :r.welcome :icon [:> solid/LoginIcon] :text "login"})
+              (when-not logged-in :space)
+              (when logged-in {:login true :route-name :r.new-booking :icon [:> solid/PlusIcon] :text "ny"})
+              ;(when logged-in {:login true :route-name :r.forsiden :icon [:> solid/TicketIcon] :text "siste"})
+              {:login true :route-name :r.booking-blog :icon [:> solid/NewspaperIcon] :text "info" :badge "1"}
+              ;{:login true :route-name :r.logg :icon [:> solid/ViewListIcon] :text "logg"}
+              ;:space
+              {:login true :route-name :r.debug :icon [:> outline/BeakerIcon] :text "lab"}
+              :grow
+              {:login false :route-name :r.welcome :icon (schpaa.icon/adapt :command 3) :text "hjelp"}]
+
+        tab (fn [d]
+              (cond
+                (= :grow d) [:div.flex-grow]
+                (= :space d) [:div.h-4]
+                :else (when-let [{:keys [badge login icon text route-name]} d]
+                        [:div.relative
+                         (nicer-tab'
+                           {:available  (or (not login) (and login (some? @user-auth))) ;(or (not (or login (some? @user-auth))))
+                            :icon       icon
+                            :text       text
+                            :route-name route-name
+                            :selected   (= route-name (-> route :data :name))})
+                         (when (some? badge)
+                           [:div.absolute.top-px.left-px
+                            [:div.rounded-full.bg-white.text-black
+                             [:div.flex.items-center.justify-center.h-6.text-base.font-medium.font-oswald
+                              {:style {:aspect-ratio "1/1"}}
+                              badge]]])])))
+
+        body (aget (.getElementsByTagName js/document "body") 0)]
+    (.setAttribute body "class" "font-sans")
+    (.setAttribute body "style" "background-color:var(--surface0)")
+
+    #_[:div.fixed.inset-0
+       [:div.grid.h-full
+        {:style {:background            "var(--surface5)"
+                 :grid-template-columns "4rem 1fr"
+                 :grid-auto-rows        "1fr"}}
+        (into [:div.h-full.flex.flex-col.overflow-y-scroll.space-y-0]
+              (map tab data))]]
+    [:div.fixed.inset-0.overflow-y-auto                     ;.h-full.overflow-y-autox
+     {:style {:background "var(--surface2)"}}
+     [dispatch-main-sidebar
+      (when-let [page (get route-table @route-name)]
+        (make-route-component page route))]]))

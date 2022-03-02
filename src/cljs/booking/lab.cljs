@@ -18,7 +18,7 @@
 
 (defn page-boundry [& c]
   [err-boundary
-   c])
+   [:div.relative c]])
 
 (rf/reg-event-db :lab/show-popover (fn [db]
                                      (tap> (:lab/show-popover db))
@@ -216,39 +216,39 @@
 
 (defn better-mainmenu-definition [settings-atom]
   ;[icon label action disabled value]
-  [[:menuitem {:icon      (sc/icon [schpaa.icon/adapt :compass])
+  [[:menuitem {:icon      (sc/icon [:> solid/CollectionIcon])
                :label     "Forsiden"
                :highlight true
-               :action    nil
+               :action    #(js/alert "!")
                :disabled  false
                :value     #()}]
-   [:menuitem {:icon      (sc/icon [schpaa.icon/adapt :compass])
+   [:menuitem {:icon      (sc/icon [:> solid/NewspaperIcon])
                :label     "Hva er nytt?"
                :highlight false
                :action    nil
-               :disabled  false
+               :disabled  true
                :value     #()}]
-   [:menuitem {:icon      (sc/icon [schpaa.icon/adapt :compass])
+   [:hr]
+   [:menuitem {:icon      (sc/icon [:> solid/PlusIcon])
                :label     "Ny booking"
                :highlight false
                :action    nil
                :disabled  false
                :value     #()}]
-   [:hr]
-   [:menuitem {:icon      (sc/icon [schpaa.icon/adapt :compass])
+   [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
                :label     "Mine bookinger"
                :highlight false
                :action    nil
                :disabled  false
                :value     #()}]
-   [:menuitem {:icon      (sc/icon [schpaa.icon/adapt :compass])
+   [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
                :label     "Turlogg"
                :highlight false
                :action    nil
-               :disabled  false
+               :disabled  true
                :value     #()}]
    [:hr]
-   [:menuitem {:icon      (sc/icon [schpaa.icon/adapt :compass])
+   [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
                :label     "Regler"
                :highlight false
                :action    nil
@@ -287,7 +287,8 @@
                                    :setting-2 1
                                    :selection #{2 5}})]
       [page-boundry
-       [:div.p-2.space-y-4.mt-4
+       [:div.p-2.space-y-4.mt-4x.relative
+
         [sc/row-stretch {:class [:p-4 :items-center]}
          [sc/hero "Booking på Sjøbasen"]
          (main-menu)]
