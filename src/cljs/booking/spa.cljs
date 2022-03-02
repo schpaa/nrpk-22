@@ -37,7 +37,8 @@
             [schpaa.style.button :as scb]
             [fork.re-frame :as fork]
             [schpaa.style.popover]
-            [booking.lab]))
+            [booking.lab]
+            [booking.common-views :refer [page-boundry main-menu]]))
 
 
 ;region related to flex-date and how to display relative time
@@ -187,15 +188,6 @@
              inline
              schpaa.markdown/md->html
              st/prose-markdown-styles)]]]]]))
-
-(defn page-boundry [r & c]
-  (let [page-title (-> r :data :header)]
-    [err-boundary
-     [sc/row-stretch {:class [:px-4 :py-8 :mx-auto]}
-      [sc/hero-p (or page-title "no-title")]
-      (booking.lab/main-menu)]
-     [:div.max-w-mdx.mr-auto
-      c]]))
 
 (declare menu-example-with-args standard-menu standard-menu-2)
 

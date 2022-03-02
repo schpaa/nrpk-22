@@ -13,18 +13,15 @@
             [schpaa.style.menu]
             [fork.re-frame :as fork]
             [tick.core :as t]
+            [booking.common-views :refer [page-boundry main-menu]]
             [schpaa.debug :as l]
             [schpaa.style.button :as scb]
             [schpaa.style.dialog]
             [booking.views]))
 
-(defn page-boundry [& c]
-  [err-boundary
-   [:div.relative c]])
-
 (rf/reg-event-db :lab/show-popover (fn [db]
                                      (tap> (:lab/show-popover db))
-                                     (update db :lab/show-popover (fnil not true))))
+                                     (update db :lab/show-popover (fnil not false))))
 (rf/reg-sub :lab/show-popover (fn [db] (get db :lab/show-popover false)))
 
 (defn popover-sample []
@@ -214,104 +211,18 @@
     :selected false}])
 
 
-;- [ ] todo close menu
 
-(defn better-mainmenu-definition [settings-atom]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-    ;[icon label action disabled value]
-    [[:menuitem {:icon      (sc/icon [:> solid/CollectionIcon])
-                 :label     "Forsiden"
-                 :highlight (= :r.forsiden current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/NewspaperIcon])
-                 :label     "Hva er nytt?"
-                 :highlight (= :r.booking-blog current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-                 :disabled  false
-                 :value     #()}]
-     [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/PlusIcon])
-                 :label     "Ny booking"
-                 :highlight (= :r.debug current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.debug]])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
-                 :label     "Mine bookinger"
-                 :highlight false
-                 :action    nil
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
-                 :label     "Turlogg"
-                 :highlight false
-                 :action    nil
-                 :disabled  true
-                 :value     #()}]
-     [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
-                 :label     "Regler"
-                 :highlight false
-                 :action    nil
-                 :disabled  true
-                 :value     #()}]
-     [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
-                 :label     "Autoclosing dialog"
-                 :highlight false
-                 :action    #(rf/dispatch [:lab/modal-example-dialog2 true])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
-                 :label     "Form dialog"
-                 :highlight false
-                 :action    #(rf/dispatch [:lab/modal-example-dialog true])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
-                 :label     "Open popover"
-                 :highlight false
-                 :action    nil
-                 :disabled  true
-                 :value     #()}]
-     #_#_#_[:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
-                       "Badge"
-                       nil
-                       true
-                       #()]]
-             [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
-                         "Badge"
-                         nil
-                         true
-                         #()]]
-             [:menuitem [(sc/icon-large #_[:> solid/BadgeCheckIcon])
-                         "Badge"
-                         nil
-                         true
-                         #()]]
-     ]))
 (rf/reg-sub :lab/modal-example-dialog :-> (fn [db] (get db :lab/modal-example-dialog false)))
+
 (rf/reg-event-db :lab/modal-example-dialog (fn [db [_ arg]] (if arg
                                                               (assoc db :lab/modal-example-dialog arg)
                                                               (update db :lab/modal-example-dialog (fnil not true)))))
 
 (rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
+
 (rf/reg-event-db :lab/modal-example-dialog2 (fn [db [_ arg]] (if arg
                                                                (assoc db :lab/modal-example-dialog2 arg)
                                                                (update db :lab/modal-example-dialog2 (fnil not true)))))
-
-(defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom nil)]
-    (let [toggle-mainmenu #(do (tap> "TOGGLE!") (swap! mainmenu-visible (fnil not false)))]
-      [:<>
-       [schpaa.style.menu/mainmenu-example-with-args
-        {:close-button (fn [open] [scb/small-corner {:on-click #(do (tap> "toggle") #_((:toggle-mainmenu @settings-atom)))} [sc/icon [:> solid/XIcon]]])
-         :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
-         :button       (fn [open]
-                         [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]]
-                         )}]])))
 
 (defn render [r]
   (let [mmm (rf/subscribe [:lab/modal-example-dialog])
@@ -319,9 +230,9 @@
     (r/with-let [settings (r/atom {:setting-1 false
                                    :setting-2 1
                                    :selection #{2 5}})]
-      [page-boundry
-       [:div.p-2.space-y-4.mt-4x.relative
-        [l/ppre-x @mmm @(rf/subscribe [:lab/modal-example-dialog2])]
+      [:<>
+       [:div.p-2.space-y-4.relative
+        ;[l/ppre-x @mmm @(rf/subscribe [:lab/modal-example-dialog2])]
 
         [schpaa.style.dialog/modal-example-with-timeout
          (rf/subscribe [:lab/modal-example-dialog2])
