@@ -368,7 +368,7 @@
           [:div.space-y-2
            [sc/row {:class [:gap-4 :flex-wrap]}
 
-            [sc/col {:class [:w-48 :gap-1]}
+            [sc/col {:class [:w-40 :gap-1]}
              [sc/row {:class [:gap-2]}
               [sc/label "Fra dato"]
               (if (:start-date errors)
@@ -426,7 +426,7 @@
                (try (some-> (values :start-date) t/date) (catch js/Error _ nil))
                data]]]]
            [sc/row {:class [:gap-4 :flex-wrap]}
-            [sc/col {:class [:w-48 :gap-1]}
+            [sc/col {:class [:w-40 :gap-1]}
              [sc/row {:class [:gap-2]}
               [sc/label "Til dato"]
               (if (:start-time errors)

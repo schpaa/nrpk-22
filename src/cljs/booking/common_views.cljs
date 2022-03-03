@@ -69,21 +69,44 @@
                  :disabled  true
                  :value     #()}]]))
 
+(defn bottom-menu-definition [settings-atom]
+  [[:header [sc/row {:class [:justify-between :items-end]}
+             [sc/title "Top"]
+             [sc/pill (or booking.data/VERSION "dev.x.y")]]]
+   [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
+               "Badge"
+               nil
+               true
+               #()]]
+   [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
+
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom nil)]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))]
       [:<>
        [scm/mainmenu-example-with-args
-        {:close-button (fn [open] [scb/small-corner {:on-click #()} [sc/icon [:> solid/XIcon]]])
+        {:dir          :down
+         :close-button (fn [open] [scb/small-corner {:on-click #()} [sc/icon [:> solid/XIcon]]])
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
                          [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]])}]])))
+
+(defn bottom-menu []
+  (r/with-let [main-visible (r/atom nil)]
+    (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
+      [scm/naked-menu-example-with-args
+       {:dir    :up
+        :data   (bottom-menu-definition (r/atom nil))
+        :button (fn [open]
+                  [scb/corner {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
 (defn page-boundry [r & c]
   (let [page-title (-> r :data :header)]
     [err-boundary
      [:div.lg:max-w-6xl.md:max-w-3xl.max-w-sm.mx-auto
-      [sc/row-stretch {:class [:px-4 :py-8 :mx-auto :items-baseline]}
+      [sc/row-stretch {:class [:px-6 :py-8 :mx-auto :items-baseline]}
        [sc/hero-p (or page-title "no-title")]
        (main-menu)]
-      c]]))
+      c
+      [sc/row-end {:class [:p-6]}
+       (bottom-menu)]]]))

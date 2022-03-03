@@ -17,7 +17,8 @@
             [schpaa.debug :as l]
             [schpaa.style.button :as scb]
             [schpaa.style.dialog]
-            [booking.views]))
+            [booking.views]
+            [clojure.set :as set]))
 
 (rf/reg-event-db :lab/show-popover (fn [db]
                                      (tap> (:lab/show-popover db))
@@ -110,7 +111,7 @@
               true
               #()]])))
 
-(defn better-menu-definition [settings-atom]
+(defn timeinput-shortcuts-definition [settings-atom]
   [[:header [sc/row {:class [:justify-between :items-end]}
              [sc/title "Top"]
              [sc/pill (or booking.data/VERSION "dev.x.y")]]]
@@ -124,47 +125,93 @@
 (defn time-input-form []
   (r/with-let [lightning-visible (r/atom nil)]
     (let [toggle-lightning #(swap! lightning-visible (fnil not false))]
-      [:div
-       ;[l/ppre lightning-visible]
-       [fork/form {:initial-values    {:start-date  (str (t/new-date))
-                                       :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration -2 :hours)) :hours))
-                                       ;todo adjust for 22-23
-                                       ;:end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
-                                       :end-date    (str (t/new-date))
-                                       :id          0
-                                       :description ""}
-                   :form-id           "sample-form"
-                   :prevent-default?  true
-                   :state             (r/atom {})
-                   :clean-on-unmount? true
-                   :keywordize-keys   true
-                   :on-submit         (fn [e] (tap> e))
-                   :validation        time-input-validation}
+      [fork/form {:initial-values    {:start-date  (str (t/new-date))
+                                      :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration -2 :hours)) :hours))
+                                      ;todo adjust for 22-23
+                                      ;:end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
+                                      :end-date    (str (t/new-date))
+                                      :id          0
+                                      :description ""}
+                  :form-id           "sample-form"
+                  :prevent-default?  true
+                  :state             (r/atom {})
+                  :clean-on-unmount? true
+                  :keywordize-keys   true
+                  :on-submit         (fn [e] (tap> e))
+                  :validation        time-input-validation}
 
-        (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
-          [sc/surface-a {:class [:min-w-fit :xoverflow-x-auto]}
+       (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
+         [sc/surface-a {:class [:p-4 :min-w-fit]}
+          [sc/col {:class [:space-y-4]}
+
+           #_[:div.z-50.mb-10x
+              [schpaa.style.menu/naked-menu-example-with-args
+               {:dir    :down
+                :data   (timeinput-shortcuts-definition (r/atom nil))
+                :button (fn [open]
+                          [scb/corner {:on-click toggle-lightning} [sc/icon [:> outline/LightningBoltIcon]]])}]]
+
            [sc/row
             [:form.space-y-1.w-full
              {:id        form-id
               :on-submit handle-submit}
              [sc/row {:class [:shrink-0]}
               [booking.views/time-input props false]
-              [:div.relative.absolute.top-1.right-1.px-2.z-500]]]
-            [sc/col {:class [:justify-between]}
-             [:div.relative
-              ;[scb/corner {:on-click toggle-lightning} [sc/icon [:> outline/LightningBoltIcon]]]
-              [schpaa.style.menu/naked-menu-example-with-args
-               {:dir    :down
-                :data   (better-menu-definition (r/atom nil)) #_(complex-menu (r/atom nil))
-                ;:always-show false
-                :button (fn [open]
-                          [scb/corner {:on-click toggle-lightning} [sc/icon [:> outline/LightningBoltIcon]]]
-                          #_[scb/normal-floating
-                             ;{:class [:w-32]}
-                             [sc/row {:class [:gap-4 :px-2]}
-                              [sc/text "Visning"]
-                              [sc/icon [:> (if open outline/XIcon outline/ChevronDownIcon)]]]])}]]
-             [scb/corner {} [sc/icon [:> solid/DotsHorizontalIcon] #_[sc/corner-symbol "A"]]]]]])]])))
+              [:div.relative.absolute.top-1.right-1.px-2.z-500]]]]]])])))
+
+
+(def type-data
+  [{:type        5000
+    :category    "Grønnlandskayakk"
+    :material    "Epoxy"
+    :stability   4
+    :description "Ufattelig lang beskrivelse som går over flere linjer og som sier en hel drøss om hva dette er godt for og at du burde prøve den!"
+    :brand       "Rebel Naja"
+    :weight      "33 kg"
+    :width       "50 cm"
+    :length      "490 cm"}
+   {:type      3100
+    :category  "Havkayakk"
+    :material  "Plast"
+    :stability 1
+    ;:description ""
+    :brand     "P3 Baffin Boreal"
+    ;:weight      "23 kg"
+    :width     "50 cm"
+    :length    "490 cm"}
+   {:type      3200
+    :category  "Tomahawk"
+    :material  "Plast"
+    :stability 1
+    ;:description ""
+    :brand     "P3 Baffin Boreal"
+    ;:weight      "23 kg"
+    :width     "50 cm"
+    :length    "490 cm"}
+   {:type      4100
+    :category  "Testthing"
+    :material  "Plast"
+    :stability 1
+    ;:description ""
+    :brand     "P3 Baffin Boreal"
+    ;:weight      "23 kg"
+    :width     "50 cm"
+    :length    "490 cm"}])
+
+(def card-data-v2
+  [{:id 100 :loc "C3" :number "310" :type 5000}
+   {:id 102 :loc "C4" :number "313" :type 5000}
+   {:id 210 :loc "A2" :number "439" :type 3100}
+   {:id 211 :loc "A2" :number "439" :type 3200}
+   {:id 212 :loc "A2" :number "212" :type 3200}
+   {:id 412 :loc "A2" :number "412" :type 4100}
+   {:id 413 :loc "A2" :number "413" :type 4100}
+   {:id 414 :loc "A2" :number "414" :type 4100}
+   {:id 415 :loc "A2" :number "415" :type 4100}])
+
+(comment
+  (do
+    (group-by :type (card-data-v2))))
 
 (def card-data
   [{:content  {:category    "Grønnlandskayakk"
@@ -245,12 +292,34 @@
          (rf/subscribe [:lab/modal-example-dialog])
          #(rf/dispatch [:lab/modal-example-dialog false])]
 
-        [popover-sample]
+        ;[popover-sample]
 
-        [time-input-form]
+        [:div.sticky.top-0.z-50
+         [time-input-form]]
 
-        [sc/grid-wide {:class [:gap-4 :place-content-center]}
-         (map schpaa.style.booking/line card-data)]]])))
+        #_[sc/grid-wide {:class [:gap-1 :place-content-center]}
+           (map schpaa.style.booking/line (map #(assoc % :expanded true) (flatten (repeat 11 card-data))))]
+
+        (r/with-let [state (r/atom {:expanded #{5000}
+                                    :selected #{413 414}})]
+          [sc/grid-wide {:class [:gap-2 :place-content-center]}
+           (doall (for [[type data] (group-by :type card-data-v2)]
+                    [sc/surface-e {:class [:p-2]}
+                     [:div.space-y-2
+                      [schpaa.style.booking/collapsable-type-card
+                       {:on-click #(swap! state update :expanded (fn [e] (if (some #{type} e)
+                                                                           (set/difference e #{type})
+                                                                           (set/union e #{type}))))
+                        :expanded (some #{type} (:expanded @state))
+                        :content  (first (get (group-by :type type-data) type))}]
+                      (for [{:keys [id] :as each} data]
+                        [:div.pl-4x [schpaa.style.booking/line-with-graph
+                                     {:selected (some #{id} (:selected @state))
+                                      :content  each
+                                      :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
+                                                                                         (set/difference e #{id})
+                                                                                         (set/union e #{id}))))}]])]]))])]])))
+
 
 (comment
   #_[:div.px-4.space-y-4
