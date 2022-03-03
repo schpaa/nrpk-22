@@ -443,7 +443,7 @@
               (if (:end-time errors)
                 [sc/label-error (first (:end-time errors))])]
              [sci/date {:type      "time"
-                        :values    values
+                        :value     (:end-time values)
                         :on-change handle-change
                         :errors    (:end-time errors)
                         :name      :end-time}]]]]]]]]]]))

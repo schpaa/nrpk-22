@@ -53,26 +53,27 @@
 
 
 (defn time-input-validation [e]
-  {:start-date (cond-> nil
-                 (empty? (:start-date e)) ((fnil conj []) "mangler")
-                 (and (not (empty? (:start-date e)))
-                      (some #{(tick.alpha.interval/relation
-                                (t/date (:start-date e)) (t/date))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+  (into {} (remove (comp nil? val)
+                   {:start-date (cond-> nil
+                                  (empty? (:start-date e)) ((fnil conj []) "mangler")
+                                  (and (not (empty? (:start-date e)))
+                                       (some #{(tick.alpha.interval/relation
+                                                 (t/date (:start-date e)) (t/date))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
 
-   :start-time (cond-> nil
-                 (empty? (:start-time e)) ((fnil conj []) "mangler")
-                 (and (not (empty? (:start-date e)))
-                      (not (empty? (:start-time e)))
-                      (some #{(tick.alpha.interval/relation
-                                (t/at (t/date (:start-date e)) (t/time (:start-time e)))
-                                (t/date-time (t/now)))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
-   :end-time   (cond-> nil
-                 (empty? (:end-time e)) ((fnil conj []) "mangler")
-                 (and (not (empty? (:start-date e)))
-                      (not (empty? (:end-time e)))
-                      (some #{(tick.alpha.interval/relation
-                                (t/at (t/date (:end-date e)) (t/time (:end-time e)))
-                                (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "er før 'fra kl'"))})
+                    :start-time (cond-> nil
+                                  (empty? (:start-time e)) ((fnil conj []) "mangler")
+                                  (and (not (empty? (:start-date e)))
+                                       (not (empty? (:start-time e)))
+                                       (some #{(tick.alpha.interval/relation
+                                                 (t/at (t/date (:start-date e)) (t/time (:start-time e)))
+                                                 (t/date-time (t/now)))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+                    :end-time   (cond-> nil
+                                  (empty? (:end-time e)) ((fnil conj []) "mangler")
+                                  (and (not (empty? (:start-date e)))
+                                       (not (empty? (:end-time e)))
+                                       (some #{(tick.alpha.interval/relation
+                                                 (t/at (t/date (:end-date e)) (t/time (:end-time e)))
+                                                 (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "er før 'fra kl'"))})))
 
 (defn standard-menu-2 [data]
   [[(sc/icon-large [:> solid/TrashIcon]) "Fjern alle" #()]
@@ -122,19 +123,20 @@
                #()]]
    [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
 
-(defn time-input-form []
+(defn time-input-form [time-state]
   (r/with-let [lightning-visible (r/atom nil)]
     (let [toggle-lightning #(swap! lightning-visible (fnil not false))]
       [fork/form {:initial-values    {:start-date  (str (t/new-date))
-                                      :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration -2 :hours)) :hours))
+                                      :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
                                       ;todo adjust for 22-23
-                                      ;:end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
+                                      :end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 3 :hours)) :hours))
                                       :end-date    (str (t/new-date))
                                       :id          0
                                       :description ""}
                   :form-id           "sample-form"
+
                   :prevent-default?  true
-                  :state             (r/atom {})
+                  :state             time-state
                   :clean-on-unmount? true
                   :keywordize-keys   true
                   :on-submit         (fn [e] (tap> e))
@@ -257,6 +259,12 @@
     :expanded true
     :selected false}])
 
+(rf/reg-sub :lab/confirm-booking :-> (fn [db] (get db :lab/confirm-booking false)))
+
+(rf/reg-event-db :lab/confirm-booking (fn [db [_ arg]] (if arg
+                                                         (assoc db :lab/confirm-booking arg)
+                                                         (update db :lab/confirm-booking (fnil not true)))))
+
 
 
 (rf/reg-sub :lab/modal-example-dialog :-> (fn [db] (get db :lab/modal-example-dialog false)))
@@ -272,11 +280,22 @@
                                                                (update db :lab/modal-example-dialog2 (fnil not true)))))
 
 (defn render [r]
-  (let [mmm (rf/subscribe [:lab/modal-example-dialog])
+  (let [;mmm (rf/subscribe [:lab/modal-example-dialog])
         user-auth @(rf/subscribe [::db/user-auth])]
     (r/with-let [settings (r/atom {:setting-1 false
                                    :setting-2 1
-                                   :selection #{2 5}})]
+                                   :selection #{2 5}})
+                 time-state (r/atom nil)
+                 state (r/atom {:expanded #{}
+                                :selected #{100
+                                            ;102
+                                            ;210
+                                            ;211
+                                            ;212
+                                            ;412
+                                            ;413
+                                            ;414
+                                            415}})]
       [:<>
        [:div.p-2.space-y-4.relative
         ;[l/ppre-x @mmm @(rf/subscribe [:lab/modal-example-dialog2])]
@@ -292,33 +311,82 @@
          (rf/subscribe [:lab/modal-example-dialog])
          #(rf/dispatch [:lab/modal-example-dialog false])]
 
-        ;[popover-sample]
+        [schpaa.style.dialog/modal-example-2
+         (let [cdv2 (group-by :id card-data-v2)]
+           [sc/col {:class [:space-y-4]}
+            [sc/row [sc/title-p "Bekreft booking"]]
+            [sc/surface-e {:style {:max-height "16rem"}
+                           :class [:p-2 :overflow-y-auto]}
+             [sc/col {:class [:space-y-4]}
+
+              [sc/grid-wide {:class [:gap-2]}
+               (for [e (:selected @state)
+                     :let [type (:type (first (get cdv2 e)))]]
+                 [schpaa.style.booking/selection-with-badges
+                  {:content
+                   (conj (first (get cdv2 e))
+                         (first (get (group-by :type type-data) type)))}])]]]])
+
+         (rf/subscribe [:lab/confirm-booking])
+         #(rf/dispatch [:lab/confirm-booking false])]
 
         [:div.sticky.top-0.z-50
-         [time-input-form]]
+         [time-input-form time-state]]
 
         #_[sc/grid-wide {:class [:gap-1 :place-content-center]}
            (map schpaa.style.booking/line (map #(assoc % :expanded true) (flatten (repeat 11 card-data))))]
 
-        (r/with-let [state (r/atom {:expanded #{5000}
-                                    :selected #{413 414}})]
-          [sc/grid-wide {:class [:gap-2 :place-content-center]}
-           (doall (for [[type data] (group-by :type card-data-v2)]
-                    [sc/surface-e {:class [:p-2]}
-                     [:div.space-y-2
-                      [schpaa.style.booking/collapsable-type-card
-                       {:on-click #(swap! state update :expanded (fn [e] (if (some #{type} e)
-                                                                           (set/difference e #{type})
-                                                                           (set/union e #{type}))))
-                        :expanded (some #{type} (:expanded @state))
-                        :content  (first (get (group-by :type type-data) type))}]
-                      (for [{:keys [id] :as each} data]
-                        [:div.pl-4x [schpaa.style.booking/line-with-graph
-                                     {:selected (some #{id} (:selected @state))
-                                      :content  each
-                                      :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
-                                                                                         (set/difference e #{id})
-                                                                                         (set/union e #{id}))))}]])]]))])]])))
+        [:<>
+
+
+         [sc/grid-wide {:class [:gap-2 :place-content-center]}
+          (doall (for [[type data] (group-by :type card-data-v2)]
+                   [sc/surface-e {:class [:p-2]}
+                    [:div.space-y-2
+                     [schpaa.style.booking/collapsable-type-card
+                      {:on-click #(swap! state update :expanded (fn [e] (if (some #{type} e)
+                                                                          (set/difference e #{type})
+                                                                          (set/union e #{type}))))
+                       :expanded (some #{type} (:expanded @state))
+                       :content  (first (get (group-by :type type-data) type))}]
+                     (for [{:keys [id] :as each} data]
+                       [:div.pl-4x [schpaa.style.booking/line-with-graph
+                                    {:selected (some #{id} (:selected @state))
+                                     :content  each
+                                     :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
+                                                                                        (set/difference e #{id})
+                                                                                        (set/union e #{id}))))}]])]]))]
+
+
+         (let [valid-registry? (and (empty? (time-input-validation (:values @time-state)))
+                                    (not (empty? (:selected @state))))]
+           [:<>
+            #_[l/ppre-x
+               (:selected @state)
+               (not (empty? (:selected @state)))
+               (:values @time-state)
+               valid-registry?
+               (time-input-validation (:values @time-state))]
+
+            [sc/row-end
+             [scb/button-cta {:disabled (not valid-registry?)
+                              :on-click #(rf/dispatch [:lab/confirm-booking true])
+                              :class    [:px-8 :py-4]} "Book nå!"]]])
+         #_(let [cdv2 (group-by :id card-data-v2)]
+             [sc/col {:class [:space-y-4]}
+              [sc/row [sc/title "Bekreft booking av"]]
+              [sc/surface-e {:class [:p-2]}
+               [sc/col {:class [:space-y-4]}
+
+                [sc/grid-wide {:class [:gap-2]}
+                 (for [e (:selected @state)
+                       :let [type (:type (first (get cdv2 e)))]]
+                   [schpaa.style.booking/selection-with-badges
+                    {:content
+                     (conj (first (get cdv2 e))
+                           (first (get (group-by :type type-data) type)))}])]
+                [sc/row-end
+                 [scb/button-cta {:class [:px-8 :py-4]} "Book nå!"]]]]])]]])))
 
 
 (comment

@@ -445,7 +445,7 @@ body {
 .schpaa_style_ornament__surface_b_sans_bg{padding:.5rem;border-radius:var(--radius-2)}
 .schpaa_style_ornament__surface_d{background:var(--surface00);border-radius:var(--radius-2)}
 .schpaa_style_ornament__surface_c{overflow:hidden;box-shadow:var(--inner-shadow-1);background:var(--surface3);border-radius:var(--radius-2)}
-.schpaa_style_ornament__grid_wide{display:grid;grid-auto-flow:row dense;column-gap:4px;row-gap:4px;grid-template-columns:repeat(auto-fit,minmax(21rem,1fr))}
+.schpaa_style_ornament__grid_wide{display:grid;grid-auto-flow:row dense;column-gap:4px;row-gap:4px;grid-template-columns:repeat(auto-fill,minmax(21rem,1fr))}
 .schpaa_style_ornament__icon{width:1.5rem;height:1.5rem}
 .schpaa_style_ornament__icon_large{width:2rem;height:2rem}
 .schpaa_style_ornament__col{display:flex;flex-direction:column}
@@ -530,3 +530,4 @@ body {
 
 .schpaa_style_booking__line_with_graph .selected{background:var(--brand1)}.schpaa_style_booking__line_with_graph .normal{background:var(--surface1)}
 .schpaa_style_ornament__surface_e{padding:1rem;background:var(--surface000);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
+.schpaa_style_booking__selection_with_badges .selected{background:var(--brand1)}
