@@ -249,7 +249,7 @@
 
         [time-input-form]
 
-        [sc/grid-wide {:class [:gap-4]}
+        [sc/grid-wide {:class [:gap-4 :place-content-center]}
          (map schpaa.style.booking/line card-data)]]])))
 
 (comment

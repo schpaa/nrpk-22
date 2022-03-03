@@ -71,10 +71,10 @@
 
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom nil)]
-    (let [toggle-mainmenu #(do (tap> "TOGGLE!") (swap! mainmenu-visible (fnil not false)))]
+    (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))]
       [:<>
        [scm/mainmenu-example-with-args
-        {:close-button (fn [open] [scb/small-corner {:on-click #(do (tap> "toggle") #_((:toggle-mainmenu @settings-atom)))} [sc/icon [:> solid/XIcon]]])
+        {:close-button (fn [open] [scb/small-corner {:on-click #()} [sc/icon [:> solid/XIcon]]])
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
                          [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]])}]])))
@@ -82,8 +82,8 @@
 (defn page-boundry [r & c]
   (let [page-title (-> r :data :header)]
     [err-boundary
-     [sc/row-stretch {:class [:px-4 :py-8 :mx-auto :items-baseline]}
-      [sc/hero-p (or page-title "no-title")]
-      (main-menu)]
-     [:div.max-w-mdx.mr-auto
+     [:div.lg:max-w-6xl.md:max-w-3xl.max-w-sm.mx-auto
+      [sc/row-stretch {:class [:px-4 :py-8 :mx-auto :items-baseline]}
+       [sc/hero-p (or page-title "no-title")]
+       (main-menu)]
       c]]))
