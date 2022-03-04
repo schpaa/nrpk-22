@@ -1774,6 +1774,10 @@ h2 {
   right: 0.25rem;
 }
 
+.top-0 {
+  top: 0px;
+}
+
 .top-16 {
   top: 4rem;
 }
@@ -1788,10 +1792,6 @@ h2 {
 
 .top-28 {
   top: 7rem;
-}
-
-.top-0 {
-  top: 0px;
 }
 
 .top-44 {
@@ -2144,16 +2144,16 @@ h2 {
   width: 100%;
 }
 
-.w-10 {
-  width: 2.5rem;
-}
-
 .w-auto {
   width: auto;
 }
 
 .w-24 {
   width: 6rem;
+}
+
+.w-10 {
+  width: 2.5rem;
 }
 
 .w-6 {
@@ -2164,12 +2164,16 @@ h2 {
   width: 1rem;
 }
 
-.w-48 {
-  width: 12rem;
+.w-40 {
+  width: 10rem;
 }
 
 .w-32 {
   width: 8rem;
+}
+
+.w-48 {
+  width: 12rem;
 }
 
 .w-2 {
@@ -2194,10 +2198,6 @@ h2 {
 
 .w-64 {
   width: 16rem;
-}
-
-.w-40 {
-  width: 10rem;
 }
 
 .w-44 {
@@ -2475,12 +2475,12 @@ h2 {
   justify-content: space-around;
 }
 
-.gap-2 {
-  gap: 0.5rem;
-}
-
 .gap-1 {
   gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
 }
 
 .gap-4 {
@@ -2499,10 +2499,6 @@ h2 {
   gap: 2rem;
 }
 
-.gap-6 {
-  gap: 1.5rem;
-}
-
 .gap-x-2 {
   -moz-column-gap: 0.5rem;
        column-gap: 0.5rem;
@@ -2519,6 +2515,12 @@ h2 {
   margin-bottom: calc(1px * var(--tw-space-y-reverse));
 }
 
+.space-y-1 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
+}
+
 .space-y-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
@@ -2529,12 +2531,6 @@ h2 {
   --tw-space-y-reverse: 0;
   margin-top: calc(0px * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0px * var(--tw-space-y-reverse));
-}
-
-.space-y-1 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
 }
 
 .space-y-4 > :not([hidden]) ~ :not([hidden]) {
@@ -2807,11 +2803,6 @@ h2 {
   background-color: rgb(245 245 244 / var(--tw-bg-opacity));
 }
 
-.bg-gray-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(120 113 108 / var(--tw-bg-opacity));
-}
-
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
@@ -2944,6 +2935,11 @@ h2 {
   background-color: rgb(136 19 55 / var(--tw-bg-opacity));
 }
 
+.bg-gray-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(120 113 108 / var(--tw-bg-opacity));
+}
+
 .bg-alt-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(104 167 61 / var(--tw-bg-opacity));
@@ -3063,10 +3059,6 @@ h2 {
   padding: 0.25rem;
 }
 
-.p-6 {
-  padding: 1.5rem;
-}
-
 .p-2 {
   padding: 0.5rem;
 }
@@ -3087,23 +3079,9 @@ h2 {
   padding: 1.75rem;
 }
 
-.p-8 {
-  padding: 2rem;
-}
-
-.px-2 {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.px-6 {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
-.py-8 {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .px-4 {
@@ -3116,6 +3094,16 @@ h2 {
   padding-bottom: 0.25rem;
 }
 
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
 .px-3 {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
@@ -3124,11 +3112,6 @@ h2 {
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-}
-
-.py-4 {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
 }
 
 .px-px {
@@ -3146,13 +3129,12 @@ h2 {
   padding-right: 0.25rem;
 }
 
-.px-8 {
-  padding-left: 2rem;
-  padding-right: 2rem;
+.pb-8 {
+  padding-bottom: 2rem;
 }
 
-.pl-4 {
-  padding-left: 1rem;
+.pt-4 {
+  padding-top: 1rem;
 }
 
 .pt-16 {
@@ -3171,10 +3153,6 @@ h2 {
   padding-left: 0.5rem;
 }
 
-.pt-4 {
-  padding-top: 1rem;
-}
-
 .pr-2 {
   padding-right: 0.5rem;
 }
@@ -3185,10 +3163,6 @@ h2 {
 
 .pt-2 {
   padding-top: 0.5rem;
-}
-
-.pb-8 {
-  padding-bottom: 2rem;
 }
 
 .pt-px {
@@ -4414,11 +4388,6 @@ h2 {
   background-color: rgb(20 92 62 / var(--tw-bg-opacity));
 }
 
-.dark .dark\:bg-gray-900 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(28 25 23 / var(--tw-bg-opacity));
-}
-
 .dark .dark\:bg-gray-700 {
   --tw-bg-opacity: 1;
   background-color: rgb(68 64 60 / var(--tw-bg-opacity));
@@ -4432,6 +4401,11 @@ h2 {
 .dark .dark\:bg-gray-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(87 83 78 / var(--tw-bg-opacity));
+}
+
+.dark .dark\:bg-gray-900 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(28 25 23 / var(--tw-bg-opacity));
 }
 
 .dark .dark\:bg-black {

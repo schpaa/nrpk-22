@@ -1,44 +1,33 @@
 (ns booking.spa
-  (:require [re-frame.core :as rf]
-            [reagent.core :as r]
-            [re-statecharts.core :as rs]
-            [kee-frame.router]
-            [kee-frame.core :as k]
-            [cljs.pprint :refer [pprint]]
-            [booking.data :as data :refer [start-db]]
-            [schpaa.components.views :as views :refer [rounded-view]]
-            [schpaa.components.tab :refer [tab]]
-            [schpaa.time]
-            [schpaa.darkmode]
-            [nrpk.fsm-helpers :as state :refer [send]]
+  (:require [booking.common-views :refer [main-menu page-boundry]]
+            [booking.content.booking-blog :as content.booking-blog :refer [render]]
+            [booking.content.overview :as content.overview]
+            [booking.hoc :as hoc]
+            [booking.lab]
+            [booking.views]
             [db.core :as db]
             [db.signin]
             [eykt.content.pages]
-            [booking.views]
-            [user.views]
-            [booking.hoc :as hoc]
-            [shadow.resource :refer [inline]]
-            [schpaa.style :as st]
-            [booking.content.booking-blog :as content.booking-blog :refer [booking-blog]]
-            [booking.content.overview :as content.overview]
-            [schpaa.debug :as l]
-            [schpaa.button :as bu]
-            [tick.core :as t]
             [eykt.content.rapport-side]
-            [booking.content.blog-support :refer [err-boundary]]
-
+            [kee-frame.router]
+            [nrpk.fsm-helpers :refer [send]]
+            [re-frame.core :as rf]
+            [schpaa.button :as bu]
+            [schpaa.components.tab :refer [tab]]
+            [schpaa.components.views :refer [rounded-view]]
+            [schpaa.darkmode]
+            [schpaa.debug :as l]
+            [shadow.resource :refer [inline]]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
-            [lambdaisland.ornament :as o]
-            [schpaa.style.ornament :as sc]
-            [schpaa.style.menu]
+            [schpaa.style :as st]
             [schpaa.style.booking]
-            [clojure.set :as set]
-            [schpaa.style.button :as scb]
-            [fork.re-frame :as fork]
+            [schpaa.style.menu]
+            [schpaa.style.ornament :as sc]
             [schpaa.style.popover]
-            [booking.lab]
-            [booking.common-views :refer [page-boundry main-menu]]))
+            [schpaa.time]
+            [tick.core :as t]
+            [user.views]))
 
 
 ;region related to flex-date and how to display relative time
@@ -235,7 +224,16 @@
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        [content.overview/overview]]))
+        [:div '[content.overview/overview]]]))
+
+   :r.oversikt
+   (fn forsiden [r]
+     (let [user-auth (rf/subscribe [::db/user-auth])]
+       [page-boundry r
+        [content.overview/overview
+         {:uid  (:uid @user-auth)
+          :data (or [{}]
+                    (sort-by (comp :number val) < (logg.database/boat-db)))}]]))
 
    :r.new-booking
    (fn [r]
@@ -255,8 +253,7 @@
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        ;[render-front-tabbar (:uid @user-auth)]
-        [content.booking-blog/booking-blog
+        [content.booking-blog/render
          {:fsm  {}
           :uid  (:uid @user-auth)
           :path ["booking-posts" "articles"]}]]))

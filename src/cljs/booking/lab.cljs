@@ -273,11 +273,15 @@
                                                               (assoc db :lab/modal-example-dialog arg)
                                                               (update db :lab/modal-example-dialog (fnil not true)))))
 
-(rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
 
-(rf/reg-event-db :lab/modal-example-dialog2 (fn [db [_ arg]] (if arg
-                                                               (assoc db :lab/modal-example-dialog2 arg)
-                                                               (update db :lab/modal-example-dialog2 (fnil not true)))))
+
+(rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
+(rf/reg-sub :lab/modal-example-dialog2-extra :-> (fn [db] (get db :lab/modal-example-dialog2-extra)))
+
+(rf/reg-event-db :lab/modal-example-dialog2 (fn [db [_ arg extra]] (if arg
+                                                                     (assoc db :lab/modal-example-dialog2 arg
+                                                                               :lab/modal-example-dialog2-extra extra)
+                                                                     (update db :lab/modal-example-dialog2 (fnil not true)))))
 
 (defn render [r]
   (let [;mmm (rf/subscribe [:lab/modal-example-dialog])
@@ -297,7 +301,7 @@
                                             ;414
                                             415}})]
       [:<>
-       [:div.p-2.space-y-4.relative
+       [:div.xp-2.space-y-4.relative
         ;[l/ppre-x @mmm @(rf/subscribe [:lab/modal-example-dialog2])]
 
         [schpaa.style.dialog/modal-example-with-timeout
@@ -337,12 +341,10 @@
            (map schpaa.style.booking/line (map #(assoc % :expanded true) (flatten (repeat 11 card-data))))]
 
         [:<>
-
-
          [sc/grid-wide {:class [:gap-2 :place-content-center]}
           (doall (for [[type data] (group-by :type card-data-v2)]
-                   [sc/surface-e {:class [:p-2]}
-                    [:div.space-y-2
+                   [sc/surface-e {:class []}
+                    [:div.space-y-1
                      [schpaa.style.booking/collapsable-type-card
                       {:on-click #(swap! state update :expanded (fn [e] (if (some #{type} e)
                                                                           (set/difference e #{type})
@@ -350,12 +352,12 @@
                        :expanded (some #{type} (:expanded @state))
                        :content  (first (get (group-by :type type-data) type))}]
                      (for [{:keys [id] :as each} data]
-                       [:div.pl-4x [schpaa.style.booking/line-with-graph
-                                    {:selected (some #{id} (:selected @state))
-                                     :content  each
-                                     :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
-                                                                                        (set/difference e #{id})
-                                                                                        (set/union e #{id}))))}]])]]))]
+                       [schpaa.style.booking/line-with-graph
+                        {:selected (some #{id} (:selected @state))
+                         :content  each
+                         :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
+                                                                            (set/difference e #{id})
+                                                                            (set/union e #{id}))))}])]]))]
 
 
          (let [valid-registry? (and (empty? (time-input-validation (:values @time-state)))

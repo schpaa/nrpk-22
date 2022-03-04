@@ -57,7 +57,7 @@
 (defn lineitem [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
   ;(tap> [item-id id-of-last-seen])
 
-  [sc/surface-c
+  [sc/surface-b {:style {:border-radius "var(--radius-2)"}}
    (let [bg (if (pos? (compare (str item-id) (str id-of-last-seen))) :bg-white :bg-transparent)]
      [:div
       ;{:class bg}
@@ -94,25 +94,22 @@
              [:div "yet"])])])])
 
 (defn initial-page [{:keys [path date-of-last-seen id uid pointer]}]
-  (let []                                                   ;{:keys [bg fg- fg+ fg hd p p- he]} (st/fbg' :surface)]
-    [:div
-     ;{:class bg}
-     (into [:div.p-2.space-y-2]
-           (concat
-             (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse @(db/on-value-reaction {:path path})))
-                   :let [uid' (:uid e)]]
-               (lineitem (assoc (select-keys e [])
-                           :content content
-                           :item-id (name k)
-                           :date-of-last-seen date-of-last-seen
-                           :id-of-last-seen id
-                           :uid uid
-                           :kv kv
-                           :date date
-                           :uid' (:uid e))))
-             [[:div.h-1]
-              [:div.flex.flex-center.h-16 {:on-click #(swap! pointer (fn [e] (+ e 5)))
-                                           :class    ["bg-black/10" :rounded]} "Vis eldre"]]))]))
+  (into [:div.space-y-1]
+        (concat
+          (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse @(db/on-value-reaction {:path path})))
+                :let [uid' (:uid e)]]
+            (lineitem (assoc (select-keys e [])
+                        :content content
+                        :item-id (name k)
+                        :date-of-last-seen date-of-last-seen
+                        :id-of-last-seen id
+                        :uid uid
+                        :kv kv
+                        :date date
+                        :uid' (:uid e))))
+          [[:div.h-1]
+           [:div.flex.flex-center.h-16 {:on-click #(swap! pointer (fn [e] (+ e 5)))
+                                        :class    ["bg-black/10" :rounded]} "Vis eldre"]])))
 
 (def fsm
   {:initial :s.startup
@@ -127,7 +124,7 @@
              :s.initial {}
              :s.empty   {}}})
 
-(defn booking-blog [{:keys [path uid fsm]}]
+(defn render [{:keys [path uid fsm]}]
   ;intent When opening this section, mark as read!
   (let [pointer (r/atom 5)
         datas (db/on-value-reaction {:path path})]
@@ -160,7 +157,7 @@
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
            [:div
             ;[l/ppre datas]
-            ;[:div *fsm-rapport]
+            [:div *fsm-rapport]
 
             (rs/match-state *fsm-rapport
               [:s.startup]

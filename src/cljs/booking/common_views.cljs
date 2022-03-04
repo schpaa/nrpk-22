@@ -31,9 +31,9 @@
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
-                 :label     "Mine bookinger"
+                 :label     "Bookingoversikt"
                  :highlight false
-                 :action    nil
+                 :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
@@ -51,13 +51,13 @@
                  :value     #()}]
      [:hr]
      [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
-                 :label     "Autoclosing dialog"
+                 :label     "Auto-message"
                  :highlight false
                  :action    #(rf/dispatch [:lab/modal-example-dialog2 true])
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
-                 :label     "Form dialog"
+                 :label     "Form-message"
                  :highlight false
                  :action    #(rf/dispatch [:lab/modal-example-dialog true])
                  :disabled  false
@@ -69,17 +69,6 @@
                  :disabled  true
                  :value     #()}]]))
 
-(defn bottom-menu-definition [settings-atom]
-  [[:header [sc/row {:class [:justify-between :items-end]}
-             [sc/title "Top"]
-             [sc/pill (or booking.data/VERSION "dev.x.y")]]]
-   [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
-               "Badge"
-               nil
-               true
-               #()]]
-   [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
-
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom nil)]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))]
@@ -90,6 +79,17 @@
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
                          [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]])}]])))
+
+(defn bottom-menu-definition [settings-atom]
+  [[:header [sc/row {:class [:justify-between :items-end]}
+             [sc/title "Top"]
+             [sc/pill (or booking.data/VERSION "dev.x.y")]]]
+   [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
+               "Badge"
+               nil
+               true
+               #()]]
+   [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
 
 (defn bottom-menu []
   (r/with-let [main-visible (r/atom nil)]
@@ -103,10 +103,12 @@
 (defn page-boundry [r & c]
   (let [page-title (-> r :data :header)]
     [err-boundary
-     [:div.lg:max-w-6xl.md:max-w-3xl.max-w-sm.mx-auto
-      [sc/row-stretch {:class [:px-6 :py-8 :mx-auto :items-baseline]}
-       [sc/hero-p (or page-title "no-title")]
-       (main-menu)]
-      c
-      [sc/row-end {:class [:p-6]}
-       (bottom-menu)]]]))
+     [:div.p-1
+      [:div.lg:max-w-6xl.md:max-w-3xl.max-w-sm.mx-auto
+       ;{:style {:outline "red 1px solid"}}
+       [sc/row-stretch {:class [:py-4 :pb-8 :mx-auto :items-baseline]}
+        [sc/hero-p (or page-title "no-title")]
+        (main-menu)]
+       c
+       [sc/row {:class [:pt-4]}
+        (bottom-menu)]]]]))

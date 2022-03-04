@@ -1,5 +1,10 @@
+;-[ ] below 100 lines?
 (ns booking.bookinglist
   (:require [tick.core :as t]
+            ["@heroicons/react/solid" :as solid]
+            ["@heroicons/react/outline" :as outline]
+            [schpaa.style.dialog]
+            [lambdaisland.ornament :as o]
             [reagent.core :as r]
             [re-frame.core :as rf]
             [booking.views.picker :refer [list-line]]
@@ -9,7 +14,9 @@
             [schpaa.components.fields :as fields]
             [schpaa.icon :as icon]
             [schpaa.debug :as l]
-            [schpaa.style :as st]))
+            [schpaa.style :as st]
+            [schpaa.style.ornament :as sc]
+            [schpaa.style.button :as scb]))
 
 (defn- booking-list-item-color-map [relation]
   (case relation
@@ -30,28 +37,6 @@
      :bg  ["dark:bg-alt-600" "bg-gray-100"]
      :fg  ["dark:text-black" "text-gray-700"]
      :fg- ["dark:text-white" :text-gray-400]}))
-
-(defn time-segment-display'old [{:keys [hide-name? multiday navn start end relation]}]
-  (let [day-name (times.api/day-name (t/date-time start))
-        {:keys [bg fg fg-]} (booking-list-item-color-map relation)]
-    [:div.grid.gap-2.w-full.px-2
-     {:class (concat bg fg)
-      :style {:grid-template-columns "1.5rem 1fr min-content max-content 3rem"
-              :grid-auto-rows        ""}}
-     [:div.truncate.col-span-2
-      (when-not hide-name?
-        [:div.truncate {:class fg-} navn])]
-     [:<>
-      [:div.justify-self-end.whitespace-nowrap (t/format (str "'" day-name " 'd.MM") (t/date-time start))]
-      [:div.debug.whitespace-nowrap (t/format "'kl.' H.mm" (t/time (t/date-time start)))]]
-     [:div.self-center.justify-self-end
-      (when multiday
-        [icon/small :moon-2])]
-     [:div.col-span-3]
-     [:div.debug.whitespace-nowrap.self-start (t/format "'kl.' H.mm" (t/time (t/date-time end)))]
-     [:div.self-start.justify-self-end
-      (when multiday
-        (t/format "d.MM" (t/date (t/date-time end))))]]))
 
 (defn time-segment-display [colormap {:keys [hide-name? navn start end relation]}]
   (let [{:keys [fg- p-]} colormap #_(st/fbg' :listitem)
@@ -102,7 +87,7 @@
            (schpaa.components.views/number-view number))]))))
 
 (defn bookers-name [colormap {:keys [uid navn]}]
-  [:div.truncate {:class (concat)}
+  [:div.truncate
    (if navn
      navn
      (let [user @(db.core/on-value-reaction {:path ["users" uid]})]
@@ -119,7 +104,6 @@
   (let [selected (map keyword selected)                     ;;selected must be a keyword
         relation (try (tick.alpha.interval/relation start today)
                       (catch js/Error _ nil))
-        {:keys [bg bg- fg fg- fg+ p]} (st/fbg' :listitem)
         {:keys [br]} (booking-list-item-color-map relation)]
 
     [:div.flex
@@ -185,36 +169,131 @@
        (insert-after id)
        [:div])]))
 
-(defn booking-list [{:keys [uid today booking-data accepted-user? class boat-db details?]}]
-  (let [
-        show-only-my-own? (-> (schpaa.state/listen :opt/show-only-my-own) deref) #_@(schpaa.state/listen :opt/show-only-my-own)
+(defn booking-list-item-prime [uid [{:keys [start]} item]]
+  (let [my-own? (= uid (:uid item))]
+    [booking-list-item
+     {:fetch-boatdata-for (fn [id] (get (into {} (logg.database/boat-db)) id))
+      ;:details?           details?
+      :boat-db            (logg.database/boat-db)
+
+      ;:today              today
+      :hide-name?         (not (some? uid))
+      :insert-before      hov/open-booking-details-button
+      #_#_:insert-after (fn [id]
+                          (if (booking.views.picker/after-and-including today item)
+                            (if my-own?
+                              (hov/remove-booking-details-button
+                                id
+                                (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read)))
+                              [:div.w-10.shrink-0.flex])
+                            [:div.w-10.shrink-0.flex]))}
+     item]))
+
+;region
+
+(defn date-row [start end]
+  [:<>
+   [sc/text-clear (t/format "dd.MM 'kl ' hh:mm" (t/date-time start))]
+   [sc/text-clear (t/format "dd.MM 'kl ' hh:mm" (t/date-time end))]])
+
+(o/defstyled listitem-past :div
+  ([item]
+   (let [{:keys [start end alias description selected]} item]
+     [sc/surface-a {:class [:p-2 :space-y-1]
+                    :style {:background "var(--surface0)"
+                            :box-shadow "var(--inner-shadow-1)"}}
+      [sc/col
+       [sc/row {:class [:items-center]}
+        [sc/row-stretch (date-row start end)]]
+       [sc/text-1 alias]
+       [sc/subtext-p description]
+       [sc/row-end [:div.inline-flex.gap-1 (map sc/badge selected)]]]])))
+
+(o/defstyled listitem-present-future :div
+  [:&]
+  [:.present :text-white]
+  ([item]
+   (let [{:keys [owner present start end alias description selected on-delete]} item]
+     [sc/surface-a {:class [:p-2]
+                    :style {:background (if present "var(--brand1)" "var(--surface000)")}}
+      [sc/col {:class [:space-y-1]}
+       [sc/row {:class [:items-center :gap-2]}
+        [scb/clear (sc/icon [:> solid/DotsHorizontalIcon])]
+        [sc/row-stretch {:class (if present [:present])} (date-row start end)]
+        (when owner [scb/clear {:on-click on-delete} (sc/icon [:> solid/XCircleIcon])])]
+       [sc/subtext {:class [:text-black]} alias]
+       [sc/subtext-p description]
+       [sc/row-end [:div.inline-flex.gap-1 (map (fn [e] [sc/badge {:on-click #(rf/dispatch [:lab/modal-example-dialog2 true e])} e]) selected)]]]])))
+
+(defn fetch-boatdata-for [id]
+  (get (into {} (logg.database/boat-db)) id))
+
+(defn item-past [uid' [id {:keys [uid start navn selected] :as item}]]
+  [listitem-past (assoc item :alias (bookers-name nil {:uid  uid
+                                                       :navn navn})
+                             :selected (sort (map (fn [id] (:number (fetch-boatdata-for id))) selected)))])
+
+(defn item-present-future [today uid [id {:keys [start navn selected] :as item}]]
+  [listitem-present-future (assoc item
+                             :on-delete #(rf/dispatch [:lab/confirm-delete true item])
+                             :present (t/= (t/date (t/date-time start)) (t/date today))
+                             :owner (= uid (:uid item))
+                             :alias (bookers-name nil {:uid  (:uid item)
+                                                       :navn navn})
+                             :selected (sort (map (fn [id] (:number (fetch-boatdata-for id))) selected)))])
+
+(defn filter-before [today data]
+  (let [precedes (fn [today] (filter (fn [[_ v]] (some #{(tick.alpha.interval/relation (:start v) today)} [:precedes]))))]
+    (transduce (comp (precedes today)) conj [] data)))
+
+(defn filter-today-and-after [today data]
+  (let [preceded-by (fn [today] (filter (fn [[_ v]] (some #{(tick.alpha.interval/relation (:start v) today)} [:preceded-by :meets :during]))))]
+    (transduce (comp (preceded-by today)) conj [] data)))
+
+(rf/reg-sub :lab/confirm-delete :-> (fn [db] (get db :lab/confirm-delete false)))
+(rf/reg-sub :lab/confirm-delete-extra :-> (fn [db] (get db :lab/confirm-delete-extra)))
+
+(rf/reg-event-db :lab/confirm-delete (fn [db [_ arg extra]] (if arg
+                                                              (assoc db :lab/confirm-delete arg
+                                                                        :lab/confirm-delete-extra extra)
+                                                              (update db :lab/confirm-delete (fnil not true)))))
+
+(defn booking-list [{:keys [uid today booking-data class details?]}]
+  (let [today (t/new-date 2022 1 21)
+        show-only-my-own? (-> (schpaa.state/listen :opt/show-only-my-own) deref)
         data (->> booking-data
-                  ;(filter (comp (partial booking.views.picker/after-and-including today) val))
-                  ;fixme BAD CODE
                   (filter (fn [[id data]] (if show-only-my-own?
                                             true
                                             (= uid (:uid data)))))
                   (sort-by (comp :start val) <))]
-    (into [:div.space-y-px.bg-gray-500.dark:bg-gray-900
-           {:class class}]
-          (map (fn [[{:keys [start]} item]]
-                 (let [my-own? (= uid (:uid item))]
-                   [booking-list-item
-                    {:fetch-boatdata-for (fn [id] (get (into {} boat-db) id))
-                     :details?           details?
-                     :boat-db            boat-db
-                     :accepted-user?     accepted-user?
-                     :today              today
-                     :hide-name?         (not (some? uid))
-                     :insert-before      hov/open-booking-details-button
-                     :insert-after       (fn [id]
-                                           (if (booking.views.picker/after-and-including today item)
-                                             (if my-own?
-                                               (hov/remove-booking-details-button
-                                                 id
-                                                 (filter (fn [{:keys [] :as item}] (= (:id item) id)) (booking.database/read)))
-                                               [:div.w-10.shrink-0.flex])
-                                             [:div.w-10.shrink-0.flex]))}
+    [:<>
 
-                    item]))
-               data))))
+     ;intent Setting up a modal-message
+     [schpaa.style.dialog/modal-with-timeout
+      {:!open?     (rf/subscribe [:lab/modal-example-dialog2])
+       :close'     #(rf/dispatch [:lab/modal-example-dialog2 false])
+       :context    @(rf/subscribe [:lab/modal-example-dialog2-extra])
+       :content-fn (fn [{:keys [] :as m}] [:div.w-full
+                                           [sc/title-p "Autoclosing message"]
+                                           [l/ppre-x m]])}]
+
+     ;intent Setting up a modal-message for delete
+     [schpaa.style.dialog/modal-confirm-delete
+      {:content-fn (fn [{:keys [start selected] :as m}]
+                     [sc/col {:class [:space-y-4 :w-full]}
+                      [sc/row [sc/title-p "Bekreft sletting"]]
+                      [sc/text "Dette kommer til å slette booking dato slik og slik. Er du sikker?"]
+                      (l/ppre-x start selected m)])
+       :context    @(rf/subscribe [:lab/confirm-delete-extra])
+       :action     (fn [{:keys [start selected] :as m}] (tap> m))
+       :on-close   (fn [] (tap> "closing after save"))
+       :vis        (rf/subscribe [:lab/confirm-delete])
+       :close      #(rf/dispatch [:lab/confirm-delete false])}]
+
+     [:div.space-y-1
+      (into [:div.space-y-1]
+            (map (partial item-past uid) (filter-before today data)))
+
+      (into [:div.space-y-1
+             {:class class}]
+            (map (partial item-present-future today uid) (filter-today-and-after today data)))]]))

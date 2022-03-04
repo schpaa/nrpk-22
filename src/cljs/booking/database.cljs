@@ -98,7 +98,7 @@
       (remove :deleted))
     conj
     []
-    (if true
+    (if false
       @(db/on-value-reaction {:path path})
       (concat #_(take 4 @(db/on-value-reaction {:path ["booking"]}))
         {:xx {:start     (str (t/at (t/new-date 2022 1 25) (t/new-time 14 0)))
@@ -135,25 +135,26 @@
                     :version   2
                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
                                                      (t/new-time 10 0))))}}
-        {:intern-a {:date      (str (t/new-date 2021 1 5))
-                    :start     (str (t/at (t/new-date 2022 1 22) (t/new-time 8 0)))
-                    :end       (str (t/at (t/new-date 2022 1 22) (t/new-time 20 0)))
-                    :sleepover false
-                    :selected  [:-Mg5wRGchF2DP-S8n627]
-                    :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
-                    :navn      "navns"
-                    :version   2
-                    :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
-                                                     (t/new-time 10 0))))}}
-        {:intern-a {:start     (str (t/at (t/new-date 2022 1 21) (t/new-time 23 0)))
-                    :end       (str (t/at (t/new-date 2022 1 22) (t/new-time 22 0)))
-                    :sleepover false
-                    :selected  [:-Mg5wRGchF2DP-S8n627]
-                    :uid       "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"
-                    :navn      "navns"
-                    :version   2
-                    :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
-                                                     (t/new-time 10 0))))}}
+        {:intern-ab {:date        (str (t/new-date 2021 1 5))
+                     :start       (str (t/at (t/new-date 2022 1 22) (t/new-time 8 0)))
+                     :end         (str (t/at (t/new-date 2022 1 22) (t/new-time 20 0)))
+                     :sleepover   false
+                     :selected    [:-Mg5wRGchF2DP-S8n627]
+                     :uid         "piH3WsiKhFcq56lh1q37ijiGnqX2"
+                     ;:navn      "navns"
+                     :description "Lang beskrivelse, hva skal vi i dag og hvor går turen?"
+                     :version     2
+                     :timestamp   (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                        (t/new-time 10 0))))}}
+        {:intern-ac {:start     (str (t/at (t/new-date 2022 1 21) (t/new-time 23 0)))
+                     :end       (str (t/at (t/new-date 2022 1 22) (t/new-time 22 0)))
+                     :sleepover false
+                     :selected  [:-Mg5wRGchF2DP-S8n627]
+                     :uid       "piH3WsiKhFcq56lh1q37ijiGnqX2"
+                     ;:navn      "navns"
+                     :version   2
+                     :timestamp (str (t/instant (t/at (t/new-date 2022 11 1)
+                                                      (t/new-time 10 0))))}}
         {:intern-b {:start     (str (t/at (t/new-date 2022 1 4) (t/new-time 18 0)))
                     :end       (str (t/at (t/new-date 2022 1 10) (t/new-time 2 0)))
                     :sleepover false
