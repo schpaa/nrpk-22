@@ -534,4 +534,11 @@ body {
 
 
 .booking_bookinglist__listitem_present_future .present{--gi-text-opacity:1;color:rgba(255,255,255,var(--gi-text-opacity))}
-.schpaa_style_ornament__text_clear{letter-spacing:var(--font-letterspacing-1);font-size:var(--font-size-2);font-weight:var(--font-weight-4)}
+.schpaa_style_ornament__text_clear{letter-spacing:var(--font-letterspacing-1);font-size:var(--font-size-1);font-weight:var(--font-weight-5)}
+.booking_bookinglist__surface_bookingcard{background:var(--surface000);box-shadow:var(--shadow-4);border-radius:var(--radius-2)}
+.booking_bookinglist__surface_bookingcard_highlighted{background:var(--brand1);box-shadow:var(--shadow-4);border-radius:var(--radius-2)}
+.booking_bookinglist__surface_bookingcard_past{background:var(--surface1);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
+.schpaa_style_ornament__surface_bookingcard_past{background:var(--surface1);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
+.schpaa_style_ornament__surface_bookingcard_highlighted{background:var(--brand1);box-shadow:var(--shadow-4);border-radius:var(--radius-2)}
+.schpaa_style_ornament__surface_bookingcard{background:var(--surface000);box-shadow:var(--shadow-4);border-radius:var(--radius-2)}
+.booking_bookinglist__listitem_past_present_future{font-size:.75rem;line-height:1rem}.booking_bookinglist__listitem_past_present_future>*+*{margin-top:.25rem}.booking_bookinglist__listitem_past_present_future .present{--gi-text-opacity:1;color:rgba(255,255,255,var(--gi-text-opacity))}.booking_bookinglist__listitem_past_present_future .item{padding:.5rem}.booking_bookinglist__listitem_past_present_future .item>*+*{margin-top:.25rem}

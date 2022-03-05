@@ -122,11 +122,6 @@
        (regular-button {:disabled true
                         :on-click #(js/alert "!")} "Hjelp")]]]))
 
-(defn my-bookings [{:keys [uid bookings]}]
-  [:ul.space-y-px.shadow
-   (for [e bookings]
-     [booking.bookinglist/booking-list-item {} e])])
-
 ;endregion
 
 (defn sist-oppdatert [data]

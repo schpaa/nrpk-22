@@ -54,21 +54,21 @@
                           ["Ok" :button-danger (fn [])]])
           :footer      [:div.p-4 "footer"]}]])
 
-(defcard-rg four
-  (let [my-own? true]
-    [:div [booking.bookinglist/booking-list-item
-           {:fetch-boatdata-for (fn [id] (get {:a1 {:number "A"}
-                                               :a2 {:number "B"}} id {:number id})) ;(get (into {} boat-db) id)
-            :today              (t/new-date 2022 1 21)
-            :insert-after       (fn [id]
-                                  [:div.flex
-                                   (when my-own? (hov/remove-booking-details-button id []))
-                                   (hov/open-booking-details-button id)])
-            :details?           true}
-           {:start       (t/>> (t/now) (t/new-duration 1 :hours))
-            :end         (t/>> (t/now) (t/new-duration 114 :hours))
-            :description "sample"
-            :selected    ["a1" "a2"]}]]))
+;(defcard-rg four
+;  (let [my-own? true]
+;    [:div [booking.bookinglist/booking-list-item
+;           {:fetch-boatdata-for (fn [id] (get {:a1 {:number "A"}
+;                                               :a2 {:number "B"}} id {:number id})) ;(get (into {} boat-db) id)
+;            :today              (t/new-date 2022 1 21)
+;            :insert-after       (fn [id]
+;                                  [:div.flex
+;                                   (when my-own? (hov/remove-booking-details-button id []))
+;                                   (hov/open-booking-details-button id)])
+;            :details?           true}
+;           {:start       (t/>> (t/now) (t/new-duration 1 :hours))
+;            :end         (t/>> (t/now) (t/new-duration 114 :hours))
+;            :description "sample"
+;            :selected    ["a1" "a2"]}]]))
 
 (defcard-rg list-line
   [:div
