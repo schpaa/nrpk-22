@@ -63,15 +63,16 @@ module.exports = {
 //        pink: colors.pink,
         red: colors.red
     },
-//    screens: {
-//        xs: '415px',
+    screens: {
+        xs: '412px',
+        md: '768px',
 //        br: '455px',
 //        mob: '768px',
 //        /*md: '768px',*/
 //        lg: '1024px',
 //        'print': {'raw':'print'},
 //        'screen': {'raw':'screen'},
-//    },
+    },
     zIndex: {
         auto: 'auto',
         0: '0',

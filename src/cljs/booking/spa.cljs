@@ -224,14 +224,18 @@
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        [:div '[content.overview/overview]]]))
+        [:div (-> "./frontpage1.md"
+                  inline
+                  schpaa.markdown/md->html
+                  sc/markdown)]
+        #_[:div [content.overview/overview]]]))
 
    :r.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
         [content.overview/overview
-         {:uid  (:uid @user-auth)
+         {:uids (:uid @user-auth)
           :data (or [{}]
                     (sort-by (comp :number val) < (logg.database/boat-db)))}]]))
 
@@ -239,7 +243,6 @@
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        ;[render-front-tabbar (:uid @user-auth)]
         [booking.views/booking-form
          {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
           :selected      hoc/selected
@@ -262,9 +265,10 @@
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
        [page-boundry r
-        [user.views/userstatus-form user-auth]
+        ;[user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
-        [user.views/my-info]]))
+        [sc/surface-a {:class [:p-0 :rounded-lg :overflow-clip]}
+         [user.views/my-info]]]))
 
    :r.logg
    (fn [r]

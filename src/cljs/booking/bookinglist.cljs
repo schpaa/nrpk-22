@@ -46,7 +46,6 @@
         [sc/text-clear-large " — " (t/format "dd.MM" end)]
         [sc/text-clear (t/format "' kl ' HH.mm" end)]]])))
 
-
 (defn boat-numbers [selected]
   [:div.inline-flex.gap-1 (map (fn [e] [sc/badge {:on-click #(rf/dispatch [:lab/modal-example-dialog2 true [:boatdetails e]])} (:number e)]) selected)])
 
@@ -116,7 +115,7 @@
 
 (defn booking-list [{:keys [uid today booking-data class details?]}]
   (let [show-archived (r/atom false)
-        show-only-my-own? (r/atom true)]
+        show-only-my-own? (r/atom false)]
     (fn [{:keys [uid today booking-data class details?]}]
       (let [today (t/new-date 2022 1 21)
             ;show-only-my-own? (-> (schpaa.state/listen :opt/show-only-my-own) deref)
