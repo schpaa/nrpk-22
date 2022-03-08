@@ -302,14 +302,6 @@
                                             415}})]
       [:<>
        [:div.xp-2.space-y-4.relative
-        ;[l/ppre-x @mmm @(rf/subscribe [:lab/modal-example-dialog2])]
-
-        [schpaa.style.dialog/modal-example-with-timeout
-         (rf/subscribe [:lab/modal-example-dialog2])
-         #(rf/dispatch [:lab/modal-example-dialog2 false])
-         [:<>
-          [sc/title-p "Autoclosing message"]
-          [sc/text-p "Your payment has been successfully submitted. We’ve sent you an email with all of the details of your order."]]]
 
         [schpaa.style.dialog/modal-example
          (rf/subscribe [:lab/modal-example-dialog])

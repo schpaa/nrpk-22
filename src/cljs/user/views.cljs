@@ -132,14 +132,14 @@
 
 (defn sist-oppdatert [data]
   [:div.h-16.flex.items-center.px-4
-   {:style {:background "var(--surface000)"}}
+   ;{:style {:background "var(--surface000)"}}
    (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)])
    [:div.flex.flex-col
     ;{:class (concat fg p-)}
     (if-let [tm (:timestamp @data)]
       (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
            (catch js/Error e (.-message e)))
-      [:div "Aldri registrert"])]])
+      [sc/subtext [sc/dim "Aldri registrert"]])]])
 
 (defn input [{:keys [errors values handle-change] :as props} type class label field-name]
   [sc/col {:class (into [:gap-1] class)}
@@ -383,8 +383,9 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         uid (:uid @user-auth)]
     (fn []
-      [sc/col
-       [user-form uid]
+      [sc/col {:class [:space-y-4]}
+       [sc/surface-a {:class [:p-0 :rounded-lg :overflow-clip]}
+        [user-form uid]]
        ;separer
        [sist-oppdatert (r/atom nil)]])))
 

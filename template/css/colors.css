@@ -172,6 +172,7 @@
   }
 }
 
+/*
 button[type="submit"] {
     color: var(--buttoncta0);
     background: var(--buttoncta2);
@@ -180,11 +181,14 @@ button[type="submit"]:hover {
     background: var(--buttoncta1);
 }
 
-button[type="button"] {
-    color: var(--buttontext);
-    background: var(--buttonbase);
-}
 button[type="button"]:hover {
     background: var(--buttonbase-hover);
 }
+
+button[type="button"] {
+background: unset;
+}
+
+
+*/
 

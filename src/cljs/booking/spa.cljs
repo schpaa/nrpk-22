@@ -267,8 +267,7 @@
        [page-boundry r
         ;[user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
-        [sc/surface-a {:class [:p-0 :rounded-lg :overflow-clip]}
-         [user.views/my-info]]]))
+        [user.views/my-info]]))
 
    :r.logg
    (fn [r]

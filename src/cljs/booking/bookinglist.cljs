@@ -58,9 +58,9 @@
    (let [{:keys [owner present past start end alias description selected on-delete on-bookingdetails]} item]
      [sc/col {:class [:item]}
 
-      [sc/row {:class [:justify-between :items-center :gap-4 (if present :present) :headerline]}
+      [sc/row {:class [:justify-between :h-full :items-center :gap-4 (if present :present) :headerline]}
        [scb/clear {:on-click on-bookingdetails} (sc/icon [:> solid/DotsHorizontalIcon])]
-       [sc/row {:class [:justify-between :w-full :flex-grow]} (date-row start end)]
+       [sc/row {:class [:justify-between :items-center :w-full :flex-grow]} (date-row start end)]
        (when owner [scb/danger {:on-click on-delete} (sc/icon [:> solid/XCircleIcon])])]
 
       [sc/subtext {:class [:text-black]} alias]
@@ -80,7 +80,16 @@
      [listitem-past-present-future
       (assoc item
         :past past
-        :on-bookingdetails #(rf/dispatch [:lab/modal-example-dialog2 true [:bookingdetails item]])
+        :on-bookingdetails #(rf/dispatch [:lab/modal-example-dialog2 true
+                                          {:click-overlay-to-dismiss true
+                                           :type                     :bookingdetails
+                                           :data                     item
+                                           :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
+                                           :buttons                  [[:cancel "Avbryt" nil] [:danger "Logg ut" (fn [] (tap> "click"))]]
+                                           :content-fn               (fn [context]
+                                                                       [:div
+                                                                        [:div "something"]
+                                                                        [l/ppre context]])}])
         :on-delete #(rf/dispatch [:lab/confirm-delete true item])
         :present (t/= (t/date (t/date-time start)) (t/date today))
         :owner (= uid (:uid item))
@@ -124,35 +133,35 @@
                       (sort-by (comp :start val) <))]
         [:<>
          ;intent Setting up a modal-message
-         [schpaa.style.dialog/modal-regular
-          {:show       (rf/subscribe [:lab/modal-example-dialog2])
-           :close-fn   #(rf/dispatch [:lab/modal-example-dialog2 false])
-           :context    @(rf/subscribe [:lab/modal-example-dialog2-extra])
-           :content-fn (fn [[context data]]
-                         (cond
-                           (= :bookingdetails context)
-                           [sc/col {:class [:text-base :tracking-normal :w-full]}
-                            [sc/title-p "Booking details"]
-                            (when-let [tm (some-> (:timestamp data) (t/instant) (t/zoned-date-time))]
-                              [sc/text (ta/datetime-format tm)])
-                            [sc/text (bookers-name data)]
-                            (for [e (:selected data)
-                                  :let [data (fetch-boatdata-for e)
-                                        {:keys [number aquired-year aquired-price]} (fetch-boatdata-for e)]]
-                              #_[l/ppre-x data]
-                              [sc/row {:class [:gap-4]}
-                               [sc/text number]
-                               [sc/text aquired-year]
-                               [sc/text aquired-price]])
-                            [sc/col
-                             [sc/text (:telefon (bookers-details (:uid data)))]
-                             [sc/text (:epost (bookers-details (:uid data)))]]
+         #_[schpaa.style.dialog/modal-regular
+            {:show       (rf/subscribe [:lab/modal-example-dialog2])
+             :close-fn   #(rf/dispatch [:lab/modal-example-dialog2 false])
+             :context    @(rf/subscribe [:lab/modal-example-dialog2-extra])
+             :content-fn (fn [[context data]]
+                           (cond
+                             (= :bookingdetails context)
+                             [sc/col {:class [:text-base :tracking-normal :w-full]}
+                              [sc/title-p "Booking details"]
+                              (when-let [tm (some-> (:timestamp data) (t/instant) (t/zoned-date-time))]
+                                [sc/text (ta/datetime-format tm)])
+                              [sc/text (bookers-name data)]
+                              (for [e (:selected data)
+                                    :let [data (fetch-boatdata-for e)
+                                          {:keys [number aquired-year aquired-price]} (fetch-boatdata-for e)]]
+                                #_[l/ppre-x data]
+                                [sc/row {:class [:gap-4]}
+                                 [sc/text number]
+                                 [sc/text aquired-year]
+                                 [sc/text aquired-price]])
+                              [sc/col
+                               [sc/text (:telefon (bookers-details (:uid data)))]
+                               [sc/text (:epost (bookers-details (:uid data)))]]
 
-                            [l/ppre-x data #_(bookers-details (:uid data))]]
-                           (= :boatdetails context)
-                           [:div
-                            [sc/title-p "Boat details"]
-                            [l/ppre-x data]]))}]
+                              [l/ppre-x data #_(bookers-details (:uid data))]]
+                             (= :boatdetails context)
+                             [:div
+                              [sc/title-p "Boat details"]
+                              [l/ppre-x data]]))}]
 
          ;intent Setting up a modal-message for delete
          [schpaa.style.dialog/modal-confirm-delete

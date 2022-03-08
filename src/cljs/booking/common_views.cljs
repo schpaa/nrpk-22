@@ -2,12 +2,17 @@
   (:require [booking.content.blog-support :refer [err-boundary]]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
+            [schpaa.style.dialog]
+            [booking.bookinglist]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [reagent.core :as r]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [schpaa.debug :as l]
+            [times.api :as ta]
+            [tick.core :as t]))
 
 (defn better-mainmenu-definition [settings-atom]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
@@ -51,23 +56,103 @@
                  :disabled  true
                  :value     #()}]
      [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
+     [:menuitem {:icon      (sc/icon nil #_[:> solid/ArrowRightIcon])
                  :label     "Auto-message"
                  :highlight false
-                 :action    #(rf/dispatch [:lab/modal-example-dialog2 true])
+                 :action    #(rf/dispatch [:lab/modal-example-dialog2 true
+                                           {:click-overlay-to-dismiss true
+                                            :auto-dismiss             5000
+                                            :content-fn               (fn [{:keys [start selected] :as context}]
+                                                                        [sc/col {:class [:space-y-4 :w-full]}
+                                                                         [sc/row [sc/title-p "Sample"]]
+                                                                         [sc/text "Sample text for a autoclosing dialog - dismissed after 5000 ms"]
+                                                                         [l/ppre context]])
+
+                                            :buttons                  [[:cancel "Lukk" nil]]
+                                            :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
+                                            :on-primary-action        (fn [] (tap> "closing after save"))}])
                  :disabled  false
                  :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
+     [:menuitem {:icon      (sc/icon nil #_[:> solid/ArrowRightIcon])
                  :label     "Form-message"
                  :highlight false
-                 :action    #(rf/dispatch [:lab/modal-example-dialog true])
+                 :action    #(rf/dispatch [:lab/modal-example-dialog2
+                                           true
+                                           {:click-overlay-to-dismiss true
+                                            ;:auto-dismiss 5000
+                                            :data                     {:timestamp (t/now)}
+                                            :type                     :bookingdetails
+                                            :content-fn               (fn [{:keys [data type] :as context}]
+                                                                        (cond
+                                                                          (= :bookingdetails type)
+                                                                          [sc/col {:class [:text-base :tracking-normal :w-full]}
+                                                                           [sc/title-p "Booking details"]
+                                                                           (when-let [tm (some-> (:timestamp data) (t/instant) (t/zoned-date-time))]
+                                                                             [sc/text (ta/datetime-format tm)])
+                                                                           [sc/text (booking.bookinglist/bookers-name data)]
+                                                                           (for [e (:selected data)
+                                                                                 :let [data (booking.bookinglist/fetch-boatdata-for e)
+                                                                                       {:keys [number aquired-year aquired-price]} (booking.bookinglist/fetch-boatdata-for e)]]
+                                                                             #_[l/ppre-x data]
+                                                                             [sc/row {:class [:gap-4]}
+                                                                              [sc/text number]
+                                                                              [sc/text aquired-year]
+                                                                              [sc/text aquired-price]])
+                                                                           [sc/col
+                                                                            [sc/text (:telefon (booking.bookinglist/bookers-details (:uid data)))]
+                                                                            [sc/text (:epost (booking.bookinglist/bookers-details (:uid data)))]]
+
+                                                                           [l/ppre-x data #_(bookers-details (:uid data))]]
+                                                                          (= :boatdetails type)
+                                                                          [:div
+                                                                           [sc/title-p "Boat details"]
+                                                                           [l/ppre-x data]]
+                                                                          :else
+                                                                          [l/ppre context]))
+
+                                            :buttons                  [[:cancel "Lukk" nil]]
+                                            :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
+                                            :on-primary-action        (fn [] (tap> "closing after save"))}])
+
                  :disabled  false
                  :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ArrowRightIcon])
-                 :label     "Open popover"
+     [:menuitem {:icon      (sc/icon nil #_[:> solid/ArrowRightIcon])
+                 :label     "Super-simple"
                  :highlight false
-                 :action    nil
-                 :disabled  true
+                 :action    #(rf/dispatch [:lab/modal-example-dialog2
+                                           true
+                                           #_{:click-overlay-to-dismiss true
+                                              ;:auto-dismiss 5000
+                                              :content-fn               (fn [{:keys [] :as context}]
+                                                                          [sc/col {:class [:space-y-4 :w-full]}
+                                                                           [sc/row [sc/title-p "Bekreft utlogging"]]
+                                                                           [sc/text "Dette vil logge deg ut fra denne enheten."]
+                                                                           [l/ppre context]])
+
+                                              :buttons                  [[:cancel "Avbryt" nil] [:danger "Logg ut" (fn [] (tap> "click"))]]
+                                              :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
+                                              :on-primary-action        (fn [] (tap> "closing after save"))}])
+                 :disabled  false
+                 :value     #()}]
+     [:hr]
+     [:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
+                 :label     "Logg ut..."
+                 :highlight false
+                 :action    #(rf/dispatch [:lab/modal-example-dialog2
+                                           true
+                                           {:click-overlay-to-dismiss true
+                                            ;:auto-dismiss 5000
+                                            :content-fn               (fn [{:keys [] :as context}]
+                                                                        [sc/col {:class [:space-y-4 :w-full]}
+                                                                         [sc/row [sc/title-p "Bekreft utlogging"]]
+                                                                         [sc/text "Dette vil logge deg ut fra denne enheten."]
+                                                                         [l/ppre context]])
+
+                                            :buttons                  [[:cancel "Avbryt" nil] [:danger "Logg ut" (fn [] (tap> "click"))]]
+                                            :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
+                                            :on-primary-action        (fn [] (tap> "closing after save"))}])
+
+                 :disabled  false
                  :value     #()}]]))
 
 (defn main-menu []
@@ -189,6 +274,16 @@
 (defn page-boundry [r & c]
   (let [page-title (-> r :data :header)]
     [err-boundary
+
+
+     ;region experiment
+     [schpaa.style.dialog/modal-generic
+      {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
+       :vis     (rf/subscribe [:lab/modal-example-dialog2])
+       :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
+     ;endregion
+
+
      [:div.fixed.inset-0.flex
       ;vertical action-bar
       [:div.shrink-0.w-16.md:w-20.h-full.xs:flex.hidden.justify-around.items-center.flex-col.border-r
