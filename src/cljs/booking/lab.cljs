@@ -15,7 +15,8 @@
             [schpaa.style.button :as scb]
             [schpaa.style.dialog :refer [open-dialog-confirmbooking]]
             [booking.views]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [schpaa.style.button2 :as scb2]))
 
 ;region temporary, perhaps for later
 
@@ -296,6 +297,7 @@
       (let [valid-registry? (and (empty? (time-input-validation (:values @time-state)))
                                  (not (empty? (:selected @state))))]
         [sc/row-end
-         [scb/button-cta {:disabled (not valid-registry?)
-                          :on-click #(open-dialog-confirmbooking time-state state card-data-v2 type-data)
-                          :class    [:px-8 :py-4]} "Book nå!"]])]]))
+         [scb2/cta-large
+          {:disabled (not valid-registry?)
+           :on-click #(open-dialog-confirmbooking time-state state card-data-v2 type-data)}
+          "Book nå!"]])]]))

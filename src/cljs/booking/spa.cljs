@@ -29,7 +29,8 @@
             [tick.core :as t]
             [user.views]
             [schpaa.style.button :as scb]
-            [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]))
+            [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]
+            [schpaa.style.button2 :as scb2]))
 
 
 ;region related to flex-date and how to display relative time
@@ -226,12 +227,13 @@
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        [sc/col {:class [:space-y-8]}
-         [:div (-> "./frontpage1.md"
-                   inline
-                   schpaa.markdown/md->html
-                   sc/markdown)]
-         [sc/row-end [scb/normal {:type "button" :on-click open-dialog-signin} "Logg inn"]]]
+        [sc/col {:class [:space-y-4 :max-w-md :mx-auto :px-4]}
+         [:div
+          (-> "./frontpage1.md"
+              inline
+              schpaa.markdown/md->html
+              sc/markdown)]
+         [sc/row-end [scb2/cta-large {:type "button" :on-click open-dialog-signin} "Logg inn"]]]
         ;[db.signin/login]]
         #_[:div [content.overview/overview]]]))
 

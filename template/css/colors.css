@@ -8,6 +8,9 @@
 
 :root {
 
+    --radius-2: 8px;
+    --radius-3: 14px;
+
     --gray-0: #fafaf9; 
     --gray-1: #f5f5f4; 
     --gray-2: #e7e5e4; 
@@ -61,7 +64,7 @@
 
    --text1-light: var(--gray-9);
    --text2-light: var(--gray-6);
-   --text3-light: var(--gray-5);
+   --text3-light: var(--gray-4);
    --label-light: var(--gray-5);
 
    --surface000-light: var(--gray-0);
@@ -109,6 +112,7 @@
        --text1: var(--text1-light);
        --text2: var(--text2-light);
        --text3: var(--text3-light);
+
        --label: var(--label-light);
        --surface000: var(--surface000-light);
        --surface00: var(--surface00-light);
@@ -135,6 +139,14 @@
        --buttontext: var(--buttontext-light);
        --buttonbase-hover: var(--buttonbase-hover-light);
        --buttonbase-active: var(--buttonbase-active-light);
+
+
+
+       --forsiden: var(--green-5);
+       --new-booking: var(--yellow-6);
+       --hva-er-nytt: var(--pink-6);
+       --booking-oversikt: var(--teal-8);
+       --logg-ut: var(--red-5);
     }
 }
 

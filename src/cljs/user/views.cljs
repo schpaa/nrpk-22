@@ -31,7 +31,8 @@
             [shadow.resource :refer [inline]]
             [clojure.string :as str]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.input :as sci]))
+            [schpaa.style.input :as sci]
+            [schpaa.style.button2 :as scb2]))
 
 (defn confirm-registry []
   #_(apply send
@@ -131,15 +132,17 @@
 ;endregion
 
 (defn sist-oppdatert [data]
-  [:div.h-16.flex.items-center.px-4
-   ;{:style {:background "var(--surface000)"}}
-   (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :void)])
-   [:div.flex.flex-col
-    ;{:class (concat fg p-)}
-    (if-let [tm (:timestamp @data)]
-      (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
-           (catch js/Error e (.-message e)))
-      [sc/subtext [sc/dim "Aldri registrert"]])]])
+  (let [user-info @(rf/subscribe [::db/user-auth])]
+    [:div.flex.items-center.px-4
+     [sc/dim
+      [sc/col {:class [:space-y-2]}
+       (if-let [tm (:timestamp @data)]
+         (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
+              (catch js/Error e (.-message e)))
+         [sc/small "Sist oppdatert: aldri"])
+       [sc/small (:email user-info)]
+       [sc/small (:display-name user-info)]
+       [sc/small (:uid user-info)]]]]))
 
 (defn input [{:keys [errors values handle-change] :as props} type class label field-name]
   [sc/col {:class (into [:gap-1] class)}
@@ -153,27 +156,27 @@
               :errors    (field-name errors)
               :name      field-name}]])
 
+(o/defstyled checkbox' :input
+  [:&
+   {:color      :blue
+    :background :red}])
+
 (defn checkbox [{:keys [errors values handle-change] :as props} class label field-name]
-  #_[sc/col {:class (into [:gap-1] class)}
-     #_[sc/row {:class [:gap-2]}
-        [sc/label label]
-        (if (field-name errors)
-          [sc/label-error (first (field-name errors))])]]
-  [sc/row {:class [:items-center :gap-4]}
-   [sci/checkbox
+  [sc/row {:class [:items-baseline :gap-2]}
+   [checkbox'
     {:type      :checkbox
-     :class     [:pb-px]
+     :style     {:background    "var(--surface0)"
+                 :accent-color  "var(--brand0)"
+                 :border-radius "var(--radius-1)"
+                 #_#_:border "2px solid red"}
+     :class     [:w-5 :h-5 :self-center]
      :id        field-name
      :value     (field-name values)
      :on-change handle-change
      :errors    (field-name errors)
      :name      field-name}]
    [:label.p-0.text-base.normal-case
-    {:class    (concat
-                 ;(checkbox-colors readonly?)
-                 #_[(if disabled? "text-gray-500/50" "text-info-500")])
-     :disabled false
-     :for      field-name} [sc/subtext label]]])
+    {:for field-name} [sc/checkbox-text label]]])
 
 (defn select [{:keys [errors values handle-change] :as props} type class label field-name default-text items]
   (let [sorted false]
@@ -199,11 +202,11 @@
    [:div
     [:div.flex.gap-4.flex-wrap
      [sc/row-wrap
-      [input props :text [:w-64] "Fullt navn" :navn]
-      [input props :text [:w-40] "Alias" :alias]]
+      [input props :text [:w-56] "Fullt navn" :navn]
+      [input props :text [:w-32] "Alias" :alias]]
      [sc/row-wrap
-      [input props :text [:w-40] "Telefon" :telefon]
-      [input props :text [:w-64] "E-post" :epost]]
+      [input props :text [:w-32] "Telefon" :telefon]
+      [input props :text [:w-70] "E-post" :epost]]
 
      [select props :våttkort [] "Våttkort" :våttkort "Velg" {"0" "Jeg har ikke våttkort" "1" "Introkurs 3 timer" "2" "Grunnkurs 16 timer" "3" "Teknikk, sikkerhet eller grunnkurs-2" "4" "Aktivitetsleder, trener-1 eller høyere"}]]]])
 
@@ -213,6 +216,9 @@
     :on-submit handle-submit}
    ;[l/ppre-x values]
    [:div.space-y-4
+
+    [:div.flex.gap-4.flex-wrap
+     [input props :text [] "Våttkort-nr" :våttkortnr]]
 
     [:div.flex.gap-4.flex-wrap
      [checkbox props [:xw-40] "Ønsker å bruke booking på sjøbasen" :request-booking]
@@ -225,9 +231,6 @@
 
                                                 #_(handle-change %)))) :label "Jeg ønsker å bruke booking på sjøbasen" :name :request-booking]
      [checkbox props [] "Ønsker tilgang til de utfordrende båtene" :booking-expert]]
-
-    [:div.flex.gap-4.flex-wrap
-     [input props :text [] "Våttkort-nr" :våttkortnr]]
 
     #_[:div.flex.gap-4.flex-wrap.justify-end
        [fields/date (-> props fields/date-field (assoc :readonly? true
@@ -262,21 +265,21 @@
        [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Godkjent" :name :godkjent]]]])
 
 (o/defstyled summary :summary
-  :flex :items-center :mb-px :pl-4 :h-12 :relative :select-none
-  {:background "var(--surface000)"}
-  #_([summary']
-     [:div.inline-flex.items-center.h-12 [sc/title summary']]))
+  :flex :items-center :pl-3 :h-12 :relative :select-none
+  {:-border-top "1px solid var(--surface0)"})
 
 (defn details [tag summary' content]
   (let [st (schpaa.state/listen tag)]
-    [:details
+    [:details.border-b
      {:open @st}
      [summary
-      {:on-click #(schpaa.state/change tag (not @st))}
-      [:div.flex.items-center
-       [sc/icon [:> (if @st solid/ChevronDownIcon solid/ChevronRightIcon)]]
-       [sc/title summary']]]
-     [:div.p-4 {:style {:background "var(--surface0)"}} content]]))
+      {:style    {:background (if @st "var(--surface000)" "var(--surface00)")}
+       :on-click #(schpaa.state/change tag (not @st))}
+      [:div.flex.items-center.gap-2
+       {:style {:color (if @st "var(--text3)" "var(--text1)")}}
+       [sc/icon-small {:style {:color "var(--brand1)"}} [:> (if @st solid/ChevronDownIcon solid/ChevronRightIcon)]]
+       [sc/header-title summary']]]
+     [:div.p-4.pb-8 {:style {:background "var(--surface000)"}} content]]))
 
 (defn user-form [uid]
   (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
@@ -313,7 +316,7 @@
 
         [sc/col {:class [:w-full]}
 
-         [:div.space-y-0
+         [:div.space-y-px
           [details :user/basic-section-open "Grunnleggende"
            [fork/form {:state               form-state
                        :prevent-default?    true
@@ -383,10 +386,16 @@
   (let [user-auth (rf/subscribe [::db/user-auth])
         uid (:uid @user-auth)]
     (fn []
-      [sc/col {:class [:space-y-4]}
-       [sc/surface-a {:class [:p-0 :rounded-lg :overflow-clip]}
-        [user-form uid]]
+      [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
+       [sc/surface-u {:class [:p-0 :overflow-hidden]}
+        [user-form uid]
+        [:div.p-4
+         [sc/row-stretch {:class [:gap-2]}
+          [scb2/outline-large {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
+           [sc/row {:class [:gap-3 :items-baseline]}
+            [sc/icon-small [:> outline/TrashIcon]]
+            [:div "Slett konto..."]]]
+          [scb2/cta-large {:disabled 1} "Lagre"]]]]
+
        ;separer
        [sist-oppdatert (r/atom nil)]])))
-
-

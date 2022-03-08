@@ -10,6 +10,7 @@
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
+            [schpaa.style.button2 :as scb2]
             [reagent.core :as r]
             [re-frame.core :as rf]
             [schpaa.debug :as l]
@@ -21,81 +22,92 @@
     ;[icon label action disabled value]
     [[:menuitem {:icon      (sc/icon [:> solid/CollectionIcon])
                  :label     "Forsiden"
+                 :color     "var(--forsiden)"
                  :highlight (= :r.forsiden current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
                  :disabled  false
                  :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/NewspaperIcon])
+     [:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
                  :label     "Hva er nytt?"
+                 :color     "var(--hva-er-nytt)"
                  :highlight (= :r.booking-blog current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
+                 :label     "Retningslinjer"
+                 :color     "var(--blue-4)"
+                 :highlight (= :r.retningslinjer current-page)
+                 :action    nil
                  :disabled  false
                  :value     #()}]
      [:hr]
      [:menuitem {:icon      (sc/icon [:> solid/PlusIcon])
                  :label     "Ny booking"
+                 :color     "var(--new-booking)"
                  :highlight (= :r.debug current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.debug]])
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
                  :label     "Bookingoversikt"
-                 :highlight false
+                 :color     "var(--booking-oversikt)"
+                 :highlight (= :r.oversikt current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
                  :disabled  false
                  :value     #()}]
+     ;[:hr]
      [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
                  :label     "Turlogg"
                  :highlight false
                  :action    nil
                  :disabled  true
                  :value     #()}]
-     [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
-                 :label     "Regler"
-                 :highlight false
-                 :action    nil
-                 :disabled  true
-                 :value     #()}]
-     [:hr]
-     [:menuitem {:icon      (sc/icon nil #_[:> solid/ArrowRightIcon])
-                 :label     "Auto-message"
-                 :highlight false
-                 :action    open-dialog-sampleautomessage
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon nil #_[:> solid/ArrowRightIcon])
-                 :label     "Form-message"
-                 :highlight false
-                 :action    open-dialog-sampleformmessage
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon nil #_[:> solid/ArrowRightIcon])
-                 :label     "Super-simple"
-                 :highlight false
-                 :action    #(rf/dispatch [:lab/modal-example-dialog2
-                                           true
-                                           #_{:click-overlay-to-dismiss true
-                                              ;:auto-dismiss 5000
-                                              :content-fn               (fn [{:keys [] :as context}]
-                                                                          [sc/col {:class [:space-y-4 :w-full]}
-                                                                           [sc/row [sc/title-p "Bekreft utlogging"]]
-                                                                           [sc/text "Dette vil logge deg ut fra denne enheten."]
-                                                                           [l/ppre context]])
+     #_[:hr]
+     #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
+                   :label     "Auto-message"
+                   :highlight false
+                   :action    open-dialog-sampleautomessage
+                   :disabled  false
+                   :value     #()}]
+     #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
+                   :label     "Form-message"
+                   :highlight false
+                   :action    open-dialog-sampleformmessage
+                   :disabled  false
+                   :value     #()}]
+     #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
+                   :label     "Super-simple"
+                   :highlight false
+                   :action    #(rf/dispatch [:lab/modal-example-dialog2
+                                             true
+                                             #_{:click-overlay-to-dismiss true
+                                                ;:auto-dismiss 5000
+                                                :content-fn               (fn [{:keys [] :as context}]
+                                                                            [sc/col {:class [:space-y-4 :w-full]}
+                                                                             [sc/row [sc/title-p "Bekreft utlogging"]]
+                                                                             [sc/text "Dette vil logge deg ut fra denne enheten."]
+                                                                             [l/ppre context]])
 
-                                              :buttons                  [[:cancel "Avbryt" nil] [:danger "Logg ut" (fn [] (tap> "click"))]]
-                                              :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
-                                              :on-primary-action        (fn [] (tap> "closing after save"))}])
-                 :disabled  false
-                 :value     #()}]
+                                                :buttons                  [[:cancel "Avbryt" nil] [:danger "Logg ut" (fn [] (tap> "click"))]]
+                                                :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
+                                                :on-primary-action        (fn [] (tap> "closing after save"))}])
+                   :disabled  false
+                   :value     #()}]
      [:hr]
      [:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
                  :label     "Logg ut..."
+                 :color     "var(--logg-ut)"
                  :highlight false
                  :action    #(open-dialog-logoutcommand)
 
                  :disabled  false
-                 :value     #()}]]))
+                 :value     #()}]
+     [:space]
+     [:div
+      [:div.flex.items-center.gap-2.justify-between
+       [scb2/normal-small "Logg in"]
+       [scb2/cta-small "Meld på"]]]]))
 
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom nil)]
@@ -203,7 +215,7 @@
      {:on-click on-click}
      [vert-button {:active (= page-name current-page)
                    :style  style}
-      [sc/icon-large [:> icon]]]]))
+      [sc/icon [:> icon]]]]))
 
 (defn vertical-button [{:keys [icon style on-click page-name active-style!] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
@@ -211,7 +223,7 @@
      {:on-click on-click}
      [vert-button {:active (= page-name current-page)
                    :style  style}
-      [sc/icon-large [:> icon]]]]))
+      [sc/icon [:> icon]]]]))
 
 (defn page-boundry [r & c]
   (let [page-title (-> r :data :header)]
@@ -241,12 +253,13 @@
         {:style {:background   "var(--surface000)"
                  :border-color "var(--surface0)"}}
         [sc/row-stretch
-         [sc/header-title (or page-title "no-title")]
+         [sc/header-title [sc/dim (or page-title "no-title")]]
          (main-menu)]]
 
        [:div.overflow-y-auto.h-full.py-8
-        [:div.lg:max-w-6xl.md:max-w-3xl.max-w-sm.mx-auto.p-4
+        [:div.lg:max-w-6xl.md:max-w-3xl.mx-auto.px-4
          c
+         [:div.h-32]
          [:div.absolute.bottom-24.xs:bottom-4.right-4
           [sc/row-end {:class [:pt-4]}
            (bottom-menu)]]]]
