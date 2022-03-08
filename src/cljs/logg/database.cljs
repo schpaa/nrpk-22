@@ -1,6 +1,6 @@
 (ns logg.database
   (:require [db.core :as db]
-            [booking.database]))
+    #_[booking.database]))
 
 (comment
   (do

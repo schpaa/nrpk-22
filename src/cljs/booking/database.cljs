@@ -5,7 +5,8 @@
             [tick.core :as t']
             [tick.core :as t]
             [re-frame.core :as rf]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [logg.database]))
 
 (def path ["booking2"])
 
@@ -363,3 +364,23 @@
         :brand "Levi's"}
    999 {:text  "c"
         :brand "Levi's"}})
+
+;region shortcuts
+
+(defn bookers-details [uid]
+  @(db.core/on-value-reaction {:path ["users" uid]}))
+
+(defn bookers-name [{:keys [uid navn]}]
+  (if navn
+    navn
+    (let [user @(db.core/on-value-reaction {:path ["users" uid]})]
+      (if (:alias user)
+        (:alias user)
+        (if (:navn user)
+          (:navn user)
+          uid)))))
+
+(defn fetch-boatdata-for [id]
+  (get (into {} (logg.database/boat-db)) id))
+
+;endregion

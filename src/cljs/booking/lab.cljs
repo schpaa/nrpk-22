@@ -16,7 +16,7 @@
             [booking.common-views :refer [page-boundry main-menu]]
             [schpaa.debug :as l]
             [schpaa.style.button :as scb]
-            [schpaa.style.dialog]
+            [schpaa.style.dialog :refer [open-dialog-confirmbooking]]
             [booking.views]
             [clojure.set :as set]))
 
@@ -259,20 +259,20 @@
     :expanded true
     :selected false}])
 
-(rf/reg-sub :lab/confirm-booking :-> (fn [db] (get db :lab/confirm-booking false)))
+;(rf/reg-sub :lab/confirm-booking :-> (fn [db] (get db :lab/confirm-booking false)))
+;
+;(rf/reg-event-db :lab/confirm-booking (fn [db [_ arg]] (if arg
+;                                                         (assoc db :lab/confirm-booking arg)
+;                                                         (update db :lab/confirm-booking (fnil not true)))))
 
-(rf/reg-event-db :lab/confirm-booking (fn [db [_ arg]] (if arg
-                                                         (assoc db :lab/confirm-booking arg)
-                                                         (update db :lab/confirm-booking (fnil not true)))))
 
 
-
-(rf/reg-sub :lab/modal-example-dialog :-> (fn [db] (get db :lab/modal-example-dialog false)))
-
-(rf/reg-event-db :lab/modal-example-dialog (fn [db [_ arg]] (if arg
-                                                              (assoc db :lab/modal-example-dialog arg)
-                                                              (update db :lab/modal-example-dialog (fnil not true)))))
-
+;(rf/reg-sub :lab/modal-example-dialog :-> (fn [db] (get db :lab/modal-example-dialog false)))
+;
+;(rf/reg-event-db :lab/modal-example-dialog (fn [db [_ arg]] (if arg
+;                                                              (assoc db :lab/modal-example-dialog arg)
+;                                                              (update db :lab/modal-example-dialog (fnil not true)))))
+;
 
 
 (rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
@@ -303,28 +303,28 @@
       [:<>
        [:div.xp-2.space-y-4.relative
 
-        [schpaa.style.dialog/modal-example
-         (rf/subscribe [:lab/modal-example-dialog])
-         #(rf/dispatch [:lab/modal-example-dialog false])]
+        #_[schpaa.style.dialog/modal-example
+           (rf/subscribe [:lab/modal-example-dialog])
+           #(rf/dispatch [:lab/modal-example-dialog false])]
 
-        [schpaa.style.dialog/modal-example-2
-         (let [cdv2 (group-by :id card-data-v2)]
-           [sc/col {:class [:space-y-4]}
-            [sc/row [sc/title-p "Bekreft booking"]]
-            [sc/surface-e {:style {:max-height "16rem"}
-                           :class [:p-2 :overflow-y-auto]}
+        #_[schpaa.style.dialog/modal-example-2
+           (let [cdv2 (group-by :id card-data-v2)]
              [sc/col {:class [:space-y-4]}
+              [sc/row [sc/title-p "Bekreft booking"]]
+              [sc/surface-e {:style {:max-height "16rem"}
+                             :class [:p-2 :overflow-y-auto]}
+               [sc/col {:class [:space-y-4]}
 
-              [sc/grid-wide {:class [:gap-2]}
-               (for [e (:selected @state)
-                     :let [type (:type (first (get cdv2 e)))]]
-                 [schpaa.style.booking/selection-with-badges
-                  {:content
-                   (conj (first (get cdv2 e))
-                         (first (get (group-by :type type-data) type)))}])]]]])
+                [sc/grid-wide {:class [:gap-2]}
+                 (for [e (:selected @state)
+                       :let [type (:type (first (get cdv2 e)))]]
+                   [schpaa.style.booking/selection-with-badges
+                    {:content
+                     (conj (first (get cdv2 e))
+                           (first (get (group-by :type type-data) type)))}])]]]])
 
-         (rf/subscribe [:lab/confirm-booking])
-         #(rf/dispatch [:lab/confirm-booking false])]
+           (rf/subscribe [:lab/confirm-booking])
+           #(rf/dispatch [:lab/confirm-booking false])]
 
         [:div.sticky.top-0.z-50
          [time-input-form time-state]]
@@ -354,92 +354,7 @@
 
          (let [valid-registry? (and (empty? (time-input-validation (:values @time-state)))
                                     (not (empty? (:selected @state))))]
-           [:<>
-            #_[l/ppre-x
-               (:selected @state)
-               (not (empty? (:selected @state)))
-               (:values @time-state)
-               valid-registry?
-               (time-input-validation (:values @time-state))]
-
-            [sc/row-end
-             [scb/button-cta {:disabled (not valid-registry?)
-                              :on-click #(rf/dispatch [:lab/confirm-booking true])
-                              :class    [:px-8 :py-4]} "Book nå!"]]])
-         #_(let [cdv2 (group-by :id card-data-v2)]
-             [sc/col {:class [:space-y-4]}
-              [sc/row [sc/title "Bekreft booking av"]]
-              [sc/surface-e {:class [:p-2]}
-               [sc/col {:class [:space-y-4]}
-
-                [sc/grid-wide {:class [:gap-2]}
-                 (for [e (:selected @state)
-                       :let [type (:type (first (get cdv2 e)))]]
-                   [schpaa.style.booking/selection-with-badges
-                    {:content
-                     (conj (first (get cdv2 e))
-                           (first (get (group-by :type type-data) type)))}])]
-                [sc/row-end
-                 [scb/button-cta {:class [:px-8 :py-4]} "Book nå!"]]]]])]]])))
-
-
-(comment
-  #_[:div.px-4.space-y-4
-     [sc/grid-wide
-      (doall (for [e (range 5)]
-               [schpaa.style.booking/line {:content  {:category "Grønnlandskayakk"
-                                                      :number   e
-                                                      :location (str "A" e)}
-                                           :on-click #(if (some #{e} (:selection @settings))
-                                                        (swap! settings update :selection set/difference #{e})
-                                                        (swap! settings update :selection set/union #{e}))
-                                           :expanded (= 2 (:setting-2 @settings))
-                                           :selected (some #{e} (:selection @settings))}]))]
-
-     (let [section [:div.p-4.space-y-4
-                    [:div.gap-1.flex.gap-4.flex-wrap
-
-                     (scb/round-normal [:> solid/HeartIcon])
-                     (scb/round-cta [:> solid/HeartIcon])
-                     (scb/round-danger [:> solid/HeartIcon])
-
-                     [scb/normal "normal button"]
-                     [scb/button-cta "cta button"]
-                     [scb/button-danger "danger button"]]
-
-                    [sc/col
-                     [sc/hero-p "Some Title Here"]
-                     [sc/title-p "Some Title Here"]
-                     [sc/row {:class [:gap-1]}
-                      [sc/badge-author "Author of this post"]
-                      [sc/badge-date {:class [:tabular-nums]} "1 uke siden"]]
-                     [sc/subtitle "subtitle lorem ipsum dolores etceterum among many lines and so forth"]
-                     [sc/text-p "text subtext subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum"]
-                     [sc/subtext-p "subtext subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum subtitle lorem ipsum dolores etceterum"]]]]
-
-       [:<>
-        [sc/surface-a section]
-        ;[sc/surface-b section]
-        [sc/surface-c section]])]
-  #_[:div.flex.justify-end.items-center
-
-     [schpaa.style.menu/menu-example-with-args
-      {:dir         :down
-       :data        (complex-menu settings)
-       :always-show false
-       :button      (fn [open]
-                      [scb/normal-floating
-                       ;{:class [:w-32]}
-                       [sc/row {:class [:gap-4 :px-2]}
-                        [sc/text "Visning"]
-                        [sc/icon [:> (if open outline/XIcon outline/ChevronDownIcon)]]]])}]]
-  #_[:div.fixed.-absolute.bottom-2.right-4
-     [:div.flex.justify-end.items-center
-      [schpaa.style.menu/menu-example-with-args
-       {:dir         :up
-        :data        (complex-menu settings)                ;(standard-menu-2 (r/atom nil))
-        :always-show false
-        :button      (fn [open]
-                       [scb/round-normal-floating
-                        [sc/icon [:> (if open solid/DotsVerticalIcon
-                                              solid/DotsHorizontalIcon)]]])}]]])
+           [sc/row-end
+            [scb/button-cta {:disabled (not valid-registry?)
+                             :on-click #(open-dialog-confirmbooking time-state state card-data-v2 type-data)
+                             :class    [:px-8 :py-4]} "Book nå!"]])]]])))
