@@ -27,7 +27,9 @@
             [schpaa.style.popover]
             [schpaa.time]
             [tick.core :as t]
-            [user.views]))
+            [user.views]
+            [schpaa.style.button :as scb]
+            [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]))
 
 
 ;region related to flex-date and how to display relative time
@@ -224,10 +226,13 @@
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        [:div (-> "./frontpage1.md"
-                  inline
-                  schpaa.markdown/md->html
-                  sc/markdown)]
+        [sc/col {:class [:space-y-8]}
+         [:div (-> "./frontpage1.md"
+                   inline
+                   schpaa.markdown/md->html
+                   sc/markdown)]
+         [sc/row-end [scb/normal {:type "button" :on-click open-dialog-signin} "Logg inn"]]]
+        ;[db.signin/login]]
         #_[:div [content.overview/overview]]]))
 
    :r.oversikt
@@ -291,18 +296,3 @@
       [booking.lab/render r]])
 
    :r.page-not-found (fn [r] [:div "?"])})
-
-
-(defn standard-menu [data]
-  [[solid/TrashIcon "Fjern alle" #(reset! data (reduce (fn [a [k v]] (assoc-in a [k :st] false)) @data @data))]
-   [solid/CursorClickIcon "Velg alle" #(reset! data (reduce (fn [a [k v]] (assoc-in a [k :st] true)) @data @data))]
-   nil
-   [solid/PencilIcon "Rediger" #()]
-   nil
-   [solid/DuplicateIcon "Dupliser" #()]])
-
-(defn standard-menu-2 [data]
-  [[(sc/icon-large [:> solid/TrashIcon]) "Fjern alle" #()]
-   [(sc/icon-large [:> solid/CursorClickIcon]) "Siste valg" #()]
-   nil
-   [(sc/icon-large [:> solid/CogIcon]) "Book nå" #()]])
