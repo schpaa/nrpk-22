@@ -1732,6 +1732,10 @@ h2 {
   right: 1rem;
 }
 
+.left-4 {
+  left: 1rem;
+}
+
 .bottom-0 {
   bottom: 0px;
 }
@@ -1818,10 +1822,6 @@ h2 {
 
 .-bottom-1 {
   bottom: -0.25rem;
-}
-
-.left-4 {
-  left: 1rem;
 }
 
 .isolate {
@@ -1986,10 +1986,6 @@ h2 {
   margin-bottom: 1px;
 }
 
-.mb-8 {
-  margin-bottom: 2rem;
-}
-
 .block {
   display: block;
 }
@@ -2062,6 +2058,10 @@ h2 {
   height: 0.25rem;
 }
 
+.h-12 {
+  height: 3rem;
+}
+
 .h-4 {
   height: 1rem;
 }
@@ -2074,16 +2074,8 @@ h2 {
   height: 2.5rem;
 }
 
-.h-12 {
-  height: 3rem;
-}
-
 .h-8 {
   height: 2rem;
-}
-
-.h-64 {
-  height: 16rem;
 }
 
 .h-screen {
@@ -2192,18 +2184,6 @@ h2 {
 
 .w-56 {
   width: 14rem;
-}
-
-.w-96 {
-  width: 24rem;
-}
-
-.w-80 {
-  width: 20rem;
-}
-
-.w-72 {
-  width: 18rem;
 }
 
 .min-w-fit {
@@ -3168,16 +3148,24 @@ h2 {
   padding-top: 1px;
 }
 
-.pb-px {
-  padding-bottom: 1px;
-}
-
 .pb-6 {
   padding-bottom: 1.5rem;
 }
 
 .pt-3 {
   padding-top: 0.75rem;
+}
+
+.pb-20 {
+  padding-bottom: 5rem;
+}
+
+.pb-7 {
+  padding-bottom: 1.75rem;
+}
+
+.pb-5 {
+  padding-bottom: 1.25rem;
 }
 
 .text-left {
@@ -4745,6 +4733,22 @@ h2 {
     bottom: 1rem;
   }
 
+  .xs\:left-20 {
+    left: 5rem;
+  }
+
+  .xs\:bottom-6 {
+    bottom: 1.5rem;
+  }
+
+  .xs\:bottom-8 {
+    bottom: 2rem;
+  }
+
+  .xs\:bottom-7 {
+    bottom: 1.75rem;
+  }
+
   .xs\:mx-0 {
     margin-left: 0px;
     margin-right: 0px;
@@ -4798,6 +4802,10 @@ h2 {
 }
 
 @media (min-width: 768px) {
+  .md\:left-24 {
+    left: 6rem;
+  }
+
   .md\:w-20 {
     width: 5rem;
   }

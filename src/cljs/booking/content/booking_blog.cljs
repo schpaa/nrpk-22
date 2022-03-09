@@ -2,6 +2,8 @@
   (:require [schpaa.style :as st]
             [db.core :as db]
             [reagent.core :as r]
+            ["@heroicons/react/solid" :as solid]
+            ["@heroicons/react/outline" :as outline]
             [nrpk.database]
             [tick.core :as t]
             [times.api :as ta]
@@ -10,7 +12,10 @@
             [nrpk.fsm-helpers :refer [send]]
             [schpaa.debug :as l]
             [eykt.content.rapport-side]
-            [schpaa.style.ornament :as sc]))
+            [schpaa.style.ornament :as sc]
+            [schpaa.style.button2 :as scb2]
+            [schpaa.style.menu :as scm]
+            [schpaa.style.button :as scb]))
 
 (defn not-yet-seen [last-visit-dt [k v]]
   (if last-visit-dt
@@ -21,10 +26,51 @@
       (catch js/Error e (prn (.-message e)) false))
     true))
 
+(defn not-yet-seen' [last-visit-dt {:keys [date]}]
+  (if last-visit-dt
+    (try
+      (if-let [article-dt (some-> date t/instant)]
+        (not (t/<= article-dt last-visit-dt))
+        false)
+      (catch js/Error e (prn (.-message e)) false))
+    true))
+
 (defn last-seen [uid]
   (let [path ["booking-posts" "receipts" (name uid)]
         last-seen (db/on-value-reaction {:path path})]
-    (some-> @last-seen (last) (val) (t/instant))))
+    @last-seen
+    #_(some-> @last-seen (last) (val) (t/instant))))
+
+(defn all-articles-by-date [all]
+  (let [f (fn [a [k v]]
+            (conj a {:date    (:date v)
+                     :content (:content v)
+                     :id      (name k)}))]
+    (sort-by :date > (reduce f [] all))))
+
+(defn count-unseen [uid]                                    ;"piH3WsiKhFcq56lh1q37ijiGnqX2"
+  (when uid
+    (let [last-visit (-> (last-seen uid) :articles :date)
+          all (db/on-value-reaction {:path ["booking-posts" "articles"]})
+          unseen (remove (fn [m] (not-yet-seen' last-visit m)) (all-articles-by-date @all))]
+      (- (count @all) (count unseen)))))
+
+(comment
+  (do
+    (let [last-visit (-> (last-seen "piH3WsiKhFcq56lh1q37ijiGnqX2") :articles :date)
+          all (db/on-value-reaction {:path ["booking-posts" "articles"]})
+          unseen (filter (fn [m] (not-yet-seen' last-visit m)) (all-articles-by-date @all))]
+
+      (- (count @all) (count unseen))
+      #_{:all     (all-articles-by-date @all)
+         :not-yet unseen})))
+
+(comment
+  (do
+    (not-yet-seen
+      (-> (last-seen "piH3WsiKhFcq56lh1q37ijiGnqX2") :articles :date)
+      ;(t/at (t/new-date 2021 1 1) (t/new-time 1 1 1))
+      [:x {:date (t/at (t/new-date 2023 1 1) (t/new-time 1 1 1))}])))
 
 (defn empty-list-message [msg]
   (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 0)]
@@ -51,17 +97,12 @@
                              :value {"articles" {:id   id
                                                  :date date}}})))))
 
-(defn preview [{:keys [content date uid]}]
-  (eykt.content.rapport-side/preview "b" date content))
-
 (defn lineitem [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
-  ;(tap> [item-id id-of-last-seen])
-
-  [sc/surface-b {:style {:border-radius "var(--radius-2)"}}
+  [sc/surface-a {:style {:border-radius "var(--radius-2)"}}
    (let [bg (if (pos? (compare (str item-id) (str id-of-last-seen))) :bg-white :bg-transparent)]
      [:div
-      ;{:class bg}
-      (preview m)
+
+      (eykt.content.rapport-side/preview "b" date content)
 
       #_(if (some? uid')
           [:div.grid.gap-2 {:style {:grid-template-columns "min-content min-content 1fr 1fr 1fr "}}
@@ -108,7 +149,7 @@
                         :date date
                         :uid' (:uid e))))
           [[:div.h-1]
-           [:div.flex.flex-center.h-16 {:on-click #(swap! pointer (fn [e] (+ e 5)))
+           [:div.flex.flex-center.h-12 {:on-click #(swap! pointer (fn [e] (+ e 5)))
                                         :class    ["bg-black/10" :rounded]} "Vis eldre"]])))
 
 (def fsm
@@ -124,6 +165,60 @@
              :s.initial {}
              :s.empty   {}}})
 
+(defn remove-receipts [uid]
+  (db/database-set {:path  ["booking-posts" "receipts" uid "articles"]
+                    :value {}}))
+
+(defn add-article []
+  (db/database-push {:path  ["booking-posts" "articles"]
+                     :value {:date (str (t/now)) :content "some content for the new stuff"}}))
+
+(defn generate [uid]
+  (db/database-push {:path  ["booking-posts" "receipts" uid "articles"]
+                     :value {:date (str (t/now)) :id "A"}})
+  (db/database-push {:path  ["booking-posts" "articles"]
+                     :value {:date (str (t/now)) :content "A"}}))
+
+(defn bottom-menu-definition [settings-atom]
+  (let [uid (:uid @settings-atom)]
+    [#_[:header [sc/row {:class [:justify-between :items-end]}
+                 [sc/title "Top"]
+                 [sc/pill (or booking.data/VERSION "dev.x.y")]]]
+     ;[icon label action disabled value]
+     #_[:menuitem [nil "Slett kvitteringer" #() false 0]]
+     [:menuitem {:icon     (sc/icon [:> solid/TrashIcon])
+                 :label    "Slett kvitteringer"
+                 :color    "var(--blue-4)"
+                 ;:highlight (= :r.retningslinjer :current-page)
+                 :action   #(remove-receipts uid)
+                 :disabled false
+                 :value    #()}]
+     [:menuitem {:icon     (sc/icon [:> solid/PlusIcon])
+                 :label    "Ny artikkel"
+                 :color    "var(--green-4)"
+                 ;:highlight (= :r.retningslinjer :current-page)
+                 :action   #(add-article)
+                 :disabled false
+                 :value    #()}]
+     [:menuitem {:icon     (sc/icon [:> solid/BeakerIcon])
+                 :label    "Generer"
+                 :color    "var(--red-4)"
+                 ;:highlight (= :r.retningslinjer :current-page)
+                 :action   #()
+                 :disabled true
+                 :value    #()}]]))
+
+
+(defn bottom-menu [uid]
+  (r/with-let [main-visible (r/atom true)]
+    (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
+      [scm/naked-menu-example-with-args
+       {:showing @main-visible
+        :dir     #{:up :right}
+        :data    (bottom-menu-definition (r/atom {:uid uid}))
+        :button  (fn [open]
+                   [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/DotsHorizontalIcon]]])}])))
+
 (defn render [{:keys [path uid fsm]}]
   ;intent When opening this section, mark as read!
   (let [pointer (r/atom 5)
@@ -134,30 +229,39 @@
 
        :component-did-update
        (fn [this old-argv old-state snapshot]
-         (let [datas (db/on-value-reaction {:path path})]
-           (tap> [:component-did-update @datas])
-           (if (empty? @datas)
-             (send :e.empty)
-             (send :e.initial))))
+         #_(let [datas (db/on-value-reaction {:path path})]
+             (tap> [:component-did-update @datas])
+             (if (empty? @datas)
+               (send :e.empty)
+               (send :e.initial))))
 
        :component-did-mount
        (fn [_]
+         ;-[ ] set receipts/uid/articles/date and id
+         (mark-last-seen uid)
+         ;(js/alert "!")
          ;(tap> {:datas @datas})
-
          ;(rf/dispatch [::rs/start])
          #_(tap> ":component-did-mount"))
 
        :reagent-render
        (fn [{:keys [path uid]}]
-         (let [{:keys [bg fg- fg+ fg hd p p- he]} (st/fbg' :form)
-               data (sort-by (comp :number val) < (logg.database/boat-db))
+         (let [data (sort-by (comp :number val) < (logg.database/boat-db))
                {date-of-last-seen :date id :id} @(db/on-value-reaction {:path ["booking-posts" "receipts" uid "articles"]})
                date-of-last-seen (some-> date-of-last-seen t/instant t/date-time)
                list-of-posts (db/on-value-reaction {:path path})
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
-           [:div
-            ;[l/ppre datas]
-            [:div *fsm-rapport]
+           [sc/col {:class [:space-y-4]}
+            #_[l/ppre-x
+               @(rf/subscribe [::rs/state :main-fsm])
+               date-of-last-seen]
+
+            ;[l/ppre-x @list-of-posts]
+            ;[:div *fsm-rapport]
+            ;[l/ppre-x uid]
+
+            #_(when uid
+                [l/ppre-x (last-seen uid)])
 
             (rs/match-state *fsm-rapport
               [:s.startup]
@@ -168,7 +272,9 @@
                              :date-of-last-seen date-of-last-seen}]
 
               [:s.empty]
-              [:div "EMPTY"]
+              [sc/col
+               [l/ppre-x @list-of-posts]
+               [:div "EMPTY"]]
 
               [:s.initial]
               [initial-page {:path              path
@@ -177,5 +283,9 @@
                              :pointer           pointer
                              :date-of-last-seen date-of-last-seen}]
 
-              [:div "other " *fsm-rapport])]))})))
+              [:div "other " *fsm-rapport])
 
+            [:div.absolute.bottom-24.xs:bottom-7.left-4.xs:left-20.md:left-24
+             [sc/row-end {:class [:pt-4]}
+              (bottom-menu uid)]]]))})))
+ 

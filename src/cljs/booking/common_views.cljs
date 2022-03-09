@@ -5,7 +5,7 @@
             [schpaa.style.dialog :refer [open-dialog-logoutcommand
                                          open-dialog-sampleautomessage
                                          open-dialog-sampleformmessage]]
-
+            [booking.content.booking-blog]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu :as scm]
@@ -56,14 +56,14 @@
                  :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
                  :disabled  false
                  :value     #()}]
-     ;[:hr]
+
      [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
                  :label     "Turlogg"
                  :highlight false
                  :action    nil
                  :disabled  true
                  :value     #()}]
-     #_[:hr]
+
      #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
                    :label     "Auto-message"
                    :highlight false
@@ -132,13 +132,14 @@
    [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
 
 (defn bottom-menu []
-  (r/with-let [main-visible (r/atom nil)]
+  (r/with-let [main-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
       [scm/naked-menu-example-with-args
-       {:dir    :up
-        :data   (bottom-menu-definition (r/atom nil))
-        :button (fn [open]
-                  [scb/round-normal {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
+       {:showing @main-visible
+        :dir     #{:up :left}
+        :data    (bottom-menu-definition (r/atom nil))
+        :button  (fn [open]
+                   [scb/round-normal {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
 #_(def vertical-toolbar
     [{:icon  outline/HomeIcon
@@ -164,8 +165,9 @@
    {:icon      outline/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.oversikt]])
     :page-name :r.oversikt}
-   {:icon      outline/ShieldCheckIcon
+   {:icon      outline/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+    :badge     #(booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")
     :page-name :r.booking-blog}
    {:icon      solid/PlusIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
@@ -181,8 +183,9 @@
    {:icon      solid/PlusIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}
-   {:icon      outline/ShieldCheckIcon
+   {:icon      outline/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+    :badge     #(booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")
     :page-name :r.booking-blog}
    {:icon      outline/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.oversikt]])
@@ -209,21 +212,48 @@
   ([attr & ch]
    [:div (conj attr {:class [(if (:active attr) :active :normal)]}) ch]))
 
-(defn horizontal-button [{:keys [icon on-click style page-name] :or {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-    [:div.w-full.h-full.flex.items-center.justify-center
-     {:on-click on-click}
-     [vert-button {:active (= page-name current-page)
-                   :style  style}
-      [sc/icon [:> icon]]]]))
+(o/defstyled top-left-badge :div
+  :rounded-full :bg-pink-500 :text-white :px-1 :text-sm     ; :border-dashed :border-black :border
+  [:& :top-0 :left-1 {:min-width  "1.3rem"
+                      :height     "1.2rem"
+                      :position   :absolute
+                      :box-shadow "var(--shadow-5)"}]
+  ([badge]
+   [:<>
+    [:div.flex.items-center.justify-center badge]]))
 
-(defn vertical-button [{:keys [icon style on-click page-name active-style!] :or {style {}}}]
+(o/defstyled top-right-tight-badge :div
+  :rounded-full :bg-pink-500 :text-white :px-1 :text-sm     ; :border-dashed :border-black :border
+  [:& :top-2 :right-3 {:min-width  "1.3rem"
+                       :height     "1.2rem"
+                       :position   :absolute
+                       :box-shadow "var(--shadow-5)"}]
+  ([badge]
+   [:<>
+    [:div.flex.items-center.justify-center badge]]))
+
+(defn horizontal-button [{:keys [icon on-click style page-name badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-    [:div.w-full.h-16.flex.items-center.justify-center
+    [:div.w-full.h-full.flex.items-center.justify-center.relative
      {:on-click on-click}
+     (when badge
+       (let [b (badge)]
+         (when (pos? b) [top-right-tight-badge b])))
      [vert-button {:active (= page-name current-page)
                    :style  style}
-      [sc/icon [:> icon]]]]))
+      [sc/icon-large [:> icon]]]]))
+
+(defn vertical-button [{:keys [icon style on-click page-name active-style! badge] :or {style {}}}]
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
+    [:div.w-full.h-16.flex.items-center.justify-center.relative
+     {:on-click on-click}
+     (when badge
+       (let [b (badge)]
+         (when (pos? b) [top-left-badge b])))
+     [vert-button {:active (= page-name current-page)
+                   :style  style}
+
+      [sc/icon-large [:> icon]]]]))
 
 (defn page-boundry [r & c]
   (let [page-title (-> r :data :header)]
@@ -243,10 +273,10 @@
                 :box-shadow   "var(--inner-shadow-3)"
                 :border-color "var(--surface0)"
                 :background   "var(--surface0)"}}
-       (map vertical-button
-            (butlast vertical-toolbar))
+       (into [:<>] (map vertical-button
+                        (butlast vertical-toolbar)))
        [:div.flex-grow]
-       [:div.h-20 (vertical-button (last vertical-toolbar))]]
+       [:div.pb-4 (vertical-button (last vertical-toolbar))]]
 
       [:div.flex-col.flex.h-full.w-full
        [:div.h-16.flex.items-center.w-full.border-b.px-4
@@ -260,11 +290,11 @@
         [:div.lg:max-w-6xl.md:max-w-3xl.mx-auto.px-4
          c
          [:div.h-32]
-         [:div.absolute.bottom-24.xs:bottom-4.right-4
+         [:div.absolute.bottom-24.xs:bottom-7.right-4
           [sc/row-end {:class [:pt-4]}
            (bottom-menu)]]]]
        [:div.h-24.w-full.xs:hidden.flex.justify-around.items-center
         {:style {:box-shadow "var(--inner-shadow-3)"
                  :background "var(--surface0)"}}
-        (map horizontal-button
-             horizontal-toolbar)]]]]))
+        (into [:<>] (map horizontal-button
+                         horizontal-toolbar))]]]]))
