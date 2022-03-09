@@ -31,7 +31,7 @@
             [shadow.resource :refer [inline]]
             [clojure.string :as str]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.input :as sci]
+            [schpaa.style.input :as sci :refer [input]]
             [schpaa.style.button2 :as scb2]))
 
 (defn confirm-registry []
@@ -143,18 +143,6 @@
        [sc/small (:email user-info)]
        [sc/small (:display-name user-info)]
        [sc/small (:uid user-info)]]]]))
-
-(defn input [{:keys [errors values handle-change] :as props} type class label field-name]
-  [sc/col {:class (into [:gap-1] class)}
-   [sc/row {:class [:gap-2]}
-    [sc/label label]
-    (if (field-name errors)
-      [sc/label-error (first (field-name errors))])]
-   [sci/date {:type      type
-              :value     (field-name values)
-              :on-change handle-change
-              :errors    (field-name errors)
-              :name      field-name}]])
 
 (o/defstyled checkbox' :input
   [:&

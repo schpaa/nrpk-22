@@ -2,6 +2,7 @@
   (:require [schpaa.style :as st]
             [db.core :as db]
             [reagent.core :as r]
+            [lambdaisland.ornament :as o]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [nrpk.database]
@@ -15,7 +16,8 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.button2 :as scb2]
             [schpaa.style.menu :as scm]
-            [schpaa.style.button :as scb]))
+            [schpaa.style.button :as scb]
+            [schpaa.style.dialog]))
 
 (defn not-yet-seen [last-visit-dt [k v]]
   (if last-visit-dt
@@ -97,46 +99,70 @@
                              :value {"articles" {:id   id
                                                  :date date}}})))))
 
+(o/defstyled top-right-date :div
+  :top-0 :right-0
+  {:position :absolute})
+
 (defn lineitem [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
-  [sc/surface-a {:style {:border-radius "var(--radius-2)"}}
+  [sc/surface-d {:style {:border-radius "var(--radius-1)"
+                         :-background   "var(--surface000)"
+                         :-box-shadow   "var(--shadow-2)"}}
    (let [bg (if (pos? (compare (str item-id) (str id-of-last-seen))) :bg-white :bg-transparent)]
-     [:div
+     [:div.p-4
+      [:div.relative.space-y-4
+       [:div.sticky.-top-8.p-2
+        {:class [:-mx-2]
+         :style {:background "var(--surface00)"
+                 :opacity    0.85}}
+        [sc/row-stretch
+         [sc/subtext "Arne Bo"]
+         [sc/subtext (ta/date-format (t/instant date))]]]
+       [:div (-> [schpaa.markdown/md->html "
+# Overskrift nr 2\n
+> Jeg kan tenke meg en ingress her
+### Første del
+Her kommer litt brødtekst, en lenke til [forsiden](/) og noen ord om det som jeg skulle ha sagt. Dette er selvfølgelig kun for demonstrasjonens skyld.
 
-      (eykt.content.rapport-side/preview "b" date content)
+Her kommer litt brødtekst i et nytt avsnitt, en lenke til [forsiden](/) og noen ord om det som jeg skulle ha sagt. Dette er selvfølgelig kun for demonstrasjonens skyld.
+### Avsluttende del
+Helt til slutt, en kinaputt
+"] sc/markdown)]
+       #_(eykt.content.rapport-side/preview "b" date content)
 
-      #_(if (some? uid')
-          [:div.grid.gap-2 {:style {:grid-template-columns "min-content min-content 1fr 1fr 1fr "}}
-           [:div {:on-click #(mark-last-seen' item-id uid (str (t/now)))} "set"]
-           ;[:div (nrpk.database/get-username-memoed uid')]
-           [:div (compare item-id id-of-last-seen)]
-           [:div (str (not-yet-seen (t/now) kv))]
+       #_(if (some? uid')
+           [:div.grid.gap-2 {:style {:grid-template-columns "min-content min-content 1fr 1fr 1fr "}}
+            [:div {:on-click #(mark-last-seen' item-id uid (str (t/now)))} "set"]
+            ;[:div (nrpk.database/get-username-memoed uid')]
+            [:div (compare item-id id-of-last-seen)]
+            [:div (str (not-yet-seen (t/now) kv))]
 
-           ;[:div (str (t/now))]
+            ;[:div (str (t/now))]
 
-           #_[:div (t/date-time (t/instant date))]
-           (let [beginning date-of-last-seen
-                 end (t/date-time (t/instant date))]
-             (if (and beginning end)
-               (if (t/<= end beginning)
-                 [:div {:class ["text-black/20"]}
-                  (t/hours (t/duration (tick.alpha.interval/new-interval end beginning)))]
-                 [:div {:class ["text-black/100"]}
-                  (t/hours (t/duration (tick.alpha.interval/new-interval beginning end)))])
-               [:div ">?"]))
-           [:div.tabular-nums (apply ta/format "%02d -- %02d:%02d" ((juxt t/day-of-month t/hour t/minute) (t/date-time (t/instant date))))]]
-          [:div
-           (if (some? uid')
-             (str "> " (last-seen (keyword uid)))
-             (str "." uid'))
-           (if (not-yet-seen (t/now) kv)
-             [:div.flex.gap-4
-              [:div "not yet"]
-              [:div date]]
-             [:div "yet"])])])])
+            #_[:div (t/date-time (t/instant date))]
+            (let [beginning date-of-last-seen
+                  end (t/date-time (t/instant date))]
+              (if (and beginning end)
+                (if (t/<= end beginning)
+                  [:div {:class ["text-black/20"]}
+                   (t/hours (t/duration (tick.alpha.interval/new-interval end beginning)))]
+                  [:div {:class ["text-black/100"]}
+                   (t/hours (t/duration (tick.alpha.interval/new-interval beginning end)))])
+                [:div ">?"]))
+            [:div.tabular-nums (apply ta/format "%02d -- %02d:%02d" ((juxt t/day-of-month t/hour t/minute) (t/date-time (t/instant date))))]]
+           [:div
+            (if (some? uid')
+              (str "> " (last-seen (keyword uid)))
+              (str "." uid'))
+            (if (not-yet-seen (t/now) kv)
+              [:div.flex.gap-4
+               [:div "not yet"]
+               [:div date]]
+              [:div "yet"])])]])])
 
 (defn initial-page [{:keys [path date-of-last-seen id uid pointer]}]
-  (into [:div.space-y-1]
+  (into [:div.space-y-2]
         (concat
+          [[sc/row {:class [:justify-center]} [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
           (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse @(db/on-value-reaction {:path path})))
                 :let [uid' (:uid e)]]
             (lineitem (assoc (select-keys e [])
@@ -149,8 +175,8 @@
                         :date date
                         :uid' (:uid e))))
           [[:div.h-1]
-           [:div.flex.flex-center.h-12 {:on-click #(swap! pointer (fn [e] (+ e 5)))
-                                        :class    ["bg-black/10" :rounded]} "Vis eldre"]])))
+           [sc/row {:class [:justify-center]} [scb2/normal-small {:on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis tidligere"]]])))
+
 
 (def fsm
   {:initial :s.startup
@@ -208,9 +234,8 @@
                  :disabled true
                  :value    #()}]]))
 
-
 (defn bottom-menu [uid]
-  (r/with-let [main-visible (r/atom true)]
+  (r/with-let [main-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
       [scm/naked-menu-example-with-args
        {:showing @main-visible
@@ -251,7 +276,8 @@
                date-of-last-seen (some-> date-of-last-seen t/instant t/date-time)
                list-of-posts (db/on-value-reaction {:path path})
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
-           [sc/col {:class [:space-y-4]}
+           [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
+
             #_[l/ppre-x
                @(rf/subscribe [::rs/state :main-fsm])
                date-of-last-seen]

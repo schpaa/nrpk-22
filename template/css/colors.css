@@ -7,9 +7,10 @@
 }
 
 :root {
-
+    --radius-1: 6px;
     --radius-2: 8px;
     --radius-3: 14px;
+
 
     --gray-0: #fafaf9; 
     --gray-1: #f5f5f4; 
@@ -21,6 +22,7 @@
     --gray-7: #44403c; 
     --gray-8: #292524; 
     --gray-9: #1c1917; 
+
 
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
@@ -62,9 +64,9 @@
    --brand1-light: var(--blue-6);
    --brand2-light: var(--blue-9);
 
-   --text1-light: var(--gray-9);
-   --text2-light: var(--gray-6);
-   --text3-light: var(--gray-4);
+   --text1-light: var(--gray-8);
+   --text2-light: var(--gray-7);
+   --text3-light: var(--gray-6);
    --label-light: var(--gray-5);
 
    --surface000-light: var(--gray-0);

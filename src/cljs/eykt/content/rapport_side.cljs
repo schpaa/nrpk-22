@@ -296,8 +296,8 @@
 (defn preview [style dt content]
   (let [common [:xs:px-2 :px-2 :pb-8 :my-px]
         date [:div.relative.sticky.top-0
-              [:div.absolute.-top-4x.right-0.bg-black.text-white.px-2.py-1.text-xs (ta/date-format (t/instant dt))]]]
-    [:div.h-12
+              [:div.absolute.-top-4x.right-0.xbg-black.xtext-white.px-2.py-1.text-xs (ta/date-format (t/instant dt))]]]
+    [:div                                                   ;.h-12
      [:div date]
      [:div.p-2 (schpaa.markdown/md->html content)]]
     #_(case style
