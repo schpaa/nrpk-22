@@ -14,6 +14,7 @@
             [reagent.core :as r]
             [re-frame.core :as rf]
             [schpaa.debug :as l]
+            [goog.events.KeyCodes :as keycodes]
             [times.api :as ta]
             [tick.core :as t]))
 
@@ -109,52 +110,153 @@
        [scb2/normal-small "Logg in"]
        [scb2/cta-small "Meld på"]]]]))
 
+(defn set-focus [el a]
+  (tap> "set ref")
+  (when-not @a
+    (reset! a el)
+    #_(when el (.focus el))))
+
+;region search
+
+(rf/reg-event-db :lab/set-search-expr (fn [db [_ search-expr]]
+                                        (assoc db :lab/search-expr search-expr)))
+
+(rf/reg-event-db :lab/set-search-mode (fn [db [_ searchmode?]]
+                                        (assoc db :lab/set-search-mode searchmode?)))
+
+(rf/reg-event-db :lab/toggle-search-mode (fn [db]
+                                           (update db :lab/set-search-mode (fnil not false))))
+
+(rf/reg-event-db :lab/start-search (fn [db]
+                                     (assoc db :lab/run-search true)))
+
+(rf/reg-event-db :lab/stop-search (fn [db]
+                                    (assoc db :lab/run-search false)))
+
+(rf/reg-sub :lab/is-search-running? :-> :lab/run-search)
+(rf/reg-sub :lab/in-search-mode? :-> :lab/set-search-mode)
+(rf/reg-sub :lab/search-expression :-> :lab/search-expr)
+
+(defn search-menu []
+  (let [a (r/atom nil)
+        value (rf/subscribe [:lab/search-expression])       ;(r/atom "")
+        search (rf/subscribe [:lab/in-search-mode?])
+        #_#_toggle-mainmenu #(do
+                               (rf/dispatch [:lab/toggle-search-mode])
+                               ;(swap! search (fnil not false))
+                               ;(reset! value "")
+                               (tap> ["toggle-mainmenu" @a @search]))]
+    (r/create-class
+      {:display-name         "search-widget"
+       :component-did-update (fn [_]
+                               (when @a (.focus @a)))
+       :component-did-mount  (fn [c]
+                               (when @a (.focus @a))
+                               (.addEventListener @a "keydown"
+                                                  (fn [event]
+                                                    (do
+                                                      (tap> [event.keyCode])
+                                                      (if (= keycodes/ESC event.keyCode)
+                                                        (do
+                                                          (tap> "ESC")
+                                                          (rf/dispatch [:lab/set-search-mode false])
+                                                          (rf/dispatch [:lab/stop-search])
+                                                          (rf/dispatch [:lab/set-search-expr ""]))))
+                                                    (if (= keycodes/ENTER event.keyCode)
+                                                      (do
+                                                        (tap> "ENTER")
+                                                        (rf/dispatch [:lab/start-search]))))))
+
+       :reagent-render       (fn []
+                               [scb/round-expander
+                                {:class (into [:h-10 :flex :items-center :duration-200]
+                                              [(if @search :px-2)
+                                               (if @search :w-full :w-10)])
+                                 :style (if @search
+                                          {:-padding-block "var(--size-4)"
+                                           :background     "var(--surface0)"}
+                                          {:-aspect-ratio "1/1"})}
+                                (when @search [:div [sc/icon [:> solid/SearchIcon]]])
+                                [:input.w-full.h-full.px-2
+                                 {:class       [:bg-transparent
+                                                :focus:outline-none
+                                                (if @search :flex :hidden)]
+                                  :ref         #(when-not @a
+                                                  (set-focus % a))
+                                  :placeholder "søk"
+                                  :value       @value
+                                  :on-blur     (fn [e] (let [s (-> e .-target .-value)]
+                                                         (if (nil? (seq s))
+                                                           (do
+                                                             (tap> "blur")
+                                                             (rf/dispatch [:lab/set-search-expr ""])
+                                                             (rf/dispatch [:lab/set-search-mode false])
+                                                             (rf/dispatch [:lab/stop-search])))))
+                                  :on-change   #(let [s (-> % .-target .-value)]
+                                                  (.stopPropagation %)
+                                                  (rf/dispatch [:lab/set-search-expr s]))
+                                  :type        :text}]
+
+                                [:div [sc/icon
+                                       {:class    [:shrink-0]
+                                        :on-click #(if @search
+                                                     (do
+                                                       (rf/dispatch [:lab/set-search-mode false])
+                                                       (rf/dispatch [:lab/stop-search])
+                                                       (rf/dispatch [:lab/set-search-expr ""]))
+                                                     (do
+                                                       (rf/dispatch [:lab/set-search-mode true])
+                                                       (when-let [r @a]
+                                                         (tap> "attempt focus")
+                                                         (.focus r))))}
+
+                                       (if @search
+                                         [:div.hover:text-red-500 [:> solid/XIcon]]
+                                         [:> solid/SearchIcon])]]])})))
+
+;endregion
+
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom nil)]
+  (r/with-let [mainmenu-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))]
       [:<>
        [scm/mainmenu-example-with-args
-        {:dir          :down
-         :close-button (fn [open] [scb/small-corner {:on-click #()} [sc/icon [:> solid/XIcon]]])
+        {:showing      @mainmenu-visible
+         :dir          #{:right :down}
+         :close-button (fn [open] #_[scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
-                         [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/MenuIcon]]])}]])))
+                         [scb/round-normal {:on-click toggle-mainmenu}
+                          (if open
+                            [sc/icon [:> solid/XIcon]]
+                            [sc/icon [:> solid/MenuIcon]])])}]])))
 
 (defn bottom-menu-definition [settings-atom]
-  [[:header [sc/row {:class [:justify-between :items-end]}
-             [sc/title "Top"]
-             [sc/pill (or booking.data/VERSION "dev.x.y")]]]
-   [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
-               "Badge"
-               nil
-               true
-               #()]]
-   [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
+  [[:header [sc/row {:class [:justify-between :items-end :w-44]}
+             [sc/header-title "Booking"]
+             [sc/pill (or "dev.3.12" booking.data/VERSION)]]]
+
+
+   [:space]
+   [:div [sc/small "Skrevet av meg for NRPK"]]
+   [:space]
+   [:footer [sc/row-end {:class [:gap-1 :justify-end :items-center]}
+             [sc/small "Vilkår"]
+             [sc/small "&"]
+             [sc/small "Betingelser"]]]])
 
 (defn bottom-menu []
   (r/with-let [main-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
-      [scm/naked-menu-example-with-args
-       {:showing @main-visible
-        :dir     #{:up :left}
-        :data    (bottom-menu-definition (r/atom nil))
-        :button  (fn [open]
-                   [scb/round-normal {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
+      [scm/mainmenu-example-with-args
+       {:close-button #()
+        :showing      @main-visible
+        :dir          #{:up :right}
+        :data         (bottom-menu-definition (r/atom nil))
+        :button       (fn [open]
+                        [scb/round-normal {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
-#_(def vertical-toolbar
-    [{:icon  outline/HomeIcon
-      :style {:border-radius "var(--radius-round)"
-              :padding       "var(--size-2)"
-              :background    "var(--surface000)"}}
-     {:icon  solid/UserIcon
-      :style {}}
-     {:icon  outline/ClockIcon
-      :style {}}
-     {:icon  solid/PlusIcon
-      :style {:border-radius "var(--radius-round)"
-              :padding       "var(--size-2)"
-              :background    "var(--surface1)"}}])
-
+;-[ ] todo: [:space] for extra space
 (def vertical-toolbar
   [{:icon      outline/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
@@ -167,8 +269,28 @@
     :page-name :r.oversikt}
    {:icon      outline/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-    :badge     #(booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")
+    :badge     #(let [c (booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")]
+                  (when (pos? c) c))
     :page-name :r.booking-blog}
+   {:icon      outline/ColorSwatchIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.designlanguage]])
+    ;:badge     (fn [_] "A")
+    :special   true
+    :page-name :r.designlanguage}
+
+   {:icon      outline/HandIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.terms]])
+    :special   true
+    :page-name :r.terms}
+   {:icon      outline/ClipboardListIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.conditions]])
+    :special   true
+    :page-name :r.conditions}
+   {:icon      outline/ShieldCheckIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
+    :special   true
+    :color     "red"
+    :page-name :r.retningslinjer}
    {:icon      solid/PlusIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}])
@@ -241,60 +363,109 @@
          (when (pos? b) [top-right-tight-badge b])))
      [vert-button {:active (= page-name current-page)
                    :style  style}
-      [sc/icon-large [:> icon]]]]))
+      [sc/icon [:> icon]]]]))
 
-(defn vertical-button [{:keys [icon style on-click page-name active-style! badge] :or {style {}}}]
+(defn vertical-button [{:keys [special icon style on-click page-name color badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     [:div.w-full.h-16.flex.items-center.justify-center.relative
-     {:on-click on-click}
-     (when badge
-       (let [b (badge)]
-         (when (pos? b) [top-left-badge b])))
-     [vert-button {:active (= page-name current-page)
-                   :style  style}
+     {:on-click on-click
+      :style    {:background (if special "var(--surface1)")}}
 
-      [sc/icon-large [:> icon]]]]))
+     (when badge
+       (when-some [b (badge)]
+         [top-left-badge b]))
+     [vert-button {:active (= page-name current-page)
+                   :style  (conj style (when (= page-name current-page) {:color color}))}
+
+      [sc/icon [:> icon]]]]))
+
+(defn compute-page-title [r]
+  (let [path-fn (some-> r :data :path-fn)
+        page-title (-> r :data :header)]
+    (remove nil? [(or page-title "no-title")
+                  (if path-fn
+                    (path-fn r))])))
+
+(o/defstyled result-item :div
+  {:display        :flex
+   :align-items    :center
+   :min-width      "12rem"
+   :padding-inline "var(--size-4)"
+   :padding-block  "var(--size-3)"
+   :background     "var(--surface000)"
+   :color          "var(--text1)"}
+  [:&:hover {:background "var(--surface0)"}])
+
+(defn search-result []
+  (let [data (range 12)]
+    (into [:div.gap-px.grid.w-full
+           {:style {:grid-template-columns "repeat(auto-fill,minmax(24rem,1fr))"}}]
+          (for [e data]
+            [result-item e]))))
 
 (defn page-boundry [r & c]
-  (let [page-title (-> r :data :header)]
-    [err-boundary
+  (r/create-class
+    {:component-did-mount
+     (fn []
+       (tap> :component-did-mount)
+       (.focus (.getElementById js/document "inner-document")))
+     :reagent-render
+     (fn [r & c]
+       (let [page-title (-> r :data :header)]
+         [err-boundary
 
-     ;region modal dialog
-     [schpaa.style.dialog/modal-generic
-      {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
-       :vis     (rf/subscribe [:lab/modal-example-dialog2])
-       :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
-     ;endregion
+          ;region modal dialog
+          [schpaa.style.dialog/modal-generic
+           {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
+            :vis     (rf/subscribe [:lab/modal-example-dialog2])
+            :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
+          ;endregion
 
-     [:div.fixed.inset-0.flex
-      ;vertical action-bar
-      [:div.shrink-0.w-16.md:w-20.h-full.xs:flex.hidden.justify-around.items-center.flex-col.border-r
-       {:style {:padding-top  "var(--size-0)"
-                :box-shadow   "var(--inner-shadow-3)"
-                :border-color "var(--surface0)"
-                :background   "var(--surface0)"}}
-       (into [:<>] (map vertical-button
-                        (butlast vertical-toolbar)))
-       [:div.flex-grow]
-       [:div.pb-4 (vertical-button (last vertical-toolbar))]]
+          [:div.fixed.inset-0.flex
 
-      [:div.flex-col.flex.h-full.w-full
-       [:div.h-16.flex.items-center.w-full.border-b.px-4
-        {:style {:background   "var(--surface000)"
-                 :border-color "var(--surface0)"}}
-        [sc/row-stretch
-         [sc/header-title [sc/dim (or page-title "no-title")]]
-         (main-menu)]]
+           ;vertical toolbar
+           [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+            {:style {:padding-top  "var(--size-0)"
+                     :box-shadow   "var(--inner-shadow-3)"
+                     :border-color "var(--surface0)"
+                     :background   "var(--surface0)"}}
+            (into [:<>] (map vertical-button (butlast vertical-toolbar)))
+            [:div.flex-grow]
+            [:div.pb-4 (vertical-button (last vertical-toolbar))]]
 
-       [:div.overflow-y-auto.h-full.py-8
-        [:div.lg:max-w-6xl.md:max-w-3xl.mx-auto.px-4
-         c
-         [:div.h-32]
-         [:div.absolute.bottom-24.xs:bottom-7.right-4
-          [sc/row-end {:class [:pt-4]}
-           (bottom-menu)]]]]
-       [:div.h-24.w-full.xs:hidden.flex.justify-around.items-center
-        {:style {:box-shadow "var(--inner-shadow-3)"
-                 :background "var(--surface0)"}}
-        (into [:<>] (map horizontal-button
-                         horizontal-toolbar))]]]]))
+           [:div.flex-col.flex.h-full.w-full
+            [:div.h-16.flex.items-center.w-full.border-b.px-4
+             {:style {:background   "var(--surface000)"
+                      :border-color "var(--surface0)"}}
+             [sc/row-std
+              [sc/header-title {:class [:grow]}
+               (when-not @(rf/subscribe [:lab/in-search-mode?])
+                 [sc/row {:class [:truncate]}
+                  (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
+                                                        [:div.truncate e]))])]
+              [search-menu]
+              (main-menu)]]
+
+            [:div.overflow-y-auto.h-full.focus:outline-none
+             {:id        "inner-document"
+              :tab-index "0"}
+             (if @(rf/subscribe [:lab/is-search-running?])
+               [:div.h-full
+                {:style {:background "var(--surface2)"}}
+                [search-result]
+                [:div.absolute.bottom-24.sm:bottom-7.right-4
+                 [sc/row-end {:class [:pt-4]}
+                  (bottom-menu)]]]
+               [:div.max-w-md.mx-auto.px-4.py-8
+                c
+                [:div.py-8.h-32]
+                [:div.absolute.bottom-24.sm:bottom-7.right-4
+                 [sc/row-end {:class [:pt-4]}
+                  (bottom-menu)]]])]
+
+            ;horizontal toolbar
+            [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center
+             {:style {:box-shadow "var(--inner-shadow-3)"
+                      :background "var(--surface0)"}}
+             (into [:<>] (map horizontal-button
+                              horizontal-toolbar))]]]]))}))

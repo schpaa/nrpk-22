@@ -1,0 +1,1 @@
+> Booking på sjøbasen er en tjeneste Nøklevann ro- og padleklubb tilbyr til alle sine medlemmer og har ingen kostnad utover vanlig medlemskap i klubben.

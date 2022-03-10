@@ -1,15 +1,19 @@
 # Er du medlem i NRPK med gyldig Våttkort?
 
-> Da kan du bruke NRPK Booking for å booke båter på sjøbasen som for tiden befinner seg på Ormsund roklubb [på Malmøya.](https://kart.finn.no/?lng=10.76408&lat=59.86772&zoom=15&mapType=normaphd&markers=10.76307,59.86606,b,Brukerdefinert)
+## Da kan du bruke NRPK Booking for å booke båter på sjøbasen som for tiden befinner seg på Ormsund roklubb [på Malmøya.](https://kart.finn.no/?lng=10.76408&lat=59.86772&zoom=15&mapType=normaphd&markers=10.76307,59.86606,b,Brukerdefinert)
 
-### De som ønsker å booke båt må gjennom følgende
+### Hvis du ønsker å bruke sjøbasen må du:
 
-1. Logg inn/registrer deg med en passende tilbyder og passord. Vi tilbyr
-   pålogging via Facebook, Gmail, E-post samt telefonnummer.
+1. Lage konto her. Vi tilbyr pålogging via Facebook, Gmail, E-post eller via
+   telefonnummeret ditt.
 
-2. Fyll ut registreringsskjemaet med personlige opplysninger samt seksjon for
-   booking. Ønsker du tilgang til de avanserte båtene må du huske å krysse av
-   for dette også.
+2. Legg igjen et minimum av relevante opplysninger som navn, alias, epost,
+   våttkortnummer og informasjon om hva slags sertifisering du har.
 
-3. Så snart registreringen er godkjent får du tilgang til å booke båter. Dette
-   skjer som regel innen samme dag du registrerer deg.
+3. Lese og akseptere [retningslinjene](/retningslinjer). Dette kan du gjøre før
+   du er godkjent, men du må ha laget konto.
+
+Når vi har godkjent registreringen din får du tilgang til båtene.
+
+Ønsker du også tilgang til `avanserte båter` kan du krysse av for dette i
+registreringen

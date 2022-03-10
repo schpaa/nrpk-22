@@ -19,14 +19,49 @@
             [schpaa.style.button :as scb]
             [schpaa.style.dialog]))
 
-(defn not-yet-seen [last-visit-dt [k v]]
-  (if last-visit-dt
-    (try
-      (if-let [article-dt (some-> (:date v) t/instant)]
-        (not (t/<= article-dt last-visit-dt))
-        false)
-      (catch js/Error e (prn (.-message e)) false))
-    true))
+(defn article-menu-definition [settings-atom]
+  (let [uid (:uid @settings-atom)]
+    [#_[:header [sc/row {:class [:justify-between :items-end]}
+                 [sc/title "Top"]
+                 [sc/pill (or booking.data/VERSION "dev.x.y")]]]
+     ;[icon label action disabled value]
+     #_[:menuitem [nil "Slett kvitteringer" #() false 0]]
+     [:menuitem {:icon     (sc/icon [:> solid/TrashIcon])
+                 :label    "Slett kvitteringer"
+                 :color    "var(--blue-4)"
+                 ;:highlight (= :r.retningslinjer :current-page)
+                 ;:action   #(remove-receipts uid)
+                 :disabled false
+                 :value    #()}]
+     [:menuitem {:icon     (sc/icon [:> solid/PlusIcon])
+                 :label    "Ny artikkel"
+                 :color    "var(--green-4)"
+                 ;:highlight (= :r.retningslinjer :current-page)
+                 ;:action   #(add-article)
+                 :disabled false
+                 :value    #()}]
+     [:menuitem {:icon     (sc/icon [:> solid/BeakerIcon])
+                 :label    "Generer"
+                 :color    "var(--red-4)"
+                 ;:highlight (= :r.retningslinjer :current-page)
+                 ;:action   #()
+                 :disabled true
+                 :value    #()}]]))
+
+(defn article-menu [k uid]
+  (let [main-visible (r/atom false)]
+    (fn [k uid]
+      (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
+        [scm/mainmenu-example-with-args
+         {:showing      @main-visible
+          :close-button #()
+          :dir          #{:up :left}
+          :data         (article-menu-definition (r/atom {:uid uid}))
+          :button       (fn [open]
+                          [scb2/outline-tight {:on-click toggle-mainmenu}
+                           [sc/row-gap
+                            [sc/icon [:> solid/MenuAlt1Icon]]
+                            "Rediger"]])}]))))
 
 (defn not-yet-seen' [last-visit-dt {:keys [date]}]
   (if last-visit-dt
@@ -90,92 +125,77 @@
                              :value {:id   (key last-seen)
                                      :date (str (t/now))}})))))
 
-(defn mark-last-seen' [id uid date]
-  (when-not (nil? uid)
-    (let [path ["booking-posts" "receipts" uid]
-          last-seen (first (last @(db/on-value-reaction {:path ["booking-posts" "articles"]})))]
-      (when last-seen
-        (db/database-update {:path  path
-                             :value {"articles" {:id   id
-                                                 :date date}}})))))
-
 (o/defstyled top-right-date :div
   :top-0 :right-0
   {:position :absolute})
 
-(defn lineitem [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
-  [sc/surface-d {:style {:border-radius "var(--radius-1)"
-                         :-background   "var(--surface000)"
-                         :-box-shadow   "var(--shadow-2)"}}
-   (let [bg (if (pos? (compare (str item-id) (str id-of-last-seen))) :bg-white :bg-transparent)]
-     [:div.p-4
-      [:div.relative.space-y-4
-       [:div.sticky.-top-8.p-2
-        {:class [:-mx-2]
-         :style {:background "var(--surface00)"
-                 :opacity    0.85}}
-        [sc/row-stretch
-         [sc/subtext "Arne Bo"]
-         [sc/subtext (ta/date-format (t/instant date))]]]
-       [:div (-> [schpaa.markdown/md->html "
-# Overskrift nr 2\n
-> Jeg kan tenke meg en ingress her
-### Første del
-Her kommer litt brødtekst, en lenke til [forsiden](/) og noen ord om det som jeg skulle ha sagt. Dette er selvfølgelig kun for demonstrasjonens skyld.
+(defn lineitem [_]
+  ;-[ ] issue: tabbing into elements that are overflow-hidden will give them the focus
+  (let [visible? (r/atom false)]
+    (fn [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
+      [sc/surface-d {:style {:padding       "1rem"
+                             :border-radius "var(--radius-1)"
+                             :background    "var(--surface000)"
+                             :box-shadow    "var(--inner-shadow-2)"}}
+       [:div.relative.space-y-4.overflow-hidden
+        (when-not @visible?
+          {:style {:max-height "25rem"}})
+        [:div.absolute.bottom-0.inset-x-0.pointer-events-none
+         (when-not @visible?
+           {:style {:height           "50%"
+                    :background-image "linear-gradient(transparent,var(--surface00))"}})]
 
-Her kommer litt brødtekst i et nytt avsnitt, en lenke til [forsiden](/) og noen ord om det som jeg skulle ha sagt. Dette er selvfølgelig kun for demonstrasjonens skyld.
-### Avsluttende del
-Helt til slutt, en kinaputt
-"] sc/markdown)]
-       #_(eykt.content.rapport-side/preview "b" date content)
+        ;intent bottom fadeout
+        [:div
+         (if @visible?
+           [:div (-> content schpaa.markdown/md->html sc/markdown)]
+           [:div (-> content (subs 0 256) (str "...") schpaa.markdown/md->html sc/markdown)])]
+        [:div.absolute.bottom-0.inset-x-0
+         [:div.grid
+          {:style {:grid-template-columns "min-content 1fr min-content 1fr min-content"}}
+          [scb2/outline-tight {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
+          [:div]
+          (if-not @visible?
+            [scb2/outline-tight {:on-click #(swap! visible? not)} "Les mer"]
+            [:div])
+          [:div]
+          [scb2/outline-tight [sc/icon [:> outline/PencilIcon]]]]]
 
-       #_(if (some? uid')
-           [:div.grid.gap-2 {:style {:grid-template-columns "min-content min-content 1fr 1fr 1fr "}}
-            [:div {:on-click #(mark-last-seen' item-id uid (str (t/now)))} "set"]
-            ;[:div (nrpk.database/get-username-memoed uid')]
-            [:div (compare item-id id-of-last-seen)]
-            [:div (str (not-yet-seen (t/now) kv))]
+        #_[:div.sticky.-top-8.px-4
+           {:class [:-mx-4]
+            :style {:background "var(--surface00)"
+                    :opacity    0.85}}
+           [:div.h-8 {:class [:flex :items-center :gap-4]}
+            [:div.grow [sc/subtext "Arne Bo"]]
+            [sc/subtext (ta/date-format (t/instant date))]]]]
 
-            ;[:div (str (t/now))]
 
-            #_[:div (t/date-time (t/instant date))]
-            (let [beginning date-of-last-seen
-                  end (t/date-time (t/instant date))]
-              (if (and beginning end)
-                (if (t/<= end beginning)
-                  [:div {:class ["text-black/20"]}
-                   (t/hours (t/duration (tick.alpha.interval/new-interval end beginning)))]
-                  [:div {:class ["text-black/100"]}
-                   (t/hours (t/duration (tick.alpha.interval/new-interval beginning end)))])
-                [:div ">?"]))
-            [:div.tabular-nums (apply ta/format "%02d -- %02d:%02d" ((juxt t/day-of-month t/hour t/minute) (t/date-time (t/instant date))))]]
-           [:div
-            (if (some? uid')
-              (str "> " (last-seen (keyword uid)))
-              (str "." uid'))
-            (if (not-yet-seen (t/now) kv)
-              [:div.flex.gap-4
-               [:div "not yet"]
-               [:div date]]
-              [:div "yet"])])]])])
+       #_[:div.absolute.bottom-10.left-0.z-50 [article-menu :k uid]]])))
+
 
 (defn initial-page [{:keys [path date-of-last-seen id uid pointer]}]
-  (into [:div.space-y-2]
-        (concat
-          [[sc/row {:class [:justify-center]} [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
-          (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse @(db/on-value-reaction {:path path})))
-                :let [uid' (:uid e)]]
-            (lineitem (assoc (select-keys e [])
-                        :content content
-                        :item-id (name k)
-                        :date-of-last-seen date-of-last-seen
-                        :id-of-last-seen id
-                        :uid uid
-                        :kv kv
-                        :date date
-                        :uid' (:uid e))))
-          [[:div.h-1]
-           [sc/row {:class [:justify-center]} [scb2/normal-small {:on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis tidligere"]]])))
+  (let [data @(db/on-value-reaction {:path path})]
+    (into [:div.space-y-2]
+          (concat
+            [[sc/row {:class [:justify-center]} [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
+            (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse data))
+                  :let [uid' (:uid e)]]
+              ^{:key (str k)}
+              [lineitem (assoc (select-keys e [])
+                          :content content
+                          :item-id (name k)
+                          :date-of-last-seen date-of-last-seen
+                          :id-of-last-seen id
+                          :uid uid
+                          :kv kv
+                          :date date
+                          :uid' (:uid e))])
+            [[:div.h-1]
+             [sc/row {:class [:justify-center]}
+              (if (< @pointer (count data))
+                [scb2/normal-small {:disabled (zero? (count data))
+                                    :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
+                [sc/subtext "Ingen flere"])]]))))
 
 
 (def fsm
@@ -195,9 +215,29 @@ Helt til slutt, en kinaputt
   (db/database-set {:path  ["booking-posts" "receipts" uid "articles"]
                     :value {}}))
 
-(defn add-article []
-  (db/database-push {:path  ["booking-posts" "articles"]
-                     :value {:date (str (t/now)) :content "some content for the new stuff"}}))
+(defn add-article' [content]
+  (let [add-func #(db/database-push {:path  ["booking-posts" "articles"]
+                                     :value {:date (str (t/now)) :content %}})]
+    (add-func content)))
+
+(defn add-article [kind]
+  (let [add-func #(db/database-push {:path  ["booking-posts" "articles"]
+                                     :value {:date (str (t/now)) :content %}})]
+    (add-func (case kind
+                :e (shadow.resource/inline "./intro.md")
+                :d (shadow.resource/inline "./frontpage.md")
+                :c (shadow.resource/inline "./frontpage2.md")
+                :b (shadow.resource/inline "./test.md")
+                :a "# Overskrift nr 2\n
+> Jeg kan tenke meg en ingress her
+### Første del
+Her kommer litt brødtekst, en lenke til [forsiden](/) og noen ord om det som jeg skulle ha sagt. Dette er selvfølgelig kun for demonstrasjonens skyld.
+
+Her kommer litt brødtekst i et nytt avsnitt, en lenke til [forsiden](/) og noen ord om det som jeg skulle ha sagt. Dette er selvfølgelig kun for demonstrasjonens skyld.
+### Avsluttende del
+Helt til slutt, en kinaputt"
+                "some content for the new stuff"))))
+
 
 (defn generate [uid]
   (db/database-push {:path  ["booking-posts" "receipts" uid "articles"]
@@ -207,42 +247,41 @@ Helt til slutt, en kinaputt
 
 (defn bottom-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
-    [#_[:header [sc/row {:class [:justify-between :items-end]}
-                 [sc/title "Top"]
-                 [sc/pill (or booking.data/VERSION "dev.x.y")]]]
-     ;[icon label action disabled value]
-     #_[:menuitem [nil "Slett kvitteringer" #() false 0]]
-     [:menuitem {:icon     (sc/icon [:> solid/TrashIcon])
-                 :label    "Slett kvitteringer"
-                 :color    "var(--blue-4)"
-                 ;:highlight (= :r.retningslinjer :current-page)
-                 :action   #(remove-receipts uid)
-                 :disabled false
-                 :value    #()}]
-     [:menuitem {:icon     (sc/icon [:> solid/PlusIcon])
-                 :label    "Ny artikkel"
-                 :color    "var(--green-4)"
-                 ;:highlight (= :r.retningslinjer :current-page)
-                 :action   #(add-article)
-                 :disabled false
-                 :value    #()}]
-     [:menuitem {:icon     (sc/icon [:> solid/BeakerIcon])
-                 :label    "Generer"
-                 :color    "var(--red-4)"
-                 ;:highlight (= :r.retningslinjer :current-page)
-                 :action   #()
-                 :disabled true
-                 :value    #()}]]))
+    [[:small-menuitem {:icon   (sc/icon [:> solid/TrashIcon])
+                       :label  "Slett alle kvitteringer"
+                       :action #(remove-receipts uid)}]
+     [:small-menuitem {:icon   (sc/icon [:> solid/PlusIcon])
+                       :label  "Ny artikkel A"
+                       :action #(add-article :a)}]
+     [:small-menuitem {:icon   (sc/icon [:> solid/PlusIcon])
+                       :label  "Ny artikkel B"
+                       :action #(add-article :b)}]
+     [:small-menuitem {:label  "Ny artikkel C"
+                       :action #(add-article :c)}]
+     [:small-menuitem {:label  "Ny artikkel D"
+                       :action #(add-article :d)}]
+     [:small-menuitem {:label  "Ny artikkel E"
+                       :action #(add-article :e)}]
+     [:small-menuitem {:label  "../markdown-example.md"
+                       :action #(add-article' (shadow.resource/inline "../markdown-example.md"))}]
+     [:small-menuitem {:icon     (sc/icon [:> solid/BeakerIcon])
+                       :label    "Generer"
+                       :color    "var(--red-4)"
+                       :action   #()
+                       :disabled true}]]))
+
 
 (defn bottom-menu [uid]
   (r/with-let [main-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
-      [scm/naked-menu-example-with-args
-       {:showing @main-visible
-        :dir     #{:up :right}
-        :data    (bottom-menu-definition (r/atom {:uid uid}))
-        :button  (fn [open]
-                   [scb/round-normal {:on-click toggle-mainmenu} [sc/icon [:> solid/DotsHorizontalIcon]]])}])))
+      [scm/small-menu
+       {:showing      @main-visible
+        :close-button #()
+        :dir          #{:up :left}
+        :data         (bottom-menu-definition (r/atom {:uid uid}))
+        :button       (fn [open]
+                        [scb/round-dark {:on-click toggle-mainmenu}
+                         [sc/icon [:> outline/FingerPrintIcon]]])}])))
 
 (defn render [{:keys [path uid fsm]}]
   ;intent When opening this section, mark as read!
@@ -276,18 +315,7 @@ Helt til slutt, en kinaputt
                date-of-last-seen (some-> date-of-last-seen t/instant t/date-time)
                list-of-posts (db/on-value-reaction {:path path})
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
-           [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
-
-            #_[l/ppre-x
-               @(rf/subscribe [::rs/state :main-fsm])
-               date-of-last-seen]
-
-            ;[l/ppre-x @list-of-posts]
-            ;[:div *fsm-rapport]
-            ;[l/ppre-x uid]
-
-            #_(when uid
-                [l/ppre-x (last-seen uid)])
+           [sc/col {:class [:space-y-4 :max-w-lg :mx-auto]}
 
             (rs/match-state *fsm-rapport
               [:s.startup]
@@ -311,7 +339,7 @@ Helt til slutt, en kinaputt
 
               [:div "other " *fsm-rapport])
 
-            [:div.absolute.bottom-24.xs:bottom-7.left-4.xs:left-20.md:left-24
+            [:div.absolute.bottom-24.xs:bottom-7.left-4.sm:left-20
              [sc/row-end {:class [:pt-4]}
               (bottom-menu uid)]]]))})))
  

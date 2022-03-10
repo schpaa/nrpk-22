@@ -16,12 +16,19 @@
   [["/" {:name :r.forsiden :header "Booking på Sjøbasen" :subheader "Forsiden"}]
    ["/oversikt" {:name :r.oversikt :header "Bookingoversikt"}]
    ["/nytt" {:name :r.booking-blog :header "Hva er nytt?" :subheader "Forsiden"}]
+   ["/nytt/:id" {:name    :r.booking-blog-doc
+                 :header  "Hva er nytt?"
+                 :path-fn (fn [r] (some-> r :path-params :id))}]
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
    ["/debug" {:name :r.debug :header "Booking Labs" :subheader "Baksiden"}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
    ["/om-meg" {:name :r.user :header "Om meg" :subheader "Baksiden"}]
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
-   ["/not-found" {:name :r.page-not-found :header ":r.page-not-found" :subheader ":r.page-not-found"}]])
+   ["/not-found" {:name :r.page-not-found :header ":r.page-not-found" :subheader ":r.page-not-found"}]
+   ["/designspråk" {:name :r.designlanguage :header "designspråk"}]
+   ["/retningslinjer" {:name :r.retningslinjer :header "Retningslinjer"}]
+   ["/conditions" {:name :r.conditions :header "Vilkår"}]
+   ["/terms" {:name :r.terms :header "Betingelser"}]])
 
 (defn kee-start []
   (k/start! {:routes         routes,

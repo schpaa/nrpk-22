@@ -1,6 +1,8 @@
 (ns booking.spa
   (:require [booking.common-views :refer [main-menu page-boundry]]
             [booking.content.booking-blog :as content.booking-blog :refer [render]]
+            [reagent.core :as r]
+            [lambdaisland.ornament :as o]
             [booking.content.overview :as content.overview]
             [booking.hoc :as hoc]
             [booking.lab]
@@ -30,7 +32,9 @@
             [user.views]
             [schpaa.style.button :as scb]
             [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]
-            [schpaa.style.button2 :as scb2]))
+            [schpaa.style.button2 :as scb2]
+            [shadow.resource :refer [inline]]
+            [times.api :as ta]))
 
 
 ;region related to flex-date and how to display relative time
@@ -216,6 +220,30 @@
               true
               #()]])))
 
+(o/defstyled details :details
+  #_[:& :select-none
+     [#{:openxx} :text-blue-500]
+     [:>summary
+      ;:flex
+      #_[:&:hover :opacity-100]
+      #_[:> [:* {:display :inline}]]]]
+
+  ([{:keys [st header]} ch]
+   #_^{;:class [:openxx]
+       :open st}
+   ;^{:open st}
+   [:div
+    [:div "asd"]
+    #_[:summary
+       "header"]]))
+
+(defn collapsable-memory [tag header content]
+  (r/with-let [st (schpaa.state/listen tag)]
+    [:details.select-none {:open @st}
+     [:summary {:on-click #(schpaa.state/toggle tag)
+                :style    {:display :inline}} header]
+     content]))
+
 (def routing-table
   {:r.welcome
    (fn [r]
@@ -268,6 +296,15 @@
           :uid  (:uid @user-auth)
           :path ["booking-posts" "articles"]}]]))
 
+   :r.booking-blog-doc
+   (fn [r]
+     (let [id (some-> r :path-params :id)
+           data (db/on-value-reaction {:path ["booking-posts" "articles" (name id)]})]
+       [page-boundry r
+        ;[l/ppre-x r id @data]
+        [:div.max-w-xl.mx-auto.container
+         [sc/markdown [schpaa.markdown/md->html (:content @data)]]]]))
+
    :r.user
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
@@ -297,4 +334,149 @@
      [page-boundry r
       [booking.lab/render r]])
 
-   :r.page-not-found (fn [r] [:div "?"])})
+   :r.designlanguage
+   (fn [r]
+     [page-boundry r
+      [:div.pb-32
+       ;.max-w-md.mx-auto
+       [collapsable-memory
+        :color-palette
+        [sc/separator "Color and grayscale palette"]
+        (into [:div.grid.gap-2
+               {:style {:grid-template-columns "repeat(auto-fit,minmax(6rem,1fr))"}}]
+              (map (fn [[styles tag]]
+                     [sc/surface-b-sans-bg {:class []
+                                            :style (conj styles {:box-shadow   "var(--inner-shadow-2)"
+                                                                 :font-size    "var(--font-size-0)"
+                                                                 :aspect-ratio "1/1"})} tag])
+                   [[{:color      "var(--green-0)"
+                      :background "var(--green-5)"} "call to action"]
+
+
+                    [{:color      "var(--red-0)"
+                      :background "var(--red-5)"} "dangerous and irreversible actions"]
+
+
+                    [{:color      "var(--surface5)"
+                      :background "var(--brand0)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--brand1)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--brand2)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--yellow-2)"} :highlighter]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface1)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface2)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface3)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface4)"} :tag]
+                    [{:color      "var(--surface0)"
+                      :background "var(--surface5)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface0)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface00)"} :tag]
+                    [{:color      "var(--surface5)"
+                      :background "var(--surface000)"} :tag]]))]
+
+       [collapsable-memory
+        :fonts
+        [sc/separator "Fonts"]
+        (let [f (fn [font-name font-size line-height e]
+                  (let [line-height (or line-height "auto")
+                        e (ta/format e font-name font-size line-height)]
+                    [:div
+                     {:style {:font-weight "400"
+                              :font-family font-name
+                              :font-size   font-size
+                              :line-height line-height}}
+                     [:div e]
+                     [:div {:style {:font-style :italic}} e]
+                     [:div {:style {:font-weight "100"}} e " 100"]
+                     [:div {:style {:font-weight "900"}} e " 900"]
+                     [:div (apply str (range 10))]
+                     [:div [:strong (apply str (range 10))]]]))]
+
+          [:<>
+           [sc/col {:class [:space-y-8]}
+            [sc/col {:class [:space-y-4]}
+             (f "Inter" "16px" "20px" "%s %s/%s sans-serif")
+             (f "Inter" "24px" "26px" "%s %s/%s sans-serif")
+             (f "Montserrat" "18px" "22px" "%s %s/%s sans-serif")
+             (f "Montserrat" "24px" "28px" "%s %s/%s sans-serif")
+             (f "Montserrat" "32px" "38px" "%s %s/%s sans-serif")
+             (f "Lora" "16px" "18px" "%s %s/%s serif")
+             (f "Lora" "24px" "30px" "%s %s/%s serif")
+             (f "Lora" "32px" "38px" "%s %s/%s serif")]]])]
+
+       [collapsable-memory
+        :markdown
+        [sc/separator "Markdown styles"]
+        [sc/surface-a
+         (-> (inline "./markdown-example.md") schpaa.markdown/md->html sc/markdown)]]
+       [collapsable-memory
+        :styles
+        [sc/separator "Styles"]
+        (into [:div.space-y-1]
+              (map (fn [c] [sc/surface-a {:class [:p-2]} c])
+                   [[sc/small "sc/small"]
+                    [sc/separator "sc/separator"]
+                    [sc/col-fields
+                     [sc/header-title "sc/header-title"]
+                     [sc/header-title "sc/header-title"]
+                     [sc/header-title "sc/header-title"]]
+                    [sc/col
+                     [sc/dialog-title "sc/dialog-title"]
+                     [sc/dialog-title "sc/dialog-title"]
+                     [sc/dialog-title "sc/dialog-title"]]
+                    [sc/subtitle "sc/subtitle"]
+                    [sc/subtext "sc/subtext"]
+                    [sc/text "sc/text"]
+                    [sc/field-label "sc/field-label"]
+                    [sc/title "sc/title"]
+                    [sc/pill "sc/pill"]
+                    [sc/text "sc/row-fields"
+                     [sc/row-fields
+                      [sc/text "field"]
+                      [sc/text "field"]
+                      [sc/text "field"]]]
+                    [sc/text "sc/row-stretch"
+                     [sc/row-stretch
+                      [sc/text "field"]
+                      [sc/text "field"]
+                      [sc/text "field"]]]
+                    [sc/text "sc/row-end"
+                     [sc/row-end
+                      [sc/text "field"]
+                      [sc/text "field"]
+                      [sc/text "field"]]]
+                    [sc/text "sc/row-wrap (gap-4)"
+                     [sc/row-wrap
+                      [sc/text "field"]
+                      [sc/text "field"]
+                      [sc/text "field"]]]
+                    [sc/text "sc/row-gap (gap-2)"
+                     [sc/row-gap
+                      [sc/text "field"]
+                      [sc/text "field"]
+                      [sc/text "field"]]]]))]]])
+
+   :r.terms
+   (fn [r]
+     [page-boundry r])
+
+   :r.conditions
+   (fn [r]
+     [page-boundry r])
+
+   :r.retningslinjer
+   (fn [r]
+     [page-boundry r
+      (-> (inline "./content/retningslinjer.md") schpaa.markdown/md->html sc/markdown)])
+
+
+   :r.page-not-found
+   (fn [r] [:div "?"])})

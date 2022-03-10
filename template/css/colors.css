@@ -6,13 +6,16 @@
   src: url("/fonts/Inter.var.woff2?v=3.19") format("woff2");
 }
 
+@font-face {
+  font-family: 'Lora', serif;
+}
+
 :root {
     --radius-1: 6px;
     --radius-2: 8px;
     --radius-3: 14px;
 
-
-    --gray-0: #fafaf9; 
+    --gray-0: #fafaf9;
     --gray-1: #f5f5f4; 
     --gray-2: #e7e5e4; 
     --gray-3: #d6d3d1; 
@@ -96,9 +99,9 @@
    --button2-light: var(--gray-3);
 
    --buttonbase-disabled-light: var(--gray-1);
-   --buttonbase-light: var(--gray-3);
+   --buttonbase-light: var(--gray-4);
    --buttontext-light: var(--gray-7);
-   --buttonbase-hover-light: var(--gray-4);
+   --buttonbase-hover-light: var(--gray-3);
    --buttonbase-active-light: var(--gray-5);
 
 }
