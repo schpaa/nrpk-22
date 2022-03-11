@@ -247,10 +247,11 @@
 
 (o/defstyled listitem :div
   ([a b c]
-   [sc/row-stretch
-    [sc/text a]
-    [sc/text b]
-    [sc/text c]]))
+   [sc/row'
+    [sc/text {:class [:w-8 :shrink-0]} b]
+    [scb2/outline-tight "Rediger"]
+    [sc/subtext {:class [:line-clamp-3 :grow]} a]
+    #_[sc/text c]]))
 
 (def routing-table
   {:r.welcome
@@ -489,15 +490,27 @@
    (fn [r]
      [page-boundry r
       (r/with-let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})
-                   receipts (db/on-value-reaction {:path ["booking-posts" "receipts"]})
-                   receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts)]
-        [:<>
-         [sc/row-center
-          [scb2/cta-large {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
-         (into [:<>]
-               (for [[k {:keys [content date]}] @data]
-                 [listitem k [schpaa.time/y (t/date-time (t/instant date))] (get receipts (name k))]))
-         [l/ppre-x receipts]])])
-
+                   receipts' (db/on-value-reaction {:path ["booking-posts" "receipts"]})
+                   #_#_receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
+        (when @receipts'
+          (let [receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
+            [:<>
+             ;[l/ppre-x receipts]
+             [sc/row-center
+              [scb2/cta-large {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
+             (when @data
+               (into [:<>]
+                     (for [[k {:keys [content date]}] @data]
+                       [listitem
+                        content
+                        [:div (get receipts (name k))]
+                        [schpaa.time/flex-date
+                         {:time-class [:text-xs]}
+                         (t/date-time (t/instant date))
+                         (fn [current-time] (t/format "dd. MMMM 'kl' hh.mm.ss" (t/date-time current-time)))]])))
+             #_[l/ppre-x receipts']])))])
+   :r.calendar
+   (fn [r]
+     [page-boundry r])
    :r.page-not-found
    (fn [r] [:div "?"])})

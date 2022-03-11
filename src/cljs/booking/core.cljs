@@ -29,7 +29,8 @@
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
    ["/retningslinjer" {:name :r.retningslinjer :header "Retningslinjer"}]
    ["/conditions" {:name :r.conditions :header "Vilkår"}]
-   ["/terms" {:name :r.terms :header "Betingelser"}]])
+   ["/terms" {:name :r.terms :header "Betingelser"}]
+   ["/kalender" {:name :r.calendar :header "Kalender"}]])
 
 (defn kee-start []
   (k/start! {:routes         routes,

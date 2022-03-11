@@ -31,18 +31,18 @@
 (defn better-mainmenu-definition [settings-atom]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     ;[icon label action disabled value]
-    [[:menuitem {:icon      (sc/icon [:> solid/CollectionIcon])
+    [[:menuitem {:icon      (sc/icon [:> solid/HomeIcon])
                  :label     "Forsiden"
-                 :color     "var(--forsiden)"
+                 :color     "var(--red-6)"
                  :highlight (= :r.forsiden current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
                  :disabled  false
                  :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
-                 :label     "Hva er nytt?"
+     [:menuitem {:icon      (sc/icon [:> solid/CalendarIcon])
+                 :label     "Kalender"
                  :color     "var(--hva-er-nytt)"
-                 :highlight (= :r.booking-blog current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+                 :highlight (= :r.calendar current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.calendar]])
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
@@ -67,7 +67,6 @@
                  :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
                  :disabled  false
                  :value     #()}]
-
      [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
                  :label     "Turlogg"
                  :highlight false
@@ -75,14 +74,22 @@
                  :disabled  true
                  :value     #()}]
      [:hr]
-     [:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
-                 :label     "Logg ut..."
-                 :color     "var(--logg-ut)"
-                 :highlight false
-                 :action    #(open-dialog-logoutcommand)
-
+     [:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
+                 :label     "Hva er nytt?"
+                 :color     "var(--hva-er-nytt)"
+                 :highlight (= :r.booking-blog current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
                  :disabled  false
                  :value     #()}]
+     #_[:hr]
+     #_[:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
+                   :label     "Logg ut..."
+                   :color     "var(--logg-ut)"
+                   :highlight false
+                   :action    #(open-dialog-logoutcommand)
+
+                   :disabled  false
+                   :value     #()}]
      [:space]
      [:div
       [:div.flex.items-center.gap-2.justify-between
@@ -118,13 +125,9 @@
 
 (defn search-menu []
   (let [a (r/atom nil)
-        value (rf/subscribe [:lab/search-expression])       ;(r/atom "")
-        search (rf/subscribe [:lab/in-search-mode?])
-        #_#_toggle-mainmenu #(do
-                               (rf/dispatch [:lab/toggle-search-mode])
-                               ;(swap! search (fnil not false))
-                               ;(reset! value "")
-                               (tap> ["toggle-mainmenu" @a @search]))]
+        value (rf/subscribe [:lab/search-expression])
+        search (rf/subscribe [:lab/in-search-mode?])]
+
     (r/create-class
       {:display-name         "search-widget"
        :component-did-update (fn [_]
@@ -153,9 +156,9 @@
                                                (if @search :w-full :w-10)])
                                  :style (if @search
                                           {:-padding-block "var(--size-4)"
-                                           :background     "var(--surface0)"}
+                                           :background     "var(--surface000)"}
                                           {:-aspect-ratio "1/1"})}
-                                (when @search [:div [sc/icon [:> solid/SearchIcon]]])
+                                (when @search [sc/icon [:> solid/SearchIcon]])
                                 [:input.w-full.h-full.px-2
                                  {:class       [:bg-transparent
                                                 :focus:outline-none
@@ -202,7 +205,7 @@
        [scm/mainmenu-example-with-args
         {:showing      @mainmenu-visible
          :dir          #{:right :down}
-         :close-button (fn [open] #_[scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
+         :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
                          [scb/round-normal {:on-click toggle-mainmenu}
@@ -237,60 +240,44 @@
 
 ;-[ ] todo: [:space] for extra space
 (defn vertical-toolbar [uid]
-  [{:icon      outline/HomeIcon
+  [{:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}
-   {:icon      outline/UserCircleIcon
+   {:icon      solid/CalendarIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.calendar]])
+    #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
+                  (when (pos? c) c))
+    :page-name :r.calendar}
+   {:icon      solid/UserCircleIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
-   {:icon      outline/ClockIcon
+   {:icon      solid/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.oversikt]])
     :page-name :r.oversikt}
-   {:icon      outline/BookOpenIcon
+   {:icon      solid/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
-
-   #_{:icon      outline/ColorSwatchIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.designlanguage]])
-      ;:badge     (fn [_] "A")
-      :special   true
-      :page-name :r.designlanguage}
-
-   #_{:icon      outline/HandIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.terms]])
-      :special   true
-      :page-name :r.terms}
-   #_{:icon      outline/ClipboardListIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.conditions]])
-      :special   true
-      :page-name :r.conditions}
-   #_{:icon      outline/ShieldCheckIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
-      :special   true
-      :color     "red"
-      :page-name :r.retningslinjer}
    {:icon      solid/PlusIcon
-    ;:on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
-    :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
+    :on-click  schpaa.style.dialog/open-selector
     :page-name :r.debug}])
 
 (def horizontal-toolbar
-  [{:icon      outline/HomeIcon
+  [{:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}
-   {:icon      outline/UserCircleIcon
+   {:icon      solid/UserCircleIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
    {:icon      solid/PlusIcon
     :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}
-   {:icon      outline/BookOpenIcon
+   {:icon      solid/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
     :badge     #(booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")
     :page-name :r.booking-blog}
-   {:icon      outline/ClockIcon
+   {:icon      solid/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.oversikt]])
     :page-name :r.oversikt}])
 
@@ -299,21 +286,19 @@
                    :background    "var(--surface000)"})
 
 (o/defstyled vert-button :div
-  [:&
-   {:color "var(--text1)"}
-   [:.normal {;:background    "var(--surface000)"
-              :border-radius "var(--radius-round)"
-              :color         "var(--surface3)"
-              :padding       "var(--size-2)"}]
-   [:.active {:box-shadow    "var(--shadow-3)"
-              :background    "var(--surface000)"
-              :border-radius "var(--radius-round)"
-              :color         "var(--surface5)"
-              :padding       "var(--size-2)"}]
-   [:&:hover {:border-radius "var(--radius-round)"
-              :background    "var(--surface1)"}]]
+  [#{:.active :.item} {:border-radius "var(--radius-round)"}]
+  [:.item
+   [:&:hover {:color      "var(--surface3)"
+              :padding    "var(--size-1)"
+              :background "var(--surface00)"}]]
+  [:>.normal {:color "var(--surface2)"}]
+
+  [:>.active {:color      "var(--surface000)"
+              :box-shadow "var(--shadow-3)"
+              :background "var(--surface3)"
+              :padding    "var(--size-2)"}]
   ([attr & ch]
-   [:div (conj attr {:class [(if (:active attr) :active :normal)]}) ch]))
+   [:div (conj attr {:class (if (:active attr) [:active] [:item :normal])}) ch]))
 
 (o/defstyled top-left-badge :div
   :rounded-full :bg-pink-500 :text-white :px-1 :text-sm     ; :border-dashed :border-black :border
@@ -351,14 +336,12 @@
     [:div.w-full.h-16.flex.items-center.justify-center.relative
      {:on-click on-click
       :style    {:background (if special "var(--surface1)")}}
-
      (when badge
        (when-some [b (badge)]
          [top-left-badge b]))
      [vert-button {:active (= page-name current-page)
                    :style  (conj style (when (= page-name current-page) {:color color}))}
-
-      [sc/icon [:> icon]]]]))
+      [sc/icon-large [:> icon]]]]))
 
 (defn compute-page-title [r]
   (let [path-fn (some-> r :data :path-fn)
@@ -487,16 +470,16 @@
              [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
               {:style {:padding-top  "var(--size-0)"
                        :box-shadow   "var(--inner-shadow-3)"
-                       :border-color "var(--surface0)"
-                       :background   "var(--surface0)"}}
+                       :border-color "var(--surface1)"
+                       :background   "var(--surface000)"}}
               (into [:<>] (map vertical-button (butlast (vertical-toolbar (:uid @user-auth)))))
               [:div.flex-grow]
               [:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]]
 
              [:div.flex-col.flex.h-full.w-full
               ;header
-              [:div.h-16.flex.items-center.w-full.border-b.px-4
-               {:style {:background   "var(--surface000)"
+              [:div.h-16.flex.items-center.w-full.border-b.px-4.shrink-0
+               {:style {:background   "var(--surface00)"
                         :border-color "var(--surface0)"}}
                [sc/row-std
                 [sc/header-title {:class [:grow]}
@@ -519,18 +502,22 @@
                    [sc/row-end {:class [:pt-4]}
                     (bottom-menu)]]]
                  ;content
-                 [:div.max-w-md.mx-auto.xpx-4.xpy-8.space-y-4.x-debug.px-2
-                  [:div.-mx-2x.py-2 [header-control-panel]]
-                  c
-                  [:div.py-8.h-32]
-                  [:div.absolute.bottom-24.sm:bottom-7.right-4
-                   [sc/row-end {:class [:pt-4]}
-                    (bottom-menu)]]])]
+                 [:div
+                  {:style {:background "var(--surface000)"}}
+                  [:div.max-w-md.mx-auto.py-4.space-y-4.px-2
+
+                   ;[:div.-mx-2x.py-2 [header-control-panel]]
+                   c
+                   [:div.py-8.h-32]
+                   [:div.absolute.bottom-24.sm:bottom-7.right-4
+                    [sc/row-end {:class [:pt-4]}
+                     (bottom-menu)]]]])]
 
               ;horizontal toolbar
-              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center
-               {:style {:box-shadow "var(--inner-shadow-3)"
-                        :background "var(--surface0)"}}
+              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
+               {:style {:box-shadow   "var(--inner-shadow-3)"
+                        :border-color "var(--surface1)"
+                        :background   "var(--surface000)"}}
                (into [:<>] (map horizontal-button
                                 horizontal-toolbar))]]]]))})))
 
