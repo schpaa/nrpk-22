@@ -4102,6 +4102,10 @@ h2 {
   --tw-ring-offset-width: 2px;
 }
 
+.focus-visible\:ring-offset-red-300:focus-visible {
+  --tw-ring-offset-color: #fca5a5;
+}
+
 .active\:border-gray-600:active {
   --tw-border-opacity: 1;
   border-color: rgb(87 83 78 / var(--tw-border-opacity));

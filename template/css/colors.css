@@ -15,6 +15,18 @@
     --radius-2: 8px;
     --radius-3: 14px;
 
+/* greenish
+ --gray-0: #F5FEFE;
+ --gray-1: #D7FCFA;
+ --gray-2: #9AF6EC;
+ --gray-3: #5DF1D6;
+ --gray-4: #20ECB7;
+ --gray-5: #10B981;
+ --gray-6: #0C8F5A;
+ --gray-7: #096538;
+ --gray-8: #053A1D;
+ --gray-9: #011007;
+*/
 /*
     --gray-0: #fafaf9;
     --gray-1: #f5f5f4; 
@@ -27,6 +39,17 @@
     --gray-8: #292524; 
     --gray-9: #1c1917; 
  */
+
+  --gray-0: #F0F1F1;
+  --gray-1: #E5E6E6;
+  --gray-2: #CDD0D0;
+  --gray-3: #B5BABA;
+  --gray-4: #9DA4A4;
+  --gray-5: #858E8E;
+  --gray-6: #6C7374;
+  --gray-7: #54595A;
+  --gray-8: #3B3E3F;
+  --gray-9: #222425;
 
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;

@@ -22,9 +22,11 @@
             [schpaa.debug :as l]
             [db.core :as db]
             [goog.events.KeyCodes :as keycodes]
+    ;[goog.events :as gevent]
             [times.api :as ta]
             [tick.core :as t]
-            [schpaa.style.combobox]))
+            [schpaa.style.combobox]
+            [re-pressed.core :as rp]))
 
 (defn better-mainmenu-definition [settings-atom]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
@@ -249,25 +251,26 @@
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
-   {:icon      outline/ColorSwatchIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.designlanguage]])
-    ;:badge     (fn [_] "A")
-    :special   true
-    :page-name :r.designlanguage}
 
-   {:icon      outline/HandIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.terms]])
-    :special   true
-    :page-name :r.terms}
-   {:icon      outline/ClipboardListIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.conditions]])
-    :special   true
-    :page-name :r.conditions}
-   {:icon      outline/ShieldCheckIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
-    :special   true
-    :color     "red"
-    :page-name :r.retningslinjer}
+   #_{:icon      outline/ColorSwatchIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.designlanguage]])
+      ;:badge     (fn [_] "A")
+      :special   true
+      :page-name :r.designlanguage}
+
+   #_{:icon      outline/HandIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.terms]])
+      :special   true
+      :page-name :r.terms}
+   #_{:icon      outline/ClipboardListIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.conditions]])
+      :special   true
+      :page-name :r.conditions}
+   #_{:icon      outline/ShieldCheckIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
+      :special   true
+      :color     "red"
+      :page-name :r.retningslinjer}
    {:icon      solid/PlusIcon
     ;:on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
     :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
@@ -401,7 +404,6 @@
       ;[:div (.-protocol js/window.location)]
       #_[:a {:href path} path]])))
 
-
 (defonce state (r/atom {:a false}))
 (defonce ctrl (reagent.ratom/make-reaction #(or (get-in @state [:a]) "---")))
 
@@ -433,7 +435,8 @@
 
 (defn header-control-panel []
   (let [do-toggle #(put! ch :signal (fn [ev] (tap> ["just did" ev])))]
-    [sc/col {:style {:padding          "var(--size-4)"
+    [sc/col {:style {:padding-block    "var(--size-4)"
+                     :padding-inline   "var(--size-2)"
                      :border-radius    "var(--radius-1)"
                      :box-shadow       (when @preferred-state "var(--inner-shadow-2)")
                      :background-color (when @preferred-state "var(--surface000)")}}
@@ -516,8 +519,8 @@
                    [sc/row-end {:class [:pt-4]}
                     (bottom-menu)]]]
                  ;content
-                 [:div.max-w-md.mx-auto.xpx-4.xpy-8.space-y-4.x-debug
-                  [:div.-mx-2.py-2 [header-control-panel]]
+                 [:div.max-w-md.mx-auto.xpx-4.xpy-8.space-y-4.x-debug.px-2
+                  [:div.-mx-2x.py-2 [header-control-panel]]
                   c
                   [:div.py-8.h-32]
                   [:div.absolute.bottom-24.sm:bottom-7.right-4
@@ -530,3 +533,68 @@
                         :background "var(--surface0)"}}
                (into [:<>] (map horizontal-button
                                 horizontal-toolbar))]]]]))})))
+
+(comment
+  (defonce keydown-ch (chan))
+  (defonce _d (gevent/listen js/document "keydown"
+
+                             #(do
+                                (put! keydown-ch (.-key %))
+                                (set! (.-cancelBubble %) true)
+                                (.stopImmediatePropagation %)
+                                false)))
+
+  (defonce keyup-ch (chan))
+  (defonce _c (gevent/listen js/document "keyup"
+                             #(do (put! keyup-ch (.-key %))
+                                  (set! (.-cancelBubble %) true)
+                                  (.stopImmediatePropagation %)
+                                  false)))
+
+  (def is-modifier? #{"Control" "Meta" "Alt" "Shift"})
+
+  (defonce _a (do
+                (def chord-ch (chan))
+                (go-loop [modifiers []
+                          pressed nil]
+                         (when (and (seq modifiers) pressed)
+                           (>! chord-ch (conj modifiers pressed)))
+                         (let [[key ch] (alts! [keydown-ch keyup-ch])]
+                           (condp = ch
+                             keydown-ch (if (is-modifier? key)
+                                          (recur (conj modifiers key) pressed)
+                                          (recur modifiers key))
+                             keyup-ch (if (is-modifier? key)
+                                        (recur (filterv #(not= % key) modifiers)
+                                               pressed)
+                                        (recur modifiers nil)))))))
+
+  (defonce _b (go-loop []
+                       (let [chord (<! chord-ch)]
+                         (if (= chord ["Meta" "k"])
+                           (tap> "COMMAND KE")
+                           (tap> chord))
+                         (recur)))))
+
+(do
+  (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
+
+  (rf/reg-event-fx :app/open-command-palette
+                   (fn [{db :db} _]
+                     {:fx [[:dispatch [:lab/modal-selector
+                                       true
+                                       {:content-fn (fn [c] [schpaa.style.combobox/combobox-example c])}]]]}))
+
+  (rf/dispatch
+    [::rp/set-keydown-rules
+     {:event-keys [[[:app/open-command-palette]
+                    [{:metaKey true
+                      :keyCode keycodes/K}]]
+                   [[:app/open-command-palette]
+                    [{:ctrlKey true
+                      :keyCode keycodes/K}]]]
+      :prevent-default-keys
+      [{:metaKey true
+        :keyCode keycodes/K}
+       {:keyCode 71
+        :ctrlKey true}]}]))
