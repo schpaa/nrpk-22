@@ -257,10 +257,11 @@
 (rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
 (rf/reg-sub :lab/modal-example-dialog2-extra :-> (fn [db] (get db :lab/modal-example-dialog2-extra)))
 
-(rf/reg-event-db :lab/modal-example-dialog2 (fn [db [_ arg extra]] (if arg
-                                                                     (assoc db :lab/modal-example-dialog2 arg
-                                                                               :lab/modal-example-dialog2-extra extra)
-                                                                     (update db :lab/modal-example-dialog2 (fnil not true)))))
+(rf/reg-event-db :lab/modal-example-dialog2
+                 (fn [db [_ arg extra]] (if arg
+                                          (assoc db :lab/modal-example-dialog2 arg
+                                                    :lab/modal-example-dialog2-extra extra)
+                                          (update db :lab/modal-example-dialog2 (fnil not true)))))
 
 (rf/reg-sub :lab/modal-selector-extra :-> (fn [db] (get db :lab/modal-selector-extra)))
 (rf/reg-sub :lab/modal-selector :-> (fn [db] (get db :lab/modal-selector false)))
@@ -300,7 +301,6 @@
                                                                          (set/difference e #{id})
                                                                          (set/union e #{id}))))}])]]))]
 
-
       (let [valid-registry? (and (empty? (time-input-validation (:values @time-state)))
                                  (not (empty? (:selected @state))))]
         [sc/row-end
@@ -308,3 +308,11 @@
           {:disabled (not valid-registry?)
            :on-click #(open-dialog-confirmbooking time-state state card-data-v2 type-data)}
           "Book nå!"]])]]))
+
+(rf/reg-fx :lab/open-new-blog-entry-dialog (fn [_] (schpaa.style.dialog/open-dialog-addpost)))
+
+(rf/reg-event-fx :lab/new-blog-entry
+                 (fn [_ _]
+                   (tap> :lab/new-blog-entry)
+                   {:fx [[:dispatch [:app/navigate-to [:r.booking-blog-new]]]
+                         [:lab/open-new-blog-entry-dialog nil]]}))

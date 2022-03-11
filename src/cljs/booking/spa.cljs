@@ -34,7 +34,8 @@
             [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]
             [schpaa.style.button2 :as scb2]
             [shadow.resource :refer [inline]]
-            [times.api :as ta]))
+            [times.api :as ta]
+            [schpaa.time]))
 
 
 ;region related to flex-date and how to display relative time
@@ -243,6 +244,13 @@
      [:summary {:on-click #(schpaa.state/toggle tag)
                 :style    {:display :inline}} header]
      content]))
+
+(o/defstyled listitem :div
+  ([a b c]
+   [sc/row-stretch
+    [sc/text a]
+    [sc/text b]
+    [sc/text c]]))
 
 (def routing-table
   {:r.welcome
@@ -477,6 +485,19 @@
      [page-boundry r
       (-> (inline "./content/retningslinjer.md") schpaa.markdown/md->html sc/markdown)])
 
+   :r.booking-blog-new
+   (fn [r]
+     [page-boundry r
+      (r/with-let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})
+                   receipts (db/on-value-reaction {:path ["booking-posts" "receipts"]})
+                   receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts)]
+        [:<>
+         [sc/row-center
+          [scb2/cta-large {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
+         (into [:<>]
+               (for [[k {:keys [content date]}] @data]
+                 [listitem k [schpaa.time/y (t/date-time (t/instant date))] (get receipts (name k))]))
+         [l/ppre-x receipts]])])
 
    :r.page-not-found
    (fn [r] [:div "?"])})

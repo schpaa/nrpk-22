@@ -1927,11 +1927,6 @@ h2 {
   margin-right: auto;
 }
 
-.-mx-2 {
-  margin-left: -0.5rem;
-  margin-right: -0.5rem;
-}
-
 .mx-2 {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
@@ -1945,6 +1940,11 @@ h2 {
 .my-px {
   margin-top: 1px;
   margin-bottom: 1px;
+}
+
+.-mx-2 {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
 }
 
 .mx-1 {
@@ -2124,6 +2124,10 @@ h2 {
   height: auto;
 }
 
+.max-h-72 {
+  max-height: 18rem;
+}
+
 .max-h-screen {
   max-height: 100vh;
 }
@@ -2210,10 +2214,6 @@ h2 {
 
 .w-8 {
   width: 2rem;
-}
-
-.w-96 {
-  width: 24rem;
 }
 
 .w-min {
@@ -2374,6 +2374,34 @@ h2 {
 
 .translate-x-7 {
   --tw-translate-x: 1.75rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.translate-y-4 {
+  --tw-translate-y: 1rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.translate-y-8 {
+  --tw-translate-y: 2rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.scale-95 {
+  --tw-scale-x: .95;
+  --tw-scale-y: .95;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.scale-100 {
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.scale-90 {
+  --tw-scale-x: .9;
+  --tw-scale-y: .9;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
@@ -2560,6 +2588,11 @@ h2 {
        column-gap: 2.5rem;
 }
 
+.gap-x-3 {
+  -moz-column-gap: 0.75rem;
+       column-gap: 0.75rem;
+}
+
 .space-y-4 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
@@ -2637,10 +2670,6 @@ h2 {
   justify-self: center;
 }
 
-.overflow-auto {
-  overflow: auto;
-}
-
 .overflow-hidden {
   overflow: hidden;
 }
@@ -2659,6 +2688,10 @@ h2 {
 
 .overflow-y-auto {
   overflow-y: auto;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
 }
 
 .overflow-y-scroll {
@@ -2710,10 +2743,6 @@ h2 {
 
 .rounded-lg {
   border-radius: 0.5rem;
-}
-
-.rounded-xl {
-  border-radius: 0.75rem;
 }
 
 .rounded-t-lg {
@@ -3095,6 +3124,11 @@ h2 {
   background-color: rgb(224 242 254 / var(--tw-bg-opacity));
 }
 
+.bg-yellow-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(234 179 8 / var(--tw-bg-opacity));
+}
+
 .bg-opacity-0 {
   --tw-bg-opacity: 0;
 }
@@ -3109,6 +3143,10 @@ h2 {
 
 .bg-opacity-75 {
   --tw-bg-opacity: 0.75;
+}
+
+.bg-opacity-50 {
+  --tw-bg-opacity: 0.5;
 }
 
 .bg-gradient-to-t {
@@ -3212,6 +3250,16 @@ h2 {
   padding-right: 0.25rem;
 }
 
+.py-11 {
+  padding-top: 2.75rem;
+  padding-bottom: 2.75rem;
+}
+
+.py-10 {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
 .pb-4 {
   padding-bottom: 1rem;
 }
@@ -3254,6 +3302,10 @@ h2 {
 
 .pt-px {
   padding-top: 1px;
+}
+
+.pl-4 {
+  padding-left: 1rem;
 }
 
 .pb-6 {
@@ -3699,12 +3751,8 @@ h2 {
   opacity: 0.25;
 }
 
-.opacity-70 {
-  opacity: 0.7;
-}
-
-.opacity-60 {
-  opacity: 0.6;
+.opacity-50 {
+  opacity: 0.5;
 }
 
 .shadow {
@@ -4096,14 +4144,6 @@ h2 {
 
 .focus-visible\:ring-opacity-50:focus-visible {
   --tw-ring-opacity: 0.5;
-}
-
-.focus-visible\:ring-offset-2:focus-visible {
-  --tw-ring-offset-width: 2px;
-}
-
-.focus-visible\:ring-offset-red-300:focus-visible {
-  --tw-ring-offset-color: #fca5a5;
 }
 
 .active\:border-gray-600:active {
@@ -4964,10 +5004,5 @@ h2 {
   .sm\:px-0 {
     padding-left: 0px;
     padding-right: 0px;
-  }
-
-  .sm\:text-sm {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
   }
 }

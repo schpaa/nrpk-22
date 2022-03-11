@@ -19,6 +19,7 @@
    ["/nytt/:id" {:name    :r.booking-blog-doc
                  :header  "Hva er nytt?"
                  :path-fn (fn [r] (some-> r :path-params :id))}]
+   ["/nytt-innlegg" {:name :r.booking-blog-new :header "Nytt innlegg"}]
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
    ["/debug" {:name :r.debug :header "Booking Labs" :subheader "Baksiden"}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
