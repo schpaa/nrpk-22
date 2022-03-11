@@ -262,6 +262,13 @@
                                                                                :lab/modal-example-dialog2-extra extra)
                                                                      (update db :lab/modal-example-dialog2 (fnil not true)))))
 
+(rf/reg-sub :lab/modal-selector-extra :-> (fn [db] (get db :lab/modal-selector-extra)))
+(rf/reg-sub :lab/modal-selector :-> (fn [db] (get db :lab/modal-selector false)))
+(rf/reg-event-db :lab/modal-selector (fn [db [_ arg extra]] (if arg
+                                                              (assoc db :lab/modal-selector arg
+                                                                        :lab/modal-selector-extra extra)
+                                                              (update db :lab/modal-selector (fnil not true)))))
+
 (defn render [r]
   (r/with-let [settings (r/atom {:setting-1 false
                                  :setting-2 1

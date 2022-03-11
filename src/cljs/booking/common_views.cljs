@@ -23,7 +23,8 @@
             [db.core :as db]
             [goog.events.KeyCodes :as keycodes]
             [times.api :as ta]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [schpaa.style.combobox]))
 
 (defn better-mainmenu-definition [settings-atom]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
@@ -268,7 +269,8 @@
     :color     "red"
     :page-name :r.retningslinjer}
    {:icon      solid/PlusIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
+    ;:on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
+    :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}])
 
 (def horizontal-toolbar
@@ -279,7 +281,7 @@
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
    {:icon      solid/PlusIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.debug]])
+    :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}
    {:icon      outline/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
@@ -469,7 +471,11 @@
               :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
             ;endregion
 
-            ;region add-selector
+            ;region add-selector   
+            [schpaa.style.dialog/modal-selector
+             {:context @(rf/subscribe [:lab/modal-selector-extra])
+              :vis     (rf/subscribe [:lab/modal-selector])
+              :close   #(rf/dispatch [:lab/modal-selector false])}]
             ;endregion
 
             [:div.fixed.inset-0.flex
