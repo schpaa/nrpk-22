@@ -3,7 +3,11 @@
             [garden.selectors :as s]))
 
 
-(o/set-tokens! {:components [{:id     :font-oswald
+(o/set-tokens! {:components [{:id     :flex-center
+                              :garden [:& {:display         :flex
+                                           :justify-content :center
+                                           :align-items     :center}]}
+                             {:id     :font-oswald
                               :garden [:& {
                                            :font-family "oswald"}]}
                              {:id     :tab

@@ -133,33 +133,35 @@
   ;-[ ] issue: tabbing into elements that are overflow-hidden will give them the focus
   (let [visible? (r/atom false)]
     (fn [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
-      [sc/surface-d {:style {:padding       "1rem"
+      [sc/surface-d {:style {:xpadding      "1rem"
                              :border-radius "var(--radius-1)"
-                             :background    "var(--surface000)"
-                             :box-shadow    "var(--inner-shadow-2)"}}
-       [:div.relative.space-y-4.overflow-hidden
+                             :xbackground   "var(--surface000)"
+                             :xbox-shadow   "var(--inner-shadow-2)"}}
+       [:div.relative.space-y-s4.overflow-hidden
         (when-not @visible?
           {:style {:max-height "25rem"}})
+        ;intent bottom fadeout
         [:div.absolute.bottom-0.inset-x-0.pointer-events-none
          (when-not @visible?
-           {:style {:height           "50%"
-                    :background-image "linear-gradient(transparent,var(--surface00))"}})]
+           {:class [:bg-gradient-to-t :from-current]
+            :style {:height            "50%"
+                    :color             "var(--surface00)"
+                    :abackground-image "linear-gradient(transparent,var(--surface00))"}})]
 
-        ;intent bottom fadeout
         [:div
          (if @visible?
            [:div (-> content schpaa.markdown/md->html sc/markdown)]
            [:div (-> content (subs 0 256) (str "...") schpaa.markdown/md->html sc/markdown)])]
         [:div.absolute.bottom-0.inset-x-0
-         [:div.grid
-          {:style {:grid-template-columns "min-content 1fr min-content 1fr min-content"}}
-          [scb2/outline-tight {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
+         [:div.grid.gap-2
+          {:style {:grid-template-columns "1fr min-content  min-content  min-content 1fr"}}
           [:div]
+          [scb2/normal-tight {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
           (if-not @visible?
-            [scb2/outline-tight {:on-click #(swap! visible? not)} "Les mer"]
+            [scb2/normal-tight {:on-click #(swap! visible? not)} "Les mer"]
             [:div])
-          [:div]
-          [scb2/outline-tight [sc/icon [:> outline/PencilIcon]]]]]
+          [scb2/normal-tight [sc/icon [:> outline/PencilIcon]]]
+          [:div]]]
 
         #_[:div.sticky.-top-8.px-4
            {:class [:-mx-4]
@@ -175,9 +177,11 @@
 
 (defn initial-page [{:keys [path date-of-last-seen id uid pointer]}]
   (let [data @(db/on-value-reaction {:path path})]
-    (into [:div.space-y-2]
+    (into [:div.space-y-20]
           (concat
-            [[sc/row {:class [:justify-center]} [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
+            [[sc/row {:class [:justify-center]}
+              [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
+
             (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse data))
                   :let [uid' (:uid e)]]
               ^{:key (str k)}
@@ -189,13 +193,14 @@
                           :uid uid
                           :kv kv
                           :date date
-                          :uid' (:uid e))])
-            [[:div.h-1]
-             [sc/row {:class [:justify-center]}
+                          :uid' uid' #_(:uid e))])
+
+            [[sc/row {:class [:justify-center]}
               (if (< @pointer (count data))
                 [scb2/normal-small {:disabled (zero? (count data))
                                     :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
-                [sc/subtext "Ingen flere"])]]))))
+                (when (pos? (count data))
+                  [sc/subtext "Ingen flere innlegg"]))]]))))
 
 
 (def fsm
@@ -315,7 +320,7 @@ Helt til slutt, en kinaputt"
                date-of-last-seen (some-> date-of-last-seen t/instant t/date-time)
                list-of-posts (db/on-value-reaction {:path path})
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
-           [sc/col {:class [:space-y-4 :max-w-lg :mx-auto]}
+           [sc/col {:class [:space-y-4 :max-w-lg :mx-auto :px-4]}
 
             (rs/match-state *fsm-rapport
               [:s.startup]
@@ -339,7 +344,7 @@ Helt til slutt, en kinaputt"
 
               [:div "other " *fsm-rapport])
 
-            [:div.absolute.bottom-24.xs:bottom-7.left-4.sm:left-20
+            [:div.absolute.bottom-24.sm:bottom-7.left-4.sm:left-20
              [sc/row-end {:class [:pt-4]}
               (bottom-menu uid)]]]))})))
  

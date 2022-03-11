@@ -1,5 +1,10 @@
 (ns booking.common-views
   (:require [booking.content.blog-support :refer [err-boundary]]
+            [reagent.ratom]
+
+            [cljs.core.async :refer [chan take! put! >! <! timeout]]
+            [cljs.core.async :refer-macros [go-loop go]]
+
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.style.dialog :refer [open-dialog-logoutcommand
@@ -8,12 +13,14 @@
             [booking.content.booking-blog]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
+            ["react-qr-code" :default QRCode]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [schpaa.style.button2 :as scb2]
             [reagent.core :as r]
             [re-frame.core :as rf]
             [schpaa.debug :as l]
+            [db.core :as db]
             [goog.events.KeyCodes :as keycodes]
             [times.api :as ta]
             [tick.core :as t]))
@@ -64,37 +71,6 @@
                  :action    nil
                  :disabled  true
                  :value     #()}]
-
-     #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
-                   :label     "Auto-message"
-                   :highlight false
-                   :action    open-dialog-sampleautomessage
-                   :disabled  false
-                   :value     #()}]
-     #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
-                   :label     "Form-message"
-                   :highlight false
-                   :action    open-dialog-sampleformmessage
-                   :disabled  false
-                   :value     #()}]
-     #_[:menuitem {:icon      nil                           ;(sc/icon nil #_[:> solid/ArrowRightIcon])
-                   :label     "Super-simple"
-                   :highlight false
-                   :action    #(rf/dispatch [:lab/modal-example-dialog2
-                                             true
-                                             #_{:click-overlay-to-dismiss true
-                                                ;:auto-dismiss 5000
-                                                :content-fn               (fn [{:keys [] :as context}]
-                                                                            [sc/col {:class [:space-y-4 :w-full]}
-                                                                             [sc/row [sc/title-p "Bekreft utlogging"]]
-                                                                             [sc/text "Dette vil logge deg ut fra denne enheten."]
-                                                                             [l/ppre context]])
-
-                                                :buttons                  [[:cancel "Avbryt" nil] [:danger "Logg ut" (fn [] (tap> "click"))]]
-                                                :action                   (fn [{:keys [start selected] :as m}] (tap> [">>" m]))
-                                                :on-primary-action        (fn [] (tap> "closing after save"))}])
-                   :disabled  false
-                   :value     #()}]
      [:hr]
      [:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
                  :label     "Logg ut..."
@@ -257,7 +233,7 @@
                         [scb/round-normal {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
 ;-[ ] todo: [:space] for extra space
-(def vertical-toolbar
+(defn vertical-toolbar [uid]
   [{:icon      outline/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}
@@ -269,7 +245,7 @@
     :page-name :r.oversikt}
    {:icon      outline/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-    :badge     #(let [c (booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")]
+    :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
    {:icon      outline/ColorSwatchIcon
@@ -403,69 +379,148 @@
           (for [e data]
             [result-item e]))))
 
+(o/defstyled qr-code :div
+  ;:space-y-4 :flex :justify-center :flex-col :items-center
+  ;:border-2 :border-gray-500 :p-4 :rounded-sm
+  [:>a :w-full :px-4 {:overflow      :hidden
+                      :text-overflow :ellipsis
+                      :white-space   :nowrap}]
+  ([active-item]
+   (let [addr active-item                                   ;(kee-frame.core/path-for [:r.topic {:id active-item}])
+         path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
+     [:<>
+      [:> QRCode {:title "Whatever"
+                  :size  128
+                  :level "Q"
+                  :value path}]
+
+      ;[:div addr]
+      ;[:div (.-host js/window.location)]
+      ;[:div (.-protocol js/window.location)]
+      #_[:a {:href path} path]])))
+
+
+(defonce state (r/atom {:a false}))
+(defonce ctrl (reagent.ratom/make-reaction #(or (get-in @state [:a]) "---")))
+
+(defn handle-fx [event]
+  ;(tap> {:event event})
+  (swap! state update :a (fnil not false)))
+
+(defonce _
+         (do
+           (def ch (chan))
+           (go-loop []
+                    (let [event (<! ch)]
+                      (handle-fx event)
+                      (recur)))
+           #_(go-loop []
+                      (<! (timeout 1000))
+                      (>! ch 3)
+                      (<! (timeout 2000))
+                      (>! ch 2)
+                      (recur))))
+
+(def preferred-state (reagent.ratom/make-reaction #(= true (get @state :a))))
+
+(defn chevron-updown-toggle [st toggle]
+  [sc/dim [scb/round-floating
+           {:on-click toggle}
+           [sc/icon-tiny
+            [:> (if st outline/ChevronUpIcon outline/ChevronDownIcon)]]]])
+
+(defn header-control-panel []
+  (let [do-toggle #(put! ch :signal (fn [ev] (tap> ["just did" ev])))]
+    [sc/col {:style {:padding          "var(--size-4)"
+                     :border-radius    "var(--radius-1)"
+                     :box-shadow       (when @preferred-state "var(--inner-shadow-2)")
+                     :background-color (when @preferred-state "var(--surface000)")}}
+     [:div {:class (into [:duration-200] (if @preferred-state [:h-24 :opacity-100] [:pointer-events-none :h-0 :opacity-0]))}
+      [sc/dim [sc/col {:class [:space-y-2]}
+               [sc/subtext "Som en liste"]
+               [sc/subtext "Som blokker i et rutenett"]
+               [sc/subtext "Alle poster ekspandert"]]]
+      #_[sc/markdown [:code "Some options here"]]]
+     [sc/row-end                                            ;:div.flex.justify-between.items-center
+      {:class [:x-debug]
+       :style {:padding "var(--size-1)"}}
+      [sc/dim [sc/small {:style {:font-family    "montserrat"
+                                 :letter-spacing "var(--font-letterspacing-1)"
+                                 :font-weight    "var(--font-weight-6)"}} "Visningsvalg"]]
+      (chevron-updown-toggle @preferred-state do-toggle)]]))
+
 (defn page-boundry [r & c]
-  (r/create-class
-    {:component-did-mount
-     (fn []
-       (tap> :component-did-mount)
-       (.focus (.getElementById js/document "inner-document")))
-     :reagent-render
-     (fn [r & c]
-       (let [page-title (-> r :data :header)]
-         [err-boundary
+  (let [user-auth (rf/subscribe [::db/user-auth])]
+    (r/create-class
+      {:component-did-mount
+       (fn []
+         (tap> :component-did-mount)
+         (.focus (.getElementById js/document "inner-document")))
+       :reagent-render
+       (fn [r & c]
+         (let [page-title (-> r :data :header)]
 
-          ;region modal dialog
-          [schpaa.style.dialog/modal-generic
-           {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
-            :vis     (rf/subscribe [:lab/modal-example-dialog2])
-            :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
-          ;endregion
+           [err-boundary
 
-          [:div.fixed.inset-0.flex
+            ;region modal dialog
+            [schpaa.style.dialog/modal-generic
+             {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
+              :vis     (rf/subscribe [:lab/modal-example-dialog2])
+              :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
+            ;endregion
 
-           ;vertical toolbar
-           [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-            {:style {:padding-top  "var(--size-0)"
-                     :box-shadow   "var(--inner-shadow-3)"
-                     :border-color "var(--surface0)"
-                     :background   "var(--surface0)"}}
-            (into [:<>] (map vertical-button (butlast vertical-toolbar)))
-            [:div.flex-grow]
-            [:div.pb-4 (vertical-button (last vertical-toolbar))]]
+            ;region add-selector
+            ;endregion
 
-           [:div.flex-col.flex.h-full.w-full
-            [:div.h-16.flex.items-center.w-full.border-b.px-4
-             {:style {:background   "var(--surface000)"
-                      :border-color "var(--surface0)"}}
-             [sc/row-std
-              [sc/header-title {:class [:grow]}
-               (when-not @(rf/subscribe [:lab/in-search-mode?])
-                 [sc/row {:class [:truncate]}
-                  (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
-                                                        [:div.truncate e]))])]
-              [search-menu]
-              (main-menu)]]
+            [:div.fixed.inset-0.flex
 
-            [:div.overflow-y-auto.h-full.focus:outline-none
-             {:id        "inner-document"
-              :tab-index "0"}
-             (if @(rf/subscribe [:lab/is-search-running?])
-               [:div.h-full
-                {:style {:background "var(--surface2)"}}
-                [search-result]
-                [:div.absolute.bottom-24.sm:bottom-7.right-4
-                 [sc/row-end {:class [:pt-4]}
-                  (bottom-menu)]]]
-               [:div.max-w-md.mx-auto.px-4.py-8
-                c
-                [:div.py-8.h-32]
-                [:div.absolute.bottom-24.sm:bottom-7.right-4
-                 [sc/row-end {:class [:pt-4]}
-                  (bottom-menu)]]])]
+             ;vertical toolbar
+             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+              {:style {:padding-top  "var(--size-0)"
+                       :box-shadow   "var(--inner-shadow-3)"
+                       :border-color "var(--surface0)"
+                       :background   "var(--surface0)"}}
+              (into [:<>] (map vertical-button (butlast (vertical-toolbar (:uid @user-auth)))))
+              [:div.flex-grow]
+              [:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]]
 
-            ;horizontal toolbar
-            [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center
-             {:style {:box-shadow "var(--inner-shadow-3)"
-                      :background "var(--surface0)"}}
-             (into [:<>] (map horizontal-button
-                              horizontal-toolbar))]]]]))}))
+             [:div.flex-col.flex.h-full.w-full
+              ;header
+              [:div.h-16.flex.items-center.w-full.border-b.px-4
+               {:style {:background   "var(--surface000)"
+                        :border-color "var(--surface0)"}}
+               [sc/row-std
+                [sc/header-title {:class [:grow]}
+                 (when-not @(rf/subscribe [:lab/in-search-mode?])
+                   [sc/row {:class [:truncate]}
+                    (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
+                                                          [:div.truncate e]))])]
+                [search-menu]
+                (main-menu)]]
+
+              [:div.overflow-y-auto.h-full.focus:outline-none
+               {:id        "inner-document"
+                :tab-index "0"}
+               (if @(rf/subscribe [:lab/is-search-running?])
+                 ;searchmode
+                 [:div.h-full
+                  {:style {:background "var(--surface2)"}}
+                  [search-result]
+                  [:div.absolute.bottom-24.sm:bottom-7.right-4
+                   [sc/row-end {:class [:pt-4]}
+                    (bottom-menu)]]]
+                 ;content
+                 [:div.max-w-md.mx-auto.xpx-4.xpy-8.space-y-4.x-debug
+                  [:div.-mx-2.py-2 [header-control-panel]]
+                  c
+                  [:div.py-8.h-32]
+                  [:div.absolute.bottom-24.sm:bottom-7.right-4
+                   [sc/row-end {:class [:pt-4]}
+                    (bottom-menu)]]])]
+
+              ;horizontal toolbar
+              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center
+               {:style {:box-shadow "var(--inner-shadow-3)"
+                        :background "var(--surface0)"}}
+               (into [:<>] (map horizontal-button
+                                horizontal-toolbar))]]]]))})))

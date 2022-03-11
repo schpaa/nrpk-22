@@ -25,7 +25,7 @@
    ["/om-meg" {:name :r.user :header "Om meg" :subheader "Baksiden"}]
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
    ["/not-found" {:name :r.page-not-found :header ":r.page-not-found" :subheader ":r.page-not-found"}]
-   ["/designspråk" {:name :r.designlanguage :header "designspråk"}]
+   ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
    ["/retningslinjer" {:name :r.retningslinjer :header "Retningslinjer"}]
    ["/conditions" {:name :r.conditions :header "Vilkår"}]
    ["/terms" {:name :r.terms :header "Betingelser"}]])
