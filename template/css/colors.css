@@ -27,7 +27,6 @@
  --gray-8: #053A1D;
  --gray-9: #011007;
 */
-/*
     --gray-0: #fafaf9;
     --gray-1: #f5f5f4; 
     --gray-2: #e7e5e4; 
@@ -38,8 +37,8 @@
     --gray-7: #44403c; 
     --gray-8: #292524; 
     --gray-9: #1c1917; 
- */
 
+/*
   --gray-0: #F0F1F1;
   --gray-1: #E5E6E6;
   --gray-2: #CDD0D0;
@@ -50,7 +49,7 @@
   --gray-7: #54595A;
   --gray-8: #3B3E3F;
   --gray-9: #222425;
-
+*/
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
@@ -109,9 +108,9 @@
    --surface8-light: var(--gray-8);
    --surface9-light: var(--gray-9);
 
-   --buttoncta0-light: var(--green-1);
-   --buttoncta1-light: var(--green-6);
-   --buttoncta2-light: var(--green-5);
+   --buttoncta0-light: white;
+   --buttoncta1-light: var(--blue-8);
+   --buttoncta2-light: var(--blue-7);
    --buttondanger0-light: var(--red-1);
    --buttondanger1-light: var(--red-6);
    --buttondanger2-light: var(--red-5);
@@ -125,7 +124,7 @@
    --buttonbase-disabled-light: var(--gray-1);
    --buttonbase-light: var(--gray-3);
    --buttontext-light: var(--gray-7);
-   --buttonbase-hover-light: var(--gray-4);
+   --buttonbase-hover-light: var(--gray-2);
    --buttonbase-active-light: var(--gray-5);
 
 }

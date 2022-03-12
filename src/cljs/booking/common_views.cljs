@@ -53,7 +53,7 @@
                  :disabled  false
                  :value     #()}]
      [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/PlusIcon])
+     [:menuitem {:icon      (sc/icon [:> solid/TicketIcon])
                  :label     "Ny booking"
                  :color     "var(--new-booking)"
                  :highlight (= :r.debug current-page)
@@ -177,7 +177,7 @@
 
           (if @search
             [experiment3
-             [sc/row' {:class    [:flex-center :w-12 :shrink-1]
+             [sc/row' {:class    [:flex-center :w-10 :shrink-1]
                        :on-click #(.stopPropagation %)}
               [sc/icon [:> solid/SearchIcon]]]]
             [experiment
@@ -190,7 +190,7 @@
           (when @search
             [:input.w-full.h-full.outline-none.focus:outline-none
              {:style       {:xflex "1 1 100%"}
-              :placeholder "søk"
+              :placeholder "finn ressurser"
               :type        :text
               :on-blur     #(let [s (-> % .-target .-value)]
                               (if (empty? s)
@@ -225,18 +225,25 @@
                             [sc/icon [:> solid/MenuIcon]])])}]])))
 
 (defn bottom-menu-definition [settings-atom]
-  [[:header [sc/row {:class [:justify-between :items-end :w-44]}
+  [[:header [sc/row' {:class [:justify-between :items-end :w-44 :px-2]}
              [sc/header-title "Booking"]
              [sc/pill (or "dev.3.12" booking.data/VERSION)]]]
 
 
    [:space]
-   [:div [sc/small "Skrevet av meg for NRPK"]]
+   [:div [:div.px-2 [sc/small "Skrevet av meg for NRPK"]]]
    [:space]
-   [:footer [sc/row-end {:class [:gap-1 :justify-end :items-center]}
-             [sc/small "Vilkår"]
-             [sc/small "&"]
-             [sc/small "Betingelser"]]]])
+   [:div [:div.px-2 [sc/row-center {:class [:py-4]}
+                     [:div.relative.w-24.h-24
+                      [:div.absolute.rounded-full.-inset-1.blur
+                       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                                :group-hover:-inset-1 :duration-500]}]
+                      [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]]]
+   [:footer [:div.p-2
+             [sc/row-end {:class [:gap-1 :justify-end :items-center]}
+              [sc/small "Vilkår"]
+              [sc/small "&"]
+              [sc/small "Betingelser"]]]]])
 
 (defn bottom-menu []
   (r/with-let [main-visible (r/atom false)]
@@ -247,7 +254,7 @@
         :dir          #{:up :right}
         :data         (bottom-menu-definition (r/atom nil))
         :button       (fn [open]
-                        [scb/round-normal {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
+                        [scb/round-mainpage {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
 ;-[ ] todo: [:space] for extra space
 (defn vertical-toolbar [uid]
@@ -270,8 +277,9 @@
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
-   {:icon      solid/PlusIcon
+   {:icon      solid/LightningBoltIcon
     :on-click  schpaa.style.dialog/open-selector
+    :color     "red"
     :page-name :r.debug}])
 
 (def horizontal-toolbar
@@ -281,7 +289,7 @@
    {:icon      solid/UserCircleIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
-   {:icon      solid/PlusIcon
+   {:icon      solid/LightningBoltIcon
     :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}
    {:icon      solid/BookOpenIcon
@@ -423,30 +431,48 @@
 
 (defn chevron-updown-toggle [st toggle]
   [sc/dim [scb/round-floating
-           {:on-click toggle}
+           {:on-click #(do
+                         (.stopPropagation %)
+                         (toggle))}
            [sc/icon-tiny
             [:> (if st outline/ChevronUpIcon outline/ChevronDownIcon)]]]])
 
 (defn header-control-panel []
-  (let [do-toggle #(put! ch :signal (fn [ev] (tap> ["just did" ev])))]
-    [sc/col {:style {:padding-block    "var(--size-4)"
+  (r/with-let [do-toggle #(put! ch :signal (fn [ev] (tap> ["just did" ev])))
+               show-archived (r/atom false)]
+    [sc/col {:style {:padding-block    "var(--size-1)"
                      :padding-inline   "var(--size-2)"
-                     :border-radius    "var(--radius-1)"
-                     :box-shadow       (when @preferred-state "var(--inner-shadow-2)")
+                     ;:border-radius    "var(--radius-1)"
+                     ;:box-shadow       (when @preferred-state "var(--inner-shadow-2)")
                      :background-color (when @preferred-state "var(--surface000)")}}
+     [sc/row-end                                            ;:div.flex.justify-between.items-center
+      {:on-click #(do
+                    (do-toggle)
+                    (.stopPropagation %))
+       :class    [:x-debug]
+       :style    {:padding "var(--size-1)"}}
+      [sc/dim [sc/small {:style {;:font-family    "montserrat"
+                                 :letter-spacing "var(--font-letterspacing-2)"
+                                 :text-transform :uppercase
+                                 :font-weight    "var(--font-weight-6)"}} "Visningsvalg"]]
+      (chevron-updown-toggle @preferred-state do-toggle)]
      [:div {:class (into [:duration-200] (if @preferred-state [:h-24 :opacity-100] [:pointer-events-none :h-0 :opacity-0]))}
       [sc/dim [sc/col {:class [:space-y-2]}
-               [sc/subtext "Som en liste"]
-               [sc/subtext "Som blokker i et rutenett"]
-               [sc/subtext "Alle poster ekspandert"]]]
+               [sc/row' {:class [:items-center]}
+                [schpaa.style.switch/small-switch-example
+                 {:!value  show-archived
+                  :caption [sc/subtext "Vis arkiverte"]}]]
+
+               [sc/row' {:class [:items-center]}
+                [schpaa.style.switch/small-switch-example
+                 {:!value  show-archived
+                  :caption [sc/subtext "Skjul mine"]}]]]]
+
+      ;[sc/subtext "Som en liste"]
+      ;[sc/subtext "Som blokker i et rutenett"]
+      ;[sc/subtext "Alle poster ekspandert"]]]
       #_[sc/markdown [:code "Some options here"]]]
-     [sc/row-end                                            ;:div.flex.justify-between.items-center
-      {:class [:x-debug]
-       :style {:padding "var(--size-1)"}}
-      [sc/dim [sc/small {:style {:font-family    "montserrat"
-                                 :letter-spacing "var(--font-letterspacing-1)"
-                                 :font-weight    "var(--font-weight-6)"}} "Visningsvalg"]]
-      (chevron-updown-toggle @preferred-state do-toggle)]]))
+     (when @preferred-state [:hr])]))
 
 (defn page-boundry [r & c]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -484,14 +510,14 @@
                 {:style {:padding-top  "var(--size-0)"
                          :box-shadow   "var(--inner-shadow-3)"
                          :border-color "var(--surface1)"
-                         :background   "var(--surface000)"}}
+                         :background   "var(--surface0)"}}
                 (into [:<>] (map vertical-button (butlast (vertical-toolbar (:uid @user-auth)))))
                 [:div.flex-grow]
                 [:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]])
 
              [:div.flex-col.flex.h-full.w-full
 
-              ;header
+              ;header 
               #_[l/ppre-x @(rf/subscribe [:lab/modal-selector])]
               [:div.h-16.flex.items-center.w-full.border-b.px-4.shrink-0.truncates
                {:style {:background   "var(--surface00)"
@@ -503,12 +529,11 @@
                     (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
                                                           [:div.truncate e]))])]
                 [search-menu]
-
-
                 (main-menu)]]
 
               [:div.overflow-y-auto.h-full.focus:outline-none
-               {:id        "inner-document"
+               {:style     {:background "var(--surface000)"}
+                :id        "inner-document"
                 :tab-index "0"}
                (if @(rf/subscribe [:lab/is-search-running?])
                  ;searchmode
@@ -519,16 +544,20 @@
                    [sc/row-end {:class [:pt-4]}
                     (bottom-menu)]]]
                  ;content
-                 [:div
-                  {:style {:background "var(--surface000)"}}
-                  [:div.max-w-md.mx-auto.py-4.space-y-4.px-2
-
+                 [:div.h-full
+                  [:div.max-w-md.mx-auto.py-4.space-y-4.px-4
                    ;[:div.-mx-2x.py-2 [header-control-panel]]
                    c
                    [:div.py-8.h-32]
-                   [:div.absolute.bottom-24.sm:bottom-7.right-4
+
+
+
+                   [:div.absolute.right-4
+                    {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
                     [sc/row-end {:class [:pt-4]}
                      (bottom-menu)]]]])]
+
+
 
               ;horizontal toolbar
               (when @has-chrome?

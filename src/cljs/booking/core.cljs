@@ -13,7 +13,7 @@
     [nrpk.spa]))
 
 (def routes
-  [["/" {:name :r.forsiden :header "Booking på Sjøbasen" :subheader "Forsiden"}]
+  [["/" {:name :r.forsiden :header "Hjem" :subheader "Booking på Sjøbasen"}]
    ["/oversikt" {:name :r.oversikt :header "Bookingoversikt"}]
    ["/nytt" {:name :r.booking-blog :header "Hva er nytt?" :subheader "Forsiden"}]
    ["/nytt/:id" {:name    :r.booking-blog-doc

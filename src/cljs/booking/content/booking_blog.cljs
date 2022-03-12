@@ -277,7 +277,7 @@ Helt til slutt, en kinaputt"
 
 
 (defn bottom-menu [uid]
-  (r/with-let [main-visible (r/atom false)]
+  (r/with-let [main-visible (r/atom true)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
       [scm/small-menu
        {:showing      @main-visible

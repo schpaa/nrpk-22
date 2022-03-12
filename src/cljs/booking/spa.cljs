@@ -264,13 +264,18 @@
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
-        [sc/col {:class [:space-y-4 :max-w-md :mx-auto :px-4]}
+        [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
          [:div
           (-> "./frontpage1.md"
               inline
               schpaa.markdown/md->html
               sc/markdown)]
-         [sc/row-end [scb2/cta-large {:type "button" :on-click open-dialog-signin} "Logg inn"]]]
+         [sc/row-end
+          [scb2/cta-large
+           {:type "button" :on-click open-dialog-signin}
+           "Registrer meg"]]]
+
+
         ;[db.signin/login]]
         #_[:div [content.overview/overview]]]))
 
@@ -347,7 +352,6 @@
    (fn [r]
      [page-boundry r
       [:div.pb-32
-       ;.max-w-md.mx-auto
        [collapsable-memory
         :color-palette
         [sc/separator "Color and grayscale palette"]
@@ -511,6 +515,19 @@
              #_[l/ppre-x receipts']])))])
    :r.calendar
    (fn [r]
-     [page-boundry r])
+     [page-boundry r
+      [:div.-debugx.select-none [booking.common-views/header-control-panel]]
+      [:div {:class [:gap-1]
+             :style {:display               :grid
+                     :grid-auto-rows        "3rem"
+                     :grid-template-columns "repeat(7,minmax(1rem,1fr))"}}
+       (for [e (range 7)]
+         [:div.flex.flex-centerx.bg-white.p-1.self-end [sc/small (ta/week-name e :length 3 #_(t/>> (t/now) (t/new-duration e :days)))]])
+       (for [e (concat (map - (reverse (range 1 4))) (range 30))]
+         [:div.bg-white.p-1
+          {:class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
+          (if (neg? e)
+            [:div]
+            [sc/small e])])]])
    :r.page-not-found
    (fn [r] [:div "?"])})

@@ -1,19 +1,14 @@
-# Er du medlem i NRPK med gyldig Våttkort?
+# Medlemmer med våttkort
 
-## Da kan du bruke NRPK Booking for å booke båter på sjøbasen som for tiden befinner seg på Ormsund roklubb [på Malmøya.](https://kart.finn.no/?lng=10.76408&lat=59.86772&zoom=15&mapType=normaphd&markers=10.76307,59.86606,b,Brukerdefinert)
+## Sjøbasen er åpen for medlemmer i NRPK som har gyldig våttkort. Her kan du reserve båter for turer i indre Oslofjord.
 
-### Hvis du ønsker å bruke sjøbasen må du:
+### Er dette interessant for deg, kan du:
 
-1. Lage konto her. Vi tilbyr pålogging via Facebook, Gmail, E-post eller via
-   telefonnummeret ditt.
+1. Registrere deg og lage konto her. Vi tilbyr fleksibel pålogging.
 
-2. Legg igjen et minimum av relevante opplysninger som navn, alias, epost,
-   våttkortnummer og informasjon om hva slags sertifisering du har.
+2. Lære om [retningslinjene og vilkårene](/retningslinjer) for bruk av sjøbasen.
 
-3. Lese og akseptere [retningslinjene](/retningslinjer). Dette kan du gjøre før
-   du er godkjent, men du må ha laget konto.
+3. Vente på at vi godkjenner registreringen din slik at du kan reservere båt.
 
-Når vi har godkjent registreringen din får du tilgang til båtene.
-
-Ønsker du også tilgang til `avanserte båter` kan du krysse av for dette i
-registreringen
+Husk å krysse av for bruk av avanserte båter dersom du ønsker tilgang til dette.
+                    

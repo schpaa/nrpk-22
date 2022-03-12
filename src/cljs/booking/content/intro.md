@@ -1,4 +1,4 @@
-# Er du medlem i NRPK med gyldig Våttkort?
+# Til våre Er du medlem i NRPK med gyldig Våttkort?
 
 ## Da kan du bruke NRPK Booking for å booke båter på sjøbasen som for tiden befinner seg på Ormsund roklubb [på Malmøya.](https://kart.finn.no/?lng=10.76408&lat=59.86772&zoom=15&mapType=normaphd&markers=10.76307,59.86606,b,Brukerdefinert)
 
