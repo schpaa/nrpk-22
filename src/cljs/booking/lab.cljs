@@ -265,10 +265,12 @@
 
 (rf/reg-sub :lab/modal-selector-extra :-> (fn [db] (get db :lab/modal-selector-extra)))
 (rf/reg-sub :lab/modal-selector :-> (fn [db] (get db :lab/modal-selector false)))
-(rf/reg-event-db :lab/modal-selector (fn [db [_ arg extra]] (if arg
-                                                              (assoc db :lab/modal-selector arg
-                                                                        :lab/modal-selector-extra extra)
-                                                              (update db :lab/modal-selector (fnil not true)))))
+(rf/reg-event-db :lab/modal-selector
+                 (fn [db [_ arg extra]]
+                   (if (some? arg)
+                     (assoc db :lab/modal-selector arg
+                               :lab/modal-selector-extra extra)
+                     (update db :lab/modal-selector (fnil not true)))))
 
 (defn render [r]
   (r/with-let [settings (r/atom {:setting-1 false
@@ -316,3 +318,8 @@
                    (tap> :lab/new-blog-entry)
                    {:fx [[:dispatch [:app/navigate-to [:r.booking-blog-new]]]
                          [:lab/open-new-blog-entry-dialog nil]]}))
+
+(rf/reg-sub :lab/has-chrome :-> :lab/toggle-chrome)
+
+(rf/reg-event-fx :lab/toggle-chrome (fn [{db :db} _]
+                                      {:db (update db :lab/toggle-chrome (fnil not false))}))

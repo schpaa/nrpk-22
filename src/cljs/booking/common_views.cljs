@@ -158,7 +158,7 @@
                                           {:-padding-block "var(--size-4)"
                                            :background     "var(--surface000)"}
                                           {:-aspect-ratio "1/1"})}
-                                (when @search [sc/icon [:> solid/SearchIcon]])
+                                (when @search [sc/icon {:class [:shrink-0]} [:> solid/SearchIcon]])
                                 [:input.w-full.h-full.px-2
                                  {:class       [:bg-transparent
                                                 :focus:outline-none
@@ -438,7 +438,8 @@
       (chevron-updown-toggle @preferred-state do-toggle)]]))
 
 (defn page-boundry [r & c]
-  (let [user-auth (rf/subscribe [::db/user-auth])]
+  (let [user-auth (rf/subscribe [::db/user-auth])
+        has-chrome? (rf/subscribe [:lab/has-chrome])]
     (r/create-class
       {:component-did-mount
        (fn []
@@ -467,22 +468,25 @@
             [:div.fixed.inset-0.flex
 
              ;vertical toolbar
-             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-              {:style {:padding-top  "var(--size-0)"
-                       :box-shadow   "var(--inner-shadow-3)"
-                       :border-color "var(--surface1)"
-                       :background   "var(--surface000)"}}
-              (into [:<>] (map vertical-button (butlast (vertical-toolbar (:uid @user-auth)))))
-              [:div.flex-grow]
-              [:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]]
+             (when @has-chrome?
+               [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+                {:style {:padding-top  "var(--size-0)"
+                         :box-shadow   "var(--inner-shadow-3)"
+                         :border-color "var(--surface1)"
+                         :background   "var(--surface000)"}}
+                (into [:<>] (map vertical-button (butlast (vertical-toolbar (:uid @user-auth)))))
+                [:div.flex-grow]
+                [:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]])
 
              [:div.flex-col.flex.h-full.w-full
+
               ;header
-              [:div.h-16.flex.items-center.w-full.border-b.px-4.shrink-0
+              #_[l/ppre-x @(rf/subscribe [:lab/modal-selector])]
+              [:div.h-16.flex.items-center.w-full.border-b.px-4.shrink-0.truncates
                {:style {:background   "var(--surface00)"
                         :border-color "var(--surface0)"}}
                [sc/row-std
-                [sc/header-title {:class [:grow]}
+                [sc/header-title {:class [:truncate :grow]}
                  (when-not @(rf/subscribe [:lab/in-search-mode?])
                    [sc/row {:class [:truncate]}
                     (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
@@ -514,12 +518,13 @@
                      (bottom-menu)]]]])]
 
               ;horizontal toolbar
-              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
-               {:style {:box-shadow   "var(--inner-shadow-3)"
-                        :border-color "var(--surface1)"
-                        :background   "var(--surface000)"}}
-               (into [:<>] (map horizontal-button
-                                horizontal-toolbar))]]]]))})))
+              (when @has-chrome?
+                [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
+                 {:style {:box-shadow   "var(--inner-shadow-3)"
+                          :border-color "var(--surface1)"
+                          :background   "var(--surface000)"}}
+                 (into [:<>] (map horizontal-button
+                                  horizontal-toolbar))])]]]))})))
 
 (comment
   (defonce keydown-ch (chan))
@@ -563,25 +568,28 @@
                            (tap> chord))
                          (recur)))))
 
-(do
-  (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
+(defonce _x (do
+              (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
 
-  (rf/reg-event-fx :app/open-command-palette
-                   (fn [{db :db} _]
-                     {:fx [[:dispatch [:lab/modal-selector
-                                       true
-                                       {:content-fn (fn [c] [schpaa.style.combobox/combobox-example c])}]]]}))
+              (rf/reg-event-fx :app/toggle-command-palette
+                               (fn [{db :db} _]
+                                 (tap> :app/toggle-command-palette)
+                                 {:fx [[:dispatch [:lab/modal-selector
+                                                   (-> db :lab/modal-selector not)
+                                                   {:content-fn (fn [c] [schpaa.style.combobox/combobox-example c])}]]]}))
 
-  (rf/dispatch
-    [::rp/set-keydown-rules
-     {:event-keys [[[:app/open-command-palette]
-                    [{:metaKey true
-                      :keyCode keycodes/K}]]
-                   [[:app/open-command-palette]
-                    [{:ctrlKey true
-                      :keyCode keycodes/K}]]]
-      :prevent-default-keys
-      [{:metaKey true
-        :keyCode keycodes/K}
-       {:keyCode 71
-        :ctrlKey true}]}]))
+              (rf/dispatch
+                [::rp/set-keydown-rules
+                 {:event-keys [[[:app/toggle-command-palette]
+                                [{:metaKey true
+                                  :keyCode keycodes/K}]]
+                               [[:app/toggle-command-palette]
+                                [{:ctrlKey true
+                                  :keyCode keycodes/K}]]]
+                  :prevent-default-keys
+                  [{:ctrlKey true
+                    :keyCode keycodes/K}
+                   {:metaKey true
+                    :keyCode keycodes/K}
+                   {:keyCode 71
+                    :ctrlKey true}]}])))
