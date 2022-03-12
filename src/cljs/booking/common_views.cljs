@@ -136,72 +136,36 @@
    {:color "var(--surface4)"}
    [:&:hover {:color "var(--red-5)"}]])
 
+(o/defstyled experiment3 :div
+  [:&
+   {:color "var(--surface4)"}])
+
+
 
 (defn search-menu []
   (let [a (r/atom nil)
         value (rf/subscribe [:lab/search-expression])
-        enter-search #(do
-                        (tap> ["enter search" @a])
-                        (rf/dispatch [:lab/set-search-mode true])
-                        #_(.focus @a))
+        enter-search #(rf/dispatch [:lab/set-search-mode true])
         exit-search #(do
-                       ;clear a
-                       (tap> "clear ref")
                        (reset! a nil)
-                       (tap> "exit search")
                        (rf/dispatch [:lab/set-search-mode false])
                        (rf/dispatch [:lab/stop-search])
                        (rf/dispatch [:lab/set-search-expr ""]))
         set-refs #(when @a
                     (.addEventListener @a "keydown"
                                        (fn [event]
-                                         (do
-                                           (tap> [event.keyCode])
-                                           (if (= keycodes/ESC event.keyCode)
-
-                                             (do
-                                               (exit-search)
-                                               (tap> "ESC")
-                                               (rf/dispatch [:lab/set-search-mode false])
-                                               (rf/dispatch [:lab/stop-search])
-                                               (rf/dispatch [:lab/set-search-expr ""]))))
-                                         (if (= keycodes/ENTER event.keyCode)
-                                           (do
-                                             (tap> "ENTER")
-                                             (rf/dispatch [:lab/start-search]))))))
+                                         (cond
+                                           (= keycodes/ESC event.keyCode)
+                                           (exit-search)
+                                           (= keycodes/ENTER event.keyCode)
+                                           (rf/dispatch [:lab/start-search])))))
         search (rf/subscribe [:lab/in-search-mode?])]
 
     (r/create-class
-      {:display-name          "search-widget"
-       :component-did-unmount (fn [_]
-                                (tap> :component-did-unmount))
-       :component-did-update  (fn [_]
-                                (when @a
-                                  (do
-                                    (tap> ["focus" (if @a @a "a is empty")])
-                                    (.focus @a))))
-       :component-did-mount   (fn [c]
-                                #_(if @a
-                                    (do
+      {:display-name         "search-widget"
 
-                                      (tap> "register event listener")
-                                      (.addEventListener @a "keydown"
-                                                         (fn [event]
-                                                           (do
-                                                             (tap> [event.keyCode])
-                                                             (if (= keycodes/ESC event.keyCode)
-
-                                                               (do
-                                                                 (exit-search)
-                                                                 (tap> "ESC")
-                                                                 (rf/dispatch [:lab/set-search-mode false])
-                                                                 (rf/dispatch [:lab/stop-search])
-                                                                 (rf/dispatch [:lab/set-search-expr ""]))))
-                                                           (if (= keycodes/ENTER event.keyCode)
-                                                             (do
-                                                               (tap> "ENTER")
-                                                               (rf/dispatch [:lab/start-search]))))))
-                                    (tap> ["xxxxxx" @a])))
+       :component-did-update (fn [_]
+                               (when @a (.focus @a)))
 
        :reagent-render
        (fn []
@@ -212,9 +176,10 @@
                          (if @search :w-full :w-10)])}
 
           (if @search
-            [sc/row' {:class    [:flex-center :w-12 :shrink-1]
-                      :on-click #(.stopPropagation %)}
-             [sc/icon [:> solid/SearchIcon]]]
+            [experiment3
+             [sc/row' {:class    [:flex-center :w-12 :shrink-1]
+                       :on-click #(.stopPropagation %)}
+              [sc/icon [:> solid/SearchIcon]]]]
             [experiment
              [sc/row' (conj
                         {:class [:flex-center :w-10 :shrink-1]}
