@@ -305,6 +305,7 @@
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundry r
+        [:div.-debugx.select-none [booking.common-views/header-control-panel]]
         [content.booking-blog/render
          {:fsm  {}
           :uid  (:uid @user-auth)
@@ -315,6 +316,7 @@
      (let [id (some-> r :path-params :id)
            data (db/on-value-reaction {:path ["booking-posts" "articles" (name id)]})]
        [page-boundry r
+
         ;[l/ppre-x r id @data]
         [:div.max-w-xl.mx-auto.container
          [sc/markdown [schpaa.markdown/md->html (:content @data)]]]]))

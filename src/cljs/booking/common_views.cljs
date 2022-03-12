@@ -74,11 +74,18 @@
                  :disabled  true
                  :value     #()}]
      [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
-                 :label     "Hva er nytt?"
-                 :color     "var(--hva-er-nytt)"
-                 :highlight (= :r.booking-blog current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+     #_[:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
+                   :label     "Hva er nytt?"
+                   :color     "var(--hva-er-nytt)"
+                   :highlight (= :r.booking-blog current-page)
+                   :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+                   :disabled  false
+                   :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/GiftIcon])
+                 :label     "Omriss?"
+                 :color     "var(--green-8)"
+                 :highlight false                           ;(= :r.booking-blog current-page)
+                 :action    #(rf/dispatch [:lab/toggle-chrome])
                  :disabled  false
                  :value     #()}]
      #_[:hr]
@@ -220,9 +227,7 @@
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
                          [scb/round-normal {:on-click toggle-mainmenu}
-                          (if open
-                            [sc/icon [:> solid/XIcon]]
-                            [sc/icon [:> solid/MenuIcon]])])}]])))
+                          [sc/icon [:> solid/MenuIcon]]])}]])))
 
 (defn bottom-menu-definition [settings-atom]
   [[:header [sc/row' {:class [:justify-between :items-end :w-44 :px-2]}
@@ -277,10 +282,10 @@
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
-   {:icon      solid/LightningBoltIcon
-    :on-click  schpaa.style.dialog/open-selector
-    :color     "red"
-    :page-name :r.debug}])
+   {:icon       solid/LightningBoltIcon
+    :on-click   schpaa.style.dialog/open-selector
+    ;:color     "red"
+    :xpage-name :r.debug}])
 
 (def horizontal-toolbar
   [{:icon      solid/HomeIcon
@@ -445,7 +450,7 @@
                      ;:border-radius    "var(--radius-1)"
                      ;:box-shadow       (when @preferred-state "var(--inner-shadow-2)")
                      :background-color (when @preferred-state "var(--surface000)")}}
-     [sc/row-end                                            ;:div.flex.justify-between.items-center
+     [sc/row'                                               ;:div.flex.justify-between.items-center
       {:on-click #(do
                     (do-toggle)
                     (.stopPropagation %))
@@ -457,21 +462,27 @@
                                  :font-weight    "var(--font-weight-6)"}} "Visningsvalg"]]
       (chevron-updown-toggle @preferred-state do-toggle)]
      [:div {:class (into [:duration-200] (if @preferred-state [:h-24 :opacity-100] [:pointer-events-none :h-0 :opacity-0]))}
-      [sc/dim [sc/col {:class [:space-y-2]}
-               [sc/row' {:class [:items-center]}
-                [schpaa.style.switch/small-switch-example
-                 {:!value  show-archived
-                  :caption [sc/subtext "Vis arkiverte"]}]]
+      [sc/col-space-2
 
-               [sc/row' {:class [:items-center]}
-                [schpaa.style.switch/small-switch-example
-                 {:!value  show-archived
-                  :caption [sc/subtext "Skjul mine"]}]]]]
+       [sc/col {:class [:space-y-2]}
+        #_[sc/row' {:class [:items-center]}
+           [schpaa.style.switch/small-switch-example
+            {:!value  show-archived
+             :caption [sc/subtext "Vis arkiverte"]}]]
 
-      ;[sc/subtext "Som en liste"]
-      ;[sc/subtext "Som blokker i et rutenett"]
-      ;[sc/subtext "Alle poster ekspandert"]]]
-      #_[sc/markdown [:code "Some options here"]]]
+        [sc/row' {:class [:items-center]}
+         [schpaa.style.switch/small-switch-example
+          {:!value  show-archived
+           :caption [sc/subtext "Vis skjulte"]}]]]
+       [sc/dim
+        [sc/row-stretch
+         [sc/subtext "Se innhold"]
+         [sc/subtext "Se slettede"]
+         [sc/subtext "Se skjulte"]]]]]
+     ;[sc/subtext "Som en liste"]
+     ;[sc/subtext "Som blokker i et rutenett"]
+     ;[sc/subtext "Alle poster ekspandert"]]]
+     #_[sc/markdown [:code "Some options here"]]
      (when @preferred-state [:hr])]))
 
 (defn page-boundry [r & c]
@@ -519,17 +530,25 @@
 
               ;header 
               #_[l/ppre-x @(rf/subscribe [:lab/modal-selector])]
-              [:div.h-16.flex.items-center.w-full.border-b.px-4.shrink-0.truncates
-               {:style {:background   "var(--surface00)"
-                        :border-color "var(--surface0)"}}
-               [sc/row-std
-                [sc/header-title {:class [:truncate :grow]}
-                 (when-not @(rf/subscribe [:lab/in-search-mode?])
-                   [sc/row {:class [:truncate]}
-                    (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
-                                                          [:div.truncate e]))])]
-                [search-menu]
-                (main-menu)]]
+              (r/with-let [st (r/atom false)]
+                [sc/col {:class [:border-b :duration-200]
+                         :style {:background   "var(--surface00)"
+                                 :border-color "var(--surface0)"}}
+                 [:div.h-16.flex.items-center.w-full.px-4.shrink-0.truncates
+
+                  [sc/row-std
+                   (when-not @(rf/subscribe [:lab/in-search-mode?])
+                     [sc/row' {:class [:grow :gap-4]}
+                      [sc/header-title {:class [:truncate]}
+                       [sc/row' {:class [:truncate]}
+                        (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
+                                                              [:div.truncate e]))]]
+                      [:div.h-8.w-8 {:on-click #(swap! st not)}
+                       [scb/round-normal-floating [sc/icon [:> (if @st solid/ChevronUpIcon solid/ChevronDownIcon)]]]]])
+
+                   [search-menu]
+                   [main-menu]]]
+                 [:div {:class [:duration-200 (if @st :h-32 :h-0)]}]])
 
               [:div.overflow-y-auto.h-full.focus:outline-none
                {:style     {:background "var(--surface000)"}

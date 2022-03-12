@@ -135,7 +135,7 @@
     (fn [{:keys [content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
       [sc/surface-d {:style {:xpadding      "1rem"
                              :border-radius "var(--radius-1)"
-                             :xbackground   "var(--surface000)"
+                             :background    "var(--surface000)"
                              :xbox-shadow   "var(--inner-shadow-2)"}}
        [:div.relative.space-y-s4.overflow-hidden
         (when-not @visible?
@@ -145,7 +145,7 @@
          (when-not @visible?
            {:class [:bg-gradient-to-t :from-current]
             :style {:height            "50%"
-                    :color             "var(--surface00)"
+                    :color             "var(--surface000)"
                     :abackground-image "linear-gradient(transparent,var(--surface00))"}})]
 
         [:div
@@ -179,8 +179,8 @@
   (let [data @(db/on-value-reaction {:path path})]
     (into [:div.space-y-20]
           (concat
-            [[sc/row {:class [:justify-center]}
-              [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
+            #_[[sc/row {:class [:justify-center]}
+                [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
 
             (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse data))
                   :let [uid' (:uid e)]]
@@ -277,7 +277,7 @@ Helt til slutt, en kinaputt"
 
 
 (defn bottom-menu [uid]
-  (r/with-let [main-visible (r/atom true)]
+  (r/with-let [main-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
       [scm/small-menu
        {:showing      @main-visible
@@ -322,6 +322,11 @@ Helt til slutt, en kinaputt"
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
            [sc/col {:class [:space-y-4 :max-w-lg :mx-auto :px-4]}
 
+
+            #_[sc/row {:class [:justify-center]}
+               [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]
+               [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Oversikt"]]
+
             (rs/match-state *fsm-rapport
               [:s.startup]
               [initial-page {:path              path
@@ -347,4 +352,4 @@ Helt til slutt, en kinaputt"
             [:div.absolute.bottom-24.sm:bottom-7.left-4.sm:left-20
              [sc/row-end {:class [:pt-4]}
               (bottom-menu uid)]]]))})))
- 
+

@@ -146,12 +146,7 @@
          [sc/surface-a {:class [:p-4 :min-w-fit]}
           [sc/col {:class [:space-y-4]}
 
-           #_[:div.z-50.mb-10x
-              [schpaa.style.menu/naked-menu-example-with-args
-               {:dir    :down
-                :data   (timeinput-shortcuts-definition (r/atom nil))
-                :button (fn [open]
-                          [scb/corner {:on-click toggle-lightning} [sc/icon [:> outline/LightningBoltIcon]]])}]]
+
 
            [sc/row
             [:form.space-y-1.w-full

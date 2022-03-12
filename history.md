@@ -63,3 +63,4 @@
 -rw-r--r-- 1 chris staff 3226705 Mar 11 17:40 ./dist/booking/js/main.F263.js
 -rw-r--r-- 1 chris staff 3226383 Mar 11 20:21 ./dist/booking/js/main.19C7.js
 -rw-r--r-- 1 chris staff 3227120 Mar 12 00:30 ./dist/booking/js/main.A5B2.js
+-rw-r--r-- 1 chris staff 3234937 Mar 12 18:02 ./dist/booking/js/main.6D1B.js
