@@ -598,10 +598,19 @@
                                   :keyCode keycodes/K}]]
                                [[:app/toggle-command-palette]
                                 [{:ctrlKey true
-                                  :keyCode keycodes/K}]]]
+                                  :keyCode keycodes/K}]]
+                               [[:lab/toggle-search-mode]
+                                [{:metaKey true
+                                  :keyCode keycodes/F}]]
+                               [[:lab/toggle-search-mode]
+                                [{:ctrlKey true
+                                  :keyCode keycodes/F}]]]
+
                   :prevent-default-keys
                   [{:ctrlKey true
                     :keyCode keycodes/K}
+                   {:metaKey true
+                    :keyCode keycodes/F}
                    {:metaKey true
                     :keyCode keycodes/K}
                    {:keyCode 71
