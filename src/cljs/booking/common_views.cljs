@@ -97,8 +97,8 @@
        [scb2/cta-small "Meld på"]]]]))
 
 (defn set-focus [el a]
-  (tap> "set ref")
   (when-not @a
+    (tap> "set ref")
     (reset! a el)
     #_(when el (.focus el))))
 
@@ -123,78 +123,133 @@
 (rf/reg-sub :lab/in-search-mode? :-> :lab/set-search-mode)
 (rf/reg-sub :lab/search-expression :-> :lab/search-expr)
 
+(o/defstyled experiment :div
+  [:&
+   :rounded-full
+   [:&:hover {:background "red"}]])
+
 (defn search-menu []
   (let [a (r/atom nil)
         value (rf/subscribe [:lab/search-expression])
+        enter-search #(do
+                        (tap> ["enter search" @a])
+                        (rf/dispatch [:lab/set-search-mode true])
+                        #_(.focus @a))
+        exit-search #(do
+                       ;clear a
+                       (reset! a nil)
+                       (tap> "exit search")
+                       (rf/dispatch [:lab/set-search-mode false])
+                       (rf/dispatch [:lab/stop-search])
+                       (rf/dispatch [:lab/set-search-expr ""]))
         search (rf/subscribe [:lab/in-search-mode?])]
 
     (r/create-class
-      {:display-name         "search-widget"
-       :component-did-update (fn [_]
-                               (when @a (.focus @a)))
-       :component-did-mount  (fn [c]
-                               (when @a (.focus @a))
-                               (.addEventListener @a "keydown"
-                                                  (fn [event]
-                                                    (do
-                                                      (tap> [event.keyCode])
-                                                      (if (= keycodes/ESC event.keyCode)
-                                                        (do
-                                                          (tap> "ESC")
-                                                          (rf/dispatch [:lab/set-search-mode false])
-                                                          (rf/dispatch [:lab/stop-search])
-                                                          (rf/dispatch [:lab/set-search-expr ""]))))
-                                                    (if (= keycodes/ENTER event.keyCode)
-                                                      (do
-                                                        (tap> "ENTER")
-                                                        (rf/dispatch [:lab/start-search]))))))
-
-       :reagent-render       (fn []
-                               [scb/round-expander
-                                {:class (into [:h-10 :flex :items-center :duration-200]
-                                              [(if @search :px-2)
-                                               (if @search :w-full :w-10)])
-                                 :style (if @search
-                                          {:-padding-block "var(--size-4)"
-                                           :background     "var(--surface000)"}
-                                          {:-aspect-ratio "1/1"})}
-                                (when @search [sc/icon {:class [:shrink-0]} [:> solid/SearchIcon]])
-                                [:input.w-full.h-full.px-2
-                                 {:class       [:bg-transparent
-                                                :focus:outline-none
-                                                (if @search :flex :hidden)]
-                                  :ref         #(when-not @a
-                                                  (set-focus % a))
-                                  :placeholder "søk"
-                                  :value       @value
-                                  :on-blur     (fn [e] (let [s (-> e .-target .-value)]
-                                                         (if (nil? (seq s))
+      {:display-name          "search-widget"
+       :component-did-unmount (fn [_]
+                                (tap> :component-did-unmount))
+       :component-did-update  (fn [_]
+                                (when @a
+                                  (do
+                                    (tap> ["focus" (if @a @a "a is empty")])
+                                    (.focus @a))))
+       :component-did-mount   (fn [c]
+                                (if @a
+                                  (do
+                                    (.focus @a)
+                                    (tap> "register event listener")
+                                    (.addEventListener @a "keydown"
+                                                       (fn [event]
+                                                         (do
+                                                           (tap> [event.keyCode])
+                                                           (if (= keycodes/ESC event.keyCode)
+                                                             (do
+                                                               (tap> "ESC")
+                                                               (rf/dispatch [:lab/set-search-mode false])
+                                                               (rf/dispatch [:lab/stop-search])
+                                                               (rf/dispatch [:lab/set-search-expr ""]))))
+                                                         (if (= keycodes/ENTER event.keyCode)
                                                            (do
-                                                             (tap> "blur")
-                                                             (rf/dispatch [:lab/set-search-expr ""])
-                                                             (rf/dispatch [:lab/set-search-mode false])
-                                                             (rf/dispatch [:lab/stop-search])))))
-                                  :on-change   #(let [s (-> % .-target .-value)]
-                                                  (.stopPropagation %)
-                                                  (rf/dispatch [:lab/set-search-expr s]))
-                                  :type        :text}]
+                                                             (tap> "ENTER")
+                                                             (rf/dispatch [:lab/start-search]))))))
+                                  (tap> ["xxxxxx" @a])))
 
-                                [:div [sc/icon
-                                       {:class    [:shrink-0]
-                                        :on-click #(if @search
-                                                     (do
-                                                       (rf/dispatch [:lab/set-search-mode false])
-                                                       (rf/dispatch [:lab/stop-search])
-                                                       (rf/dispatch [:lab/set-search-expr ""]))
-                                                     (do
-                                                       (rf/dispatch [:lab/set-search-mode true])
-                                                       (when-let [r @a]
-                                                         (tap> "attempt focus")
-                                                         (.focus r))))}
+       :reagent-render        (fn []
+                                [:div.h-10.duration-200.rounded-full
+                                 {:class (into [:flex :gap-1]
+                                               [(if @search :bg-white)
+                                                (if @search :px-x1)
+                                                (if @search :w-full :w-10)])}
 
-                                       (if @search
-                                         [:div.hover:text-red-500 [:> solid/XIcon]]
-                                         [:> solid/SearchIcon])]]])})))
+                                 [experiment
+                                  [sc/row' (conj
+                                             {:class [:flex-center :w-10 :x-debug :shrink-1]}
+                                             (when-not @search
+                                               {:on-click enter-search #_#(reset! search true)}))
+                                   [sc/icon [:> solid/SearchIcon]]]]
+
+                                 (when @search
+                                   [:input.w-full.h-full.outline-none.focus:outline-none
+                                    {:style       {:xflex "1 1 100%"}
+                                     :placeholder "søk"
+                                     :type        :text
+                                     :on-blur     #(let [s (-> % .-target .-value)]
+                                                     (if (empty? s)
+                                                       (exit-search)))
+                                     :ref         #(when-not @a
+                                                     (set-focus % a))}])
+
+                                 (when @search
+                                   [sc/row' {:class    [:flex-center :w-12 :x-debug]
+                                             :on-click exit-search #_#(reset! st false)}
+                                    [sc/icon [:> solid/XIcon]]])]
+                                #_[scb/round-expander
+                                   {:class (into [:h-10 :flex :items-center :duration-200]
+                                                 [(if @search :px-2)
+                                                  (if @search :w-full :w-10)])
+                                    :style (if @search
+                                             {:-padding-block "var(--size-4)"
+                                              :background     "var(--surface000)"}
+                                             {:-aspect-ratio "1/1"})}
+                                   (when @search [sc/icon {:class [:shrink-0]} [:> solid/SearchIcon]])
+                                   [:input.w-full.h-full.px-2
+                                    {:class       [:bg-transparent
+                                                   :focus:outline-none
+                                                   (if @search :flex :hidden)]
+                                     :ref         #(when-not @a
+                                                     (set-focus % a))
+                                     :placeholder "søk"
+                                     :value       @value
+                                     :on-blur     (fn [e] (let [s (-> e .-target .-value)]
+                                                            (if (nil? (seq s))
+                                                              (do
+                                                                (tap> "blur")
+                                                                (rf/dispatch [:lab/set-search-expr ""])
+                                                                (rf/dispatch [:lab/set-search-mode false])
+                                                                (rf/dispatch [:lab/stop-search])))))
+                                     :on-change   #(let [s (-> % .-target .-value)]
+                                                     (.stopPropagation %)
+                                                     (rf/dispatch [:lab/set-search-expr s]))
+                                     :type        :text}]
+
+                                   [scb/round-normal {:class    [:hover:bg-blue-500 :-debug]
+                                                      :on-click #(if @search
+                                                                   (do
+                                                                     (rf/dispatch [:lab/set-search-mode false])
+                                                                     (rf/dispatch [:lab/stop-search])
+                                                                     (rf/dispatch [:lab/set-search-expr ""]))
+                                                                   (do
+                                                                     (rf/dispatch [:lab/set-search-mode true])
+                                                                     (when-let [r @a]
+                                                                       (tap> "attempt focus")
+                                                                       (.focus r))))}
+                                    [sc/icon
+                                     {:class [:shrink-0]}
+
+
+                                     (if @search
+                                       [:div.hover:text-red-500 [:> solid/XIcon]]
+                                       [:> solid/SearchIcon])]]])})))
 
 ;endregion
 
@@ -492,6 +547,8 @@
                     (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
                                                           [:div.truncate e]))])]
                 [search-menu]
+
+
                 (main-menu)]]
 
               [:div.overflow-y-auto.h-full.focus:outline-none

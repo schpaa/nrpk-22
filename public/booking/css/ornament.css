@@ -621,3 +621,4 @@ body {
 .schpaa_style_combobox__placeholder input.w-full{font-family:Montserrat;font-weight:500;font-size:var(--font-size-2);color:var(--surface5)}.schpaa_style_combobox__placeholder input.w-full::placeholder{font-size:var(--font-size-2);color:var(--surface1)}
 
 .schpaa_style_ornament__row_SINGLEQUOTE_{display:flex;align-items:center;height:100%;gap:.5rem}
+.booking_common-views__experiment{border-radius:9999px}.booking_common-views__experiment:hover{background:red}
