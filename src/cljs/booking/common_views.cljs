@@ -197,7 +197,7 @@
           (when @search
             [:input.w-full.h-full.outline-none.focus:outline-none
              {:style       {:xflex "1 1 100%"}
-              :placeholder "finn ressurser"
+              :placeholder "finn ressurser + <return>"
               :type        :text
               :on-blur     #(let [s (-> % .-target .-value)]
                               (if (empty? s)
@@ -226,7 +226,7 @@
          :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
          :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
-                         [scb/round-normal {:on-click toggle-mainmenu}
+                         [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
                           [sc/icon [:> solid/MenuIcon]]])}]])))
 
 (defn bottom-menu-definition [settings-atom]
@@ -485,6 +485,23 @@
      #_[sc/markdown [:code "Some options here"]]
      (when @preferred-state [:hr])]))
 
+(o/defstyled listitem :div
+  [:&
+   :flex :items-center
+   [:.selected :w-full
+    {:padding-block  "var(--size-1)"
+     :padding-inline "var(--size-2)"
+     :border-radius  "var(--radius-2)"
+     :color          [:rgba 0 0 0 1]
+     :background     [:rgba 0 0 0 0.09]}]
+   [:.normal :w-full
+    {:padding-block  "var(--size-1)"
+     :padding-inline "var(--size-2)"
+     :color          [:rgba 0 0 0 0.5]}]]
+  ([a c]
+   ;^{:class [:selected]}
+   [:div a c]))
+
 (defn page-boundry [r & c]
   (let [user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
@@ -528,9 +545,10 @@
 
              [:div.flex-col.flex.h-full.w-full
 
-              ;header 
+              ;header        
               #_[l/ppre-x @(rf/subscribe [:lab/modal-selector])]
-              (r/with-let [st (r/atom false)]
+              (let [st (schpaa.state/listen :top-toggle)
+                    toggle #(schpaa.state/toggle :top-toggle)]
                 [sc/col {:class [:border-b :duration-200]
                          :style {:background   "var(--surface00)"
                                  :border-color "var(--surface0)"}}
@@ -543,12 +561,80 @@
                        [sc/row' {:class [:truncate]}
                         (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
                                                               [:div.truncate e]))]]
-                      [:div.h-8.w-8 {:on-click #(swap! st not)}
-                       [scb/round-normal-floating [sc/icon [:> (if @st solid/ChevronUpIcon solid/ChevronDownIcon)]]]]])
+                      [:div.h-8.w-8 {:on-click toggle}
+                       [scb/round-dark-on-hover [sc/icon {:style {:transform (if @st "rotate(0deg)" "rotate(180deg)")}
+                                                          :class [:duration-200 :transform]}
+                                                 [:> outline/ChevronUpIcon]]]]])
 
                    [search-menu]
                    [main-menu]]]
-                 [:div {:class [:duration-200 (if @st :h-32 :h-0)]}]])
+                 [:div {:class (into [:duration-200] (if @st [:h-64 :opacity-100]
+                                                             [:h-0 :opacity-0]))}
+                  [sc/surface-b-sans-bg {:style {:border-radius "var(--radius-0)"
+                                                 :padding       "0px"
+                                                 :background    "var(--surface00)"}}
+                   [:div.h-12
+                    [sc/row-stretch {:class [:items-center :gap-2 :xpx-4]
+                                     :style {:padding-inline "var(--size-2)"
+                                             :color          :black
+                                             :background     "var(--surface00)"}}
+                     [scb2/outline-tight
+                      [sc/icon-small [:> outline/PlusIcon]]]
+                     [:div.grow]
+                     [scb2/outline-tight
+                      [sc/icon-small [:> outline/FolderIcon]]]
+                     [scb2/outline-tight
+                      [sc/icon-small [:> outline/TrashIcon]]]
+                     ;[sc/small {:class [:w-48]} "dokument"]
+                     ;[sc/small {:class [:w-20]} "dato"]
+                     ;[sc/small {:class [:w-20]} "tid"]
+                     #_[scb/round-normal-listitem
+                        [sc/icon-small [:> outline/DocumentIcon]]]
+                     #_[:div.w-full.grow]]]
+
+                   [:div {:class [:relative :overflow-clipx]
+                          :style {:xbox-shadow "var(--shadow-inner-2)"}}
+
+                    [:div {:style {:color "var(--surface00"}}
+                     [:div.absolute.top-0.inset-x-0.bg-gradient-to-b.h-4.from-current.pointer-events-none]
+                     [:div.absolute.bottom-0.inset-x-0.bg-gradient-to-t.h-2.from-current.pointer-events-none]]
+                    [:div.px-2x {:class [:overflow-y-auto :-snap-y :h-52]}
+                     (r/with-let [time (ta/short-date-format (t/now))
+                                  date (ta/time-format (t/now))
+                                  st (r/atom 1)
+                                  light (r/atom {1 {:light true}
+                                                 2 {:light true}})]
+                       (into [:div.snap-center.select-none]
+                             (for [e (range 16)]
+                               ^{:key (str e)}
+                               [listitem
+                                {:on-click #(reset! st e)
+                                 :class    (into [:snap-start] (if (= e @st) [:selected] [:normal]))}
+                                [sc/row'' {:class [:items-center :gap-2]}
+                                 [scb/round-normal-listitem
+                                  [sc/icon-small [:> outline/DocumentIcon]]]
+                                 [sc/text-clear {:class [:truncate :w-48]} "super-long-untitled-" e]
+                                 [sc/row
+                                  [sc/text-clear {:class [:w-16]} time]
+                                  [sc/text-clear {:class [:w-16]} date]]
+                                 [:div.grow]
+                                 [scb/round-normal-listitem
+                                  {:on-click #(do
+                                                (swap! light update-in [e :light] (fnil not false))
+                                                (.stopPropagation %))}
+                                  [sc/icon-small {:style {:color (if (get-in @light [e :light]) "var(--yellow-8)" "var(--surface1)")}
+                                                  :class []} [:> outline/LightBulbIcon]]]
+                                 [scb/round-normal-listitem
+                                  [sc/icon-small [:> outline/KeyIcon]]]
+                                 [scb/round-normal-listitem
+                                  {:on-click #(do
+                                                (swap! light update-in [e :lock] (fnil not false))
+                                                (.stopPropagation %))}
+                                  [sc/icon-small
+                                   {:style {:color (if (get-in @light [e :lock]) "var(--red-8)" "var(--surface1)")}}
+                                   [:> (if (get-in @light [e :lock]) outline/LockClosedIcon outline/LockOpenIcon)]]]]])))]]]]])
+
+
 
               [:div.overflow-y-auto.h-full.focus:outline-none
                {:style     {:background "var(--surface000)"}
