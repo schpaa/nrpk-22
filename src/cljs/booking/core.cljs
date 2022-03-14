@@ -23,13 +23,14 @@
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
    ["/debug" {:name :r.debug :header "Booking Labs" :subheader "Baksiden"}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
-   ["/om-meg" {:name :r.user :header "Om meg" :subheader "Baksiden"}]
+   ["/om-meg" {:name :r.user :header "Mine opplysninger" :subheader "Baksiden"}]
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
    ["/not-found" {:name :r.page-not-found :header ":r.page-not-found" :subheader ":r.page-not-found"}]
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
    ["/retningslinjer" {:name :r.retningslinjer :header "Retningslinjer"}]
    ["/conditions" {:name :r.conditions :header "Vilkår"}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
+   ["/filer" {:name :r.fileman-temporary :header "Filer"}]
    ["/kalender" {:name :r.calendar :header "Kalender"}]])
 
 (defn kee-start []

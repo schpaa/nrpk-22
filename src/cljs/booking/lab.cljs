@@ -308,6 +308,11 @@
 
 (rf/reg-fx :lab/open-new-blog-entry-dialog (fn [_] (schpaa.style.dialog/open-dialog-addpost)))
 
+(rf/reg-event-fx :lab/just-create-new-blog-entry
+                 (fn [_ _]
+                   (tap> :lab/new-blog-entry)
+                   {:fx [[:lab/open-new-blog-entry-dialog nil]]}))
+
 (rf/reg-event-fx :lab/new-blog-entry
                  (fn [_ _]
                    (tap> :lab/new-blog-entry)

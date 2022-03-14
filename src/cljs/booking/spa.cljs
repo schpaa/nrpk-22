@@ -1,5 +1,5 @@
 (ns booking.spa
-  (:require [booking.common-views :refer [main-menu page-boundry]]
+  (:require [booking.common-views :refer [main-menu page-boundary]]
             [booking.content.booking-blog :as content.booking-blog :refer [render]]
             [reagent.core :as r]
             [lambdaisland.ornament :as o]
@@ -35,7 +35,8 @@
             [schpaa.style.button2 :as scb2]
             [shadow.resource :refer [inline]]
             [times.api :as ta]
-            [schpaa.time]))
+            [schpaa.time]
+            [goog.style :as gs]))
 
 
 ;region related to flex-date and how to display relative time
@@ -256,15 +257,27 @@
 (def routing-table
   {:r.welcome
    (fn [r]
-     [page-boundry r
+     [page-boundary r
       [db.signin/login]
       [welcome]])
 
    :r.forsiden
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry r
+       [page-boundary r
         [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
+         ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
+         ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
+         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
+         (let [el (-> js/document.documentElement .-style)
+               prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
+
+           [:<>
+            #_[l/ppre (js->clj el)]
+            [scb/button-cta {:on-click #(let [p (prop)]
+                                          (.setProperty el "--brand1" p)
+                                          (.setProperty el "--buttoncta1" p))} "Randomize color"]])
+         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
          [:div
           (-> "./frontpage1.md"
               inline
@@ -273,7 +286,7 @@
          [sc/row-end
           [scb2/cta-large
            {:type "button" :on-click open-dialog-signin}
-           "Registrer meg"]]]
+           "Begynn her"]]]
 
 
         ;[db.signin/login]]
@@ -282,7 +295,7 @@
    :r.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry r
+       [page-boundary r
         [content.overview/overview
          {:uids (:uid @user-auth)
           :data (or [{}]
@@ -291,7 +304,7 @@
    :r.new-booking
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry r
+       [page-boundary r
         [booking.views/booking-form
          {:boat-db       (sort-by (comp :number val) < (logg.database/boat-db))
           :selected      hoc/selected
@@ -304,18 +317,18 @@
    :r.booking-blog
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundry r
-        [:div.-debugx.select-none [booking.common-views/header-control-panel]]
-        [content.booking-blog/render
-         {:fsm  {}
-          :uid  (:uid @user-auth)
-          :path ["booking-posts" "articles"]}]]))
+       [page-boundary r
+        ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
+        {:whole [:div.p-4 [content.booking-blog/render
+                           {:fsm  {}
+                            :uid  (:uid @user-auth)
+                            :path ["booking-posts" "articles"]}]]}]))
 
    :r.booking-blog-doc
    (fn [r]
      (let [id (some-> r :path-params :id)
            data (db/on-value-reaction {:path ["booking-posts" "articles" (name id)]})]
-       [page-boundry r
+       [page-boundary r
 
         ;[l/ppre-x r id @data]
         [:div.max-w-xl.mx-auto.container
@@ -324,7 +337,7 @@
    :r.user
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [page-boundry r
+       [page-boundary r
         ;[user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
         [user.views/my-info]]))
@@ -332,7 +345,7 @@
    :r.logg
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [page-boundry r
+       [page-boundary r
         [user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
         (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :void)]
@@ -347,12 +360,12 @@
 
    :r.debug
    (fn [r]
-     [page-boundry r
+     [page-boundary r
       [booking.lab/render r]])
 
    :r.designlanguage
    (fn [r]
-     [page-boundry r
+     [page-boundary r
       [:div.pb-32
        [collapsable-memory
         :color-palette
@@ -481,20 +494,22 @@
 
    :r.terms
    (fn [r]
-     [page-boundry r])
+     [page-boundary r
+      (-> (inline "./content/regler-utenom-vakt.md") schpaa.markdown/md->html sc/markdown)])
 
    :r.conditions
    (fn [r]
-     [page-boundry r])
+     [page-boundary r
+      (-> (inline "./content/plikter-som-vakt.md") schpaa.markdown/md->html sc/markdown)])
 
    :r.retningslinjer
    (fn [r]
-     [page-boundry r
+     [page-boundary r
       (-> (inline "./content/retningslinjer.md") schpaa.markdown/md->html sc/markdown)])
 
    :r.booking-blog-new
    (fn [r]
-     [page-boundry r
+     [page-boundary r
       (r/with-let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})
                    receipts' (db/on-value-reaction {:path ["booking-posts" "receipts"]})
                    #_#_receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
@@ -517,7 +532,7 @@
              #_[l/ppre-x receipts']])))])
    :r.calendar
    (fn [r]
-     [page-boundry r
+     [page-boundary r
       [:div.-debugx.select-none [booking.common-views/header-control-panel]]
       [:div {:class [:gap-1]
              :style {:display               :grid
@@ -531,5 +546,12 @@
           (if (neg? e)
             [:div]
             [sc/small e])])]])
+
+   :r.fileman-temporary
+   (fn [r]
+     (let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})]
+       [page-boundary r
+        {:whole [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]}]))
+
    :r.page-not-found
    (fn [r] [:div "?"])})

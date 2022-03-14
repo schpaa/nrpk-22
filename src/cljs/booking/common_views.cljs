@@ -26,10 +26,12 @@
             [times.api :as ta]
             [tick.core :as t]
             [schpaa.style.combobox]
-            [re-pressed.core :as rp]))
+            [re-pressed.core :as rp]
+            [booking.fileman]))
 
-(defn better-mainmenu-definition [settings-atom]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
+(defn mainmenu-definition [settings-atom]
+  (let [userauth (rf/subscribe [::db/user-auth])
+        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     ;[icon label action disabled value]
     [[:menuitem {:icon      (sc/icon [:> solid/HomeIcon])
                  :label     "Forsiden"
@@ -52,6 +54,14 @@
                  :action    nil
                  :disabled  false
                  :value     #()}]
+
+
+
+
+     #_{:icon      solid/UserCircleIcon
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+        :page-name :r.user}
+
      [:hr]
      [:menuitem {:icon      (sc/icon [:> solid/TicketIcon])
                  :label     "Ny booking"
@@ -81,13 +91,13 @@
                    :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
                    :disabled  false
                    :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/GiftIcon])
-                 :label     "Omriss?"
-                 :color     "var(--green-8)"
-                 :highlight false                           ;(= :r.booking-blog current-page)
-                 :action    #(rf/dispatch [:lab/toggle-chrome])
-                 :disabled  false
-                 :value     #()}]
+     #_[:menuitem {:icon      (sc/icon [:> solid/GiftIcon])
+                   :label     "Omriss?"
+                   :color     "var(--green-8)"
+                   :highlight false                         ;(= :r.booking-blog current-page)
+                   :action    #(rf/dispatch [:lab/toggle-chrome])
+                   :disabled  false
+                   :value     #()}]
      #_[:hr]
      #_[:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
                    :label     "Logg ut..."
@@ -97,11 +107,20 @@
 
                    :disabled  false
                    :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/UserCircleIcon])
+                 :label     "Mine opplysninger"
+                 :color     "var(--blue-4)"
+                 :highlight (= :r.user current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.user]])
+                 :disabled  false
+                 :value     #()}]
      [:space]
      [:div
-      [:div.flex.items-center.gap-2.justify-between
-       [scb2/normal-small "Logg in"]
-       [scb2/cta-small "Meld på"]]]]))
+      [:<>
+       [l/ppre (:uid @userauth)]
+       [:div.flex.items-center.gap-2.justify-between
+        [scb2/normal-small "Logg in"]
+        [scb2/cta-small "Meld på"]]]]]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -224,7 +243,7 @@
         {:showing      @mainmenu-visible
          :dir          #{:right :down}
          :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
-         :data         (better-mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
+         :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
          :button       (fn [open]
                          [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
                           [sc/icon [:> solid/MenuIcon]]])}]])))
@@ -271,9 +290,9 @@
     #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.calendar}
-   {:icon      solid/UserCircleIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-    :page-name :r.user}
+   #_{:icon      solid/UserCircleIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :page-name :r.user}
    {:icon      solid/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.oversikt]])
     :page-name :r.oversikt}
@@ -282,10 +301,20 @@
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
-   {:icon       solid/LightningBoltIcon
-    :on-click   schpaa.style.dialog/open-selector
+   nil
+   {:tall-height true
+    :icon        solid/FolderIcon
+    :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
+    #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
+                  (when (pos? c) c))
+    :page-name   :r.fileman-temporary}
+
+   {:tall-height true
+    :special     true
+    :icon        solid/LightningBoltIcon
+    :on-click    schpaa.style.dialog/open-selector
     ;:color     "red"
-    :xpage-name :r.debug}])
+    :xpage-name  :r.debug}])
 
 (def horizontal-toolbar
   [{:icon      solid/HomeIcon
@@ -295,6 +324,7 @@
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
    {:icon      solid/LightningBoltIcon
+    :special   true
     :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}
    {:icon      solid/BookOpenIcon
@@ -335,16 +365,22 @@
     [:div.flex.items-center.justify-center badge]]))
 
 (o/defstyled top-right-tight-badge :div
-  :rounded-full :bg-pink-500 :text-white :px-1 :text-sm     ; :border-dashed :border-black :border
-  [:& :top-2 :right-3 {:min-width  "1.3rem"
-                       :height     "1.2rem"
-                       :position   :absolute
-                       :box-shadow "var(--shadow-5)"}]
+  :rounded-full :flex :flex-center                          ; :border-dashed :border-black :border
+  [:& :top-1 :right-2 {:font-size    "var(--font-size-0)"
+                       :font-weight  "var(--font-weight-5)"
+                       :aspect-ratio "1/1"
+                       :background   "var(--brand1)"
+                       :color        "var(--brand0)"
+                       :border       "var(--surface0) 3px solid"
+                       ;:min-width  "1.3rem"
+                       :height       "1.7rem"
+                       :position     :absolute
+                       :xbox-shadow  "var(--shadow-5)"}]
   ([badge]
    [:<>
     [:div.flex.items-center.justify-center badge]]))
 
-(defn horizontal-button [{:keys [icon on-click style page-name badge] :or {style {}}}]
+(defn horizontal-button [{:keys [special icon on-click style page-name badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     [:div.w-full.h-full.flex.items-center.justify-center.relative
      {:on-click on-click}
@@ -353,19 +389,20 @@
          (when (pos? b) [top-right-tight-badge b])))
      [vert-button {:active (= page-name current-page)
                    :style  style}
-      [sc/icon [:> icon]]]]))
+      [sc/icon-large {:style (if special {:color "var(--brand1)"})} [:> icon]]]]))
 
-(defn vertical-button [{:keys [special icon style on-click page-name color badge] :or {style {}}}]
+(defn vertical-button [{:keys [tall-height special icon style on-click page-name color badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-    [:div.w-full.h-16.flex.items-center.justify-center.relative
+    [:div.w-full.flex.items-center.justify-center.relative
      {:on-click on-click
-      :style    {:background (if special "var(--surface1)")}}
+      :style    {:height      (if tall-height "var(--size-10)" "var(--size-9)")
+                 :xbackground (if special "var(--surface1)")}}
      (when badge
        (when-some [b (badge)]
          [top-left-badge b]))
      [vert-button {:active (= page-name current-page)
                    :style  (conj style (when (= page-name current-page) {:color color}))}
-      [sc/icon-large [:> icon]]]]))
+      [sc/icon-large {:style (if special {:color "var(--brand1)"})} [:> icon]]]]))
 
 (defn compute-page-title [r]
   (let [path-fn (some-> r :data :path-fn)
@@ -485,24 +522,7 @@
      #_[sc/markdown [:code "Some options here"]]
      (when @preferred-state [:hr])]))
 
-(o/defstyled listitem :div
-  [:&
-   :flex :items-center
-   [:.selected :w-full
-    {:padding-block  "var(--size-1)"
-     :padding-inline "var(--size-2)"
-     :border-radius  "var(--radius-2)"
-     :color          [:rgba 0 0 0 1]
-     :background     [:rgba 0 0 0 0.09]}]
-   [:.normal :w-full
-    {:padding-block  "var(--size-1)"
-     :padding-inline "var(--size-2)"
-     :color          [:rgba 0 0 0 0.5]}]]
-  ([a c]
-   ;^{:class [:selected]}
-   [:div a c]))
-
-(defn page-boundry [r & c]
+(defn page-boundary [r & c]
   (let [user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (r/create-class
@@ -539,9 +559,11 @@
                          :box-shadow   "var(--inner-shadow-3)"
                          :border-color "var(--surface1)"
                          :background   "var(--surface0)"}}
-                (into [:<>] (map vertical-button (butlast (vertical-toolbar (:uid @user-auth)))))
-                [:div.flex-grow]
-                [:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]])
+                (into [:<>] (map #(if (nil? %)
+                                    [:div.grow]
+                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))
+                ;[:div.flex-grow]
+                #_[:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]])
 
              [:div.flex-col.flex.h-full.w-full
 
@@ -561,80 +583,15 @@
                        [sc/row' {:class [:truncate]}
                         (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
                                                               [:div.truncate e]))]]
-                      [:div.h-8.w-8 {:on-click toggle}
-                       [scb/round-dark-on-hover [sc/icon {:style {:transform (if @st "rotate(0deg)" "rotate(180deg)")}
-                                                          :class [:duration-200 :transform]}
-                                                 [:> outline/ChevronUpIcon]]]]])
+                      #_[:div.h-8.w-8 {:on-click toggle}
+                         [scb/round-dark-on-hover [sc/icon {:style {:transform (if @st "rotate(0deg)" "rotate(180deg)")}
+                                                            :class [:duration-200 :transform]}
+                                                   [:> outline/ChevronUpIcon]]]]])
 
                    [search-menu]
                    [main-menu]]]
-                 [:div {:class (into [:duration-200] (if @st [:h-64 :opacity-100]
-                                                             [:h-0 :opacity-0]))}
-                  [sc/surface-b-sans-bg {:style {:border-radius "var(--radius-0)"
-                                                 :padding       "0px"
-                                                 :background    "var(--surface00)"}}
-                   [:div.h-12
-                    [sc/row-stretch {:class [:items-center :gap-2 :xpx-4]
-                                     :style {:padding-inline "var(--size-2)"
-                                             :color          :black
-                                             :background     "var(--surface00)"}}
-                     [scb2/outline-tight
-                      [sc/icon-small [:> outline/PlusIcon]]]
-                     [:div.grow]
-                     [scb2/outline-tight
-                      [sc/icon-small [:> outline/FolderIcon]]]
-                     [scb2/outline-tight
-                      [sc/icon-small [:> outline/TrashIcon]]]
-                     ;[sc/small {:class [:w-48]} "dokument"]
-                     ;[sc/small {:class [:w-20]} "dato"]
-                     ;[sc/small {:class [:w-20]} "tid"]
-                     #_[scb/round-normal-listitem
-                        [sc/icon-small [:> outline/DocumentIcon]]]
-                     #_[:div.w-full.grow]]]
-
-                   [:div {:class [:relative :overflow-clipx]
-                          :style {:xbox-shadow "var(--shadow-inner-2)"}}
-
-                    [:div {:style {:color "var(--surface00"}}
-                     [:div.absolute.top-0.inset-x-0.bg-gradient-to-b.h-4.from-current.pointer-events-none]
-                     [:div.absolute.bottom-0.inset-x-0.bg-gradient-to-t.h-2.from-current.pointer-events-none]]
-                    [:div.px-2x {:class [:overflow-y-auto :-snap-y :h-52]}
-                     (r/with-let [time (ta/short-date-format (t/now))
-                                  date (ta/time-format (t/now))
-                                  st (r/atom 1)
-                                  light (r/atom {1 {:light true}
-                                                 2 {:light true}})]
-                       (into [:div.snap-center.select-none]
-                             (for [e (range 16)]
-                               ^{:key (str e)}
-                               [listitem
-                                {:on-click #(reset! st e)
-                                 :class    (into [:snap-start] (if (= e @st) [:selected] [:normal]))}
-                                [sc/row'' {:class [:items-center :gap-2]}
-                                 [scb/round-normal-listitem
-                                  [sc/icon-small [:> outline/DocumentIcon]]]
-                                 [sc/text-clear {:class [:truncate :w-48]} "super-long-untitled-" e]
-                                 [sc/row
-                                  [sc/text-clear {:class [:w-16]} time]
-                                  [sc/text-clear {:class [:w-16]} date]]
-                                 [:div.grow]
-                                 [scb/round-normal-listitem
-                                  {:on-click #(do
-                                                (swap! light update-in [e :light] (fnil not false))
-                                                (.stopPropagation %))}
-                                  [sc/icon-small {:style {:color (if (get-in @light [e :light]) "var(--yellow-8)" "var(--surface1)")}
-                                                  :class []} [:> outline/LightBulbIcon]]]
-                                 [scb/round-normal-listitem
-                                  [sc/icon-small [:> outline/KeyIcon]]]
-                                 [scb/round-normal-listitem
-                                  {:on-click #(do
-                                                (swap! light update-in [e :lock] (fnil not false))
-                                                (.stopPropagation %))}
-                                  [sc/icon-small
-                                   {:style {:color (if (get-in @light [e :lock]) "var(--red-8)" "var(--surface1)")}}
-                                   [:> (if (get-in @light [e :lock]) outline/LockClosedIcon outline/LockOpenIcon)]]]]])))]]]]])
-
-
+                 #_(when @st
+                     (booking.fileman/render st "source-path"))])
 
               [:div.overflow-y-auto.h-full.focus:outline-none
                {:style     {:background "var(--surface000)"}
@@ -649,18 +606,25 @@
                    [sc/row-end {:class [:pt-4]}
                     (bottom-menu)]]]
                  ;content
-                 [:div.h-full
-                  [:div.max-w-md.mx-auto.py-4.space-y-4.px-4
-                   ;[:div.-mx-2x.py-2 [header-control-panel]]
-                   c
-                   [:div.py-8.h-32]
+
+                 [:div
+                  (cond
+                    (map? (first c))
+                    (:whole (first c))
+
+                    :else
+                    [:div.h-full
+                     [:div.max-w-md.mx-auto.py-4.space-y-4.px-4
+                      ;[:div.-mx-2x.py-2 [header-control-panel]]
+                      c
+                      [:div.py-8.h-32]
 
 
 
-                   [:div.absolute.right-4
-                    {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
-                    [sc/row-end {:class [:pt-4]}
-                     (bottom-menu)]]]])]
+                      [:div.absolute.right-4
+                       {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
+                       [sc/row-end {:class [:pt-4]}
+                        (bottom-menu)]]]])])]
 
 
 
@@ -669,7 +633,7 @@
                 [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
                  {:style {:box-shadow   "var(--inner-shadow-3)"
                           :border-color "var(--surface1)"
-                          :background   "var(--surface000)"}}
+                          :background   "var(--surface0)"}}
                  (into [:<>] (map horizontal-button
                                   horizontal-toolbar))])]]]))})))
 

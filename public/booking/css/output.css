@@ -1734,14 +1734,6 @@ h2 {
   right: 0.25rem;
 }
 
-.top-0 {
-  top: 0px;
-}
-
-.bottom-0 {
-  bottom: 0px;
-}
-
 .bottom-24 {
   bottom: 6rem;
 }
@@ -1754,8 +1746,16 @@ h2 {
   right: 1rem;
 }
 
+.bottom-0 {
+  bottom: 0px;
+}
+
 .left-4 {
   left: 1rem;
+}
+
+.top-0 {
+  top: 0px;
 }
 
 .left-0 {
@@ -1850,6 +1850,10 @@ h2 {
   isolation: isolate;
 }
 
+.z-10 {
+  z-index: 10;
+}
+
 .z-100 {
   z-index: 100;
 }
@@ -1868,10 +1872,6 @@ h2 {
 
 .z-300 {
   z-index: 300;
-}
-
-.z-10 {
-  z-index: 10;
 }
 
 .z-0 {
@@ -1948,11 +1948,6 @@ h2 {
   margin-right: 0.25rem;
 }
 
-.mx-4 {
-  margin-left: 1rem;
-  margin-right: 1rem;
-}
-
 .mb-32 {
   margin-bottom: 8rem;
 }
@@ -2011,6 +2006,10 @@ h2 {
 
 .mb-px {
   margin-bottom: 1px;
+}
+
+.-mb-4 {
+  margin-bottom: -1rem;
 }
 
 .block {
@@ -2073,36 +2072,12 @@ h2 {
   height: 6rem;
 }
 
-.h-16 {
-  height: 4rem;
-}
-
 .h-0 {
   height: 0px;
 }
 
-.h-64 {
-  height: 16rem;
-}
-
-.h-52 {
-  height: 13rem;
-}
-
-.h-8 {
-  height: 2rem;
-}
-
-.h-12 {
-  height: 3rem;
-}
-
-.h-4 {
-  height: 1rem;
-}
-
-.h-2 {
-  height: 0.5rem;
+.h-16 {
+  height: 4rem;
 }
 
 .h-32 {
@@ -2113,6 +2088,18 @@ h2 {
   height: 5rem;
 }
 
+.h-64 {
+  height: 16rem;
+}
+
+.h-12 {
+  height: 3rem;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
 .h-6 {
   height: 1.5rem;
 }
@@ -2121,8 +2108,16 @@ h2 {
   height: 0.25rem;
 }
 
+.h-8 {
+  height: 2rem;
+}
+
 .h-screen {
   height: 100vh;
+}
+
+.h-2 {
+  height: 0.5rem;
 }
 
 .h-5 {
@@ -2165,20 +2160,16 @@ h2 {
   width: 4rem;
 }
 
-.w-48 {
-  width: 12rem;
-}
-
-.w-20 {
-  width: 5rem;
-}
-
-.w-8 {
-  width: 2rem;
+.w-12 {
+  width: 3rem;
 }
 
 .w-auto {
   width: auto;
+}
+
+.w-8 {
+  width: 2rem;
 }
 
 .w-6 {
@@ -2197,12 +2188,16 @@ h2 {
   width: 8rem;
 }
 
+.w-48 {
+  width: 12rem;
+}
+
 .w-2 {
   width: 0.5rem;
 }
 
-.w-12 {
-  width: 3rem;
+.w-20 {
+  width: 5rem;
 }
 
 .w-64 {
@@ -2235,6 +2230,10 @@ h2 {
   width: 14rem;
 }
 
+.w-36 {
+  width: 9rem;
+}
+
 .min-w-fit {
   min-width: -webkit-fit-content;
   min-width: -moz-fit-content;
@@ -2243,10 +2242,6 @@ h2 {
 
 .max-w-md {
   max-width: 28rem;
-}
-
-.max-w-lg {
-  max-width: 32rem;
 }
 
 .max-w-sm {
@@ -2382,6 +2377,11 @@ h2 {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+.rotate-90 {
+  --tw-rotate: 90deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
 .scale-100 {
   --tw-scale-x: 1;
   --tw-scale-y: 1;
@@ -2446,12 +2446,16 @@ h2 {
           animation: spin 1s linear infinite;
 }
 
-.cursor-default {
-  cursor: default;
+.cursor-text {
+  cursor: text;
 }
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.cursor-default {
+  cursor: default;
 }
 
 .select-none {
@@ -2501,6 +2505,10 @@ h2 {
 
 .place-content-center {
   place-content: center;
+}
+
+.items-start {
+  align-items: flex-start;
 }
 
 .items-end {
@@ -3108,6 +3116,11 @@ h2 {
   background-color: rgb(224 242 254 / var(--tw-bg-opacity));
 }
 
+.bg-red-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(248 113 113 / var(--tw-bg-opacity));
+}
+
 .bg-opacity-0 {
   --tw-bg-opacity: 0;
 }
@@ -3126,10 +3139,6 @@ h2 {
 
 .bg-gradient-to-r {
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
-}
-
-.bg-gradient-to-b {
-  background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
 }
 
 .bg-gradient-to-t {
@@ -3199,6 +3208,11 @@ h2 {
   padding-bottom: 2rem;
 }
 
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
 .py-1 {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -3222,15 +3236,6 @@ h2 {
 .py-0 {
   padding-top: 0px;
   padding-bottom: 0px;
-}
-
-.px-1 {
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-}
-
-.pb-4 {
-  padding-bottom: 1rem;
 }
 
 .pt-4 {
@@ -3259,6 +3264,10 @@ h2 {
 
 .pr-2 {
   padding-right: 0.5rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
 }
 
 .pt-2 {
@@ -3434,6 +3443,10 @@ h2 {
 
 .leading-8 {
   line-height: 2rem;
+}
+
+.tracking-tighter {
+  letter-spacing: -0.05em;
 }
 
 .tracking-tight {
@@ -3710,6 +3723,10 @@ h2 {
 
 .opacity-0 {
   opacity: 0;
+}
+
+.opacity-30 {
+  opacity: 0.3;
 }
 
 .opacity-25 {
@@ -4940,6 +4957,10 @@ h2 {
 @media (min-width: 512px) {
   .sm\:bottom-7 {
     bottom: 1.75rem;
+  }
+
+  .sm\:bottom-4 {
+    bottom: 1rem;
   }
 
   .sm\:left-20 {

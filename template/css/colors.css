@@ -11,6 +11,7 @@
 }
 
 :root {
+    --radius-0: 3px;
     --radius-1: 6px;
     --radius-2: 8px;
     --radius-3: 14px;
@@ -27,16 +28,18 @@
  --gray-8: #053A1D;
  --gray-9: #011007;
 
+
     --gray-0: #fafaf9;
-    --gray-1: #f5f5f4; 
-    --gray-2: #e7e5e4; 
-    --gray-3: #d6d3d1; 
-    --gray-4: #a8a29e; 
-    --gray-5: #78716c; 
-    --gray-6: #57534e; 
-    --gray-7: #44403c; 
-    --gray-8: #292524; 
-    --gray-9: #1c1917; 
+    --gray-1: #f5f5f4;
+    --gray-2: #e7e5e4;
+    --gray-3: #d6d3d1;
+    --gray-4: #a8a29e;
+    --gray-5: #78716c;
+    --gray-6: #57534e;
+    --gray-7: #44403c;
+    --gray-8: #292524;
+    --gray-9: #1c1917;
+
 */
 
   --gray-0: #F0F1F1;
@@ -50,15 +53,16 @@
   --gray-8: #3B3E3F;
   --gray-9: #222425;
 
+
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
 
-   --brand000-dim: var(--blue-9);
-   --brand00-dim: var(--blue-8);
-   --brand0-dim: var(--blue-7);
-   --brand1-dim: var(--blue-4);
-   --brand2-dim: var(--blue-1);
+   --brand000-dim: var(--green-9);
+   --brand00-dim: var(--green-8);
+   --brand0-dim: var(--green-7);
+   --brand1-dim: var(--green-4);
+   --brand2-dim: var(--green-1);
 
    --text1-dim: var(--gray-2);
    --text2-dim: var(--gray-4);
@@ -84,16 +88,18 @@
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
-   --brand000-light: var(--blue-1);
-   --brand00-light: var(--blue-2);
-   --brand0-light: var(--blue-3);
-   --brand1-light: var(--blue-6);
-   --brand2-light: var(--blue-9);
+   --brand000-light: var(--green-1);
+   --brand00-light: var(--green-2);
+   --brand0-light: hsla(200, 39%, 92%, 1); /* var(--green-3); */
+   --brand1-light: hsla(200, 39%, 52%, 1);
+   --brand2-light: hsla(200, 39%, 33%, 1);
 
    --text1-light: var(--gray-8);
    --text2-light: var(--gray-7);
    --text3-light: var(--gray-6);
    --label-light: var(--gray-5);
+
+    --link-1: var(--blue-9);
 
    --surface000-light: var(--gray-0);
    --surface00-light: var(--gray-1);
@@ -109,8 +115,8 @@
    --surface9-light: var(--gray-9);
 
    --buttoncta0-light: white;
-   --buttoncta1-light: var(--blue-8);
-   --buttoncta2-light: var(--blue-7);
+   --buttoncta1-light: var(--green-8);
+   --buttoncta2-light: var(--green-7);
    --buttondanger0-light: var(--red-1);
    --buttondanger1-light: var(--red-6);
    --buttondanger2-light: var(--red-5);
@@ -155,9 +161,9 @@
        --surface8: var(--surface8-light);
        --surface9: var(--surface9-light);
        
-       --buttoncta0: var(--buttoncta0-light);
-       --buttoncta1: var(--buttoncta1-light);
-       --buttoncta2: var(--buttoncta2-light);
+       --buttoncta0: var(--brand0-light);
+       --buttoncta1: var(--brand1-light);
+       --buttoncta2: var(--brand2-light);
        --buttondanger0: var(--buttondanger0-light);
        --buttondanger1: var(--buttondanger1-light);
        --buttondanger2: var(--buttondanger2-light);
