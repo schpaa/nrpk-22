@@ -273,7 +273,7 @@
                prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
 
            [:<>
-            #_[l/ppre (js->clj el)]
+
             [scb/button-cta {:on-click #(let [p (prop)]
                                           (.setProperty el "--brand1" p)
                                           (.setProperty el "--buttoncta1" p))} "Randomize color"]])
