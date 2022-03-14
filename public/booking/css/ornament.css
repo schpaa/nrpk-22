@@ -29,18 +29,6 @@
  --gray-9: #011007;
 
 
-    --gray-0: #fafaf9;
-    --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;
-    --gray-3: #d6d3d1;
-    --gray-4: #a8a29e;
-    --gray-5: #78716c;
-    --gray-6: #57534e;
-    --gray-7: #44403c;
-    --gray-8: #292524;
-    --gray-9: #1c1917;
-
-*/
 
   --gray-0: #F0F1F1;
   --gray-1: #E5E6E6;
@@ -52,6 +40,21 @@
   --gray-7: #54595A;
   --gray-8: #3B3E3F;
   --gray-9: #222425;
+
+
+*/
+
+    --gray-0: #fafaf9;
+    --gray-1: #f5f5f4;
+    --gray-2: #e7e5e4;
+    --gray-3: #d6d3d1;
+    --gray-4: #a8a29e;
+    --gray-5: #78716c;
+    --gray-6: #57534e;
+    --gray-7: #44403c;
+    --gray-8: #292524;
+    --gray-9: #1c1917;
+
 
 
     --tw-ring-inset: 2;
@@ -90,9 +93,9 @@
 
    --brand000-light: var(--green-1);
    --brand00-light: var(--green-2);
-   --brand0-light: hsla(200, 39%, 92%, 1); /* var(--green-3); */
-   --brand1-light: hsla(200, 39%, 52%, 1);
-   --brand2-light: hsla(200, 39%, 33%, 1);
+   --brand0-light: hsla(300, 39%, 90%, 1); /* var(--green-3); */
+   --brand1-light: hsla(300, 39%, 50%, 1);
+   --brand2-light: hsla(300, 39%, 30%, 1);
 
    --text1-light: var(--gray-8);
    --text2-light: var(--gray-7);
@@ -629,7 +632,7 @@ body {
 .schpaa_style_button__round_floating{transition-duration:200ms;display:flex;justify-content:center;align-items:center;border-radius:var(--radius-round);padding:var(--size-2);-background:var(--surface1)}.schpaa_style_button__round_floating:hover{background:var(--surface1)}
 .schpaa_style_ornament__icon_tiny{width:1rem;height:1rem}
 .schpaa_style_ornament__selector,min-w-xsx,xmax-w-md,h-autox{box-shadow:var(--shadow-6);color:var(--text1);background-color:var(--surface000)}
-.schpaa_style_combobox__placeholder input.w-full{font-family:Montserrat;font-weight:500;font-size:var(--font-size-2);color:var(--surface5)}.schpaa_style_combobox__placeholder input.w-full::placeholder{font-size:var(--font-size-2);color:var(--surface1)}
+.schpaa_style_combobox__placeholder input.w-full{font-family:IBM Plex Sans;font-weight:500;font-size:var(--font-size-2);color:var(--surface5)}.schpaa_style_combobox__placeholder input.w-full::placeholder{font-size:var(--font-size-2);color:var(--surface1)}
 
 .schpaa_style_ornament__row_SINGLEQUOTE_{display:flex;align-items:center;height:100%;gap:1rem;width:100%}
 .booking_common-views__experiment{border-radius:9999px;color:var(--surface4)}.booking_common-views__experiment:hover{background:var(--surface0)}
@@ -652,3 +655,4 @@ body {
 .schpaa_style_input__select_SINGLEQUOTE_ select{padding:.5rem;width:100%;border-radius:.25rem;height:2.5rem;background:var(--surface0);border:0}.schpaa_style_input__select_SINGLEQUOTE_ select:focus{transition-property:background-color,border-color,color,fill,stroke,opacity,box-shadow,transform;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms;transition-duration:200ms;background:var(--surface00)}.schpaa_style_input__select_SINGLEQUOTE_ select.validation-error{outline:2px solid transparent;outline-offset:2px;background:var(--red-1)}.schpaa_style_input__select_SINGLEQUOTE_ select.validation-error:focus{transition-property:background-color,border-color,color,fill,stroke,opacity,box-shadow,transform;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms;transition-duration:200ms;background:var(--surface000)}.schpaa_style_input__select_SINGLEQUOTE_ div.validation-error{border-radius:.25rem;outline:solid var(--red-3) 2px}
 .schpaa_style_input__combobox_SINGLEQUOTE__SINGLEQUOTE_{border-radius:var(--radius-1);background:var(--surface0)}.schpaa_style_input__combobox_SINGLEQUOTE__SINGLEQUOTE_:focus{background:white;outline:2px solid var(--brand1)}
 .schpaa_style_ornament__as_shortcut{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;border-radius:var(--radius-1);padding-inline:var(--size-2);padding-block:var(--size-1);background-color:white;border:1px solid var(--surface1);font-size:var(--font-size-0);font-weight:var(--font-weight-4)}
+.schpaa_style_menu__not_filled .item{padding:var(--size-1);border-radius:var(--radius-round)}

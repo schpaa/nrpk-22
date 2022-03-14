@@ -9,6 +9,7 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.dialog :refer [open-dialog-logoutcommand
                                          open-dialog-sampleautomessage
+                                         open-dialog-config
                                          open-dialog-sampleformmessage]]
             [booking.content.booking-blog]
             ["@heroicons/react/solid" :as solid]
@@ -33,88 +34,91 @@
   (let [userauth (rf/subscribe [::db/user-auth])
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     ;[icon label action disabled value]
-    [[:menuitem {:icon      (sc/icon [:> solid/HomeIcon])
-                 :label     "Forsiden"
-                 :color     "var(--red-6)"
-                 :highlight (= :r.forsiden current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-                 :disabled  false
-                 :value     #()}]
+    [[:menuitem {:filledicon (sc/icon [:> solid/HomeIcon])
+
+                 :label      "Forsiden"
+                 :color      "var(--red-6)"
+                 :highlight  (= :r.forsiden current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+                 :disabled   false
+                 :value      #()}]
      [:space]
-     [:menuitem {:icon      (sc/icon [:> solid/CalendarIcon])
-                 :label     "Kalender"
-                 :color     "var(--hva-er-nytt)"
-                 :highlight (= :r.calendar current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.calendar]])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
-                 :label     "Innlegg"
-                 :color     "var(--hva-er-nytt)"
-                 :highlight (= :r.booking-blog current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
-                 :label     "Retningslinjer"
-                 :color     "var(--blue-4)"
-                 :highlight (= :r.retningslinjer current-page)
-                 :action    nil
-                 :disabled  false
-                 :value     #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/CalendarIcon])
+                 :label      "Kalender"
+                 :color      "var(--hva-er-nytt)"
+                 :highlight  (= :r.calendar current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.calendar]])
+                 :disabled   false
+                 :value      #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/BookOpenIcon])
+                 :label      "Innlegg"
+                 :color      "var(--hva-er-nytt)"
+                 :highlight  (= :r.booking-blog current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
+                 :disabled   false
+                 :value      #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
+                 :label      "Retningslinjer"
+                 :color      "var(--blue-4)"
+                 :highlight  (= :r.retningslinjer current-page)
+                 :action     nil
+                 :disabled   false
+                 :value      #()}]
      [:hr]
-     [:menuitem {:icon      (sc/icon [:> solid/TicketIcon])
-                 :label     "Ny booking"
-                 :color     "var(--new-booking)"
-                 :highlight (= :r.debug current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.debug]])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
-                 :label
-                 [sc/row' {:class [:gap-4]}
-                  [sc/subtext "Bookingoversikt"]
-                  [sc/as-shortcut "ctrl-b"]]
-                 :color     "var(--booking-oversikt)"
-                 :highlight (= :r.oversikt current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
-                 :disabled  false
-                 :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/UserCircleIcon])
-                 :label     "Mine opplysninger"
-                 :color     "var(--blue-4)"
-                 :highlight (= :r.user current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.user]])
-                 :disabled  false
-                 :value     #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/TicketIcon])
+                 :label      "Ny booking"
+                 :color      "var(--new-booking)"
+                 :highlight  (= :r.debug current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.debug]])
+                 :disabled   false
+                 :value      #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
+                 :label      "Bookingoversikt"
+                 :shortcut   "ctrl-b"
+                 :color      "var(--booking-oversikt)"
+                 :highlight  (= :r.oversikt current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+                 :disabled   false
+                 :value      #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/UserCircleIcon])
+                 :label      "Mine opplysninger"
+                 :color      "var(--blue-4)"
+                 :highlight  (= :r.user current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.user]])
+                 :disabled   false
+                 :value      #()}]
      [:space]
-     [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
-                 :label     "Turlogg"
-                 :highlight false
-                 :action    nil
-                 :disabled  true
-                 :value     #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/MapIcon])
+                 :label      "Turlogg"
+                 :highlight  false
+                 :action     nil
+                 :disabled   true
+                 :value      #()}]
      [:hr]
-     [:menuitem {:icon     nil                              ;     (sc/icon [:> solid/CollectionIcon])
-                 :label    [sc/row' {:class [:items-end :gap-4 :w-full]}
-                            [sc/subtext "Kommandoer"]
-                            [sc/as-shortcut "ctrl-k"]]
+     [:menuitem {:icon     (sc/icon [:> outline/CollectionIcon])
+                 :label    "Kommandoer"
                  :color    "var(--brand1)"
-                 ;:highlight (= :r.user current-page)
-                 :action   #(rf/dispatch [:app/toggle-command-palette])
-                 :disabled false
-                 :value    #()}]
-     [:space]
-     [:div
-      [:<>
-       ;[l/ppre (:uid @userauth)]
-       [:div.flex.items-center.gap-2.justify-between
-        (if-not @userauth
-          [scb2/cta-small "Meld på"]
-          [:div.grow])
-        (if @userauth
-          [scb2/normal-small "Logg ut"]
-          [scb2/normal-small "Logg in"])]]]]))
+                 :shortcut "ctrl-k"
+                 :action   #(rf/dispatch [:app/toggle-command-palette])}]
+     [:menuitem {:label  "Innstillinger"
+                 :icon   (sc/icon [:> outline/CogIcon])
+                 :action #(rf/dispatch [:app/toggle-config])}]
+     [:menuitem {:label    "Logg ut"
+                 :disabled true
+                 :icon     (sc/icon [:> outline/LogoutIcon])
+                 :action   #(rf/dispatch [:app/toggle-config])}]
+
+     #_[:space]
+     #_[:div
+        [:<>
+         ;[l/ppre (:uid @userauth)]
+         [:div.flex.items-center.gap-2.justify-between
+          (if-not @userauth
+            [scb2/cta-small "Meld på"]
+            [:div.grow])
+          (if @userauth
+            [scb2/normal-small "Logg ut"]
+            [scb2/normal-small "Logg in"])]]]]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -561,37 +565,25 @@
                          :background   "var(--surface0)"}}
                 (into [:<>] (map #(if (nil? %)
                                     [:div.grow]
-                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))
-                ;[:div.flex-grow]
-                #_[:div.pb-4 (vertical-button (last (vertical-toolbar (:uid @user-auth))))]])
-
+                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
              [:div.flex-col.flex.h-full.w-full
 
               ;header        
-              #_[l/ppre-x @(rf/subscribe [:lab/modal-selector])]
               (let [st (schpaa.state/listen :top-toggle)
                     toggle #(schpaa.state/toggle :top-toggle)]
                 [sc/col {:class [:border-b :duration-200]
                          :style {:background   "var(--surface00)"
                                  :border-color "var(--surface0)"}}
                  [:div.h-16.flex.items-center.w-full.px-4.shrink-0.truncates
-
                   [sc/row-std
                    (when-not @(rf/subscribe [:lab/in-search-mode?])
                      [sc/row' {:class [:grow :gap-4]}
                       [sc/header-title {:class [:truncate]}
                        [sc/row' {:class [:truncate]}
-                        (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)]
-                                                              [:div.truncate e]))]]
-                      #_[:div.h-8.w-8 {:on-click toggle}
-                         [scb/round-dark-on-hover [sc/icon {:style {:transform (if @st "rotate(0deg)" "rotate(180deg)")}
-                                                            :class [:duration-200 :transform]}
-                                                   [:> outline/ChevronUpIcon]]]]])
-
+                        (interpose [:div.px-2.truncate "/"] (for [e (compute-page-title r)] [:div.truncate e]))]]])
                    [search-menu]
-                   [main-menu]]]
-                 #_(when @st
-                     (booking.fileman/render st "source-path"))])
+                   [main-menu]]]])
+
 
               [:div.overflow-y-auto.h-full.focus:outline-none
                {:style     {:background "var(--surface000)"}
@@ -611,22 +603,16 @@
                   (cond
                     (map? (first c))
                     (:whole (first c))
-
                     :else
                     [:div.h-full
                      [:div.max-w-md.mx-auto.py-4.space-y-4.px-4
                       ;[:div.-mx-2x.py-2 [header-control-panel]]
                       c
                       [:div.py-8.h-32]
-
-
-
                       [:div.absolute.right-4
                        {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
                        [sc/row-end {:class [:pt-4]}
                         (bottom-menu)]]]])])]
-
-
 
               ;horizontal toolbar
               (when @has-chrome?
@@ -678,6 +664,12 @@
                            (tap> "COMMAND KE")
                            (tap> chord))
                          (recur)))))
+
+;region :app/toggle-config
+
+(rf/reg-event-fx :app/toggle-config (fn [{db :db} _]
+                                      (tap> :app/toggle-config)
+                                      (open-dialog-config)))
 
 (defonce _x (do
               (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
