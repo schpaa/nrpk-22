@@ -166,7 +166,8 @@
    [:label.p-0.text-base.normal-case
     {:for field-name} [sc/checkbox-text label]]])
 
-(defn select [{:keys [errors values handle-change] :as props} type class label field-name default-text items]
+;duplicated
+(defn ^:deprecated select [{:keys [errors values handle-change] :as props} type class label field-name default-text items]
   (let [sorted false]
     [sc/col {:class (into [:gap-1] class)}
      [sc/row {:class [:gap-2]}
@@ -196,7 +197,7 @@
       [input props :text [:w-32] "Telefon" :telefon]
       [input props :text [:w-70] "E-post" :epost]]
 
-     [select props :våttkort [] "Våttkort" :våttkort "Velg" {"0" "Jeg har ikke våttkort" "1" "Introkurs 3 timer" "2" "Grunnkurs 16 timer" "3" "Teknikk, sikkerhet eller grunnkurs-2" "4" "Aktivitetsleder, trener-1 eller høyere"}]]]])
+     #_[select props :våttkort [] "Våttkort" :våttkort "Velg" {"0" "Jeg har ikke våttkort" "1" "Introkurs 3 timer" "2" "Grunnkurs 16 timer" "3" "Teknikk, sikkerhet eller grunnkurs-2" "4" "Aktivitetsleder, trener-1 eller høyere"}]]]])
 
 (defn my-booking-form [{:keys [form-id handle-submit handle-change values set-values dirty readonly? values] :as props}]
   [:form
@@ -303,7 +304,6 @@
              "Få epost!")]]]
 
         [sc/col {:class [:w-full]}
-
          [:div.space-y-px
           [details :user/basic-section-open "Grunnleggende"
            [fork/form {:state               form-state
@@ -371,8 +371,8 @@
                                    "Lagre")]]])]))))
 
 (defn my-info [{:keys []}]
-  (let [user-auth (rf/subscribe [::db/user-auth])
-        uid (:uid @user-auth)]
+  (let [user-auth @(rf/subscribe [::db/user-auth])
+        uid (:uid user-auth)]
     (fn []
       [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
        [sc/surface-u {:class [:p-0 :overflow-hidden]}

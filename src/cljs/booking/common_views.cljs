@@ -40,11 +40,19 @@
                  :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
                  :disabled  false
                  :value     #()}]
+     [:space]
      [:menuitem {:icon      (sc/icon [:> solid/CalendarIcon])
                  :label     "Kalender"
                  :color     "var(--hva-er-nytt)"
                  :highlight (= :r.calendar current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.calendar]])
+                 :disabled  false
+                 :value     #()}]
+     [:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
+                 :label     "Innlegg"
+                 :color     "var(--hva-er-nytt)"
+                 :highlight (= :r.booking-blog current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/ShieldCheckIcon])
@@ -54,14 +62,6 @@
                  :action    nil
                  :disabled  false
                  :value     #()}]
-
-
-
-
-     #_{:icon      solid/UserCircleIcon
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-        :page-name :r.user}
-
      [:hr]
      [:menuitem {:icon      (sc/icon [:> solid/TicketIcon])
                  :label     "Ny booking"
@@ -71,42 +71,15 @@
                  :disabled  false
                  :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/ClockIcon])
-                 :label     "Bookingoversikt"
+                 :label
+                 [sc/row' {:class [:gap-4]}
+                  [sc/subtext "Bookingoversikt"]
+                  [sc/as-shortcut "ctrl-b"]]
                  :color     "var(--booking-oversikt)"
                  :highlight (= :r.oversikt current-page)
                  :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
                  :disabled  false
                  :value     #()}]
-     [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
-                 :label     "Turlogg"
-                 :highlight false
-                 :action    nil
-                 :disabled  true
-                 :value     #()}]
-     [:hr]
-     #_[:menuitem {:icon      (sc/icon [:> solid/BookOpenIcon])
-                   :label     "Hva er nytt?"
-                   :color     "var(--hva-er-nytt)"
-                   :highlight (= :r.booking-blog current-page)
-                   :action    #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-                   :disabled  false
-                   :value     #()}]
-     #_[:menuitem {:icon      (sc/icon [:> solid/GiftIcon])
-                   :label     "Omriss?"
-                   :color     "var(--green-8)"
-                   :highlight false                         ;(= :r.booking-blog current-page)
-                   :action    #(rf/dispatch [:lab/toggle-chrome])
-                   :disabled  false
-                   :value     #()}]
-     #_[:hr]
-     #_[:menuitem {:icon      (sc/icon nil [:> solid/ArrowRightIcon])
-                   :label     "Logg ut..."
-                   :color     "var(--logg-ut)"
-                   :highlight false
-                   :action    #(open-dialog-logoutcommand)
-
-                   :disabled  false
-                   :value     #()}]
      [:menuitem {:icon      (sc/icon [:> solid/UserCircleIcon])
                  :label     "Mine opplysninger"
                  :color     "var(--blue-4)"
@@ -115,12 +88,33 @@
                  :disabled  false
                  :value     #()}]
      [:space]
+     [:menuitem {:icon      (sc/icon [:> solid/MapIcon])
+                 :label     "Turlogg"
+                 :highlight false
+                 :action    nil
+                 :disabled  true
+                 :value     #()}]
+     [:hr]
+     [:menuitem {:icon     nil                              ;     (sc/icon [:> solid/CollectionIcon])
+                 :label    [sc/row' {:class [:items-end :gap-4 :w-full]}
+                            [sc/subtext "Kommandoer"]
+                            [sc/as-shortcut "ctrl-k"]]
+                 :color    "var(--brand1)"
+                 ;:highlight (= :r.user current-page)
+                 :action   #(rf/dispatch [:app/toggle-command-palette])
+                 :disabled false
+                 :value    #()}]
+     [:space]
      [:div
       [:<>
-       [l/ppre (:uid @userauth)]
+       ;[l/ppre (:uid @userauth)]
        [:div.flex.items-center.gap-2.justify-between
-        [scb2/normal-small "Logg in"]
-        [scb2/cta-small "Meld på"]]]]]))
+        (if-not @userauth
+          [scb2/cta-small "Meld på"]
+          [:div.grow])
+        (if @userauth
+          [scb2/normal-small "Logg ut"]
+          [scb2/normal-small "Logg in"])]]]]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -236,7 +230,7 @@
 ;endregion
 
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom false)]
+  (r/with-let [mainmenu-visible (r/atom true)]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))]
       [:<>
        [scm/mainmenu-example-with-args
@@ -316,7 +310,7 @@
     ;:color     "red"
     :xpage-name  :r.debug}])
 
-(def horizontal-toolbar
+(defn horizontal-toolbar [uid]
   [{:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}
@@ -329,7 +323,7 @@
     :page-name :r.debug}
    {:icon      solid/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-    :badge     #(booking.content.booking-blog/count-unseen "piH3WsiKhFcq56lh1q37ijiGnqX2")
+    :badge     #(booking.content.booking-blog/count-unseen uid)
     :page-name :r.booking-blog}
    {:icon      solid/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.oversikt]])
@@ -355,27 +349,33 @@
    [:div (conj attr {:class (if (:active attr) [:active] [:item :normal])}) ch]))
 
 (o/defstyled top-left-badge :div
-  :rounded-full :bg-pink-500 :text-white :px-1 :text-sm     ; :border-dashed :border-black :border
-  [:& :top-0 :left-1 {:min-width  "1.3rem"
-                      :height     "1.2rem"
-                      :position   :absolute
-                      :box-shadow "var(--shadow-5)"}]
+  :rounded-full :flex :flex-center
+  [:& :-top-1 :right-0 {:font-size    "var(--font-size-0)"
+                        :font-weight  "var(--font-weight-5)"
+                        :aspect-ratio "1/1"
+                        :background   "var(--brand1)"
+                        :color        "var(--brand0)"
+                        :border       "var(--surface0) 3px solid"
+                        :width        "1.7rem"
+                        :height       "1.7rem"
+                        :position     :absolute}]
+
   ([badge]
    [:<>
     [:div.flex.items-center.justify-center badge]]))
 
 (o/defstyled top-right-tight-badge :div
-  :rounded-full :flex :flex-center                          ; :border-dashed :border-black :border
-  [:& :top-1 :right-2 {:font-size    "var(--font-size-0)"
+  :rounded-full :flex :flex-center
+  [:& :top-0 :right-4 {:font-size    "var(--font-size-0)"
                        :font-weight  "var(--font-weight-5)"
                        :aspect-ratio "1/1"
                        :background   "var(--brand1)"
                        :color        "var(--brand0)"
                        :border       "var(--surface0) 3px solid"
-                       ;:min-width  "1.3rem"
+                       :width        "1.7rem"
                        :height       "1.7rem"
-                       :position     :absolute
-                       :xbox-shadow  "var(--shadow-5)"}]
+                       :position     :absolute}]
+
   ([badge]
    [:<>
     [:div.flex.items-center.justify-center badge]]))
@@ -635,7 +635,7 @@
                           :border-color "var(--surface1)"
                           :background   "var(--surface0)"}}
                  (into [:<>] (map horizontal-button
-                                  horizontal-toolbar))])]]]))})))
+                                  (horizontal-toolbar (:uid @user-auth))))])]]]))})))
 
 (comment
   (defonce keydown-ch (chan))

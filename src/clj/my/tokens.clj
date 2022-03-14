@@ -3,7 +3,12 @@
             [garden.selectors :as s]))
 
 
-(o/set-tokens! {:components [{:id     :flex-center
+(o/set-tokens! {:components [{:id     :bg-focused-field
+                              :garden [:&
+                                       [:&:focus {:background-color "var(--surface000)"}]]}
+                             {:id     :bg-unfocused-field
+                              :garden [:& {:background "var(--surface0)"}]}
+                             {:id     :flex-center
                               :garden [:& {:display         :flex
                                            :justify-content :center
                                            :align-items     :center}]}

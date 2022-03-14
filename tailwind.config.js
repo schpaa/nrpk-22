@@ -31,6 +31,7 @@ module.exports = {
             },
     },
     colors: {
+        brand1: {DEFAULT: "var(--brand1)"},
         alt: {
             text: 'white',
             '300': '#DBFFB0',

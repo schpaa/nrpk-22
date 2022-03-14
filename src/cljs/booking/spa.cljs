@@ -269,14 +269,13 @@
          ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
          ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
          #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
-         (let [el (-> js/document.documentElement .-style)
-               prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
+         #_(let [el (-> js/document.documentElement .-style)
+                 prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
 
-           [:<>
-
-            [scb/button-cta {:on-click #(let [p (prop)]
-                                          (.setProperty el "--brand1" p)
-                                          (.setProperty el "--buttoncta1" p))} "Randomize color"]])
+             [:<>
+              [scb/button-cta {:on-click #(let [p (prop)]
+                                            (.setProperty el "--brand1" p)
+                                            (.setProperty el "--buttoncta1" p))} "Randomize color"]])
          #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
          [:div
           (-> "./frontpage1.md"
@@ -340,7 +339,7 @@
        [page-boundary r
         ;[user.views/userstatus-form user-auth]
         ;[render-back-tabbar]
-        [user.views/my-info]]))
+        [user.views/my-info {}]]))
 
    :r.logg
    (fn [r]

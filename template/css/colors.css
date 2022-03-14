@@ -238,3 +238,10 @@ background: unset;
 
 */
 
+.bg-unfocused-field {
+    background: var(--surface0);
+}
+
+.outline-focused-field:focus {
+    outline: var(--brand1) 2px solid;
+}
