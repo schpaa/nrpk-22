@@ -28,13 +28,18 @@
             [tick.core :as t]
             [schpaa.style.combobox]
             [re-pressed.core :as rp]
-            [booking.fileman]))
+            [booking.fileman]
+            [schpaa.icon :as icon]
+            [booking.boatinput]))
 
 (defn mainmenu-definition [settings-atom]
   (let [userauth (rf/subscribe [::db/user-auth])
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     ;[icon label action disabled value]
-    [[:menuitem {:filledicon (sc/icon [:> solid/HomeIcon])
+    [[:div [:div.p-2 [sc/title {:style {:font-family "Merriweather"
+                                        :font-weight 300
+                                        :font-size   "var(--font-size-4)"}} "Hei Chris!"]]]
+     [:menuitem {:filledicon (sc/icon [:> solid/HomeIcon])
 
                  :label      "Forsiden"
                  :color      "var(--red-6)"
@@ -61,7 +66,7 @@
                  :label      "Retningslinjer"
                  :color      "var(--blue-4)"
                  :highlight  (= :r.retningslinjer current-page)
-                 :action     nil
+                 :action     #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
                  :disabled   false
                  :value      #()}]
      [:hr]
@@ -95,6 +100,15 @@
                  :disabled   true
                  :value      #()}]
      [:hr]
+     [:menuitem {:filledicon [:div {:class [:-m-1]
+                                    :style {:padding          "var(--size-1)"
+                                            :border-radius    "var(--radius-round)"
+                                            :background-color "var(--brand1)"
+                                            :color            :white}} (sc/icon [:> outline/CalculatorIcon])]
+                 :label      "Utlån"
+                 :color      "var(--brand1)"
+                 :shortcut   "ctrl-l"
+                 :action     #(rf/dispatch [:lab/open-number-input])}]
      [:menuitem {:icon     (sc/icon [:> outline/CollectionIcon])
                  :label    "Kommandoer"
                  :color    "var(--brand1)"
@@ -146,6 +160,18 @@
 (rf/reg-sub :lab/is-search-running? :-> :lab/run-search)
 (rf/reg-sub :lab/in-search-mode? :-> :lab/set-search-mode)
 (rf/reg-sub :lab/search-expression :-> :lab/search-expr)
+
+;region number-input
+
+(rf/reg-event-db :lab/open-number-input (fn [db]
+                                          (assoc db :lab/number-input true)))
+
+(rf/reg-event-db :lab/close-number-input (fn [db]
+                                           (assoc db :lab/number-input false)))
+
+(rf/reg-sub :lab/number-input :-> :lab/number-input)
+
+;endregion
 
 (o/defstyled experiment :div
   [:&
@@ -233,18 +259,38 @@
 
 ;endregion
 
+
+
+
+
+
+
+
+
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom true)]
-    (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))]
+  (r/with-let [mainmenu-visible (r/atom false)
+               numberinput-visible (rf/subscribe [:lab/number-input])]
+    (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
+          toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
       [:<>
-       [scm/mainmenu-example-with-args
-        {:showing      @mainmenu-visible
-         :dir          #{:right :down}
-         :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
-         :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
-         :button       (fn [open]
-                         [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
-                          [sc/icon [:> solid/MenuIcon]]])}]])))
+       ;[l/ppre-x @numberinput-visible]
+       (if @numberinput-visible
+         [scm/numberinput
+          {:showing      true
+           :dir          #{:right :down}
+           :close-button (fn [open] [scb/corner {:on-click toggle-numberinput} [sc/icon [:> solid/ArrowLeftIcon]]])
+           :data         (booking.boatinput/sample)
+           :button       (fn [open]
+                           [scb/round-normal {:class [:h-10] :on-click toggle-numberinput}
+                            [sc/icon [:> solid/MenuIcon]]])}]
+         [scm/mainmenu-example-with-args
+          {:showing      @mainmenu-visible
+           :dir          #{:right :down}
+           :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
+           :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
+           :button       (fn [open]
+                           [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
+                            [sc/icon [:> solid/MenuIcon]]])}])])))
 
 (defn bottom-menu-definition [settings-atom]
   [[:header [sc/row' {:class [:justify-between :items-end :w-44 :px-2]}
@@ -547,7 +593,7 @@
               :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
             ;endregion
 
-            ;region add-selector   
+            ;region add-selector
             [schpaa.style.dialog/modal-selector
              {:context @(rf/subscribe [:lab/modal-selector-extra])
               :vis     (rf/subscribe [:lab/modal-selector])
@@ -568,7 +614,7 @@
                                     [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
              [:div.flex-col.flex.h-full.w-full
 
-              ;header        
+              ;header
               (let [st (schpaa.state/listen :top-toggle)
                     toggle #(schpaa.state/toggle :top-toggle)]
                 [sc/col {:class [:border-b :duration-200]

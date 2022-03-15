@@ -9,7 +9,8 @@
                              {:id     :bg-unfocused-field
                               :garden [:& {:background "var(--surface0)"}]}
                              {:id     :flex-center
-                              :garden [:& {:display         :flex
+                              :garden [:& {;:color :red
+                                           :display         :flex
                                            :justify-content :center
                                            :align-items     :center}]}
                              {:id     :font-oswald

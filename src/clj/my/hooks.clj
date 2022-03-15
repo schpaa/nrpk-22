@@ -1,12 +1,12 @@
 (ns my.hooks
-  (:require                                                 ;[my.tokens]
-    [my.tokens]
+  (:require
     [lambdaisland.ornament :as o]
     [garden.stylesheet :refer [at-font-face]]
     [garden.def :refer [defcssfn]]
     [garden.core :refer [css]]
     [garden.compiler :as gc]
-    [girouette.tw.preflight :as girouette-preflight]))
+    [girouette.tw.preflight :as girouette-preflight]
+    [my.tokens]))
 
 (defcssfn url)
 (defcssfn format)
