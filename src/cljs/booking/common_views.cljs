@@ -270,7 +270,7 @@
 
 
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom true)
+  (r/with-let [mainmenu-visible (r/atom false)
                numberinput-visible (rf/subscribe [:lab/number-input])]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
           toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
@@ -347,6 +347,11 @@
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
+   {:icon      solid/ShieldCheckIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
+    #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
+                  (when (pos? c) c))
+    :page-name :r.retningslinjer}
    nil
    {:tall-height true
     :icon        solid/FolderIcon
