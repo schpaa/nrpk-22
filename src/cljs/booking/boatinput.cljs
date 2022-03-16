@@ -185,7 +185,11 @@
                                           (update :phonenumber str e)))
                            (swap! st #(-> %
                                           (update :item str e)
-                                          (dissoc :selected)))))
+                                          ((fn [z]
+                                             (tap> [z (some #{(:item z)} (:list z))])
+                                             (if (some #{(:item z)} (:list z))
+                                               (assoc z :selected (:item z))
+                                               z)))))))
                   #_#_#_#_:on-style {:background :red}
                           :style {:border-radius "var(--radius-2)"
                                   :xbox-shadow   "var(--shadow-2)"}
@@ -250,8 +254,7 @@
 (defn add [st]
   [button
    {:on-click (fn [] (swap! st #(-> %
-
-                                    (assoc :selected (:item %))
+                                    ;(assoc :selected (:item %))
                                     (update :list (fnil conj #{}) (:item %))
                                     ((fn [e] (if true (dissoc e :item) identity))))))
     :value    true
