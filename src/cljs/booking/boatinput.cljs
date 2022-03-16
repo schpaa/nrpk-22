@@ -116,19 +116,18 @@
   #_[:.icons
      #_{:display       :grid
         :place-content :center}]
-  #_#_[:div.on {:color      "var(--green-0)"
-                :background "var(--green-9)"}
-       [:div.off {:background "var(--surface1)"
-                  :color      "var(--surface0)"}
-
-          ([{:keys [on-click value on-style off-style content]}]
-           ^{:on-click on-click}
-           [:<> [:div (if value
-                        {:style (when on-style on-style)
-                         :class (when-not on-style :on)}
-                        {:style (when off-style off-style)
-                         :class [(when-not off-style :off)]})
-                 content]])]])
+  #_[:div.on {:color      "var(--green-0)"
+              :background "var(--green-9)"}
+     [:div.off {:background "var(--surface1)"
+                :color      "var(--surface0)"}]]
+  ([{:keys [on-click value on-style off-style content]}]
+   ^{:on-click on-click}
+   [:<> [:div (if value
+                {:style (when on-style on-style)
+                 :class (when-not on-style :on)}
+                {:style (when off-style off-style)
+                 :class [(when-not off-style :off)]})
+         content]]))
 
 (o/defstyled panel :div
   :w-64 :h-auto
@@ -151,7 +150,7 @@
                decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
     [up-down-button {:content  (fn [value]
                                  [:div.flex.flex-col.justify-end.items-center.h-full
-                                  [:img.h-8.object-fit.-ml-px {:src "/img/human.png"}]
+                                  [:img.h-12.object-fit.-ml-px {:src "/img/human.png"}]
                                   (str value)])
                      :value    (or @n 0)
                      :increase increase
@@ -163,7 +162,7 @@
                decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
     [up-down-button {:content  (fn [value]
                                  [:div.flex.flex-col.justify-end.items-center.h-full
-                                  [:img.h-16.object-fit {:src "/img/human.png"}]
+                                  [:img.h-20.object-fit {:src "/img/human.png"}]
                                   (str value)])
                      :value    (or @n 0)
                      :increase increase
@@ -173,6 +172,8 @@
   (r/with-let [a (r/atom "123")]
     [:div.bgs-black.p-2
      {:style {:display               :grid
+              :background-color      "var(--brand1o)"
+              :border-radius         "var(--radius-1)"
               :gap                   "var(--size-1)"
               :grid-template-columns "repeat(3,1fr)"
               :grid-auto-rows        "4rem"}}
@@ -312,8 +313,10 @@
         [button
          {:ref     (fn [e]
                      (when-not @a
+                       (.addEventListener e "touchstart" mousedown)
                        (.addEventListener e "mousedown" mousedown)
                        (.addEventListener e "mouseup" mouseup)
+                       (.addEventListener e "touchend" mouseup)
                        (reset! a e)))
           :enabled ok?
           :style   (if ok?
@@ -331,7 +334,9 @@
 
           (sc/icon-large (icon/adapt :refresh 2.5))]])
       (finally (.removeEventListener @a "mousedown" mousedown)
-               (.removeEventListener @a "mouseup" mouseup)))))
+               (.removeEventListener @a "touchstart" mousedown)
+               (.removeEventListener @a "mouseup" mouseup)
+               (.removeEventListener @a "touchend" mouseup)))))
 
 (defn lookup [id]
   (if (< 3 (count id))
@@ -343,10 +348,10 @@
      [sc/subtext "Grønnlandskajakk"]]))
 
 (defn sample []
-  (r/with-let [st (r/atom {:adults   1
-                           :list     (into #{} (map str (range 100 120)))
-                           :selected "300"
-                           :item     "UGH"})]
+  (r/with-let [st (r/atom {} #_{:adults   1
+                                :list     (into #{} (map str (range 100 120)))
+                                :selected "300"
+                                :item     "UGH"})]
     [[:div
       [panel
        [:div {:style {:grid-column "2/span 3"
@@ -358,8 +363,8 @@
        [:div {:style {:grid-column "2"
                       :grid-row    "1/span 2"}}
         [adults st]]
-       [:div {:style {:grid-row    "2"
-                      :grid-column "4"}}
+       [:div {:style {:grid-row    "1"
+                      :grid-column "1"}}
         [moon st]]
        [:div {:style {:grid-row    "2"
                       :grid-column "1"}}
@@ -367,7 +372,7 @@
 
        [:div
         {:style {:grid-row       "4"
-                 :grid-column    "2/span 3"
+                 :grid-column    "2/span 2"
                  :padding-inline "var(--size-3)"
                  :border-radius  "var(--radius-1)"
                  :background     "var(--surface00)"
@@ -388,7 +393,7 @@
             {:style {:color "var(--surface4)"}}
             (when (empty? (:item @st))
               [:div.animate-blink.opacity-100 "|"])
-            [button-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnummer"] (:item @st))]
+            [button-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
             (when-not (empty? (:item @st))
               [:div.animate-blink.opacity-100 "|"])])]]
 
@@ -425,8 +430,8 @@
        [:div {:style {:grid-row    "4"
                       :grid-column "1"}}
         [delete st]]
-       [:div {:style {:grid-row    "3"
-                      :grid-column "1"}}
+       [:div {:style {:grid-row    "4"
+                      :grid-column "4"}}
         [add st]]
        [:div {:style {:grid-row    "8"
                       :grid-column "1"}}
