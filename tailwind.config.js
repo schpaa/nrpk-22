@@ -16,9 +16,31 @@ module.exports = {
   theme: {
     extend: {
         animation: {
+            'pulse': 'pulse 2000ms linear infinite',
+            'blink': 'blink 1000ms steps(2) infinite',
         	'slow-ping': 'slow-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
         },
         keyframes: {
+            'blink': {
+                '0%': {
+                    opacity: '0',
+                },
+            },
+            'pulse': {
+                '0%': {
+                    opacity: '0'
+                },
+                '50%': {
+                    opacity: '0',
+                },
+                '51%': {
+                    opacity: '1',
+                },
+                '100%': {
+                    opacity: '1',
+                },
+            },
+
              'slow-ping': {
                   '0%': {
                     opacity: '1'

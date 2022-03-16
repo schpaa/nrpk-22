@@ -7,7 +7,30 @@
             [schpaa.style.ornament :as sc]
             [schpaa.icon :as icon]
             [schpaa.debug :as l]
-            [schpaa.style.button2 :as scb2]))
+            [schpaa.style.button2 :as scb2]
+            [clojure.set :as set]))
+
+(o/defstyled button-caption :div
+  {:font-family "Inter"                                     ;"IBM Plex Sans"
+   :font-size   "var(--font-size-4)"
+   :font-weight "var(--font-weight-6)"})
+
+(o/defstyled button :button
+  :w-full :h-full
+  {:display       :grid
+   :place-content :center
+   :border-radius "var(--radius-1)"
+   ;:background    "var(--surface0)"
+   :color         "var(--surface4)"}
+  [:&:disabled {
+                :color       "var(--surface0)"
+                :xbackground "var(--surface00)"}]
+  [:&:active {:background "var(--surface00)"}]
+  ([{:keys [ref on-click disabled enabled style]} ch]
+   ^{:ref      ref
+     :on-click on-click
+     :disabled (if (some? enabled) (not enabled) disabled)}
+   [:<> [:div ch]]))
 
 (o/defstyled circle-button :div
   [:div :flex :flex-center :shrink-0
@@ -17,10 +40,10 @@
    [:&:actives
     {:box-shadow "var(--inner-shadow-3)"}]]
   [:.normal
-   {:box-shadow    "var(--inner-shadow-2)"
-    :background    "var(--surface00)"
+   {:box-shadow    "var(--shadow-3)"
+    :background    "var(--surface000)"
     :color         "var(--surface4)"
-    :border-radius "var(--radius-blob-1)"}
+    :border-radius "var(--radius-round)"}
    [:&:active
     {:background "var(--surface0)"}]]
   [:.disabled :opacity-20]
@@ -56,17 +79,16 @@
           :esel [:div.normal {:on-click on-click} caption])]))
 
 (o/defstyled up-down-button :div
-  ;:h-32
-  :h-full
+  :h-full button-caption
   {:box-shadow "var(--inner-shadow-1)"}
   [:.base
    {:padding       "var(--size-2)"
-    :background    "var(--surface1)"
+    :background    "var(--surface00)"
     :color         "var(--surface5)"
     :border-radius "var(--radius-2)"}]
   [:.some {:opacity 1}]
   [:.zero {:opacity 0.3}]
-  [:.item:active {:background-color "var(--surface2)"}]
+  [:.item:active {:background-color "var(--surface1)"}]
   [:.overlay {:overflow :hidden}]
   ([{:keys [increase decrease value content]}]
    [:<> [:div.base
@@ -77,37 +99,36 @@
          [:div.overlay.absolute.top-0.inset-x-0.item.z-10.overflow-hiddenx {:on-click increase :style {:height "50%"}}]
          [:div.overlay.absolute.bottom-0.inset-x-0.item.z-10.overflow-hiddenx {:on-click decrease :style {:height "50%"}}]
          [:div.flex.items-end.justify-center.h-full.z-50.pointer-events-none.base]
-         [:div.absolute.inset-0.z-20.pointer-events-none.text-black
+         [:div.absolute.inset-0.z-20.pointer-events-none.mb-1
           {:class (if (pos? value) :some :zero)}
           (content value)]]]))
 
 (o/defstyled toggle-button :div
-  [:.aaa                                                    ; :w-full :h-full :flex :flex-center
-   {:aspect-ratio  "1/1"
-    :border-radius "var(--radius-2)"}]
-  [:.icons :w-full :h-full :flex-center]
-  #_[:&
-     :flex :items-center :justify-center                    ;:flex-center
-     ;:w-full :h-full
-     {:aspect-ratio "1/1"}
-     {
-      :border-radius "var(--radius-round)"
-      ;:padding       "var(--size-2)"
-      :color         :red #_"var(--surface000)"}]
-  [:div.on {:color      "var(--green-0)"
-            :background "var(--green-9)"}]
-  [:div.off {:background "var(--surface1)"
-             :color      "var(--surface0)"}]
-  [:div.items {:width  "90%"
-               :height "90%"}]
-  ([{:keys [on-click value on-style off-style content]}]
-   ^{:on-click on-click}
-   [:<> [:div.aaa (if value
-                    {:style (when on-style on-style)
-                     :class (when-not on-style :on)}
-                    {:style (when off-style off-style)
-                     :class [(when-not off-style :off)]})
-         [:div.icons content]]]))
+  :w-full :h-full
+  {:display       :grid
+   :place-content :center
+   :aspect-ratio  "1/1"
+   :border-radius "var(--radius-1)"
+   :xbackground   "var(--surface0)"}
+  #_[:.aaa
+     {:aspect-ratio  "1/1"
+      :border-radius "var(--radius-1)"}]
+  #_[:.icons
+     #_{:display       :grid
+        :place-content :center}]
+  #_#_[:div.on {:color      "var(--green-0)"
+                :background "var(--green-9)"}
+       [:div.off {:background "var(--surface1)"
+                  :color      "var(--surface0)"}
+
+          ([{:keys [on-click value on-style off-style content]}]
+           ^{:on-click on-click}
+           [:<> [:div (if value
+                        {:style (when on-style on-style)
+                         :class (when-not on-style :on)}
+                        {:style (when off-style off-style)
+                         :class [(when-not off-style :off)]})
+                 content]])]])
 
 (o/defstyled panel :div
   :w-64 :h-auto
@@ -115,7 +136,7 @@
    :display               :grid
    :gap                   "var(--size-1)"
    :grid-template-columns "repeat(4,1fr)"
-   :grid-template-rows    "repeat(8,1fr)"})
+   :grid-auto-rows        "1fr"})
 
 (o/defstyled pad :div
   [:div :flex-center
@@ -127,11 +148,11 @@
 (defn children [st]
   (r/with-let [n (r/cursor st [:children])
                increase #(swap! n inc)
-               decrease #(swap! n (fn [n] (if (pos? n) (dec n) n)))]
+               decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
     [up-down-button {:content  (fn [value]
                                  [:div.flex.flex-col.justify-end.items-center.h-full
-                                  [:img.h-8.object-fit {:src "/img/human.png"}]
-                                  [sc/title-p (str value)]])
+                                  [:img.h-8.object-fit.-ml-px {:src "/img/human.png"}]
+                                  (str value)])
                      :value    (or @n 0)
                      :increase increase
                      :decrease decrease}]))
@@ -139,49 +160,64 @@
 (defn adults [st]
   (r/with-let [n (r/cursor st [:adults])
                increase #(swap! n inc)
-               decrease #(swap! n (fn [n] (if (pos? n) (dec n) n)))]
+               decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
     [up-down-button {:content  (fn [value]
                                  [:div.flex.flex-col.justify-end.items-center.h-full
-                                  [:img.h-12.object-fit {:src "/img/human.png"}]
-                                  [sc/title-p (str value)]])
+                                  [:img.h-16.object-fit {:src "/img/human.png"}]
+                                  (str value)])
                      :value    (or @n 0)
                      :increase increase
                      :decrease decrease}]))
 
 (defn numberinput [st]
   (r/with-let [a (r/atom "123")]
-    [:div.bgs-black
+    [:div.bgs-black.p-2
      {:style {:display               :grid
-              :gap                   "var(--size-2)"
-              :grid-template-columns "repeat(3,1fr)"}}
-     (for [e '[1 2 3 4 5 6 7 8 9 nil 0 :del]]
+              :gap                   "var(--size-1)"
+              :grid-template-columns "repeat(3,1fr)"
+              :grid-auto-rows        "4rem"}}
+     (for [e '[7 8 9 4 5 6 1 2 3 nil 0 :del]]
        (if (number? e)
-         [circle-button {:on-click #(swap! st update :item str e)
-                         :caption  e}]
-         (cond
-           (= :prev e)
-           [toggle-button
-            {:on-click #(swap! st update :moon (fnil not false))
-             :value    (:moon @st)
-             :on-style {:color      "var(--yellow-3)"
-                        :background :#124}
-             :content  [sc/icon-large [:> solid/ArrowUpIcon]]}]
-           (= :next e)
-           [toggle-button
-            {:on-click #(swap! st update :moon (fnil not false))
-             :value    (:moon @st)
-             :on-style {:color      "var(--yellow-3)"
-                        :background :#124}
-             :content  [sc/icon-large [:> solid/ArrowDownIcon]]}]
+         [button {:on-click
+                  (fn [] (if (:phone @st)
+                           (swap! st #(-> %
+                                          (update :phonenumber str e)))
+                           (swap! st #(-> %
+                                          (update :item str e)
+                                          (dissoc :selected)))))
+                  #_#_#_#_:on-style {:background :red}
+                          :style {:border-radius "var(--radius-2)"
+                                  :xbox-shadow   "var(--shadow-2)"}
 
+                  :enabled (if (:phone @st)
+                             (< (count (:phonenumber @st)) 8)
+                             (< (count (:item @st)) 4))}
+          [button-caption e]]
+         (cond
            (= :del e)
-           [circle-button
-            {:type     :delete
-             :on-click #(swap! st update :item (fn [s] (subs s 0 (dec (count s)))))
-             :value    (:item @st)
-             :caption  [:div.xw-16.xh-16.p-0.flex [sc/icon-large [:> outline/BackspaceIcon]]]
-             :on-style {:color      "var(--orange-2)"
-                        :background "var(--orange-5)"}}]
+           [button
+            {:on-click (fn [] (if (:phone @st)
+                                (swap! st #(-> %
+                                               (update :phonenumber (fn [s] (subs s 0 (dec (count s)))))))
+                                (swap! st #(-> %
+                                               (update :item (fn [s] (subs s 0 (dec (count s)))))
+                                               (dissoc :selected)))))
+             :style    {:color       (if (not (empty? (:item @st))) "var(--surface4)" "var(--surface0)")
+                        ;:border-radius "var(--radius-round)"
+                        :xbackground "none" #_"var(--surface00)"}
+             :enabled  (if (:phone @st)
+                         (not (empty? (:phonenumber @st)))
+                         (not (empty? (:item @st))))}
+            [sc/icon-large [:> solid/BackspaceIcon #_ArrowNarrowLeftIcon]]]
+           (= :phone e)
+           [toggle-button
+            {:on-click  #(swap! st update :phone (fnil not false))
+             :value     (:phone @st)
+             :off-style {:color      "var(--surface2)"
+                         :background "none"}
+             :style     (if (:phone @st) {:color      "var(--yellow-1)"
+                                          :background :#124})
+             :content   [sc/icon-large [:> solid/DeviceMobileIcon]]}]
 
            (= :other e)
            [circle-button
@@ -191,50 +227,129 @@
 
 (defn havekey [st]
   [toggle-button
-   {:on-click #(swap! st update :key (fnil not false))
-    :value    (:key @st)
-    :on-style {:color      "var(--green-0)"
-               :background "var(--green-9)"}
-    :content  [sc/icon-large [:> solid/KeyIcon]]}])
+   {:on-click  #(swap! st update :key (fnil not false))
+    :value     (:key @st)
+    :off-style {:color      "var(--surface2)"
+                :background "none"}
+    :style     (if (:key @st) {:box-shadow "var(--shadow-3)"
+                               :color      "var(--yellow-2)"
+                               :background "var(--surface4)"})
+    :content   [sc/icon-large [:> solid/KeyIcon]]}])
 
 (defn moon [st]
   [toggle-button
-   {:on-click #(swap! st update :moon (fnil not false))
-    :value    (:moon @st)
-    :on-style {:color      "var(--yellow-3)"
-               :background :#124}
-    :content  [sc/icon-large [:> solid/MoonIcon]]}])
+   {:on-click  #(swap! st update :moon (fnil not false))
+    :value     (:moon @st)
+    :off-style {:color      "var(--surface2)"
+                :background "none"}
+    :style     (if (:moon @st) {:color      "var(--yellow-1)"
+                                :background :#124})
+    :content   [sc/icon-large [:> solid/MoonIcon]]}])
 
 (defn add [st]
-  [toggle-button
-   {:on-click #(swap! st update :moon (fnil not false))
+  [button
+   {:on-click (fn [] (swap! st #(-> %
+
+                                    (assoc :selected (:item %))
+                                    (update :list (fnil conj #{}) (:item %))
+                                    ((fn [e] (if true (dissoc e :item) identity))))))
     :value    true
+    :enabled  (and (not= (:item @st) (:selected @st))
+                   (not (some #{(:item @st)} (:list @st)))
+                   ;(not (some #{(:item @st)} (:list @st)))
+                   ;(not (some? (:selected @st)))
+                   (<= 3 (count (:item @st))))
     :on-style {:color      "var(--surface4)"
-               :background "var(--surface1)"}
-    :content  (sc/icon [:> solid/PlusIcon])}])
+               :background "var(--surface1)"}}
+   (sc/icon-large [:> solid/PlusIcon])])
 
 (defn delete [st]
-  [toggle-button
-   {:on-click #(swap! st update :moon (fnil not false))
+  [button
+   {:on-click (fn [] (swap! st #(-> %
+                                    (dissoc :item)
+                                    (update :list set/difference #{(:selected %)})
+                                    #_(assoc :selected (last (sort (:list %)))))))
     :value    true
-    :on-style {:color      "var(--surface4)"
+    ;:style {:color       "var(--red-7)"}
+    :on-style {:scolor     "var(--surface4)"
+
                :background "var(--surface1)"}
-    :content  (sc/icon [:> solid/MinusIcon])}])
+    :enabled  (and (or (pos? (count (:list @st)))
+                       (not (empty? (:item @st))))
+                   #_(some? (:selected @st)))}
+   (sc/icon-large [:> solid/XIcon])])
 
 (defn confirm [st]
-  [toggle-button
-   {:on-click #(swap! st update :moon (fnil not false))
-    :value    true
-    :on-style {:color      "white"
-               :background "var(--brand1)"}
-    :content  "Ok"}])
+  (let [ok? (and (pos? (+ (:adults @st) (:children @st)))
+                 (pos? (count (:list @st))))]
+    [button
+     {:on-click #(js/alert "Dialogen forsvinner og du blir vist en liste over dine siste aktiviteter. Denne registreringen vil ligge øverst")
+      :enabled  ok?
+      :style    (when ok? {:color      "white"
+                           :background "var(--green-5)"})}
+     (sc/icon-large [:> solid/CheckIcon])]))
+
+(defn restart [st]
+  (let [ok? (or (pos? (+ (:adults @st) (:children @st)))
+                (pos? (count (:list @st)))
+                (:moon @st)
+                (:key @st)
+                (not (empty? (:item @st))))]
+    (r/with-let [clicks (r/atom 0)
+                 a (r/atom nil)
+                 timer (r/atom nil)
+                 ontimeout (fn [e]
+                             (when @timer (reset! st nil)))
+                 mousedown (fn [e]
+                             (when ok? (reset! timer (js/setTimeout ontimeout 1100))))
+
+                 mouseup (fn [e]
+                           (tap> "up")
+                           (js/clearTimeout @timer)
+                           (reset! timer false))
+                 holding (r/atom false)]
+      (let []
+        [button
+         {:ref     (fn [e]
+                     (when-not @a
+                       (.addEventListener e "mousedown" mousedown)
+                       (.addEventListener e "mouseup" mouseup)
+                       (reset! a e)))
+          :enabled ok?
+          :style   (if ok?
+                     (if @timer
+                       {:transition-duration "1s"
+                        :color               "white"
+                        :background          "var(--red-2)"}
+                       {:background "none"
+                        :color      "var(--red-5)"})
+                     {:color "var(--surface0)"})}
+
+         [:div {:style {:transition-duration "1s"
+                        ;:transition-property "transform"
+                        :transform           (if @timer "rotate(-360deg)")}}
+
+          (sc/icon-large (icon/adapt :refresh 2.5))]])
+      (finally (.removeEventListener @a "mousedown" mousedown)
+               (.removeEventListener @a "mouseup" mouseup)))))
+
+(defn lookup [id]
+  (if (< 3 (count id))
+    [sc/col {:class [:space-y-1]}
+     [sc/title "Test-navn"]
+     [sc/subtext "Test-kategori"]]
+    [sc/col {:class [:space-y-1]}
+     [sc/header-title "Rebel Roy"]
+     [sc/subtext "Grønnlandskajakk"]]))
 
 (defn sample []
-  (r/with-let [st (r/atom {})]
+  (r/with-let [st (r/atom {:adults   1
+                           :list     (into #{} (map str (range 100 120)))
+                           :selected "300"
+                           :item     "UGH"})]
     [[:div
       [panel
-       ;(repeat 10 [pad {} "·"])
-       [:div {:style {:grid-column "1/span 3"
+       [:div {:style {:grid-column "2/span 3"
                       :grid-row    "5/span 4"}}
         [numberinput st]]
        [:div {:style {:grid-column "3"
@@ -243,148 +358,98 @@
        [:div {:style {:grid-column "2"
                       :grid-row    "1/span 2"}}
         [adults st]]
-       [:div {:style {:grid-column "1"
-                      :grid-row    "2/span 1"}}
+       [:div {:style {:grid-row    "2"
+                      :grid-column "4"}}
         [moon st]]
-       [:div {:style {:grid-column "1"
-                      :grid-row    "1/span 1"}}
+       [:div {:style {:grid-row    "2"
+                      :grid-column "1"}}
         [havekey st]]
-       [:div.bg-gray-200.white {:style {:grid-area "3/1/5/4"}} @st]
-       [:div {:style {:grid-column "4"
-                      :grid-row    "4/span 1"}}
+
+       [:div
+        {:style {:grid-row       "4"
+                 :grid-column    "2/span 3"
+                 :padding-inline "var(--size-3)"
+                 :border-radius  "var(--radius-1)"
+                 :background     "var(--surface00)"
+                 :-box-shadow    "var(--inner-shadow-1)"}}
+        [:div.flex.items-center.h-full
+         {:style {:font-family "Inter"
+                  :font-weight 600
+                  :font-size   "var(--font-size-4)"}}
+         (if (:phone @st)
+           [:div.flex
+            {:style {:color "var(--surface4)"}}
+            (when (empty? (:phonenumber @st))
+              [:div.animate-blink.opacity-100 "|"])
+            [button-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
+            (when-not (empty? (:phonenumber @st))
+              [:div.animate-blink.opacity-100 "|"])]
+           [:div.flex
+            {:style {:color "var(--surface4)"}}
+            (when (empty? (:item @st))
+              [:div.animate-blink.opacity-100 "|"])
+            [button-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnummer"] (:item @st))]
+            (when-not (empty? (:item @st))
+              [:div.animate-blink.opacity-100 "|"])])]]
+
+       [:div
+        {:style {:grid-row       "3"
+                 :grid-column    "2/span 3"
+                 :padding-inline "var(--size-2)"
+                 :display        :flex
+                 :align-items    :center
+                 :-border-radius "var(--radius-1)"
+                 :-background    "var(--surface00)"
+                 :-box-shadow    "var(--inner-shadow-0)"}}
+        (when (<= 3 (count (:item @st)))
+          (lookup (:item @st)))]
+
+       [:div.p-1
+        {:style {:grid-column           "1"
+                 :grid-row              "5/span 2"
+                 :border-radius         "var(--radius-1)"
+                 :background            "var(--surface00)"
+                 :gap                   "var(--size-1)"
+                 :display               :grid
+                 :grid-template-columns "1fr"
+                 :grid-template-rows    "repeat(3,1fr)"}}
+        (for [e (take 3 (sort (:list @st)))]
+          [sc/badge
+           {:selected (and (= e (:selected @st)))
+            :on-click (fn [] (if (= e (:selected @st))
+                               (swap! st dissoc :selected
+                                      dissoc :item)
+                               (swap! st #(-> %
+                                              (assoc :selected e)
+                                              (assoc :item e)))))} e])]
+       [:div {:style {:grid-row    "4"
+                      :grid-column "1"}}
         [delete st]]
-       [:div {:style {:grid-column "4"
-                      :grid-row    "3/span 1"}}
+       [:div {:style {:grid-row    "3"
+                      :grid-column "1"}}
         [add st]]
-       [:div {:style {:grid-column "4"
-                      :grid-row    "8/span 1"}}
-        [confirm st]]]]]))
+       [:div {:style {:grid-row    "8"
+                      :grid-column "1"}}
+        [confirm st]]
+       [:div {:style {:grid-row    "7"
+                      :grid-column "1"}}
+        [restart st]]
 
-#_(defn sample []
-    (r/with-let [a (r/atom "123")
-                 st (r/atom {:items ["130" "512" "800"]
-                             :key   false})]
-      [[:space]
-       [:space]
-       [:space]
-       [:div
-        (if
-          (= 3 (count @a))
-          [:div.space-y-2
-
-           [:div.px-2
-            {:style {:display               :grid
-                     :gap                   "var(--size-2)"
-                     :grid-template-columns "repeat(4,1fr)"}}]
-
-           [:div.px-2
-            {:style {:display               :grid
-                     :gap                   "var(--size-2)"
-                     :grid-template-columns "repeat(4,1fr)"
-                     :grid-auto-rows        "auto"}}
-            [:div.col-span-2.p-2
-             {:style {:box-shadow    "var(--inner-shadow-1)"
-                      ;:display       "grid"
-                      ;:place-content "center"
-                      :font-size     "var(--font-size-3)"
-                      :background    "var(--surface1)"
-                      :color         "var(--surface00)"
-                      :border-radius "var(--radius-1)"}}
-             [sc/col-space-2 {:class [:truncate]}
-              ;[sc/header-title @a]
-              [:div
-               [sc/title "Rebel Ninja"]
-               [sc/subtext "Grønnlandskajakk"]
-               [sc/subtext "kayaks'R'us"]]]]
-            [:div]
-
-            [:div.row-span-2.col-span-2.space-y-1
-             {:style {:box-shadow    "var(--inner-shadow-1)"
-                      ;:display       "grid"
-                      ;:place-content "center"
-                      :font-size     "var(--font-size-3)"
-                      :background    "var(--surface00)"
-                      :color         "var(--surface1)"
-                      :border-radius "var(--radius-1)"}}
-             #_[scb2/normal-large [sc/icon-large [:> outline/PlusIcon]]]
-             (for [e (:items @st)]
-               [sc/row
-                [sc/badge-big {:class [:grow]} e]
-                [scb2/normal-tight {:class [:shrink-0]} [sc/icon-tiny [:> outline/XIcon]]]])]
-
-
-            [toggle-button
-             {:on-click #(swap! st update :key (fnil not false))
-              :value    (:key @st)
-              :on-style {:color      "var(--green-0)"
-                         :background "var(--green-9)"}
-              :content  [sc/icon-large [:> solid/KeyIcon]]}]
-
-            [toggle-button
-             {:on-click #(swap! st update :moon (fnil not false))
-              :value    (:moon @st)
-              :on-style {:color      "var(--yellow-3)"
-                         :background :#124}
-              :content  [sc/icon-large [:> solid/MoonIcon]]}]
-
-            (r/with-let [n (r/cursor st [:adults])
-                         increase #(swap! n inc)
-                         decrease #(swap! n (fn [n] (if (pos? n) (dec n) n)))]
-              [up-down-button
-               {:content  (fn [value]
-                            [:div.flex.flex-col.justify-end.items-center.h-32
-                             [:img.h-16.object-fit {:src "/img/human.png"}]
-                             [sc/title-p (str value)]])
-                :value    (or @n 0)
-                :increase increase
-                :decrease decrease}])
-
-            (r/with-let [n (r/cursor st [:children])
-                         increase #(swap! n inc)
-                         decrease #(swap! n (fn [n] (if (pos? n) (dec n) n)))]
-              [up-down-button {:content  (fn [value]
-                                           [:div.flex.flex-col.justify-end.items-center.h-full
-                                            [:img.h-8.object-fit {:src "/img/human.png"}]
-                                            [sc/title-p (str value)]])
-                               :value    (or @n 0)
-                               :increase increase
-                               :decrease decrease}])]])]
-       [:div
-        [:div.bgs-black.p-2.w-64
-         {:style {:display               :grid
-                  :gap                   "var(--size-2)"
-                  :grid-template-columns "repeat(4,1fr)"}}
-         (for [e '[:prev 7 8 9 nil 4 5 6 nil 1 2 3 :next 0 nil :del]]
-           (if (number? e)
-             [circle-button {:on-click #(swap! a str e)
-                             :caption  e}]
-             (cond
-               (= :prev e)
-               [toggle-button
-                {:on-click #(swap! st update :moon (fnil not false))
-                 :value    (:moon @st)
-                 :on-style {:color      "var(--yellow-3)"
-                            :background :#124}
-                 :content  [sc/icon-large [:> solid/ArrowUpIcon]]}]
-               (= :next e)
-               [toggle-button
-                {:on-click #(swap! st update :moon (fnil not false))
-                 :value    (:moon @st)
-                 :on-style {:color      "var(--yellow-3)"
-                            :background :#124}
-                 :content  [sc/icon-large [:> solid/ArrowDownIcon]]}]
-
-               (= :del e)
-               [circle-button
-                {:type     :delete
-                 :on-click #(swap! a (fn [s] (subs s 0 (dec (count s)))))
-                 :value    @a
-                 :caption  [:div.w-16.h-16.p-0.flex [sc/icon-large [:> outline/BackspaceIcon]]]
-                 :on-style {:color      "var(--orange-2)"
-                            :background "var(--orange-5)"}}]
-
-               (= :other e)
-               [circle-button
-                {:caption (sc/icon-large (icon/adapt :rotate-left))
-                 :type    :other}]
-               :else [:div])))]]]))
+       (when (< 3 (count (:list @st)))
+         [:div.p-1 {:style {:grid-column           "1/span 4"
+                            :grid-row              "9/span 4"
+                            :border-radius         "var(--radius-1)"
+                            :background            "var(--surface00)"
+                            :gap                   "var(--size-1)"
+                            :display               :grid
+                            :grid-template-columns "repeat(4,1fr)"
+                            :grid-auto-rows        "2rem" #_"repeat(3,1fr)"}}
+          (for [e (drop 3 (sort (:list @st)))]
+            [sc/badge
+             {:selected (and (= e (:selected @st)))
+              :on-click (fn [] (if (= e (:selected @st))
+                                 (swap! st dissoc :selected
+                                        dissoc :item)
+                                 (swap! st #(-> %
+                                                (assoc :selected e)
+                                                (assoc :item e)))))} e])])]]]))

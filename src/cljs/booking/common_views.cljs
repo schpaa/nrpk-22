@@ -47,7 +47,7 @@
                  :action     #(rf/dispatch [:app/navigate-to [:r.forsiden]])
                  :disabled   false
                  :value      #()}]
-     [:space]
+     ;[:space]
      [:menuitem {:filledicon (sc/icon [:> solid/CalendarIcon])
                  :label      "Kalender"
                  :color      "var(--hva-er-nytt)"
@@ -62,43 +62,6 @@
                  :action     #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
                  :disabled   false
                  :value      #()}]
-     [:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
-                 :label      "Retningslinjer"
-                 :color      "var(--blue-4)"
-                 :highlight  (= :r.retningslinjer current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
-                 :disabled   false
-                 :value      #()}]
-     [:hr]
-     [:menuitem {:filledicon (sc/icon [:> solid/TicketIcon])
-                 :label      "Ny booking"
-                 :color      "var(--new-booking)"
-                 :highlight  (= :r.debug current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.debug]])
-                 :disabled   false
-                 :value      #()}]
-     [:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
-                 :label      "Bookingoversikt"
-                 :shortcut   "ctrl-b"
-                 :color      "var(--booking-oversikt)"
-                 :highlight  (= :r.oversikt current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.oversikt]])
-                 :disabled   false
-                 :value      #()}]
-     [:menuitem {:filledicon (sc/icon [:> solid/UserCircleIcon])
-                 :label      "Mine opplysninger"
-                 :color      "var(--blue-4)"
-                 :highlight  (= :r.user current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.user]])
-                 :disabled   false
-                 :value      #()}]
-     [:space]
-     [:menuitem {:filledicon (sc/icon [:> solid/MapIcon])
-                 :label      "Turlogg"
-                 :highlight  false
-                 :action     nil
-                 :disabled   true
-                 :value      #()}]
      [:hr]
      [:menuitem {:filledicon [:div {:class [:-m-1]
                                     :style {:padding          "var(--size-1)"
@@ -109,6 +72,45 @@
                  :color      "var(--brand1)"
                  :shortcut   "ctrl-l"
                  :action     #(rf/dispatch [:lab/open-number-input])}]
+     #_[:menuitem {:filledicon (sc/icon [:> solid/TicketIcon])
+                   :label      "Ny booking"
+                   :color      "var(--new-booking)"
+                   :highlight  (= :r.debug current-page)
+                   :action     #(rf/dispatch [:app/navigate-to [:r.debug]])
+                   :disabled   false
+                   :value      #()}]
+     [:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
+                 :label      "Båtoversikt"
+                 :shortcut   "ctrl-b"
+                 :color      "var(--booking-oversikt)"
+                 :highlight  (= :r.oversikt current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+                 :disabled   false
+                 :value      #()}]
+
+
+     #_[:menuitem {:filledicon (sc/icon [:> solid/MapIcon])
+                   :label      "Turlogg"
+                   :highlight  false
+                   :action     nil
+                   :disabled   true
+                   :value      #()}]
+
+     [:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
+                 :label      "Retningslinjer"
+                 :color      "var(--blue-4)"
+                 :highlight  (= :r.retningslinjer current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
+                 :disabled   false
+                 :value      #()}]
+     [:hr]
+     [:menuitem {:icon      (sc/icon [:> outline/UserCircleIcon])
+                 :label     "Mine opplysninger"
+                 :color     "var(--blue-4)"
+                 :highlight (= :r.user current-page)
+                 :action    #(rf/dispatch [:app/navigate-to [:r.user]])
+                 :disabled  false
+                 :value     #()}]
      [:menuitem {:icon     (sc/icon [:> outline/CollectionIcon])
                  :label    "Kommandoer"
                  :color    "var(--brand1)"
@@ -268,7 +270,7 @@
 
 
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom false)
+  (r/with-let [mainmenu-visible (r/atom true)
                numberinput-visible (rf/subscribe [:lab/number-input])]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
           toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
@@ -278,7 +280,7 @@
          [scm/numberinput
           {:showing      true
            :dir          #{:right :down}
-           :close-button (fn [open] [scb/corner {:on-click toggle-numberinput} [sc/icon [:> solid/ArrowLeftIcon]]])
+           :close-button (fn [open] [scb/corner {:on-click toggle-numberinput} [sc/icon (icon/adapt :arrow-right-up)]])
            :data         (booking.boatinput/sample)
            :button       (fn [open]
                            [scb/round-normal {:class [:h-10] :on-click toggle-numberinput}

@@ -3,7 +3,11 @@
             [garden.selectors :as s]))
 
 
-(o/set-tokens! {:components [{:id     :bg-focused-field
+(o/set-tokens! {:components [{:id     :disabled-button
+                              :garden [:& {:opacity    0.5
+                                           :color      "var(--surface000)"
+                                           :background "var(--surface00)"}]}
+                             {:id     :bg-focused-field
                               :garden [:&
                                        [:&:focus {:background-color "var(--surface000)"}]]}
                              {:id     :bg-unfocused-field

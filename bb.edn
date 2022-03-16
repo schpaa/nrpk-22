@@ -49,7 +49,7 @@
   dev          {:doc  "requires `booking` or `eykt`"
                 :task (run '-dev {:parallel true})}
 
-  css          {:task (shell (str "npx tailwindcss -i template/styles/style.css -o " -css-output))}
+  css          {:task (shell (str "npx tailwindcss -o " -css-output))}
   clean        {:task (fs/delete-tree -dist-dir)}
   build        {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
   fonts        {:task (do
