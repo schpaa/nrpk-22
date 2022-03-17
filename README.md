@@ -20,6 +20,7 @@ Hoved-repo for alt relatert NRPK
 ### Logg
 
 - [ ] [Dokumentasjon](/docs/logg/README.md)
+- [x] Diskusjon rundt båtlogg-panelet (https://github.com/schpaa/nrpk-22/issues/21)
 
 Se forøvrig [her](https://github.com/schpaa/nrpk-22/issues) for registrering av
 oppgaver, problemer og [her](https://github.com/schpaa/nrpk-22/discussions) for
