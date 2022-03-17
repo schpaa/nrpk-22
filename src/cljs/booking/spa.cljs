@@ -36,7 +36,8 @@
             [shadow.resource :refer [inline]]
             [times.api :as ta]
             [schpaa.time]
-            [goog.style :as gs]))
+            [goog.style :as gs]
+            [booking.aktivitetsliste]))
 
 
 ;region related to flex-date and how to display relative time
@@ -555,7 +556,7 @@
    :r.aktivitetsliste
    (fn [r]
      [page-boundary r
-      {:whole [:div.p-4 "holy-moly"]}])
+      {:whole [booking.aktivitetsliste/render r]}])
 
    :r.page-not-found
    (fn [r] [:div "?"])})

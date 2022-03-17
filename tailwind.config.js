@@ -71,14 +71,14 @@ module.exports = {
 //        yellow: colors.yellow,
 //        green: colors.green,
         white: colors.white,
-        gray: colors.stone
+        gray: colors.stone,
 //        info: colors.amber,
 //         slate stone sinc neutral gray
 
 //        emerald: colors.emerald,
 //        indigo: colors.indigo,
 //        yellow:colors.yellow,
-//        amber: colors.amber,
+        amber: colors.amber
 //        blue: colors.blue,
 //        sky: colors.sky,
 //        orange: colors.orange,

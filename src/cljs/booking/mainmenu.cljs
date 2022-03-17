@@ -8,7 +8,8 @@
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [booking.boatinput]))
 
 (defn address-me-as [user]
   (booking.database/bookers-name user))
@@ -125,14 +126,20 @@
       [:<>
        ;[l/ppre-x @numberinput-visible]
        (if @numberinput-visible
-         [scm/numberinput
-          {:showing      true
-           :dir          #{:right :down}
-           :close-button (fn [open] [scb/corner {:on-click toggle-numberinput} [sc/icon (icon/adapt :arrow-right-up)]])
-           :data         (booking.boatinput/sample)
-           :button       (fn [open]
-                           [scb/round-normal {:class [:h-10] :on-click toggle-numberinput}
-                            [sc/icon [:> solid/MenuIcon]]])}]
+         [:div.absolute.w-64.z-100
+          {:style {:right "28px"
+                   :top   "var(--size-2)"}}
+
+          [scm/mainmenu-items-rounded-very
+           [booking.boatinput/sample]]]
+         #_[scm/numberinput
+            {:showing      true
+             :dir          #{:right :down}
+             :close-button (fn [open] [scb/corner {:on-click toggle-numberinput} [sc/icon (icon/adapt :arrow-right-up)]])
+             :data         (booking.boatinput/sample)
+             :button       (fn [open]
+                             [scb/round-normal {:class [:h-10] :on-click toggle-numberinput}
+                              [sc/icon [:> solid/MenuIcon]]])}]
          [scm/mainmenu-example-with-args
           {:showing      @mainmenu-visible
            :dir          #{:right :down}

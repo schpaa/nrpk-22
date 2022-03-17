@@ -141,7 +141,7 @@
                                              (if deleted [:line-through :xopacity-50]))}
 
                       [scb/round-normal-listitem
-                       {:on-click #(set-toggle-fn k #_(fnil not false))}
+                       {:on-click #(set-toggle-fn k)}
                        [sc/icon-small {:class (into [:duration-200] (if @(get-toggle-fn k) [:rotate-90]))} [:> outline/ChevronRightIcon]]]
 
                       (r/with-let [value (r/atom title)
