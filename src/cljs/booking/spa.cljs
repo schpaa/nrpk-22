@@ -1,5 +1,5 @@
 (ns booking.spa
-  (:require [booking.common-views :refer [main-menu page-boundary]]
+  (:require [booking.common-views :refer [page-boundary]]
             [booking.content.booking-blog :as content.booking-blog :refer [render]]
             [reagent.core :as r]
             [lambdaisland.ornament :as o]
@@ -532,7 +532,7 @@
    :r.calendar
    (fn [r]
      [page-boundary r
-      [:div.-debugx.select-none [booking.common-views/header-control-panel]]
+      ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
       [:div {:class [:gap-1]
              :style {:display               :grid
                      :grid-auto-rows        "3rem"

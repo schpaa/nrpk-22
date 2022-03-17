@@ -270,24 +270,27 @@
 (defn delete [st]
   [button
    {:on-click (fn [] (swap! st #(-> %
-                                    (dissoc :item)
-                                    (update :list set/difference #{(:selected %)})
-                                    #_(assoc :selected (last (sort (:list %)))))))
+                                    (dissoc :item :selected)
+                                    (update :list set/difference #{(:selected %)}))))
     :value    true
     ;:style {:color       "var(--red-7)"}
     :on-style {:scolor     "var(--surface4)"
 
                :background "var(--surface1)"}
-    :enabled  (and (or (pos? (count (:list @st)))
+    :enabled  (and (or (not (empty? (:selected @st)))
                        (not (empty? (:item @st))))
                    #_(some? (:selected @st)))}
    (sc/icon-large [:> solid/XIcon])])
 
 (defn confirm [st]
   (let [ok? (and (pos? (+ (:adults @st) (:children @st)))
-                 (pos? (count (:list @st))))]
+                 (pos? (count (:list @st)))
+                 (or (and (pos? (count (:item @st)))
+                          (some #{(:item @st)} (:list @st)))
+                     (empty? (:item @st))))]
+
     [button
-     {:on-click #(js/alert "Dialogen forsvinner og du blir vist en liste over dine siste aktiviteter. Denne registreringen vil ligge øverst")
+     {:on-click #(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
       :enabled  ok?
       :style    (when ok? {:color      "white"
                            :background "var(--green-5)"})}
@@ -346,82 +349,121 @@
     [sc/col {:class [:space-y-1]}
      [sc/title "Test-navn"]
      [sc/subtext "Test-kategori"]]
-    [sc/col {:class [:space-y-1]}
-     [sc/header-title "Rebel Roy"]
-     [sc/subtext "Grønnlandskajakk"]]))
+    (case id
+      "400" [sc/col {:class [:space-y-1]}
+             [sc/header-title "Rebel Roy"]
+             [sc/subtext "Grønnlandskajakk"]]
+      "401" [sc/col {:class [:space-y-1]}
+             [sc/header-title "Rebel Joy"]
+             [sc/subtext "Canadakajakk"]]
+      [sc/col {:class [:space-y-1]}
+       [sc/header-title "Rebel Soy"]
+       [sc/subtext "Canadasnoozegoose"]])))
+
+(defonce st (r/atom {} #_{:adults   1
+                          :list     (into #{} (map str (range 100 120)))
+                          :selected "300"
+                          :item     "UGH"}))
 
 (defn sample []
-  (r/with-let [st (r/atom {} #_{:adults   1
-                                :list     (into #{} (map str (range 100 120)))
-                                :selected "300"
-                                :item     "UGH"})]
-    [[:div
-      [panel
-       [:div {:style {:grid-column "2/span 3"
-                      :grid-row    "5/span 4"}}
-        [numberinput st]]
-       [:div {:style {:grid-column "3"
-                      :grid-row    "1/span 2"}}
-        [children st]]
-       [:div {:style {:grid-column "2"
-                      :grid-row    "1/span 2"}}
-        [adults st]]
-       [:div {:style {:grid-row    "1"
-                      :grid-column "1"}}
-        [moon st]]
-       [:div {:style {:grid-row    "2"
-                      :grid-column "1"}}
-        [havekey st]]
+  [[:div
+    [panel
+     [:div {:style {:grid-column "2/span 3"
+                    :grid-row    "5/span 4"}}
+      [numberinput st]]
+     [:div {:style {:grid-column "3"
+                    :grid-row    "1/span 2"}}
+      [children st]]
+     [:div {:style {:grid-column "2"
+                    :grid-row    "1/span 2"}}
+      [adults st]]
+     [:div {:style {:grid-row    "1"
+                    :grid-column "1"}}
+      [moon st]]
+     [:div {:style {:grid-row    "2"
+                    :grid-column "1"}}
+      [havekey st]]
 
-       [:div
-        {:style {:grid-row       "4"
-                 :grid-column    "2/span 2"
-                 :padding-inline "var(--size-3)"
-                 :border-radius  "var(--radius-1)"
-                 :background     "var(--surface00)"
-                 :-box-shadow    "var(--inner-shadow-1)"}}
-        [:div.flex.items-center.h-full
-         {:style {:font-family "Inter"
-                  :font-weight 600
-                  :font-size   "var(--font-size-4)"}}
-         (if (:phone @st)
-           [:div.flex
-            {:style {:color "var(--surface4)"}}
-            (when (empty? (:phonenumber @st))
-              [:div.animate-blink.opacity-100 "|"])
-            [button-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
-            (when-not (empty? (:phonenumber @st))
-              [:div.animate-blink.opacity-100 "|"])]
-           [:div.flex
-            {:style {:color "var(--surface4)"}}
-            (when (empty? (:item @st))
-              [:div.animate-blink.opacity-100 "|"])
-            [button-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
-            (when-not (empty? (:item @st))
-              [:div.animate-blink.opacity-100 "|"])])]]
+     [:div
+      {:style {:grid-row       "4"
+               :grid-column    "2/span 2"
+               :padding-inline "var(--size-3)"
+               :border-radius  "var(--radius-1)"
+               :background     "var(--surface00)"
+               :-box-shadow    "var(--inner-shadow-1)"}}
+      [:div.flex.items-center.h-full
+       {:style {:font-family "Inter"
+                :font-weight 600
+                :font-size   "var(--font-size-4)"}}
+       (if (:phone @st)
+         [:div.flex
+          {:style {:color "var(--surface4)"}}
+          (when (empty? (:phonenumber @st))
+            [:div.animate-blink.opacity-100 "|"])
+          [button-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
+          (when-not (empty? (:phonenumber @st))
+            [:div.animate-blink.opacity-100 "|"])]
+         [:div.flex
+          {:style {:color "var(--surface4)"}}
+          (when (empty? (:item @st))
+            [:div.animate-blink.opacity-100 "|"])
+          [button-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
+          (when-not (empty? (:item @st))
+            [:div.animate-blink.opacity-100 "|"])])]]
 
-       [:div
-        {:style {:grid-row       "3"
-                 :grid-column    "2/span 3"
-                 :padding-inline "var(--size-2)"
-                 :display        :flex
-                 :align-items    :center
-                 :-border-radius "var(--radius-1)"
-                 :-background    "var(--surface00)"
-                 :-box-shadow    "var(--inner-shadow-0)"}}
-        (when (<= 3 (count (:item @st)))
-          (lookup (:item @st)))]
+     [:div
+      {:style {:grid-row       "3"
+               :grid-column    "1/span 4"
+               :padding-inline "var(--size-2)"
+               :display        :flex
+               :align-items    :center
+               :-border-radius "var(--radius-1)"
+               :-background    "var(--surface00)"
+               :-box-shadow    "var(--inner-shadow-0)"}}
+      (when (<= 3 (count (:item @st)))
+        (lookup (:item @st)))]
 
-       [:div.p-1
-        {:style {:grid-column           "1"
-                 :grid-row              "5/span 2"
-                 :border-radius         "var(--radius-1)"
-                 :background            "var(--surface00)"
-                 :gap                   "var(--size-1)"
-                 :display               :grid
-                 :grid-template-columns "1fr"
-                 :grid-template-rows    "repeat(3,1fr)"}}
-        (for [e (take 3 (sort (:list @st)))]
+     [:div.p-1
+      {:style {:grid-column           "1"
+               :grid-row              "5/span 2"
+               :border-radius         "var(--radius-1)"
+               :background            "var(--surface00)"
+               :gap                   "var(--size-1)"
+               :display               :grid
+               :grid-template-columns "1fr"
+               :grid-template-rows    "repeat(3,1fr)"}}
+      (for [e (take 3 (sort (:list @st)))]
+        [sc/badge
+         {:selected (and (= e (:selected @st)))
+          :on-click (fn [] (if (= e (:selected @st))
+                             (swap! st dissoc :selected
+                                    dissoc :item)
+                             (swap! st #(-> %
+                                            (assoc :selected e)
+                                            (assoc :item e)))))} e])]
+     [:div {:style {:grid-row    "4"
+                    :grid-column "1"}}
+      [delete st]]
+     [:div {:style {:grid-row    "4"
+                    :grid-column "4"}}
+      [add st]]
+     [:div {:style {:grid-row    "8"
+                    :grid-column "1"}}
+      [confirm st]]
+     [:div {:style {:grid-row    "7"
+                    :grid-column "1"}}
+      [restart st]]
+
+     (when (< 3 (count (:list @st)))
+       [:div.p-1 {:style {:grid-column           "1/span 4"
+                          :grid-row              "9/span 4"
+                          :border-radius         "var(--radius-1)"
+                          :background            "var(--surface00)"
+                          :gap                   "var(--size-1)"
+                          :display               :grid
+                          :grid-template-columns "repeat(4,1fr)"
+                          :grid-auto-rows        "2rem" #_"repeat(3,1fr)"}}
+        (for [e (drop 3 (sort (:list @st)))]
           [sc/badge
            {:selected (and (= e (:selected @st)))
             :on-click (fn [] (if (= e (:selected @st))
@@ -429,35 +471,4 @@
                                       dissoc :item)
                                (swap! st #(-> %
                                               (assoc :selected e)
-                                              (assoc :item e)))))} e])]
-       [:div {:style {:grid-row    "4"
-                      :grid-column "1"}}
-        [delete st]]
-       [:div {:style {:grid-row    "4"
-                      :grid-column "4"}}
-        [add st]]
-       [:div {:style {:grid-row    "8"
-                      :grid-column "1"}}
-        [confirm st]]
-       [:div {:style {:grid-row    "7"
-                      :grid-column "1"}}
-        [restart st]]
-
-       (when (< 3 (count (:list @st)))
-         [:div.p-1 {:style {:grid-column           "1/span 4"
-                            :grid-row              "9/span 4"
-                            :border-radius         "var(--radius-1)"
-                            :background            "var(--surface00)"
-                            :gap                   "var(--size-1)"
-                            :display               :grid
-                            :grid-template-columns "repeat(4,1fr)"
-                            :grid-auto-rows        "2rem" #_"repeat(3,1fr)"}}
-          (for [e (drop 3 (sort (:list @st)))]
-            [sc/badge
-             {:selected (and (= e (:selected @st)))
-              :on-click (fn [] (if (= e (:selected @st))
-                                 (swap! st dissoc :selected
-                                        dissoc :item)
-                                 (swap! st #(-> %
-                                                (assoc :selected e)
-                                                (assoc :item e)))))} e])])]]]))
+                                              (assoc :item e)))))} e])])]]])

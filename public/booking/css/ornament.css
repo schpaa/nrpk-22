@@ -661,3 +661,6 @@ body {
 .booking_boatinput__pad div{background:var(--surface0);aspect-ratio:1/1}.booking_boatinput__pad div{display:flex;justify-content:center;align-items:center}
 .booking_boatinput__button{width:100%;height:100%;display:grid;place-content:center;border-radius:var(--radius-1);color:var(--surface4)}.booking_boatinput__button:disabled{color:var(--surface0);xbackground:var(--surface00)}.booking_boatinput__button:active{background:var(--surface00)}
 .booking_boatinput__button_caption{font-family:Inter;font-size:var(--font-size-4);font-weight:var(--font-weight-6)}
+.booking_search__experiment3{color:var(--surface4)}
+.booking_search__experiment{border-radius:9999px;color:var(--surface4)}.booking_search__experiment:hover{background:var(--surface0)}
+.booking_search__experiment2{border-radius:9999px;color:var(--surface4)}.booking_search__experiment2:hover{color:var(--red-5)}
