@@ -31,7 +31,8 @@
    ["/conditions" {:name :r.conditions :header "Vilkår"}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
    ["/filer" {:name :r.fileman-temporary :header "Filer"}]
-   ["/kalender" {:name :r.calendar :header "Kalender"}]])
+   ["/kalender" {:name :r.calendar :header "Kalender"}]
+   ["/aktivitetsliste" {:name :r.aktivitetsliste :header "Aktivitetsliste"}]])
 
 (defn kee-start []
   (k/start! {:routes         routes,

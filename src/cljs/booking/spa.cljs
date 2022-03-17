@@ -552,5 +552,10 @@
        [page-boundary r
         {:whole [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]}]))
 
+   :r.aktivitetsliste
+   (fn [r]
+     [page-boundary r
+      {:whole [:div.p-4 "holy-moly"]}])
+
    :r.page-not-found
    (fn [r] [:div "?"])})

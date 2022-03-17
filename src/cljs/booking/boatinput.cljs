@@ -8,7 +8,8 @@
             [schpaa.icon :as icon]
             [schpaa.debug :as l]
             [schpaa.style.button2 :as scb2]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [re-frame.core :as rf]))
 
 (o/defstyled button-caption :div
   {:font-family "Inter"                                     ;"IBM Plex Sans"
@@ -282,19 +283,8 @@
                    #_(some? (:selected @st)))}
    (sc/icon-large [:> solid/XIcon])])
 
-(defn confirm [st]
-  (let [ok? (and (pos? (+ (:adults @st) (:children @st)))
-                 (pos? (count (:list @st)))
-                 (or (and (pos? (count (:item @st)))
-                          (some #{(:item @st)} (:list @st)))
-                     (empty? (:item @st))))]
-
-    [button
-     {:on-click #(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
-      :enabled  ok?
-      :style    (when ok? {:color      "white"
-                           :background "var(--green-5)"})}
-     (sc/icon-large [:> solid/CheckIcon])]))
+(defn- restart-command [st]
+  (reset! st nil))
 
 (defn restart [st]
   (let [ok? (or (pos? (+ (:adults @st) (:children @st)))
@@ -306,7 +296,7 @@
                  a (r/atom nil)
                  timer (r/atom nil)
                  ontimeout (fn [e]
-                             (when @timer (reset! st nil)))
+                             (when @timer (restart-command st)))
                  mousedown (fn [e]
                              (when ok? (reset! timer (js/setTimeout ontimeout 1100))))
 
@@ -343,6 +333,23 @@
                (.removeEventListener @a "touchstart" mousedown)
                (.removeEventListener @a "mouseup" mouseup)
                (.removeEventListener @a "touchend" mouseup)))))
+
+(defn confirm [st]
+  (let [ok? (and (pos? (+ (:adults @st) (:children @st)))
+                 (pos? (count (:list @st)))
+                 (or (and (pos? (count (:item @st)))
+                          (some #{(:item @st)} (:list @st)))
+                     (empty? (:item @st))))]
+
+    [button
+     {:on-click #(do
+                   (js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
+                   (rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])
+                   (restart-command st))
+      :enabled  ok?
+      :style    (when ok? {:color      "white"
+                           :background "var(--green-5)"})}
+     (sc/icon-large [:> solid/CheckIcon])]))
 
 (defn lookup [id]
   (if (< 3 (count id))

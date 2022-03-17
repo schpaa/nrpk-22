@@ -118,7 +118,7 @@
             [scb2/normal-small "Logg in"])]]]]))
 
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom true)
+  (r/with-let [mainmenu-visible (r/atom false)
                numberinput-visible (rf/subscribe [:lab/number-input])]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
           toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
