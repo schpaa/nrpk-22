@@ -65,8 +65,8 @@
                  :label      "Båtoversikt"
                  :shortcut   "ctrl-b"
                  :color      "var(--booking-oversikt)"
-                 :highlight  (= :r.oversikt current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+                 :highlight  (= :r.booking.oversikt current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
                  :disabled   false
                  :value      #()}]
 
@@ -81,8 +81,8 @@
      [:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
                  :label      "Retningslinjer"
                  :color      "var(--blue-4)"
-                 :highlight  (= :r.retningslinjer current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.retningslinjer]])
+                 :highlight  (= :r.booking.retningslinjer current-page)
+                 :action     #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
                  :disabled   false
                  :value      #()}]
      [:hr]
@@ -123,14 +123,15 @@
                numberinput-visible (rf/subscribe [:lab/number-input])]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
           toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
-      [:<>
+      [:div.relative.z-100
        ;[l/ppre-x @numberinput-visible]
        (if @numberinput-visible
-         [:div.absolute.w-64.z-100
-          {:style {:right "28px"
-                   :top   "var(--size-2)"}}
+         [:div.absolute.right-0                             ;.w-64x.inset-yx.my-auto.h-96
+          #_{:style {:left    "-270px"                      ;"28px"
 
-          [scm/mainmenu-items-rounded-very
+                     :xbottom "-320px"}}                    ;   "var(--size-2)"}}
+
+          [scm/boatinput-panel
            [booking.boatinput/sample]]]
          #_[scm/numberinput
             {:showing      true

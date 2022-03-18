@@ -16,6 +16,8 @@
     --radius-2: 8px;
     --radius-3: 14px;
 
+    --font-letterspacing-0: -0.02em;
+    
 /* greenish
  --gray-0: #F5FEFE;
  --gray-1: #D7FCFA;
@@ -27,20 +29,6 @@
  --gray-7: #096538;
  --gray-8: #053A1D;
  --gray-9: #011007;
-
-
-    --gray-0: #fafaf9;
-    --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;
-    --gray-3: #d6d3d1;
-    --gray-4: #a8a29e;
-    --gray-5: #78716c;
-    --gray-6: #57534e;
-    --gray-7: #44403c;
-    --gray-8: #292524;
-
-
-*/
 
 
 
@@ -58,6 +46,22 @@
 
 
 
+*/
+
+    --gray-0: #fafaf9;
+    --gray-1: #f5f5f4;
+    --gray-2: #e7e5e4;
+    --gray-3: #d6d3d1;
+    --gray-4: #a8a29e;
+    --gray-5: #78716c;
+    --gray-6: #57534e;
+    --gray-7: #44403c;
+    --gray-8: #292524;
+
+
+
+
+
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
@@ -68,17 +72,19 @@
    --brand1-dim: var(--green-4);
    --brand2-dim: var(--green-1);
 
-   --text1-dim: var(--gray-2);
-   --text2-dim: var(--gray-4);
-   --text3-dim: var(--gray-5);
+
+
+   --text1-dim: var(--gray-3);
+   --text2-dim: var(--gray-3);
+   --text3-dim: var(--gray-4);
    --label-dim: var(--green-5);
 
    --surface000-dim: var(--gray-9);
-   --surface00-dim: var(--gray-8);
-   --surface0-dim: var(--gray-7);
-   --surface1-dim: var(--gray-6); /* surface-background of entities and elements */
+   --surface00-dim: black; /*var(--gray-9);*/
+   --surface0-dim: var(--gray-9); /* var(--gray-7); */
+   --surface1-dim: var(--gray-5); /* surface-background of entities and elements */
    --surface2-dim: var(--gray-6); /* content-background of slidein menu, can contain entities and elements */
-   --surface3-dim: var(--gray-5); /* surface-background of slidein menu, contains the content above */
+   --surface3-dim: var(--gray-3); /* surface-background of slidein menu, contains the content above */
    --surface4-dim: var(--gray-4);
    --surface5-dim: var(--gray-3);
 
@@ -94,10 +100,14 @@
 
    --brand000-light: var(--green-1);
    --brand00-light: var(--green-2);
-   --brand0-light: hsl(200, 39%, 90% ); /* var(--green-3); */
-   --brand1o-light: hsla(200, 39%, 50%,0.05);
-   --brand1-light: hsl(200, 39%, 50% );
-   --brand2-light: hsl(200, 39%, 30% );
+   --brand0-light: hsl(150, 39%, 90% ); /* var(--green-3); */
+   --brand1o-light: hsla(150, 39%, 50%,0.05);
+   --brand1-light: hsl(150, 39%, 40%);
+   --brand2-light: hsl(150, 39%, 30%);
+
+   --brand1-dim: hsl(100, 39%, 50%);
+   --buttoncta0-dim: hsl(100, 39%, 5%);
+   --buttoncta1-dim: hsl(100, 39%, 50%);
 
    --text1-light: var(--gray-8);
    --text2-light: var(--gray-7);
@@ -192,6 +202,11 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
+
+    --font-weight-1: var(--font-weight-3);
+    --font-weight-2: var(--font-weight-4);
+    --font-weight-3: var(--font-weight-5);
+
    --brand000: var(--brand000-dim);
    --brand00: var(--brand00-dim);
    --brand0: var(--brand0-dim);

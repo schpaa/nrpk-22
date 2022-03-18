@@ -1,8 +1,6 @@
 (ns booking.content.blog-support
   (:require [reagent.core :as r]
-            [schpaa.debug :as l]
-            [schpaa.modal.readymade :as readymade]
-            [db.core :as db]))
+            [schpaa.debug :as l]))
 
 (defn err-boundary
   [& children]
@@ -16,12 +14,3 @@
                                 (into [:<>] children)
                                 (let [[_ info] @err-state]
                                   [l/ppre-x info])))})))
-
-;temp located
-
-(defn confirmed [msg]
-  (fn [_ _] (readymade/popup {:dialog-type :message
-                              :flags       #{:popup :short-timeout}
-                              :content     msg})))
-
-                           

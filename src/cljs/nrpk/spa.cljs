@@ -234,40 +234,40 @@
         route-name (rf/subscribe [:app/route-name])
         route @(rf/subscribe [:kee-frame/route])
         logged-in (some? @user-auth)
-        data [(when logged-in
-                {:login      true
-                 :route-name :r.user
-                 :icon       [:> solid/UserCircleIcon]
-                 :text       "meg"})
-              (when-not logged-in {:login false :route-name :r.welcome :icon [:> solid/LoginIcon] :text "login"})
-              (when-not logged-in :space)
-              (when logged-in {:login true :route-name :r.new-booking :icon [:> solid/PlusIcon] :text "ny"})
-              ;(when logged-in {:login true :route-name :r.forsiden :icon [:> solid/TicketIcon] :text "siste"})
-              {:login true :route-name :r.booking-blog :icon [:> solid/NewspaperIcon] :text "info" :badge "1"}
-              ;{:login true :route-name :r.logg :icon [:> solid/ViewListIcon] :text "logg"}
-              ;:space
-              {:login true :route-name :r.debug :icon [:> outline/BeakerIcon] :text "lab"}
-              :grow
-              {:login false :route-name :r.welcome :icon (schpaa.icon/adapt :command 3) :text "hjelp"}]
+        #_#_data [(when logged-in
+                    {:login      true
+                     :route-name :r.user
+                     :icon       [:> solid/UserCircleIcon]
+                     :text       "meg"})
+                  (when-not logged-in {:login false :route-name :r.welcome :icon [:> solid/LoginIcon] :text "login"})
+                  (when-not logged-in :space)
+                  (when logged-in {:login true :route-name :r.new-booking :icon [:> solid/PlusIcon] :text "ny"})
+                  ;(when logged-in {:login true :route-name :r.forsiden :icon [:> solid/TicketIcon] :text "siste"})
+                  {:login true :route-name :r.booking-blog :icon [:> solid/NewspaperIcon] :text "info" :badge "1"}
+                  ;{:login true :route-name :r.logg :icon [:> solid/ViewListIcon] :text "logg"}
+                  ;:space
+                  {:login true :route-name :r.debug :icon [:> outline/BeakerIcon] :text "lab"}
+                  :grow
+                  {:login false :route-name :r.welcome :icon (schpaa.icon/adapt :command 3) :text "hjelp"}]
 
-        tab (fn [d]
-              (cond
-                (= :grow d) [:div.flex-grow]
-                (= :space d) [:div.h-4]
-                :else (when-let [{:keys [badge login icon text route-name]} d]
-                        [:div.relative
-                         (nicer-tab'
-                           {:available  (or (not login) (and login (some? @user-auth))) ;(or (not (or login (some? @user-auth))))
-                            :icon       icon
-                            :text       text
-                            :route-name route-name
-                            :selected   (= route-name (-> route :data :name))})
-                         (when (some? badge)
-                           [:div.absolute.top-px.left-px
-                            [:div.rounded-full.bg-white.text-black
-                             [:div.flex.items-center.justify-center.h-6.text-base.font-medium.font-oswald
-                              {:style {:aspect-ratio "1/1"}}
-                              badge]]])])))
+        #_#_tab (fn [d]
+                  (cond
+                    (= :grow d) [:div.flex-grow]
+                    (= :space d) [:div.h-4]
+                    :else (when-let [{:keys [badge login icon text route-name]} d]
+                            [:div.relative
+                             (nicer-tab'
+                               {:available  (or (not login) (and login (some? @user-auth))) ;(or (not (or login (some? @user-auth))))
+                                :icon       icon
+                                :text       text
+                                :route-name route-name
+                                :selected   (= route-name (-> route :data :name))})
+                             (when (some? badge)
+                               [:div.absolute.top-px.left-px
+                                [:div.rounded-full.bg-white.text-black
+                                 [:div.flex.items-center.justify-center.h-6.text-base.font-medium.font-oswald
+                                  {:style {:aspect-ratio "1/1"}}
+                                  badge]]])])))
 
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute body "class" "font-sans")

@@ -39,7 +39,6 @@
             [goog.style :as gs]
             [booking.aktivitetsliste]))
 
-
 ;region related to flex-date and how to display relative time
 
 (rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
@@ -255,6 +254,27 @@
     [sc/subtext {:class [:line-clamp-3 :grow]} a]
     #_[sc/text c]]))
 
+(defn error-page [r]
+  ;[:div "error"]
+  [page-boundary r
+   [sc/col {:class [:p-1 :space-y-4 :mx-auto :max-w-xs :sm:max-w-md]}
+    [:div.animate-pulse
+     {:style {:display       :grid
+              :min-height    "25vh"
+              :place-content :center
+              :font-size     "var(--font-size-7)"
+              :font-family   "IBM Plex Sans"}}
+     [:div.relative.w-24.h-24
+      [:div.absolute.rounded-full.-inset-1.blur
+       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                :sgroup-hover:-inset-1 :duration-500]}]
+      [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
+
+    [sc/text "Finner ikke noe på denne adressen! Det er sikkert bare en gammel lenke. Kanskje du finner det du leter etter i denne listen?"]
+    (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
+                                 (sort-by :name < schpaa.style.combobox/commands)]
+                             [:div [sc/subtext-with-link {:on-click action} name]]))]])
+
 (def routing-table
   {:r.welcome
    (fn [r]
@@ -266,33 +286,11 @@
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundary r
-        [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
-         ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
-         ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
-         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
-         #_(let [el (-> js/document.documentElement .-style)
-                 prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
+        {:whole [:iframe.w-full.h-screen
+                 {:src "https://nrpk.no"}]}
+        [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}]]))
 
-             [:<>
-              [scb/button-cta {:on-click #(let [p (prop)]
-                                            (.setProperty el "--brand1" p)
-                                            (.setProperty el "--buttoncta1" p))} "Randomize color"]])
-         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
-         [:div
-          (-> "./frontpage1.md"
-              inline
-              schpaa.markdown/md->html
-              sc/markdown)]
-         [sc/row-end
-          [scb2/cta-large
-           {:type "button" :on-click open-dialog-signin}
-           "Begynn her"]]]
-
-
-        ;[db.signin/login]]
-        #_[:div [content.overview/overview]]]))
-
-   :r.oversikt
+   :r.booking.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundary r
@@ -502,7 +500,7 @@
      [page-boundary r
       (-> (inline "./content/plikter-som-vakt.md") schpaa.markdown/md->html sc/markdown)])
 
-   :r.retningslinjer
+   :r.booking.retningslinjer
    (fn [r]
      [page-boundary r
       (-> (inline "./content/retningslinjer.md") schpaa.markdown/md->html sc/markdown)])
@@ -551,12 +549,54 @@
    (fn [r]
      (let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})]
        [page-boundary r
-        {:whole [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]}]))
+        [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]]))
 
    :r.aktivitetsliste
    (fn [r]
      [page-boundary r
-      {:whole [booking.aktivitetsliste/render r]}])
+      [:div
+       [:div.-debugx.select-none [booking.common-views/header-control-panel]]
+       [booking.aktivitetsliste/render r]]])
+
+   :r.booking.faq
+   (fn [r]
+     [page-boundary r
+      (-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown)])
+
+   :r.booking
+   (fn [r]
+     (let [user-auth (rf/subscribe [::db/user-auth])]
+       [page-boundary r
+        [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
+         ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
+         ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
+         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
+         #_(let [el (-> js/document.documentElement .-style)
+                 prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
+
+             [:<>
+              [scb/button-cta {:on-click #(let [p (prop)]
+                                            (.setProperty el "--brand1" p)
+                                            (.setProperty el "--buttoncta1" p))} "Randomize color"]])
+         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
+         [:div
+          (-> "./frontpage1.md"
+              inline
+              schpaa.markdown/md->html
+              sc/markdown)]
+         [sc/row-end
+          [scb2/cta-large
+           {:type "button" :on-click open-dialog-signin}
+           "Begynn her"]]]
+
+
+        ;[db.signin/login]]
+        #_[:div [content.overview/overview]]]))
+   #_(fn [r]
+       [page-boundary r
+        [:div "base page for booking/sjøbasen"]
+        #_(-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown)])
 
    :r.page-not-found
-   (fn [r] [:div "?"])})
+   error-page})
+
