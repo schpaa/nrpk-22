@@ -39,7 +39,6 @@
     (reset! a el)
     #_(when el (.focus el))))
 
-
 ;region number-input
 
 (rf/reg-event-db :lab/toggle-number-input (fn [db]
@@ -101,7 +100,6 @@
         :button       (fn [open]
                         [scb/round-mainpage {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
-;-[ ] todo: [:space] for extra space
 (defn vertical-toolbar [uid]
   [{:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
@@ -140,9 +138,7 @@
     :special     true
     :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                           (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
-    :on-click    schpaa.style.dialog/open-selector
-    :xpage-name  :r.debug}
-
+    :on-click    schpaa.style.dialog/open-selector}
    {:tall-height true
     :icon-fn     (fn [] (let [st (rf/subscribe [:lab/number-input])]
                           (if @st solid/CalculatorIcon outline/CalculatorIcon)))
@@ -150,13 +146,16 @@
     :on-click    #(rf/dispatch [:lab/toggle-number-input])}])
 
 (defn horizontal-toolbar [uid]
-  [{:icon      solid/HomeIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :page-name :r.forsiden}
+  [{:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                       (if @st solid/CalculatorIcon outline/CalculatorIcon)))
+    :special  true
+    :on-click #(rf/dispatch [:lab/toggle-number-input])}
+
    {:icon      solid/UserCircleIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
-   {:icon      solid/LightningBoltIcon
+   {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
+                        (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
     :special   true
     :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
     :page-name :r.debug}
@@ -164,9 +163,13 @@
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
     :badge     #(booking.content.booking-blog/count-unseen uid)
     :page-name :r.booking-blog}
-   {:icon      solid/ClockIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-    :page-name :r.booking.oversikt}])
+   #_{:icon      solid/ClockIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
+      :page-name :r.booking.oversikt}
+   {:icon      solid/HomeIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+    :page-name :r.forsiden}])
+
 
 (def active-style {:border-radius "var(--radius-round)"
                    :padding       "var(--size-2)"
@@ -219,7 +222,7 @@
    [:<>
     [:div.flex.items-center.justify-center badge]]))
 
-(defn horizontal-button [{:keys [special icon on-click style page-name badge] :or {style {}}}]
+(defn horizontal-button [{:keys [icon-fn special icon on-click style page-name badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     [:div.w-full.h-full.flex.items-center.justify-center.relative
      {:on-click on-click}
@@ -228,7 +231,13 @@
          (when (pos? b) [top-right-tight-badge b])))
      [vert-button {:active (= page-name current-page)
                    :style  style}
-      [sc/icon-large {:style (if special {:color "var(--brand1)"})} [:> icon]]]]))
+      (if icon-fn
+        [sc/icon-large
+         {:style (if special {:color "var(--brand1)"})}
+         [:> (icon-fn)]]
+        [sc/icon-large
+         {:style (if special {:color "var(--brand1)"})}
+         [:> icon]])]]))
 
 (defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
@@ -263,8 +272,6 @@
     (some-> (reitit/match-by-name (reitit/router booking.routes/routes) :r.forsiden)
             :data :header)))
 
-
-
 (defn compute-page-titles [r]
   (let [path-fn (some-> r :data :path-fn)
         page-title (-> r :data :header)]
@@ -282,7 +289,6 @@
 (comment
   (do
     (compute-page-titles {:data {:header ["stuff"]}})))
-
 
 (o/defstyled result-item :div
   {:display        :flex
@@ -321,6 +327,8 @@
       ;[:div (.-protocol js/window.location)]
       #_[:a {:href path} path]])))
 
+;region header-control-panel related
+
 (defn chevron-updown-toggle [st toggle]
   [sc/dim [scb/round-floating
            {:on-click #(do
@@ -329,7 +337,7 @@
            [sc/icon-tiny
             [:> (if st outline/ChevronUpIcon outline/ChevronDownIcon)]]]])
 
-(def preferred-state (r/atom true) #_(reagent.ratom/make-reaction #(= true #_(get @state :a))))
+(def preferred-state (r/atom true))
 
 (defn header-control-panel []
   (r/with-let [toggle (schpaa.state/listen :header-activity)
@@ -373,80 +381,7 @@
            [sc/subtext "Se skjulte"]]]]]
      (when @toggle [:hr])]))
 
-(comment
-  (defonce state (r/atom {:a false}))
-  (defonce ctrl (reagent.ratom/make-reaction #(or (get-in @state [:a]) "---")))
-
-  (defn handle-fx [event]
-    ;(tap> {:event event})
-    (swap! state update :a (fnil not false)))
-
-  (defonce _
-           (do
-             (def ch (chan))
-             (go-loop []
-                      (let [event (<! ch)]
-                        (handle-fx event)
-                        (recur)))
-             #_(go-loop []
-                        (<! (timeout 1000))
-                        (>! ch 3)
-                        (<! (timeout 2000))
-                        (>! ch 2)
-                        (recur))))
-
-  (def preferred-state (reagent.ratom/make-reaction #(= true (get @state :a))))
-
-  (defn chevron-updown-toggle [st toggle]
-    [sc/dim [scb/round-floating
-             {:on-click #(do
-                           (.stopPropagation %)
-                           (toggle))}
-             [sc/icon-tiny
-              [:> (if st outline/ChevronUpIcon outline/ChevronDownIcon)]]]])
-
-  (defn header-control-panel []
-    (r/with-let [do-toggle #(put! ch :signal (fn [ev] (tap> ["just did" ev])))
-                 show-archived (r/atom false)]
-      [sc/col {:style {:padding-block    "var(--size-1)"
-                       :padding-inline   "var(--size-2)"
-                       ;:border-radius    "var(--radius-1)"
-                       ;:box-shadow       (when @preferred-state "var(--inner-shadow-2)")
-                       :background-color (when @preferred-state "var(--surface000)")}}
-       [sc/row'                                             ;:div.flex.justify-between.items-center
-        {:on-click #(do
-                      (do-toggle)
-                      (.stopPropagation %))
-         :class    [:x-debug]
-         :style    {:padding "var(--size-1)"}}
-        [sc/dim [sc/small {:style {;:font-family    "montserrat"
-                                   :letter-spacing "var(--font-letterspacing-2)"
-                                   :text-transform :uppercase
-                                   :font-weight    "var(--font-weight-6)"}} "Visningsvalg"]]
-        (chevron-updown-toggle @preferred-state do-toggle)]
-       [:div {:class (into [:duration-200] (if @preferred-state [:h-24 :opacity-100] [:pointer-events-none :h-0 :opacity-0]))}
-        [sc/col-space-2
-
-         [sc/col {:class [:space-y-2]}
-          #_[sc/row' {:class [:items-center]}
-             [schpaa.style.switch/small-switch-example
-              {:!value  show-archived
-               :caption [sc/subtext "Vis arkiverte"]}]]
-
-          [sc/row' {:class [:items-center]}
-           [schpaa.style.switch/small-switch-example
-            {:!value  show-archived
-             :caption [sc/subtext "Vis skjulte"]}]]]
-         [sc/dim
-          [sc/row-stretch
-           [sc/subtext "Se innhold"]
-           [sc/subtext "Se slettede"]
-           [sc/subtext "Se skjulte"]]]]]
-       ;[sc/subtext "Som en liste"]
-       ;[sc/subtext "Som blokker i et rutenett"]
-       ;[sc/subtext "Alle poster ekspandert"]]]
-       #_[sc/markdown [:code "Some options here"]]
-       (when @preferred-state [:hr])])))
+;endregion
 
 (defn page-boundary [r & c]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -462,130 +397,114 @@
            (.focus el)))
        :reagent-render
        (fn [r & c]
-         (let [page-title (-> r :data :header)]
-
-           [err-boundary
-
-            ;region modal dialog
-            [schpaa.style.dialog/modal-generic
-             {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
-              :vis     (rf/subscribe [:lab/modal-example-dialog2])
-              :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
-            ;endregion
-
-            ;region add-selector
-            [schpaa.style.dialog/modal-selector
-             {:context @(rf/subscribe [:lab/modal-selector-extra])
-              :vis     (rf/subscribe [:lab/modal-selector])
-              :close   #(rf/dispatch [:lab/modal-selector false])}]
-            ;endregion
-
-
-
-            [:div.fixed.inset-0.flex
-
-             [boatinput-menu]
-             ;vertical toolbar
-             (when @has-chrome?
-               [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-                {:style {:padding-top  "var(--size-0)"
-                         :box-shadow   "var(--inner-shadow-3)"
-                         :border-color "var(--surface0)"
-                         :background   "var(--surface00)"}}
-                (into [:<>] (map #(if (nil? %)
-                                    [:div.grow]
-                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
-             [:div.flex-col.flex.h-full.w-full
-
-              ;header
-              (let [st (schpaa.state/listen :top-toggle)
-                    toggle #(schpaa.state/toggle :top-toggle)]
-                [sc/col {:class [:border-b :duration-200]
-                         :style {:background   "var(--surface00)"
-                                 :border-color "var(--surface0)"}}
-                 [:div.h-16.flex.items-center.w-full.px-4.shrink-0.truncates
-                  [sc/row-std
-                   (when-not @(rf/subscribe [:lab/in-search-mode?])
-                     (let [titles (compute-page-titles r)]
+         [err-boundary
+          ;region modal dialog
+          [schpaa.style.dialog/modal-generic
+           {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
+            :vis     (rf/subscribe [:lab/modal-example-dialog2])
+            :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
+          ;endregion
+          ;region add-selector
+          [schpaa.style.dialog/modal-selector
+           {:context @(rf/subscribe [:lab/modal-selector-extra])
+            :vis     (rf/subscribe [:lab/modal-selector])
+            :close   #(rf/dispatch [:lab/modal-selector false])}]
+          ;endregion
+          [:div.fixed.inset-0.flex
+           [boatinput-menu]
+           ;vertical toolbar
+           (when @has-chrome?
+             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+              {:style {:padding-top  "var(--size-0)"
+                       :box-shadow   "var(--inner-shadow-3)"
+                       :border-color "var(--surface0)"
+                       :background   "var(--surface00)"}}
+              (into [:<>] (map #(if (nil? %)
+                                  [:div.grow]
+                                  [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
+           [:div.flex-col.flex.h-full.w-full
+            ;header
+            (let [st (schpaa.state/listen :top-toggle)
+                  toggle #(schpaa.state/toggle :top-toggle)]
+              [sc/col {:class [:border-b :duration-200]
+                       :style {:background   "var(--surface00)"
+                               :border-color "var(--surface0)"}}
+               [:div.h-16.flex.items-center.w-full.px-4.shrink-0.truncates
+                [sc/row-std
+                 (when-not @(rf/subscribe [:lab/in-search-mode?])
+                   (let [titles (compute-page-titles r)]
+                     [:<>
+                      [:div.hidden.sm:block.grow
                        [:<>
-                        [:div.hidden.sm:block.grow
-                         [:<>
-                          ;[l/ppre-x title (vector? title)]
-                          (if (vector? titles)
-                            [:div.flex.items-center.gap-1
-                             (interpose [:div.text-2xl.opacity-20 "/"]
-                                        (for [[idx e] (map-indexed vector titles)
-                                              :let [last? (= idx (dec (count titles)))]]
-                                          (if last?
-                                            [sc/title e]
-                                            (let [{:keys [text link]} e]
-                                              [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
-                            [sc/title titles])]]
-                        [:div.xs:block.sm:hidden.grow
-                         (if (vector? titles)
-                           [sc/col-space-1
-                            (when (< 1 (count titles))
-                              (let [{:keys [text link]} (first titles)]
-                                [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))
-                            [sc/title (last titles)]]
-                           [sc/col
-                            [sc/title titles]])]]))
+                        ;[l/ppre-x title (vector? title)]
+                        (if (vector? titles)
+                          [:div.flex.items-center.gap-1
+                           (interpose [:div.text-2xl.opacity-20 "/"]
+                                      (for [[idx e] (map-indexed vector titles)
+                                            :let [last? (= idx (dec (count titles)))]]
+                                        (if last?
+                                          [sc/title e]
+                                          (let [{:keys [text link]} e]
+                                            [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
+                          [sc/title titles])]]
+                      [:div.xs:block.sm:hidden.grow
+                       (if (vector? titles)
+                         [sc/col-space-1
+                          (when (< 1 (count titles))
+                            (let [{:keys [text link]} (first titles)]
+                              [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))
+                          [sc/title (last titles)]]
+                         [sc/col
+                          [sc/title titles]])]]))
 
-                   [search-menu]
-                   [main-menu]]]])
+                 [search-menu]
+                 [main-menu]]]])
+            [:div.overflow-y-auto.h-full.focus:outline-none
+             {:style     {:background "var(--surface000)"}
+              :id        "inner-document"
+              :tab-index "0"}
+             (if @(rf/subscribe [:lab/is-search-running?])
+               ;searchmode
+               [:div.h-full
+                {:style {:background "var(--surface2)"}}
+                [search-result]
+                [:div.absolute.bottom-24.sm:bottom-7.right-4
+                 [sc/row-end {:class [:pt-4]}
+                  (bottom-menu)]]]
+               ;content
 
+               [:div
+                (cond
+                  (map? (first c))
+                  (:whole (first c))
+                  :else
+                  [:div.h-full
+                   [:div.xmax-w-lg.py-4.space-y-4.px-4
+                    {:class :mx-auto}
+                    #_{:class (if @(rf/subscribe [:lab/number-input])
+                                :mr-auto
+                                :mx-auto)}
 
-              [:div.overflow-y-auto.h-full.focus:outline-none
-               {:style     {:background "var(--surface000)"}
-                :id        "inner-document"
-                :tab-index "0"}
-               (if @(rf/subscribe [:lab/is-search-running?])
-                 ;searchmode
-                 [:div.h-full
-                  {:style {:background "var(--surface2)"}}
-                  [search-result]
-                  [:div.absolute.bottom-24.sm:bottom-7.right-4
-                   [sc/row-end {:class [:pt-4]}
-                    (bottom-menu)]]]
-                 ;content
+                    [:div.flex.w-full.justify-between
+                     ;[:div "X"]
+                     [:div.growx.mx-auto c]
+                     (when (not mobile?)
+                       [:div.duration-200.delay-200.shrink-0 {:class [(if @numberinput? :w-64 :w-0)]}])]
 
-                 [:div
-                  (cond
-                    (map? (first c))
-                    (:whole (first c))
-                    :else
-                    [:div.h-full
-                     [:div.xmax-w-lg.py-4.space-y-4.px-4
-                      {:class :mx-auto}
-                      #_{:class (if @(rf/subscribe [:lab/number-input])
-                                  :mr-auto
-                                  :mx-auto)}
+                    [:div.py-8.h-32]
+                    [:div.absolute.right-4
+                     {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
+                     [sc/row-end {:class [:pt-4]}
+                      (bottom-menu)]]]])
+                #_[l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
+                                    :kee-frame/route
+                                    :re-pressed.core/keydown)]])]
 
-                      [:div.flex.w-full.justify-between
-                       ;[:div "X"]
-                       [:div.growx.mx-auto c]
-                       (when (not mobile?)
-                         [:div.duration-200.delay-200.shrink-0 {:class [(if @numberinput? :w-64 :w-0)]}])]
-
-                      [:div.py-8.h-32]
-                      [:div.absolute.right-4
-                       {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
-                       [sc/row-end {:class [:pt-4]}
-                        (bottom-menu)]]]])
-                  #_[l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
-                                      :kee-frame/route
-                                      :re-pressed.core/keydown)]])]
-
-              ;horizontal toolbar
-              (when @has-chrome?
-                [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
-                 {:style {:box-shadow   "var(--inner-shadow-3)"
-                          :border-color "var(--surface0)"
-                          :background   "var(--surface00)"}}
-                 (into [:<>] (map horizontal-button
-                                  (horizontal-toolbar (:uid @user-auth))))])]]]))})))
-
-
-
-;region :app/toggle-config
-
+            ;horizontal toolbar
+            (when @has-chrome?
+              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
+               {:style {:box-shadow   "var(--inner-shadow-3)"
+                        :border-color "var(--surface0)"
+                        :background   "var(--surface00)"}}
+               (into [:<>] (map horizontal-button
+                                (horizontal-toolbar (:uid @user-auth))))])]]])})))

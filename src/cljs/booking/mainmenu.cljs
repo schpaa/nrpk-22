@@ -124,8 +124,9 @@
 (defn boatinput-menu []
   (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])
                mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
-    [:div.absolute.inset-0.pointer-events-none
-     {:style {:z-index 100}}
+    [:div.absolute.inset-0x.w-auto.inset-x-0.pointer-events-none
+     {:style {:z-index     1
+              :xbackground "red"}}
      [headlessui-reagent.core/transition
       (conj
         {:show (or @numberinput-visible false)}
@@ -145,18 +146,20 @@
            :leave-from "opacity-100 translate-x-0"
            :leave-to   "opacity-0 translate-x-full"}))
       [:div.h-screen
-       {:style (if mobile?
-                 {:display       :grid
-                  :align-content :end}
-                 {:display         :grid
-                  :justify-content :end
-                  :align-content   :center})}
+       {:style (conj {:z-index 1000}
+                     (if mobile?
+                       {:display       :grid
+                        :align-content :end}
+                       {:display         :grid
+                        :justify-content :end
+                        :align-content   :center}))}
        [:div.pointer-events-auto
-        {:style (if mobile? {:xpadding-block "var(--size-4)"
-                             :overflow-y     :auto}
-                            {:overflow-y      :auto
-                             :padding-block   :1rem
-                             :spadding-inline "var(--size-4)"})}
+        {:style (conj
+                  (if mobile? {:xpadding-block "var(--size-4)"
+                               :overflow-y     :auto}
+                              {:overflow-y      :auto
+                               :padding-block   :1rem
+                               :spadding-inline "var(--size-4)"}))}
         [(if mobile? scm/boatinput-panel-from-bottom scm/boatinput-panel-from-right)
          [booking.boatinput/sample]]]]]]))
 

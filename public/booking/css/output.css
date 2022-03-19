@@ -1406,6 +1406,13 @@ Ensure the default browser behavior of the `hidden` attribute.
   left: -0.5rem;
 }
 
+.inset-10 {
+  top: 2.5rem;
+  right: 2.5rem;
+  bottom: 2.5rem;
+  left: 2.5rem;
+}
+
 .inset-x-0 {
   left: 0px;
   right: 0px;
