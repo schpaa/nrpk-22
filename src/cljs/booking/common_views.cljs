@@ -119,6 +119,7 @@
    nil
    {:tall-height true
     :icon        solid/FolderIcon
+
     :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
     #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
@@ -126,10 +127,16 @@
 
    {:tall-height true
     :special     true
-    :icon        solid/LightningBoltIcon
+    :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
+                          (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
     :on-click    schpaa.style.dialog/open-selector
-    ;:color     "red"
-    :xpage-name  :r.debug}])
+    :xpage-name  :r.debug}
+
+   {:tall-height true
+    :icon-fn     (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                          (if @st solid/CalculatorIcon outline/CalculatorIcon)))
+    :special     true
+    :on-click    #(rf/dispatch [:lab/toggle-number-input])}])
 
 (defn horizontal-toolbar [uid]
   [{:icon      solid/HomeIcon
@@ -212,7 +219,7 @@
                    :style  style}
       [sc/icon-large {:style (if special {:color "var(--brand1)"})} [:> icon]]]]))
 
-(defn vertical-button [{:keys [tall-height special icon style on-click page-name color badge] :or {style {}}}]
+(defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     [:div.w-full.flex.items-center.justify-center.relative
      {:on-click on-click
@@ -223,7 +230,13 @@
          [top-left-badge b]))
      [vert-button {:active (= page-name current-page)
                    :style  (conj style (when (= page-name current-page) {:color color}))}
-      [sc/icon-large {:style (if special {:color "var(--brand1)"})} [:> icon]]]]))
+      (if icon-fn
+        [sc/icon-large
+         {:style (if special {:color "var(--brand1)"})}
+         [:> (icon-fn)]]
+        [sc/icon-large
+         {:style (if special {:color "var(--brand1)"})}
+         [:> icon]])]]))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
