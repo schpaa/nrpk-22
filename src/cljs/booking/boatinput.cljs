@@ -419,7 +419,7 @@
 (defn sample []
   (let [keydown-f (fn [event]
                     (tap> event)
-                    (.stopPropagation event)
+                    ;(.stopPropagation event)
                     (let [kc (.-keyCode event)]
                       (tap> kc)
                       (cond

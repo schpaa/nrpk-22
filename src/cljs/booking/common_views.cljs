@@ -27,7 +27,7 @@
             [booking.fileman]
             [schpaa.icon :as icon]
             [booking.boatinput]
-            [booking.mainmenu :refer [main-menu]]
+            [booking.mainmenu :refer [main-menu boatinput-menu]]
             [booking.search :refer [search-menu]]
             [schpaa.debug :as l]
             [kee-frame.core :as k]
@@ -42,6 +42,9 @@
 
 
 ;region number-input
+
+(rf/reg-event-db :lab/toggle-number-input (fn [db]
+                                            (update db :lab/number-input (fnil not false))))
 
 (rf/reg-event-db :lab/open-number-input (fn [db]
                                           (assoc db :lab/number-input true)))
@@ -423,6 +426,8 @@
 
 (defn page-boundary [r & c]
   (let [user-auth (rf/subscribe [::db/user-auth])
+        mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
+        numberinput? (rf/subscribe [:lab/number-input])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (r/create-class
       {:display-name "booking-page-boundary"
@@ -451,8 +456,11 @@
               :close   #(rf/dispatch [:lab/modal-selector false])}]
             ;endregion
 
+
+
             [:div.fixed.inset-0.flex
 
+             [boatinput-menu]
              ;vertical toolbar
              (when @has-chrome?
                [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
@@ -498,6 +506,7 @@
                             [sc/title (last titles)]]
                            [sc/col
                             [sc/title titles]])]]))
+
                    [search-menu]
                    [main-menu]]]])
 
@@ -522,16 +531,26 @@
                     (:whole (first c))
                     :else
                     [:div.h-full
-                     [:div.max-w-lg.py-4.space-y-4.px-4
-                      {:class (if @(rf/subscribe [:lab/number-input])
-                                :mr-auto
-                                :mx-auto)}
-                      c
+                     [:div.xmax-w-lg.py-4.space-y-4.px-4
+                      {:class :mx-auto}
+                      #_{:class (if @(rf/subscribe [:lab/number-input])
+                                  :mr-auto
+                                  :mx-auto)}
+
+                      [:div.flex.w-full.justify-between
+                       ;[:div "X"]
+                       [:div.growx.mx-auto c]
+                       (when (not mobile?)
+                         [:div.duration-200.delay-200.shrink-0 {:class [(if @numberinput? :w-64 :w-0)]}])]
+
                       [:div.py-8.h-32]
                       [:div.absolute.right-4
                        {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
                        [sc/row-end {:class [:pt-4]}
-                        (bottom-menu)]]]])])]
+                        (bottom-menu)]]]])
+                  [l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
+                                    :kee-frame/route
+                                    :re-pressed.core/keydown)]])]
 
               ;horizontal toolbar
               (when @has-chrome?
@@ -602,7 +621,10 @@
 
               (rf/dispatch
                 [::rp/set-keydown-rules
-                 {:event-keys [[[:app/toggle-command-palette]
+                 {:event-keys [[[:app/toggle-config]
+                                [{:metaKey true
+                                  :keyCode keycodes/SEMICOLON}]
+                                [:app/toggle-command-palette]
                                 [{:metaKey true
                                   :keyCode keycodes/K}]]
                                [[:app/toggle-command-palette]
@@ -611,12 +633,19 @@
                                [[:lab/toggle-search-mode]
                                 [{:metaKey true
                                   :keyCode keycodes/F}]]
+                               [[:lab/toggle-number-input]
+                                [{:metaKey true
+                                  :keyCode keycodes/E}]]
                                [[:lab/toggle-search-mode]
                                 [{:ctrlKey true
                                   :keyCode keycodes/F}]]]
 
                   :prevent-default-keys
-                  [{:ctrlKey true
+                  [{:metaKey true
+                    :keyCode keycodes/SEMICOLON}
+                   {:metaKey true
+                    :keyCode keycodes/E}
+                   {:ctrlKey true
                     :keyCode keycodes/K}
                    {:metaKey true
                     :keyCode keycodes/F}

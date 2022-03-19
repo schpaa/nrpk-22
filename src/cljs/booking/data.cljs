@@ -8,9 +8,10 @@
 ;region initial-state
 
 (def start-db
-  {:version  "3.0.23"
+  {:version  "3.0.24"
    :app/name "booking"
-   :tab      :cloud})
+   :tab      :cloud
+   #_#_:lab/toggle-chrome true})
 
 (defn initialize
   [db ls-key]

@@ -4,12 +4,14 @@
             [db.core :as db]
     ;styles
             [schpaa.style.ornament :as sc]
+            [headlessui-reagent.core]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
-            [booking.boatinput]))
+            [booking.boatinput]
+            [schpaa.debug :as l]))
 
 (defn address-me-as [user]
   (booking.database/bookers-name user))
@@ -52,7 +54,7 @@
                                             :color            :white}} (sc/icon [:> outline/CalculatorIcon])]
                  :label      "Utlån"
                  :color      "var(--brand1)"
-                 :shortcut   "ctrl-l"
+                 :shortcut   "cmd-l"
                  :action     #(rf/dispatch [:lab/open-number-input])}]
      #_[:menuitem {:filledicon (sc/icon [:> solid/TicketIcon])
                    :label      "Ny booking"
@@ -63,7 +65,7 @@
                    :value      #()}]
      [:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
                  :label      "Båtoversikt"
-                 :shortcut   "ctrl-b"
+                 :shortcut   "cmd-b"
                  :color      "var(--booking-oversikt)"
                  :highlight  (= :r.booking.oversikt current-page)
                  :action     #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
@@ -96,11 +98,12 @@
      [:menuitem {:icon     (sc/icon [:> outline/CollectionIcon])
                  :label    "Kommandoer"
                  :color    "var(--brand1)"
-                 :shortcut "ctrl-k"
+                 :shortcut "cmd-k"
                  :action   #(rf/dispatch [:app/toggle-command-palette])}]
-     [:menuitem {:label  "Innstillinger"
-                 :icon   (sc/icon [:> outline/CogIcon])
-                 :action #(rf/dispatch [:app/toggle-config])}]
+     [:menuitem {:label    "Innstillinger"
+                 :icon     (sc/icon [:> outline/CogIcon])
+                 :shortcut "cmd-;"
+                 :action   #(rf/dispatch [:app/toggle-config])}]
      [:menuitem {:label    "Logg ut"
                  :disabled true
                  :icon     (sc/icon [:> outline/LogoutIcon])
@@ -118,34 +121,55 @@
             [scb2/normal-small "Logg ut"]
             [scb2/normal-small "Logg in"])]]]]))
 
+(defn boatinput-menu []
+  (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])
+               mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
+    [:div.absolute.inset-0.pointer-events-none
+     {:style {:z-index 100}}
+     [headlessui-reagent.core/transition
+      (conj
+        {:show (or @numberinput-visible false)}
+        (if mobile?
+          {:enter      "transition duration-300 ease-out"
+           :enter-from "opacity-0 translate-y-full"
+           :enter-to   "opacity-100 translate-y-0"
+           :entered    "translate-y-0 "
+           :leave      "transition  duration-200"
+           :leave-from "opacity-100 translate-y-0"
+           :leave-to   "opacity-0 translate-y-full"}
+          {:enter      "transition duration-300 ease-out"
+           :enter-from "opacity-0 translate-x-full"
+           :enter-to   "opacity-100 translate-x-0"
+           ;:entered    "translate-x-0"
+           :leave      "transition  duration-200"
+           :leave-from "opacity-100 translate-x-0"
+           :leave-to   "opacity-0 translate-x-full"}))
+      [:div.h-screen
+       {:style (if mobile?
+                 {:display       :grid
+                  :align-content :end}
+                 {:display         :grid
+                  :justify-content :end
+                  :align-content   :center})}
+       [:div.pointer-events-auto
+        {:style (if mobile? {:xpadding-block "var(--size-4)"
+                             :overflow-y     :auto}
+                            {:overflow-y      :auto
+                             :padding-block   :1rem
+                             :spadding-inline "var(--size-4)"})}
+        [(if mobile? scm/boatinput-panel-from-bottom scm/boatinput-panel-from-right)
+         [booking.boatinput/sample]]]]]]))
+
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom false)
                numberinput-visible (rf/subscribe [:lab/number-input])]
     (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
           toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
-      [:div.relative.z-100
-       ;[l/ppre-x @numberinput-visible]
-       (if @numberinput-visible
-         [:div.absolute.right-0                             ;.w-64x.inset-yx.my-auto.h-96
-          #_{:style {:left    "-270px"                      ;"28px"
-
-                     :xbottom "-320px"}}                    ;   "var(--size-2)"}}
-
-          [scm/boatinput-panel
-           [booking.boatinput/sample]]]
-         #_[scm/numberinput
-            {:showing      true
-             :dir          #{:right :down}
-             :close-button (fn [open] [scb/corner {:on-click toggle-numberinput} [sc/icon (icon/adapt :arrow-right-up)]])
-             :data         (booking.boatinput/sample)
-             :button       (fn [open]
-                             [scb/round-normal {:class [:h-10] :on-click toggle-numberinput}
-                              [sc/icon [:> solid/MenuIcon]]])}]
-         [scm/mainmenu-example-with-args
-          {:showing      @mainmenu-visible
-           :dir          #{:right :down}
-           :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
-           :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
-           :button       (fn [open]
-                           [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
-                            [sc/icon [:> solid/MenuIcon]]])}])])))
+      [scm/mainmenu-example-with-args
+       {:showing      @mainmenu-visible
+        :dir          #{:right :down}
+        :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
+        :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
+        :button       (fn [open]
+                        [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
+                         [sc/icon [:> solid/MenuIcon]]])}])))

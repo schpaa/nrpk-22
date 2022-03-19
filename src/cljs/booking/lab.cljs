@@ -319,7 +319,9 @@
                    {:fx [[:dispatch [:app/navigate-to [:r.booking-blog-new]]]
                          [:lab/open-new-blog-entry-dialog nil]]}))
 
-(rf/reg-sub :lab/has-chrome :-> :lab/toggle-chrome)
+(rf/reg-sub :lab/has-chrome (fn [db]
+                              (get-in db [:settings :state :lab/toggle-chrome])))
 
-(rf/reg-event-fx :lab/toggle-chrome (fn [{db :db} _]
-                                      {:db (update db :lab/toggle-chrome (fnil not false))}))
+(rf/reg-event-db :lab/toggle-chrome
+                 (fn [db _]
+                   (update-in db [:settings :state :lab/toggle-chrome] (fnil not false))))

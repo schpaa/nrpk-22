@@ -1,3 +1,7 @@
+.dbg {
+outline: "2px solid red" !important;
+}
+
 @font-face {
   font-family: 'Inter var experimental';
   font-weight: 100 900;
@@ -98,12 +102,13 @@
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
+   --brand-hue: 350;
    --brand000-light: var(--green-1);
    --brand00-light: var(--green-2);
-   --brand0-light: hsl(150, 39%, 90% ); /* var(--green-3); */
-   --brand1o-light: hsla(150, 39%, 50%,0.05);
-   --brand1-light: hsl(150, 39%, 40%);
-   --brand2-light: hsl(150, 39%, 30%);
+   --brand0-light: hsl(var(--brand-hue), 39%, 90% ); /* var(--green-3); */
+   --brand1o-light: hsla(var(--brand-hue), 39%, 50%,0.05);
+   --brand1-light: hsl(var(--brand-hue), 39%, 40%);
+   --brand2-light: hsl(var(--brand-hue), 39%, 30%);
 
    --brand1-dim: hsl(100, 39%, 50%);
    --buttoncta0-dim: hsl(100, 39%, 5%);
