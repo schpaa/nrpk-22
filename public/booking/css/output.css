@@ -1928,10 +1928,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   width: 100vw;
 }
 
-.w-96 {
-  width: 24rem;
-}
-
 .min-w-fit {
   min-width: -webkit-fit-content;
   min-width: -moz-fit-content;
@@ -2107,12 +2103,20 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 @-webkit-keyframes blink {
   0% {
+    opacity: 0.3;
+  }
+
+  50% {
     opacity: 0;
   }
 }
 
 @keyframes blink {
   0% {
+    opacity: 0.3;
+  }
+
+  50% {
     opacity: 0;
   }
 }
@@ -3493,11 +3497,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .focus\:border-transparent:focus {
   border-color: transparent;
-}
-
-.focus\:bg-black:focus {
-  --tw-bg-opacity: 1;
-  background-color: rgb(0 0 0 / var(--tw-bg-opacity));
 }
 
 .focus\:bg-white:focus {

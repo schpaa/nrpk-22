@@ -548,9 +548,9 @@
                        {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
                        [sc/row-end {:class [:pt-4]}
                         (bottom-menu)]]]])
-                  [l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
-                                    :kee-frame/route
-                                    :re-pressed.core/keydown)]])]
+                  #_[l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
+                                      :kee-frame/route
+                                      :re-pressed.core/keydown)]])]
 
               ;horizontal toolbar
               (when @has-chrome?

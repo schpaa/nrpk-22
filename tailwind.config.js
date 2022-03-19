@@ -23,8 +23,11 @@ module.exports = {
         keyframes: {
             'blink': {
                 '0%': {
-                    opacity: '0',
+                    opacity: '0.3',
                 },
+                '50%': {
+                    opacity: '0',
+                }
             },
             'pulse': {
                 '0%': {

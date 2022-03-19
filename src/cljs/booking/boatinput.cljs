@@ -492,10 +492,10 @@
                 [:div.flex
                  {:style {:color "var(--surface4)"}}
                  (when (empty? (:item @st))
-                   [:div.animate-blink.opacity-100 "|"])
+                   [:span.blinking-cursor "|"])
                  [button-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
                  (when-not (empty? (:item @st))
-                   [:div.animate-blink.opacity-100 "|"])])]]
+                   [:span.blinking-cursor "|"])])]]
 
             [:div
              {:style {:grid-row       "3"

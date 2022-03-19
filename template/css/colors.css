@@ -14,6 +14,63 @@ outline: "2px solid red" !important;
   font-family: 'Lora', serif;
 }
 
+.blinking-cursor {
+  font-weight: 500;
+  color: #2E3D48;
+  -webkit-animation: 1s blink step-end infinite;
+  -moz-animation: 1s blink step-end infinite;
+  -ms-animation: 1s blink step-end infinite;
+  -o-animation: 1s blink step-end infinite;
+  animation: 1s blink step-end infinite;
+}
+
+@keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-moz-keyframes blink {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-webkit-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-ms-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-o-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+
+
 :root {
     --radius-0: 3px;
     --radius-1: 6px;
@@ -102,7 +159,7 @@ outline: "2px solid red" !important;
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
-   --brand-hue: 350;
+   --brand-hue: 180;
    --brand000-light: var(--green-1);
    --brand00-light: var(--green-2);
    --brand0-light: hsl(var(--brand-hue), 39%, 90% ); /* var(--green-3); */

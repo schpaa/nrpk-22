@@ -549,7 +549,7 @@
    (fn [r]
      (let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})]
        [page-boundary r
-        [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]]))
+        {:whole [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]}]))
 
    :r.aktivitetsliste
    (fn [r]
