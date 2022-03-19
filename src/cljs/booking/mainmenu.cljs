@@ -125,7 +125,7 @@
   (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])
                mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
     [:div.absolute.inset-0x.w-auto.inset-x-0.pointer-events-none
-     {:style {:z-index     1
+     {:style {:z-index     200
               :xbackground "red"}}
      [headlessui-reagent.core/transition
       (conj
@@ -146,13 +146,13 @@
            :leave-from "opacity-100 translate-x-0"
            :leave-to   "opacity-0 translate-x-full"}))
       [:div.h-screen
-       {:style (conj {:z-index 1000}
-                     (if mobile?
-                       {:display       :grid
-                        :align-content :end}
-                       {:display         :grid
-                        :justify-content :end
-                        :align-content   :center}))}
+       {:style (conj
+                 (if mobile?
+                   {:display       :grid
+                    :align-content :end}
+                   {:display         :grid
+                    :justify-content :end
+                    :align-content   :center}))}
        [:div.pointer-events-auto
         {:style (conj
                   (if mobile? {:xpadding-block "var(--size-4)"

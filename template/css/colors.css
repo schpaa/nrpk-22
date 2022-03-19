@@ -16,7 +16,7 @@ outline: "2px solid red" !important;
 
 .blinking-cursor {
   font-weight: 500;
-  color: #2E3D48;
+  color: var(--surface4);
   -webkit-animation: 1s blink step-end infinite;
   -moz-animation: 1s blink step-end infinite;
   -ms-animation: 1s blink step-end infinite;
