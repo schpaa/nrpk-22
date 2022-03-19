@@ -161,7 +161,7 @@
                                :padding-block   :1rem
                                :spadding-inline "var(--size-4)"}))}
         [(if mobile? scm/boatinput-panel-from-bottom scm/boatinput-panel-from-right)
-         [booking.boatinput/sample]]]]]]))
+         [booking.boatinput/sample mobile?]]]]]]))
 
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom false)

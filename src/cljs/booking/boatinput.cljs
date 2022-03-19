@@ -445,7 +445,7 @@
 
 (defonce st (r/atom {}))
 
-(defn sample []
+(defn sample [mobile?]
   (let [keydown-f (fn [event]
                     (tap> event)
                     ;(.stopPropagation event)
@@ -470,12 +470,15 @@
       {:reagent-render
        (fn [_]
          [:div.relative
-
           [:div.absolute.top-0.right-0
            [scb/corner {:on-click toggle-numberinput} [sc/icon-large [:> solid/XIcon]]]]
 
-          [:div.focus:outline-none.focus:ring-2.focus:ring-alt-500.rounded-t-lg.p-1
-           {:tab-index 0
+          [:div.focus:outline-none.focus:ring-2.focus:ring-alt-500.p-1
+           {:style     (if mobile? {} {:border-top-left-radius     "var(--radius-2)"
+                                       :border-bottom-left-radius  "var(--radius-2)"
+                                       :border-top-right-radius    "none"
+                                       :border-bottom-right-radius "none"})
+            :tab-index 0
             :ref       (fn [e]
                          (when-not @ref
                            (tap> ["adding for " e])
