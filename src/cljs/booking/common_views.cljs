@@ -23,7 +23,7 @@
             [times.api :as ta]
             [tick.core :as t]
             [schpaa.style.combobox]
-            [re-pressed.core :as rp]
+
             [booking.fileman]
             [schpaa.icon :as icon]
             [booking.boatinput]
@@ -32,7 +32,6 @@
             [schpaa.debug :as l]
             [kee-frame.core :as k]
             [booking.routes]))
-
 
 (defn set-focus [el a]
   (when-not @a
@@ -55,6 +54,18 @@
 (rf/reg-sub :lab/number-input :-> :lab/number-input)
 
 ;endregion
+
+;region
+
+(rf/reg-event-fx :app/toggle-config (fn [{db :db} _]
+                                      (open-dialog-config)))
+
+(rf/reg-event-fx :app/toggle-command-palette
+                 (fn [{db :db} _]
+                   (tap> :app/toggle-command-palette)
+                   {:fx [[:dispatch [:lab/modal-selector
+                                     (-> db :lab/modal-selector not)
+                                     {:content-fn (fn [c] [schpaa.style.combobox/combobox-example c])}]]]}))
 
 ;endregion
 
@@ -574,94 +585,7 @@
                  (into [:<>] (map horizontal-button
                                   (horizontal-toolbar (:uid @user-auth))))])]]]))})))
 
-(comment
-  (defonce keydown-ch (chan))
-  (defonce _d (gevent/listen js/document "keydown"
 
-                             #(do
-                                (put! keydown-ch (.-key %))
-                                (set! (.-cancelBubble %) true)
-                                (.stopImmediatePropagation %)
-                                false)))
-
-  (defonce keyup-ch (chan))
-  (defonce _c (gevent/listen js/document "keyup"
-                             #(do (put! keyup-ch (.-key %))
-                                  (set! (.-cancelBubble %) true)
-                                  (.stopImmediatePropagation %)
-                                  false)))
-
-  (def is-modifier? #{"Control" "Meta" "Alt" "Shift"})
-
-  (defonce _a (do
-                (def chord-ch (chan))
-                (go-loop [modifiers []
-                          pressed nil]
-                         (when (and (seq modifiers) pressed)
-                           (>! chord-ch (conj modifiers pressed)))
-                         (let [[key ch] (alts! [keydown-ch keyup-ch])]
-                           (condp = ch
-                             keydown-ch (if (is-modifier? key)
-                                          (recur (conj modifiers key) pressed)
-                                          (recur modifiers key))
-                             keyup-ch (if (is-modifier? key)
-                                        (recur (filterv #(not= % key) modifiers)
-                                               pressed)
-                                        (recur modifiers nil)))))))
-
-  (defonce _b (go-loop []
-                       (let [chord (<! chord-ch)]
-                         (if (= chord ["Meta" "k"])
-                           (tap> "COMMAND KE")
-                           (tap> chord))
-                         (recur)))))
 
 ;region :app/toggle-config
 
-(rf/reg-event-fx :app/toggle-config (fn [{db :db} _]
-                                      (tap> :app/toggle-config)
-                                      (open-dialog-config)))
-
-(defonce _x (do
-              (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
-
-              (rf/reg-event-fx :app/toggle-command-palette
-                               (fn [{db :db} _]
-                                 (tap> :app/toggle-command-palette)
-                                 {:fx [[:dispatch [:lab/modal-selector
-                                                   (-> db :lab/modal-selector not)
-                                                   {:content-fn (fn [c] [schpaa.style.combobox/combobox-example c])}]]]}))
-
-              (rf/dispatch
-                [::rp/set-keydown-rules
-                 {:event-keys [
-
-                               [[:app/toggle-config] [{:metaKey true
-                                                       :keyCode keycodes/SEMICOLON}]]
-
-                               [[:app/toggle-command-palette] [{:metaKey true
-                                                                :keyCode keycodes/K}]]
-
-                               [[:app/toggle-command-palette] [{:ctrlKey true
-                                                                :keyCode keycodes/K}]]
-
-                               [[:lab/toggle-search-mode] [{:metaKey true
-                                                            :keyCode keycodes/F}]]
-                               [[:lab/toggle-number-input] [{:metaKey true
-                                                             :keyCode keycodes/E}]]
-                               [[:lab/toggle-search-mode] [{:ctrlKey true
-                                                            :keyCode keycodes/F}]]]
-
-                  :prevent-default-keys
-                  [{:metaKey true
-                    :keyCode keycodes/SEMICOLON}
-                   {:metaKey true
-                    :keyCode keycodes/E}
-                   {:ctrlKey true
-                    :keyCode keycodes/K}
-                   {:metaKey true
-                    :keyCode keycodes/F}
-                   {:metaKey true
-                    :keyCode keycodes/K}
-                   {:keyCode 71
-                    :ctrlKey true}]}])))

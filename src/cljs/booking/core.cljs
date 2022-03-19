@@ -11,7 +11,9 @@
     [schpaa.darkmode]
     [nrpk.core]
     [nrpk.spa]
-    [booking.routes]))
+    [booking.routes]
+    [booking.keyboard]))
+
 
 (defn kee-start []
   (k/start! {:routes         booking.routes/routes
@@ -30,4 +32,5 @@
 (defn init! []
   (db/init! {:config app-data/booking-firebaseconfig})
   (reload!)
-  (rf/dispatch [::rs/transition :main :e.restart]))
+  (rf/dispatch [::rs/transition :main :e.restart])
+  (booking.keyboard/define-shortcuts))
