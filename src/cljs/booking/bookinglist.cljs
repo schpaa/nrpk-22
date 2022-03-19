@@ -95,8 +95,8 @@
     (transduce (comp (preceded-by today)) conj [] data)))
 
 (defn booking-list [{:keys [uid today booking-data class details?]}]
-  (let [show-archived (r/atom false)
-        show-only-my-own? (r/atom false)]
+  (let [show-archived (schpaa.state/listen :lab/vis-arkiverte-bookinger)
+        show-only-my-own? (schpaa.state/listen :lab/vis-bare-mine-booking)]
     (fn [{:keys [uid today booking-data class details?]}]
       (let [today (t/new-date 2022 1 21)
             ;show-only-my-own? (-> (schpaa.state/listen :opt/show-only-my-own) deref)
@@ -105,14 +105,13 @@
                       (sort-by (comp :start val) <))]
         [:div.space-y-4
          [sc/col {:class [:space-y-4]}
-          [sc/row {:class [:items-center :gap-4]}
-           [schpaa.style.switch/switch-example
-            {:!value  show-archived
-             :caption [sc/text "Vis arkiverte"]}]]
-          [sc/row {:class [:items-center :gap-4]}
-           [schpaa.style.switch/switch-example
-            {:!value  show-only-my-own?
-             :caption [sc/text "Bare vis bookinger fra meg"]}]]]
+
+          [schpaa.style.switch/small-switch-example
+           {:tag     :lab/vis-arkiverte-bookinger
+            :caption "Vis arkiverte"}]
+          [schpaa.style.switch/small-switch-example
+           {:tag     :lab/vis-bare-mine-booking
+            :caption "Bare vis bookinger fra meg"}]]
 
          [sc/grid-wide
           (concat (when @show-archived
