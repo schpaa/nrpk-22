@@ -534,11 +534,16 @@
                       :padding-inline "var(--size-2)"
                       :display        :flex
                       :align-items    :center
-                      :-border-radius "var(--radius-1)"
-                      :-background    "var(--surface00)"
-                      :-box-shadow    "var(--inner-shadow-0)"}}
-             (when (<= 3 (count (:item @st)))
-               (lookup (:item @st)))]
+                      ;:border-radius "var(--radius-1)"
+                      ;:background    "var(--brand1)"
+                      #_#_:box-shadow "var(--inner-shadow-2)"}}
+             (if (<= 3 (count (:item @st)))
+               (lookup (:item @st))
+               [sc/col {:class [:space-y-1 :opacity-50]}
+                [sc/row-sba
+                 [sc/title "Slå inn båtnummer og"]
+                 [sc/icon-small [:> solid/PlusCircleIcon]]]
+                [sc/subtext "Bruk 4 siffer for testing"]])]
 
             [:div.p-1
              {:style {:grid-column           "1"
