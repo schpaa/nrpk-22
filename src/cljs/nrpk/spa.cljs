@@ -271,7 +271,7 @@
 
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute body "class" "font-sans")
-    (.setAttribute body "style" "background-color:var(--surface00)")
+    (.setAttribute body "style" "background-color:var(--surface4)")
 
     #_[:div.fixed.inset-0
        [:div.grid.h-full
@@ -280,8 +280,8 @@
                  :grid-auto-rows        "1fr"}}
         (into [:div.h-full.flex.flex-col.overflow-y-scroll.space-y-0]
               (map tab data))]]
-    [:div.fixed.inset-0.overflow-y-auto.max-w-7xl.mx-auto   ;.h-full.overflow-y-autox
-     {:style {:background "var(--surface00)"}}
-     [dispatch-main-sidebar
-      (when-let [page (get route-table @route-name)]
-        (make-route-component page route))]]))
+    ;[:div];.fixed.inset-0.overflow-y-auto.max-w-7xl.mx-auto   ;.h-full.overflow-y-autox
+    ;{:style {:background "var(--surface3)"}}
+    ;'[dispatch-main-sidebar]
+    (when-let [page (get route-table @route-name)]
+      (make-route-component page route))))

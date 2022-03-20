@@ -19,6 +19,7 @@
 (defn write-styles-hook
   {:shadow.build/stage :flush}
   [build-state & args]
+  (my.tokens/set-it)
   (spit "public/booking/css/ornament.css"
         (str
           (slurp "template/css/colors.css")

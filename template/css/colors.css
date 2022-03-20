@@ -16,19 +16,21 @@ outline: "2px solid red" !important;
 
 .blinking-cursor {
   font-weight: 500;
+  font-size: unset;
+  
   color: var(--surface4);
-  -webkit-animation: 1s blink step-end infinite;
+  -webkit-animation: 2s blink step-end infinite;
   -moz-animation: 1s blink step-end infinite;
   -ms-animation: 1s blink step-end infinite;
   -o-animation: 1s blink step-end infinite;
-  animation: 1s blink step-end infinite;
+  animation: 2s blink step-end infinite;
 }
 
 @keyframes "blink" {
   from, to {
     color: transparent;
   }
-  50% {
+  20% {
     color: black;
   }
 }
@@ -93,6 +95,20 @@ outline: "2px solid red" !important;
 
 
 
+    --gray-0: #fafaf9;
+    --gray-1: #f5f5f4;
+    --gray-2: #e7e5e4;
+    --gray-3: #d6d3d1;
+    --gray-4: #a8a29e;
+    --gray-5: #78716c;
+    --gray-6: #57534e;
+    --gray-7: #44403c;
+    --gray-8: #292524;
+
+*/
+
+
+
   --gray-0: #F0F1F1;
   --gray-1: #E5E6E6;
   --gray-2: #CDD0D0;
@@ -104,23 +120,6 @@ outline: "2px solid red" !important;
   --gray-8: #3B3E3F;
   --gray-9: #222425;
   --gray-9: #1c1917;
-
-
-
-*/
-
-    --gray-0: #fafaf9;
-    --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;
-    --gray-3: #d6d3d1;
-    --gray-4: #a8a29e;
-    --gray-5: #78716c;
-    --gray-6: #57534e;
-    --gray-7: #44403c;
-    --gray-8: #292524;
-
-
-
 
 
     --tw-ring-inset: 2;
@@ -164,7 +163,7 @@ outline: "2px solid red" !important;
    --brand00-light: var(--green-2);
    --brand0-light: hsl(var(--brand-hue), 39%, 90% ); /* var(--green-3); */
    --brand1o-light: hsla(var(--brand-hue), 39%, 50%,0.05);
-   --brand1-light: hsl(var(--brand-hue), 39%, 40%);
+   --brand1-light: #68A73D; //hsl(var(--brand-hue), 39%, 40%);
    --brand2-light: hsl(var(--brand-hue), 39%, 30%);
 
    --brand1-dim: hsl(100, 39%, 50%);

@@ -121,47 +121,75 @@
             [scb2/normal-small "Logg ut"]
             [scb2/normal-small "Logg in"])]]]]))
 
+(defn boatinput-sidebar []
+  (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])]
+    (when @numberinput-visible
+      [:div.w-auto
+       [scm/boatinput-panel-from-right
+        [booking.boatinput/sample false]]])))
+
 (defn boatinput-menu []
   (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])
-               mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
-    [:div.absolute.inset-0x.w-auto.inset-x-0.pointer-events-none
-     {:style {:z-index     200
-              :xbackground "red"}}
-     [headlessui-reagent.core/transition
-      (conj
-        {:show (or @numberinput-visible false)}
-        (if mobile?
-          {:enter      "transition duration-300 ease-out"
-           :enter-from "opacity-0 translate-y-full"
-           :enter-to   "opacity-100 translate-y-0"
-           :entered    "translate-y-0 "
-           :leave      "transition  duration-200"
-           :leave-from "opacity-100 translate-y-0"
-           :leave-to   "opacity-0 translate-y-full"}
-          {:enter      "transition duration-300 ease-out"
-           :enter-from "opacity-0 translate-x-full"
-           :enter-to   "opacity-100 translate-x-0"
-           ;:entered    "translate-x-0"
-           :leave      "transition  duration-200"
-           :leave-from "opacity-100 translate-x-0"
-           :leave-to   "opacity-0 translate-x-full"}))
-      [:div.h-screen
+               mobile? false]                               ;(= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
+    #_[:div.xabsolute.inset-0x.xw-auto.xinset-x-0.right-0x
+       #_{:style {:z-index        0
+                  :pointer-events :none
+                  :background     "blue"}}]
+    [headlessui-reagent.core/transition
+     (conj
+       {:show  (or @numberinput-visible false)
+        :style {:pointer-events :none
+                :-background    :#0f05}}
+       (if mobile?
+         {:enter      "transition duration-200 ease-out"
+          :enter-from "opacity-0 translate-y-full"
+          :enter-to   "opacity-100 translate-y-0"
+          :entered    "translate-y-0 "
+          :leave      "transition  duration-200"
+          :leave-from "opacity-100 translate-y-0"
+          :leave-to   "opacity-0 translate-y-full"}
+         {:enter      "transition duration-200 ease-out"
+          :enter-from "opacity-0 translate-x-full"
+          :enter-to   "opacity-100 translate-x-0"
+          ;:entered    "translate-x-0"
+          :leave      "transition  duration-300"
+          :leave-from "opacity-100 translate-x-0"
+          :leave-to   "opacity-0 translate-x-full"}))
+     [:div.h-screen
+      {;:on-click #(tap> "clack")
+       :style (conj
+                ;{:pointer-events :none}
+                {}
+                (if mobile?
+                  {:display       :grid
+                   :align-content :end}
+                  {:pointer-events  :none
+
+                   :display         :grid
+
+                   ;:z-index         10
+                   :justify-content :end
+
+                   :align-content   :center}))}
+      [:div.select-none
        {:style (conj
-                 (if mobile?
-                   {:display       :grid
-                    :align-content :end}
-                   {:display         :grid
-                    :justify-content :end
-                    :align-content   :center}))}
-       [:div.pointer-events-auto
-        {:style (conj
-                  (if mobile? {:xpadding-block "var(--size-4)"
-                               :overflow-y     :auto}
-                              {:overflow-y      :auto
-                               :padding-block   :1rem
-                               :spadding-inline "var(--size-4)"}))}
-        [(if mobile? scm/boatinput-panel-from-bottom scm/boatinput-panel-from-right)
-         [booking.boatinput/sample mobile?]]]]]]))
+                 {}
+                 (if mobile? {:padding-block "var(--size-10)"
+                              :overflow-y    :auto}
+                             {:pointer-events            :none
+                              :background                :none ;#f00a
+                              :border-bottom-left-radius "var(--radius-3)"
+                              :border-top-left-radius    "var(--radius-3)"
+                              :box-shadow                "var(--shadow-6)"
+                              ;:box-sizing :content-box
+                              ;:padding-top     "var(--size-9)"
+                              ;:padding-bottom  "var(--size-10)"
+                              :overflow-y                :auto
+                              :-margin-top               "var(--size-9)"
+                              :-margin-bottom            "var(--size-10)"
+                              :spadding-inline           "var(--size-4)"}))}
+       [scm/boatinput-panel-from-right
+        [booking.boatinput/sample mobile?]]]]]))
 
 (defn main-menu []
   (r/with-let [mainmenu-visible (r/atom false)

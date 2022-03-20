@@ -15,6 +15,7 @@
             [schpaa.style.button :as scb]))
 
 (o/defstyled input-caption :div
+
   {:font-family "Oswald"                                    ;"IBM Plex Sans"
    :font-size   "var(--font-size-4)"
    :font-weight "var(--font-weight-6)"})
@@ -70,8 +71,8 @@
    :border-radius "var(--radius-1)"
    ;:background    "var(--red-6)"
    ;:color         "var(--surface1)"
-   ;:background    "var(--surface1)"
-   :color         "var(--green-6)"}
+   :background    "var(--green-6)"
+   :color         "var(--green-1)"}
   [:&:hover {;:background    "var(--red-5)"
              :color "var(--green-7)"}]
   [:&:disabled {:color      "var(--surface2)"
@@ -88,7 +89,7 @@
   :w-full :h-full :duration-100
   {:display       :grid
    :place-content :center
-   :border-radius "var(--radius-1)"
+   :border-radius "var(--radius-3)"
    :background    "var(--surface4)"
    :color         "var(--surface1)"}
   [:&:hover {;:background "var(--surface5)"
@@ -110,10 +111,10 @@
    {:padding       "var(--size-2)"
     :background    "var(--surface00)"
     :color         "var(--surface5)"
-    :border-radius "var(--radius-2)"}]
+    :border-radius "var(--radius-1)"}]
   [:.some {:opacity 1}]
   [:.zero {:opacity 0.3}]
-  [:.item:active {:background-color "var(--surface1)"}]
+  [:.item:active {:background-color "var(--surface2)"}]
   [:.overlay {:overflow :hidden}]
   ([{:keys [increase decrease value content]}]
    [:<> [:div.base
@@ -172,7 +173,7 @@
                #_#_decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
     [up-down-button {:content  (fn [value]
                                  [:div.flex.flex-col.justify-end.items-center.h-full
-                                  [:img.h-10.object-fit.-ml-px {:src "/img/child.png"}]
+                                  [:img.h-12.object-fit.-ml-px {:src "/img/toddler.png"}]
                                   (str value)])
                      :value    (or @n 0)
                      :increase #(increase-children st)
@@ -342,7 +343,9 @@
   (reset! st nil))
 
 (defn restart [st]
-  (r/with-let [form-dirty? #(or (pos? (+ (:adults @st) (:children @st)))
+  (r/with-let [form-dirty? #(or (pos? (+ (:adults @st)
+                                         (:juveniles @st)
+                                         (:children @st)))
                                 (pos? (count (:list @st)))
                                 (:moon @st)
                                 (:key @st)
@@ -414,8 +417,8 @@
     [add-button
      {:on-click #(confirm-command st)
       :enabled  ok?
-      :xstyle   (when ok? {:color      "var(--green-1)"
-                           :background "var(--green-5)"})}
+      :styles   (when ok? {:color      "var(--green-1)"
+                           :background "var(--green-6)"})}
      (sc/icon-huge [:> solid/CheckCircleIcon])]))
 
 (defn lookup [id]
@@ -461,14 +464,21 @@
       {:reagent-render
        (fn [_]
          [:div.relative
-          [:div.absolute.top-0.right-0
-           [scb/corner {:on-click toggle-numberinput} [sc/icon-large [:> solid/XIcon]]]]
+          {}
+          #_[:div.absolute.top-0.right-0
+             [scb/corner {:on-click toggle-numberinput} [sc/icon-large [:> solid/XIcon]]]]
 
-          [:div.focus:outline-none.focus:ring-2.focus:ring-alt-500.p-1
-           {:style     (if mobile? {} {:border-top-left-radius     "var(--radius-2)"
+          [:div.p-2                                         ;.focus:outline-nonex.focus:ring-black.focus:ring-offset-2.focus:ring-offset-white.p-4
+           {:class     [:focus:outline-none
+                        :focus:ring-4
+                        ;:focus:ring-alt
+                        :focus:ring-offset-2
+                        :focus:ring-offset-clear]
+            :style     (if mobile? {} {:border-top-left-radius     "var(--radius-2)"
                                        :border-bottom-left-radius  "var(--radius-2)"
                                        :border-top-right-radius    "none"
-                                       :border-bottom-right-radius "none"})
+                                       :border-bottom-right-radius "none"
+                                       :pointer-events             :auto})
             :tab-index 0
             :ref       (fn [e]
                          (when-not @ref
@@ -519,13 +529,14 @@
                  [input-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
                  (when-not (empty? (:phonenumber @st))
                    [:div.animate-blink.opacity-100 "|"])]
-                [:div.flex
-                 {:style {:color "var(--surface5)"}}
+                [:div.flex.items-center
+                 {:style {:font-size "var(--font-size-5)"
+                          :color     "var(--surface5)"}}
                  (when (empty? (:item @st))
-                   [:span.blinking-cursor "|"])
+                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
                  [input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
                  (when-not (empty? (:item @st))
-                   [:span.blinking-cursor "|"])])]]
+                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])])]]
 
             [:div
              {:style {:grid-row       "3"

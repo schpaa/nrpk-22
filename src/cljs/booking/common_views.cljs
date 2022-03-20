@@ -27,7 +27,7 @@
             [booking.fileman]
             [schpaa.icon :as icon]
             [booking.boatinput]
-            [booking.mainmenu :refer [main-menu boatinput-menu]]
+            [booking.mainmenu :refer [main-menu boatinput-menu boatinput-sidebar]]
             [booking.search :refer [search-menu]]
             [schpaa.debug :as l]
             [kee-frame.core :as k]
@@ -134,16 +134,88 @@
                   (when (pos? c) c))
     :page-name   :r.fileman-temporary}
 
+   #_{:tall-height true
+      :special     true
+      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
+                            (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
+      :on-click    schpaa.style.dialog/open-selector}
+   #_{:tall-height true
+      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                            (if @st solid/CalculatorIcon outline/CalculatorIcon)))
+      :special     true
+      :on-click    #(rf/dispatch [:lab/toggle-number-input])}])
+
+(o/defstyled centered-thing :div
+  :flex-center
+  #_{:border-radius "var(--radius-round)"
+     :padding       "var(--size-1)"
+     :color         :white
+     :background    "var(--brand1)"})
+
+(o/defstyled centered-thing-red :div
+  :flex-center
+  {:border-radius "var(--radius-round)"
+   :padding       "var(--size-2)"
+   :color         :white
+   :background    "var(--red-6)"})
+
+(o/defstyled sidebar :div
+  :cursor-pointer
+  {:text-transform "uppercase"
+   :font-family    "IBM Plex Sans"
+   :font-size      "var(--font-size-5)"
+   :font-weight    "var(--font-weight-5)"})
+
+(defn vertical-toolbar-right [uid]
+  [#_{:icon-fn (fn []
+                 [main-menu])}
+
+   {;:tall-height true
+    :icon-fn    (fn [] [centered-thing-red
+                        (sc/icon-large
+                          [:> outline/HomeIcon])])
+    :special    true
+    :on-click   #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+    :xpage-name :r.forsiden}
+
+   {:icon-fn   (fn [] [sidebar "N"])
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])
+    :page-name :r.welcome}
+
+   {:icon-fn   (fn [] [sidebar "S"])
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
+    :page-name :r.booking}
+   {:icon-fn   (fn [] [sidebar "Å"])
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
+    :page-name :r.yearwheel}
+
+   nil
+   {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                       [centered-thing
+                        (sc/icon-large
+                          [:> (if @st solid/ChevronRightIcon
+                                      solid/ChevronLeftIcon)])]))
+    :special  true
+    :on-click #(rf/dispatch [:lab/toggle-number-input])}
+
+   #_{:tall-height true
+      :icon        solid/FolderIcon
+
+      :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
+      #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
+                    (when (pos? c) c))
+      :page-name   :r.fileman-temporary}
+   nil
    {:tall-height true
     :special     true
     :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                          (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
-    :on-click    schpaa.style.dialog/open-selector}
-   {:tall-height true
-    :icon-fn     (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                          (if @st solid/CalculatorIcon outline/CalculatorIcon)))
-    :special     true
-    :on-click    #(rf/dispatch [:lab/toggle-number-input])}])
+                          (sc/icon-huge
+                            [:> (if @st solid/InformationCircleIcon
+                                        outline/InformationCircleIcon)])))
+    :on-click    schpaa.style.dialog/open-selector}])
+
+
+
 
 (defn horizontal-toolbar [uid]
   [{:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
@@ -240,21 +312,22 @@
          [:> icon]])]]))
 
 (defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :or {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+        active? (= page-name current-page)]
     [:div.w-full.flex.items-center.justify-center.relative
      {:on-click on-click
-      :style    {:height      (if tall-height "var(--size-10)" "var(--size-9)")
-                 :xbackground (if special "var(--surface1)")}}
+      :style    {:height (if tall-height "var(--size-10)" "var(--size-9)")}}
+
      (when badge
        (when-some [b (badge)]
          [top-left-badge b]))
-     [vert-button {:active (= page-name current-page)
+     [vert-button {:active active?
                    :style  (conj style (when (= page-name current-page) {:color color}))}
       (if icon-fn
-        [sc/icon-large
+        [:div
          {:style (if special {:color "var(--brand1)"})}
-         [:> (icon-fn)]]
-        [sc/icon-large
+         (icon-fn)]
+        [(if active? sc/icon sc/icon-large)
          {:style (if special {:color "var(--brand1)"})}
          [:> icon]])]]))
 
@@ -383,6 +456,42 @@
 
 ;endregion
 
+(defn header-line [r]
+  (let [st (schpaa.state/listen :top-toggle)
+        toggle #(schpaa.state/toggle :top-toggle)]
+    [sc/col {:class [:border-b :duration-200]
+             :style {:background   "var(--surface00)"
+                     :border-color "var(--surface0)"}}
+     [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
+      [sc/row-std
+       (when-not @(rf/subscribe [:lab/in-search-mode?])
+         (let [titles (compute-page-titles r)]
+           [:<>
+            [:div.hidden.sm:block.grow
+             [:<>
+              (if (vector? titles)
+                [:div.flex.items-center.gap-1
+                 (interpose [:div.text-2xl.opacity-20 "/"]
+                            (for [[idx e] (map-indexed vector titles)
+                                  :let [last? (= idx (dec (count titles)))]]
+                              (if last?
+                                [sc/title e]
+                                (let [{:keys [text link]} e]
+                                  [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
+                [sc/title titles])]]
+            [:div.xs:block.sm:hidden.grow
+             (if (vector? titles)
+               [sc/col-space-1
+                (when (< 1 (count titles))
+                  (let [{:keys [text link]} (first titles)]
+                    [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))
+                [sc/title (last titles)]]
+               [sc/col
+                [sc/title titles]])]]))
+
+       [search-menu]
+       [main-menu]]]]))
+
 (defn page-boundary [r & c]
   (let [user-auth (rf/subscribe [::db/user-auth])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
@@ -410,56 +519,23 @@
             :vis     (rf/subscribe [:lab/modal-selector])
             :close   #(rf/dispatch [:lab/modal-selector false])}]
           ;endregion
-          [:div.fixed.inset-0.flex
-           [boatinput-menu]
-           ;vertical toolbar
-           (when @has-chrome?
-             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-              {:style {:padding-top  "var(--size-0)"
-                       :box-shadow   "var(--inner-shadow-3)"
-                       :border-color "var(--surface0)"
-                       :background   "var(--surface00)"}}
-              (into [:<>] (map #(if (nil? %)
-                                  [:div.grow]
-                                  [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
-           [:div.flex-col.flex.h-full.w-full
-            ;header
-            (let [st (schpaa.state/listen :top-toggle)
-                  toggle #(schpaa.state/toggle :top-toggle)]
-              [sc/col {:class [:border-b :duration-200]
-                       :style {:background   "var(--surface00)"
-                               :border-color "var(--surface0)"}}
-               [:div.h-16.flex.items-center.w-full.px-4.shrink-0.truncates
-                [sc/row-std
-                 (when-not @(rf/subscribe [:lab/in-search-mode?])
-                   (let [titles (compute-page-titles r)]
-                     [:<>
-                      [:div.hidden.sm:block.grow
-                       [:<>
-                        ;[l/ppre-x title (vector? title)]
-                        (if (vector? titles)
-                          [:div.flex.items-center.gap-1
-                           (interpose [:div.text-2xl.opacity-20 "/"]
-                                      (for [[idx e] (map-indexed vector titles)
-                                            :let [last? (= idx (dec (count titles)))]]
-                                        (if last?
-                                          [sc/title e]
-                                          (let [{:keys [text link]} e]
-                                            [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
-                          [sc/title titles])]]
-                      [:div.xs:block.sm:hidden.grow
-                       (if (vector? titles)
-                         [sc/col-space-1
-                          (when (< 1 (count titles))
-                            (let [{:keys [text link]} (first titles)]
-                              [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))
-                          [sc/title (last titles)]]
-                         [sc/col
-                          [sc/title titles]])]]))
 
-                 [search-menu]
-                 [main-menu]]]])
-            [:div.overflow-y-auto.h-full.focus:outline-none
+          [:div.fixed.inset-0.flex
+
+           #_(when @has-chrome?
+               [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+                {:style {:padding-top  "var(--size-0)"
+                         :box-shadow   "var(--inner-shadow-3)"
+                         :border-color "var(--surface0)"
+                         :background   "var(--surface00)"}}
+                (into [:<>] (map #(if (nil? %)
+                                    [:div.grow]
+                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
+           ;vertical toolbar
+           [:div.flex-col.flex.h-full.w-full
+            [header-line r]
+            ;content
+            [:div.overflow-y-auto.h-full.focus:outline-none.grow
              {:style     {:background "var(--surface000)"}
               :id        "inner-document"
               :tab-index "0"}
@@ -487,15 +563,18 @@
 
                     [:div.flex.w-full.justify-between
                      ;[:div "X"]
-                     [:div.growx.mx-auto c]
-                     (when (not mobile?)
-                       [:div.duration-200.delay-200.shrink-0 {:class [(if @numberinput? :w-64 :w-0)]}])]
+                     [:div.mx-auto
+                      {:style {:max-width "50ch"}}
+                      c]
+                     #_(when (not mobile?)
+                         [:div.duration-200.delay-200.shrink-0 {:class [(if @numberinput? :w-64 :w-0)]}])]
 
                     [:div.py-8.h-32]
-                    [:div.absolute.right-4
-                     {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
-                     [sc/row-end {:class [:pt-4]}
-                      (bottom-menu)]]]])
+
+                    #_[:div.absolute.right-4
+                       {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
+                       [sc/row-end {:class [:pt-4]}
+                        (bottom-menu)]]]])
                 #_[l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
                                     :kee-frame/route
                                     :re-pressed.core/keydown)]])]
@@ -504,7 +583,30 @@
             (when @has-chrome?
               [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
                {:style {:box-shadow   "var(--inner-shadow-3)"
+
                         :border-color "var(--surface0)"
                         :background   "var(--surface00)"}}
                (into [:<>] (map horizontal-button
-                                (horizontal-toolbar (:uid @user-auth))))])]]])})))
+                                (horizontal-toolbar (:uid @user-auth))))])]
+           (when @has-chrome?
+             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
+              [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.border-l
+               {:style {:z-index      1211
+                        :padding-top  "var(--size-0)"
+                        :box-shadow   (if @numberinput? "var(--shadow-5)"
+                                                        "var(--inner-shadow-1)")
+                        :border-color "var(--surface0)"
+                        :background   "var(--surface00)"}}
+               (into [:<>] (map #(if (nil? %)
+                                   [:div.grow]
+                                   [vertical-button %]) (vertical-toolbar-right (:uid @user-auth))))]
+              [:div.absolute.right-16.xl:right-20.inset-y-0
+               {:style {:width          "280px"
+                        :pointer-events :none}}
+               [boatinput-menu]]])
+           #_[:div.hidden.sm:block
+              [:div.pl-4.h-fullx.flex.items-center.justify-end.h-full
+               {:style {:box-shadow   "var(--inner-shadow-3)"
+                        :border-color "var(--surface0)"
+                        :background   "var(--surface00)"}}
+               [:div [boatinput-sidebar]]]]]])})))

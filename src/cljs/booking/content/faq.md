@@ -1,6 +1,6 @@
 # Ofte stilte spørsmål
 
-## Sitter du inne med et ubesvart spørsmål etter å ha sett i denne listen, kan du godt sende oss en [tilbakemelding](/tilbakemelding).
+## Sitter du inne med et ubesvart spørsmål (etter å ha sett grundig i denne listen), kan du godt sende oss en [tilbakemelding](/tilbakemelding).
 
 <div class="qa"> 
 1. Hva betyr det at kravet til våttkort (grunnkurs hav) er absolutt? 

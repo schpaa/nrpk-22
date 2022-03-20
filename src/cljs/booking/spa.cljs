@@ -37,7 +37,8 @@
             [times.api :as ta]
             [schpaa.time]
             [goog.style :as gs]
-            [booking.aktivitetsliste]))
+            [booking.aktivitetsliste]
+            [booking.yearwheel]))
 
 ;region related to flex-date and how to display relative time
 
@@ -596,6 +597,11 @@
        [page-boundary r
         [:div "base page for booking/sjøbasen"]
         #_(-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown)])
+
+   :r.yearwheel
+   booking.yearwheel/render
+
+
 
    :r.page-not-found
    error-page})

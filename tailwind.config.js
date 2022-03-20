@@ -57,17 +57,17 @@ module.exports = {
     },
     colors: {
         brand1: {DEFAULT: "var(--brand1)"},
-//        alt: {
+        alt: {
 //            text: 'white',
 //            '300': '#DBFFB0',
 //            '400': '#A9E87E',
 //            '500': '#68A73D',
-//            DEFAULT: '#68A73D', //colors.sky[500],
+            DEFAULT: '#68A73D', //colors.sky[500],
 //            'inverse': 'white',
 //            'text-inverse': '#68A73D',
 //            '600': '#145C3E',
 //            '700': '#145C3E',
-//        },
+        },
         transparent: 'transparent',
 //        current: 'currentColor',
         black: colors.black,
@@ -81,8 +81,8 @@ module.exports = {
 //        emerald: colors.emerald,
 //        indigo: colors.indigo,
 //        yellow:colors.yellow,
-        amber: colors.amber
-//        blue: colors.blue,
+        amber: colors.amber,
+        blue: colors.blue
 //        sky: colors.sky,
 //        orange: colors.orange,
 //        rose:colors.rose,

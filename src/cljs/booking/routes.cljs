@@ -19,6 +19,7 @@
    ["/filer" {:name :r.fileman-temporary :header "Filer"}]
    ["/kalender" {:name :r.calendar :header "Kalender"}]
    ["/aktivitetsliste" {:name :r.aktivitetsliste :header [:r.forsiden "Aktivitetsliste"]}]
+   ["/arshjul" {:name :r.yearwheel :header [:r.forsiden "Årshjul"]}]
 
    ["/booking" {:name :r.booking :header [:r.forsiden "Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
