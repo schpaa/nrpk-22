@@ -533,31 +533,48 @@
    (fn [r]
      [page-boundary r
       ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
-      [:div {:class [:gap-1]
-             :style {:display               :grid
-                     :grid-auto-rows        "3rem"
-                     :grid-template-columns "repeat(7,minmax(1rem,1fr))"}}
-       (for [e (range 7)]
-         [:div.flex.flex-centerx.bg-white.p-1.self-end [sc/small (ta/week-name e :length 3 #_(t/>> (t/now) (t/new-duration e :days)))]])
-       (for [e (concat (map - (reverse (range 1 4))) (range 30))]
-         [:div.bg-white.p-1
-          {:class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
-          (if (neg? e)
-            [:div]
-            [sc/small e])])]])
+
+      {:whole [sc/col-space-2 {:class [:py-8]}
+               ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
+               (r/with-let [open? (r/atom false)]
+                 [:div.px-4 [booking.page-controlpanel/standard
+                             {:open?   @open?
+                              :toggle  #(swap! open? not)
+                              :title   "operasjoner"
+                              :content (fn [c]
+                                         [:div :header])}]])
+               ;[booking.aktivitetsliste/render r]
+               [:div {:class [:gap-1]
+                      :style {:display               :grid
+                              :grid-auto-rows        "3rem"
+                              :grid-template-columns "repeat(7,minmax(1rem,1fr))"}}
+                (for [e (range 7)]
+                  [:div.flex.flex-centerx.bg-white.p-1.self-end [sc/small (ta/week-name e :length 3 #_(t/>> (t/now) (t/new-duration e :days)))]])
+                (for [e (concat (map - (reverse (range 1 4))) (range 30))]
+                  [:div.bg-white.p-1
+                   {:class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
+                   (if (neg? e)
+                     [:div]
+                     [sc/small e])])]]}])
 
    :r.fileman-temporary
    (fn [r]
      (let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})]
        [page-boundary r
-        {:whole [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]}]))
+        [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]]))
 
    :r.aktivitetsliste
    (fn [r]
-     [page-boundary r
-      [:div
-       [:div.-debugx.select-none [booking.common-views/header-control-panel]]
-       [booking.aktivitetsliste/render r]]])
+     (r/with-let [open? (r/atom false)]
+       [page-boundary r
+        [sc/col-space-2 {:class [:py-8]}
+         [:div.px-4x [booking.page-controlpanel/standard
+                      {:open?   @open?
+                       :toggle  #(swap! open? not)
+                       :title   "operasjoner"
+                       :content (fn [c]
+                                  [:div :header])}]]
+         [booking.aktivitetsliste/render r]]]))
 
    :r.booking.faq
    (fn [r]
@@ -601,8 +618,5 @@
    :r.yearwheel
    booking.yearwheel/render
 
-
-
    :r.page-not-found
    error-page})
-

@@ -205,7 +205,7 @@
   (let [time-now (t/now)
         session-start (t/at (t/new-date 2022 3 18) (t/new-time 7 0))
         session-end (t/at (t/new-date 2022 3 18) (t/new-time 12 0))]
-    (into [:div.space-y-px.xp-1]
+    (into [:div.space-y-px.-debug]
           (for [[k {:keys [start end key moon adults children deleted list datetime] :as e}]
                 (->> (seq @data)
                      (filter (fn [[_ {:keys [start end]}]] (when (and (some? start))

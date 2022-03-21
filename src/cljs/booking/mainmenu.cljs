@@ -13,6 +13,7 @@
             [booking.boatinput]
             [schpaa.debug :as l]))
 
+
 (defn address-me-as [user]
   (booking.database/bookers-name user))
 
@@ -204,3 +205,19 @@
         :button       (fn [open]
                         [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
                          [sc/icon [:> solid/MenuIcon]]])}])))
+
+;region extract!
+
+(defn sub-menu [{:keys [dir data]}]
+  (r/with-let [menu-visible (r/atom true)]
+    (let [toggle-menu #(swap! menu-visible (fnil not false))]
+      [scm/submenu
+       {:showing      @menu-visible
+        :dir          dir
+        :close-button (fn [open] [scb/corner {:on-click toggle-menu} [sc/icon [:> solid/XIcon]]])
+        :data         data
+        :button       (fn [open]
+                        [scb/round-normal {:class    [:h-10]
+                                           :on-click toggle-menu}
+                         [sc/icon [:div {:class [:duration-100 :transform (if open :rotate-180)]}
+                                   [:> solid/ChevronDownIcon]]]])}])))

@@ -522,18 +522,19 @@
 
           [:div.fixed.inset-0.flex
 
-           #_(when @has-chrome?
-               [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-                {:style {:padding-top  "var(--size-0)"
-                         :box-shadow   "var(--inner-shadow-3)"
-                         :border-color "var(--surface0)"
-                         :background   "var(--surface00)"}}
-                (into [:<>] (map #(if (nil? %)
-                                    [:div.grow]
-                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
+           (when @has-chrome?
+             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+              {:style {:padding-top  "var(--size-0)"
+                       :box-shadow   "var(--inner-shadow-3)"
+                       :border-color "var(--surface0)"
+                       :background   "var(--surface00)"}}
+              (into [:<>] (map #(if (nil? %)
+                                  [:div.grow]
+                                  [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
            ;vertical toolbar
            [:div.flex-col.flex.h-full.w-full
             [header-line r]
+
             ;content
             [:div.overflow-y-auto.h-full.focus:outline-none.grow
              {:style     {:background "var(--surface000)"}
@@ -549,35 +550,27 @@
                   (bottom-menu)]]]
                ;content
 
-               [:div
-                (cond
-                  (map? (first c))
-                  (:whole (first c))
-                  :else
-                  [:div.h-full
-                   [:div.xmax-w-lg.py-4.space-y-4.px-4
-                    {:class :mx-auto}
-                    #_{:class (if @(rf/subscribe [:lab/number-input])
-                                :mr-auto
-                                :mx-auto)}
+               (cond
+                 (map? (first c))
+                 [:div.flex.grow
+                  (:whole (first c))]
+                 ;[:div.shrink-0 "extra"]]
 
-                    [:div.flex.w-full.justify-between
-                     ;[:div "X"]
-                     [:div.mx-auto
-                      {:style {:max-width "50ch"}}
-                      c]
-                     #_(when (not mobile?)
-                         [:div.duration-200.delay-200.shrink-0 {:class [(if @numberinput? :w-64 :w-0)]}])]
+                 :else
+                 [:div.h-full
+                  [:div.py-4.space-y-4.px-4
+                   {:class :mx-auto}
+                   [:div.flex.w-full.justify-between
+                    [:div.mx-auto
+                     {:style {:max-width "50ch"}}
+                     c]]
 
-                    [:div.py-8.h-32]
+                   [:div.py-8.h-32]
 
-                    #_[:div.absolute.right-4
-                       {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
-                       [sc/row-end {:class [:pt-4]}
-                        (bottom-menu)]]]])
-                #_[l/ppre-x (dissoc @re-frame.db/app-db :re-statecharts.core/fsm-state
-                                    :kee-frame/route
-                                    :re-pressed.core/keydown)]])]
+                   #_[:div.absolute.right-4
+                      {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
+                      [sc/row-end {:class [:pt-4]}
+                       (bottom-menu)]]]]))]
 
             ;horizontal toolbar
             (when @has-chrome?

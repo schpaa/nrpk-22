@@ -19,7 +19,10 @@
             [schpaa.state]
             [schpaa.debug :as l]
             [schpaa.icon :as icon]
-            [schpaa.style.dialog]))
+            [schpaa.style.dialog]
+            [schpaa.markdown]
+            [booking.mainmenu :refer [sub-menu main-menu boatinput-menu boatinput-sidebar]]
+            [booking.page-controlpanel]))
 
 
 #_(defonce st (reduce (fn [a e] (assoc a (subs (str (random-uuid)) 0 5) (dissoc e :id)))
@@ -34,11 +37,12 @@
 
 (defonce ui-state (r/atom {}))
 
-(defonce data (r/atom (reduce (fn [a {:keys [id type date content] :as e}]
+(defonce data (r/atom (reduce (fn [a {:keys [id tldr type date content] :as e}]
                                 (tap> date)
                                 (tap> (some-> date t/date-time t/date))
                                 (update a id assoc
                                         :type type
+                                        :tldr tldr
                                         :id id
                                         :date (some-> date t/date-time t/date)
                                         :content content))
@@ -51,6 +55,7 @@
                                     {:type 11
                                      :date nil}
                                     {:type 9
+                                     :tldr "En lang tekst som viser hvordan bryting fungerer, dvs når setningene strekker seg over flere linjer"
                                      :date (str (t/at (t/new-date 2022 4 28) (t/noon)))}
                                     {:date (str (t/at (t/new-date 2022 5 11) (t/noon))) :type 8}
                                     {:date (str (t/at (t/new-date 2022 5 31) (t/noon))) :type 8}
@@ -125,7 +130,9 @@
 
             [sci/input props :date [:w-48] "Dato" :date]
 
-            [sci/input props :text [:w-full] "Beskrivelse" :content]]
+            [sci/input props :text [:w-full] "TL;DR (too long, didn't read)" :tldr]
+
+            [sci/textarea props :text [:w-full] "Beskrivelse (blog)" :content]]
 
            #_[sci/textarea props :text [] "Innhold (ekslusiv tittel)" :content]]
           [sc/row-ec
@@ -140,16 +147,18 @@
                               :type     "submit"
                               :on-click #(on-save)} "Lagre"]]]]))]])
 
-(defn submit-fn [{:keys [date content id type] :as values}]
+(defn submit-fn [{:keys [date content id type tldr] :as values}]
   (if id
     ;update
     (swap! data assoc (str id) {:date    (when date (t/date date))
                                 :type    type
+                                :tldr    tldr
                                 :updated (str (t/now))
                                 :content content})
     ;push
     (swap! data assoc (subs (str (random-uuid)) 0 5) {:date    (when date (t/date date))
                                                       :type    type
+                                                      :tldr    tldr
                                                       :created (str (t/now))
                                                       :content content})))
 
@@ -176,21 +185,52 @@
                 [:> outline/TrashIcon])]])
 
 (o/defstyled icon-with-caption :button
+  {:background     "var(--surface00)"
+   :color          "var(--surface3)"
+   :padding-inline "var(--size-2)"
+   :padding-block  "var(--size-1)"
+   :border-radius  "var(--radius-round)"
+   :font-size      "var(--font-size-0)"}
+  [:&:hover {:background "var(--surface00)"
+             :color      "var(--surface5)"}]
   ([{:keys [class on-click alternate icon caption] :as attr} & ch]
    ^{:on-click on-click
      :class    class}
-   [scb2/normal-tight
+   [:<>
     [sc/row-sc-g2
      (when icon
-       [sc/icon {:class (if alternate [] [])} (icon alternate)])
+       [sc/icon-small {:class (if alternate [] [])} (icon alternate)])
      (when caption
        [:div (caption alternate)])]]))
 
 (defn- header []
   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
                show-editing (schpaa.state/listen :yearwheel/show-editing)
+               show-content (schpaa.state/listen :yearwheel/show-content)
                sort-by-created (r/atom true)]
-    [:div.sticky.top-0.z-10.snap-x
+    [sc/row-sc-g2
+     [icon-with-caption
+      {:on-click  #(schpaa.state/toggle :yearwheel/show-deleted)
+       :alternate @show-deleted
+       :icon      (fn [_] [:> outline/TrashIcon])
+       :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
+     [icon-with-caption
+      {:on-click  #(schpaa.state/toggle :yearwheel/show-content)
+       :alternate @show-content
+       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
+       :caption   (fn [e] (if e "A" "B"))}]]))
+
+(defn- header' []
+  (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
+               show-editing (schpaa.state/listen :yearwheel/show-editing)
+               show-content (schpaa.state/listen :yearwheel/show-content)
+               sort-by-created (r/atom true)]
+    #_[:div.w-full.bg-alt.truncate                          ;.xsticky.top-0.z-10.xinset-x-0.bg-alt.w-fullx
+       [:div.overflow-x-aduto.truncate]
+       [:div.flex.truncate
+        (for [_ (range 20)]
+          [:div.mr-2 "Xxx "])]]
+    [:div.sticky.top-0.z-10.max-w-xsx
      {:style {:overflow-x     :auto
               :padding-inline "var(--size-2)"
               :background     "var(--surface0)"}}
@@ -202,11 +242,16 @@
         :caption  #(-> "Ny hendelse")}]
 
       [icon-with-caption
-       {:class     [:snap-start]
-        :on-click  #(schpaa.state/toggle :yearwheel/show-editing)
+       {:on-click  #(schpaa.state/toggle :yearwheel/show-editing)
         :alternate @show-editing
         :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
         :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+
+      [icon-with-caption
+       {:on-click  #(schpaa.state/toggle :yearwheel/show-content)
+        :alternate @show-content
+        :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
+        :caption   (fn [e] (if e "A" "B"))}]
 
       [:div.grow]
 
@@ -228,101 +273,174 @@
           :icon      (fn [_] [:> outline/TrashIcon])
           :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}])]]))
 
+(def arco-datetime-config
+  {:refresh-rate 1000
+   :vocabulary   {:in     "om"
+                  :ago    "siden"
+                  :now    "nå"
+                  :second ["sekund" "sekunder"]
+                  :minute ["minutt" "minutter"]
+                  :hour   ["time" "timer"]
+                  :day    ["dag" "dager"]
+                  :week   ["uke" "uker"]
+                  :month  ["måned" "måneder"]
+                  :year   ["år" "år"]}})
 
-(defn- my-list-item [{:keys [id date content created deleted type] :as m}]
-  (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)]
-    [listitem
-     {:class    [:px-4 (when deleted :deleted)]
-      :on-click #(edit-event m)}
-     [sc/col-space-2
-      #_[arco.react/time-since {:times  [(str (t/now))
-                                         (str (t/instant (t/at (t/new-date 2022 2 2) (t/midnight))))]
-                                :config {:refresh-rate 1000
-                                         :vocabulary   {:in     "om"
-                                                        :now    "nå"
-                                                        :second ["sekund" "sekunder"]
-                                                        :minute ["minutt" "minutter"]
-                                                        :hour   ["time" "timer"]
-                                                        :day    ["dag" "dager"]
-                                                        :week   ["uke" "uker"]
-                                                        :month  ["måned" "måneder"]
-                                                        :year   ["år" "år"]}}}
+(defn- toggle-relative-time []
+  (schpaa.state/toggle :app/show-relative-time-toggle))
+
+(defn flex-datetime [date formatted]
+  (let [relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
+        on-click {:on-click #(do
+                               (tap> ["toggle" @relative-time?])
+                               (.stopPropagation %)
+                               (toggle-relative-time))}]
+    (when date
+      (if @relative-time?
+        [sc/link on-click (formatted (ta/date-format-sans-year date))]
+        [arco.react/time-to {:times  [(if (t/date-time? date)
+                                        (t/date-time date)
+                                        (t/at (t/date date) (t/midnight)))
+                                      (t/now)]
+                             :config arco-datetime-config}
          (fn [formatted-t]
-           [:div "my formatted-t: " formatted-t])]
-      [sc/row-sc {:class [:h-8]}
+           [sc/link on-click (formatted formatted-t)])]))))
 
-       (when show-editing
-         (trashcan id m))
+#_(defn- my-list-item [{:keys [id date content created deleted type] :as m}]
+    (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)]
+      [listitem
+       {:class    [:px-4 (when deleted :deleted)]
+        :on-click #(edit-event m)}
+       [sc/col-space-2
+        [sc/row-sc {:class [:h-8]}
 
-       [:div.w-6.shrink-0 (if date
-                            [sc/subtext "u" (ta/week-number (t/date date))]
-                            [sc/subtext "—"])]
+         (when show-editing
+           (trashcan id m))
 
-       ;(str (t/instant (t/at (t/date "2023-01-01") (t/midnight))))
-       #_(str (t/instant (t/at (t/date date) (t/midnight))))
+         [:div.w-6.shrink-0 (if date
+                              [sc/subtext "u" (ta/week-number (t/date date))]
+                              [sc/subtext "—"])]
 
+         [:div.whitespace-nowrap (flex-datetime date #(sc/subtext %))]
 
-       [sc/subtext
-        {:class [:w-32 :shrink-0 :truncate]}
-        (when date
-          (arco/time-to
-            [(str (t/instant (t/at (t/date date) (t/midnight))))]
-            {:vocabulary {:in     "om"
-                          :now    "nå"
-                          :second ["sekund" "sekunder"]
-                          :minute ["minutt" "minutter"]
-                          :hour   ["time" "timer"]
-                          :day    ["dag" "dager"]
-                          :week   ["uke" "uker"]
-                          :month  ["måned" "måneder"]
-                          :year   ["år" "år"]}
-             :order      [:in :time :interval]}))]
-       #_[sc/subtext {:class [:w-32 :shrink-0 :truncate]}
-          (if date
-            [schpaa.time/flex-date
-             {:format-fn (fn [dt]
-                           (sc/row-sc-g2
-                             [:div {:class [:w-8 :text-right]} (t/format "d. " dt)]
-                             (ta/month-name dt :length 3)))}
-             (t/date date)
-             (fn [i]
-               (ta/relative-local-time
-                 {:past-prefix           "for"
-                  :future-prefix         "om"
-                  :progressive-rounding? true}
-                 (t/at (t/date date) (t/midnight))))]
-            [:div.w-8.text-right "—"])]
-       [sc/subtext {:class [:truncate :shrink-0 :w-56]} (->> type (get sci/person-by-id) :name)]
-       [sc/subtext {:class [:truncate :shrink-0 :w-64]} (or content "—")]
+         [sc/subtext {:class []}
+          (->> type (get sci/person-by-id) :name)
+          (when content
+            [:span ", " content])]
 
-       #_[sc/subtext (ta/short-time-format (t/instant created))]
-       #_[sc/link "link"]]
-      #_[sc/row-sc
-         [:div.w-48]
-         [sc/subtext {:class [:truncate :w-32 :select-all]} (str (:id m))]]]]))
+         #_[sc/subtext (ta/short-time-format (t/instant created))]
+         #_[sc/link "link"]]
+        #_[sc/row-sc
+           [:div.w-48]
+           [sc/subtext {:class [:truncate :w-32 :select-all]} (str (:id m))]]]]))
+
+(defn- listitem-softwrap [{:keys [id date content tldr created deleted type] :as m}]
+  (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)
+        show-content (schpaa.state/listen :yearwheel/show-content)]
+    [listitem {:class    [:px-4x (when deleted :deleted)]
+               :on-click #(edit-event m)}
+     [:div
+      {:style {:display               :grid
+               :grid-template-columns "3rem 1fr"}}
+
+      (if show-editing
+        (trashcan id m)
+        [:div])
+
+      (do
+        (o/defstyled line :div
+          {:margin-top  "var(--size-1)"
+           :color       "var(--text3)"
+           :line-height "var(--font-lineheight-3)"})
+        (o/defstyled text :span
+          {:color "var(--text3)"})
+        (o/defstyled emph :span
+          {:color "var(--text1)"})
+        (o/defstyled dim :span
+          {:color       "var(--text3)"
+           :font-size   "var(--font-size-1)"
+           :font-weight "var(--font-weight-3)"})
+
+        [line
+         (interpose ", "
+                    (remove nil?
+                            [(when date
+                               (dim (str "uke " (ta/week-number (t/date date)))))
+                             (when date
+                               (dim (flex-datetime date #(vector :span %))))
+                             (when type
+                               (emph (->> type (get sci/person-by-id) :name)))
+                             (when tldr
+                               tldr)
+                             (when (and content @show-content)
+                               (-> (schpaa.markdown/md->html content)
+                                   (sc/markdown)))]))
+
+         #_(text "aljksd ;alskdq;oawdj ioa;jowidjoasj di;oasijk;ojias jl;asjdo; awjikio; ja4d;oi jhiod j;asdoi; jasodjia o;sidq aso;idj aosdjaio;sodi")])]]
+
+    #_[listitem
+       {:class    [:px-4 (when deleted :deleted)]
+        :on-click #(edit-event m)}
+       [sc/col-space-2
+        [sc/row-sc {:class [:h-8]}
+
+         (when show-editing
+           (trashcan id m))
+
+         [:div.w-6.shrink-0 (if date
+                              [sc/subtext "u" (ta/week-number (t/date date))]
+                              [sc/subtext "—"])]
+
+         [:div.whitespace-nowrap (flex-datetime date #(sc/subtext %))]
+
+         [sc/subtext {:class []}
+          (->> type (get sci/person-by-id) :name)
+          (when content
+            [:span ", " content])]
+
+         #_[sc/subtext (ta/short-time-format (t/instant created))]
+         #_[sc/link "link"]]
+        #_[sc/row-sc
+           [:div.w-48]
+           [sc/subtext {:class [:truncate :w-32 :select-all]} (str (:id m))]]]]))
 
 (defn render [r]
-  (let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-        show-editing (schpaa.state/listen :yearwheel/show-editing)]
-    [page-boundary r
-     {:whole
-      [:div
-       [header]
-       [sc/col-space-2 {:class [:py-8 :w-full :overflow-x-auto]}
-        (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
-                                                         (if (and @show-deleted @show-editing)
-                                                           @data
-                                                           (remove (comp :deleted val) @data))))]
-                 [sc/col-space-2
-                  [:div.h-1]
-                  [sc/header-title {:class [:px-4]} (t/int g)]
-                  (into [:div.space-y-px]
-                        (concat
-                          (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
-                            [:div
-                             (my-list-item (assoc data :id id))])
-                          (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
-                            (my-list-item (assoc data :id id)))))]))]]}]))
+  (r/with-let [open? (r/atom true)]
+    (let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
+          show-editing (schpaa.state/listen :yearwheel/show-editing)]
+
+      [page-boundary r
+       [sc/col-space-2 {:class [:py-8]}
+        ;[header]
+        #_[:div.bg-alt
+           {:style {;:overflow-x :auto
+                    :display :flex
+                    :flex    "0 0 200px"}}
+           #_[:div.bg-black.text-white {:style {:width "50ch"}} "z"]
+           (for [e (range 20)]
+             [:div "ITEM " e " "])]
+        [:div.px-4x [booking.page-controlpanel/standard
+                     {:open?   @open?
+                      :toggle  #(swap! open? not)
+                      :title   "operasjoner"
+                      :content (fn [c]
+                                 [header])}]]
+
+
+        [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
+         (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
+                                                          (if (and @show-deleted @show-editing)
+                                                            @data
+                                                            (remove (comp :deleted val) @data))))]
+                  [sc/col-space-2
+                   [:div.h-1]
+                   [sc/header-title {:class [:px-2]} (t/int g)]
+                   (into [:div.space-y-px]
+                         (concat
+                           (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
+                             (listitem-softwrap (assoc data :id id)))
+                           (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
+                             (listitem-softwrap (assoc data :id id)))))]))]]])))
 
 
 (comment
