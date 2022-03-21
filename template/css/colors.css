@@ -1,5 +1,12 @@
-.-debug {
-outline: 2px solid red;
+.x-debug {
+outline: 2px solid #a008;
+}
+.x-debug2 {
+outline: 2px solid #00a8;
+}
+
+.-debug3 {
+outline: 2px solid #0aa8;
 }
 
 @font-face {

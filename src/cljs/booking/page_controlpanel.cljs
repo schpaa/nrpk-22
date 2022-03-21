@@ -17,7 +17,7 @@
                :class [:tracking-wider :uppercase]} title]]])
 
 (defn standard [{:keys [content open? toggle title]}]
-  [sc/col-space-2
+  [sc/col-space-2 {:class [:-debug]}
    (chevron-updown-toggle open? toggle title)
    (when open?
      (content))])

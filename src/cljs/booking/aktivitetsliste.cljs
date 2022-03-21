@@ -15,53 +15,53 @@
     (t/instant (t/at (t/new-date 2022 3 17) (t/new-time 10 0)))))
 
 (def data
-  (let [n (t/new-date 2022 3 18)
+  (let [n (t/date (t/now)) #_(t/new-date 2022 3 21)
         tm 1]
     (r/atom {"A1" {:start  (t/instant (t/at n (t/new-time 8 0)))
-                   :list   #{"JEG"}
+                   :list   #{"101"}
                    :adults 1
                    :data   1}
              "A2" {:start  (t/instant (t/at n (t/new-time 7 0)))
-                   :list   #{"JEG"}
+                   :list   #{"102"}
                    :adults 1
                    :data   1}
              "A3" {:start  (t/instant (t/at n (t/new-time 6 0)))
-                   :list   #{"JEG"}
+                   :list   #{"103"}
                    :adults 1
                    :data   1}
              "A4" {:start  (t/instant (t/at n (t/new-time 4 0)))
                    :end    (t/instant (t/at n (t/new-time 8 0)))
-                   :list   #{"NOEN"}
+                   :list   #{"104"}
                    :adults 1
                    :data   1}
              "B"  {:start (t/instant (t/at n (t/new-time 5 0)))
                    :end   (t/instant (t/at n (t/new-time 7 0)))
-                   :list  #{"DEG"}
+                   :list  #{"105"}
                    :data  1}
-             "C"  {:start  (t/instant (t/at n (t/new-time 14 0)))
-                   :end    (t/instant (t/at n (t/new-time 20 0)))
-                   :list   #{100}
+             "C"  {:start  (t/instant (t/at n (t/new-time 10 30)))
+                   :end    (t/instant (t/at n (t/new-time 12 0)))
+                   :list   #{200}
                    :adults 1
                    :data   1}
              "D"  {:start  (t/instant (t/at n (t/new-time 7 0)))
-                   :list   #{100 120}
+                   :list   #{200 220}
                    :adults 1
                    :data   1}
              "E"  {:start    (t/instant (t/at n (t/new-time 14 0)))
-                   :list     #{100 120}
+                   :list     #{300 221}
                    :adults   2
                    :children 1
                    :data     1}
              "F"  {:start (t/instant (t/at n (t/new-time 12 0)))
-                   :list  #{100 121}
+                   :list  #{141 132}
                    :data  1}
              "overnattF"
              {:key      true
               :moon     true
               :adults   10
               :children 2
-              :start    (t/instant (t/at (t/new-date 2022 3 18) (t/new-time 7 0)))
-              :list     #{100 120 130 150 160 164 142}
+              :start    (t/instant (t/at (t/new-date 2022 3 21) (t/new-time 15 0)))
+              :list     #{600 620 630 650 660 664 642}
               :data     1}})))
 
 (o/defstyled listitem :div
@@ -128,137 +128,184 @@
    ^{:on-click on-click}
    [:<> [:div {:class (if selected :selected :normal)} ch]]))
 
-(defn- calc-rows [rows]
-  (case rows
-    (4 5 6) 40
-    (7 8 9) 60
-    20))
-
 (defn fancy-timeline [{:keys [entries rows session-start session-end action-start action-end now]}]
   (let [start-hour (or (some-> action-start t/hour) 0)
         end-hour (some-> action-end t/hour)
-        now-hour (t/hour now)]
-    [:div.relative
-     {:style {:height (* 2 (calc-rows rows))}}
-     [:svg.h-full
-      {:viewBox             (str "0 0 23 " (calc-rows rows))
-       :stroke-width        1
+        now-hour (t/hour now)
+        y 4
+        active-color :blue
+        now-color :red
+        complete-color :black]
+    [:svg.h-full.w-full
+     {:viewBox             (str "0 0 23 " 12)
+      :stroke-width        1
+      :preserveAspectRatio "none"
+      :width               "100%"
+      :height              "auto"}
 
-       :preserveAspectRatio "none"
-       :width               "100%"
-       :height              "auto"}
+     [:rect {:vector-effect :non-scaling-stroke
+             :fill          :white
+             :width         :100%
+             :height        :100%}]
 
-      [:rect {:vector-effect :non-scaling-stroke
-              :fill          :white
-              :width         :100%
-              :height        :100%}]
-
-      [:rect {:vector-effect :non-scaling-stroke
-              :fill          "var(--surface00)"
-              :x             (t/hour session-start)
-              :width         (- (t/hour session-end) (t/hour session-start))
-              :height        :100%}]
-      (let [w (or (some-> end-hour (- start-hour))
-                  (- now-hour start-hour))]
-        [:<>
-         [:rect {:fill         :0
-                 :stroke-width 0
-                 :y            2
-                 :x            start-hour
-                 :width        w
-                 :height       1}]
-         (when (< 0 (- now-hour start-hour))
-           [:rect {:stroke        :black
-                   :vector-effect :non-scaling-stroke
-                   :x             start-hour :y 1
-                   :width         "2%" :height 3}])
-         #_[:ellipse {:vector-effect :non-scaling-stroke
-                      :fill          :black
-                      :stroke        :none
-                      :cx            start-hour
-                      :cy            2
-                      :rx            "0.1vh"
-                      :ry            "0.1vw"
-                      :transform     (str "translate(" (- start-hour 2) "," 1 ")")
-                      :d             "M0,0 L1,1.5 L0,3 z"}]
-         (if (nil? end-hour)
-           [:path {:vector-effect :non-scaling-stroke
-                   :fill          "black"
-                   :transform     (str "translate(" (+ start-hour w) "," 1 ")")
-                   :d             "M0,0 L1,1.5 L0,3 z"}]
-           [:rect {:stroke        :black
-                   :vector-effect :non-scaling-stroke
-                   :x             end-hour :y 1
-                   :width         "2%" :height 3}])])
-      [:line {:stroke           :red
-              :vector-effect    :non-scaling-stroke
-              :stroke-dasharray "2"
-              :x1               now-hour :y1 0 :x2 now-hour :y2 "100%"}]]
-
-     (for [[idx e] (map-indexed vector entries)]
-       [:div.absolute.top-0.left-0
-        {:style {:top (str (* idx 20) "px")}}
-        [mini-badge {} e]])]))
+     [:rect {:vector-effect :non-scaling-stroke
+             :fill          "var(--surface00)"
+             :x             (t/hour session-start)
+             :width         (- (t/hour session-end) (t/hour session-start))
+             :height        :100%}]
+     (let [w (or (some-> end-hour (- start-hour))
+                 (- now-hour start-hour))]
+       [:<>
+        [:rect (if (nil? end-hour)
+                 {:fill         active-color
+                  :stroke-width 0
+                  :y            (+ 1 y)
+                  :x            start-hour
+                  :width        w
+                  :height       1}
+                 {:fill         complete-color
+                  :stroke-width 0
+                  :y            (+ 1 y)
+                  :x            start-hour
+                  :width        w
+                  :height       1})]
+        (when (< 0 (- now-hour start-hour))
+          (if (nil? end-hour)
+            [:rect {:stroke        active-color
+                    :fill          active-color
+                    :vector-effect :non-scaling-stroke
+                    :x             start-hour :y y
+                    :width         "2%" :height 3}]
+            [:rect {:stroke        complete-color
+                    :fill          complete-color
+                    :vector-effect :non-scaling-stroke
+                    :x             start-hour :y y
+                    :width         "2%" :height 3}]))
+        (if (nil? end-hour)
+          [:path {:vector-effect :non-scaling-stroke
+                  :fill          active-color
+                  :transform     (str "translate(" (+ start-hour w 0.2) "," y ")")
+                  :d             "M0,0 L1,1.5 L0,3 z"}]
+          [:rect {:stroke        complete-color
+                  :fill          complete-color
+                  :vector-effect :non-scaling-stroke
+                  :x             end-hour :y y
+                  :width         "2%" :height 3}])])
+     [:line {:stroke           now-color
+             :stroke-width     1
+             :vector-effect    :non-scaling-stroke
+             :stroke-dasharray "2 1"
+             :x1               now-hour :y1 0 :x2 now-hour :y2 "100%"}]]))
 
 (defn render [r]
   ;constants
-  (let [time-now (t/now)
-        session-start (t/at (t/new-date 2022 3 18) (t/new-time 7 0))
-        session-end (t/at (t/new-date 2022 3 18) (t/new-time 12 0))]
-    (into [:div.space-y-px.-debug]
-          (for [[k {:keys [start end key moon adults children deleted list datetime] :as e}]
-                (->> (seq @data)
-                     (filter (fn [[_ {:keys [start end]}]] (when (and (some? start))
-                                                             (or
-                                                               (and (t/< (t/date start) (t/date time-now)) (nil? end))
-                                                               (= (t/date time-now) (t/date start))))))
-                     (sort-by (comp :start val) >))]
+  (r/with-let [show-editing (schpaa.state/listen :activitylist/show-editing)
+               show-deleted (schpaa.state/listen :activitylist/show-deleted)]
+    (let [time-now (t/now)
+          session-start (t/at (t/new-date 2022 3 21) (t/new-time 11 0))
+          session-end (t/at (t/new-date 2022 3 21) (t/new-time 20 0))]
+      [:div.min-w-full.-debug3                              ;.max-w-lg.-debug.min-w-fullx.mx-auto
 
-            [listitem
-             [:div.flex.w-full
-              {:class (into [:justify-between
-                             :items-start :gap-2 :px-2]
-                            (if deleted [:line-through :opacity-50]))}
+       (into [:div.flex.flex-col.space-y-px.-debug2.xmin-w-xl.xmd:min-w-lg]
+             (for [[k {:keys [start end key moon adults children juveniles deleted list datetime] :as e}]
+                   (->> (seq @data)
+                        (remove (fn [[k {:keys [deleted]}]] (if @show-editing
+                                                              (if @show-deleted
+                                                                false
+                                                                deleted)
+                                                              deleted)))
+                        (filter (fn [[_ {:keys [start end]}]]
+                                  (when (and (some? start))
+                                    (or
+                                      (and (t/< (t/date start) (t/date time-now)) (nil? end))
+                                      (= (t/date time-now) (t/date start))))))
+                        (sort-by (comp :start val) >))]
 
-              ;[:div.h-10.flex.items-center (trashcan k e)]
-              [:div.h-10.flex.items-center (edit k e)]
+               [listitem
+                [:div.w-full.-debug.flex.items-start.gap-2
+                 [:div.flex.items-center.justify-between.gap-2.w-fullx.h-8
+                  {:style {:flex "0 1 auto"}}
+                  (when (and @show-editing)
+                    [:div.flex.-debug
+                     {:style {:flex "0 1 auto"}}
+                     (trashcan k e)
+                     (edit k e)])
+
+                  [sc/row-sc-g2
+                   {:style {:flex "0 1 auto"}
+                    :class [:w-32 :-debug2 :h-8]}
+                   [sc/text (or adults "—")]
+                   [sc/text (or juveniles "—")]
+                   [sc/text (or children "—")]
+                   [:div.grow]
+                   (when key (sc/icon-tiny [:> solid/KeyIcon]))
+                   (when moon (sc/icon-tiny [:> solid/MoonIcon]))]]
+
+                 [sc/col {:class  [:w-full
+                                   :py-x2 :space-y-pxx]
+                          :xstyle {:min-width "20ch"
+                                   :max-width "30ch"}}
+
+                  (for [e (sort list)]
+                    [:div.gap-2.w-full
+                     {:style {:display     :flex
+
+                              :align-items :center}}
+
+                     [:div.w-16.h-8.shrink-0.justify-end.align-item-end.item-end.-debug
+                      [sc/badge {:selected false}
+                       [:div.px-2 e]]]
+
+                     [:div.h-8.w-full.growx                 ;.first:rounded-t-xl.last:rounded-b-xl
+                      [fancy-timeline
+                       {;:entries       list
+                        :rows          1
+                        :session-start session-start
+                        :session-end   session-end
+                        :action-start  (if (t/< (t/date start) (t/date time-now)) nil (t/time start))
+                        :action-end    (some-> end t/time)
+                        :now           time-now}]]])]]]
+
+               #_[listitem
+                  [:div.flex.w-full.-debug
+                   {:class (into [:justify-between
+                                  :items-start :gap-2 :px-2]
+                                 (if deleted [:line-through :opacity-50]))}
+
+                   ;[:div.h-10.flex.items-center (trashcan k e)]
+                   [:div.h-10.flex.items-center (edit k e)]
 
 
-              [:div.w-10.shrink-0.flex.flex-col.items-center.h-full
-               [:div.w-auto.flex.gap-1.items-baseline
-                [sc/text adults]
-                [sc/small children]]
-               [:div.w-auto.flex.gap-1
-                (when key (sc/icon-tiny [:> solid/KeyIcon]))
-                (when moon (sc/icon-tiny [:> solid/MoonIcon]))]]
+                   [:div.w-10.shrink-0.flex.flex-col.items-center.h-full
+                    [:div.w-auto.flex.gap-1.items-baseline
+                     [sc/text adults]
+                     [sc/small children]]
+                    [:div.w-auto.flex.gap-1
+                     (when key (sc/icon-tiny [:> solid/KeyIcon]))
+                     (when moon (sc/icon-tiny [:> solid/MoonIcon]))]]
 
-              #_(into [sc/surface-b-sans-bg {:class [:gap-1 :shrink-1 :w-full]
-                                             :style {:padding               "var(--size-1)"
-                                                     :max-width             "17ch"
-                                                     :min-width             :4rem
-                                                     ;:background            :#aaf
-                                                     :display               :grid
-                                                     :grid-template-columns "repeat(auto-fit,minmax(2.53rem,min-content))"
-                                                     :grid-auto-rows        "2rem"}}]
-                      (map #(vector mini-badge {:on-click (fn [e] (tap> %))
-                                                :selected false} (str %))) list)
+                   (let [rows (case (count list)
+                                (3 4) 20
+                                (5 6) 30
+                                (7 8) 40
+                                10)]
 
-              (let [rows (case (count list)
-                           (3 4) 20
-                           (5 6) 30
-                           (7 8) 40
-                           10)]
-                [:div.shrink-1.h-10x.shadow-sm.w-full
-                 {:style {:height        (str (* 4 rows) "px")
-                          :flex-grow     1
-                          :max-width     "30ch"
-                          :overflow      :hidden
-                          :border-radius "var(--radius-1)"}}
-                 [fancy-timeline
-                  {:entries       list
-                   :rows          (count list)
-                   :session-start session-start
-                   :session-end   session-end
-                   :action-start  (if (t/< (t/date start) (t/date time-now)) nil (t/time start))
-                   :action-end    (some-> end t/time)
-                   :now           time-now}]])]]))))
+
+                     [:div.shrink-1.h-6.shadow-sm.w-full
+                      {:style {;:height        (str (* 4 rows) "px")
+                               :flex-grow     1
+                               :max-width     "30ch"
+                               :overflow      :hidden
+                               :border-radius "var(--radius-1)"}}])
+                   [:div.w-full
+                    (for [e list]
+                      [:div.flex.w-full.h-6.space-y-1.-debug2
+                       [:div.w-12.-debug2 [sc/small e]]
+                       [fancy-timeline
+                        {;:entries       list
+                         :rows          1
+                         :session-start session-start
+                         :session-end   session-end
+                         :action-start  (if (t/< (t/date start) (t/date time-now)) nil (t/time start))
+                         :action-end    (some-> end t/time)
+                         :now           time-now}]])]]]))])))

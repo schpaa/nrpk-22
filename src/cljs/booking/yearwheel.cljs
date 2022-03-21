@@ -218,7 +218,12 @@
       {:on-click  #(schpaa.state/toggle :yearwheel/show-content)
        :alternate @show-content
        :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-       :caption   (fn [e] (if e "A" "B"))}]]))
+       :caption   (fn [e] (if e "A" "B"))}]
+     [icon-with-caption
+      {:on-click  #(schpaa.state/toggle :yearwheel/show-editing)
+       :alternate @show-editing
+       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
+       :caption   (fn [e] (if e "Ferdig" "Endre"))}]]))
 
 (defn- header' []
   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)

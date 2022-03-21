@@ -564,17 +564,59 @@
         [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]]))
 
    :r.aktivitetsliste
-   (fn [r]
-     (r/with-let [open? (r/atom false)]
-       [page-boundary r
-        [sc/col-space-2 {:class [:py-8]}
-         [:div.px-4x [booking.page-controlpanel/standard
-                      {:open?   @open?
-                       :toggle  #(swap! open? not)
-                       :title   "operasjoner"
-                       :content (fn [c]
-                                  [:div :header])}]]
-         [booking.aktivitetsliste/render r]]]))
+   (do
+     (o/defstyled icon-with-caption :button
+       {:background     "var(--surface00)"
+        :color          "var(--surface3)"
+        :padding-inline "var(--size-2)"
+        :padding-block  "var(--size-1)"
+        :border-radius  "var(--radius-round)"
+        :font-size      "var(--font-size-0)"}
+       [:&:hover {:background "var(--surface00)"
+                  :color      "var(--surface5)"}]
+       ([{:keys [class on-click alternate icon caption] :as attr} & ch]
+        ^{:on-click on-click
+          :class    class}
+        [:<>
+         [sc/row-sc-g2
+          (when icon
+            [sc/icon-small {:class (if alternate [] [])} (icon alternate)])
+          (when caption
+            [:div (caption alternate)])]]))
+
+     (defn- header []
+       (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
+                    show-editing (schpaa.state/listen :activitylist/show-editing)
+                    show-content (schpaa.state/listen :activitylist/show-content)
+                    sort-by-created (r/atom true)]
+         [sc/row-sc-g2
+          [icon-with-caption
+           {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
+            :alternate @show-editing
+            :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
+            :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+          [icon-with-caption
+           {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
+            :alternate @show-deleted
+            :icon      (fn [_] [:> outline/TrashIcon])
+            :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
+          [icon-with-caption
+           {:on-click  #(schpaa.state/toggle :activitylist/show-content)
+            :alternate @show-content
+            :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
+            :caption   (fn [e] (if e "Bare aktive" "Alle"))}]]))
+
+     (fn [r]
+       (r/with-let [open? (r/atom true)]
+         [page-boundary r
+          [sc/col-space-2 {:class [:py-8 :min-w-full]}
+           [booking.page-controlpanel/standard
+            {:open?   @open?
+             :toggle  #(swap! open? not)
+             :title   "operasjoner"
+             :content (fn [c]
+                        [header])}]
+           [booking.aktivitetsliste/render r]]])))
 
    :r.booking.faq
    (fn [r]
