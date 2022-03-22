@@ -1,32 +1,27 @@
 (ns booking.yearwheel
-  (:require [booking.common-views :refer [page-boundary]]
-            [lambdaisland.ornament :as o :refer [defstyled]]
-            ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]
+  (:require
+    [lambdaisland.ornament :as o :refer [defstyled]]
+    [booking.ico :as ico]
+    [arco.react]
+    [schpaa.style.ornament :as sc]
+    [tick.core :as t]
+    [times.api :as ta]
+    [schpaa.time]
+    [schpaa.style.button :as scb]
+    [schpaa.style.button2 :as scb2]
+    [schpaa.style.input :as sci]
+    [fork.re-frame :as fork]
+    [db.core :as db]
+    [reagent.core :as r]
+    [schpaa.state]
+    [schpaa.icon :as icon]
+    [schpaa.style.dialog]
+    [schpaa.markdown]
+    [booking.page-controlpanel]
+    [schpaa.style.hoc.toggles :as hoc.toggles]))
 
-            [arco.react]
-            [schpaa.style.ornament :as sc]
-            [tick.core :as t]
-            [times.api :as ta]
-            [schpaa.time]
-            [schpaa.style.button :as scb]
-            [schpaa.style.button2 :as scb2]
-
-            [schpaa.style.input :as sci]
-            [fork.re-frame :as fork]
-            [db.core :as db]
-            [reagent.core :as r]
-            [schpaa.state]
-
-            [schpaa.icon :as icon]
-            [schpaa.style.dialog]
-            [schpaa.markdown]
-
-            [booking.page-controlpanel]))
-
-
-
-#_(defonce st (reduce (fn [a e] (assoc a (subs (str (random-uuid)) 0 5) (dissoc e :id)))
+(comment
+  (defonce st (reduce (fn [a e] (assoc a (subs (str (random-uuid)) 0 5) (dissoc e :id)))
                       {}
                       [{:date nil :content "a"}
                        {:date nil :content "d"}
@@ -34,7 +29,7 @@
                        {:date (str (t/at (t/new-date 2023 3 16) (t/noon))) :content "Styremøte"}
                        {:date (t/now) :content "b"}
                        {:date nil :content "c"}]))
-#_(def data (r/atom st))
+  (def data (r/atom st)))
 
 (defonce ui-state (r/atom {}))
 
@@ -182,11 +177,11 @@
          :value {:deleted (not deleted)}})
    [sc/icon-small
     {:style {:color "var(--surface5)"}}
-    (if deleted (icon/small :rotate-left)
-                [:> outline/TrashIcon])]])
+    (if deleted (icon/small :rotate-left) ico/trash)]])
 
 (o/defstyled icon-with-caption :button
-  {:background     "var(--surface00)"
+  {:white-space    :nowrap
+   :background     "var(--surface00)"
    :color          "var(--surface3)"
    :padding-inline "var(--size-2)"
    :padding-block  "var(--size-1)"
@@ -206,78 +201,26 @@
 
 (defn- header []
   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-               show-editing (schpaa.state/listen :yearwheel/show-editing)
-               show-content (schpaa.state/listen :yearwheel/show-content)
-               sort-by-created (r/atom true)]
-    [sc/row-sc-g2
-     [icon-with-caption
-      {:on-click  #(schpaa.state/toggle :yearwheel/show-deleted)
-       :alternate @show-deleted
-       :icon      (fn [_] [:> outline/TrashIcon])
-       :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-     [icon-with-caption
-      {:on-click  #(schpaa.state/toggle :yearwheel/show-content)
-       :alternate @show-content
-       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-       :caption   (fn [e] (if e "A" "B"))}]
-     [icon-with-caption
-      {:on-click  #(schpaa.state/toggle :yearwheel/show-editing)
-       :alternate @show-editing
-       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
-       :caption   (fn [e] (if e "Ferdig" "Endre"))}]]))
 
-(defn- header' []
-  (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-               show-editing (schpaa.state/listen :yearwheel/show-editing)
-               show-content (schpaa.state/listen :yearwheel/show-content)
-               sort-by-created (r/atom true)]
-    #_[:div.w-full.bg-alt.truncate                          ;.xsticky.top-0.z-10.xinset-x-0.bg-alt.w-fullx
-       [:div.overflow-x-aduto.truncate]
-       [:div.flex.truncate
-        (for [_ (range 20)]
-          [:div.mr-2 "Xxx "])]]
-    [:div.sticky.top-0.z-10.max-w-xsx
-     {:style {:overflow-x     :auto
-              :padding-inline "var(--size-2)"
-              :background     "var(--surface0)"}}
-     [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
+               show-content (schpaa.state/listen :yearwheel/show-content)]
 
-      [icon-with-caption
-       {:on-click #(edit-event nil)
-        :icon     #(-> [:> solid/PlusIcon])
-        :caption  #(-> "Ny hendelse")}]
+    [sc/col-space-2
 
-      [icon-with-caption
-       {:on-click  #(schpaa.state/toggle :yearwheel/show-editing)
-        :alternate @show-editing
-        :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
-        :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+     [sc/row-sc-g2-w
+      [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]
+      [hoc.toggles/switch :yearwheel/show-editing "Rediger"]
+      [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"]]
 
-      [icon-with-caption
-       {:on-click  #(schpaa.state/toggle :yearwheel/show-content)
-        :alternate @show-content
-        :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-        :caption   (fn [e] (if e "A" "B"))}]
-
-      [:div.grow]
-
-      (when @show-editing
-        [icon-with-caption
-         {:icon #(-> [:> outline/FolderIcon])}])
-
-      (when @show-editing
-        [icon-with-caption
-         {:on-click  #(swap! sort-by-created not)
-          :icon      #(if % [:> outline/SortAscendingIcon] [:> outline/SortDescendingIcon])
-          :alternate @sort-by-created}])
-
-      (when @show-editing
-        [icon-with-caption
-         {:class     [:snap-start]
-          :on-click  #(schpaa.state/toggle :yearwheel/show-deleted)
-          :alternate @show-deleted
-          :icon      (fn [_] [:> outline/TrashIcon])
-          :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}])]]))
+     [sc/row-sc-g2-w
+      [hoc.toggles/button-cta
+       #(edit-event nil)
+       (sc/row-sc-g2 (sc/icon-small ico/plus) "Ny hendelse")]
+      [hoc.toggles/button-reg
+       #(edit-event nil)
+       (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
+      [hoc.toggles/button-reg
+       #(edit-event nil)
+       (sc/row-sc-g2 (sc/icon-small ico/qrcode) "Nullstill")]]]))
 
 (def arco-datetime-config
   {:refresh-rate 1000
@@ -311,34 +254,6 @@
                              :config arco-datetime-config}
          (fn [formatted-t]
            [sc/link on-click (formatted formatted-t)])]))))
-
-#_(defn- my-list-item [{:keys [id date content created deleted type] :as m}]
-    (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)]
-      [listitem
-       {:class    [:px-4 (when deleted :deleted)]
-        :on-click #(edit-event m)}
-       [sc/col-space-2
-        [sc/row-sc {:class [:h-8]}
-
-         (when show-editing
-           (trashcan id m))
-
-         [:div.w-6.shrink-0 (if date
-                              [sc/subtext "u" (ta/week-number (t/date date))]
-                              [sc/subtext "—"])]
-
-         [:div.whitespace-nowrap (flex-datetime date #(sc/subtext %))]
-
-         [sc/subtext {:class []}
-          (->> type (get sci/person-by-id) :name)
-          (when content
-            [:span ", " content])]
-
-         #_[sc/subtext (ta/short-time-format (t/instant created))]
-         #_[sc/link "link"]]
-        #_[sc/row-sc
-           [:div.w-48]
-           [sc/subtext {:class [:truncate :w-32 :select-all]} (str (:id m))]]]]))
 
 (defn- listitem-softwrap [{:keys [id date content tldr created deleted type] :as m}]
   (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)
@@ -380,57 +295,24 @@
                                tldr)
                              (when (and content @show-content)
                                (-> (schpaa.markdown/md->html content)
-                                   (sc/markdown)))]))
-
-         #_(text "aljksd ;alskdq;oawdj ioa;jowidjoasj di;oasijk;ojias jl;asjdo; awjikio; ja4d;oi jhiod j;asdoi; jasodjia o;sidq aso;idj aosdjaio;sodi")])]]
-
-    #_[listitem
-       {:class    [:px-4 (when deleted :deleted)]
-        :on-click #(edit-event m)}
-       [sc/col-space-2
-        [sc/row-sc {:class [:h-8]}
-
-         (when show-editing
-           (trashcan id m))
-
-         [:div.w-6.shrink-0 (if date
-                              [sc/subtext "u" (ta/week-number (t/date date))]
-                              [sc/subtext "—"])]
-
-         [:div.whitespace-nowrap (flex-datetime date #(sc/subtext %))]
-
-         [sc/subtext {:class []}
-          (->> type (get sci/person-by-id) :name)
-          (when content
-            [:span ", " content])]
-
-         #_[sc/subtext (ta/short-time-format (t/instant created))]
-         #_[sc/link "link"]]
-        #_[sc/row-sc
-           [:div.w-48]
-           [sc/subtext {:class [:truncate :w-32 :select-all]} (str (:id m))]]]]))
+                                   (sc/markdown)))]))])]]))
 
 (defn render [r]
   (r/with-let [open? (r/atom true)]
     (let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
           show-editing (schpaa.state/listen :yearwheel/show-editing)]
 
-      [page-boundary r
-       [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
-        (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
-                                                         (if (and @show-deleted @show-editing)
-                                                           @data
-                                                           (remove (comp :deleted val) @data))))]
-                 [sc/col-space-2
-                  [:div.h-1]
-                  [sc/header-title {:class [:px-2]} (t/int g)]
-                  (into [:div.space-y-px]
-                        (concat
-                          (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
-                            (listitem-softwrap (assoc data :id id)))
-                          (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
-                            (listitem-softwrap (assoc data :id id)))))]))]])))
-
-
-(comment
-  (ta/week-number (t/now)))
+      [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
+       (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
+                                                        (if (and @show-deleted @show-editing)
+                                                          @data
+                                                          (remove (comp :deleted val) @data))))]
+                [sc/col-space-2
+                 [:div.h-1]
+                 [sc/header-title {:class [:px-2]} (t/int g)]
+                 (into [:div.space-y-px]
+                       (concat
+                         (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
+                           (listitem-softwrap (assoc data :id id)))
+                         (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
+                           (listitem-softwrap (assoc data :id id)))))]))])))

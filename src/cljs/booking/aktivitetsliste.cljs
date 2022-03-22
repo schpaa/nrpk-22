@@ -8,7 +8,8 @@
             [schpaa.icon :as icon]
             [reagent.core :as r]
             [schpaa.debug :as l]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [schpaa.style.hoc.toggles :as hoc.toggles]))
 
 (comment
   (do
@@ -337,3 +338,29 @@
                          :action-start  (if (t/< (t/date start) (t/date time-now)) nil (t/time start))
                          :action-end    (some-> end t/time)
                          :now           time-now}]])]]]))])))
+
+(defn- panel []
+  (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
+               show-editing (schpaa.state/listen :activitylist/show-editing)
+               show-content (schpaa.state/listen :activitylist/show-content)
+               show-narrow (schpaa.state/listen :activitylist/show-narrow-scope)
+               sort-by-created (r/atom true)]
+    [sc/row-sc-g2 {:class [:flex-wrap]}
+     [hoc.toggles/twostate
+      {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
+       :alternate @show-editing
+       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
+       :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+     [hoc.toggles/twostate
+      {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
+       :alternate @show-deleted
+       :icon      (fn [_] [:> outline/TrashIcon])
+       :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
+     [hoc.toggles/twostate
+      {:on-click  #(schpaa.state/toggle :activitylist/show-content)
+       :alternate @show-content
+       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
+       :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
+
+     [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]]))
+  

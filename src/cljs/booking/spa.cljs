@@ -1,5 +1,5 @@
 (ns booking.spa
-  (:require [booking.common-views :refer [page-boundary]]
+  (:require [booking.common-views :refer [page-boundary +page-builder]]
             [booking.content.booking-blog :as content.booking-blog :refer [render]]
             [reagent.core :as r]
             [lambdaisland.ornament :as o]
@@ -534,24 +534,36 @@
              #_[l/ppre-x receipts']])))])
    :r.calendar
    (fn [r]
-     [page-boundary r
-      [:div {:class [:gap-1]
-             :style {:display               :grid
-                     :grid-template-columns "repeat(7,minmax(1rem,1fr))"
-                     :grid-auto-rows        "3rem"}}
-       (for [e (range 7)]
-         [:div.flex.p-1.self-end.w-full
-          {:style {:background "red"
-                   :color      "yellow"}}
-          [sc/small (ta/week-name e :length 3)]])
-       (for [e (concat (map - (reverse (range 1 4))) (range 30))]
-         [:div.p-1
-          {:style {:background "blue"
-                   :color      "white"}
-           :class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
-          (if (neg? e)
-            [:div]
-            [sc/small e])])]])
+     [+page-builder r
+      {:panel  (fn [c]
+                 [sc/col-space-2
+                  [sc/row-sc-g2-w
+                   [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
+                   [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]]
+                  [sc/row-sc-g2-w
+                   [hoc.toggles/button-cta #(js/alert "!") "act!"]
+                   [hoc.toggles/button-reg #(js/alert "!") "now!"]
+                   [hoc.toggles/button-reg #(js/alert "!") "hurry!"]]])
+
+       :render (fn [_] [:div {:class [:gap-1]
+                              :style {:display               :grid
+                                      :grid-template-columns "repeat(7,minmax(1rem,1fr))"
+                                      :grid-template-rows    "1rem"
+                                      :grid-auto-rows        "4rem"}}
+
+                        (for [e (range 7)]
+                          [:div.flex.p-1.self-end.w-full
+                           {:style {:background "red"
+                                    :color      "yellow"}}
+                           [sc/small (ta/week-name e :length 3)]])
+                        (for [e (concat (map - (reverse (range 1 4))) (range 30))]
+                          [:div.p-1
+                           {:style {:background "blue"
+                                    :color      "white"}
+                            :class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
+                           (if (neg? e)
+                             [:div]
+                             [sc/small e])])])}])
 
    :r.fileman-temporary
    (fn [r]
@@ -561,13 +573,15 @@
 
    :r.aktivitetsliste
    (fn [r]
-     [page-boundary r
-      [booking.aktivitetsliste/render r]])
+     ;todo: () or [], and does it matter here?
+     [+page-builder r
+      {:render booking.aktivitetsliste/render
+       :panel  booking.aktivitetsliste/panel}])
 
    :r.booking.faq
    (fn [r]
-     [page-boundary r
-      (-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown)])
+     [+page-builder r
+      {:render (fn [_] (-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown))}])
 
    :r.booking
    (fn [r]
@@ -604,7 +618,9 @@
         #_(-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown)])
 
    :r.yearwheel
-   booking.yearwheel/render
+   (fn [r]
+     (+page-builder r {:panel  booking.yearwheel/header
+                       :render booking.yearwheel/render}))
 
    :r.page-not-found
    error-page})

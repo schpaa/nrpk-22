@@ -35,7 +35,7 @@
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [schpaa.style.hoc.toggles :as hoc.toggles]
     ;todo: problem with codelocality
-            [booking.yearwheel]))
+    #_[booking.yearwheel]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -491,76 +491,76 @@
   (toggle [t])
   (listen [t]))
 
-(defn config-panel-for-page [r perstate]
-  (let [open? (listen perstate)
-        toggle (toggle perstate)]
-    (let [page-name (some-> r :data :name)]
-      (case page-name
-        :r.yearwheel
-        [hoc.panel/togglepanel
-         {:open?   @open?
-          :toggle  #(swap! open? not)
-          :title   "operasjoner"
-          :content (fn [c]
-                     [booking.yearwheel/header])}]
+#_(defn config-panel-for-page [r perstate]
+    (let [open? (listen perstate)
+          toggle (toggle perstate)]
+      (let [page-name (some-> r :data :name)]
+        (case page-name
+          :r.yearwheel
+          [hoc.panel/togglepanel
+           {:open?   @open?
+            :toggle  #(swap! open? not)
+            :title   "operasjoner"
+            :content (fn [c]
+                       [booking.yearwheel/header])}]
 
-        :r.fileman-temporary
-        [hoc.panel/togglepanel
-         {:open?   @open?
-          :toggle  toggle
-          :title   "operasjoner"
-          :content (fn [c]
-                     [sc/row-sc-g2 {:class [:flex-wrap]}
-                      [hoc.toggles/switch :calendar/show-history "Vis historikk"]
-                      [hoc.toggles/switch :calendar/show-hidden "Vis skjulte"]])}]
-
-        :r.aktivitetsliste
-        (do
-          (defn- header []
-            (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
-                         show-editing (schpaa.state/listen :activitylist/show-editing)
-                         show-content (schpaa.state/listen :activitylist/show-content)
-                         show-narrow (schpaa.state/listen :activitylist/show-narrow-scope)
-                         sort-by-created (r/atom true)]
-              [sc/row-sc-g2 {:class [:flex-wrap]}
-               [hoc.toggles/twostate
-                {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
-                 :alternate @show-editing
-                 :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
-                 :caption   (fn [e] (if e "Ferdig" "Endre"))}]
-               [hoc.toggles/twostate
-                {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
-                 :alternate @show-deleted
-                 :icon      (fn [_] [:> outline/TrashIcon])
-                 :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-               [hoc.toggles/twostate
-                {:on-click  #(schpaa.state/toggle :activitylist/show-content)
-                 :alternate @show-content
-                 :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-                 :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
-
-               [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]]))
+          :r.fileman-temporary
           [hoc.panel/togglepanel
            {:open?   @open?
             :toggle  toggle
             :title   "operasjoner"
             :content (fn [c]
-                       [header])}])
+                       [sc/row-sc-g2 {:class [:flex-wrap]}
+                        [hoc.toggles/switch :calendar/show-history "Vis historikk"]
+                        [hoc.toggles/switch :calendar/show-hidden "Vis skjulte"]])}]
 
-        :r.calendar
-        [hoc.panel/togglepanel
-         {:open?   @open?
-          :toggle  toggle
-          :title   "operasjoner"
-          :content (fn [c]
-                     [sc/row-sc-g2 {:class [:flex-wrap]}
-                      [hoc.toggles/button #(js/alert "!") "act!"]
-                      [hoc.toggles/button #(js/alert "!") "now!"]
-                      [hoc.toggles/button #(js/alert "!") "hurry!"]
-                      [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
-                      [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]])}]
+          :r.aktivitetsliste
+          (do
+            (defn- header []
+              (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
+                           show-editing (schpaa.state/listen :activitylist/show-editing)
+                           show-content (schpaa.state/listen :activitylist/show-content)
+                           show-narrow (schpaa.state/listen :activitylist/show-narrow-scope)
+                           sort-by-created (r/atom true)]
+                [sc/row-sc-g2 {:class [:flex-wrap]}
+                 [hoc.toggles/twostate
+                  {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
+                   :alternate @show-editing
+                   :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
+                   :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+                 [hoc.toggles/twostate
+                  {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
+                   :alternate @show-deleted
+                   :icon      (fn [_] [:> outline/TrashIcon])
+                   :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
+                 [hoc.toggles/twostate
+                  {:on-click  #(schpaa.state/toggle :activitylist/show-content)
+                   :alternate @show-content
+                   :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
+                   :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
 
-        [:div "NO PANEL DEFINED?"]))))
+                 [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]]))
+            [hoc.panel/togglepanel
+             {:open?   @open?
+              :toggle  toggle
+              :title   "operasjoner"
+              :content (fn [c]
+                         [header])}])
+
+          :r.calendar
+          [hoc.panel/togglepanel
+           {:open?   @open?
+            :toggle  toggle
+            :title   "operasjoner"
+            :content (fn [c]
+                       [sc/row-sc-g2 {:class [:flex-wrap]}
+                        [hoc.toggles/button-cta #(js/alert "!") "act!"]
+                        [hoc.toggles/button-cta #(js/alert "!") "now!"]
+                        [hoc.toggles/button-cta #(js/alert "!") "hurry!"]
+                        [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
+                        [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]])}]
+
+          [:div "NO PANEL DEFINED?"]))))
 
 (defrecord Perstate [tag]
   PerstateP
@@ -569,13 +569,13 @@
   (listen [t]
     (schpaa.state/listen tag)))
 
-(defn with-panel [r content]
-  (let [pagename (some-> r :data :name)
-        perstate (Perstate. pagename)]
-    [sc/col-space-2
-     {:class [:py-8]}
-     (config-panel-for-page r perstate)
-     content]))
+#_(defn with-panel [r content]
+    (let [pagename (some-> r :data :name)
+          perstate (Perstate. pagename)]
+      [sc/col-space-2
+       {:class [:py-8]}
+       (config-panel-for-page r perstate)
+       content]))
 
 (defn page-boundary [r & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -641,7 +641,7 @@
                   [:div.mx-auto
                    {:style {:width     "100%"
                             :max-width "40ch"}}
-                   [with-panel r contents]]
+                   contents #_[with-panel r contents]]
                   [:div.py-8.h-32]]))]
 
             ;horizontal toolbar
@@ -675,3 +675,16 @@
                         :border-color "var(--surface0)"
                         :background   "var(--surface00)"}}
                [:div [boatinput-sidebar]]]]]])})))
+
+(defn +page-builder [r {:keys [render panel]}]
+  (let [pagename (some-> r :data :name)
+        perstate (Perstate. pagename)]
+    [page-boundary r
+     (when panel
+       [:div.py-8
+        [hoc.panel/togglepanel
+         {:open?   @(listen perstate)
+          :toggle  (toggle perstate)
+          :title   "kontrollpanel"
+          :content (fn [c] [panel])}]])
+     [render r]]))

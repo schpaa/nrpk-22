@@ -19,7 +19,13 @@
    ["/filer" {:name :r.fileman-temporary :header "Filer"}]
    ["/kalender" {:name :r.calendar :header "Kalender"}]
    ["/aktivitetsliste" {:name :r.aktivitetsliste :header [:r.forsiden "Aktivitetsliste"]}]
-   ["/arshjul" {:name :r.yearwheel :header [:r.forsiden "Årshjul"]}]
+
+   ["/arshjul" {:name   :r.yearwheel
+                :header [:r.forsiden "Årshjul"]
+                :panel  [:yearwheel/add
+                         :yearwheel/delete
+                         :yearwheel/toggle-deleted
+                         :yearwheel/toggle-content]}]
 
    ["/booking" {:name :r.booking :header [:r.forsiden "Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
