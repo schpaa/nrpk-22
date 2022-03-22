@@ -147,7 +147,8 @@
 (o/defstyled panel :div
   :w-64 :h-auto
   {:display               :grid
-   :gap                   "var(--size-1)"
+   :column-gap            "var(--size-2)"
+   :row-gap               "var(--size-1)"
    :grid-template-columns "repeat(4,1fr)"
    :grid-auto-rows        "4rem"})
 
@@ -166,14 +167,13 @@
   (let [n (r/cursor st [:children])]
     (swap! n inc)))
 
-
 (defn children [st]
   (r/with-let [n (r/cursor st [:children])
                #_#_increase #(swap! n inc)
                #_#_decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
     [up-down-button {:content  (fn [value]
                                  [:div.flex.flex-col.justify-end.items-center.h-full
-                                  [:img.h-12.object-fit.-ml-px {:src "/img/toddler.png"}]
+                                  [:img.h-12.object-fit.-ml-px {:src "/img/human.png"}]
                                   (str value)])
                      :value    (or @n 0)
                      :increase #(increase-children st)
@@ -186,7 +186,6 @@
 (defn- increase-juveniles [st]
   (let [n (r/cursor st [:juveniles])]
     (swap! n inc)))
-
 
 (defn juveniles [st]
   (r/with-let [n (r/cursor st [:juveniles])
@@ -243,7 +242,7 @@
              :gap                   "var(--size-1)"
              :grid-template-columns "repeat(3,1fr)"
              :grid-auto-rows        "1fr"}}
-    (doall (for [e '[7 8 9 4 5 6 1 2 3 nil 0 :del]]
+    (doall (for [e '[7 8 9 4 5 6 1 2 3 :toggle 0 :del]]
              (if (number? e)
                [numberpad-button {:on-click
                                   (fn [] (if (:phone @st)
@@ -266,15 +265,17 @@
                                (not (empty? (:phonenumber @st)))
                                (not (empty? (:item @st))))}
                   [sc/icon-huge [:> solid/BackspaceIcon]]]
-                 (= :phone e)
-                 [toggle-button
-                  {:on-click  #(swap! st update :phone (fnil not false))
-                   :value     (:phone @st)
-                   :off-style {:color      "var(--surface2)"
-                               :background "none"}
-                   :style     (if (:phone @st) {:color      "var(--yellow-1)"
-                                                :background :#124})
-                   :content   [sc/icon-large [:> solid/DeviceMobileIcon]]}]
+                 (= :toggle e)
+                 [numberpad-button
+                  {:on-click #(swap! st update :phone (fnil not false))
+                   ;:value     (:phone @st)
+                   #_#_:off-style {:color      "var(--surface2)"
+                                   :background "none"}
+                   :xstyle   (if (:phone @st) {:color       "var(--yellow-1)"
+                                               :xbackground :#124})}
+                  (if (:phone @st)
+                    [sc/icon-large [:> solid/TagIcon]]
+                    [sc/icon-large [:> solid/PhoneIcon]])]
 
                  :else [:div]))))]])
 
@@ -468,13 +469,14 @@
           #_[:div.absolute.top-0.right-0
              [scb/corner {:on-click toggle-numberinput} [sc/icon-large [:> solid/XIcon]]]]
 
-          [:div.p-2                                         ;.focus:outline-nonex.focus:ring-black.focus:ring-offset-2.focus:ring-offset-white.p-4
+          [:div                                             ;.focus:outline-nonex.focus:ring-black.focus:ring-offset-2.focus:ring-offset-white.p-4
            {:class     [:focus:outline-none
                         :focus:ring-4
                         ;:focus:ring-alt
                         :focus:ring-offset-2
                         :focus:ring-offset-clear]
-            :style     (if mobile? {} {:border-top-left-radius     "var(--radius-2)"
+            :style     (if mobile? {} {:padding                    "var(--size-4)"
+                                       :border-top-left-radius     "var(--radius-2)"
                                        :border-bottom-left-radius  "var(--radius-2)"
                                        :border-top-right-radius    "none"
                                        :border-bottom-right-radius "none"
@@ -513,7 +515,7 @@
             [:div
              {:style {:grid-row       "4"
                       :grid-column    "2/span 2"
-                      :padding-inline "var(--size-3)"
+                      :padding-inline "var(--size-2)"
                       :border-radius  "var(--radius-1)"
                       :background     "var(--surface000)"
                       :box-shadow     "var(--inner-shadow-0)"}}
@@ -522,16 +524,21 @@
                        :font-weight 600
                        :font-size   "var(--font-size-4)"}}
               (if (:phone @st)
-                [:div.flex
-                 {:style {:color "var(--surface4)"}}
+                [:div
+                 {:style {:display     "flex"
+                          :align-items "center"
+                          :font-size   "var(--font-size-5)"
+                          :color       "var(--surface5)"}}
                  (when (empty? (:phonenumber @st))
-                   [:div.animate-blink.opacity-100 "|"])
+                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
                  [input-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
                  (when-not (empty? (:phonenumber @st))
-                   [:div.animate-blink.opacity-100 "|"])]
-                [:div.flex.items-center
-                 {:style {:font-size "var(--font-size-5)"
-                          :color     "var(--surface5)"}}
+                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])]
+                [:div
+                 {:style {:display     "flex"
+                          :align-items "center"
+                          :font-size   "var(--font-size-5)"
+                          :color       "var(--surface5)"}}
                  (when (empty? (:item @st))
                    [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
                  [input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]

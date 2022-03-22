@@ -575,8 +575,8 @@
    (fn [r]
      ;todo: () or [], and does it matter here?
      [+page-builder r
-      {:render booking.aktivitetsliste/render
-       :panel  booking.aktivitetsliste/panel}])
+      {:render-fullwidth booking.aktivitetsliste/render
+       :panel            booking.aktivitetsliste/panel}])
 
    :r.booking.faq
    (fn [r]

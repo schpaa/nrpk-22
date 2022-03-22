@@ -2,8 +2,7 @@
   (:require [booking.content.blog-support :refer [err-boundary]]
             [reitit.core :as reitit]
             [reagent.ratom]
-            [cljs.core.async :refer [chan take! put! >! <! timeout]]
-            [cljs.core.async :refer-macros [go-loop go]]
+    ;[cljs.core.async :refer-macros [go-loop go]]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.style.dialog :refer [open-dialog-logoutcommand
@@ -13,23 +12,23 @@
             [booking.content.booking-blog]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
-            ["react-qr-code" :default QRCode]
+    ;["react-qr-code" :default QRCode]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [reagent.core :as r]
             [re-frame.core :as rf]
             [db.core :as db]
-            [goog.events.KeyCodes :as keycodes]
-            [times.api :as ta]
-            [tick.core :as t]
+    ;[goog.events.KeyCodes :as keycodes]
+    ;[times.api :as ta]
+    ;[tick.core :as t]
             [schpaa.style.combobox]
 
             [booking.fileman]
-            [schpaa.icon :as icon]
+    ;[schpaa.icon :as icon]
             [booking.boatinput]
             [booking.mainmenu :refer [main-menu boatinput-menu boatinput-sidebar]]
             [booking.search :refer [search-menu]]
-            [schpaa.debug :as l]
+    ;[schpaa.debug :as l]
             [kee-frame.core :as k]
             [booking.routes]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
@@ -469,101 +468,13 @@
        [search-menu]
        [main-menu]]]]))
 
-(defprotocol PerstateP
-  (toggle [t])
-  (listen [t]))
-
-#_(defn config-panel-for-page [r perstate]
-    (let [open? (listen perstate)
-          toggle (toggle perstate)]
-      (let [page-name (some-> r :data :name)]
-        (case page-name
-          :r.yearwheel
-          [hoc.panel/togglepanel
-           {:open?   @open?
-            :toggle  #(swap! open? not)
-            :title   "operasjoner"
-            :content (fn [c]
-                       [booking.yearwheel/header])}]
-
-          :r.fileman-temporary
-          [hoc.panel/togglepanel
-           {:open?   @open?
-            :toggle  toggle
-            :title   "operasjoner"
-            :content (fn [c]
-                       [sc/row-sc-g2 {:class [:flex-wrap]}
-                        [hoc.toggles/switch :calendar/show-history "Vis historikk"]
-                        [hoc.toggles/switch :calendar/show-hidden "Vis skjulte"]])}]
-
-          :r.aktivitetsliste
-          (do
-            (defn- header []
-              (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
-                           show-editing (schpaa.state/listen :activitylist/show-editing)
-                           show-content (schpaa.state/listen :activitylist/show-content)
-                           show-narrow (schpaa.state/listen :activitylist/show-narrow-scope)
-                           sort-by-created (r/atom true)]
-                [sc/row-sc-g2 {:class [:flex-wrap]}
-                 [hoc.toggles/twostate
-                  {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
-                   :alternate @show-editing
-                   :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
-                   :caption   (fn [e] (if e "Ferdig" "Endre"))}]
-                 [hoc.toggles/twostate
-                  {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
-                   :alternate @show-deleted
-                   :icon      (fn [_] [:> outline/TrashIcon])
-                   :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-                 [hoc.toggles/twostate
-                  {:on-click  #(schpaa.state/toggle :activitylist/show-content)
-                   :alternate @show-content
-                   :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-                   :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
-
-                 [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]]))
-            [hoc.panel/togglepanel
-             {:open?   @open?
-              :toggle  toggle
-              :title   "operasjoner"
-              :content (fn [c]
-                         [header])}])
-
-          :r.calendar
-          [hoc.panel/togglepanel
-           {:open?   @open?
-            :toggle  toggle
-            :title   "operasjoner"
-            :content (fn [c]
-                       [sc/row-sc-g2 {:class [:flex-wrap]}
-                        [hoc.toggles/button-cta #(js/alert "!") "act!"]
-                        [hoc.toggles/button-cta #(js/alert "!") "now!"]
-                        [hoc.toggles/button-cta #(js/alert "!") "hurry!"]
-                        [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
-                        [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]])}]
-
-          [:div "NO PANEL DEFINED?"]))))
-
-(defrecord Perstate [tag]
-  PerstateP
-  (toggle [t]
-    #(schpaa.state/toggle tag))
-  (listen [t]
-    (schpaa.state/listen tag)))
-
-#_(defn with-panel [r content]
-    (let [pagename (some-> r :data :name)
-          perstate (Perstate. pagename)]
-      [sc/col-space-2
-       {:class [:py-8]}
-       (config-panel-for-page r perstate)
-       content]))
 
 (defn page-boundary [r & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
         numberinput? (rf/subscribe [:lab/number-input])
-        has-chrome? (rf/subscribe [:lab/has-chrome])]
+        has-chrome? (rf/subscribe [:lab/has-chrome])
+        left-aligned (schpaa.state/listen :activitylist/left-aligned)]
     (r/create-class
       {:display-name "booking-page-boundary"
        :component-did-mount
@@ -619,11 +530,8 @@
                ;content
                (if (map? (first contents))
                  [:div.w-auto (:whole (first contents))]
-                 [:div.h-full.mx-4
-                  [:div.mx-auto
-                   {:style {:width     "100%"
-                            :max-width "40ch"}}
-                   contents #_[with-panel r contents]]
+                 [:div.h-full.xmx-4.w-full
+                  contents
                   [:div.py-8.h-32]]))]
 
             ;horizontal toolbar
@@ -648,7 +556,7 @@
                                    [:div.grow]
                                    [vertical-button %]) (vertical-toolbar-right (:uid @user-auth))))]
               [:div.absolute.right-16.xl:right-20.inset-y-0
-               {:style {:width          "280px"
+               {:style {:width          "298px"
                         :pointer-events :none}}
                [boatinput-menu]]])
            #_[:div.hidden.sm:block
@@ -658,15 +566,45 @@
                         :background   "var(--surface00)"}}
                [:div [boatinput-sidebar]]]]]])})))
 
-(defn +page-builder [r {:keys [render panel]}]
+(def max-width "40ch")
+
+(defprotocol PerstateP
+  (toggle [t])
+  (listen [t]))
+
+(defrecord Perstate [tag]
+  PerstateP
+  (toggle [t]
+    #(schpaa.state/toggle tag))
+  (listen [t]
+    (schpaa.state/listen tag)))
+
+(defn +page-builder [r {:keys [render render-fullwidth panel]}]
   (let [pagename (some-> r :data :name)
-        perstate (Perstate. pagename)]
+        perstate (Perstate. pagename)
+        numberinput (rf/subscribe [:lab/number-input])
+        left-aligned (schpaa.state/listen :activitylist/left-aligned)]
     [page-boundary r
      (when panel
-       [:div.py-8
-        [hoc.panel/togglepanel
-         {:open?   @(listen perstate)
-          :toggle  (toggle perstate)
-          :title   "kontrollpanel"
-          :content (fn [c] [panel])}]])
-     [render r]]))
+       [:div.mx-4
+        [:div.py-8.mx-auto
+         {:style {:width     "100%"
+                  :max-width max-width}}
+         [hoc.panel/togglepanel
+          {:open?   @(listen perstate)
+           :toggle  (toggle perstate)
+           :title   "kontrollpanel"
+           :content (fn [c] [panel])}]]])
+     [:div.mx-4
+      [:div.duration-200
+       {:style {:margin-right :auto
+                :margin-left  (if render-fullwidth
+                                (if (and @numberinput @left-aligned)
+                                  0                         ;force view to align to the left
+                                  :auto)
+                                :auto)
+                :width        "100%"
+                :max-width    max-width}}
+       (if render-fullwidth
+         [render-fullwidth r]
+         [render r])]]]))

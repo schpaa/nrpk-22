@@ -239,13 +239,14 @@
 (defn render [r]
   ;constants
   (r/with-let [show-editing (schpaa.state/listen :activitylist/show-editing)
-               show-deleted (schpaa.state/listen :activitylist/show-deleted)]
+               show-deleted (schpaa.state/listen :activitylist/show-deleted)
+               left-aligned (schpaa.state/listen :activitylist/left-aligned)]
     (let [time-now (t/now)
           session-start (t/at (t/new-date 2022 3 21) (t/new-time 11 0))
           session-end (t/at (t/new-date 2022 3 21) (t/new-time 20 0))]
-      [:div.min-w-full.-debug3                              ;.max-w-lg.-debug.min-w-fullx.mx-auto
+      [:div
 
-       (into [:div.flex.flex-col.space-y-px.-debug2.xmin-w-xl.xmd:min-w-lg]
+       (into [:div.flex.flex-col.space-y-px]
              (for [[k {:keys [start end key moon adults children juveniles deleted list datetime] :as e}]
                    (->> (seq @data)
                         (remove (fn [[k {:keys [deleted]}]] (if @show-editing
@@ -261,19 +262,19 @@
                         (sort-by (comp :start val) >))]
 
                [listitem
-                [:div.w-full.-debug.flex.items-start.gap-2
+                [:div.w-full.-xdebug.flex.items-start.gap-2
                  {:style {:opacity (if deleted 0.2)}}
                  [:div.flex.items-center.justify-between.gap-2.w-fullx.h-8
                   {:style {:flex "0 1 auto"}}
                   (when (and @show-editing)
-                    [:div.flex.-debug
+                    [:div.flex.-xdebug
                      {:style {:flex "0 1 auto"}}
                      (trashcan k e)
                      (edit k e)])
 
                   [sc/row-sc-g2
                    {:style {:flex "0 1 auto"}
-                    :class [:w-32 :-debug2 :h-8]}
+                    :class [:w-32 :-xdebug2 :h-8]}
                    [sc/text {:class [:w-4]} (or adults "")]
                    [sc/text {:class [:w-4]} (or juveniles "")]
                    [sc/text {:class [:w-4]} (or children "")]
@@ -296,7 +297,7 @@
                       :now           time-now}])]]]
 
                #_[listitem
-                  [:div.flex.w-full.-debug
+                  [:div.flex.w-full.-xdebug
                    {:class (into [:justify-between
                                   :items-start :gap-2 :px-2]
                                  (if deleted [:line-through :opacity-50]))}
@@ -328,8 +329,8 @@
                                :border-radius "var(--radius-1)"}}])
                    [:div.w-full
                     (for [e list]
-                      [:div.flex.w-full.h-6.space-y-1.-debug2
-                       [:div.w-12.-debug2 [sc/small e]]
+                      [:div.flex.w-full.h-6.space-y-1.-xdebug2
+                       [:div.w-12.-xdebug2 [sc/small e]]
                        [fancy-timeline
                         {;:entries       list
                          :rows          1
@@ -362,5 +363,6 @@
        :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
        :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
 
-     [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]]))
+     [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]
+     [hoc.toggles/switch :activitylist/left-aligned "Venstrestilt"]]))
   

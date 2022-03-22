@@ -203,7 +203,6 @@
 
 (defn- header []
   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-
                show-content (schpaa.state/listen :yearwheel/show-content)]
 
     [sc/col-space-2
@@ -216,14 +215,14 @@
      [sc/row-sc-g2-w
       [hoc.toggles/button-cta
        #(edit-event nil)
-       (sc/row-sc-g2 (sc/icon-small ico/plus) "Ny hendelse")]
+       (sc/row-sc-g2 (sc/icon-small ico/plus) "Nytt event")]
       [hoc.toggles/button-reg
        #(rf/dispatch [:lab/qr-code-for-current-page])
        (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
       [hoc.toggles/button-reg
        #(js/alert "wat")
        (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")
-       true]]]))
+       {:disabled true}]]]))
 
 (def arco-datetime-config
   {:refresh-rate 1000
