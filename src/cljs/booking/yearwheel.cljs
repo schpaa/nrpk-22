@@ -201,6 +201,19 @@
      (when caption
        [:div (caption alternate)])]]))
 
+(defn always-panel []
+  [sc/row-sc-g2-w
+   [hoc.toggles/button-cta
+    #(edit-event nil)
+    (sc/row-sc-g2 (sc/icon-small ico/plus) "Nytt event")]
+   [hoc.toggles/button-reg
+    #(rf/dispatch [:lab/qr-code-for-current-page])
+    (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
+   [hoc.toggles/button-reg
+    #(js/alert "wat")
+    (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")
+    {:disabled true}]])
+
 (defn- header []
   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
                show-content (schpaa.state/listen :yearwheel/show-content)]
@@ -210,19 +223,9 @@
      [sc/row-sc-g2-w
       [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]
       [hoc.toggles/switch :yearwheel/show-editing "Rediger"]
-      [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"]]
+      [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"]]]))
 
-     [sc/row-sc-g2-w
-      [hoc.toggles/button-cta
-       #(edit-event nil)
-       (sc/row-sc-g2 (sc/icon-small ico/plus) "Nytt event")]
-      [hoc.toggles/button-reg
-       #(rf/dispatch [:lab/qr-code-for-current-page])
-       (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
-      [hoc.toggles/button-reg
-       #(js/alert "wat")
-       (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")
-       {:disabled true}]]]))
+
 
 (def arco-datetime-config
   {:refresh-rate 1000

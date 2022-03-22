@@ -579,32 +579,39 @@
   (listen [t]
     (schpaa.state/listen tag)))
 
-(defn +page-builder [r {:keys [render render-fullwidth panel]}]
+(defn +page-builder [r {:keys [render render-fullwidth panel always-panel]}]
   (let [pagename (some-> r :data :name)
         perstate (Perstate. pagename)
         numberinput (rf/subscribe [:lab/number-input])
         left-aligned (schpaa.state/listen :activitylist/left-aligned)]
     [page-boundary r
-     (when panel
-       [:div.mx-4
-        [:div.py-8.mx-auto
-         {:style {:width     "100%"
-                  :max-width max-width}}
-         [hoc.panel/togglepanel
-          {:open?   @(listen perstate)
-           :toggle  (toggle perstate)
-           :title   "kontrollpanel"
-           :content (fn [c] [panel])}]]])
-     [:div.mx-4
-      [:div.duration-200
-       {:style {:margin-right :auto
-                :margin-left  (if render-fullwidth
-                                (if (and @numberinput @left-aligned)
-                                  0                         ;force view to align to the left
-                                  :auto)
-                                :auto)
-                :width        "100%"
-                :max-width    max-width}}
-       (if render-fullwidth
-         [render-fullwidth r]
-         [render r])]]]))
+     [sc/col-space-8 {:class [:py-8]}
+      (when panel
+        [:div.mx-4
+         [:div.mx-auto
+          {:style {:width     "100%"
+                   :max-width max-width}}
+          [hoc.panel/togglepanel
+           {:open?   @(listen perstate)
+            :toggle  (toggle perstate)
+            :title   "kontrollpanel"
+            :content (fn [c] [panel])}]]])
+      (when always-panel
+        [:div.mx-4
+         [:div.mx-auto
+          {:style {:width     "100%"
+                   :max-width max-width}}
+          [always-panel]]])
+
+      [:div.mx-4
+       [:div.duration-200
+        {:style {:margin-right :auto
+                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                 ;; force view to align to the left
+                                 0
+                                 :auto)
+                 :width        "100%"
+                 :max-width    max-width}}
+        (if render-fullwidth
+          [render-fullwidth r]
+          [render r])]]]]))

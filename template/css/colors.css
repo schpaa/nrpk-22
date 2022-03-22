@@ -130,10 +130,6 @@ outline: 2px solid #a0a8;
     --gray-8: #292524;
 
 
-
-
-
-
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
@@ -143,8 +139,6 @@ outline: 2px solid #a0a8;
    --brand0-dim: var(--green-7);
    --brand1-dim: var(--green-4);
    --brand2-dim: var(--green-1);
-
-
 
    --text1-dim: var(--gray-3);
    --text2-dim: var(--gray-3);
@@ -170,12 +164,12 @@ outline: 2px solid #a0a8;
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
-   --brand-hue: 180;
+   --brand-hue: 20;
    --brand000-light: var(--green-1);
    --brand00-light: var(--green-2);
    --brand0-light: hsl(var(--brand-hue), 39%, 90% ); /* var(--green-3); */
    --brand1o-light: hsla(var(--brand-hue), 39%, 50%,0.05);
-   --brand1-light: #68A73D; //hsl(var(--brand-hue), 39%, 40%);
+   --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
    --brand2-light: hsl(var(--brand-hue), 39%, 30%);
 
    --brand1-dim: hsl(100, 39%, 50%);

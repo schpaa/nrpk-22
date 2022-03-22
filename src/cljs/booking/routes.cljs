@@ -8,7 +8,7 @@
                  :path-fn (fn [r] (some-> r :path-params :id))}]
    ["/nytt-innlegg" {:name :r.booking-blog-new :header "Nytt innlegg"}]
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
-   ["/debug" {:name :r.debug :header "Booking Labs" :subheader "Baksiden"}]
+   ["/debug" {:name :r.debug :header [:r.booking "Booking av båt"]}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
    ["/om-meg" {:name :r.user :header "Mine opplysninger" :subheader "Baksiden"}]
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]

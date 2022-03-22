@@ -535,35 +535,35 @@
    :r.calendar
    (fn [r]
      [+page-builder r
-      {:panel  (fn [c]
-                 [sc/col-space-2
-                  [sc/row-sc-g2-w
-                   [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
-                   [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]]
-                  [sc/row-sc-g2-w
-                   [hoc.toggles/button-cta #(js/alert "!") "act!"]
-                   [hoc.toggles/button-reg #(js/alert "!") "now!"]
-                   [hoc.toggles/button-reg #(js/alert "!") "hurry!"]]])
+      {:always-panel (fn [c]
+                       [sc/row-sc-g2-w
+                        [hoc.toggles/button-cta #(js/alert "!") "act!"]
+                        [hoc.toggles/button-reg #(js/alert "!") "now!"]
+                        [hoc.toggles/button-reg #(js/alert "!") "hurry!"]])
+       :panel        (fn [c]
+                       [sc/row-sc-g2-w
+                        [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
+                        [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]])
 
-       :render (fn [_] [:div {:class [:gap-1]
-                              :style {:display               :grid
-                                      :grid-template-columns "repeat(7,minmax(1rem,1fr))"
-                                      :grid-template-rows    "1rem"
-                                      :grid-auto-rows        "4rem"}}
+       :render       (fn [_] [:div {:class [:gap-1]
+                                    :style {:display               :grid
+                                            :grid-template-columns "repeat(7,minmax(1rem,1fr))"
+                                            :grid-template-rows    "1rem"
+                                            :grid-auto-rows        "4rem"}}
 
-                        (for [e (range 7)]
-                          [:div.flex.p-1.self-end.w-full
-                           {:style {:background "red"
-                                    :color      "yellow"}}
-                           [sc/small (ta/week-name e :length 3)]])
-                        (for [e (concat (map - (reverse (range 1 4))) (range 30))]
-                          [:div.p-1
-                           {:style {:background "blue"
-                                    :color      "white"}
-                            :class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
-                           (if (neg? e)
-                             [:div]
-                             [sc/small e])])])}])
+                              (for [e (range 7)]
+                                [:div.flex.p-1.self-end.w-full
+                                 {:style {:background "red"
+                                          :color      "yellow"}}
+                                 [sc/small (ta/week-name e :length 3)]])
+                              (for [e (concat (map - (reverse (range 1 4))) (range 30))]
+                                [:div.p-1
+                                 {:style {:background "blue"
+                                          :color      "white"}
+                                  :class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
+                                 (if (neg? e)
+                                   [:div]
+                                   [sc/small e])])])}])
 
    :r.fileman-temporary
    (fn [r]
@@ -576,7 +576,8 @@
      ;todo: () or [], and does it matter here?
      [+page-builder r
       {:render-fullwidth booking.aktivitetsliste/render
-       :panel            booking.aktivitetsliste/panel}])
+       :panel            booking.aktivitetsliste/panel
+       :always-panel     booking.aktivitetsliste/always-panel}])
 
    :r.booking.faq
    (fn [r]
@@ -586,32 +587,29 @@
    :r.booking
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundary r
-        [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
-         ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
-         ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
-         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
-         #_(let [el (-> js/document.documentElement .-style)
-                 prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
+       [+page-builder r
+        {:render (fn [_] [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
+                          ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
+                          ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
+                          #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
+                          #_(let [el (-> js/document.documentElement .-style)
+                                  prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
 
-             [:<>
-              [scb/button-cta {:on-click #(let [p (prop)]
-                                            (.setProperty el "--brand1" p)
-                                            (.setProperty el "--buttoncta1" p))} "Randomize color"]])
-         #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
-         [:div
-          (-> "./frontpage1.md"
-              inline
-              schpaa.markdown/md->html
-              sc/markdown)]
-         [sc/row-end
-          [scb2/cta-large
-           {:type "button" :on-click open-dialog-signin}
-           "Begynn her"]]]
+                              [:<>
+                               [scb/button-cta {:on-click #(let [p (prop)]
+                                                             (.setProperty el "--brand1" p)
+                                                             (.setProperty el "--buttoncta1" p))} "Randomize color"]])
+                          #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
+                          [:div
+                           (-> "./frontpage1.md"
+                               inline
+                               schpaa.markdown/md->html
+                               sc/markdown)]
+                          [sc/row-end
+                           [scb2/cta-large
+                            {:type "button" :on-click open-dialog-signin}
+                            "Begynn her"]]])}]))
 
-
-        ;[db.signin/login]]
-        #_[:div [content.overview/overview]]]))
    #_(fn [r]
        [page-boundary r
         [:div "base page for booking/sjøbasen"]
@@ -619,8 +617,9 @@
 
    :r.yearwheel
    (fn [r]
-     (+page-builder r {:panel  booking.yearwheel/header
-                       :render booking.yearwheel/render}))
+     (+page-builder r {:panel        booking.yearwheel/header
+                       :always-panel booking.yearwheel/always-panel
+                       :render       booking.yearwheel/render}))
 
    :r.page-not-found
    error-page})

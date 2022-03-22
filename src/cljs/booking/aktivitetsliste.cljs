@@ -9,81 +9,150 @@
             [reagent.core :as r]
             [schpaa.debug :as l]
             [tick.core :as t]
-            [schpaa.style.hoc.toggles :as hoc.toggles]))
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [re-frame.core :as rf]
+            [booking.ico :as ico]))
 
 (comment
   (do
     (t/instant (t/at (t/new-date 2022 3 17) (t/new-time 10 0)))))
 
-(defonce data
-         (let [n (t/date (t/now)) #_(t/new-date 2022 3 21)
-               tm 1]
-           (r/atom {"A11" {:start  (t/instant (t/at n (t/new-time 12 0)))
-                           :end    (t/instant (t/at n (t/new-time 15 0)))
-                           :list   #{"331"}
-                           :adults 1
-                           :data   1}
-                    "A12" {:start  (t/instant (t/at n (t/new-time 11 0)))
-                           :end    (t/instant (t/at n (t/new-time 13 0)))
-                           :list   #{"425"}
-                           :adults 1
-                           :data   1}
-                    "A13" {:start  (t/instant (t/at n (t/new-time 12 0)))
-                           :end    (t/instant (t/at n (t/new-time 14 0)))
-                           :list   #{"489" "512"}
-                           :adults 2
-                           :data   1}
-
-
-
-
-
-                    "A1"  {:start  (t/instant (t/at n (t/new-time 8 0)))
-                           :list   #{"101"}
-                           :adults 1
-                           :data   1}
-                    "A2"  {:start  (t/instant (t/at n (t/new-time 7 0)))
-                           :list   #{"102"}
-                           :adults 1
-                           :data   1}
-                    "A3"  {:start  (t/instant (t/at n (t/new-time 6 0)))
-                           :list   #{"103"}
-                           :adults 1
-                           :data   1}
-                    "A4" {:start  (t/instant (t/at n (t/new-time 4 0)))
-                          :end    (t/instant (t/at n (t/new-time 8 0)))
-                          :list   #{"104"}
-                          :adults 1
-                          :data   1}
-                    "B"  {:start (t/instant (t/at n (t/new-time 5 0)))
-                          :end   (t/instant (t/at n (t/new-time 7 0)))
-                          :list  #{"105"}
-                          :data  1}
-                    "C"  {:start  (t/instant (t/at n (t/new-time 10 30)))
-                          :end    (t/instant (t/at n (t/new-time 12 0)))
-                          :list   #{200}
-                          :adults 1
-                          :data   1}
-                    "D"  {:start  (t/instant (t/at n (t/new-time 7 0)))
-                          :list   #{200 220}
-                          :adults 1
-                          :data   1}
-                    "E"  {:start    (t/instant (t/at n (t/new-time 14 0)))
-                          :list     #{300 221}
-                          :adults   2
-                          :children 1
-                          :data     1}
-                    "F"  {:start (t/instant (t/at n (t/new-time 12 0)))
-                          :list  #{141 132}
-                          :data  1}
-                    "overnattF"
-                    {:key      true
-                     :moon     true
-                     :adults   10
-                     :children 2
-                     :start    (t/instant (t/at (t/new-date 2022 3 21) (t/new-time 15 0)))
-                     :list     #{600 620 630 650 660 664 642}
-                     :data     1}})))
+(def data
+  (let [n (t/date (t/now)) #_(t/new-date 2022 3 21)
+        tm 1]
+    #_(r/atom (let [n (t/date (t/now))]
+                (conj (reduce (fn [a e] (assoc a (str (+ 100 e))
+                                                 {:list  #{(+ 100 e)}
+                                                  :start (t/at n (t/new-time e 0))
+                                                  :end   (t/at n (t/new-time (inc e) 0))})) {} (range 0 23))
+                      {"096" {:start (t/at n (t/new-time 0 0))
+                              :end   (t/at n (t/new-time 14 0))
+                              :list  #{96}}}
+                      {"097" {:start (t/at n (t/new-time 1 0))
+                              :end   (t/at n (t/new-time 14 0))
+                              :list  #{97}}}
+                      {"098" {:start (t/at n (t/new-time 2 0))
+                              :end   (t/at n (t/new-time 12 0))
+                              :list  #{98}}}
+                      {"099" {:start (t/at n (t/new-time 3 0))
+                              :end   (t/at n (t/new-time 12 0))
+                              :list  #{99}}})))
+    #_(r/atom {
+               "overnattF"
+               {:key      true
+                :moon     true
+                :adults   10
+                :children 2
+                :start    (t/instant (t/at n (t/new-time 12 0)))
+                :end      (t/instant (t/at n (t/new-time 13 0)))
+                :list     #{600}
+                :data     1}
+               "overnattA"
+               {:key      true
+                :moon     true
+                :adults   10
+                :children 2
+                :start    (t/at (t/new-date 2022 3 21) (t/new-time 10 0))
+                :end      (t/at (t/new-date 2022 3 22) (t/new-time 22 30))
+                :list     #{1100}
+                :data     1}
+               "x"
+               {:key      true
+                :moon     true
+                :adults   10
+                :children 2
+                :start    (t/at (t/new-date 2022 3 22) (t/new-time 11 0))
+                :end      (t/at (t/new-date 2022 3 22) (t/new-time 22 30))
+                :list     #{2100}
+                :data     1}
+               "y"
+               {:key      true
+                :moon     true
+                :adults   10
+                :children 2
+                :start    (t/at (t/new-date 2022 3 21) (t/new-time 11 0))
+                ;:end      (t/at (t/new-date 2022 3 22) (t/new-time 22 30))
+                :list     #{2102}
+                :data     1}
+               "z"
+               {:key      true
+                :moon     true
+                :adults   10
+                :children 2
+                :start    (t/at (t/new-date 2022 3 22) (t/new-time 11 0))
+                :end      (t/at (t/new-date 2022 3 23) (t/new-time 22 30))
+                :list     #{2101}
+                :data     1}
+               "w"
+               {:key      true
+                :moon     true
+                :adults   10
+                :children 2
+                :start    (t/at (t/new-date 2022 3 22) (t/new-time 11 0))
+                :end      (t/at (t/new-date 2022 3 22) (t/new-time 15 30))
+                :list     #{2101}
+                :data     1}})
+    (r/atom {"A11" {:start  (t/instant (t/at (t/yesterday) (t/new-time 12 0)))
+                    :end    (t/instant (t/at n (t/new-time 15 0)))
+                    :list   #{"331"}
+                    :adults 1
+                    :data   1}
+             "A12" {:start  (t/instant (t/at n (t/new-time 11 0)))
+                    :end    (t/instant (t/at n (t/new-time 13 0)))
+                    :list   #{"425"}
+                    :adults 1
+                    :data   1}
+             "A13" {:start  (t/instant (t/at n (t/new-time 12 0)))
+                    :end    (t/instant (t/at n (t/new-time 14 0)))
+                    :list   #{"489" "512"}
+                    :adults 2
+                    :data   1}
+             "A1"  {:start  (t/instant (t/at n (t/new-time 8 0)))
+                    :list   #{"101"}
+                    :adults 1
+                    :data   1}
+             "A2"  {:start  (t/instant (t/at n (t/new-time 7 0)))
+                    :list   #{"102"}
+                    :adults 1
+                    :data   1}
+             "A3"  {:start  (t/instant (t/at n (t/new-time 6 0)))
+                    :list   #{"103"}
+                    :adults 1
+                    :data   1}
+             "A4"  {:start  (t/instant (t/at n (t/new-time 4 0)))
+                    :end    (t/instant (t/at n (t/new-time 8 0)))
+                    :list   #{"104"}
+                    :adults 1
+                    :data   1}
+             "B"   {:start (t/instant (t/at n (t/new-time 5 0)))
+                    :end   (t/instant (t/at n (t/new-time 7 0)))
+                    :list  #{"105"}
+                    :data  1}
+             "C"   {:start  (t/instant (t/at n (t/new-time 10 30)))
+                    :end    (t/instant (t/at n (t/new-time 12 0)))
+                    :list   #{200}
+                    :adults 1
+                    :data   1}
+             "D"   {:start  (t/instant (t/at n (t/new-time 7 0)))
+                    :list   #{200 220}
+                    :adults 1
+                    :data   1}
+             "E"   {:start    (t/instant (t/at n (t/new-time 14 0)))
+                    :list     #{300 221}
+                    :adults   2
+                    :children 1
+                    :data     1}
+             "F"   {:start (t/instant (t/at n (t/new-time 12 0)))
+                    :list  #{141 132}
+                    :data  1}
+             "overnattF"
+             {:key      true
+              :moon     true
+              :adults   10
+              :children 2
+              :start    (t/instant (t/at (t/new-date 2022 3 22) (t/new-time 10 0)))
+              :list     #{600 620 630 650 660 664 642}
+              :data     1}})))
 
 (o/defstyled listitem :div
   :py-1 :bg-yellow-100x
@@ -149,117 +218,166 @@
    ^{:on-click on-click}
    [:<> [:div {:class (if selected :selected :normal)} ch]]))
 
-(defn fancy-timeline [{:keys [item entries rows session-start session-end action-start action-end now]}]
-  (let [start-hour (or (some-> action-start t/hour) 0)
-        end-hour (some-> action-end t/hour)
-        now-hour (t/hour now)
-        y 4
-        active-color :blue
-        now-color :white
-        complete-color :black
-        background "var(--surface1)"
-        period :#aa06 #_"var(--surface0)"]
-    [:div.h-8.w-full.relative.first:rounded-t-md.last:rounded-b-md
-     {:style {:background-color background}}
+(defn- prepare-time [window-start window-end start end now]
+  (let [limit-start 0
+        limit-end 23
+        n-now (* 4 (t/hour now))
+        n-start (if (not= :before start) (* 4 (t/hour start)) 0)
+        n-end (if (nil? end) n-now (* 4 (t/hour end)))
+        data {:color      (if (nil? end) :blue :black)
 
-     [:div.absolute.inset-y-0.h-full.flex.items-center.left-1
-      [sc/badge {:style    {:box-shadow    "var(--inner-shadow-1)"
-                            :border        "var(--surface3) 1px solid"
-                            :border-radius "var(--radius-1)"
-                            :width         "2.5rem"}
-                 :selected false}
-       [:div
-        {:style {:color       "var(--text2)"
+              :start-sign (if (= :before start)
+                            nil
+                            (if (< n-start window-start)
+                              false
+                              true))
 
-                 :font-size   "var(--font-size-1)"
-                 :font-weight "var(--font-weight-4)"}}
-        item]]]
+              :start      (if (= :before start)
+                            0
+                            (let [x (- n-start window-start)]
+                              (if (neg? x) 0 x)))
 
-     [:svg.h-full.w-full.pl-12.pr-12
-      {:viewBox             (str "0 0 23 " 12)
-       :stroke-width        1
-       :preserveAspectRatio "none"
-       :width               "100%"
-       :height              "auto"}
+              :end-sign   (if (nil? end) :arrow :stop)
+              :end        n-end}]
 
-      [:rect {:vector-effect :non-scaling-stroke
-              :fill          background
-              :width         :100%
-              :height        :100%}]
+    data #_(-> data
+               (update :start * 4)
+               ;(update :start - offset-x)
+               (update :end * 4))))
 
-      [:rect {:vector-effect :non-scaling-stroke
-              :fill          period
-              :x             (t/hour session-start)
-              :width         (- (t/hour session-end) (t/hour session-start))
-              :height        :100%}]
-      [:line {:stroke        now-color
-              :stroke-width  2
-              :vector-effect :non-scaling-stroke
-              ;:stroke-dasharray "2 1"
-              :x1            now-hour :y1 0 :x2 now-hour :y2 "100%"}]
-      (let [w (or (some-> end-hour (- start-hour))
-                  (- now-hour start-hour))]
-        [:<>
-         [:rect (if (nil? end-hour)
-                  {:fill         active-color
-                   :stroke-width 0
-                   :y            (+ 1 y)
-                   :x            start-hour
-                   :width        w
-                   :height       1}
-                  {:fill         complete-color
-                   :stroke-width 0
-                   :y            (+ 1 y)
-                   :x            start-hour
-                   :width        w
-                   :height       1})]
-         (when (< 0 (- now-hour start-hour))
-           (if (nil? end-hour)
-             [:rect {:stroke        active-color
-                     :fill          active-color
-                     :vector-effect :non-scaling-stroke
-                     :x             start-hour :y y
-                     :width         "2%" :height 3}]
-             [:rect {:stroke        complete-color
-                     :fill          complete-color
-                     :vector-effect :non-scaling-stroke
-                     :x             start-hour :y y
-                     :width         "2%" :height 3}]))
-         (if (nil? end-hour)
-           [:path {:vector-effect :non-scaling-stroke
-                   :fill          active-color
-                   :transform     (str "translate(" (+ start-hour w) "," y ")")
-                   :d             "M0,0 L1,1.5 L0,3 z"}]
-           [:rect {:stroke        complete-color
-                   :fill          complete-color
-                   :vector-effect :non-scaling-stroke
-                   :x             end-hour :y y
-                   :width         "2%" :height 3}])])]]))
+
+(defn- draw-badge [item badge-fg badge-bg testbadge-bg]
+  [:div.absolute.inset-y-0.h-full.flex.items-center.left-0
+   [:div {:style    {;:box-shadow    "var(--inner-shadow-1)"
+                     :background    (if (= 4 (count (str item))) testbadge-bg badge-bg)
+                     ;:border        "var(--surface3) 1px solid"
+                     :border-radius "var(--radius-1)"
+                     :width         "2.5rem"}
+          :selected false}
+    [:div
+     {:style {:display         "flex"
+              :justify-content "center"
+              :color           badge-fg                     ;(if (= 4 (count (str item))) "var(--surface000)" "var(--surface000)")
+              :font-size       "var(--font-size-1)"
+              :font-family     "Oswald"
+              :letter-spacing  (if (= 4 (count (str item))) "var(--font-letterspacing-0)" "var(--font-letterspacing-2)")
+              :font-weight     "var(--font-weight-6)"}}
+     item]]])
+
+
+(defn fancy-timeline [{:keys [window-end item entries rows session-start session-end action-start action-end now]}]
+  (tap> [:action-start action-start])
+  (let [period-view-only true
+        window [(* 0 4) (* 23 4)]
+        session-start (let [x (- session-start (first window))]
+                        (if (neg? x) 0 x))
+        session-end (- session-end (first window))
+        y 3
+        background "var(--surface0)"
+        period "var(--yellow-5)"
+        badge-bg "var(--surface5)"
+        testbadge-bg "var(--blue-5)"
+        badge-fg "var(--surface00)"
+        tm (prepare-time (first window) (last window) action-start action-end now)]
+    [:div
+     [:div.h-8.w-full.relative.first:rounded-t-sm.last:rounded-b-sm
+      ;{:style {:background-color :red #_background}}
+
+      [:div.opacity-10 [draw-badge item badge-fg badge-bg testbadge-bg]]
+
+      [:svg.h-full.w-fullx.pl-12
+       {:style               {:overflow :hidden}
+        :viewBox             (str 0 " " 0 " " (- 96 (- 96 (- (last window) (first window)))) " " 11)
+        :stroke-width        1
+        :preserveAspectRatio "none"
+        :width               "100%"
+        :height              "auto"}
+
+       [:rect {:vector-effect :non-scaling-stroke
+               :fill          background
+               :width         :100%
+               :height        :100%}]
+
+       [:rect {:style         {:opacity 0.2}
+               :vector-effect :non-scaling-stroke
+               :fill          period
+               :x             session-start
+               :width         (- session-end session-start)
+               :height        :100%}]
+       #_[:line {:stroke        now-color
+                 :stroke-width  2
+                 :vector-effect :non-scaling-stroke
+                 ;:stroke-dasharray "2 1"
+                 :x1            now-hour :y1 0 :x2 now-hour :y2 "100%"}]
+       [:<>
+        ;start sign
+        [:rect (if (:start-sign tm)
+                 {:fill         (:color tm)
+                  :stroke-width 0
+                  :y            (+ 2 y)
+                  :x            (:start tm)
+                  :width        (- (:end tm) (:start tm))
+                  :height       1}
+                 {:fill         (:color tm)
+                  :stroke-width 0
+                  :y            (+ 2 y)
+                  :x            (:start tm)
+                  :width        (- (:end tm) (:start tm))
+                  :height       1})]
+
+        (if (:start-sign tm)
+          [:rect {:stroke        (:color tm)
+                  :fill          (:color tm)
+                  :vector-effect :non-scaling-stroke
+                  :x             (:start tm)
+                  :y             y
+                  :width         "1%" :height 2.5}])
+
+        ;end sign
+        (if (:end-sign tm)
+          (if (= :arrow (:end-sign tm))
+            [:path {:vector-effect :non-scaling-stroke
+                    :fill          (:color tm)
+                    :transform     (str "translate(" (:end tm) "," y ")")
+                    :d             (str "M0,0 L" (* 1 4) ",2.5 L0,5 z")}]
+            [:rect {:stroke        (:color tm)
+                    :fill          (:color tm)
+                    :vector-effect :non-scaling-stroke
+                    :x             (:end tm)
+                    :y             (+ 2.25 y)
+                    :width         "1%"
+                    :height        2.5}]))]]]
+     #_[:<>
+        [sc/small "start-hour" (or (some-> action-start t/hour (* 4)) 0)]
+        [sc/small "end-hour" (or (some-> action-end t/hour (* 4)) 0)]
+        [sc/small "session-start--hour" session-start]
+        [sc/small "end-hour" session-end]]]))
 
 (defn render [r]
   ;constants
   (r/with-let [show-editing (schpaa.state/listen :activitylist/show-editing)
                show-deleted (schpaa.state/listen :activitylist/show-deleted)
                left-aligned (schpaa.state/listen :activitylist/left-aligned)]
+
     (let [time-now (t/now)
-          session-start (t/at (t/new-date 2022 3 21) (t/new-time 11 0))
-          session-end (t/at (t/new-date 2022 3 21) (t/new-time 20 0))]
+          session-start (* 4 12)
+          session-end (* 4 17)]
       [:div
 
        (into [:div.flex.flex-col.space-y-px]
              (for [[k {:keys [start end key moon adults children juveniles deleted list datetime] :as e}]
-                   (->> (seq @data)
-                        (remove (fn [[k {:keys [deleted]}]] (if @show-editing
-                                                              (if @show-deleted
-                                                                false
-                                                                deleted)
-                                                              deleted)))
-                        (filter (fn [[_ {:keys [start end]}]]
-                                  (when (and (some? start))
-                                    (or
-                                      (and (t/< (t/date start) (t/date time-now)) (nil? end))
-                                      (= (t/date time-now) (t/date start))))))
-                        (sort-by (comp :start val) >))]
+                   (sort-by key < @data) #_(->> (seq @data)
+                                                (remove (fn [[k {:keys [deleted]}]] (if @show-editing
+                                                                                      (if @show-deleted
+                                                                                        false
+                                                                                        deleted)
+                                                                                      deleted)))
+                                                (filter (fn [[_ {:keys [start end]}]]
+                                                          (when (and (some? start))
+                                                            (or
+                                                              (and (t/< (t/date start) (t/date time-now)) (nil? end))
+                                                              (= (t/date time-now) (t/date start))))))
+                                                (sort-by (comp :start val) >))]
 
                [listitem
                 [:div.w-full.-xdebug.flex.items-start.gap-2
@@ -286,83 +404,44 @@
                                    :py-x2 :space-y-px]
                           :xstyle {:min-width "20ch"
                                    :max-width "30ch"}}
-                  (for [e (sort list)]
+                  (for [e list]
                     [fancy-timeline
                      {:item          e
-                      :rows          1
                       :session-start session-start
                       :session-end   session-end
-                      :action-start  (if (t/< (t/date start) (t/date time-now)) nil (t/time start))
-                      :action-end    (some-> end t/time)
-                      :now           time-now}])]]]
+                      :action-start  (if (t/< (t/date start) (t/date time-now))
+                                       :before
+                                       (t/time start))
+                      :action-end    (some-> end t/date-time)
+                      :now           (t/date-time time-now)}])]]]))])))
 
-               #_[listitem
-                  [:div.flex.w-full.-xdebug
-                   {:class (into [:justify-between
-                                  :items-start :gap-2 :px-2]
-                                 (if deleted [:line-through :opacity-50]))}
+(defn always-panel []
+  [sc/row-sc-g2-w
+   #_[hoc.toggles/button-reg
+      #(rf/dispatch [:lab/qr-code-for-current-page])
+      (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
+   #_[hoc.toggles/button-cta
+      #()
+      (sc/row-sc-g2 (sc/icon-small ico/plus) "Utlån")]
+   [hoc.toggles/button-cta
+    #()
+    (sc/row-sc-g2 (sc/icon-small ico/plus) "Skade på materiell")]
+   [hoc.toggles/button-cta
+    #()
+    (sc/row-sc-g2 (sc/icon-small ico/plus) "HMS-hendelse")]])
 
-                   ;[:div.h-10.flex.items-center (trashcan k e)]
-                   [:div.h-10.flex.items-center (edit k e)]
-
-
-                   [:div.w-10.shrink-0.flex.flex-col.items-center.h-full
-                    [:div.w-auto.flex.gap-1.items-baseline
-                     [sc/text adults]
-                     [sc/small children]]
-                    [:div.w-auto.flex.gap-1
-                     (when key (sc/icon-tiny [:> solid/KeyIcon]))
-                     (when moon (sc/icon-tiny [:> solid/MoonIcon]))]]
-
-                   (let [rows (case (count list)
-                                (3 4) 20
-                                (5 6) 30
-                                (7 8) 40
-                                10)]
-
-
-                     [:div.shrink-1.h-6.shadow-sm.w-full
-                      {:style {;:height        (str (* 4 rows) "px")
-                               :flex-grow     1
-                               :max-width     "30ch"
-                               :overflow      :hidden
-                               :border-radius "var(--radius-1)"}}])
-                   [:div.w-full
-                    (for [e list]
-                      [:div.flex.w-full.h-6.space-y-1.-xdebug2
-                       [:div.w-12.-xdebug2 [sc/small e]]
-                       [fancy-timeline
-                        {;:entries       list
-                         :rows          1
-                         :session-start session-start
-                         :session-end   session-end
-                         :action-start  (if (t/< (t/date start) (t/date time-now)) nil (t/time start))
-                         :action-end    (some-> end t/time)
-                         :now           time-now}]])]]]))])))
-
-(defn- panel []
+(defn panel []
   (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
-               show-editing (schpaa.state/listen :activitylist/show-editing)
-               show-content (schpaa.state/listen :activitylist/show-content)
-               show-narrow (schpaa.state/listen :activitylist/show-narrow-scope)
-               sort-by-created (r/atom true)]
-    [sc/row-sc-g2 {:class [:flex-wrap]}
-     [hoc.toggles/twostate
-      {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
-       :alternate @show-editing
-       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
-       :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+               show-content (schpaa.state/listen :activitylist/show-content)]
+    [sc/row-sc-g2-w
+     [hoc.toggles/switch :activitylist/show-editing "Rediger"]
+
      [hoc.toggles/twostate
       {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
        :alternate @show-deleted
        :icon      (fn [_] [:> outline/TrashIcon])
        :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-     [hoc.toggles/twostate
-      {:on-click  #(schpaa.state/toggle :activitylist/show-content)
-       :alternate @show-content
-       :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-       :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
-
      [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]
-     [hoc.toggles/switch :activitylist/left-aligned "Venstrestilt"]]))
-  
+     [hoc.toggles/switch :activitylist/left-aligned "Venstre-juster listen"]
+     [hoc.toggles/switch :activitylist/limit-timeline "Bare økt-perioden"]
+     [hoc.toggles/switch :activitylist/limit-active "Bare aktive utlån"]]))
