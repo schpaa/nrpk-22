@@ -18,7 +18,8 @@
     [schpaa.style.dialog]
     [schpaa.markdown]
     [booking.page-controlpanel]
-    [schpaa.style.hoc.toggles :as hoc.toggles]))
+    [schpaa.style.hoc.toggles :as hoc.toggles]
+    [booking.qrcode]))
 
 (comment
   (defonce st (reduce (fn [a e] (assoc a (subs (str (random-uuid)) 0 5) (dissoc e :id)))
@@ -216,7 +217,17 @@
        #(edit-event nil)
        (sc/row-sc-g2 (sc/icon-small ico/plus) "Ny hendelse")]
       [hoc.toggles/button-reg
-       #(edit-event nil)
+       #(schpaa.style.dialog/open-dialog-any
+          {:form (fn [{:keys [on-close]}]
+                   [sc/dialog
+                    [:div.p-4
+                     [sc/col {:class [:space-y-8]}
+                      [sc/col-space-2
+                       [sc/title-p "Tittel"]
+                       [booking.qrcode/qr-code :r.forsiden 256]]
+                      [sc/row-ec
+                       [scb2/normal-regular {:on-click on-close} "Lukk"]]]]])})
+
        (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
       [hoc.toggles/button-reg
        #(edit-event nil)
@@ -308,9 +319,8 @@
                                                           @data
                                                           (remove (comp :deleted val) @data))))]
                 [sc/col-space-2
-                 [:div.h-1]
-                 [sc/header-title {:class [:px-2]} (t/int g)]
-                 (into [:div.space-y-px]
+                 [sc/hero "'" (subs (str (t/int g)) 2 4)]
+                 (into [:div]
                        (concat
                          (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
                            (listitem-softwrap (assoc data :id id)))
