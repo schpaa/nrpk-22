@@ -8,3 +8,4 @@
 (def eye [:> outline/EyeIcon])
 (def pencil [:> outline/PencilIcon])
 (def qrcode [:> outline/QrcodeIcon])
+(def nullstill [:> outline/ShieldExclamationIcon])

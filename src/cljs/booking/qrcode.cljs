@@ -3,6 +3,7 @@
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.style.button2 :as scb2]
+            [schpaa.style.dialog]
             [schpaa.debug :as l]))
 
 (o/defstyled qr-code :div
@@ -32,8 +33,15 @@
               [:div.p-4
                [sc/col {:class [:space-y-8]}
                 [sc/col-space-2
-                 [sc/title-p "Tittel"]
-                 [sc/row-center [booking.qrcode/qr-code :r.forsiden 256]]]
-                [l/ppre-x link]
+                 (when-let [page-title (some-> link :data :header)]
+                   [sc/title-p (if (seq? page-title) (last page-title) page-title)])
+                 [sc/row-center [booking.qrcode/qr-code :r.forsiden 192]]]
+                ;[l/ppre-x link]
+                (when-some [page-path (some-> link :path)]
+                  (let [;page-addr (kee-frame.core/path-for [page-name])
+                        url (str (.-protocol js/window.location) "//" (.-host js/window.location) page-path)]
+                    [sc/text {:class [:truncate]
+                              :style {:user-select :all
+                                      :white-space :nowrap}} url]))
                 [sc/row-ec
                  [scb2/normal-regular {:on-click on-close} "Lukk"]]]]])}))

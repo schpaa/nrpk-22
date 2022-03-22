@@ -221,8 +221,9 @@
        #(rf/dispatch [:lab/qr-code-for-current-page])
        (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
       [hoc.toggles/button-reg
-       #(edit-event nil)
-       (sc/row-sc-g2 (sc/icon-small ico/qrcode) "Nullstill")]]]))
+       #(js/alert "wat")
+       (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")
+       true]]]))
 
 (def arco-datetime-config
   {:refresh-rate 1000
@@ -267,7 +268,7 @@
                :grid-template-columns "min-content 1fr"}}
 
       (if show-editing
-        (trashcan id m)
+        [:div.pr-2 (trashcan id m)]
         [:div])
 
       (do
