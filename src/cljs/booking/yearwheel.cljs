@@ -19,7 +19,8 @@
     [schpaa.markdown]
     [booking.page-controlpanel]
     [schpaa.style.hoc.toggles :as hoc.toggles]
-    [booking.qrcode]))
+    [booking.qrcode]
+    [re-frame.core :as rf]))
 
 (comment
   (defonce st (reduce (fn [a e] (assoc a (subs (str (random-uuid)) 0 5) (dissoc e :id)))
@@ -217,17 +218,7 @@
        #(edit-event nil)
        (sc/row-sc-g2 (sc/icon-small ico/plus) "Ny hendelse")]
       [hoc.toggles/button-reg
-       #(schpaa.style.dialog/open-dialog-any
-          {:form (fn [{:keys [on-close]}]
-                   [sc/dialog
-                    [:div.p-4
-                     [sc/col {:class [:space-y-8]}
-                      [sc/col-space-2
-                       [sc/title-p "Tittel"]
-                       [booking.qrcode/qr-code :r.forsiden 256]]
-                      [sc/row-ec
-                       [scb2/normal-regular {:on-click on-close} "Lukk"]]]]])})
-
+       #(rf/dispatch [:lab/qr-code-for-current-page])
        (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
       [hoc.toggles/button-reg
        #(edit-event nil)

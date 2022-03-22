@@ -267,6 +267,12 @@
                                :lab/modal-selector-extra extra)
                      (update db :lab/modal-selector (fnil not true)))))
 
+
+(rf/reg-event-fx :lab/qr-code-for-current-page
+                 (fn [_ _]
+                   (let [link @(rf/subscribe [:kee-frame/route])]
+                     (booking.qrcode/show link))))
+
 (defn render [r]
   (r/with-let [settings (r/atom {:setting-1 false
                                  :setting-2 1
