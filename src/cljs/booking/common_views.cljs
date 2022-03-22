@@ -566,7 +566,7 @@
                         :background   "var(--surface00)"}}
                [:div [boatinput-sidebar]]]]]])})))
 
-(def max-width "40ch")
+(def max-width "50ch")
 
 (defprotocol PerstateP
   (toggle [t])

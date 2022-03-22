@@ -283,7 +283,7 @@
      [:div.h-8.w-full.relative.first:rounded-t-sm.last:rounded-b-sm
       ;{:style {:background-color :red #_background}}
 
-      [:div.opacity-10 [draw-badge item badge-fg badge-bg testbadge-bg]]
+      [draw-badge item badge-fg badge-bg testbadge-bg]
 
       [:svg.h-full.w-fullx.pl-12
        {:style               {:overflow :hidden}

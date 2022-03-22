@@ -86,13 +86,14 @@
                                      :to   (str (t/at (t/new-date 2022 8 19) (t/noon)))}]))))
 
 (o/defstyled listitem :div
-  :cursor-pointer :py-1
+  :cursor-pointer :p-1
   {:min-height "var(--size-4)"}
   [:&
    [:.deleted {:color           "red"
                :text-decoration :line-through
                :opacity         0.3}]
-   [:&:hover {:background "var(--surface00)"}]]
+   [:&:hover {:background    "var(--surface00)"
+              :border-radius "var(--radius-1)"}]]
   ([{:keys [class on-click] :as attr} & children]
    ^{:on-click on-click}
    [:<> [:div {:class class} children]]))
@@ -181,26 +182,6 @@
     {:style {:color "var(--surface5)"}}
     (if deleted (icon/small :rotate-left) ico/trash)]])
 
-(o/defstyled icon-with-caption :button
-  {:white-space    :nowrap
-   :background     "var(--surface00)"
-   :color          "var(--surface3)"
-   :padding-inline "var(--size-2)"
-   :padding-block  "var(--size-1)"
-   :border-radius  "var(--radius-round)"
-   :font-size      "var(--font-size-0)"}
-  [:&:hover {:background "var(--surface00)"
-             :color      "var(--surface5)"}]
-  ([{:keys [class on-click alternate icon caption] :as attr} & ch]
-   ^{:on-click on-click
-     :class    class}
-   [:<>
-    [sc/row-sc-g2
-     (when icon
-       [sc/icon-small {:class (if alternate [] [])} (icon alternate)])
-     (when caption
-       [:div (caption alternate)])]]))
-
 (defn always-panel []
   [sc/row-sc-g2-w
    [hoc.toggles/button-cta
@@ -224,8 +205,6 @@
       [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]
       [hoc.toggles/switch :yearwheel/show-editing "Rediger"]
       [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"]]]))
-
-
 
 (def arco-datetime-config
   {:refresh-rate 1000

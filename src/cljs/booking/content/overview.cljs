@@ -1,6 +1,7 @@
 ; -[ ] collect views
 (ns booking.content.overview
   (:require [nrpk.fsm-helpers :as state :refer [send]]
+            [reagent.core :as r]
             [booking.hoc :as hoc]
             [logg.database]
             [schpaa.components.views]
@@ -9,7 +10,9 @@
             [schpaa.style :as st]
             [db.core :as db]
             [re-frame.core :as rf]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [schpaa.style.ornament :as sc]
+            [schpaa.style.hoc.toggles :as hoc.toggles]))
 
 #_(defn boat-number-list [colormap {:keys [fetch-boatdata-for selected]}]
     (when fetch-boatdata-for
@@ -174,3 +177,11 @@
       :today        (t/date)
       :uid          uid}]
     [empty-list-message "Booking-listen er tom"]))
+
+(defn- panel []
+  [sc/col-space-2
+   [sc/row-sc-g2-w
+    [hoc.toggles/switch :booking/editing "Rediger"]
+    [hoc.toggles/switch :booking/show-archived "Vis arkiverte"]
+    [hoc.toggles/switch :booking/show-description "Vis beskrivelse"]
+    [hoc.toggles/switch :booking/private-only "Bare vis mine"]]])

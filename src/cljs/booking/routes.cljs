@@ -14,18 +14,15 @@
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
    ["/not-found" {:name :r.page-not-found :header [:r.forsiden "Finner ikke siden"]}]
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
-   ["/conditions" {:name :r.conditions :header "Vilkår"}]
+   ["/nokkelvakt" {:navn :r.nokkelvakt :header [:r.forsiden "Nøkkelvakt"]}]
+   ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
    ["/filer" {:name :r.fileman-temporary :header "Filer"}]
    ["/kalender" {:name :r.calendar :header "Kalender"}]
    ["/aktivitetsliste" {:name :r.aktivitetsliste :header [:r.forsiden "Aktivitetsliste"]}]
 
    ["/arshjul" {:name   :r.yearwheel
-                :header [:r.forsiden "Årshjul"]
-                :panel  [:yearwheel/add
-                         :yearwheel/delete
-                         :yearwheel/toggle-deleted
-                         :yearwheel/toggle-content]}]
+                :header [:r.forsiden "Årshjul"]}]
 
    ["/booking" {:name :r.booking :header [:r.forsiden "Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]

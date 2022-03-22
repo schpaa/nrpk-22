@@ -297,11 +297,14 @@
    :r.booking.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundary r
-        [content.overview/overview
-         {:uids (:uid @user-auth)
-          :data (or [{}]
-                    (sort-by (comp :number val) < (logg.database/boat-db)))}]]))
+       [+page-builder r
+        {:panel  content.overview/panel
+         :render (fn [_] [content.overview/overview
+                          {:uids (:uid @user-auth)
+                           :data (or [{}]
+                                     (sort-by (comp :number val) < (logg.database/boat-db)))}])}]))
+
+
 
    :r.new-booking
    (fn [r]
@@ -496,18 +499,18 @@
 
    :r.terms
    (fn [r]
-     [page-boundary r
-      (-> (inline "./content/regler-utenom-vakt.md") schpaa.markdown/md->html sc/markdown)])
+     [+page-builder r
+      {:render (fn [] (-> (inline "./content/regler-utenom-vakt.md") schpaa.markdown/md->html sc/markdown))}])
 
    :r.conditions
    (fn [r]
-     [page-boundary r
-      (-> (inline "./content/plikter-som-vakt.md") schpaa.markdown/md->html sc/markdown)])
+     [+page-builder r
+      {:render (fn [] (-> (inline "./content/plikter-som-vakt.md") schpaa.markdown/md->html sc/markdown))}])
 
    :r.booking.retningslinjer
    (fn [r]
-     [page-boundary r
-      (-> (inline "./content/retningslinjer.md") schpaa.markdown/md->html sc/markdown)])
+     [+page-builder r
+      {:render (fn [] (-> (inline "./content/retningslinjer.md") schpaa.markdown/md->html sc/markdown))}])
 
    :r.booking-blog-new
    (fn [r]
@@ -588,7 +591,7 @@
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [+page-builder r
-        {:render (fn [_] [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
+        {:render (fn [_] [sc/col-space-2
                           ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
                           ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
                           #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]

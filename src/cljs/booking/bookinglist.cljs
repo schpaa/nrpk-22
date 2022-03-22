@@ -15,7 +15,10 @@
             [reagent.core :as r]
             [booking.database :refer [bookers-details
                                       bookers-name
-                                      fetch-boatdata-for]]))
+                                      fetch-boatdata-for]]
+            [schpaa.icon :as icon]
+            [booking.ico :as ico]
+            [schpaa.style.input :as sci]))
 
 (defn date-row [start end]
   (let [start (t/date-time start)
@@ -39,8 +42,8 @@
         [sc/text-clear (t/format "' kl ' HH.mm" end)]]])))
 
 (defn boat-numbers [selected]
-  [:div.inline-flex.gap-1 (map (fn [e] [sc/badge {:on-click #(open-modal-boatinfo e)}
-                                        (:number e)]) selected)])
+  [:div.inline-flex.gap-1 (mapv (fn [e] [sc/badge {:on-click #(open-modal-boatinfo e)}
+                                         (:number e)]) selected)])
 
 (o/defstyled listitem-past-present-future :div
   [:& :text-xs :space-y-1]
@@ -94,32 +97,169 @@
   (let [preceded-by (fn [today] (filter (fn [[_ v]] (some #{(tick.alpha.interval/relation (:start v) today)} [:preceded-by :meets]))))]
     (transduce (comp (preceded-by today)) conj [] data)))
 
+;region copied from yearwheel, find a new home
+
+(def arco-datetime-config
+  {:refresh-rate 1000
+   :vocabulary   {:in     "om"
+                  :ago    "siden"
+                  :now    "nå"
+                  :second ["sekund" "sekunder"]
+                  :minute ["minutt" "minutter"]
+                  :hour   ["time" "timer"]
+                  :day    ["dag" "dager"]
+                  :week   ["uke" "uker"]
+                  :month  ["måned" "måneder"]
+                  :year   ["år" "år"]}})
+
+(defn- toggle-relative-time []
+  (schpaa.state/toggle :app/show-relative-time-toggle))
+
+(defn flex-datetime [date formatted]
+  (let [relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
+        on-click {:on-click #(do
+                               (tap> ["toggle" @relative-time?])
+                               (.stopPropagation %)
+                               (toggle-relative-time))}]
+    (when date
+      (if @relative-time?
+        [sc/link on-click (formatted (ta/date-format-sans-year date))]
+        [arco.react/time-since {:times  [(if (t/date-time? date)
+                                           (t/date-time date)
+                                           (t/at (t/date date) (t/midnight)))
+                                         (t/now)]
+                                :config arco-datetime-config}
+         (fn [formatted-t]
+           [sc/link on-click (formatted formatted-t)])]))))
+
+(def data (r/atom {}))
+
+(defn trashcan [k {:keys [deleted] :as v}]
+  [(if deleted scb/round-normal-listitem scb/round-danger-listitem)
+   {:on-click #(do
+                 (.stopPropagation %)
+                 (tap> ["DELETE" k v])
+                 (swap! data update k assoc :deleted (not deleted)))}
+   #_#(db/database-update
+        {:path  ["booking-posts" "articles" (name k)]
+         :value {:deleted (not deleted)}})
+   [sc/icon-small
+    {:style {:color "var(--surface5)"}}
+    (if deleted (icon/small :rotate-left) ico/trash)]])
+
+(o/defstyled listitem :div
+  :cursor-pointer :pt-0 :pb-1
+  {:min-height "var(--size-4)"}
+  [:&
+   [:.deleted {:color           "red"
+               :text-decoration :line-through
+               :opacity         0.3}]
+   [:&:hover {:background "var(--surface00)"}]]
+  ([{:keys [class on-click] :as attr} & children]
+   ^{:on-click on-click}
+   [:<> [:div {:class class} children]]))
+
+
+(o/defstyled line :div
+  {:margin-top  "var(--size-1)"
+   :color       "var(--text3)"
+   :line-height "var(--font-lineheight-3)"})
+(o/defstyled text :span
+  {:color "var(--text3)"})
+(o/defstyled emph :span
+  {:color "var(--text1)"})
+(o/defstyled dim :span
+  {:color       "var(--text3)"
+   :font-size   "var(--font-size-1)"
+   :font-weight "var(--font-weight-3)"})
+
+(defn- listitem-softwrap [{:keys [id selected start uid sleepover timestamp navn description deleted end created deleted type] :as m}]
+  (let [show-editing @(schpaa.state/listen :booking/editing)
+        show-description (schpaa.state/listen :booking/show-description)]
+
+    [listitem {:class     [:px-4x (when deleted :deleted)]
+               :xon-click #(js/alert m)}
+     [:div
+      {:style {:display               :grid
+               :grid-template-columns "min-content 1fr"}}
+
+      (if show-editing
+        [:div.pr-2 (trashcan id m)]
+        [:div])
+
+      [line
+       (interpose ", "
+                  (remove nil?
+                          [(when start
+                             (dim (flex-datetime (t/date-time start) #(vector :span %))))
+
+                           (when end
+                             (dim (flex-datetime (t/date-time end) #(vector :span %))))
+
+                           #_(when type
+                               (emph (or (some->> type (get sci/person-by-id) :name) "|?")))
+
+                           (when (pos? (count selected))
+                             [:span.inline-flex.gap-1.items-baseline
+                              (interpose ", " (map (fn [e] [sc/badge {:on-click #(open-modal-boatinfo e)}
+                                                            (:number e)]) selected))])
+
+                           (when sleepover "Overnatting")
+                           (when navn navn)
+
+                           (when (and description @show-description)
+                             description)]))]]]))
+
+;region
+
 (defn booking-list [{:keys [uid today booking-data class details?]}]
-  (let [show-archived (schpaa.state/listen :lab/vis-arkiverte-bookinger)
-        show-only-my-own? (schpaa.state/listen :lab/vis-bare-mine-booking)]
+  (let [show-archived (schpaa.state/listen :booking/show-archived)
+        show-only-my-own? (schpaa.state/listen :booking/private-only)]
     (fn [{:keys [uid today booking-data class details?]}]
       (let [today (t/new-date 2022 1 21)
             ;show-only-my-own? (-> (schpaa.state/listen :opt/show-only-my-own) deref)
             data (->> booking-data
                       (filter (fn [[id data]] (if @show-only-my-own? (= uid (:uid data)) true)))
                       (sort-by (comp :start val) <))]
-        [:div.space-y-4
-         [sc/col {:class [:space-y-4]}
+        [sc/col-space-8
 
-          [schpaa.style.switch/small-switch-example
-           {:tag     :lab/vis-arkiverte-bookinger
-            :caption "Vis arkiverte"}]
-          [schpaa.style.switch/small-switch-example
-           {:tag     :lab/vis-bare-mine-booking
-            :caption "Bare vis bookinger fra meg"}]]
+         (when @show-archived
+           (when-some [d (filter-before today data)]
+             [sc/col-space-2
+              [sc/hero "Arkivert"]
+              (into [:div]
+                    (map (fn [[id' {:keys [selected] :as m}]]
+                           (listitem-softwrap (assoc m :type :archived
+                                                       :id id'
+                                                       :selected (sort-by :number < (map (fn [id] (fetch-boatdata-for id)) selected)))))
+                         d))]))
 
-         [sc/grid-wide
-          (concat (when @show-archived
-                    (into [] (map (partial item-past-present-future today uid true)
-                                  (filter-before today data))))
+         (when-some [d (filter-today today data)]
+           [sc/col-space-2
+            [sc/hero "I dag"]
+            (into [:div]
+                  (map (fn [[id' {:keys [selected] :as m}]]
+                         (listitem-softwrap (assoc m :type :today
+                                                     :id id'
+                                                     :selected (sort-by :number < (map (fn [id] (fetch-boatdata-for id)) selected)))))
+                       d))])
 
-                  (into [] (map (partial item-past-present-future today uid false)
-                                (filter-today today data)))
+         (when-some [d (filter-after-today today data)]
+           [sc/col-space-2
+            [sc/hero "Neste"]
+            (into [:div]
+                  (map (fn [[id' {:keys [selected] :as m}]]
+                         (listitem-softwrap (assoc m :type :future
+                                                     :id id'
+                                                     :selected (sort-by :number < (map (fn [id] (fetch-boatdata-for id)) selected)))))
+                       d))])]
+        #_[sc/grid-wide
+           (concat (when @show-archived
+                     (into [] (map (partial item-past-present-future today uid true)
+                                   (filter-before today data))))
 
-                  (into [] (map (partial item-past-present-future today uid false)
-                                (filter-after-today today data))))]]))))
+                   (into [] (map (partial item-past-present-future today uid false)
+                                 (filter-today today data)))
+
+                   (into [] (map (partial item-past-present-future today uid false)
+                                 (filter-after-today today data))))]))))
