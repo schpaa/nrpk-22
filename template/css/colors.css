@@ -8,6 +8,9 @@ outline: 2px solid #00a8;
 .x-debug3 {
 outline: 2px solid #0aa8;
 }
+.-debug4 {
+outline: 2px solid #a0a8;
+}
 
 @font-face {
   font-family: 'Inter var experimental';

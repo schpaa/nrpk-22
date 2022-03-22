@@ -38,7 +38,9 @@
             [schpaa.time]
             [goog.style :as gs]
             [booking.aktivitetsliste]
-            [booking.yearwheel]))
+            [booking.yearwheel]
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [schpaa.style.hoc.page-controlpanel :as hoc.panel]))
 
 ;region related to flex-date and how to display relative time
 
@@ -275,6 +277,7 @@
     (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
                                  (sort-by :name < schpaa.style.combobox/commands)]
                              [:div [sc/subtext-with-link {:on-click action} name]]))]])
+
 
 (def routing-table
   {:r.welcome
@@ -532,91 +535,34 @@
    :r.calendar
    (fn [r]
      [page-boundary r
-      ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
-
-      {:whole [sc/col-space-2 {:class [:py-8]}
-               ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
-               (r/with-let [open? (r/atom false)]
-                 [:div.px-4 [booking.page-controlpanel/standard
-                             {:open?   @open?
-                              :toggle  #(swap! open? not)
-                              :title   "operasjoner"
-                              :content (fn [c]
-                                         [:div :header])}]])
-               ;[booking.aktivitetsliste/render r]
-               [:div {:class [:gap-1]
-                      :style {:display               :grid
-                              :grid-auto-rows        "3rem"
-                              :grid-template-columns "repeat(7,minmax(1rem,1fr))"}}
-                (for [e (range 7)]
-                  [:div.flex.flex-centerx.bg-white.p-1.self-end [sc/small (ta/week-name e :length 3 #_(t/>> (t/now) (t/new-duration e :days)))]])
-                (for [e (concat (map - (reverse (range 1 4))) (range 30))]
-                  [:div.bg-white.p-1
-                   {:class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
-                   (if (neg? e)
-                     [:div]
-                     [sc/small e])])]]}])
+      [:div {:class [:gap-1]
+             :style {:display               :grid
+                     :grid-template-columns "repeat(7,minmax(1rem,1fr))"
+                     :grid-auto-rows        "3rem"}}
+       (for [e (range 7)]
+         [:div.flex.p-1.self-end.w-full
+          {:style {:background "red"
+                   :color      "yellow"}}
+          [sc/small (ta/week-name e :length 3)]])
+       (for [e (concat (map - (reverse (range 1 4))) (range 30))]
+         [:div.p-1
+          {:style {:background "blue"
+                   :color      "white"}
+           :class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
+          (if (neg? e)
+            [:div]
+            [sc/small e])])]])
 
    :r.fileman-temporary
    (fn [r]
      (let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})]
        [page-boundary r
-        [booking.fileman/render (r/atom true) @data #_(for [e (range 15)] {:item e})]]))
+        [booking.fileman/render (r/atom true) @data]]))
 
    :r.aktivitetsliste
-   (do
-     (o/defstyled icon-with-caption :button
-       {:background     "var(--surface00)"
-        :color          "var(--surface3)"
-        :padding-inline "var(--size-2)"
-        :padding-block  "var(--size-1)"
-        :border-radius  "var(--radius-round)"
-        :font-size      "var(--font-size-0)"}
-       [:&:hover {:background "var(--surface00)"
-                  :color      "var(--surface5)"}]
-       ([{:keys [class on-click alternate icon caption] :as attr} & ch]
-        ^{:on-click on-click
-          :class    class}
-        [:<>
-         [sc/row-sc-g2
-          (when icon
-            [sc/icon-small {:class (if alternate [] [])} (icon alternate)])
-          (when caption
-            [:div (caption alternate)])]]))
-
-     (defn- header []
-       (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
-                    show-editing (schpaa.state/listen :activitylist/show-editing)
-                    show-content (schpaa.state/listen :activitylist/show-content)
-                    sort-by-created (r/atom true)]
-         [sc/row-sc-g2
-          [icon-with-caption
-           {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
-            :alternate @show-editing
-            :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
-            :caption   (fn [e] (if e "Ferdig" "Endre"))}]
-          [icon-with-caption
-           {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
-            :alternate @show-deleted
-            :icon      (fn [_] [:> outline/TrashIcon])
-            :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-          [icon-with-caption
-           {:on-click  #(schpaa.state/toggle :activitylist/show-content)
-            :alternate @show-content
-            :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
-            :caption   (fn [e] (if e "Bare aktive" "Alle"))}]]))
-
-     (fn [r]
-       (r/with-let [open? (r/atom true)]
-         [page-boundary r
-          [sc/col-space-2 {:class [:py-8 :min-w-full]}
-           [booking.page-controlpanel/standard
-            {:open?   @open?
-             :toggle  #(swap! open? not)
-             :title   "operasjoner"
-             :content (fn [c]
-                        [header])}]
-           [booking.aktivitetsliste/render r]]])))
+   (fn [r]
+     [page-boundary r
+      [booking.aktivitetsliste/render r]])
 
    :r.booking.faq
    (fn [r]

@@ -31,7 +31,11 @@
             [booking.search :refer [search-menu]]
             [schpaa.debug :as l]
             [kee-frame.core :as k]
-            [booking.routes]))
+            [booking.routes]
+            [schpaa.style.hoc.page-controlpanel :as hoc.panel]
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+    ;todo: problem with codelocality
+            [booking.yearwheel]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -100,18 +104,31 @@
         :button       (fn [open]
                         [scb/round-mainpage {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
 
-(defn vertical-toolbar [uid]
+;region
+
+(o/defstyled sidebar :div
+  :cursor-pointer
+  {:text-transform "lowercase"
+   :font-family    "IBM Plex Sans"
+   :font-size      "var(--font-size-5)"
+   :font-weight    "var(--font-weight-5)"})
+
+(defn vertical-toolbar
+  "to add a badge (of unseen posts for instance):
+
+  #(let [c (booking.content.booking-blog/count-unseen uid)]
+    (when (pos? c) c))
+  "
+  [uid]
   [{:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}
    {:icon      solid/CalendarIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.calendar]])
-    #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
-                  (when (pos? c) c))
     :page-name :r.calendar}
-   #_{:icon      solid/UserCircleIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-      :page-name :r.user}
+   {:icon      solid/UserCircleIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+    :page-name :r.user}
    {:icon      solid/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
     :page-name :r.booking.oversikt}
@@ -122,28 +139,15 @@
     :page-name :r.booking-blog}
    {:icon      solid/ShieldCheckIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
-    #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
-                  (when (pos? c) c))
     :page-name :r.booking.retningslinjer}
+   {:icon-fn   (fn [] [sidebar "A"])
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])
+    :page-name :r.aktivitetsliste}
    nil
    {:tall-height true
     :icon        solid/FolderIcon
-
     :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-    #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
-                  (when (pos? c) c))
-    :page-name   :r.fileman-temporary}
-
-   #_{:tall-height true
-      :special     true
-      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                            (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
-      :on-click    schpaa.style.dialog/open-selector}
-   #_{:tall-height true
-      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                            (if @st solid/CalculatorIcon outline/CalculatorIcon)))
-      :special     true
-      :on-click    #(rf/dispatch [:lab/toggle-number-input])}])
+    :page-name   :r.fileman-temporary}])
 
 (o/defstyled centered-thing :div
   :flex-center
@@ -159,12 +163,7 @@
    :color         :white
    :background    "var(--red-6)"})
 
-(o/defstyled sidebar :div
-  :cursor-pointer
-  {:text-transform "uppercase"
-   :font-family    "IBM Plex Sans"
-   :font-size      "var(--font-size-5)"
-   :font-weight    "var(--font-weight-5)"})
+
 
 (defn vertical-toolbar-right [uid]
   [#_{:icon-fn (fn []
@@ -214,9 +213,6 @@
                                         outline/InformationCircleIcon)])))
     :on-click    schpaa.style.dialog/open-selector}])
 
-
-
-
 (defn horizontal-toolbar [uid]
   [{:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
                        (if @st solid/CalculatorIcon outline/CalculatorIcon)))
@@ -241,7 +237,6 @@
    {:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}])
-
 
 (def active-style {:border-radius "var(--radius-round)"
                    :padding       "var(--size-2)"
@@ -492,7 +487,97 @@
        [search-menu]
        [main-menu]]]]))
 
-(defn page-boundary [r & c]
+(defprotocol PerstateP
+  (toggle [t])
+  (listen [t]))
+
+(defn config-panel-for-page [r perstate]
+  (let [open? (listen perstate)
+        toggle (toggle perstate)]
+    (let [page-name (some-> r :data :name)]
+      (case page-name
+        :r.yearwheel
+        [hoc.panel/togglepanel
+         {:open?   @open?
+          :toggle  #(swap! open? not)
+          :title   "operasjoner"
+          :content (fn [c]
+                     [booking.yearwheel/header])}]
+
+        :r.fileman-temporary
+        [hoc.panel/togglepanel
+         {:open?   @open?
+          :toggle  toggle
+          :title   "operasjoner"
+          :content (fn [c]
+                     [sc/row-sc-g2 {:class [:flex-wrap]}
+                      [hoc.toggles/switch :calendar/show-history "Vis historikk"]
+                      [hoc.toggles/switch :calendar/show-hidden "Vis skjulte"]])}]
+
+        :r.aktivitetsliste
+        (do
+          (defn- header []
+            (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
+                         show-editing (schpaa.state/listen :activitylist/show-editing)
+                         show-content (schpaa.state/listen :activitylist/show-content)
+                         show-narrow (schpaa.state/listen :activitylist/show-narrow-scope)
+                         sort-by-created (r/atom true)]
+              [sc/row-sc-g2 {:class [:flex-wrap]}
+               [hoc.toggles/twostate
+                {:on-click  #(schpaa.state/toggle :activitylist/show-editing)
+                 :alternate @show-editing
+                 :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/PencilIcon]))
+                 :caption   (fn [e] (if e "Ferdig" "Endre"))}]
+               [hoc.toggles/twostate
+                {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
+                 :alternate @show-deleted
+                 :icon      (fn [_] [:> outline/TrashIcon])
+                 :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
+               [hoc.toggles/twostate
+                {:on-click  #(schpaa.state/toggle :activitylist/show-content)
+                 :alternate @show-content
+                 :icon      (fn [e] (if e [:> outline/CheckIcon] [:> outline/EyeIcon]))
+                 :caption   (fn [e] (if e "Bare aktive" "Alle"))}]
+
+               [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]]))
+          [hoc.panel/togglepanel
+           {:open?   @open?
+            :toggle  toggle
+            :title   "operasjoner"
+            :content (fn [c]
+                       [header])}])
+
+        :r.calendar
+        [hoc.panel/togglepanel
+         {:open?   @open?
+          :toggle  toggle
+          :title   "operasjoner"
+          :content (fn [c]
+                     [sc/row-sc-g2 {:class [:flex-wrap]}
+                      [hoc.toggles/button #(js/alert "!") "act!"]
+                      [hoc.toggles/button #(js/alert "!") "now!"]
+                      [hoc.toggles/button #(js/alert "!") "hurry!"]
+                      [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
+                      [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]])}]
+
+        [:div "NO PANEL DEFINED?"]))))
+
+(defrecord Perstate [tag]
+  PerstateP
+  (toggle [t]
+    #(schpaa.state/toggle tag))
+  (listen [t]
+    (schpaa.state/listen tag)))
+
+(defn with-panel [r content]
+  (let [pagename (some-> r :data :name)
+        perstate (Perstate. pagename)]
+    [sc/col-space-2
+     {:class [:py-8]}
+     (config-panel-for-page r perstate)
+     content]))
+
+(defn page-boundary [r & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
         numberinput? (rf/subscribe [:lab/number-input])
@@ -505,7 +590,7 @@
          (when-let [el (.getElementById js/document "inner-document")]
            (.focus el)))
        :reagent-render
-       (fn [r & c]
+       (fn [r & contents]
          [err-boundary
           ;region modal dialog
           [schpaa.style.dialog/modal-generic
@@ -548,29 +633,16 @@
                 [:div.absolute.bottom-24.sm:bottom-7.right-4
                  [sc/row-end {:class [:pt-4]}
                   (bottom-menu)]]]
+
                ;content
-
-               (cond
-                 (map? (first c))
-                 [:div.flex.grow
-                  (:whole (first c))]
-                 ;[:div.shrink-0 "extra"]]
-
-                 :else
-                 [:div.h-full
-                  [:div.py-4.space-y-4.px-4
-                   {:class :mx-auto}
-                   [:div.flex.w-full.justify-between
-                    [:div.mx-auto
-                     {:style {:max-width "50ch"}}
-                     c]]
-
-                   [:div.py-8.h-32]
-
-                   #_[:div.absolute.right-4
-                      {:class (if @has-chrome? [:bottom-24 :sm:bottom-7] [:bottom-7])}
-                      [sc/row-end {:class [:pt-4]}
-                       (bottom-menu)]]]]))]
+               (if (map? (first contents))
+                 [:div.w-auto (:whole (first contents))]
+                 [:div.h-full.mx-4
+                  [:div.mx-auto
+                   {:style {:width     "100%"
+                            :max-width "40ch"}}
+                   [with-panel r contents]]
+                  [:div.py-8.h-32]]))]
 
             ;horizontal toolbar
             (when @has-chrome?

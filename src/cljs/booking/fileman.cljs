@@ -31,18 +31,6 @@
    ;^{:class [:selected]}
    [:div a c]))
 
-
-#_(defn lock-icon
-    "docstring"
-    []
-    [scb/round-normal-listitem
-     {:on-click #(do
-                   (swap! light update-in [e :lock] (fnil not false))
-                   (.stopPropagation %))}
-     [sc/icon-small
-      {:style {:color (if (get-in @light [e :lock]) "var(--red-8)" "var(--surface1)")}}
-      [:> (if (get-in @light [e :lock]) outline/LockClosedIcon outline/LockOpenIcon)]]])
-
 (defn visible [k v]
   [scb/round-normal-listitem
    {:style    {:background (when (:visible v) "var(--brand1)")}
@@ -75,6 +63,40 @@
     (if deleted (icon/small :rotate-left)
                 [:> outline/TrashIcon])]])
 
+(defn- toolbar []
+  (r/with-let [show-deleted (r/atom false)
+               sort-by-created (r/atom true)]
+    [:div.sticky.top-0.z-10
+     {:style {:padding-inline "var(--size-2)"
+              :color          :black
+              :background     "var(--surface0)"}}
+     [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
+      [scb2/normal-tight
+       {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+       [sc/icon [:> outline/PlusIcon]]]
+      [:div.grow]
+      [scb2/normal-tight
+       [sc/icon [:> outline/FolderIcon]]]
+
+      [:div.relative
+       {:on-click #(swap! sort-by-created (fnil not true))}
+       [scb2/normal-tight
+        [sc/icon {:class (if @sort-by-created [:text-black] [:opacity-30])} [:> outline/SortAscendingIcon]]]
+       #_(if @sort-by-created
+           [:div.absolute.inset-0
+            [scb2/normal-tight-clear
+             [sc/icon-large [:> outline/XIcon]]]])]
+
+      [:div.relative
+       {:class    []
+        :on-click #(swap! show-deleted (fnil not true))}
+       [scb2/normal-tight
+        [sc/icon {:class (if @show-deleted [:text-black] [:opacity-30])} [:> outline/TrashIcon]]]
+       #_(if @show-deleted
+           [:div.absolute.inset-0
+            [scb2/normal-tight-clear
+             [sc/icon-large {:class [:text-white]} [:> outline/XIcon]]]])]]]))
+
 (defn render [st data]
   (r/with-let [show-deleted (r/atom false)
                sort-by-created (r/atom true)]
@@ -82,36 +104,7 @@
                                                 [:h-0 :opacity-0]))}
      [:div {:style {:border-radius "var(--radius-0)"
                     :background    "var(--surface000)"}}
-      [:div.sticky.top-0.z-10
-       {:style {:padding-inline "var(--size-2)"
-                :color          :black
-                :background     "var(--surface0)"}}
-       [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
-        [scb2/normal-tight
-         {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
-         [sc/icon [:> outline/PlusIcon]]]
-        [:div.grow]
-        [scb2/normal-tight
-         [sc/icon [:> outline/FolderIcon]]]
-
-        [:div.relative
-         {:on-click #(swap! sort-by-created (fnil not true))}
-         [scb2/normal-tight
-          [sc/icon {:class (if @sort-by-created [:text-black] [:opacity-30])} [:> outline/SortAscendingIcon]]]
-         #_(if @sort-by-created
-             [:div.absolute.inset-0
-              [scb2/normal-tight-clear
-               [sc/icon-large [:> outline/XIcon]]]])]
-
-        [:div.relative
-         {:class    []
-          :on-click #(swap! show-deleted (fnil not true))}
-         [scb2/normal-tight
-          [sc/icon {:class (if @show-deleted [:text-black] [:opacity-30])} [:> outline/TrashIcon]]]
-         #_(if @show-deleted
-             [:div.absolute.inset-0
-              [scb2/normal-tight-clear
-               [sc/icon-large {:class [:text-white]} [:> outline/XIcon]]]])]]]
+      #_[toolbar]
 
       [:div {:class [:relative]
              :style {:xbackground "var(--surface00)"
@@ -206,8 +199,7 @@
                         [sc/icon-small [:> (if (empty? (:description v)) outline/DocumentIcon outline/DocumentTextIcon)]]]
                        [sc/text-clear {:class [:px-1]} (:description v)]]]]]))])]]]]))
 
-
-
+;---------------------
 
 (comment
   (if (get-in @light [e :edit])
@@ -239,3 +231,15 @@
                                  #_(.stopPropagation %))
                     :class    [:px-1 :cursor-pointer :truncate :w-full]}
      title #_(get-in @light [e :text] "untitled")]))
+
+(comment
+  (defn lock-icon
+    "docstring"
+    []
+    [scb/round-normal-listitem
+     {:on-click #(do
+                   (swap! light update-in [e :lock] (fnil not false))
+                   (.stopPropagation %))}
+     [sc/icon-small
+      {:style {:color (if (get-in @light [e :lock]) "var(--red-8)" "var(--surface1)")}}
+      [:> (if (get-in @light [e :lock]) outline/LockClosedIcon outline/LockOpenIcon)]]]))

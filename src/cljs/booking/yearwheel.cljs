@@ -3,7 +3,7 @@
             [lambdaisland.ornament :as o :refer [defstyled]]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
-            [arco.core :as arco]
+
             [arco.react]
             [schpaa.style.ornament :as sc]
             [tick.core :as t]
@@ -11,18 +11,19 @@
             [schpaa.time]
             [schpaa.style.button :as scb]
             [schpaa.style.button2 :as scb2]
-            [re-frame.core :as rf]
+
             [schpaa.style.input :as sci]
             [fork.re-frame :as fork]
             [db.core :as db]
             [reagent.core :as r]
             [schpaa.state]
-            [schpaa.debug :as l]
+
             [schpaa.icon :as icon]
             [schpaa.style.dialog]
             [schpaa.markdown]
-            [booking.mainmenu :refer [sub-menu main-menu boatinput-menu boatinput-sidebar]]
+
             [booking.page-controlpanel]))
+
 
 
 #_(defonce st (reduce (fn [a e] (assoc a (subs (str (random-uuid)) 0 5) (dissoc e :id)))
@@ -346,7 +347,7 @@
                :on-click #(edit-event m)}
      [:div
       {:style {:display               :grid
-               :grid-template-columns "3rem 1fr"}}
+               :grid-template-columns "min-content 1fr"}}
 
       (if show-editing
         (trashcan id m)
@@ -415,37 +416,20 @@
           show-editing (schpaa.state/listen :yearwheel/show-editing)]
 
       [page-boundary r
-       [sc/col-space-2 {:class [:py-8]}
-        ;[header]
-        #_[:div.bg-alt
-           {:style {;:overflow-x :auto
-                    :display :flex
-                    :flex    "0 0 200px"}}
-           #_[:div.bg-black.text-white {:style {:width "50ch"}} "z"]
-           (for [e (range 20)]
-             [:div "ITEM " e " "])]
-        [:div.px-4x [booking.page-controlpanel/standard
-                     {:open?   @open?
-                      :toggle  #(swap! open? not)
-                      :title   "operasjoner"
-                      :content (fn [c]
-                                 [header])}]]
-
-
-        [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
-         (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
-                                                          (if (and @show-deleted @show-editing)
-                                                            @data
-                                                            (remove (comp :deleted val) @data))))]
-                  [sc/col-space-2
-                   [:div.h-1]
-                   [sc/header-title {:class [:px-2]} (t/int g)]
-                   (into [:div.space-y-px]
-                         (concat
-                           (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
-                             (listitem-softwrap (assoc data :id id)))
-                           (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
-                             (listitem-softwrap (assoc data :id id)))))]))]]])))
+       [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
+        (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
+                                                         (if (and @show-deleted @show-editing)
+                                                           @data
+                                                           (remove (comp :deleted val) @data))))]
+                 [sc/col-space-2
+                  [:div.h-1]
+                  [sc/header-title {:class [:px-2]} (t/int g)]
+                  (into [:div.space-y-px]
+                        (concat
+                          (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
+                            (listitem-softwrap (assoc data :id id)))
+                          (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
+                            (listitem-softwrap (assoc data :id id)))))]))]])))
 
 
 (comment
