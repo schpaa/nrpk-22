@@ -2,7 +2,6 @@
   (:require [booking.content.blog-support :refer [err-boundary]]
             [reitit.core :as reitit]
             [reagent.ratom]
-    ;[cljs.core.async :refer-macros [go-loop go]]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.style.dialog :refer [open-dialog-logoutcommand
@@ -12,29 +11,20 @@
             [booking.content.booking-blog]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
-    ;["react-qr-code" :default QRCode]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [reagent.core :as r]
             [re-frame.core :as rf]
             [db.core :as db]
-    ;[goog.events.KeyCodes :as keycodes]
-    ;[times.api :as ta]
-    ;[tick.core :as t]
             [schpaa.style.combobox]
-
             [booking.fileman]
-    ;[schpaa.icon :as icon]
             [booking.boatinput]
             [booking.mainmenu :refer [main-menu boatinput-menu boatinput-sidebar]]
             [booking.search :refer [search-menu]]
-    ;[schpaa.debug :as l]
             [kee-frame.core :as k]
             [booking.routes]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
-            [schpaa.style.hoc.toggles :as hoc.toggles]
-    ;todo: problem with codelocality
-    #_[booking.yearwheel]))
+            [booking.ico :as ico]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -119,27 +109,27 @@
     (when (pos? c) c))
   "
   [uid]
-  [{:icon      solid/HomeIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :page-name :r.forsiden}
+  [#_{:icon      outline/HomeIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+      :page-name :r.forsiden}
    {:icon      solid/CalendarIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.calendar]])
     :page-name :r.calendar}
-   {:icon      solid/UserCircleIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-    :page-name :r.user}
    {:icon      solid/ClockIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
     :page-name :r.booking.oversikt}
+   {:icon      solid/UserCircleIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+    :page-name :r.user}
    {:icon      solid/BookOpenIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
     :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
                   (when (pos? c) c))
     :page-name :r.booking-blog}
-   {:icon      solid/ShieldCheckIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
-    :page-name :r.booking.retningslinjer}
-   {:icon-fn   (fn [] [sidebar "A"])
+   #_{:icon      solid/ShieldCheckIcon
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
+      :page-name :r.booking.retningslinjer}
+   {:icon-fn   (fn [] [sidebar "n"])
     :on-click  #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])
     :page-name :r.aktivitetsliste}
    nil
@@ -160,21 +150,20 @@
   {:border-radius "var(--radius-round)"
    :padding       "var(--size-2)"
    :color         :white
-   :background    "var(--red-6)"})
-
-
+   :background    "var(--gray-4)"})
 
 (defn vertical-toolbar-right [uid]
-  [#_{:icon-fn (fn []
-                 [main-menu])}
+  [
 
-   {;:tall-height true
-    :icon-fn    (fn [] [centered-thing-red
-                        (sc/icon-large
-                          [:> outline/HomeIcon])])
-    :special    true
-    :on-click   #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :xpage-name :r.forsiden}
+   {:icon-fn   #(sc/icon-large ico/new-home)
+    ;:special    true
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+    :page-name :r.forsiden}
+
+   {:icon-fn   (fn [] (sc/icon-large ico/old-home))
+    ;:special   true
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden-iframe]])
+    :page-name :r.forsiden-iframe}
 
    {:icon-fn   (fn [] [sidebar "N"])
     :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])

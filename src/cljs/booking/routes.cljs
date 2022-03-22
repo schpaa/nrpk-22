@@ -2,6 +2,7 @@
 
 (def routes
   [["/" {:name :r.forsiden :header "NRPK" :subheader "Booking på Sjøbasen"}]
+   ["/wix" {:name :r.forsiden-iframe :header "NRPK (wix)"}]
    ["/nytt" {:name :r.booking-blog :header "Hva er nytt?" :subheader "Forsiden"}]
    ["/nytt/:id" {:name    :r.booking-blog-doc
                  :header  "Hva er nytt?"

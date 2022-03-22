@@ -286,13 +286,52 @@
       [db.signin/login]
       [welcome]])
 
-   :r.forsiden
+   :r.forsiden-iframe
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [page-boundary r
         {:whole [:iframe.w-full.h-screen
                  {:src "https://nrpk.no"}]}
         [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}]]))
+
+   :r.forsiden
+   (fn forsiden [r]
+     (let [user-auth (rf/subscribe [::db/user-auth])]
+       [+page-builder r
+        {:render (fn []
+                   [sc/col-space-8
+                    [sc/col-space-1
+                     [sc/hero "Sjøbasen"]
+                     [sc/row-sc-g2-w
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Retningslinjer på sjøbasen"]
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Ofte spurte spørsmål"]
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Booking"]
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Båtlisten på Sjøbasen"]
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Oversikt"]]]
+                    [sc/col-space-1
+                     [sc/hero "Nøklevann"]
+                     [sc/row-sc-g2-w
+                      (let [data [[:r.xxx "Båtlisten på Nøklevann"]
+                                  [:r.forsiden "Aktivitetsliste"]]]
+                        (map (fn [[a b]] [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b]) (sort-by second data)))]]
+                    [sc/col-space-1
+                     [sc/hero "Årshjul"]
+                     [sc/row-sc-g2-w
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Oversikt 2022-23"]
+                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Legg til nytt i årshjulet"]]]
+                    [sc/col-space-1
+                     [sc/hero "Nøkkelvakt"]
+                     [sc/row-sc-g2-w
+                      (let [data [[:r.forsiden "Plikter som nøkkelvakt"]
+                                  [:r.forsiden "Mine nøkkelvakt-opplysninger"]
+                                  [:r.forsiden "Utlån på nøkkelvann"]
+                                  [:r.forsiden "Betingelser"]
+                                  [:r.forsiden "Vaktkalender"]]]
+                        (map (fn [[a b]] [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b]) (sort-by second data)))]]])}]))
+
+
+
+
 
    :r.booking.oversikt
    (fn forsiden [r]

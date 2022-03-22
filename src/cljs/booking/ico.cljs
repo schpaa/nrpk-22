@@ -9,3 +9,5 @@
 (def pencil [:> outline/PencilIcon])
 (def qrcode [:> outline/QrcodeIcon])
 (def nullstill [:> outline/ShieldExclamationIcon])
+(def new-home [:> solid/HomeIcon])
+(def old-home [:> outline/HomeIcon])
