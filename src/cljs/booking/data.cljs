@@ -39,3 +39,16 @@
    :measurementId     "G-FYD8HLS5C1"})
 
 ;endregion
+
+(def arco-datetime-config
+  {:refresh-rate 1000
+   :vocabulary   {:in     "om"
+                  :ago    "siden"
+                  :now    "nå"
+                  :second ["sekund" "sekunder"]
+                  :minute ["minutt" "minutter"]
+                  :hour   ["time" "timer"]
+                  :day    ["dag" "dager"]
+                  :week   ["uke" "uker"]
+                  :month  ["måned" "måneder"]
+                  :year   ["år" "år"]}})

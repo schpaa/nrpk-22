@@ -193,7 +193,7 @@
     :markdown
     [sc/separator "Markdown styles"]
     [sc/surface-a
-     (-> (inline "./markdown-example.md") schpaa.markdown/md->html sc/markdown)]]
+     (-> (inline "./content/markdown-example.md") schpaa.markdown/md->html sc/markdown)]]
    [details-summary
     :styles
     [sc/separator "Styles"]

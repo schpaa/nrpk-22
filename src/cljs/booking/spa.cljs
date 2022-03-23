@@ -14,8 +14,6 @@
             [kee-frame.router]
             [nrpk.fsm-helpers :refer [send]]
             [re-frame.core :as rf]
-            [schpaa.button :as bu]
-            [schpaa.components.tab :refer [tab]]
             [schpaa.components.views :refer [rounded-view]]
             [schpaa.darkmode]
             [schpaa.debug :as l]
@@ -26,21 +24,16 @@
             [schpaa.style.booking]
             [schpaa.style.menu]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.popover]
             [schpaa.time]
             [tick.core :as t]
             [user.views]
-            [schpaa.style.button :as scb]
             [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]
             [schpaa.style.button2 :as scb2]
-            [shadow.resource :refer [inline]]
             [times.api :as ta]
             [schpaa.time]
-            [goog.style :as gs]
             [booking.aktivitetsliste]
             [booking.yearwheel]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [booking.design-debug]))
 
 ;region related to flex-date and how to display relative time
@@ -52,75 +45,6 @@
 ;region todo: extract these higher-order-components
 
 ;endregion
-
-(defn empty-list-message [msg]
-  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' 0)]
-    [:div.grow.flex.items-center.justify-center.xpt-8.mb-32.mt-8.flex-col
-     {:class (concat fg-)}
-     [:div.text-2xl.font-black msg]
-     [:div.text-xl.font-semibold "Ta kontakt med administrator"]]))
-
-(defn register-back "to :active-front" [page]
-  (rf/dispatch [:app/register-entry :active-back page]))
-
-(defn render-back-tabbar []
-  [:div.sticky.top-16.z-200
-   [tab {:selected @(rf/subscribe [:app/current-page])}
-    [:r.user "Om meg" register-back :icon :user]
-    [:r.logg "Turlogg" register-back :icon :circle]
-    [:r.debug "Feilsøking" register-back :icon :circle]]])
-
-(defn register-front "to :active-front" [page]
-  (rf/dispatch [:app/register-entry :active-front page]))
-
-(defn temp-add-10 [uid]
-  [bu/regular-button-small {:on-click #(db/database-set {:path  ["booking-posts" "receipts" uid]
-                                                         :value {"articles" (str (t/<< (t/now) (t/new-duration 151 :hours)))}})} "10"])
-
-(defn temp-add-13 [uid]
-  [bu/regular-button-small {:on-click #(db/database-set {:path  ["booking-posts" "receipts" uid]
-                                                         :value {"articles" (str (t/<< (t/now) (t/new-duration 13 :hours)))}})} "13"])
-
-(defn temp-add-15 [uid]
-  [bu/regular-button-small {:on-click #(db/database-set {:path ["booking-posts" "receipts" uid] :value {}})} "15"])
-
-(defn render-front-tabbar [uid]
-  (let [vr (db/on-value-reaction {:path ["booking-posts" "receipts" uid "articles"]})
-        {date-of-last-seen :date id :id} @(db/on-value-reaction {:path ["booking-posts" "receipts" uid "articles"]})
-        path ["booking-posts" "articles"]
-        list-of-posts (db/on-value-reaction {:path path})]
-    (fn [uid]
-      (let [unseen (count (filter (fn [[k {:keys [] :as v}]] (pos? (compare (name k) (:id @vr)))) @list-of-posts))]
-        [:<>
-         [l/ppre-x
-          unseen
-          date-of-last-seen
-          id]
-
-         [:div.p-2.flex.gap-2
-          (temp-add-10 uid)
-          (temp-add-13 uid)
-          (temp-add-15 uid)]
-
-         [:div.sticky.top-16.z-200
-          [schpaa.components.tab/tab {:selected @(rf/subscribe [:app/current-page])}
-           [:r.new-booking "Ny booking" register-front :icon :ticket]
-           [:r.forsiden "Siste" register-front :icon :clock]
-           [:r.booking-blog
-            (fn [] [:div.flex.gap-2
-                    [:div "Nytt"]
-                    (let [unseen (count (filter (fn [[k {:keys [] :as v}]] (pos? (compare (name k) (:id @vr)))) @list-of-posts))]
-                      (when (pos? unseen)
-                        [:div
-                         [:div.rounded-full.bg-gray-100.xaspect-square.h-6.px-3.w-auto.flex.flex-center.text-black.font-semibold.text-sm
-                          unseen]]))])
-
-            #(do
-               (register-front %)
-               (booking.content.booking-blog/mark-last-seen uid))
-
-            :icon
-            :chat-square]]]]))))
 
 (defn logo-type []
   [:div.text-center.inset-0
@@ -156,7 +80,7 @@
         (logo-type)]
 
        [:div.max-w-xs.mx-auto
-        (-> "./frontpage.md"
+        (-> "./content/frontpage.md"
             inline
             schpaa.markdown/md->html
             st/prose-markdown-styles)]]]
@@ -170,7 +94,7 @@
         {:style {:grid-template-columns "min-content 1fr"}}
 
         [:div.prose.col-span-2
-         (-> "./frontpage1.md"
+         (-> "./content/frontpage1.md"
              inline
              schpaa.markdown/md->html
              st/prose-markdown-styles)]
@@ -186,64 +110,12 @@
          (logo-type)]
 
         [:div.prose.mx-auto.col-span-1.self-center
-         (-> "./frontpage2.md"
+         (-> "./content/frontpage2.md"
              inline
              schpaa.markdown/md->html
              st/prose-markdown-styles)]]]]]))
 
-(declare menu-example-with-args standard-menu standard-menu-2)
-
 ;region temp helpers
-
-(defn complex-menu [settings]
-  (let [show-1 #(swap! settings assoc :setting-1 %)
-        select-2 #(swap! settings assoc :setting-2 %)]
-    (concat [[(fn [v] (sc/icon-large (when v [:> solid/ShieldCheckIcon])))
-              (fn [e] (if e "Long" "Short"))
-              #(show-1 (not (:setting-1 @settings)))
-              false
-              #(:setting-1 @settings)]]
-            [nil]
-            (let [data [["small" 1]
-                        ["medium" 2]
-                        ["large" 3]]]
-              (map (fn [[caption value]]
-                     [(fn [v] (sc/icon-large (when (= value v) [:> outline/CheckIcon])))
-                      caption
-                      #(select-2 value)
-                      false
-                      #(:setting-2 @settings)])
-                   data))
-            [nil]
-            [[(sc/icon-large [:> solid/BadgeCheckIcon])
-              "Badge"
-              nil
-              true
-              #()]
-             [(sc/icon-large [:> solid/LightBulbIcon])
-              "Bulba?"
-              nil
-              true
-              #()]])))
-
-(o/defstyled details :details
-  #_[:& :select-none
-     [#{:openxx} :text-blue-500]
-     [:>summary
-      ;:flex
-      #_[:&:hover :opacity-100]
-      #_[:> [:* {:display :inline}]]]]
-
-  ([{:keys [st header]} ch]
-   #_^{;:class [:openxx]
-       :open st}
-   ;^{:open st}
-   [:div
-    [:div "asd"]
-    #_[:summary
-       "header"]]))
-
-
 
 (o/defstyled listitem :div
   ([a b c]
@@ -624,19 +496,9 @@
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [+page-builder r
         {:render (fn [_] [sc/col-space-2
-                          ;[l/ppre (.getPropertyValue (js/document.getComputedStyle ":root") "--brand0-light")]
-                          ;[l/ppre (. js/document documentElement -getComputedStyle getPropertyValue "--brand0-light")]
-                          #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
-                          #_(let [el (-> js/document.documentElement .-style)
-                                  prop (fn [] (ta/format "hsla(%d,35%,50%,1)" (rand-int 365)))]
 
-                              [:<>
-                               [scb/button-cta {:on-click #(let [p (prop)]
-                                                             (.setProperty el "--brand1" p)
-                                                             (.setProperty el "--buttoncta1" p))} "Randomize color"]])
-                          #_[l/ppre (gs/getComputedStyle js/document.documentElement "--brand1")]
                           [:div
-                           (-> "./frontpage1.md"
+                           (-> "./content/frontpage1.md"
                                inline
                                schpaa.markdown/md->html
                                sc/markdown)]
@@ -644,11 +506,6 @@
                            [scb2/cta-large
                             {:type "button" :on-click open-dialog-signin}
                             "Begynn her"]]])}]))
-
-   #_(fn [r]
-       [page-boundary r
-        [:div "base page for booking/sjøbasen"]
-        #_(-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown)])
 
    :r.yearwheel
    (fn [r]
@@ -658,3 +515,4 @@
 
    :r.page-not-found
    error-page})
+

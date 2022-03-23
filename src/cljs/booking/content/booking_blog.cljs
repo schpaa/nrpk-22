@@ -256,8 +256,8 @@ Helt til slutt, en kinaputt"
                        :action #(add-article :d)}]
      [:small-menuitem {:label  "Ny artikkel E"
                        :action #(add-article :e)}]
-     [:small-menuitem {:label  "../markdown-example.md"
-                       :action #(add-article' (shadow.resource/inline "../markdown-example.md"))}]
+     [:small-menuitem {:label  "./markdown-example.md"
+                       :action #(add-article' (shadow.resource/inline "./markdown-example.md"))}]
      [:small-menuitem {:icon     (sc/icon [:> solid/BeakerIcon])
                        :label    "Generer"
                        :color    "var(--red-4)"

@@ -5,14 +5,11 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.booking]
             [booking.data]
-            [schpaa.style.popover]
-            [db.core :as db]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu]
             [fork.re-frame :as fork]
             [tick.core :as t]
-            [schpaa.style.button :as scb]
             [schpaa.style.dialog :refer [open-dialog-confirmbooking]]
             [booking.views]
             [clojure.set :as set]
@@ -24,31 +21,6 @@
                                      (tap> (:lab/show-popover db))
                                      (update db :lab/show-popover (fnil not false))))
 (rf/reg-sub :lab/show-popover (fn [db] (get db :lab/show-popover false)))
-
-(defn popover-sample []
-  (let [visible (rf/subscribe [:lab/show-popover])
-        data [{:id      1
-               :content [schpaa.style.booking/line
-                         {:content  {:category    "Havkayakk"
-                                     :number      "310"
-                                     :location    "C3"
-                                     :material    "Epoxy"
-                                     :stability   4
-                                     :description "Passer best for de som liker å padle på vann og land."
-                                     :brand       "P3 Baffin Boreal"
-                                     :weight      "23 kg"
-                                     :width       "50 cm"
-                                     :length      "490 cm"}
-
-                          :on-click #()
-                          :expanded true
-                          :selected false}]}]]
-    (fn []
-      [:div.relative
-       [schpaa.style.button/normal {:type     "button"
-                                    :on-click #(do (rf/dispatch [:lab/show-popover]))} "Display popover"]
-       [:div.z-20.absolute.max-w-sm.pointer-events-none.left-0.top-12.mt-2.w-full.h-full
-        [schpaa.style.popover/popover-example @visible data]]])))
 
 ;endregion
 

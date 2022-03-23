@@ -99,19 +99,6 @@
 
 ;region copied from yearwheel, find a new home
 
-(def arco-datetime-config
-  {:refresh-rate 1000
-   :vocabulary   {:in     "om"
-                  :ago    "siden"
-                  :now    "nå"
-                  :second ["sekund" "sekunder"]
-                  :minute ["minutt" "minutter"]
-                  :hour   ["time" "timer"]
-                  :day    ["dag" "dager"]
-                  :week   ["uke" "uker"]
-                  :month  ["måned" "måneder"]
-                  :year   ["år" "år"]}})
-
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
 
@@ -128,7 +115,7 @@
                                            (t/date-time date)
                                            (t/at (t/date date) (t/midnight)))
                                          (t/now)]
-                                :config arco-datetime-config}
+                                :config booking.data/arco-datetime-config}
          (fn [formatted-t]
            [sc/link on-click (formatted formatted-t)])]))))
 
