@@ -40,7 +40,8 @@
             [booking.aktivitetsliste]
             [booking.yearwheel]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [schpaa.style.hoc.page-controlpanel :as hoc.panel]))
+            [schpaa.style.hoc.page-controlpanel :as hoc.panel]
+            [booking.design-debug]))
 
 ;region related to flex-date and how to display relative time
 
@@ -242,20 +243,15 @@
     #_[:summary
        "header"]]))
 
-(defn collapsable-memory [tag header content]
-  (r/with-let [st (schpaa.state/listen tag)]
-    [:details.select-none {:open @st}
-     [:summary {:on-click #(schpaa.state/toggle tag)
-                :style    {:display :inline}} header]
-     content]))
+
 
 (o/defstyled listitem :div
   ([a b c]
    [sc/row'
-    [sc/text {:class [:w-8 :shrink-0]} b]
+    [sc/text1 {:class [:w-8 :shrink-0]} b]
     [scb2/outline-tight "Rediger"]
     [sc/subtext {:class [:line-clamp-3 :grow]} a]
-    #_[sc/text c]]))
+    #_[sc/text1 c]]))
 
 (defn error-page [r]
   ;[:div "error"]
@@ -273,18 +269,56 @@
                 :sgroup-hover:-inset-1 :duration-500]}]
       [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
 
-    [sc/text "Finner ikke noe på denne adressen! Det er sikkert bare en gammel lenke. Kanskje du finner det du leter etter i denne listen?"]
+    [sc/text1 "Finner ikke noe på denne adressen! Det er sikkert bare en gammel lenke. Kanskje du finner det du leter etter i denne listen?"]
     (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
                                  (sort-by :name < schpaa.style.combobox/commands)]
                              [:div [sc/subtext-with-link {:on-click action} name]]))]])
 
 
+(defn opening-hours []
+  (let [f (fn [[a b]] [sc/subtext-with-link
+                       {:style {:margin-left "-2px"}
+                        :href  (kee-frame.core/path-for [a])}
+                       b])]
+    [sc/col                                                 ;-space-2 {:style {:width :auto}}
+     [sc/ingress {:style {:text-align :rights
+                          :font-size  "var(--font-size-fluid-1)"
+                          :xcolor     "white"}} "Åpningstider"]
+     ;[sc/ingress "Sesongen er inndelt i perioder."]
+     (let [data [["tirsdag" "18:00" "21:00"]
+                 ["onsdag" "18:00" "21:00"]
+                 ["torsdag" "18:00" "15:00"]
+                 ["lørdag" "11:00" "17:00"]
+                 ["søndag" "11:00" "17:00"]]]
+       [:<>
+        ;[sc/subtext "Sesongen åpner xx.xx og frem til xx vil dette være våre åpningstider"]
+        [:div {:style {:display               :grid
+                       :column-gap            "0.25rem"
+                       :grid-template-columns "5rem min-content min-content min-content"
+                       :place-content         :end}}
+         (for [[day open close] data]
+           [:<>
+            [sc/subtext {:style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} day]
+            [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} open]
+            [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} "—"]
+            [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} close]])]
+        [:div {:style {:margin-top "4px"}}
+         [sc/subtext-with-link
+          {:href  ()
+           :style {:white-space :normal
+                   :margin-left "-3px"
+                   :font-size   "var(--font-size-fluid-0)" :xcolor "white"}}
+          "Se alle åpningstidene"]]
+        #_(let [data [[1 :r.forsiden "Utvidet åpningstid i sommer"]
+                      [4 :r.oversikt "Oversikt"]]]
+            [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
+
 (def routing-table
   {:r.welcome
    (fn [r]
-     [page-boundary r
-      [db.signin/login]
-      [welcome]])
+     #_[page-boundary r
+        [db.signin/login]
+        [welcome]])
 
    :r.forsiden-iframe
    (fn forsiden [r]
@@ -295,39 +329,123 @@
         [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}]]))
 
    :r.forsiden
-   (fn forsiden [r]
-     (let [user-auth (rf/subscribe [::db/user-auth])]
+   (fn [r]
+     (let [f (fn [[a b]] [sc/subtext-with-link
+                          {:style {:margin-left "-2px"}
+                           :href  (kee-frame.core/path-for [a])}
+                          b])
+           md #(sc/markdown (schpaa.markdown/md->html %))]
        [+page-builder r
-        {:render (fn []
-                   [sc/col-space-8
-                    [sc/col-space-1
-                     [sc/hero "Sjøbasen"]
-                     [sc/row-sc-g2-w
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Retningslinjer på sjøbasen"]
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Ofte spurte spørsmål"]
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Booking"]
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Båtlisten på Sjøbasen"]
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Oversikt"]]]
-                    [sc/col-space-1
-                     [sc/hero "Nøklevann"]
-                     [sc/row-sc-g2-w
-                      (let [data [[:r.xxx "Båtlisten på Nøklevann"]
-                                  [:r.forsiden "Aktivitetsliste"]]]
-                        (map (fn [[a b]] [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b]) (sort-by second data)))]]
-                    [sc/col-space-1
-                     [sc/hero "Årshjul"]
-                     [sc/row-sc-g2-w
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Oversikt 2022-23"]
-                      [sc/subtext-with-link {:href (kee-frame.core/path-for [:r.forsiden])} "Legg til nytt i årshjulet"]]]
-                    [sc/col-space-1
-                     [sc/hero "Nøkkelvakt"]
-                     [sc/row-sc-g2-w
-                      (let [data [[:r.forsiden "Plikter som nøkkelvakt"]
-                                  [:r.forsiden "Mine nøkkelvakt-opplysninger"]
-                                  [:r.forsiden "Utlån på nøkkelvann"]
-                                  [:r.forsiden "Betingelser"]
-                                  [:r.forsiden "Vaktkalender"]]]
-                        (map (fn [[a b]] [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b]) (sort-by second data)))]]])}]))
+        {:frontpage true
+         :render    (fn []
+                      [:div.overflow-y-auto.h-full.relative
+                       {:style {:background "var(--surface1)"}}
+                       [:div.relative.w-full
+                        [:img {:style {:filter          "contrast(0.275)"
+                                       :object-fit      :cover
+                                       :object-position "center center"
+                                       :width           "100%"
+                                       :height          "100vh"
+                                       :min-height      "20rem"
+                                       :xaaspect-ratio  "1/1"}
+                               :src   "/img/brygge.jpeg"}]
+                        [:div
+                         {:style {:position      :absolute
+                                  :display       :grid
+                                  :place-content :center
+                                  :top           "0"
+                                  :right         "0"
+                                  :bottom        "0"
+                                  :left          "0"}}
+                         [:img {:style {:width     "25vw"
+                                        :max-width "10rem"}
+                                :src   "/img/logo-n.png"}]]
+
+                        [:div.absolute.bottom-4.left-4
+                         [sc/hero {:style {:color          "white"
+                                           :font-size      "var(--font-size-fluid-2)"
+                                           :letter-spacing "0"}} "Velkommen til NRPK"]]
+                        [:div.absolute.left-4.top-2.w-auto
+                         {:style {:background     "var(--surface00)"
+                                  :border-radius  "var(--radius-1)"
+                                  :padding-inline "var(--size-3)"
+                                  :padding-block  "var(--size-2)"}}
+                         [opening-hours]]]
+
+                       [:div.m-4
+                        [sc/col-space-8 {:class [:xpy-4]}
+                         [sc/col-space-2
+
+                          [sc/ingress "Etablert i 1987. Ved inngangen på 2022 har klubben over 4200 medlemmer."]
+                          (let [data [[1 :r.forsiden "Bli medlem"]
+                                      [3 :r.forsidens "Organisasjon"]
+                                      [2 :r.forsiden "Registrer deg og logg inn"]
+                                      [4 :r.oversikt "Oversikt"]]]
+                            [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])]]]
+                       [:div
+                        (sc/markdown' (schpaa.markdown/md->html "## Postadresse\nNøklevann ro- og padleklubb<br/>Postboks 37, 0621 Bogerud<br/>[styret@nrpk.no](mailto:styret@nrpk.no)<br/>[medlem@nrpk.no](mailto:medlem@nrpk.no)"))]])}]))
+
+
+
+   :r.oversikt
+   (fn forsiden [r]
+     (let [user-auth (rf/subscribe [::db/user-auth])
+           md #(sc/markdown (schpaa.markdown/md->html %))
+           f (fn [[a b]] [sc/subtext-with-link {:style {:margin-left "-2px"}
+                                                :href  (kee-frame.core/path-for [a])} b])]
+       [+page-builder r
+        {:render
+         (fn []
+           [:<>
+
+            [:div
+             [:div
+
+              [sc/col-space-8 {:class [:py-8]}
+               [sc/col-space-8
+                [sc/col-space-1
+                 (md "# NRPK\n## Nøklevann ro- og padleklubb tilbyr medlemmene å benytte klubbens materiell på Nøklevann i klubbens åpningstider. I tillegg har vi et tilbud til de som har våttkort grunnkurs hav å padle på Oslofjorden.")
+                 [sc/row-sc-g2-w
+                  (let [data [[1 :r.forsiden "Bli medlem"]
+
+                              [3 :r.forsidens "Organisasjon"]]]
+                    (map (comp f rest) (sort-by first data)))]]
+
+                [sc/col-space-1
+                 (md "# Nøklevann\n## Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer.")
+                 [sc/row-sc-g2-w
+                  (let [data [[:r.xxx "Båtlisten på Nøklevann"]
+                              [:r.forsiden "Utlånsaktivitet"]]]
+                    (map f (sort-by second data)))]]]
+               [sc/col-space-1
+                (md "# Sjøbasen\n## NRPK’s sjøbase er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her.")
+                [sc/row-sc-g2-w
+                 (let [data [[:r.forsiden "Retningslinjer på sjøbasen"]
+                             [:r.forsiden "Ofte spurte spørsmål"]
+                             [:r.forsiden "Båtlisten på Sjøbasen"]
+                             [:r.forsiden "Oversikt"]
+                             [:r.forsiden "Booking"]]]
+                   (map f (sort-by second data)))]]
+               [sc/col-space-1
+                [md "# Årshjul\n## Ingress"]
+                [sc/row-sc-g2-w
+                 (let [data [[:r.forsiden "Oversikt 2022-23"]
+                             [:r.forsiden "Legg til nytt i årshjulet"]]]
+                   (map f (sort-by second data)))]]
+               [sc/col-space-1
+                [md "# Nøkkelvakt\n## Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."]
+                [sc/row-sc-g2-w
+                 (let [data [[:r.forsiden "Plikter som nøkkelvakt"]
+                             [:r.forsiden "Mine nøkkelvakt-opplysninger"]
+                             [:r.forsiden "Utlån på nøkkelvann"]
+                             [:r.forsiden "Betingelser"]
+                             [:r.forsiden "Vaktkalender"]]]
+                   (map f (sort-by second data)))]]]]]])}]))
+
+
+
+
+
 
 
 
@@ -381,10 +499,8 @@
    :r.user
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
-       [page-boundary r
-        ;[user.views/userstatus-form user-auth]
-        ;[render-back-tabbar]
-        [user.views/my-info {}]]))
+       [+page-builder r
+        {:render (fn [] [user.views/my-info {}])}]))
 
    :r.logg
    (fn [r]
@@ -409,132 +525,9 @@
 
    :r.designlanguage
    (fn [r]
-     [page-boundary r
-      [:div.pb-32
-       [collapsable-memory
-        :color-palette
-        [sc/separator "Color and grayscale palette"]
-        (into [:div.grid.gap-2
-               {:style {:grid-template-columns "repeat(auto-fit,minmax(6rem,1fr))"}}]
-              (map (fn [[styles tag]]
-                     [sc/surface-b-sans-bg {:class []
-                                            :style (conj styles {:box-shadow   "var(--inner-shadow-2)"
-                                                                 :font-size    "var(--font-size-0)"
-                                                                 :aspect-ratio "1/1"})} tag])
-                   [[{:color      "var(--green-0)"
-                      :background "var(--green-5)"} "call to action"]
+     [+page-builder r
+      {:render (fn [] [booking.design-debug/render])}])
 
-
-                    [{:color      "var(--red-0)"
-                      :background "var(--red-5)"} "dangerous and irreversible actions"]
-
-
-                    [{:color      "var(--surface5)"
-                      :background "var(--brand0)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--brand1)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--brand2)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--yellow-2)"} :highlighter]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface1)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface2)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface3)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface4)"} :tag]
-                    [{:color      "var(--surface0)"
-                      :background "var(--surface5)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface0)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface00)"} :tag]
-                    [{:color      "var(--surface5)"
-                      :background "var(--surface000)"} :tag]]))]
-
-       [collapsable-memory
-        :fonts
-        [sc/separator "Fonts"]
-        (let [f (fn [font-name font-size line-height e]
-                  (let [line-height (or line-height "auto")
-                        e (ta/format e font-name font-size line-height)]
-                    [:div
-                     {:style {:font-weight "400"
-                              :font-family font-name
-                              :font-size   font-size
-                              :line-height line-height}}
-                     [:div e]
-                     [:div {:style {:font-style :italic}} e]
-                     [:div {:style {:font-weight "100"}} e " 100"]
-                     [:div {:style {:font-weight "900"}} e " 900"]
-                     [:div (apply str (range 10))]
-                     [:div [:strong (apply str (range 10))]]]))]
-
-          [:<>
-           [sc/col {:class [:space-y-8]}
-            [sc/col {:class [:space-y-4]}
-             (f "Inter" "16px" "20px" "%s %s/%s sans-serif")
-             (f "Inter" "24px" "26px" "%s %s/%s sans-serif")
-             (f "Montserrat" "18px" "22px" "%s %s/%s sans-serif")
-             (f "Montserrat" "24px" "28px" "%s %s/%s sans-serif")
-             (f "Montserrat" "32px" "38px" "%s %s/%s sans-serif")
-             (f "Lora" "16px" "18px" "%s %s/%s serif")
-             (f "Lora" "24px" "30px" "%s %s/%s serif")
-             (f "Lora" "32px" "38px" "%s %s/%s serif")]]])]
-
-       [collapsable-memory
-        :markdown
-        [sc/separator "Markdown styles"]
-        [sc/surface-a
-         (-> (inline "./markdown-example.md") schpaa.markdown/md->html sc/markdown)]]
-       [collapsable-memory
-        :styles
-        [sc/separator "Styles"]
-        (into [:div.space-y-1]
-              (map (fn [c] [sc/surface-a {:class [:p-2]} c])
-                   [[sc/small "sc/small"]
-                    [sc/separator "sc/separator"]
-                    [sc/col-fields
-                     [sc/header-title "sc/header-title"]
-                     [sc/header-title "sc/header-title"]
-                     [sc/header-title "sc/header-title"]]
-                    [sc/col
-                     [sc/dialog-title "sc/dialog-title"]
-                     [sc/dialog-title "sc/dialog-title"]
-                     [sc/dialog-title "sc/dialog-title"]]
-                    [sc/subtitle "sc/subtitle"]
-                    [sc/subtext "sc/subtext"]
-                    [sc/text "sc/text"]
-                    [sc/field-label "sc/field-label"]
-                    [sc/title "sc/title"]
-                    [sc/pill "sc/pill"]
-                    [sc/text "sc/row-fields"
-                     [sc/row-fields
-                      [sc/text "field"]
-                      [sc/text "field"]
-                      [sc/text "field"]]]
-                    [sc/text "sc/row-stretch"
-                     [sc/row-stretch
-                      [sc/text "field"]
-                      [sc/text "field"]
-                      [sc/text "field"]]]
-                    [sc/text "sc/row-end"
-                     [sc/row-end
-                      [sc/text "field"]
-                      [sc/text "field"]
-                      [sc/text "field"]]]
-                    [sc/text "sc/row-wrap (gap-4)"
-                     [sc/row-wrap
-                      [sc/text "field"]
-                      [sc/text "field"]
-                      [sc/text "field"]]]
-                    [sc/text "sc/row-gap (gap-2)"
-                     [sc/row-gap
-                      [sc/text "field"]
-                      [sc/text "field"]
-                      [sc/text "field"]]]]))]]])
 
    :r.terms
    (fn [r]
@@ -597,7 +590,7 @@
                                 [:div.flex.p-1.self-end.w-full
                                  {:style {:background "red"
                                           :color      "yellow"}}
-                                 [sc/small (ta/week-name e :length 3)]])
+                                 [sc/small1 (ta/week-name e :length 3)]])
                               (for [e (concat (map - (reverse (range 1 4))) (range 30))]
                                 [:div.p-1
                                  {:style {:background "blue"
@@ -605,7 +598,7 @@
                                   :class [:duration-200 :hover:bg-gray-200 :hover:text-white]}
                                  (if (neg? e)
                                    [:div]
-                                   [sc/small e])])])}])
+                                   [sc/small1 e])])])}])
 
    :r.fileman-temporary
    (fn [r]

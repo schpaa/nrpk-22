@@ -22,7 +22,7 @@
 (defn article-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
     [#_[:header [sc/row {:class [:justify-between :items-end]}
-                 [sc/title "Top"]
+                 [sc/title1 "Top"]
                  [sc/pill (or booking.data/VERSION "dev.x.y")]]]
      ;[icon label action disabled value]
      #_[:menuitem [nil "Slett kvitteringer" #() false 0]]
@@ -134,7 +134,7 @@
   (let [visible? (r/atom false)]
     (fn [{:keys [title content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
       [:div
-       [sc/title title]
+       [sc/title1 title]
        [sc/surface-d {:style {:xpadding      "1rem"
                               :border-radius "var(--radius-1)"
                               :background    "var(--surface000)"

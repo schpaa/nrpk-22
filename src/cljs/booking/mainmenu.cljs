@@ -21,9 +21,9 @@
   (let [userauth (rf/subscribe [::db/user-auth])
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     ;[icon label action disabled value]
-    [[:div [:div.p-2 [sc/title {:style {:font-family "Merriweather"
-                                        :font-weight 300
-                                        :font-size   "var(--font-size-4)"}} (str "Hei " (address-me-as @userauth))]]]
+    [[:div [:div.p-2 [sc/title1 {:style {:font-family "Merriweather"
+                                         :font-weight 300
+                                         :font-size   "var(--font-size-4)"}} (str "Hei " (address-me-as @userauth))]]]
      [:menuitem {:filledicon (sc/icon [:> solid/HomeIcon])
 
                  :label      "Forsiden"

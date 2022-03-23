@@ -40,8 +40,8 @@
                 (when-some [page-path (some-> link :path)]
                   (let [;page-addr (kee-frame.core/path-for [page-name])
                         url (str (.-protocol js/window.location) "//" (.-host js/window.location) page-path)]
-                    [sc/text {:class [:truncate]
-                              :style {:user-select :all
-                                      :white-space :nowrap}} url]))
+                    [sc/text1 {:class [:truncate]
+                               :style {:user-select :all
+                                       :white-space :nowrap}} url]))
                 [sc/row-ec
                  [scb2/normal-regular {:on-click on-close} "Lukk"]]]]])}))

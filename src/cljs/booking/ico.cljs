@@ -3,6 +3,7 @@
             ["@heroicons/react/outline" :as outline]))
 
 (def plus [:> solid/PlusIcon])
+(def plusplus [:> solid/PlusCircleIcon])
 (def trash [:> outline/TrashIcon])
 (def check [:> outline/CheckIcon])
 (def eye [:> outline/EyeIcon])
@@ -11,3 +12,5 @@
 (def nullstill [:> outline/ShieldExclamationIcon])
 (def new-home [:> solid/HomeIcon])
 (def old-home [:> outline/HomeIcon])
+(def yearwheel [:> solid/ViewGridAddIcon])
+(def user [:> solid/UserCircleIcon])

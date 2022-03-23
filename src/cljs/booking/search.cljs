@@ -35,19 +35,19 @@
 (o/defstyled experiment :div
   [:&
    :rounded-full
-   {:color "var(--surface4)"}
-   [:&:hover {
+   {:color "var(--text3)"}
+   [:&:hover {:color      "var(--text2)"
               :background "var(--surface0)"}]])
 
 (o/defstyled experiment2 :div
   [:&
    :rounded-full
-   {:color "var(--surface4)"}
+   {:color "var(--text1)"}
    [:&:hover {:color "var(--red-5)"}]])
 
 (o/defstyled experiment3 :div
   [:&
-   {:color "var(--surface4)"}])
+   {:color "var(--text1)"}])
 
 (defn search-menu []
   (let [a (r/atom nil)

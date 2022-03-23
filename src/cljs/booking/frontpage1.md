@@ -1,6 +1,6 @@
 # Medlemmer med våttkort
 
-## Sjøbasen er åpen for medlemmer i NRPK som har gyldig våttkort. Her kan du reservere havkayak, grønnlandskayak, surfski og standup-padlebrett for dagsturer og overnattinger i indre Oslofjord og omegn.
+## Sjøbasen er åpen for medlemmer i NRPK som har gyldig våttkort. Her kan du reservere hav– og grønnlandskajakk, surfski og standup-padlebrett for dagsturer og overnattinger i indre Oslofjord.
 
 ### Hvis dette er noe for deg, kan du:
 

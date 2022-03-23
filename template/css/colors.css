@@ -90,7 +90,11 @@ outline: 2px solid #a0a8;
     --radius-3: 14px;
 
     --font-letterspacing-0: -0.02em;
-    
+
+    --tw-ring-inset: 2;
+    --tw-ring-offset-width: 2;
+    --tw-ring-color: green;
+
 /* greenish
  --gray-0: #F5FEFE;
  --gray-1: #D7FCFA;
@@ -104,21 +108,6 @@ outline: 2px solid #a0a8;
  --gray-9: #011007;
 
 
-
- --gray-0: #F0F1F1;
-  --gray-1: #E5E6E6;
-  --gray-2: #CDD0D0;
-  --gray-3: #B5BABA;
-  --gray-4: #9DA4A4;
-  --gray-5: #858E8E;
-  --gray-6: #6C7374;
-  --gray-7: #54595A;
-  --gray-8: #3B3E3F;
-  --gray-9: #222425;
-  --gray-9: #1c1917;
-
-*/
-
     --gray-0: #fafaf9;
     --gray-1: #f5f5f4;
     --gray-2: #e7e5e4;
@@ -128,32 +117,44 @@ outline: 2px solid #a0a8;
     --gray-6: #57534e;
     --gray-7: #44403c;
     --gray-8: #292524;
+    --gray-9: #171515;
+
+*/
+  --gray-0: #F0F1F1;
+  --gray-1: #E5E6E6;
+  --gray-2: #CDD0D0;
+  --gray-3: #B5BABA;
+  --gray-4: #9DA4A4;
+  --gray-5: #858E8E;
+  --gray-6: #6C7374;
+  --gray-7: #54595A;
+  --gray-8: #3B3E3F;
+  --gray-9: #222425;
+  --gray-10: #1c1917;
 
 
-    --tw-ring-inset: 2;
-    --tw-ring-offset-width: 2;
-    --tw-ring-color: green;
 
-   --brand000-dim: var(--green-9);
-   --brand00-dim: var(--green-8);
-   --brand0-dim: var(--green-7);
-   --brand1-dim: var(--green-4);
+   /* brand */
+
+   --brand-hue: 390;
+   --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
+   --brand1-copy-light: white;
+
+   --brand1-hover-light: var(--red-3);
+   --brand2-light: hsl(var(--brand-hue), 39%, 30%);
+
+    --brand1-dim: var(--orange-4); /* background on cta or copy*/
+    --brand1-copy-dim: var(--orange-9); /* when copy is placed on --brand1-dim */
+    --brand1-hover-dim: var(--orange-3);
+    --brand1-copy-light: white; /* when copy is placed on --brand1-light */
+
+
    --brand2-dim: var(--green-1);
 
-   --text1-dim: var(--gray-3);
-   --text2-dim: var(--gray-3);
-   --text3-dim: var(--gray-4);
-   --label-dim: var(--green-5);
+    /* button dark */
 
-   --surface000-dim: var(--gray-9);
-   --surface00-dim: black; /*var(--gray-9);*/
-   --surface0-dim: var(--gray-9); /* var(--gray-7); */
-   --surface1-dim: var(--gray-5); /* surface-background of entities and elements */
-   --surface2-dim: var(--gray-6); /* content-background of slidein menu, can contain entities and elements */
-   --surface3-dim: var(--gray-3); /* surface-background of slidein menu, contains the content above */
-   --surface4-dim: var(--gray-4);
-   --surface5-dim: var(--gray-3);
-
+   --buttoncta0-dim: hsl(100, 39%, 5%);
+   --buttoncta1-dim: hsl(100, 39%, 50%);
    --buttoncta0-dim: var(--green-3);
    --buttoncta1-dim: var(--green-7);
    --buttoncta2-dim: var(--green-8);
@@ -164,61 +165,93 @@ outline: 2px solid #a0a8;
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
 
-   --brand-hue: 20;
-   --brand000-light: var(--green-1);
-   --brand00-light: var(--green-2);
-   --brand0-light: hsl(var(--brand-hue), 39%, 90% ); /* var(--green-3); */
-   --brand1o-light: hsla(var(--brand-hue), 39%, 50%,0.05);
-   --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
-   --brand2-light: hsl(var(--brand-hue), 39%, 30%);
+    /* button light */
 
-   --brand1-dim: hsl(100, 39%, 50%);
-   --buttoncta0-dim: hsl(100, 39%, 5%);
-   --buttoncta1-dim: hsl(100, 39%, 50%);
+    --buttoncta0-light: white;
+    --buttoncta1-light: var(--green-8);
+    --buttoncta2-light: var(--green-7);
+    --buttondanger0-light: var(--red-1);
+    --buttondanger1-light: var(--red-6);
+    --buttondanger2-light: var(--red-5);
 
-   --text1-light: var(--gray-8);
-   --text2-light: var(--gray-7);
-   --text3-light: var(--gray-6);
-   --label-light: var(--gray-5);
+    /* body copy */
 
-    --link-1: var(--blue-9);
+    --text1-light: var(--gray-8);
+    --text1-copy-light: var(--gray-2);
+    --text2-light: var(--gray-5);
+    --text3-light: var(--gray-4);
+    --label-light: var(--gray-5);
 
-   --surface000-light: var(--gray-0);
-   --surface00-light: var(--gray-1);
-   --surface0-light: var(--gray-2);
-   --surface1-light: var(--gray-3); /* surface-background of entities and elements */
-   --surface2-light: var(--gray-4); /* content-background of slidein menu, a platform for content (on top of system-background) */
-   --surface3-light: var(--gray-5); /* surface-background of slidein menu, toolbar, system-background etc */
-   --surface4-light: var(--gray-6);
-   --surface5-light: var(--gray-9);
-   --surface6-light: var(--gray-6);
-   --surface7-light: var(--gray-7);
-   --surface8-light: var(--gray-8);
-   --surface9-light: var(--gray-9);
+    --textmarker-light:var(--gray-9);
+    --textmarker-dim:var(--gray-9);
+    --text1-dim: var(--gray-3);
+    --text1-copy-dim: var(--gray-8);
+    --text2-dim: var(--gray-4);
+    --text3-dim: var(--gray-5);
+    --label-dim: var(--green-5);
 
-   --buttoncta0-light: white;
-   --buttoncta1-light: var(--green-8);
-   --buttoncta2-light: var(--green-7);
-   --buttondanger0-light: var(--red-1);
-   --buttondanger1-light: var(--red-6);
-   --buttondanger2-light: var(--red-5);
+   /* background surfaces*/
 
-   /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
-   --button00-light: var(--gray-0);
-   --button0-light: var(--gray-9);
-   --button1-light: var(--gray-4);
-   --button2-light: var(--gray-3);
+    --textmarker-background-light: var(--yellow-2);
 
-   --buttonbase-disabled-light: var(--gray-1);
-   --buttonbase-light: var(--gray-3);
-   --buttontext-light: var(--gray-7);
-   --buttonbase-hover-light: var(--gray-2);
-   --buttonbase-active-light: var(--gray-5);
+    --surface000-light: var(--gray-0);
+    --surface00-light: var(--gray-1);
+    --surface0-light: var(--gray-2);
+    --surface1-light: var(--gray-3); /* surface-background of entities and elements */
+    --surface2-light: var(--gray-4); /* content-background of slidein menu, a platform for content (on top of system-background) */
+    --surface3-light: var(--gray-5); /* surface-background of slidein menu, toolbar, system-background etc */
+    --surface4-light: var(--gray-6);
+    --surface5-light: var(--gray-9);
+    --surface6-light: var(--gray-6);
+    --surface7-light: var(--gray-7);
+    --surface8-light: var(--gray-8);
+    --surface9-light: var(--gray-9);
+
+    --textmarker-background-dim: var(--yellow-5);
+
+    --surface000-dim: var(--gray-9);
+    --surface00-dim: var(--gray-8);
+    --surface0-dim: var(--gray-7); /* var(--gray-7); */
+    --surface1-dim: var(--gray-6); /* surface-background of entities and elements */
+    --surface2-dim: var(--gray-5); /* content-background of slidein menu, can contain entities and elements */
+    --surface3-dim: var(--gray-4); /* surface-background of slidein menu, contains the content above */
+    --surface4-dim: var(--gray-3);
+    --surface5-dim: var(--gray-2);
+
+    /* unused? */
+
+    /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
+
+    --button00-light: var(--gray-0);
+    --button0-light: var(--gray-9);
+    --button1-light: var(--gray-4);
+    --button2-light: var(--gray-3);
+
+    --buttonbase-disabled-light: var(--gray-1);
+    --buttonbase-light: var(--gray-3);
+    --buttontext-light: var(--gray-7);
+    --buttonbase-hover-light: var(--gray-2);
+    --buttonbase-active-light: var(--gray-5);
 
 }
 
 @media (prefers-color-scheme: light) {
     :root {
+
+    --brand1: var(--brand1-light);
+    --brand1-copy: var(--brand1-copy-light);
+    --brand1-hover: var(--brand1-hover-light);
+
+    --textmarker: var(--textmarker-light);
+    --textmarker-background: var(--textmarker-background-light);
+    --text1: var(--text1-light);
+    --text1-copy: var(--text1-copy-light);
+    --text2: var(--text2-light);
+    --text3: var(--text3-light);
+
+    --field1: var(--surface000-light); /* focused field */
+    --field2: var(--surface00-light); /* unfocused/passive field */
+
        --brand000: var(--brand000-light);
        --brand00: var(--brand00-light);
        --brand0: var(--brand0-light);
@@ -226,9 +259,6 @@ outline: 2px solid #a0a8;
        --brand1: var(--brand1-light);
        --brand2: var(--brand2-light);
 
-       --text1: var(--text1-light);
-       --text2: var(--text2-light);
-       --text3: var(--text3-light);
 
        --label: var(--label-light);
        --surface000: var(--surface000-light);
@@ -257,7 +287,11 @@ outline: 2px solid #a0a8;
        --buttonbase-hover: var(--buttonbase-hover-light);
        --buttonbase-active: var(--buttonbase-active-light);
 
-
+    /* buttons */
+    --buttonbase: var(--gray-3);
+    --buttonbase-hover: var(--gray-4);
+    --buttonbase-active: var(--gray-3);
+    --buttontext: var(--gray-7);
 
        --forsiden: var(--green-5);
        --new-booking: var(--yellow-6);
@@ -270,19 +304,30 @@ outline: 2px solid #a0a8;
 @media (prefers-color-scheme: dark) {
     :root {
 
-    --font-weight-1: var(--font-weight-3);
-    --font-weight-2: var(--font-weight-4);
-    --font-weight-3: var(--font-weight-5);
+    --brand1: var(--brand1-dim);
+    --brand1-copy: var(--brand1-copy-dim);
+    --brand1-hover: var(--brand1-hover-dim);
+
+    --textmarker-background: var(--textmarker-background-dim);
+    --textmarker:var(--textmarker-dim);
+    --text1: var(--text1-dim);
+    --text1-copy: var(--text1-copy-dim);
+    --text2: var(--text2-dim);
+    --text3: var(--text3-dim);
+
+    --font-weight-1: var(--font-weight-2);
+    --font-weight-2: var(--font-weight-3);
+    --font-weight-3: var(--font-weight-4);
+
+    --field1: var(--surface000-dim); /* focused field */  
+    --field2: var(--surface00-dim); /* unfocused/passive field */
+
 
    --brand000: var(--brand000-dim);
    --brand00: var(--brand00-dim);
    --brand0: var(--brand0-dim);
-   --brand1: var(--brand1-dim);
    --brand2: var(--brand2-dim);
 
-      --text1: var(--text1-dim);
-      --text2: var(--text2-dim);
-      --text3: var(--text3-dim);
       --label: var(--label-dim);
 
       --surface000: var(--surface000-dim);
@@ -293,6 +338,13 @@ outline: 2px solid #a0a8;
       --surface3: var(--surface3-dim);
       --surface4: var(--surface4-dim);
       --surface5: var(--surface5-dim);
+
+    /* buttons */
+    --buttonbase: var(--gray-6);
+    --buttonbase-hover: var(--gray-5);
+    --buttonbase-active: var(--gray-4);
+    --buttontext: var(--gray-3);
+
 
       --buttoncta0: var(--buttoncta0-dim);
       --buttoncta1: var(--buttoncta1-dim);
@@ -306,30 +358,17 @@ outline: 2px solid #a0a8;
   }
 }
 
-/*
-button[type="submit"] {
-    color: var(--buttoncta0);
-    background: var(--buttoncta2);
-}
-button[type="submit"]:hover {
-    background: var(--buttoncta1);
-}
-
-button[type="button"]:hover {
-    background: var(--buttonbase-hover);
-}
-
-button[type="button"] {
-background: unset;
-}
-
-
-*/
-
 .bg-unfocused-field {
-    background: var(--surface0);
+    background: var(--field1);
+    color: var(--text2);
+}
+
+.bg-focused-field {
+    background: var(--field2);
+    color: var(--text1);
 }
 
 .outline-focused-field:focus {
     outline: var(--brand1) 2px solid;
 }
+

@@ -114,14 +114,14 @@
 
 (defn timeinput-shortcuts-definition [settings-atom]
   [[:header [sc/row {:class [:justify-between :items-end]}
-             [sc/title "Top"]
+             [sc/title1 "Top"]
              [sc/pill (or booking.data/VERSION "dev.x.y")]]]
    [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
                "Badge"
                nil
                true
                #()]]
-   [:footer [sc/row-end {:class [:gap-4]} [sc/small "Terms"] [sc/small "Privacy"]]]])
+   [:footer [sc/row-end {:class [:gap-4]} [sc/small1 "Terms"] [sc/small1 "Privacy"]]]])
 
 (defn time-input-form [time-state]
   (r/with-let [lightning-visible (r/atom nil)]

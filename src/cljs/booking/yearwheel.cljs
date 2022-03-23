@@ -121,19 +121,20 @@
           [sc/col-fields {:class [:space-y-2]}
            [sc/dialog-title "Ny hendelse"]
            [sc/row-wrap
+
             [sc/col {:class []}
              [sc/label "Kategori"]
              [sci/combobox-example {:value     (values :type)
                                     :on-change #(set-values {:type %})
                                     :class     [:w-56]}]]
 
-            [sci/input props :date [:w-48] "Dato" :date]
+            [sci/input props :date [:w-36] "Dato" :date]
 
             [sci/input props :text [:w-full] "TL;DR (too long, didn't read)" :tldr]
 
-            [sci/textarea props :text [:w-full] "Beskrivelse (blog)" :content]]
+            [sci/textarea props :text [:w-full] "Beskrivelse (blog)" :content]]]
 
-           #_[sci/textarea props :text [] "Innhold (ekslusiv tittel)" :content]]
+
           [sc/row-ec
            [scb2/normal-regular {:type     "button"
                                  :on-click #(on-close)} "Avbryt"]
@@ -141,7 +142,7 @@
                              :type     "submit"
                              :on-click #(do
                                           (set-values {:id nil})
-                                          (on-save))} "+"]
+                                          (on-save))} (sc/icon ico/plusplus)]
            [scb2/cta-regular {:disabled (not changed?)
                               :type     "submit"
                               :on-click #(on-save)} "Lagre"]]]]))]])
@@ -254,15 +255,13 @@
 
       (do
         (o/defstyled line :div
-          {:margin-top  "var(--size-1)"
-           :color       "var(--text3)"
-           :line-height "var(--font-lineheight-3)"})
-        (o/defstyled text :span
-          {:color "var(--text3)"})
-        (o/defstyled emph :span
-          {:color "var(--text1)"})
-        (o/defstyled dim :span
           {:color       "var(--text3)"
+           :margin-top  "var(--size-1)"
+           :line-height "var(--font-lineheight-3)"})
+        (o/defstyled strong :span
+          {:color "var(--text1)"})
+        (o/defstyled weak :span
+          {:color       "var(--text2)"
            :font-size   "var(--font-size-1)"
            :font-weight "var(--font-weight-3)"})
 
@@ -270,13 +269,13 @@
          (interpose ", "
                     (remove nil?
                             [(when date
-                               (dim (str "uke " (ta/week-number (t/date date)))))
+                               (weak (str "uke " (ta/week-number (t/date date)))))
                              (when date
-                               (dim (flex-datetime date #(vector :span %))))
+                               (weak (flex-datetime date #(vector :span %))))
                              (when type
-                               (emph (->> type (get sci/person-by-id) :name)))
+                               (weak (->> type (get sci/person-by-id) :name)))
                              (when tldr
-                               tldr)
+                               (strong tldr))
                              (when (and content @show-content)
                                (-> (schpaa.markdown/md->html content)
                                    (sc/markdown)))]))])]]))

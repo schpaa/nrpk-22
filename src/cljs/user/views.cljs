@@ -139,10 +139,10 @@
        (if-let [tm (:timestamp @data)]
          (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
               (catch js/Error e (.-message e)))
-         [sc/small "Sist oppdatert: aldri"])
-       [sc/small (:email user-info)]
-       [sc/small (:display-name user-info)]
-       [sc/small (:uid user-info)]]]]))
+         [sc/small1 "Sist oppdatert: aldri"])
+       [sc/small1 (:email user-info)]
+       [sc/small1 (:display-name user-info)]
+       [sc/small1 (:uid user-info)]]]]))
 
 (o/defstyled checkbox' :input
   [:&
@@ -154,7 +154,7 @@
    [checkbox'
     {:type      :checkbox
      :style     {:background    "var(--surface0)"
-                 :accent-color  "var(--brand0)"
+                 :accent-color  "var(--brand1)"
                  :border-radius "var(--radius-1)"
                  #_#_:border "2px solid red"}
      :class     [:w-5 :h-5 :self-center]

@@ -425,7 +425,7 @@
 (defn lookup [id]
   (if (< 3 (count id))
     [sc/col {:class [:space-y-1]}
-     [sc/title "Test-navn"]
+     [sc/title1 "Test-navn"]
      [sc/subtext "Test-kategori"]]
     (case id
       "400" [sc/col {:class [:space-y-1]}
@@ -557,8 +557,8 @@
              (if (<= 3 (count (:item @st)))
                (lookup (:item @st))
                [sc/col {:class [:space-y-px :opacity-50]}
-                [sc/title [sc/row-sba "Skriv båtnummeret og"
-                           [sc/icon [:> solid/PlusCircleIcon]]]]
+                [sc/title1 [sc/row-sba "Skriv båtnummeret og"
+                            [sc/icon [:> solid/PlusCircleIcon]]]]
                 [sc/subtext "Bruk 4 siffer for testing"]])]
 
             [:div.p-1

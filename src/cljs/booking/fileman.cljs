@@ -39,7 +39,7 @@
                   :value {:visible (not (:visible v))}})}
    [sc/icon-small
     {:style {
-             :color (if (:visible v) "var(--brand0)" "var(--surface1)")}}
+             :color (if (:visible v) "var(--brand1)" "var(--surface1)")}}
     [:> outline/EyeIcon]]])
 
 (defn locked [k v]

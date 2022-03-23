@@ -138,7 +138,7 @@
                     :adults 1
                     :data   1}
              "E"   {:start    (t/instant (t/at n (t/new-time 14 0)))
-                    :list     #{300 221}
+                    :list     #{380 221}
                     :adults   2
                     :children 1
                     :data     1}
@@ -226,18 +226,24 @@
         n-end (if (nil? end) n-now (* 4 (t/hour end)))
         data {:color      (if (nil? end) :blue :black)
 
-              :start-sign (if (= :before start)
-                            nil
-                            (if (< n-start window-start)
-                              false
-                              true))
+              :start-sign (cond
+                            (= n-start n-end) nil
+                            (= :before start) nil
+                            (zero? n-start) nil
+                            :else (if (< n-start window-start)
+                                    false
+                                    true))
 
-              :start      (if (= :before start)
-                            0
-                            (let [x (- n-start window-start)]
-                              (if (neg? x) 0 x)))
+              :start      (cond
+                            (= :before start) 0
+                            (< n-end n-start) 0
+                            :else (let [x (- n-start window-start)]
+                                    (if (neg? x) 0 x)))
 
-              :end-sign   (if (nil? end) :arrow :stop)
+              :end-sign   (cond
+                            (nil? end) :arrow
+
+                            :else :stop)
               :end        n-end}]
 
     data #_(-> data
@@ -266,9 +272,7 @@
 
 
 (defn fancy-timeline [{:keys [window-end item entries rows session-start session-end action-start action-end now]}]
-  (tap> [:action-start action-start])
-  (let [period-view-only true
-        window [(* 0 4) (* 23 4)]
+  (let [window [(* 0 4) (* 23 4)]
         session-start (let [x (- session-start (first window))]
                         (if (neg? x) 0 x))
         session-end (- session-end (first window))
@@ -280,11 +284,10 @@
         badge-fg "var(--surface00)"
         tm (prepare-time (first window) (last window) action-start action-end now)]
     [:div
+     ;[l/ppre-x (map #(/ % 4) (map (dissoc tm :color :start-sign :end-sign) [:start :end]))]
      [:div.h-8.w-full.relative.first:rounded-t-sm.last:rounded-b-sm
-      ;{:style {:background-color :red #_background}}
 
       [draw-badge item badge-fg badge-bg testbadge-bg]
-
       [:svg.h-full.w-fullx.pl-12
        {:style               {:overflow :hidden}
         :viewBox             (str 0 " " 0 " " (- 96 (- 96 (- (last window) (first window)))) " " 11)
@@ -348,10 +351,10 @@
                     :width         "1%"
                     :height        2.5}]))]]]
      #_[:<>
-        [sc/small "start-hour" (or (some-> action-start t/hour (* 4)) 0)]
-        [sc/small "end-hour" (or (some-> action-end t/hour (* 4)) 0)]
-        [sc/small "session-start--hour" session-start]
-        [sc/small "end-hour" session-end]]]))
+        [sc/small1 "start-hour" (or (some-> action-start t/hour (* 4)) 0)]
+        [sc/small1 "end-hour" (or (some-> action-end t/hour (* 4)) 0)]
+        [sc/small1 "session-start--hour" session-start]
+        [sc/small1 "end-hour" session-end]]]))
 
 (defn render [r]
   ;constants
@@ -361,7 +364,7 @@
 
     (let [time-now (t/now)
           session-start (* 4 12)
-          session-end (* 4 17)]
+          session-end (* 4 21)]
       [:div
 
        (into [:div.flex.flex-col.space-y-px]
@@ -393,17 +396,14 @@
                   [sc/row-sc-g2
                    {:style {:flex "0 1 auto"}
                     :class [:w-32 :-xdebug2 :h-8]}
-                   [sc/text {:class [:w-4]} (or adults "")]
-                   [sc/text {:class [:w-4]} (or juveniles "")]
-                   [sc/text {:class [:w-4]} (or children "")]
+                   [sc/text1 {:class [:w-4]} (or adults "")]
+                   [sc/text1 {:class [:w-4]} (or juveniles "")]
+                   [sc/text1 {:class [:w-4]} (or children "")]
                    [:div.grow]
                    (when key (sc/icon-tiny [:> solid/KeyIcon]))
                    (when moon (sc/icon-tiny [:> solid/MoonIcon]))]]
 
-                 [sc/col {:class  [:w-full
-                                   :py-x2 :space-y-px]
-                          :xstyle {:min-width "20ch"
-                                   :max-width "30ch"}}
+                 [sc/col {:class [:w-full]}
                   (for [e list]
                     [fancy-timeline
                      {:item          e

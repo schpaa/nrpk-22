@@ -68,7 +68,7 @@
 
 
    [:space]
-   [:div [:div.px-2 [sc/small "Skrevet av meg for NRPK"]]]
+   [:div [:div.px-2 [sc/small1 "Skrevet av meg for NRPK"]]]
    [:space]
    [:div [:div.px-2 [sc/row-center {:class [:py-4]}
                      [:div.relative.w-24.h-24
@@ -78,9 +78,9 @@
                       [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]]]
    [:footer [:div.p-2
              [sc/row-end {:class [:gap-1 :justify-end :items-center]}
-              [sc/small "Vilkår"]
-              [sc/small "&"]
-              [sc/small "Betingelser"]]]]])
+              [sc/small1 "Vilkår"]
+              [sc/small1 "&"]
+              [sc/small1 "Betingelser"]]]]])
 
 (defn bottom-menu []
   (r/with-let [main-visible (r/atom false)]
@@ -96,8 +96,10 @@
 ;region
 
 (o/defstyled sidebar :div
-  :cursor-pointer
-  {:text-transform "lowercase"
+  :cursor-pointer :m-0 :p-0 :w-8 :h-8 :grid
+  {:place-content  :center
+   :text-transform "lowercase"
+   :line-height    1
    :font-family    "IBM Plex Sans"
    :font-size      "var(--font-size-5)"
    :font-weight    "var(--font-weight-5)"})
@@ -165,14 +167,17 @@
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden-iframe]])
     :page-name :r.forsiden-iframe}
 
-   {:icon-fn   (fn [] [sidebar "N"])
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])
-    :page-name :r.welcome}
+   {:icon-fn   (fn [] (sc/icon-large ico/user))
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+    :page-name :r.user}
 
+   #_{:icon-fn   (fn [] [sidebar "N"])
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])
+      :page-name :r.welcome}
    {:icon-fn   (fn [] [sidebar "S"])
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
     :page-name :r.booking}
-   {:icon-fn   (fn [] [sidebar "Å"])
+   {:icon-fn   (fn [] (sc/icon-large ico/yearwheel) #_[sidebar "Å"])
     :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
     :page-name :r.yearwheel}
 
@@ -233,14 +238,14 @@
 (o/defstyled vert-button :div
   [#{:.active :.item} {:border-radius "var(--radius-round)"}]
   [:.item
-   [:&:hover {:color      "var(--surface3)"
-              :padding    "var(--size-1)"
-              :background "var(--surface00)"}]]
-  [:>.normal {:color "var(--surface2)"}]
+   [:&:hover {:color       "var(--text2)"
+              :padding     "var(--size-1)"
+              :xbackground "var(--surface00)"}]]
+  [:>.normal {:color "var(--text3)"}]
 
-  [:>.active {:color      "var(--surface000)"
+  [:>.active {:color      "var(--text1-copy)"
               :box-shadow "var(--shadow-3)"
-              :background "var(--surface3)"
+              :background "var(--text1)"
               :padding    "var(--size-2)"}]
   ([attr & ch]
    [:div (conj attr {:class (if (:active attr) [:active] [:item :normal])}) ch]))
@@ -251,7 +256,7 @@
                         :font-weight  "var(--font-weight-5)"
                         :aspect-ratio "1/1"
                         :background   "var(--brand1)"
-                        :color        "var(--brand0)"
+                        :color        "var(--brand1-copy)"
                         :border       "var(--surface0) 3px solid"
                         :width        "1.7rem"
                         :height       "1.7rem"
@@ -267,7 +272,7 @@
                        :font-weight  "var(--font-weight-5)"
                        :aspect-ratio "1/1"
                        :background   "var(--brand1)"
-                       :color        "var(--brand0)"
+                       :color        "var(--brand1-copy)"
                        :border       "var(--surface0) 3px solid"
                        :width        "1.7rem"
                        :height       "1.7rem"
@@ -392,9 +397,9 @@
        :class    [:x-debug]
        :style    {:padding "var(--size-1)"}}
       [sc/dim
-       [sc/small {:style {:letter-spacing "var(--font-letterspacing-2)"
-                          :text-transform :uppercase
-                          :font-weight    "var(--font-weight-6)"}}
+       [sc/small1 {:style {:letter-spacing "var(--font-letterspacing-2)"
+                           :text-transform :uppercase
+                           :font-weight    "var(--font-weight-6)"}}
         "Visningsvalg"]]
       (chevron-updown-toggle @toggle do-toggle)]
      [:div {:class (into [:duration-200] (if @toggle [:h-32 :opacity-100] [:pointer-events-none :h-0 :opacity-0]))}
@@ -440,25 +445,25 @@
                             (for [[idx e] (map-indexed vector titles)
                                   :let [last? (= idx (dec (count titles)))]]
                               (if last?
-                                [sc/title e]
+                                [sc/title1 e]
                                 (let [{:keys [text link]} e]
                                   [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
-                [sc/title titles])]]
+                [sc/title1 titles])]]
             [:div.xs:block.sm:hidden.grow
              (if (vector? titles)
                [sc/col-space-1
                 (when (< 1 (count titles))
                   (let [{:keys [text link]} (first titles)]
                     [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))
-                [sc/title (last titles)]]
+                [sc/title1 (last titles)]]
                [sc/col
-                [sc/title titles]])]]))
+                [sc/title1 titles]])]]))
 
        [search-menu]
        [main-menu]]]]))
 
 
-(defn page-boundary [r & contents]
+(defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
         numberinput? (rf/subscribe [:lab/number-input])
@@ -472,7 +477,7 @@
          (when-let [el (.getElementById js/document "inner-document")]
            (.focus el)))
        :reagent-render
-       (fn [r & contents]
+       (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
           ;region modal dialog
           [schpaa.style.dialog/modal-generic
@@ -480,58 +485,67 @@
             :vis     (rf/subscribe [:lab/modal-example-dialog2])
             :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
           ;endregion
-          ;region add-selector
+          ;region command-palette
           [schpaa.style.dialog/modal-selector
            {:context @(rf/subscribe [:lab/modal-selector-extra])
             :vis     (rf/subscribe [:lab/modal-selector])
             :close   #(rf/dispatch [:lab/modal-selector false])}]
           ;endregion
-
           [:div.fixed.inset-0.flex
-
-           (when @has-chrome?
-             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-              {:style {:padding-top  "var(--size-0)"
-                       :box-shadow   "var(--inner-shadow-3)"
-                       :border-color "var(--surface0)"
-                       :background   "var(--surface00)"}}
-              (into [:<>] (map #(if (nil? %)
-                                  [:div.grow]
-                                  [vertical-button %]) (vertical-toolbar (:uid @user-auth))))])
-           ;vertical toolbar
+           ;region vertical toolbar left side
+           (when-not true                                   ;frontpage
+             (when @has-chrome?
+               [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
+                {:style {:padding-top  "var(--size-0)"
+                         :box-shadow   "var(--inner-shadow-3)"
+                         :border-color "var(--surface0)"
+                         :background   "var(--surface00)"}}
+                (into [:<>] (map #(if (nil? %)
+                                    [:div.grow]
+                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))]))
+           ;endregion
            [:div.flex-col.flex.h-full.w-full
-            [header-line r]
+            (when-not frontpage
+              [header-line r])
 
-            ;content
-            [:div.overflow-y-auto.h-full.focus:outline-none.grow
-             {:style     {:background "var(--surface000)"}
-              :id        "inner-document"
-              :tab-index "0"}
-             (if @(rf/subscribe [:lab/is-search-running?])
-               ;searchmode
-               [:div.h-full
-                {:style {:background "var(--surface2)"}}
-                [search-result]
-                [:div.absolute.bottom-24.sm:bottom-7.right-4
-                 [sc/row-end {:class [:pt-4]}
-                  (bottom-menu)]]]
+            ;region content
+            (if frontpage
+              [:div.h-full
+               {:style     {:background "var(--surface000)"}
+                :id        "inner-document"
+                :tab-index "0"}
+               contents]
+              [:div.overflow-y-auto.h-full.focus:outline-none.grow
+               {:style     {:background "var(--surface000)"}
+                :id        "inner-document"
+                :tab-index "0"}
+               (if @(rf/subscribe [:lab/is-search-running?])
+                 ;searchmode
+                 [:div.h-full
+                  {:style {:background "var(--surface2)"}}
+                  [search-result]
+                  [:div.absolute.bottom-24.sm:bottom-7.right-4
+                   [sc/row-end {:class [:pt-4]}
+                    (bottom-menu)]]]
 
-               ;content
-               (if (map? (first contents))
-                 [:div.w-auto (:whole (first contents))]
-                 [:div.h-full.xmx-4.w-full
-                  contents
-                  [:div.py-8.h-32]]))]
+                 ;content
+                 (if (map? (first contents))
+                   [:div.w-auto (:whole (first contents))]
+                   [:div.h-full.xmx-4.w-full
+                    contents
+                    [:div.py-8.h-32]]))])
+            ;endregion
 
-            ;horizontal toolbar
+            ;region horizontal toolbar on small screens
             (when @has-chrome?
               [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
                {:style {:box-shadow   "var(--inner-shadow-3)"
-
                         :border-color "var(--surface0)"
                         :background   "var(--surface00)"}}
                (into [:<>] (map horizontal-button
                                 (horizontal-toolbar (:uid @user-auth))))])]
+           ;endregion
+
            (when @has-chrome?
              [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
               [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.border-l
@@ -557,50 +571,41 @@
 
 (def max-width "50ch")
 
-(defprotocol PerstateP
-  (toggle [t])
-  (listen [t]))
-
-(defrecord Perstate [tag]
-  PerstateP
-  (toggle [t]
-    #(schpaa.state/toggle tag))
-  (listen [t]
-    (schpaa.state/listen tag)))
-
-(defn +page-builder [r {:keys [render render-fullwidth panel always-panel]}]
+(defn +page-builder [r {:keys [frontpage render render-fullwidth panel always-panel]}]
   (let [pagename (some-> r :data :name)
-        perstate (Perstate. pagename)
         numberinput (rf/subscribe [:lab/number-input])
         left-aligned (schpaa.state/listen :activitylist/left-aligned)]
-    [page-boundary r
-     [sc/col-space-8 {:class [:py-8]}
-      (when panel
-        [:div.mx-4
-         [:div.mx-auto
-          {:style {:width     "100%"
-                   :max-width max-width}}
-          [hoc.panel/togglepanel
-           {:open?   @(listen perstate)
-            :toggle  (toggle perstate)
-            :title   "kontrollpanel"
-            :content (fn [c] [panel])}]]])
-      (when always-panel
-        [:div.mx-4
-         [:div.mx-auto
-          {:style {:width     "100%"
-                   :max-width max-width}}
-          [always-panel]]])
 
-      [:div.mx-4
-       [:div.duration-200
-        {:style {:margin-right :auto
-                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                 ;; force view to align to the left
-                                 0
-                                 :auto)
-                 :width        "100%"
-                 :max-width    max-width}}
-        (if render-fullwidth
-          [render-fullwidth r]
-          [render r])]]]]))
+    (if frontpage
+      [page-boundary r
+       {:frontpage true}
+       [render r]]
+      [page-boundary r
+       {:frontpage false}
+       [sc/col-space-8 {:class [:py-8]}
+        (when panel
+          [:div.mx-4
+           [:div.mx-auto
+            {:style {:width     "100%"
+                     :max-width max-width}}
+            [hoc.panel/togglepanel pagename "kontrolpanel" panel]]])
+
+        (when always-panel
+          [:div.mx-4
+           [:div.mx-auto
+            {:style {:width     "100%"
+                     :max-width max-width}}
+            [always-panel]]])
+
+        [:div.mx-4
+         [:div.duration-200
+          {:style {:margin-right :auto
+                   :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                   ;; force view to align to the left
+                                   0
+                                   :auto)
+                   :width        "100%"
+                   :max-width    max-width}}
+          (if render-fullwidth
+            [render-fullwidth r]
+            [render r])]]]])))

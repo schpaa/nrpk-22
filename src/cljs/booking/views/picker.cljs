@@ -96,7 +96,7 @@
                   :grid-template-columns "repeat(4,1fr)"}}
          (for [e (range 4)
                :let [s (t/format "dd/MM" (t/>> date (t/new-period (dec e) :days)))]]
-           [sc/small
+           [sc/small1
             {:style {:display       :grid
                      :justify-items :center
                      :align-items   :end}}

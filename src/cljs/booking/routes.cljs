@@ -1,9 +1,10 @@
 (ns booking.routes)
 
 (def routes
-  [["/" {:name :r.forsiden :header "NRPK" :subheader "Booking på Sjøbasen"}]
+  [["/" {:name :r.forsiden :header "NRPK"}]
+   ["/oversikt" {:name :r.oversikt :header [:r.forsiden "Oversikt"]}]
    ["/wix" {:name :r.forsiden-iframe :header "NRPK (wix)"}]
-   ["/nytt" {:name :r.booking-blog :header "Hva er nytt?" :subheader "Forsiden"}]
+   ["/nytt" {:name :r.booking-blog :header "Hva er nytt?"}]
    ["/nytt/:id" {:name    :r.booking-blog-doc
                  :header  "Hva er nytt?"
                  :path-fn (fn [r] (some-> r :path-params :id))}]
