@@ -372,7 +372,7 @@
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
        [+page-builder r
-        {:render (fn [] [user.views/my-info {}])}]))
+        {:render user.views/my-info}]))
 
    :r.logg
    (fn [r]

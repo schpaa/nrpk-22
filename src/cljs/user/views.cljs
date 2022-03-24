@@ -1,38 +1,39 @@
 (ns user.views
-  (:require [schpaa.debug :as l]
-            [lambdaisland.ornament :as o]
-            [re-statecharts.core :as rs]
+  (:require [clojure.string :as str]
+            [clojure.walk :as walk]
+            [reagent.core :as r]
             [re-frame.core :as rf]
-            ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]
+            [lambdaisland.ornament :as o]
+            [fork.re-frame :as fork]
+            [tick.core :as t]
+            [shadow.resource :refer [inline]]
+
+            [times.api :as ta]
+
+            [user.database]
+            [nrpk.fsm-helpers :refer [send]]
+            [eykt.content.rapport-side :refer [top-bottom-view map-difference]]
+
+            [booking.views.picker]
+            [booking.views]
+            [booking.bookinglist]
+            [booking.ico :as ico]
 
             [db.core :as db]
             [db.auth :refer [user-info]]
+
+            [schpaa.modal.readymade :as readymade]
+    ;[schpaa.state]
+            [schpaa.markdown :refer [md->html]]
             [schpaa.components.fields :as fields]
+            [schpaa.debug :as l]
             [schpaa.components.views :refer [rounded-view]]
             [schpaa.modal :as modal]
-            [nrpk.fsm-helpers :refer [send]]
-            [fork.re-frame :as fork]
-            [user.database]
-            [booking.views]
-            [booking.views.picker]
-            [booking.bookinglist]
-            [tick.core :as t]
             [schpaa.style :as st]
-            [schpaa.button :refer [danger-button regular-button cta-button]]
-            [schpaa.button :as bu]
-            [schpaa.modal.readymade :as readymade]
-            [eykt.content.rapport-side :refer [top-bottom-view map-difference]]
-            [schpaa.state]
-            [clojure.walk :as walk]
-            [reagent.core :as r]
-            [times.api :as ta]
-            [schpaa.markdown :refer [md->html]]
-            [shadow.resource :refer [inline]]
-            [clojure.string :as str]
             [schpaa.style.ornament :as sc]
             [schpaa.style.input :as sci :refer [input]]
-            [schpaa.style.button2 :as scb2]))
+            [schpaa.style.button2 :as scb2]
+            [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]))
 
 (defn confirm-registry []
   #_(apply send
@@ -70,7 +71,7 @@
                                    [:div {:class (if-not b "text-black/25")} (or b "ingen")]]])]))
 
 (def loggout-command
-  (regular-button
+  (
     {:on-click
      #(readymade/ok-cancel
         {:type    :form
@@ -167,82 +168,51 @@
     {:for field-name} [sc/checkbox-text label]]])
 
 ;duplicated
-(defn ^:deprecated select [{:keys [errors values handle-change] :as props} type class label field-name default-text items]
-  (let [sorted false]
-    [sc/col {:class (into [:gap-1] class)}
-     [sc/row {:class [:gap-2]}
-      [sc/label label]
-      (if (field-name errors)
-        [sc/label-error (first (field-name errors))])]
-     [sci/select {:type      type
-                  :value     (field-name values)
-                  :on-change handle-change
-                  :errors    (field-name errors)
-                  :name      field-name}
-      (cons [:option {:style {:display "none"} :disabled 1 :selected 1 :value ""} default-text]
-            (for [[idx e] (if sorted (sort-by val items) items)]
-              [:option {:value (str idx) :default-value (if (= (str idx) (values name)) (str idx))}
-               e]))]]))
 
 (defn my-basics-form [{:keys [errors handle-change form-id handle-submit dirty readonly? values] :as props}]
   [:form
    {:id        form-id
     :on-submit handle-submit}
    [:div
-    [:div.flex.gap-4.flex-wrap
-     [sc/row-wrap
+    [sc/row-sc-g4-w
+     [sc/row-sc-g4-w
       [input props :text [:w-56] "Fullt navn" :navn]
       [input props :text [:w-32] "Alias" :alias]]
-     [sc/row-wrap
+     [sc/row-sc-g4-w
       [input props :text [:w-32] "Telefon" :telefon]
       [input props :text [:w-70] "E-post" :epost]]
 
-     #_[select props :våttkort [] "Våttkort" :våttkort "Velg" {"0" "Jeg har ikke våttkort" "1" "Introkurs 3 timer" "2" "Grunnkurs 16 timer" "3" "Teknikk, sikkerhet eller grunnkurs-2" "4" "Aktivitetsleder, trener-1 eller høyere"}]]]])
+     [sci/select props :våttkort [] "Våttkort" :våttkort "Velg"
+      {"0" "Jeg har ikke våttkort"
+       "1" "Introkurs 3 timer"
+       "2" "Grunnkurs 16 timer"
+       "3" "Teknikk, sikkerhet eller grunnkurs-2"
+       "4" "Aktivitetsleder, trener-1 eller høyere"}]]]])
 
-(defn my-booking-form [{:keys [form-id handle-submit handle-change values set-values dirty readonly? values] :as props}]
+(defn my-booking-form [{:keys [form-id handle-submit] :as props}]
   [:form
    {:id        form-id
     :on-submit handle-submit}
-   ;[l/ppre-x values]
    [:div.space-y-4
-
     [:div.flex.gap-4.flex-wrap
-     [input props :text [] "Våttkort-nr" :våttkortnr]]
-
+     [input props :text [:w-32] "Våttkort-nr" :våttkortnr]]
     [:div.flex.gap-4.flex-wrap
-     [checkbox props [:xw-40] "Ønsker å bruke booking på sjøbasen" :request-booking]
-     #_[fields/checkbox (-> props
-                            fields/large-field
-                            (assoc
-                              :values #(some? (values :request-booking))
-                              :handle-change #(let [v (-> % .-target .-checked)]
-                                                (set-values {:request-booking (if v (str (t/now)) nil)})
-
-                                                #_(handle-change %)))) :label "Jeg ønsker å bruke booking på sjøbasen" :name :request-booking]
-     [checkbox props [] "Ønsker tilgang til de utfordrende båtene" :booking-expert]]
-
-    #_[:div.flex.gap-4.flex-wrap.justify-end
-       [fields/date (-> props fields/date-field (assoc :readonly? true
-                                                       :values #(if-let [v (values :request-booking)]
-                                                                  (try (t/date (t/instant v)) (catch js/Error _ nil))
-                                                                  "")))
-        :label "Req booking" :name :request-booking]]]])
+     [checkbox props [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
+     [checkbox props [] "Jeg ønsker tilgang til de utfordrende båtene" :booking-expert]]]])
 
 (defn my-vakt-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
-  (let [{:keys [bg fg- fg+ hd p p- he]} (st/fbg' :form)])
   [:form.space-y-8
-   {;:class     bg
-    :id        form-id
+   {:id        form-id
     :on-submit handle-submit}
-   [:div.space-y-8
+   [sc/col-space-8
 
-    [:div.flex.gap-4.flex-wrap
+    [sc/row-sc-g4-w
      [input props :text [:w-32] "Medlem fra år" :medlem-fra-år]
      [input props :text [:w-32] "Fødselsår" :fødselsår]
      [input props :text [:w-32] "Førstehjelp" :årstall-førstehjelpskurs]
      [input props :text [:w-32] "Livredning" :årstall-livredningskurs]]
 
-    [:div.flex.gap-4.flex-wrap
+    [sc/row-sc-g4-w
      [checkbox props [] "Jeg arbeider som instruktør for NRPK" :instruktør]
      [checkbox props [] "Foretrekker helgevakt" :helgevakt]
      [checkbox props [] "Kan stille som vikar" :vikar]
@@ -303,49 +273,48 @@
 
              "Få epost!")]]]
 
-        [sc/col {:class [:w-full]}
-         [:div.space-y-px
-          [details :user/basic-section-open "Grunnleggende"
-           [fork/form {:state               form-state
-                       :prevent-default?    true
-                       :clean-on-unmount?   false
-                       :keywordize-keys     true
-                       :component-did-mount (fn [{:keys [set-values]}]
-                                              (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                               {;:uid             uid
-                                                                #_#_:request-booking (str (t/date))})]
-                                                (set-values data)))
-                       :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-            my-basics-form]]
-          [details
-           :user/booking-section-open
-           "Booking"
-           [fork/form {:state                form-state
-                       :prevent-default?     true
-                       :clean-on-unmount?    false
-                       :keywordize-keys      true
-                       :xcomponent-did-mount (fn [{:keys [set-values]}]
-                                               (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                {:uid             uid
-                                                                 :request-booking (str (t/date))})]
-                                                 (set-values data)))
-                       :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
-            my-booking-form]]
-          (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-            [details
-             :user/vakt-section-open
-             "Nøkkelvakt"
+        [:div
+         [sc/col-space-2
+          [togglepanel :user-form/grunnleggende "Grunnleggende"
+           (fn []
              [fork/form {:state               form-state
                          :prevent-default?    true
-                         :clean-on-unmount?   true
+                         :clean-on-unmount?   false
                          :keywordize-keys     true
                          :component-did-mount (fn [{:keys [set-values]}]
                                                 (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                 {:uid             uid
-                                                                  :request-booking (str (t/date))})]
+                                                                 {;:uid             uid
+                                                                  #_#_:request-booking (str (t/date))})]
                                                   (set-values data)))
                          :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-              my-vakt-form]])]
+              my-basics-form])]
+          [togglepanel :user-form/booking "Booking"
+           (fn []
+             [fork/form {:state                form-state
+                         :prevent-default?     true
+                         :clean-on-unmount?    false
+                         :keywordize-keys      true
+                         :xcomponent-did-mount (fn [{:keys [set-values]}]
+                                                 (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                  {:uid             uid
+                                                                   :request-booking (str (t/date))})]
+                                                   (set-values data)))
+                         :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
+              my-booking-form])]
+          (when true #_(= "eykt" @(rf/subscribe [:app/name]))
+            [togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
+             (fn []
+               [fork/form {:state               form-state
+                           :prevent-default?    true
+                           :clean-on-unmount?   true
+                           :keywordize-keys     true
+                           :component-did-mount (fn [{:keys [set-values]}]
+                                                  (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                   {:uid             uid
+                                                                    :request-booking (str (t/date))})]
+                                                    (set-values data)))
+                           :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
+                my-vakt-form])])]
 
          #_(let [fields [:uid :kort-reisevei :medlem-fra-år :navn :alias :telefon :epost :våttkort :våttkortnr :kort-reisevei :fødselsår :nøkkelnummer
                          :årstall-førstehjelpskurs :årstall-livredningskurs :helgevakt :vikar :booking-expert :request-booking :instruktør]
@@ -370,19 +339,19 @@
                                     :disabled (empty? diff)}
                                    "Lagre")]]])]))))
 
-(defn my-info [{:keys []}]
+(defn my-info []
   (let [user-auth @(rf/subscribe [::db/user-auth])
         uid (:uid user-auth)]
     (fn []
-      [sc/col {:class [:space-y-4 :max-w-md :mx-auto]}
-       [sc/surface-u {:class [:p-0 :overflow-hidden]}
+      [sc/col
+       [sc/col
         [user-form uid]
         [:div.p-4
-         [sc/row-stretch {:class [:gap-2]}
+         [sc/row-stretch
           [scb2/outline-large {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
            [sc/row {:class [:gap-3 :items-baseline]}
             [sc/icon-small [:> outline/TrashIcon]]
-            [:div "Slett konto..."]]]
+            [sc/text "Slett konto..."]]]
           [scb2/cta-large {:disabled 1} "Lagre"]]]]
 
        ;separer

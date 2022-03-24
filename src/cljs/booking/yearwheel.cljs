@@ -55,22 +55,13 @@
          {:id        form-id
           :on-submit handle-submit}
          [sc/col {:class [:space-y-8]}
-          [sc/col-fields {:class [:space-y-2]}
+          [sc/col-space-2                                   ;{:class [:space-y-2]}
            [sc/dialog-title "Ny hendelse"]
-           [sc/row-wrap
-
-            [sc/col {:class []}
-             [sc/label "Kategori"]
-             [sci/combobox-example {:value     (values :type)
-                                    :on-change #(set-values {:type %})
-                                    :class     [:w-56]}]]
-
-            [sci/input props :date [:w-36] "Dato" :date]
-
+           [sc/row-sc-g2-w
+            [sci/combobox props :kind? [:w-56] "Kategori" :type]
+            [sci/input props :date [:w-40] "Dato" :date]
             [sci/input props :text [:w-full] "TL;DR (too long, didn't read)" :tldr]
-
             [sci/textarea props :text [:w-full] "Beskrivelse (blog)" :content]]]
-
 
           [sc/row-ec
            [scb2/normal-regular {:type     "button"
