@@ -12,7 +12,7 @@
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
    ["/debug" {:name :r.debug :header [:r.booking "Booking av båt"]}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
-   ["/om-meg" {:name :r.user :header "Mine opplysninger" :subheader "Baksiden"}]
+   ["/om-meg" {:name :r.user :header [:r.forsiden "Mine opplysninger"]}]
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
    ["/not-found" {:name :r.page-not-found :header [:r.forsiden "Finner ikke siden"]}]
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]

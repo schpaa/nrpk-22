@@ -369,40 +369,40 @@
             [result-item e]))))
 
 (defn header-line [r]
-  (let [st (schpaa.state/listen :top-toggle)
-        toggle #(schpaa.state/toggle :top-toggle)]
-    [sc/col {:class [:border-b :duration-200]
-             :style {:background   "var(--toolbar)"
-                     :border-color "var(--toolbar-)"}}
-     [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
-      [sc/row-std
-       (when-not @(rf/subscribe [:lab/in-search-mode?])
-         (let [titles (compute-page-titles r)]
+  [sc/col {:class [:border-b :duration-200]
+           :style {:background   "var(--toolbar)"
+                   :border-color "var(--toolbar-)"}}
+   [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
+    [sc/row-std
+     (when-not @(rf/subscribe [:lab/in-search-mode?])
+       (let [titles (compute-page-titles r)]
+         [:<>
+          [:div.hidden.sm:block.grow
            [:<>
-            [:div.hidden.sm:block.grow
-             [:<>
-              (if (vector? titles)
-                [:div.flex.items-center.gap-1
-                 (interpose [:div.text-2xl.opacity-20 "/"]
-                            (for [[idx e] (map-indexed vector titles)
-                                  :let [last? (= idx (dec (count titles)))]]
-                              (if last?
-                                [sc/title1 e]
-                                (let [{:keys [text link]} e]
-                                  [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
-                [sc/title1 titles])]]
-            [:div.xs:block.sm:hidden.grow
-             (if (vector? titles)
-               [sc/col-space-1
-                (when (< 1 (count titles))
-                  (let [{:keys [text link]} (first titles)]
-                    [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))
-                [sc/title1 (last titles)]]
-               [sc/col
-                [sc/title1 titles]])]]))
+            (if (vector? titles)
+              [:div.flex.items-center.gap-1
+               (interpose [:div.text-2xl.opacity-20 "/"]
+                          (for [[idx e] (map-indexed vector titles)
+                                :let [last? (= idx (dec (count titles)))]]
+                            (if last?
+                              [sc/text1 e]
+                              (let [{:keys [text link]} e]
+                                [sc/subtext-with-link {
+                                                       :href (k/path-for [link])} text]))))]
+              [sc/text1 titles])]]
+          [:div.xs:block.sm:hidden.grow
+           (if (vector? titles)
+             [sc/col-space-1
+              (when (< 1 (count titles))
+                (let [{:keys [text link]} (first titles)]
+                  [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
+                                               :href  (k/path-for [link])} text]]))
+              [sc/text1 (last titles)]]
+             [sc/col
+              [sc/text1 titles]])]]))
 
-       [search-menu]
-       [main-menu]]]]))
+     [search-menu]
+     [main-menu]]]])
 
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
