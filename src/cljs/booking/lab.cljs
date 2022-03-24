@@ -117,18 +117,10 @@
                   :validation        time-input-validation}
 
        (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
-         [sc/surface-a {:class [:p-4 :min-w-fit]}
-          [sc/col {:class [:space-y-4]}
-
-
-
-           [sc/row
-            [:form.space-y-1.w-full
-             {:id        form-id
-              :on-submit handle-submit}
-             [sc/row {:class [:shrink-0]}
-              [booking.views/time-input props false]
-              [:div.relative.absolute.top-1.right-1.px-2.z-500]]]]]])])))
+         [:form.space-y-1.w-full
+          {:id        form-id
+           :on-submit handle-submit}
+          [booking.views/time-input props false]])])))
 
 (def type-data
   [{:type        5000
@@ -256,7 +248,7 @@
                               :selected #{100 415}})]
     [:div.xp-2.space-y-4.relative
 
-     [:div.sticky.top-0.z-50
+     [:div                                                  ;.sticky.top-0.z-50
       [time-input-form time-state]]
 
      [:<>

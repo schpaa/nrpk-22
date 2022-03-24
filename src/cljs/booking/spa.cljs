@@ -21,7 +21,7 @@
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style :as st]
-            [schpaa.style.booking]
+            ;[schpaa.style.booking]
             [schpaa.style.menu]
             [schpaa.style.ornament :as sc]
             [schpaa.time]
@@ -393,8 +393,8 @@
 
    :r.debug
    (fn [r]
-     [page-boundary r
-      [booking.lab/render r]])
+     [+page-builder r
+      {:render (fn [] [booking.lab/render r])}])
 
    :r.designlanguage
    (fn [r]

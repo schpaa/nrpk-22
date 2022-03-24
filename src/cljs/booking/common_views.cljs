@@ -368,64 +368,6 @@
           (for [e data]
             [result-item e]))))
 
-
-
-;region header-control-panel related
-
-(defn chevron-updown-toggle [st toggle]
-  [sc/dim [scb/round-floating
-           {:on-click #(do
-                         (.stopPropagation %)
-                         (toggle))}
-           [sc/icon-tiny
-            [:> (if st outline/ChevronUpIcon outline/ChevronDownIcon)]]]])
-
-(def preferred-state (r/atom true))
-
-(defn header-control-panel []
-  (r/with-let [toggle (schpaa.state/listen :header-activity)
-               do-toggle #(schpaa.state/toggle :header-activity)
-               show-archived (r/atom false)]
-    [sc/col {:style {:padding-block    "var(--size-1)"
-                     :padding-inline   "var(--size-2)"
-
-                     :background-color (when @toggle "var(--surface000)")}}
-     [sc/row'
-      {:on-click #(do
-                    (do-toggle)
-                    (.stopPropagation %))
-       :class    [:x-debug]
-       :style    {:padding "var(--size-1)"}}
-      [sc/dim
-       [sc/small1 {:style {:letter-spacing "var(--font-letterspacing-2)"
-                           :text-transform :uppercase
-                           :font-weight    "var(--font-weight-6)"}}
-        "Visningsvalg"]]
-      (chevron-updown-toggle @toggle do-toggle)]
-     [:div {:class (into [:duration-200] (if @toggle [:h-32 :opacity-100] [:pointer-events-none :h-0 :opacity-0]))}
-      [sc/col-space-2
-       [sc/col {:class [:space-y-2]}
-        [sc/row' {:class [:items-center]}
-         [schpaa.style.switch/small-switch-example
-          {:!value  show-archived
-           :caption [sc/subtext "Vis skjulte"]}]]
-        [sc/row' {:class [:items-center]}
-         [schpaa.style.switch/small-switch-example
-          {:!value  show-archived
-           :caption [sc/subtext "Vis skjulte"]}]]
-        [sc/row' {:class [:items-center]}
-         [schpaa.style.switch/small-switch-example
-          {:!value  show-archived
-           :caption [sc/subtext "Vis skjulte"]}]]]
-       #_[sc/dim
-          [sc/row-stretch
-           [sc/subtext "Se innhold"]
-           [sc/subtext "Se slettede"]
-           [sc/subtext "Se skjulte"]]]]]
-     (when @toggle [:hr])]))
-
-;endregion
-
 (defn header-line [r]
   (let [st (schpaa.state/listen :top-toggle)
         toggle #(schpaa.state/toggle :top-toggle)]

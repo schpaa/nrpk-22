@@ -30,7 +30,8 @@
             [schpaa.style :as st]
             [schpaa.style.ornament :as sc]
             [schpaa.style.input :as sci]
-            [schpaa.style.radio]))
+            [schpaa.style.radio]
+            [schpaa.style.hoc.page-controlpanel :as hoc.panel]))
 
 ;INTENT our desired timeslot, who is available in this slow?
 
@@ -357,96 +358,69 @@
               {:id   2
                :text #(-> "2")
                :fn   #(when % (t/>> % (t/new-period 2 :days)))}]]
-    [:div.sticky.top-4
-     [:<>
-      ;[l/ppre-x values]
-      [:div
-       [:div
-        [:div
-         [:div.flex.flex-col.justify-self-endx.relative
 
-          [:div.space-y-2
-           [sc/row {:class [:gap-4 :flex-wrap]}
+    [hoc.panel/togglepanel :booking/time-input "Dato for booking"
+     (fn [] [:div.space-y-4
+             [sc/row {:class [:gap-4 :flex-wrap]}
+              [sc/col {:class [:w-40 :gap-1]}
+               [sci/input (conj props {:type      "date"
+                                       :value     (:start-date values)
+                                       :on-change #(let [z (-> % .-target .-value)]
+                                                     (do
+                                                       (handle-change %)
+                                                       (tap> {:id      (:id values)
+                                                              "value"  %
+                                                              "z"      z
+                                                              "value'" (values :start-date)})
+                                                       (let [v (if (seq z)
+                                                                 (some-> z
+                                                                         (t/date)
+                                                                         ((:fn (get (zipmap (map :id data) data) (:id values))))
+                                                                         str)
+                                                                 nil)]
+                                                         (tap> {"v" v})
+                                                         (set-handle-change
+                                                           {:path  :end-date
+                                                            :value v}))))
+                                       :errors    (:start-date errors)
+                                       :name      :start-date}) :date [:w-40] "Fra dato" :start-date]]
 
-            [sc/col {:class [:w-40 :gap-1]}
-             [sc/row {:class [:gap-2]}
-              [sc/label "Fra dato"]
-              (if (:start-date errors)
-                [sc/label-error (first (:start-date errors))])]
-             [sci/date {:type      "date"
-                        :value     (:start-date values)
-                        :on-change #(let [z (-> % .-target .-value)]
-                                      (do
-                                        (handle-change %)
-                                        (tap> {:id      (:id values)
-                                               "value"  %
-                                               "z"      z
-                                               "value'" (values :start-date)})
-                                        (let [v (if (seq z)
-                                                  (some-> z
-                                                          (t/date)
-                                                          ((:fn (get (zipmap (map :id data) data) (:id values))))
-                                                          str)
-                                                  nil)]
-                                          (tap> {"v" v})
-                                          (set-handle-change
-                                            {:path  :end-date
-                                             :value v}))))
-                        :errors    (:start-date errors)
-                        :name      :start-date}]]
 
-            [sc/col {:class [:w-32 :gap-1]}
-             [sc/row {:class [:gap-2]}
-              [sc/label "Fra kl"]
-              (if (:start-time errors)
-                [sc/label-error (first (:start-time errors))])]
-             [sci/date {:type      "time"
-                        :value     (:start-time values)
-                        :on-change handle-change
-                        :errors    (:start-time errors)
-                        :name      :start-time}]]]
 
-           [sc/row {:class [:gap-4 :flex-wrap]}
 
-            [sc/col {:class [:gap-1]}
-             [sc/label "Overnattinger"]
-             [:div.w-48.space-y-2
-              [schpaa.style.radio/radio-group-example
-               #(do
-                  (tap> {:a %})
-                  (set-values {:id %})
-                  (let [v (if (seq (values :start-date))
-                            (some-> (values :start-date)
-                                    (t/date)
-                                    ((:fn (get (zipmap (map :id data) data) %)))
-                                    str))]
-                    (tap> v)
-                    (set-values {:end-date v})))
 
-               (try (some-> (values :start-date) t/date) (catch js/Error _ nil))
-               data]]]]
-           [sc/row {:class [:gap-4 :flex-wrap]}
-            [sc/col {:class [:w-40 :gap-1]}
-             [sc/row {:class [:gap-2]}
-              [sc/label "Til dato"]
-              (if (:start-time errors)
-                [sc/label-error (first (:end-date errors))])]
-             [sci/date {:type      "date"
-                        :read-only true
-                        :value     (:end-date values)
-                        :on-change handle-change
-                        :errors    (:end-date errors)
-                        :name      :end-date}]]
-            [sc/col {:class [:w-32 :gap-1]}
-             [sc/row {:class [:gap-2]}
-              [sc/label "Til kl"]
-              (if (:end-time errors)
-                [sc/label-error (first (:end-time errors))])]
-             [sci/date {:type      "time"
-                        :value     (:end-time values)
-                        :on-change handle-change
-                        :errors    (:end-time errors)
-                        :name      :end-time}]]]]]]]]]]))
+              [sci/input props :time [:w-32] "Fra kl" :start-time]]
+
+
+             [sc/row {:class [:gap-4 :flex-wrap]}
+
+              [sc/col {:class [:gap-1]}
+               [sc/label "Overnattinger"]
+               [:div.w-48.space-y-2
+                [schpaa.style.radio/radio-group-example
+                 #(do
+                    (tap> {:a %})
+                    (set-values {:id %})
+                    (let [v (if (seq (values :start-date))
+                              (some-> (values :start-date)
+                                      (t/date)
+                                      ((:fn (get (zipmap (map :id data) data) %)))
+                                      str))]
+                      (tap> v)
+                      (set-values {:end-date v})))
+
+                 (try (some-> (values :start-date) t/date) (catch js/Error _ nil))
+                 data]]]]
+             [sc/row {:class [:gap-4 :flex-wrap]}
+              [sci/input {:type      "date"
+                          :read-only true
+                          :value     (:end-date values)
+                          :on-change handle-change
+                          :errors    (:end-date errors)
+                          :name      :end-date} :date [:w-40] "Til dato" :end-date]
+
+              [sci/input props :time [:w-32] "Til kl" :end-time]]])]))
+
 
 (defn booking-form [{:keys [uid on-submit my-state boat-db selected] :as main-m}]
   (let [admin false]

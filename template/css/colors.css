@@ -173,6 +173,14 @@ outline: 2px solid #a0a8;
     --dim-danger-bright: var(--red-6);
     --dim-dangercopy: white;
 
+    --light-field: var(--gray-1);
+    --light-field-focus: var(--gray-0);
+    --light-fieldcopy: var(--gray-7);
+    --dim-field: var(--red-1);
+    --dim-field-focus: var(--red-2);
+    --dim-fieldcopy: var(--red-4);
+
+
     /* ----------------------------- */
 
    /* brand */
@@ -355,6 +363,9 @@ outline: 2px solid #a0a8;
         --danger: var(--light-danger);
         --danger-bright: var(--light-danger-bright);
         --dangercopy: var(--light-dangercopy);
+        --field: var(--light-field);
+        --field-focus: var(--light-field-focus);
+        --fieldcopy: var(--light-fieldcopy);
 
     }
 }
@@ -430,7 +441,9 @@ outline: 2px solid #a0a8;
         --danger: var(--dim-danger);
         --danger-bright: var(--dim-danger-bright);
         --dangercopy: var(--dim-dangercopy);
-
+        --field: var(--dim-field);
+        --field-focus: var(--dim-field-focus);
+        --fieldcopy: var(--dim-fieldcopy);
     }
 }
 

@@ -21,16 +21,22 @@ hoc.buttons/icon-with-caption
 sc/small1 -- secondary var(--text1)
 sc/small2 -- tertiary var(--text2)
 
+## panels
+
+[schpaa.style.hoc.page-controlpanel :as hoc.panel]
+
 ## colors and surfaces
 
-### backgrounds
+### backgrounds and copy
 
 `--content` main content
 `--toolbar` the toolbars around content
 `--toolbar-` slightly darker to separate the adjacent content
 `--floating` controlpanels and floating stuff, relates to `--content`
 
-### colors
+`--field`
+`--field-focus`
+`--fieldcopy`
 
 **todo: <?> and <?>-bright have switched roles**
 

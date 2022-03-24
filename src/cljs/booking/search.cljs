@@ -5,7 +5,9 @@
             ["@heroicons/react/outline" :as outline]
             [goog.events.KeyCodes :as keycodes]
             [schpaa.style.ornament :as sc]
-            [lambdaisland.ornament :as o]))
+            [lambdaisland.ornament :as o]
+            [schpaa.style.button :as scb]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 ;region search
 
@@ -31,13 +33,6 @@
 (rf/reg-sub :lab/search-expression :-> :lab/search-expr)
 
 ;endregion
-
-(o/defstyled experiment :div
-  [:&
-   :rounded-full
-   {:color "var(--text3)"}
-   [:&:hover {:color      "var(--text2)"
-              :background "var(--surface0)"}]])
 
 (o/defstyled experiment2 :div
   [:&
@@ -86,12 +81,9 @@
              [:div.flex.items-center.justify-center.h-full {:class    [:w-10 :shrink-1]
                                                             :on-click #(.stopPropagation %)}
               [sc/icon [:> solid/SearchIcon]]]]
-            [experiment
-             [:div.flex.items-center.justify-center.h-full (conj
-                                                             {:class [:w-10 :shrink-1]}
-                                                             (when-not @search
-                                                               {:on-click enter-search}))
-              [sc/icon [:> solid/SearchIcon]]]])
+            [hoc.buttons/round
+             {:on-click #(when-not @search (enter-search))}
+             [sc/icon [:> solid/SearchIcon]]])
 
           (when @search
             [:input.w-full.h-full.outline-none.focus:outline-none

@@ -11,7 +11,8 @@
             [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
             [booking.boatinput]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 
 (defn address-me-as [user]
@@ -203,7 +204,7 @@
         :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
         :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
         :button       (fn [open]
-                        [scb/round-normal {:class [:h-10] :on-click toggle-mainmenu}
+                        [hoc.buttons/round {:class [:h-10] :on-click toggle-mainmenu}
                          [sc/icon [:> solid/MenuIcon]]])}])))
 
 ;region extract!
@@ -217,7 +218,7 @@
         :close-button (fn [open] [scb/corner {:on-click toggle-menu} [sc/icon [:> solid/XIcon]]])
         :data         data
         :button       (fn [open]
-                        [scb/round-normal {:class    [:h-10]
-                                           :on-click toggle-menu}
+                        [hoc.buttons/round {:class    [:h-10]
+                                            :on-click toggle-menu}
                          [sc/icon [:div {:class [:duration-100 :transform (if open :rotate-180)]}
                                    [:> solid/ChevronDownIcon]]]])}])))
