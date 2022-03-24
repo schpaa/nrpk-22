@@ -334,6 +334,13 @@
                 (if (some #{(:role s)} [:member]) s s)
                 ua)))
 
+(rf/reg-sub :lab/member
+            :<- [:lab/sim?]
+            (fn [{:keys [role status] :as sim} _]
+              (if role
+                (some #{role} [:member])
+                false)))
+
 (rf/reg-sub :lab/booking
             :<- [:lab/sim?]
             (fn [{:keys [role status] :as sim} _]
@@ -352,7 +359,9 @@
             :<- [:lab/sim?]
             (fn [{:keys [role status] :as sim} _]
               (if status
-                (= :admin (some status [:admin]))
+                (and
+                  (some #{role} [:member])
+                  (= :admin (some status [:admin])))
                 false)))
 
 (comment

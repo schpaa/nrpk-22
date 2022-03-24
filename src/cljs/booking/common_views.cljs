@@ -157,7 +157,9 @@
    :background    "var(--gray-4)"})
 
 (defn vertical-toolbar-right [uid]
-  (let [booking? (rf/subscribe [:lab/booking])
+  (let [admin? (rf/subscribe [:lab/admin])
+        member? (rf/subscribe [:lab/member])
+        booking? (rf/subscribe [:lab/booking])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [{:icon-fn   #(sc/icon-large ico/new-home)
       ;:special    true
@@ -173,14 +175,14 @@
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
 
-     (when @booking?
+     (when (and @member? @booking?)
        {:icon-fn   (fn [] (sc/icon-large ico/booking))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
         :page-name :r.booking})
 
 
 
-     (when @nokkelvakt
+     (when (and @member? @nokkelvakt)
        {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
         :page-name :r.nokkelvakt})
@@ -191,9 +193,10 @@
      #_{:icon-fn   (fn [] [sidebar "S"])
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
         :page-name :r.booking}
-     {:icon-fn   (fn [] (sc/icon-large ico/yearwheel) #_[sidebar "Å"])
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
-      :page-name :r.yearwheel}
+     (when (or @member? @admin?)
+       {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
+        :page-name :r.yearwheel})
 
      :space
      {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
@@ -204,14 +207,15 @@
       :special  true
       :on-click #(rf/dispatch [:lab/toggle-number-input])}
 
-     #_{:tall-height true
+     :space
+     (when @admin?
+       {:tall-height true
         :icon        solid/FolderIcon
 
         :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
         #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
                       (when (pos? c) c))
-        :page-name   :r.fileman-temporary}
-     :space
+        :page-name   :r.fileman-temporary})
      {:tall-height true
       :special     true
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]

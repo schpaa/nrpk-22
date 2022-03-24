@@ -210,15 +210,19 @@
            md #(sc/markdown (schpaa.markdown/md->html %))]
        [+page-builder r
         {:frontpage true
+         :panel     (fn [] [:div "panel"])
          :render    (fn []
                       [:div.overflow-y-auto.h-full.relative
                        {:style {:background "var(--surface1)"}}
+
+                       [:div.sticky.top-0.z-100 [booking.common-views/header-line r]]
                        [:div.relative.w-full
+
                         [:img {:style {:filter          "contrast(0.275)"
                                        :object-fit      :cover
                                        :object-position "center center"
                                        :width           "100%"
-                                       :height          "100vh"
+                                       :height          "calc(100vh - 10rem)"
                                        :min-height      "20rem"
                                        :xaaspect-ratio  "1/1"}
                                :src   "/img/brygge.jpeg"}]
@@ -230,6 +234,7 @@
                                   :right         "0"
                                   :bottom        "0"
                                   :left          "0"}}
+
                          [:img {:style {:width     "25vw"
                                         :max-width "10rem"}
                                 :src   "/img/logo-n.png"}]]
