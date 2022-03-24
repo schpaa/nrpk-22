@@ -33,7 +33,9 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.input :as sci :refer [input]]
             [schpaa.style.button2 :as scb2]
-            [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]))
+            [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.style.dialog]))
 
 (defn confirm-registry []
   #_(apply send
@@ -71,7 +73,7 @@
                                    [:div {:class (if-not b "text-black/25")} (or b "ingen")]]])]))
 
 (def loggout-command
-  (
+  (hoc.buttons/regular
     {:on-click
      #(readymade/ok-cancel
         {:type    :form
@@ -86,16 +88,16 @@
   (let [removal-date (some-> (db/on-value-reaction {:path ["users" uid]}) deref :removal-date)]
     (if (and (some? removal-date)
              (t/< (t/date) (t/date removal-date)))
-      (regular-button {:on-click #(readymade/ok-cancel
-                                    {:flags           #{:wide}
-                                     :button-captions (fn [id] (get {:ok     "Gjennopprett nå!"
-                                                                     :cancel "Nei, forresten"} id))
-                                     :ok              (fn [] (user.database/mark-account-for-restore uid))
-                                     #_#_:footer [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
-                                                  [:div "Etter 14 dager slettes alle data."]]
-                                     :content         "Er du sikker på at du vil gjennopprette kontoen din?"})}
-                      "Gjennopprett konto" #_(times.api/format "Gjennopprett (innen %s)" (ta/short-date-format removal-date)))
-      (danger-button
+      (hoc.buttons/regular {:on-click #(readymade/ok-cancel
+                                         {:flags           #{:wide}
+                                          :button-captions (fn [id] (get {:ok     "Gjennopprett nå!"
+                                                                          :cancel "Nei, forresten"} id))
+                                          :ok              (fn [] (user.database/mark-account-for-restore uid))
+                                          #_#_:footer [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
+                                                       [:div "Etter 14 dager slettes alle data."]]
+                                          :content         "Er du sikker på at du vil gjennopprette kontoen din?"})}
+                           "Gjennopprett konto" #_(times.api/format "Gjennopprett (innen %s)" (ta/short-date-format removal-date)))
+      (hoc.buttons/regular
         {:type :button
          :on-click
          #(readymade/ok-cancel
@@ -127,8 +129,8 @@
         [:circle {:fill :currentColor
                   :cx   5 :cy 5 :r 4}]]
        [:div.flex-grow status-text]
-       (regular-button {:disabled true
-                        :on-click #(js/alert "!")} "Hjelp")]]]))
+       (hoc.buttons/regular {:disabled true
+                             :on-click #(js/alert "!")} "Hjelp")]]]))
 
 ;endregion
 
@@ -144,28 +146,6 @@
        [sc/small1 (:email user-info)]
        [sc/small1 (:display-name user-info)]
        [sc/small1 (:uid user-info)]]]]))
-
-(o/defstyled checkbox' :input
-  [:&
-   {:color      :blue
-    :background :red}])
-
-(defn checkbox [{:keys [errors values handle-change] :as props} class label field-name]
-  [sc/row {:class [:items-baseline :gap-2]}
-   [checkbox'
-    {:type      :checkbox
-     :style     {:background    "var(--surface0)"
-                 :accent-color  "var(--brand1)"
-                 :border-radius "var(--radius-1)"
-                 #_#_:border "2px solid red"}
-     :class     [:w-5 :h-5 :self-center]
-     :id        field-name
-     :value     (field-name values)
-     :on-change handle-change
-     :errors    (field-name errors)
-     :name      field-name}]
-   [:label.p-0.text-base.normal-case
-    {:for field-name} [sc/checkbox-text label]]])
 
 ;duplicated
 
@@ -197,8 +177,8 @@
     [:div.flex.gap-4.flex-wrap
      [input props :text [:w-32] "Våttkort-nr" :våttkortnr]]
     [:div.flex.gap-4.flex-wrap
-     [checkbox props [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
-     [checkbox props [] "Jeg ønsker tilgang til de utfordrende båtene" :booking-expert]]]])
+     [hoc.buttons/checkbox props [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
+     [hoc.buttons/checkbox props [] "Jeg ønsker tilgang til de utfordrende båtene" :booking-expert]]]])
 
 (defn my-vakt-form [{:keys [form-id handle-submit dirty readonly? values] :as props}]
   [:form.space-y-8
@@ -213,10 +193,10 @@
      [input props :text [:w-32] "Livredning" :årstall-livredningskurs]]
 
     [sc/row-sc-g4-w
-     [checkbox props [] "Jeg arbeider som instruktør for NRPK" :instruktør]
-     [checkbox props [] "Foretrekker helgevakt" :helgevakt]
-     [checkbox props [] "Kan stille som vikar" :vikar]
-     [checkbox props [] "Kort reisevei" :kort-reisevei]]
+     [hoc.buttons/checkbox props [] "Jeg arbeider som instruktør for NRPK" :instruktør]
+     [hoc.buttons/checkbox props [] "Foretrekker helgevakt" :helgevakt]
+     [hoc.buttons/checkbox props [] "Kan stille som vikar" :vikar]
+     [hoc.buttons/checkbox props [] "Kort reisevei" :kort-reisevei]]
 
     #_[:div.flex.gap-4.flex-wrap.justify-end
        [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Timekrav" :name :timekrav]
@@ -226,19 +206,6 @@
 (o/defstyled summary :summary
   :flex :items-center :pl-3 :h-12 :relative :select-none
   {:-border-top "1px solid var(--surface0)"})
-
-(defn details [tag summary' content]
-  (let [st (schpaa.state/listen tag)]
-    [:details.border-b
-     {:open @st}
-     [summary
-      {:style    {:background (if @st "var(--surface000)" "var(--surface00)")}
-       :on-click #(schpaa.state/change tag (not @st))}
-      [:div.flex.items-center.gap-2
-       {:style {:color (if @st "var(--text3)" "var(--text1)")}}
-       [sc/icon-small {:style {:color "var(--brand1)"}} [:> (if @st solid/ChevronDownIcon solid/ChevronRightIcon)]]
-       [sc/header-title summary']]]
-     [:div.p-4.pb-8 {:style {:background "var(--surface000)"}} content]]))
 
 (defn user-form [uid]
   (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
@@ -261,7 +228,7 @@
           (removeaccount-command uid)
           [:div.flex.gap-4
 
-           (bu/cta-button
+           (hoc.buttons/cta
              {:type     :button
               :on-click #(readymade/message {:dialog-type :form
                                              :flags       #{:force :wide :timeout}
@@ -314,45 +281,18 @@
                                                                     :request-booking (str (t/date))})]
                                                     (set-values data)))
                            :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-                my-vakt-form])])]
-
-         #_(let [fields [:uid :kort-reisevei :medlem-fra-år :navn :alias :telefon :epost :våttkort :våttkortnr :kort-reisevei :fødselsår :nøkkelnummer
-                         :årstall-førstehjelpskurs :årstall-livredningskurs :helgevakt :vikar :booking-expert :request-booking :instruktør]
-                 diff (map-difference (select-keys (:values @form-state) fields)
-                                      (select-keys (walk/keywordize-keys @s) fields))]
-             [:<>
-              ;[l/ppre-x diff]
-              #_[l/ppre-x diff (select-keys (walk/keywordize-keys @s) fields)
-                 (select-keys (:values @form-state) fields)]
-
-              [:div.flex.justify-between.h-12.px-4
-               (removeaccount-command uid)
-               [:div.flex.gap-4
-                (when-not (empty? diff)
-                  (bu/regular-button {:type     :button
-                                      :on-click #(swap! form-state assoc :values (walk/keywordize-keys @s))} "Tilbakestill"))
-                (bu/regular-button {:type     :button
-                                    :on-click #(do
-                                                 (user.database/write diff (assoc diff :uid uid))
-                                                 (readymade/popup {:dialog-type :message
-                                                                   :content     "Lagret"}))
-                                    :disabled (empty? diff)}
-                                   "Lagre")]]])]))))
+                my-vakt-form])])]]))))
 
 (defn my-info []
   (let [user-auth @(rf/subscribe [::db/user-auth])
         uid (:uid user-auth)]
     (fn []
-      [sc/col
-       [sc/col
-        [user-form uid]
-        [:div.p-4
-         [sc/row-stretch
-          [scb2/outline-large {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
-           [sc/row {:class [:gap-3 :items-baseline]}
-            [sc/icon-small [:> outline/TrashIcon]]
-            [sc/text "Slett konto..."]]]
-          [scb2/cta-large {:disabled 1} "Lagre"]]]]
-
-       ;separer
+      [sc/col-space-8
+       [user-form uid]
+       [:div.p-4x
+        [sc/row-ec
+         [hoc.buttons/danger
+          {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
+          (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]
+         [hoc.buttons/regular {:disabled 1} "Lagre"]]]
        [sist-oppdatert (r/atom nil)]])))
