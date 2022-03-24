@@ -24,7 +24,9 @@
             [kee-frame.core :as k]
             [booking.routes]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [schpaa.style.hoc.buttons :as buttons :refer [pill icon-with-caption]]
+            [schpaa.debug :as l]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -155,56 +157,68 @@
    :background    "var(--gray-4)"})
 
 (defn vertical-toolbar-right [uid]
-  [
+  (let [booking? (rf/subscribe [:lab/booking])
+        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
+    [{:icon-fn   #(sc/icon-large ico/new-home)
+      ;:special    true
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+      :page-name :r.forsiden}
 
-   {:icon-fn   #(sc/icon-large ico/new-home)
-    ;:special    true
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :page-name :r.forsiden}
+     #_{:icon-fn   (fn [] (sc/icon-large ico/old-home))
+        ;:special   true
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden-iframe]])
+        :page-name :r.forsiden-iframe}
 
-   {:icon-fn   (fn [] (sc/icon-large ico/old-home))
-    ;:special   true
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden-iframe]])
-    :page-name :r.forsiden-iframe}
+     {:icon-fn   (fn [] (sc/icon-large ico/user))
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :page-name :r.user}
 
-   {:icon-fn   (fn [] (sc/icon-large ico/user))
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-    :page-name :r.user}
+     (when @booking?
+       {:icon-fn   (fn [] (sc/icon-large ico/booking))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name :r.booking})
 
-   #_{:icon-fn   (fn [] [sidebar "N"])
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])
-      :page-name :r.welcome}
-   {:icon-fn   (fn [] [sidebar "S"])
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
-    :page-name :r.booking}
-   {:icon-fn   (fn [] (sc/icon-large ico/yearwheel) #_[sidebar "Å"])
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
-    :page-name :r.yearwheel}
 
-   nil
-   {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                       [centered-thing
-                        (sc/icon-large
-                          [:> (if @st solid/ChevronRightIcon
-                                      solid/ChevronLeftIcon)])]))
-    :special  true
-    :on-click #(rf/dispatch [:lab/toggle-number-input])}
 
-   #_{:tall-height true
-      :icon        solid/FolderIcon
+     (when @nokkelvakt
+       {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
+        :page-name :r.nokkelvakt})
 
-      :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-      #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
-                    (when (pos? c) c))
-      :page-name   :r.fileman-temporary}
-   nil
-   {:tall-height true
-    :special     true
-    :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                          (sc/icon-huge
-                            [:> (if @st solid/InformationCircleIcon
-                                        outline/InformationCircleIcon)])))
-    :on-click    schpaa.style.dialog/open-selector}])
+     #_{:icon-fn   (fn [] [sidebar "N"])
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])
+        :page-name :r.welcome}
+     #_{:icon-fn   (fn [] [sidebar "S"])
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name :r.booking}
+     {:icon-fn   (fn [] (sc/icon-large ico/yearwheel) #_[sidebar "Å"])
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
+      :page-name :r.yearwheel}
+
+     :space
+     {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                         [centered-thing
+                          (sc/icon-large
+                            [:> (if @st solid/ChevronRightIcon
+                                        solid/ChevronLeftIcon)])]))
+      :special  true
+      :on-click #(rf/dispatch [:lab/toggle-number-input])}
+
+     #_{:tall-height true
+        :icon        solid/FolderIcon
+
+        :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
+        #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
+                      (when (pos? c) c))
+        :page-name   :r.fileman-temporary}
+     :space
+     {:tall-height true
+      :special     true
+      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
+                            (sc/icon-huge
+                              [:> (if @st solid/InformationCircleIcon
+                                          outline/InformationCircleIcon)])))
+      :on-click    schpaa.style.dialog/open-selector}]))
 
 (defn horizontal-toolbar [uid]
   [{:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
@@ -299,7 +313,7 @@
          {:style (if special {:color "var(--brand1)"})}
          [:> icon]])]]))
 
-(defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :or {style {}}}]
+(defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :as m :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (= page-name current-page)]
     [:div.w-full.flex.items-center.justify-center.relative
@@ -369,44 +383,102 @@
             [result-item e]))))
 
 (defn header-line [r]
-  [sc/col {:class [:border-b :duration-200]
-           :style {:background   "var(--toolbar)"
-                   :border-color "var(--toolbar-)"}}
-   [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
-    [sc/row-std
-     (when-not @(rf/subscribe [:lab/in-search-mode?])
-       (let [titles (compute-page-titles r)]
-         [:<>
-          [:div.hidden.sm:block.grow
-           [:<>
-            (if (vector? titles)
-              [:div.flex.items-center.gap-1
-               (interpose [:div.text-2xl.opacity-20 "/"]
-                          (for [[idx e] (map-indexed vector titles)
-                                :let [last? (= idx (dec (count titles)))]]
-                            (if last?
-                              [sc/text1 e]
-                              (let [{:keys [text link]} e]
-                                [sc/subtext-with-link {
-                                                       :href (k/path-for [link])} text]))))]
-              [sc/text1 titles])]]
-          [:div.xs:block.sm:hidden.grow
-           (if (vector? titles)
-             [sc/col-space-1
-              (when (< 1 (count titles))
-                (let [{:keys [text link]} (first titles)]
-                  [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
-                                               :href  (k/path-for [link])} text]]))
-              [sc/text1 (last titles)]]
-             [sc/col
-              [sc/text1 titles]])]]))
+  [err-boundary
+   [sc/col {:class [:border-b :duration-200]
+            :style {:background   "var(--toolbar)"
+                    :border-color "var(--toolbar-)"}}
+    [:div
+     [:div {:class [:m-4]}
+      (r/with-let [user-state (rf/subscribe [:lab/user-state])
+                   bookingx (rf/subscribe [:lab/booking])
+                   nokkelvakt (rf/subscribe [:lab/nokkelvakt])
+                   admin (rf/subscribe [:lab/admin])
+                   st (r/atom {:admin      admin
+                               :nøkkelvakt nokkelvakt
+                               :booking    bookingx})]
+        (let [registered (some #{(:role @user-state)} [:member])
+              status (:role @user-state)]
+          [:<>
+           ;[l/ppre-x @user-state bookingx]
+           [sc/row-sc-g2-w
+            [pill
+             {:class    [:regular :pad-right (when (= :none status) :outlined)]
+              :on-click #(rf/dispatch [:lab/set-sim-type :none])} [icon-with-caption ico/anonymous "anonym"]]
+            [pill
+             {:disabled false
+              :class    [:regular :pad-right (when (= :registered status) :outlined)]
+              :on-click #(rf/dispatch [:lab/set-sim-type :registered])}
+             [icon-with-caption ico/user "registrert"]]
+            [pill
+             {:class    [:regular :pad-right (when (= :waitinglist status) :outlined)]
+              :on-click #(rf/dispatch [:lab/set-sim-type :waitinglist])} [icon-with-caption ico/waitinglist "venteliste"]]
+            [pill
+             {:class    [:regular :pad-right (when (= :member status) :outlined)]
+              :on-click #(rf/dispatch [:lab/set-sim-type :member])}
+             [icon-with-caption ico/member "medlem"]]
+            #_[pill
+               {:class    [:regular :pad-right (when (= :admin status) :outlined)]
+                :on-click #(rf/dispatch [:lab/set-sim-type :admin])} [icon-with-caption ico/admin "admin"]]
+            [schpaa.style.hoc.toggles/small-switch-base
+             {:disabled (not registered)}
+             "admin"
+             (r/cursor st [:admin])
+             #(do
+                (swap! st update-in [:admin] (constantly %))
+                (rf/dispatch [:lab/set-sim :admin %]))]
 
-     [search-menu]
-     [main-menu]]]])
+            [schpaa.style.hoc.toggles/small-switch-base
+             {:disabled (not registered)}
+             "booking"
+             (r/cursor st [:booking])
+             #(do
+                (swap! st update-in [:booking] (constantly %))
+                (rf/dispatch [:lab/set-sim :booking %]))]
+
+            [schpaa.style.hoc.toggles/small-switch-base
+             {:disabled (not registered)}
+             "nøkkelvakt"
+             (r/cursor st [:nøkkelvakt])
+             #(do
+                (swap! st update-in [:nøkkelvakt] (constantly %))
+                (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))]
+
+     [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
+      [sc/row-std
+       (when-not @(rf/subscribe [:lab/in-search-mode?])
+         (let [titles (compute-page-titles r)]
+           [:<>
+            [:div.hidden.sm:block.grow
+             [:<>
+              (if (vector? titles)
+                [:div.flex.items-center.gap-1
+                 (interpose [:div.text-2xl.opacity-20 "/"]
+                            (for [[idx e] (map-indexed vector titles)
+                                  :let [last? (= idx (dec (count titles)))]]
+                              (if last?
+                                [sc/text1 e]
+                                (let [{:keys [text link]} e]
+                                  [sc/subtext-with-link {
+                                                         :href (k/path-for [link])} text]))))]
+                [sc/text1 titles])]]
+            [:div.xs:block.sm:hidden.grow
+             (if (vector? titles)
+               [sc/col-space-1
+                (when (< 1 (count titles))
+                  (let [{:keys [text link]} (first titles)]
+                    [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
+                                                 :href  (k/path-for [link])} text]]))
+                [sc/text1 (last titles)]]
+               [sc/col
+                [sc/text1 titles]])]]))
+
+       [search-menu]
+       [main-menu]]]]]])
 
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
+        user-state (rf/subscribe [:lab/user-state])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
         numberinput? (rf/subscribe [:lab/number-input])
         has-chrome? (rf/subscribe [:lab/has-chrome])
@@ -488,7 +560,7 @@
                                 (horizontal-toolbar (:uid @user-auth))))])]
            ;endregion
 
-           (when @has-chrome?
+           (when (and @has-chrome? (some #{(:role @user-state)} [:member :waitinglist :registered]))
              [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
               [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.border-l
                {:style {:z-index      1211
@@ -497,9 +569,9 @@
                                                         "var(--inner-shadow-1)")
                         :border-color "var(--toolbar-)"
                         :background   "var(--toolbar)"}}
-               (into [:<>] (map #(if (nil? %)
+               (into [:<>] (map #(if (keyword? %)
                                    [:div.grow]
-                                   [vertical-button %]) (vertical-toolbar-right (:uid @user-auth))))]
+                                   [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
               [:div.absolute.right-16.xl:right-20.inset-y-0
                {:style {:width          "298px"
                         :pointer-events :none}}

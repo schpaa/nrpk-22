@@ -2,6 +2,8 @@
   (:require [reagent.core :as r]
             [kee-frame.core]
             [re-frame.core :as rf]
+            [db.core :as db]
+            [db.auth]
             [schpaa.style.ornament :as sc]
             [schpaa.style.booking]
             [booking.data]
@@ -297,3 +299,62 @@
 (rf/reg-event-db :lab/toggle-chrome
                  (fn [db _]
                    (update-in db [:settings :state :lab/toggle-chrome] (fnil not false))))
+
+(rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
+                                     (tap> arg)
+                                     (assoc-in db [:lab/sim :role] arg)))
+
+(rf/reg-event-db :lab/set-sim (fn [db [_ arg opt]]
+                                (tap> [arg opt (:lab/sim db)])
+                                (cond
+                                  (= :booking arg)
+                                  (if opt
+                                    (update-in db [:lab/sim :status] (fnil set/union #{}) #{:booking})
+                                    (update-in db [:lab/sim :status] (fnil set/difference #{}) #{:booking}))
+
+                                  (= :admin arg)
+                                  (if opt
+                                    (update-in db [:lab/sim :status] (fnil set/union #{}) #{:admin})
+                                    (update-in db [:lab/sim :status] (fnil set/difference #{}) #{:admin}))
+
+                                  (= :nøkkelvakt arg)
+                                  (if opt
+                                    (update-in db [:lab/sim :status] (fnil set/union #{}) #{:nøkkelvakt})
+                                    (update-in db [:lab/sim :status] (fnil set/difference #{}) #{:nøkkelvakt}))
+                                  :else
+                                  db)))
+
+(rf/reg-sub :lab/sim? :-> #(get % :lab/sim))
+
+(rf/reg-sub :lab/user-state
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            (fn [[ua sim] _]
+              (if-let [s sim]
+                (if (some #{(:role s)} [:member]) s s)
+                ua)))
+
+(rf/reg-sub :lab/booking
+            :<- [:lab/sim?]
+            (fn [{:keys [role status] :as sim} _]
+              (if status
+                (= :booking (some status [:booking]))
+                false)))
+
+(rf/reg-sub :lab/nokkelvakt
+            :<- [:lab/sim?]
+            (fn [{:keys [role status] :as sim} _]
+              (if status
+                (= :nøkkelvakt (some status [:nøkkelvakt]))
+                false)))
+
+(rf/reg-sub :lab/admin
+            :<- [:lab/sim?]
+            (fn [{:keys [role status] :as sim} _]
+              (if status
+                (= :admin (some status [:admin]))
+                false)))
+
+(comment
+  (let [status #{:bookings}]
+    (some status [:booking])))

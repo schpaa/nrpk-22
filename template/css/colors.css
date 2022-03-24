@@ -157,13 +157,13 @@ outline: 2px solid #a0a8;
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
     --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);
 
-    --light-button: var(--gray-5);
-    --light-button-bright: var(--gray-4);
+    --light-button: var(--gray-2);
+    --light-button-bright: var(--gray-1);
     --light-buttoncopy: var(--gray-7);
 
-    --dim-button: var(--gray-5);
-    --dim-button-bright: var(--gray-4);
-    --dim-buttoncopy: var(--gray-7);
+    --dim-button: var(--gray-6);
+    --dim-button-bright: var(--gray-7);
+    --dim-buttoncopy: var(--gray-3);
 
     --light-danger: var(--red-6);
     --light-danger-bright: var(--red-5);

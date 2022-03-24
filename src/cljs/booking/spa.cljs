@@ -515,6 +515,12 @@
                        :always-panel booking.yearwheel/always-panel
                        :render       booking.yearwheel/render}))
 
+   :r.nokkelvakt
+   (fn [r]
+     (+page-builder r
+                    {:render (fn [] [:div "ok"])}))
+
+
    :r.page-not-found
    error-page})
 

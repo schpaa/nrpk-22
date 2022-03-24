@@ -115,16 +115,19 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [hoc.buttons/cta-pill
-    {:on-click #(edit-event nil)}
-    (sc/row-sc-g2 (sc/icon-small ico/plus) "Nytt event")]
-   [hoc.buttons/regular-pill
-    {:on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
+   [hoc.buttons/pill
+    {:class    [:cta :pad-right]
+     :on-click #(edit-event nil)}
+    (hoc.buttons/icon-with-caption (sc/icon-small ico/plus) "Nytt event")]
+   [hoc.buttons/pill
+    {:class    [:regular :pad-right]
+     :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
     (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
-   [hoc.buttons/regular-pill
+   [hoc.buttons/pill
     {:on-click #(js/alert "wat")
+     :class    [:regular :pad-right]
      :disabled true}
-    (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")]])
+    (hoc.buttons/icon-with-caption (sc/icon-small ico/nullstill) "Nullstill")]])
 
 
 (defn- header []

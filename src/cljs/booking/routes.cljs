@@ -16,7 +16,9 @@
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
    ["/not-found" {:name :r.page-not-found :header [:r.forsiden "Finner ikke siden"]}]
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
-   ["/nokkelvakt" {:navn :r.nokkelvakt :header [:r.forsiden "Nøkkelvakt"]}]
+
+   ["/nokkelvakt" {:name :r.nokkelvakt :header [:r.forsiden "Nøkkelvakt"]}]
+
    ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
    ["/filer" {:name :r.fileman-temporary :header "Filer"}]
@@ -25,6 +27,8 @@
 
    ["/arshjul" {:name   :r.yearwheel
                 :header [:r.forsiden "Årshjul"]}]
+
+   ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.forsiden "Nøkkelvakt"]}]
 
    ["/booking" {:name :r.booking :header [:r.forsiden "Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
