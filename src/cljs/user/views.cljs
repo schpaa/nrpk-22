@@ -240,48 +240,50 @@
 
              "Få epost!")]]]
 
-        [:div
-         [sc/col-space-2
-          [togglepanel :user-form/grunnleggende "Grunnleggende"
-           (fn []
-             [fork/form {:state               form-state
-                         :prevent-default?    true
-                         :clean-on-unmount?   false
-                         :keywordize-keys     true
-                         :component-did-mount (fn [{:keys [set-values]}]
-                                                (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                 {;:uid             uid
-                                                                  #_#_:request-booking (str (t/date))})]
-                                                  (set-values data)))
-                         :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-              my-basics-form])]
-          [togglepanel :user-form/booking "Booking"
-           (fn []
-             [fork/form {:state                form-state
-                         :prevent-default?     true
-                         :clean-on-unmount?    false
-                         :keywordize-keys      true
-                         :xcomponent-did-mount (fn [{:keys [set-values]}]
-                                                 (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                  {:uid             uid
-                                                                   :request-booking (str (t/date))})]
-                                                   (set-values data)))
-                         :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
-              my-booking-form])]
-          (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-            [togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
-             (fn []
-               [fork/form {:state               form-state
-                           :prevent-default?    true
-                           :clean-on-unmount?   true
-                           :keywordize-keys     true
-                           :component-did-mount (fn [{:keys [set-values]}]
-                                                  (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                   {:uid             uid
-                                                                    :request-booking (str (t/date))})]
-                                                    (set-values data)))
-                           :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-                my-vakt-form])])]]))))
+        (into [:div]
+              (interpose [:div.py-6]
+                         [[togglepanel :user-form/grunnleggende "Grunnleggende"
+                           (fn []
+                             [fork/form {:state               form-state
+                                         :prevent-default?    true
+                                         :clean-on-unmount?   false
+                                         :keywordize-keys     true
+                                         :component-did-mount (fn [{:keys [set-values]}]
+                                                                (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                                 {;:uid             uid
+                                                                                  #_#_:request-booking (str (t/date))})]
+                                                                  (set-values data)))
+                                         :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
+                              my-basics-form])]
+                          [togglepanel :user-form/booking "Booking"
+                           (fn []
+                             [fork/form {:state                form-state
+                                         :prevent-default?     true
+                                         :clean-on-unmount?    false
+                                         :keywordize-keys      true
+                                         :xcomponent-did-mount (fn [{:keys [set-values]}]
+                                                                 (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                                  {:uid             uid
+                                                                                   :request-booking (str (t/date))})]
+                                                                   (set-values data)))
+                                         :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
+                              my-booking-form])]
+                          (when true #_(= "eykt" @(rf/subscribe [:app/name]))
+                            [togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
+                             (fn []
+                               [fork/form {:state               form-state
+                                           :prevent-default?    true
+                                           :clean-on-unmount?   true
+                                           :keywordize-keys     true
+                                           :component-did-mount (fn [{:keys [set-values]}]
+                                                                  (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                                   {:uid             uid
+                                                                                    :request-booking (str (t/date))})]
+                                                                    (set-values data)))
+                                           :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
+                                my-vakt-form])])]))))))
+
+
 
 (defn my-info []
   (let [user-auth @(rf/subscribe [::db/user-auth])

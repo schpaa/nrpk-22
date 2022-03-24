@@ -7,7 +7,8 @@
             [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [booking.ico :as ico]
-            [schpaa.style.button2 :as scb2]))
+            [schpaa.style.button2 :as scb2]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 
 (defn details-summary [tag header content]
@@ -57,31 +58,13 @@
                          [sc/text2 "her skal jeg undersøke hvordan knapper i ulike fasonger finner plass"]
 
                          [sc/row-sc-g2-w
-                          [scb2/normal "scb2/normal"]
-                          [scb2/normal-regular "scb2/normal-regular"]
-                          [scb2/normal-small "scb2/normal-small"]
-                          [scb2/normal-tight "scb2/normal-tight"]]
+                          [hoc.buttons/regular "scb2/normal"]]
 
                          [sc/row-sc-g2-w
-                          [scb2/cta "scb2/cta"]
-                          [scb2/cta-regular "scb2/cta-regular"]
-                          [scb2/cta-small "scb2/cta-small"]
-                          [scb2/cta-narrow "scb2/cta-narrow"]]
+                          [hoc.buttons/cta "scb2/cta"]]
 
                          [sc/row-sc-g2-w
-                          [scb2/outline "scb2/outline"]
-                          [scb2/outline-tight "scb2/outline-tight"]
-                          [scb2/outline-large "scb2/outline-large"]]
-
-                         [sc/row-sc-g2-w
-                          [scb2/outline "scb2/outline"]
-                          [scb2/outline-tight "scb2/outline-tight"]
-                          [scb2/outline-large "scb2/outline-large"]]
-
-                         [sc/row-sc-g2-w
-                          [scb2/danger "scb2/danger"]
-                          [scb2/danger-small "scb2/danger-small"]
-                          [scb2/danger-large "scb2/danger-large"]]
+                          [hoc.buttons/danger "scb2/danger"]]
 
                          [sc/text3 "fremdeles på surface0, men nå med (--text3)"]
                          [sc/title1 "Titler er alltids nyttige i en popup"]

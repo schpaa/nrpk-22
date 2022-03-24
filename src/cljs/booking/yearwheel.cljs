@@ -21,7 +21,8 @@
     [booking.qrcode]
     [re-frame.core :as rf]
     [booking.data]
-    [booking.yearwheel-testdata]))
+    [booking.yearwheel-testdata]
+    [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (o/defstyled listitem :div
   [:& :cursor-pointer :p-1
@@ -64,16 +65,17 @@
             [sci/textarea props :text [:w-full] "Beskrivelse (blog)" :content]]]
 
           [sc/row-ec
-           [scb2/normal-regular {:type     "button"
+           [hoc.buttons/regular {:type     "button"
                                  :on-click #(on-close)} "Avbryt"]
-           [scb2/cta-narrow {:disabled false                ;(not changed?)
+           [hoc.buttons/cta {:disabled false                ;(not changed?)
+                             :style    {:min-width 0}
                              :type     "submit"
                              :on-click #(do
                                           (set-values {:id nil})
                                           (on-save))} (sc/icon ico/plusplus)]
-           [scb2/cta-regular {:disabled (not changed?)
-                              :type     "submit"
-                              :on-click #(on-save)} "Lagre"]]]]))]])
+           [hoc.buttons/cta {:disabled (not changed?)
+                             :type     "submit"
+                             :on-click #(on-save)} "Lagre"]]]]))]])
 
 (defn submit-fn [{:keys [date content id type tldr] :as values}]
   (if id
@@ -113,16 +115,17 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [hoc.toggles/button-cta
-    #(edit-event nil)
+   [hoc.buttons/cta-pill
+    {:on-click #(edit-event nil)}
     (sc/row-sc-g2 (sc/icon-small ico/plus) "Nytt event")]
-   [hoc.toggles/button-reg
-    #(rf/dispatch [:lab/qr-code-for-current-page])
-    (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
-   [hoc.toggles/button-reg
-    #(js/alert "wat")
-    (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")
-    {:disabled true}]])
+   [hoc.buttons/regular-pill
+    {:on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
+    (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
+   [hoc.buttons/regular-pill
+    {:on-click #(js/alert "wat")
+     :disabled true}
+    (sc/row-sc-g2 (sc/icon-small ico/nullstill) "Nullstill")]])
+
 
 (defn- header []
   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)

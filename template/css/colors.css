@@ -110,7 +110,7 @@ outline: 2px solid #a0a8;
 
     --gray-0: #fafaf9;
     --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;
+    --gray-2: #e7e5e4;      
     --gray-3: #d6d3d1;
     --gray-4: #a8a29e;
     --gray-5: #78716c;
@@ -118,32 +118,73 @@ outline: 2px solid #a0a8;
     --gray-7: #44403c;
     --gray-8: #292524;
     --gray-9: #171515;
-
 */
-  --gray-0: #F0F1F1;
-  --gray-1: #E5E6E6;
-  --gray-2: #CDD0D0;
-  --gray-3: #B5BABA;
-  --gray-4: #9DA4A4;
-  --gray-5: #858E8E;
-  --gray-6: #6C7374;
-  --gray-7: #54595A;
-  --gray-8: #3B3E3F;
-  --gray-9: #222425;
-  --gray-10: #1c1917;
 
+    --gray-0: #F0F1F1;
+    --gray-1: #E5E6E6;
+    --gray-2: #CDD0D0;
+    --gray-3: #B5BABA;
+    --gray-4: #9DA4A4;
+    --gray-5: #858E8E;
+    --gray-6: #6C7374;
+    --gray-7: #54595A;
+    --gray-8: #3B3E3F;
+    --gray-9: #222425;
+    --gray-10: #1c1917;
 
+    --light-toolbar: var(--gray-2);
+    --light-toolbar-: var(--gray-3);
+    --light-content: var(--gray-1);
+    --light-floating: var(--gray-0);
+
+    --dim-toolbar: var(--gray-9);
+    --dim-toolbar-: var(--gray-10);
+    --dim-content: var(--gray-8);
+    --dim-floating: var(--gray-7);
+
+    --brand-hue: 130;
+    --switch-hue: calc(var(--brand-hue) - 280);
+
+    --light-switchon: hsl(var(--switch-hue), 50%, 50%);
+    --light-switchoff: var(--gray-4);
+    --dim-switchon: hsl(var(--switch-hue), 50%, 50%);
+    --dim-switchoff: var(--gray-6);
+
+    --dim-brand1: hsl(var(--brand-hue), 50%, 60%);
+    --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
+    --dim-brand1copy: hsl(var(--brand-hue), 50%, 10%);
+    --light-brand1: hsl(var(--brand-hue), 50%, 40%);
+    --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
+    --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);
+
+    --light-button: var(--gray-5);
+    --light-button-bright: var(--gray-4);
+    --light-buttoncopy: var(--gray-7);
+
+    --dim-button: var(--gray-5);
+    --dim-button-bright: var(--gray-4);
+    --dim-buttoncopy: var(--gray-7);
+
+    --light-danger: var(--red-6);
+    --light-danger-bright: var(--red-5);
+    --light-dangercopy: var(--red-1);
+
+    --dim-danger: var(--red-7);
+    --dim-danger-bright: var(--red-6);
+    --dim-dangercopy: white;
+
+    /* ----------------------------- */
 
    /* brand */
 
-   --brand-hue: 390;
    --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
    --brand1-copy-light: white;
 
    --brand1-hover-light: var(--red-3);
    --brand2-light: hsl(var(--brand-hue), 39%, 30%);
 
-    --brand1-dim: var(--orange-4); /* background on cta or copy*/
+
+
     --brand1-copy-dim: var(--orange-9); /* when copy is placed on --brand1-dim */
     --brand1-hover-dim: var(--orange-3);
     --brand1-copy-light: white; /* when copy is placed on --brand1-light */
@@ -273,7 +314,7 @@ outline: 2px solid #a0a8;
        --surface7: var(--surface7-light);
        --surface8: var(--surface8-light);
        --surface9: var(--surface9-light);
-       
+
        --buttoncta0: var(--brand0-light);
        --buttoncta1: var(--brand1-light);
        --buttoncta2: var(--brand2-light);
@@ -298,6 +339,23 @@ outline: 2px solid #a0a8;
        --hva-er-nytt: var(--pink-6);
        --booking-oversikt: var(--teal-8);
        --logg-ut: var(--red-5);
+
+        --toolbar: var(--light-toolbar);
+        --toolbar-: var(--light-toolbar-);
+        --content: var(--light-content);
+        --floating: var(--light-floating);
+        --switchon: var(--light-switchon);
+        --switchoff: var(--light-switchoff);
+        --brand1: var(--light-brand1);
+        --brand1-bright: var(--light-brand1-bright);
+        --brand1copy: var(--light-brand1copy);
+        --button: var(--light-button);
+        --button-bright: var(--light-button-bright);
+        --buttoncopy: var(--light-buttoncopy);
+        --danger: var(--light-danger);
+        --danger-bright: var(--light-danger-bright);
+        --dangercopy: var(--light-dangercopy);
+
     }
 }
 
@@ -319,7 +377,7 @@ outline: 2px solid #a0a8;
     --font-weight-2: var(--font-weight-3);
     --font-weight-3: var(--font-weight-4);
 
-    --field1: var(--surface000-dim); /* focused field */  
+    --field1: var(--surface000-dim); /* focused field */
     --field2: var(--surface00-dim); /* unfocused/passive field */
 
 
@@ -355,7 +413,25 @@ outline: 2px solid #a0a8;
       --button0: var(--button0-dim);
       --button1: var(--button1-dim);
       --button2: var(--button2-dim);
-  }
+
+
+        --toolbar: var(--dim-toolbar);
+        --toolbar-: var(--dim-toolbar-);
+        --content: var(--dim-content);
+        --floating: var(--dim-floating);
+        --switchon: var(--dim-switchon);
+        --switchoff: var(--dim-switchoff);
+        --brand1: var(--dim-brand1);
+        --brand1-bright: var(--dim-brand1-bright);
+        --brand1copy: var(--dim-brand1copy);
+        --button: var(--dim-button);
+        --button-bright: var(--dim-button-bright);
+        --buttoncopy: var(--dim-buttoncopy);
+        --danger: var(--dim-danger);
+        --danger-bright: var(--dim-danger-bright);
+        --dangercopy: var(--dim-dangercopy);
+
+    }
 }
 
 .bg-unfocused-field {

@@ -430,8 +430,8 @@
   (let [st (schpaa.state/listen :top-toggle)
         toggle #(schpaa.state/toggle :top-toggle)]
     [sc/col {:class [:border-b :duration-200]
-             :style {:background   "var(--surface00)"
-                     :border-color "var(--surface0)"}}
+             :style {:background   "var(--toolbar)"
+                     :border-color "var(--toolbar-)"}}
      [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
       [sc/row-std
        (when-not @(rf/subscribe [:lab/in-search-mode?])
@@ -511,12 +511,12 @@
             ;region content
             (if frontpage
               [:div.h-full
-               {:style     {:background "var(--surface000)"}
+               {:style     {:background "var(--content)"}
                 :id        "inner-document"
                 :tab-index "0"}
                contents]
               [:div.overflow-y-auto.h-full.focus:outline-none.grow
-               {:style     {:background "var(--surface000)"}
+               {:style     {:background "var(--content)"}
                 :id        "inner-document"
                 :tab-index "0"}
                (if @(rf/subscribe [:lab/is-search-running?])
@@ -540,8 +540,8 @@
             (when @has-chrome?
               [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
                {:style {:box-shadow   "var(--inner-shadow-3)"
-                        :border-color "var(--surface0)"
-                        :background   "var(--surface00)"}}
+                        :border-color "var(--toolbar-)"
+                        :background   "var(--toolbar)"}}
                (into [:<>] (map horizontal-button
                                 (horizontal-toolbar (:uid @user-auth))))])]
            ;endregion
@@ -553,8 +553,8 @@
                         :padding-top  "var(--size-0)"
                         :box-shadow   (if @numberinput? "var(--shadow-5)"
                                                         "var(--inner-shadow-1)")
-                        :border-color "var(--surface0)"
-                        :background   "var(--surface00)"}}
+                        :border-color "var(--toolbar-)"
+                        :background   "var(--toolbar)"}}
                (into [:<>] (map #(if (nil? %)
                                    [:div.grow]
                                    [vertical-button %]) (vertical-toolbar-right (:uid @user-auth))))]
@@ -588,7 +588,7 @@
            [:div.mx-auto
             {:style {:width     "100%"
                      :max-width max-width}}
-            [hoc.panel/togglepanel pagename "kontrolpanel" panel]]])
+            [hoc.panel/togglepanel pagename "innstillinger" panel]]])
 
         (when always-panel
           [:div.mx-4

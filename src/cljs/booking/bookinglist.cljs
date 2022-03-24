@@ -18,7 +18,8 @@
                                       fetch-boatdata-for]]
             [schpaa.icon :as icon]
             [booking.ico :as ico]
-            [schpaa.style.input :as sci]))
+            [schpaa.style.input :as sci]
+            [arco.react]))
 
 (defn date-row [start end]
   (let [start (t/date-time start)

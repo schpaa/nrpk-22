@@ -63,39 +63,39 @@
     (if deleted (icon/small :rotate-left)
                 [:> outline/TrashIcon])]])
 
-(defn- toolbar []
-  (r/with-let [show-deleted (r/atom false)
-               sort-by-created (r/atom true)]
-    [:div.sticky.top-0.z-10
-     {:style {:padding-inline "var(--size-2)"
-              :color          :black
-              :background     "var(--surface0)"}}
-     [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
-      [scb2/normal-tight
-       {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
-       [sc/icon [:> outline/PlusIcon]]]
-      [:div.grow]
-      [scb2/normal-tight
-       [sc/icon [:> outline/FolderIcon]]]
-
-      [:div.relative
-       {:on-click #(swap! sort-by-created (fnil not true))}
-       [scb2/normal-tight
-        [sc/icon {:class (if @sort-by-created [:text-black] [:opacity-30])} [:> outline/SortAscendingIcon]]]
-       #_(if @sort-by-created
-           [:div.absolute.inset-0
-            [scb2/normal-tight-clear
-             [sc/icon-large [:> outline/XIcon]]]])]
-
-      [:div.relative
-       {:class    []
-        :on-click #(swap! show-deleted (fnil not true))}
-       [scb2/normal-tight
-        [sc/icon {:class (if @show-deleted [:text-black] [:opacity-30])} [:> outline/TrashIcon]]]
-       #_(if @show-deleted
-           [:div.absolute.inset-0
-            [scb2/normal-tight-clear
-             [sc/icon-large {:class [:text-white]} [:> outline/XIcon]]]])]]]))
+;(defn- toolbar []
+;  (r/with-let [show-deleted (r/atom false)
+;               sort-by-created (r/atom true)]
+;    [:div.sticky.top-0.z-10
+;     {:style {:padding-inline "var(--size-2)"
+;              :color          :black
+;              :background     "var(--surface0)"}}
+;     [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
+;      [scb2/normal-tight
+;       {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+;       [sc/icon [:> outline/PlusIcon]]]
+;      [:div.grow]
+;      [scb2/normal-tight
+;       [sc/icon [:> outline/FolderIcon]]]
+;
+;      [:div.relative
+;       {:on-click #(swap! sort-by-created (fnil not true))}
+;       [scb2/normal-tight
+;        [sc/icon {:class (if @sort-by-created [:text-black] [:opacity-30])} [:> outline/SortAscendingIcon]]]
+;       #_(if @sort-by-created
+;           [:div.absolute.inset-0
+;            [scb2/normal-tight-clear
+;             [sc/icon-large [:> outline/XIcon]]]])]
+;
+;      [:div.relative
+;       {:class    []
+;        :on-click #(swap! show-deleted (fnil not true))}
+;       [scb2/normal-tight
+;        [sc/icon {:class (if @show-deleted [:text-black] [:opacity-30])} [:> outline/TrashIcon]]]
+;       #_(if @show-deleted
+;           [:div.absolute.inset-0
+;            [scb2/normal-tight-clear
+;             [sc/icon-large {:class [:text-white]} [:> outline/XIcon]]]])]]]))
 
 (defn render [st data]
   (r/with-let [show-deleted (r/atom false)

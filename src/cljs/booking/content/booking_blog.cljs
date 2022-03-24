@@ -17,7 +17,8 @@
             [schpaa.style.button2 :as scb2]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
-            [schpaa.style.dialog]))
+            [schpaa.style.dialog]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (defn article-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
@@ -47,21 +48,6 @@
                  ;:action   #()
                  :disabled true
                  :value    #()}]]))
-
-(defn article-menu [k uid]
-  (let [main-visible (r/atom false)]
-    (fn [k uid]
-      (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
-        [scm/mainmenu-example-with-args
-         {:showing      @main-visible
-          :close-button #()
-          :dir          #{:up :left}
-          :data         (article-menu-definition (r/atom {:uid uid}))
-          :button       (fn [open]
-                          [scb2/outline-tight {:on-click toggle-mainmenu}
-                           [sc/row-gap
-                            [sc/icon [:> solid/MenuAlt1Icon]]
-                            "Rediger"]])}]))))
 
 (defn not-yet-seen' [last-visit-dt {:keys [date]}]
   (if last-visit-dt
@@ -158,11 +144,11 @@
           [:div.grid.gap-2
            {:style {:grid-template-columns "1fr min-content  min-content  min-content 1fr"}}
            [:div]
-           [scb2/normal-tight {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
+           [hoc.buttons/regular {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
            (if-not @visible?
-             [scb2/normal-tight {:on-click #(swap! visible? not)} "Les mer"]
+             [hoc.buttons/regular {:on-click #(swap! visible? not)} "Les mer"]
              [:div])
-           [scb2/normal-tight [sc/icon [:> outline/PencilIcon]]]
+           [hoc.buttons/regular [sc/icon [:> outline/PencilIcon]]]
            [:div]]]]]])))
 
 (defn initial-page [{:keys [data date-of-last-seen id uid pointer]}]
@@ -186,8 +172,8 @@
 
           [[sc/row {:class [:justify-center]}
             (if (< @pointer (count data))
-              [scb2/normal-small {:disabled (zero? (count data))
-                                  :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
+              [hoc.buttons/regular {:disabled (zero? (count data))
+                                    :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
               (when (pos? (count data))
                 [sc/subtext "Ingen flere innlegg"]))]])))
 

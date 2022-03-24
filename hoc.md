@@ -20,3 +20,24 @@ hoc.buttons/icon-with-caption
 
 sc/small1 -- secondary var(--text1)
 sc/small2 -- tertiary var(--text2)
+
+## colors and surfaces
+
+### backgrounds
+
+`--content` main content
+`--toolbar` the toolbars around content
+`--toolbar-` slightly darker to separate the adjacent content
+`--floating` controlpanels and floating stuff, relates to `--content`
+
+### colors
+
+**todo: <?> and <?>-bright have switched roles**
+
+`--button` hover state
+`--button-bright` normal state
+`--buttoncopy` copy means body of text, always used in tandem with `--button`
+`--danger`
+`--brand1` to avoid proliferation of colors, this is the call-to-action color
+`--brand1-bright`
+`--brand1copy`

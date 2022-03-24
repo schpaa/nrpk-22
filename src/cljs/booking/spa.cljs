@@ -34,7 +34,8 @@
             [booking.aktivitetsliste]
             [booking.yearwheel]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [booking.design-debug]))
+            [booking.design-debug]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 ;region related to flex-date and how to display relative time
 
@@ -121,7 +122,7 @@
   ([a b c]
    [sc/row'
     [sc/text1 {:class [:w-8 :shrink-0]} b]
-    [scb2/outline-tight "Rediger"]
+    [hoc.buttons/regular "Rediger"]
     [sc/subtext {:class [:line-clamp-3 :grow]} a]
     #_[sc/text1 c]]))
 
@@ -427,7 +428,7 @@
             [:<>
              ;[l/ppre-x receipts]
              [sc/row-center
-              [scb2/cta-large {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
+              [hoc.buttons/cta {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
              (when @data
                (into [:<>]
                      (for [[k {:keys [content date]}] @data]
@@ -503,8 +504,9 @@
                                schpaa.markdown/md->html
                                sc/markdown)]
                           [sc/row-end
-                           [scb2/cta-large
-                            {:type "button" :on-click open-dialog-signin}
+                           [hoc.buttons/cta
+                            {:type     "button"
+                             :on-click open-dialog-signin}
                             "Begynn her"]]])}]))
 
    :r.yearwheel

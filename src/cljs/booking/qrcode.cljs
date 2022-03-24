@@ -4,7 +4,8 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.button2 :as scb2]
             [schpaa.style.dialog]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (o/defstyled qr-code :div
   ;:space-y-4 :flex :justify-center :flex-col :items-center
@@ -44,4 +45,4 @@
                                :style {:user-select :all
                                        :white-space :nowrap}} url]))
                 [sc/row-ec
-                 [scb2/normal-regular {:on-click on-close} "Lukk"]]]]])}))
+                 [hoc.buttons/regular {:on-click on-close} "Lukk"]]]]])}))
