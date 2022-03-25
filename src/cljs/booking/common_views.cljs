@@ -393,72 +393,69 @@
               :style {:background   "var(--toolbar)"
                       :border-color "var(--toolbar-)"}}
       [:div
-       [sc/surface-d {:class [:m-4]}
-        (r/with-let [
-                     bookingx (rf/subscribe [:lab/booking])
-                     nokkelvakt (rf/subscribe [:lab/nokkelvakt])
-                     admin (rf/subscribe [:lab/admin])
-                     st (r/atom {:admin      admin
-                                 :nøkkelvakt nokkelvakt
-                                 :booking    bookingx})]
-          (let [registered (some #{(:role @user-state)} [:member])
-                status (:role @user-state)
-                f-icon (fn [action token content]
-                         [pill
-                          {:class    [:regular :pad-right (when (= token status) :outlined)]
-                           :on-click #(rf/dispatch action)}
-                          content])]
-            [:<>
-             ;[l/ppre-x @user-state bookingx]
-             [sc/row-sc-g2-w
-              [pill
-               {:class    [:regular :pad-right (when (= :none status) :outlined)]
-                :on-click #(rf/dispatch [:lab/set-sim-type :none])} [icon-with-caption ico/anonymous "anonym"]]
+       (when @(rf/subscribe [:lab/toggle-userstate-panel])
+         [sc/surface-d {:class [:m-4]}
+          (r/with-let [
+                       bookingx (rf/subscribe [:lab/booking])
+                       nokkelvakt (rf/subscribe [:lab/nokkelvakt])
+                       admin (rf/subscribe [:lab/admin])
+                       st (r/atom {:admin      admin
+                                   :nøkkelvakt nokkelvakt
+                                   :booking    bookingx})]
+            (let [registered (some #{(:role @user-state)} [:member])
+                  status (:role @user-state)
+                  f-icon (fn [action token content]
+                           [pill
+                            {:class    [:regular :pad-right (when (= token status) :outlined)]
+                             :on-click #(rf/dispatch action)}
+                            content])]
+              [:div.relative
+               [:div.absolute.top-1.right-1 (sc/icon-small {:on-click #(rf/dispatch [:lab/toggle-userstate-panel])} ico/closewindow)]
+               ;[l/ppre-x @user-state bookingx]
+               [sc/row-sc-g2-w
+                [pill
+                 {:class    [:regular :pad-right (when (= :none status) :outlined)]
+                  :on-click #(rf/dispatch [:lab/set-sim-type :none])} [icon-with-caption ico/anonymous "anonym"]]
 
-              [pill
-               {:disabled false
-                :class    [:regular :pad-right (when (= :registered status) :outlined)]
-                :on-click #(rf/dispatch [:lab/set-sim-type :registered])}
-               [icon-with-caption ico/user "registrert"]]
+                [pill
+                 {:disabled false
+                  :class    [:regular :pad-right (when (= :registered status) :outlined)]
+                  :on-click #(rf/dispatch [:lab/set-sim-type :registered])}
+                 [icon-with-caption ico/user "registrert"]]
 
-              (f-icon [:lab/set-sim-type :waitinglist] :waitinglist
-                      [icon-with-caption-and-badge ico/waitinglist "venteliste" 382])
+                (f-icon [:lab/set-sim-type :waitinglist] :waitinglist
+                        [icon-with-caption-and-badge ico/waitinglist "venteliste" (rand-int 382)])
 
-              [pill
-               {:class    [:regular :pad-right (when (= :waitinglist status) :outlined)]
-                :on-click #(rf/dispatch [:lab/set-sim-type :waitinglist])}
-               [icon-with-caption ico/waitinglist "venteliste"]]
+                [pill
+                 {:class    [:regular :pad-right (when (= :member status) :outlined)]
+                  :on-click #(rf/dispatch [:lab/set-sim-type :member])}
+                 [icon-with-caption ico/member "medlem"]]
+                #_[pill
+                   {:class    [:regular :pad-right (when (= :admin status) :outlined)]
+                    :on-click #(rf/dispatch [:lab/set-sim-type :admin])} [icon-with-caption ico/admin "admin"]]
+                [schpaa.style.hoc.toggles/small-switch-base
+                 {:disabled (not registered)}
+                 "admin"
+                 (r/cursor st [:admin])
+                 #(do
+                    (swap! st update-in [:admin] (constantly %))
+                    (rf/dispatch [:lab/set-sim :admin %]))]
 
-              [pill
-               {:class    [:regular :pad-right (when (= :member status) :outlined)]
-                :on-click #(rf/dispatch [:lab/set-sim-type :member])}
-               [icon-with-caption ico/member "medlem"]]
-              #_[pill
-                 {:class    [:regular :pad-right (when (= :admin status) :outlined)]
-                  :on-click #(rf/dispatch [:lab/set-sim-type :admin])} [icon-with-caption ico/admin "admin"]]
-              [schpaa.style.hoc.toggles/small-switch-base
-               {:disabled (not registered)}
-               "admin"
-               (r/cursor st [:admin])
-               #(do
-                  (swap! st update-in [:admin] (constantly %))
-                  (rf/dispatch [:lab/set-sim :admin %]))]
+                [schpaa.style.hoc.toggles/small-switch-base
+                 {:disabled (not registered)}
+                 "booking"
+                 (r/cursor st [:booking])
+                 #(do
+                    (swap! st update-in [:booking] (constantly %))
+                    (rf/dispatch [:lab/set-sim :booking %]))]
 
-              [schpaa.style.hoc.toggles/small-switch-base
-               {:disabled (not registered)}
-               "booking"
-               (r/cursor st [:booking])
-               #(do
-                  (swap! st update-in [:booking] (constantly %))
-                  (rf/dispatch [:lab/set-sim :booking %]))]
-
-              [schpaa.style.hoc.toggles/small-switch-base
-               {:disabled (not registered)}
-               "nøkkelvakt"
-               (r/cursor st [:nøkkelvakt])
-               #(do
-                  (swap! st update-in [:nøkkelvakt] (constantly %))
-                  (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))]
+                [schpaa.style.hoc.toggles/small-switch-base
+                 {:disabled (not registered)}
+                 "nøkkelvakt"
+                 (r/cursor st [:nøkkelvakt])
+                 #(do
+                    (swap! st update-in [:nøkkelvakt] (constantly %))
+                    (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))])
 
        [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
         [sc/row-std

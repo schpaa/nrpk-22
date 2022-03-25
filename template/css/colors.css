@@ -157,8 +157,8 @@ outline: 2px solid #a0a8;
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
     --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);
 
-    --light-button: var(--gray-2);
-    --light-button-bright: var(--gray-1);
+    --light-button: var(--gray-3);
+    --light-button-bright: var(--gray-2);
     --light-buttoncopy: var(--gray-7);
 
     --dim-button: var(--gray-6);

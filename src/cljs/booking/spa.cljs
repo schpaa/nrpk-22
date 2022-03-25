@@ -225,7 +225,7 @@
                                        :object-fit      :cover
                                        :object-position "center center"
                                        :width           "100%"
-                                       :height          (str "calc(100vh - " (if some-state "18rem" "9rem") ")")
+                                       :height          (str "calc(100vh - " (if some-state "4rem" "4rem") ")")
                                        :min-height      "20rem"}
 
                                :src   "/img/brygge.jpeg"}]
@@ -379,12 +379,12 @@
    :r.booking-blog
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
-       [page-boundary r
-        ;[:div.-debugx.select-none [booking.common-views/header-control-panel]]
-        {:whole [:div.p-4 [content.booking-blog/render
-                           {:fsm  {}
-                            :uid  (:uid @user-auth)
-                            :path ["booking-posts" "articles"]}]]}]))
+       [+page-builder r
+        {:always-panel content.booking-blog/always-panel
+         :render       (fn [] [content.booking-blog/render
+                               {:fsm  {}
+                                :uid  (:uid @user-auth)
+                                :path ["booking-posts" "articles"]}])}]))
 
    :r.booking-blog-doc
    (fn [r]
@@ -446,27 +446,27 @@
 
    :r.booking-blog-new
    (fn [r]
-     [page-boundary r
-      (r/with-let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})
-                   receipts' (db/on-value-reaction {:path ["booking-posts" "receipts"]})
-                   #_#_receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
-        (when @receipts'
-          (let [receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
-            [:<>
-             ;[l/ppre-x receipts]
-             [sc/row-center
-              [hoc.buttons/cta {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
-             (when @data
-               (into [:<>]
-                     (for [[k {:keys [content date]}] @data]
-                       [listitem
-                        content
-                        [:div (get receipts (name k))]
-                        [schpaa.time/flex-date
-                         {:time-class [:text-xs]}
-                         (t/date-time (t/instant date))
-                         (fn [current-time] (t/format "dd. MMMM 'kl' hh.mm.ss" (t/date-time current-time)))]])))
-             #_[l/ppre-x receipts']])))])
+     [+page-builder r
+      {:render (fn [] (r/with-let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})
+                                   receipts' (db/on-value-reaction {:path ["booking-posts" "receipts"]})
+                                   #_#_receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
+                        (when @receipts'
+                          (let [receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
+                            [:<>
+                             ;[l/ppre-x receipts]
+                             [sc/row-center
+                              [hoc.buttons/cta {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
+                             (when @data
+                               (into [:<>]
+                                     (for [[k {:keys [content date]}] @data]
+                                       [listitem
+                                        content
+                                        [:div (get receipts (name k))]
+                                        #_[schpaa.time/flex-date
+                                           {:time-class [:text-xs]}
+                                           (t/date-time (t/instant date))
+                                           (fn [current-time] (t/format "dd. MMMM 'kl' hh.mm.ss" (t/date-time current-time)))]])))
+                             #_[l/ppre-x receipts']]))))}])
    :r.calendar
    (fn [r]
      [+page-builder r
@@ -503,8 +503,10 @@
    :r.fileman-temporary
    (fn [r]
      (let [data (db/on-value-reaction {:path ["booking-posts" "articles"]})]
-       [page-boundary r
-        [booking.fileman/render (r/atom true) @data]]))
+       [+page-builder r
+        {:panel        booking.fileman/panel
+         :always-panel booking.fileman/always-panel
+         :render       (fn [] [booking.fileman/render (r/atom true) @data])}]))
 
    :r.aktivitetsliste
    (fn [r]

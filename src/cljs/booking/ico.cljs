@@ -20,3 +20,5 @@
 (def admin [:> solid/IdentificationIcon])
 (def booking [:> solid/ClockIcon])
 (def nokkelvakt [:> solid/KeyIcon])
+(def showdetails [:> outline/ChevronRightIcon])
+(def closewindow [:> outline/XIcon])

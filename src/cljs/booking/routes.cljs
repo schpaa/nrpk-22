@@ -4,10 +4,10 @@
   [["/" {:name :r.forsiden :header [:r.oversikt "Forsiden"]}]
    ["/oversikt" {:name :r.oversikt :header [:r.forsiden "Oversikt"]}]
    ["/wix" {:name :r.forsiden-iframe :header "NRPK (wix)"}]
-   ["/nytt" {:name :r.booking-blog :header "Hva er nytt?"}]
-   ["/nytt/:id" {:name    :r.booking-blog-doc
-                 :header  "Hva er nytt?"
-                 :path-fn (fn [r] (some-> r :path-params :id))}]
+   ["/nytt" {:name :r.booking-blog :header [:r.forside "Hva er nytt?"]}]
+   ["/nytt/:id" {:name     :r.booking-blog-doc
+                 :header   [:r.booking-blog "Eksempel"]
+                 :xpath-fn (fn [r] (some-> r :path-params :id))}]
    ["/nytt-innlegg" {:name :r.booking-blog-new :header "Nytt innlegg"}]
    ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
    ["/debug" {:name :r.debug :header [:r.booking "Booking av båt"]}]
@@ -21,7 +21,7 @@
 
    ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
-   ["/filer" {:name :r.fileman-temporary :header "Filer"}]
+   ["/filer" {:name :r.fileman-temporary :header [:r.booking-blog "Filer"]}]
    ["/kalender" {:name :r.calendar :header "Kalender"}]
    ["/aktivitetsliste" {:name :r.aktivitetsliste :header [:r.oversikt "Aktivitetsliste"]}]
 

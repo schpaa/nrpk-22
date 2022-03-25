@@ -12,7 +12,8 @@
             [schpaa.icon :as icon]
             [booking.boatinput]
             [schpaa.debug :as l]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [booking.ico :as ico]))
 
 
 (defn address-me-as [user]
@@ -48,16 +49,16 @@
                  :action     #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
                  :disabled   false
                  :value      #()}]
-     [:hr]
-     [:menuitem {:filledicon [:div {:class [:-m-1]
-                                    :style {:padding          "var(--size-1)"
-                                            :border-radius    "var(--radius-round)"
-                                            :background-color "var(--brand1)"
-                                            :color            :white}} (sc/icon [:> outline/CalculatorIcon])]
-                 :label      "Utlån"
-                 :color      "var(--brand1)"
-                 :shortcut   "cmd-l"
-                 :action     #(rf/dispatch [:lab/open-number-input])}]
+     #_[:hr]
+     #_[:menuitem {:filledicon [:div {:class [:-m-1]
+                                      :style {:padding          "var(--size-1)"
+                                              :border-radius    "var(--radius-round)"
+                                              :background-color "var(--brand1)"
+                                              :color            :white}} (sc/icon [:> outline/CalculatorIcon])]
+                   :label      "Utlån"
+                   :color      "var(--brand1)"
+                   :shortcut   "cmd-l"
+                   :action     #(rf/dispatch [:lab/open-number-input])}]
      #_[:menuitem {:filledicon (sc/icon [:> solid/TicketIcon])
                    :label      "Ny booking"
                    :color      "var(--new-booking)"
@@ -65,14 +66,14 @@
                    :action     #(rf/dispatch [:app/navigate-to [:r.debug]])
                    :disabled   false
                    :value      #()}]
-     [:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
-                 :label      "Båtoversikt"
-                 :shortcut   "cmd-b"
-                 :color      "var(--booking-oversikt)"
-                 :highlight  (= :r.booking.oversikt current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-                 :disabled   false
-                 :value      #()}]
+     #_[:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
+                   :label      "Båtoversikt"
+                   :shortcut   "cmd-b"
+                   :color      "var(--booking-oversikt)"
+                   :highlight  (= :r.booking.oversikt current-page)
+                   :action     #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
+                   :disabled   false
+                   :value      #()}]
 
 
      #_[:menuitem {:filledicon (sc/icon [:> solid/MapIcon])
@@ -82,13 +83,13 @@
                    :disabled   true
                    :value      #()}]
 
-     [:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
-                 :label      "Retningslinjer"
-                 :color      "var(--blue-4)"
-                 :highlight  (= :r.booking.retningslinjer current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
-                 :disabled   false
-                 :value      #()}]
+     #_[:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
+                   :label      "Retningslinjer"
+                   :color      "var(--blue-4)"
+                   :highlight  (= :r.booking.retningslinjer current-page)
+                   :action     #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
+                   :disabled   false
+                   :value      #()}]
      [:hr]
      [:menuitem {:icon      (sc/icon [:> outline/UserCircleIcon])
                  :label     "Mine opplysninger"
@@ -97,6 +98,7 @@
                  :action    #(rf/dispatch [:app/navigate-to [:r.user]])
                  :disabled  false
                  :value     #()}]
+     [:hr]
      [:menuitem {:icon     (sc/icon [:> outline/CollectionIcon])
                  :label    "Kommandoer"
                  :color    "var(--brand1)"
@@ -106,6 +108,13 @@
                  :icon     (sc/icon [:> outline/CogIcon])
                  :shortcut "cmd-;"
                  :action   #(rf/dispatch [:app/toggle-config])}]
+
+     [:hr]
+     [:menuitem {:label  [sc/text1 "Toggle userstate-panel"]
+                 :icon   (sc/icon ico/eye)
+                 ;:shortcut "cmd-;"
+                 :action #(rf/dispatch [:lab/toggle-userstate-panel])}]
+
      [:menuitem {:label    "Logg ut"
                  :disabled true
                  :icon     (sc/icon [:> outline/LogoutIcon])

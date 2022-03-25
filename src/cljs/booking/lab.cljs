@@ -290,7 +290,7 @@
 (rf/reg-event-fx :lab/new-blog-entry
                  (fn [_ _]
                    (tap> :lab/new-blog-entry)
-                   {:fx [[:dispatch [:app/navigate-to [:r.booking-blog-new]]]
+                   {:fx [[:dispatch [:app/navigate-to [:r.fileman-temporary]]]
                          [:lab/open-new-blog-entry-dialog nil]]}))
 
 (rf/reg-sub :lab/has-chrome (fn [db]
@@ -367,3 +367,6 @@
 (comment
   (let [status #{:bookings}]
     (some status [:booking])))
+
+(rf/reg-sub :lab/toggle-userstate-panel :-> :lab/toggle-userstate-panel)
+(rf/reg-event-db :lab/toggle-userstate-panel (fn [db _] (update db :lab/toggle-userstate-panel (fnil not false))))

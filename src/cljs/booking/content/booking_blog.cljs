@@ -120,36 +120,39 @@
   (let [visible? (r/atom false)]
     (fn [{:keys [title content item-id uid' kv date-of-last-seen id-of-last-seen date uid] :as m}]
       [:div
-       [sc/title1 title]
-       [sc/surface-d {:style {:xpadding      "1rem"
-                              :border-radius "var(--radius-1)"
-                              :background    "var(--surface000)"
-                              :xbox-shadow   "var(--inner-shadow-2)"}}
-        [:div.relative.space-y-s4.overflow-hidden
-         (when-not @visible?
-           {:style {:max-height "25rem"}})
-         ;intent bottom fadeout
-         [:div.absolute.bottom-0.inset-x-0.pointer-events-none
-          (when-not @visible?
-            {:class [:bg-gradient-to-t :from-current]
-             :style {:height            "50%"
-                     :color             "var(--surface000)"
-                     :abackground-image "linear-gradient(transparent,var(--surface00))"}})]
+       [sc/text1 title]
+       [sc/text2 date]
+       [sc/small2 item-id]
 
-         [:div
-          (if @visible?
-            [:div (-> content schpaa.markdown/md->html sc/markdown)]
-            [:div (-> content (subs 0 256) (str "...") schpaa.markdown/md->html sc/markdown)])]
-         [:div.absolute.bottom-0.inset-x-0
-          [:div.grid.gap-2
-           {:style {:grid-template-columns "1fr min-content  min-content  min-content 1fr"}}
-           [:div]
-           [hoc.buttons/regular {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
-           (if-not @visible?
-             [hoc.buttons/regular {:on-click #(swap! visible? not)} "Les mer"]
-             [:div])
-           [hoc.buttons/regular [sc/icon [:> outline/PencilIcon]]]
-           [:div]]]]]])))
+       #_[:div                                              ;sc/surface-a
+          #_{:style {:xpadding      "1rem"
+                     :border-radius "var(--radius-1)"
+                     :background    "var(--content)"
+                     :xbox-shadow   "var(--inner-shadow-2)"}}
+          [:div.relative.space-y-s4.overflow-hidden
+           (when-not @visible?
+             {:style {:max-height "25rem"}})
+           ;intent bottom fadeout
+           [:div.absolute.bottom-0.inset-x-0.pointer-events-none
+            (when-not @visible?
+              {:class [:bg-gradient-to-t :from-current]
+               :style {:height            "50%"
+                       :color             "var(--surface000)"
+                       :abackground-image "linear-gradient(transparent,var(--surface00))"}})]
+           [:div
+            (if @visible?
+              [:div (-> content schpaa.markdown/md->html sc/markdown)]
+              [:div (-> content (subs 0 256) (str "...") schpaa.markdown/md->html sc/markdown)])]
+           #_[:div.absolute.bottom-0.inset-x-0
+              [:div.grid.gap-2
+               {:style {:grid-template-columns "1fr min-content  min-content  min-content 1fr"}}
+               [:div]
+               [hoc.buttons/regular {:on-click #(rf/dispatch [:app/navigate-to [:r.booking-blog-doc {:id item-id}]])} [sc/icon [:> outline/DocumentDuplicateIcon]]]
+               (if-not @visible?
+                 [hoc.buttons/regular {:on-click #(swap! visible? not)} "Les mer"]
+                 [:div])
+               [hoc.buttons/regular [sc/icon [:> outline/PencilIcon]]]
+               [:div]]]]]])))
 
 (defn initial-page [{:keys [data date-of-last-seen id uid pointer]}]
   (into [:div.space-y-20]
@@ -176,7 +179,6 @@
                                     :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
               (when (pos? (count data))
                 [sc/subtext "Ingen flere innlegg"]))]])))
-
 
 (def fsm
   {:initial :s.startup
@@ -218,7 +220,6 @@ Her kommer litt brødtekst i et nytt avsnitt, en lenke til [forsiden](/) og noen
 Helt til slutt, en kinaputt"
                 "some content for the new stuff"))))
 
-
 (defn generate [uid]
   (db/database-push {:path  ["booking-posts" "receipts" uid "articles"]
                      :value {:date (str (t/now)) :id "A"}})
@@ -249,7 +250,6 @@ Helt til slutt, en kinaputt"
                        :color    "var(--red-4)"
                        :action   #()
                        :disabled true}]]))
-
 
 (defn bottom-menu [uid]
   (r/with-let [main-visible (r/atom false)]
@@ -304,12 +304,12 @@ Helt til slutt, en kinaputt"
 
             (rs/match-state *fsm-rapport
               [:s.startup]
-              [initial-page {:data              (filter (fn [[k v]] (:visible v)) @(db/on-value-reaction {:path path}))
-
-                             :uid               uid
-                             :id                id
-                             :pointer           pointer
-                             :date-of-last-seen date-of-last-seen}]
+              [initial-page
+               {:data              (filter (fn [[k v]] (:visible v)) @(db/on-value-reaction {:path path}))
+                :uid               uid
+                :id                id
+                :pointer           pointer
+                :date-of-last-seen date-of-last-seen}]
 
               [:s.empty]
               [sc/col
@@ -329,3 +329,8 @@ Helt til slutt, en kinaputt"
              [sc/row-end {:class [:pt-4]}
               (bottom-menu uid)]]]))})))
 
+(defn always-panel []
+  [sc/row-sc-g2-w
+   [schpaa.style.hoc.buttons/pill {:class [:cta :narrow]} "fsm"]
+   [schpaa.style.hoc.buttons/pill {:class    [:regular :narrow]
+                                   :on-click #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])} "liste over innlegg"]])

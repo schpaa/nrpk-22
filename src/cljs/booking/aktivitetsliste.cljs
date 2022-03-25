@@ -417,18 +417,8 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   #_[hoc.toggles/button-reg
-      #(rf/dispatch [:lab/qr-code-for-current-page])
-      (sc/row-sc-g2 (sc/icon-small ico/qrcode) "QR-kode")]
-   #_[hoc.toggles/button-cta
-      #()
-      (sc/row-sc-g2 (sc/icon-small ico/plus) "Utlån")]
-   [hoc.toggles/button-cta
-    #()
-    (sc/row-sc-g2 (sc/icon-small ico/plus) "Skade på materiell")]
-   [hoc.toggles/button-cta
-    #()
-    (sc/row-sc-g2 (sc/icon-small ico/plus) "HMS-hendelse")]])
+   [schpaa.style.hoc.buttons/cta-pill-icon {} ico/plus "HMS-hendelse"]
+   [schpaa.style.hoc.buttons/reg-pill-icon {} ico/plus "Skade på materiell"]])
 
 (defn panel []
   (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)

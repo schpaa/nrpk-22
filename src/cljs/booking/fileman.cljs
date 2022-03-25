@@ -11,35 +11,39 @@
             [db.core :as db]
             [schpaa.debug :as l]
             [schpaa.icon :as icon]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [booking.ico :as ico]))
 
 (o/defstyled listitem :div
   [:&
    :flex :items-center
+   {:padding-block "var(--size-1)"}
    [:.selected :w-full
     {;:padding-block  "var(--size-1)"
      :padding-inline "var(--size-2)"
      :border-radius  "var(--radius-2)"
      :color          [:rgba 0 0 0 1]
-     :background     [:rgba 0 0 0 0.09]}]
+     :xbackground    [:rgba 0 0 0 0.09]}]
    [:.normal :w-full
     {;:padding-block  "var(--size-1)"
      :padding-inline "var(--size-2)"
-     :color          [:rgba 0 0 0 0.5]}]
-   [:&:hover {:background [:rgba 0 0 0 0.1]}]]
+     :color          "var(--buttoncopy)" #_[:rgba 0 0 0 0.5]}]
+   [:&:hover {:border-radius "var(--radius-1)"
+              :background    [:rgba 0 0 0 0.1]}]]
   ([a c]
    ;^{:class [:selected]}
    [:div a c]))
 
 (defn visible [k v]
   [scb/round-normal-listitem
-   {:style    {:background (when (:visible v) "var(--brand1)")}
+   {:style    {:background (when (:visible v) "var(--floating)")}
     :on-click #(db/database-update
                  {:path  ["booking-posts" "articles" (name k)]
                   :value {:visible (not (:visible v))}})}
    [sc/icon-small
     {:style {
-             :color (if (:visible v) "var(--brand1)" "var(--surface1)")}}
+             :color (if (:visible v) "var(--brand1)" "var(--button)")}}
     [:> outline/EyeIcon]]])
 
 (defn locked [k v]
@@ -48,7 +52,7 @@
                  {:path  ["booking-posts" "articles" (name k)]
                   :value {:lock (not (:lock v))}})}
    [sc/icon-small
-    {:style {:color (if (:lock v) "var(--brand1)" "var(--surface1)")}}
+    {:style {:color (if (:lock v) "var(--danger)" "var(--button)")}}
     [:> (if (:lock v) outline/LockClosedIcon outline/LockOpenIcon)]]])
 
 (defn trashcan [k {:keys [deleted] :as v}]
@@ -59,58 +63,60 @@
                  {:path  ["booking-posts" "articles" (name k)]
                   :value {:deleted (not deleted)}})}
    [sc/icon-small
-    {:style {:color "var(--surface5)"}}
-    (if deleted (icon/small :rotate-left)
+    {:style {:color "var(--buttoncopy)"}}
+    (if deleted (icon/adapt :rotate-left 1.5)
                 [:> outline/TrashIcon])]])
 
-;(defn- toolbar []
-;  (r/with-let [show-deleted (r/atom false)
-;               sort-by-created (r/atom true)]
-;    [:div.sticky.top-0.z-10
-;     {:style {:padding-inline "var(--size-2)"
-;              :color          :black
-;              :background     "var(--surface0)"}}
-;     [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
-;      [scb2/normal-tight
-;       {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
-;       [sc/icon [:> outline/PlusIcon]]]
-;      [:div.grow]
-;      [scb2/normal-tight
-;       [sc/icon [:> outline/FolderIcon]]]
-;
-;      [:div.relative
-;       {:on-click #(swap! sort-by-created (fnil not true))}
-;       [scb2/normal-tight
-;        [sc/icon {:class (if @sort-by-created [:text-black] [:opacity-30])} [:> outline/SortAscendingIcon]]]
-;       #_(if @sort-by-created
-;           [:div.absolute.inset-0
-;            [scb2/normal-tight-clear
-;             [sc/icon-large [:> outline/XIcon]]]])]
-;
-;      [:div.relative
-;       {:class    []
-;        :on-click #(swap! show-deleted (fnil not true))}
-;       [scb2/normal-tight
-;        [sc/icon {:class (if @show-deleted [:text-black] [:opacity-30])} [:> outline/TrashIcon]]]
-;       #_(if @show-deleted
-;           [:div.absolute.inset-0
-;            [scb2/normal-tight-clear
-;             [sc/icon-large {:class [:text-white]} [:> outline/XIcon]]]])]]]))
+#_(defn- toolbar []
+    (r/with-let [show-deleted (r/atom false)
+                 sort-by-created (r/atom true)]
+      [:div.sticky.top-0.z-10
+       {:style {:padding-inline "var(--size-2)"
+                :color          :black
+                :background     "var(--surface0)"}}
+       [:div {:class [:h-12 :p-2 :flex :items-stretch :items-center :gap-2]}
+        [scb2/normal-tight
+         {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+         [sc/icon [:> outline/PlusIcon]]]
+        [:div.grow]
+        [scb2/normal-tight
+         [sc/icon [:> outline/FolderIcon]]]
+
+        [:div.relative
+         {:on-click #(swap! sort-by-created (fnil not true))}
+         [scb2/normal-tight
+          [sc/icon {:class (if @sort-by-created [:text-black] [:opacity-30])} [:> outline/SortAscendingIcon]]]
+         #_(if @sort-by-created
+             [:div.absolute.inset-0
+              [scb2/normal-tight-clear
+               [sc/icon-large [:> outline/XIcon]]]])]
+
+        [:div.relative
+         {:class    []
+          :on-click #(swap! show-deleted (fnil not true))}
+         [scb2/normal-tight
+          [sc/icon {:class (if @show-deleted [:text-black] [:opacity-30])} [:> outline/TrashIcon]]]
+         #_(if @show-deleted
+             [:div.absolute.inset-0
+              [scb2/normal-tight-clear
+               [sc/icon-large {:class [:text-white]} [:> outline/XIcon]]]])]]]))
+
+(def page-state (r/atom {:show-deleted true}))
 
 (defn render [st data]
-  (r/with-let [show-deleted (r/atom false)
+  (r/with-let [show-deleted (schpaa.state/listen :filemanager/show-deleted)
                sort-by-created (r/atom true)]
     [:div {:class (into [:duration-200] (if @st [:h-64 :opacity-100]
                                                 [:h-0 :opacity-0]))}
      [:div {:style {:border-radius "var(--radius-0)"
-                    :background    "var(--surface000)"}}
+                    :sbackground   "var(--surface000)"}}
       #_[toolbar]
 
       [:div {:class [:relative]
              :style {:xbackground "var(--surface00)"
                      :xbox-shadow "var(--inner-shadow-0)"}}
 
-       [:div.px-2x {:class [:overflow-y-auto :-snap-y :xh-52]}
+       [:div.px-2x {:class [:xoverflow-y-auto :-snap-y :xh-52]}
         (r/with-let [time (ta/short-date-format (t/now))
                      date (ta/time-format (t/now))
                      st (r/atom nil)
@@ -123,19 +129,19 @@
            ;[l/ppre-x (map (comp (if @sort-by-created :created :date) val) (sort-by (comp (if @sort-by-created :created :date) val) > data))]
            (into [:div.snap-center.select-none]
                  (for [[e [k {:keys [created deleted content title date] :as v :or {title (str "untitled-" e)}}]]
-                       (map-indexed vector (filter (fn [[k v]] (if @show-deleted (not (:deleted v false)) true))
+                       (map-indexed vector (filter (fn [[k v]] (if @show-deleted true (not (:deleted v false))))
                                                    (sort-by (comp (if @sort-by-created :created :date) val) > data)))]
 
                    ^{:key (str e)}
                    [:div
                     [listitem
-                     {:class (into [:h-10 :snap-start] (if (= e @st) [:selected] [:normal]))}
-                     [sc/row'' {:class (into [:items-center :gap-2]
-                                             (if deleted [:line-through :xopacity-50]))}
+                     {:class (into [] (if (= e @st) [:selected] [:normal]))}
+                     [sc/row-sc-g2 {:style {:opacity         (if deleted 0.3 1)
+                                            :text-decoration (if deleted :line-through)}}
 
-                      [scb/round-normal-listitem
-                       {:on-click #(set-toggle-fn k)}
-                       [sc/icon-small {:class (into [:duration-200] (if @(get-toggle-fn k) [:rotate-90]))} [:> outline/ChevronRightIcon]]]
+                      #_[scb/round-normal-listitem
+                         {:on-click #(set-toggle-fn k)}
+                         [sc/icon-small {:class (into [:duration-200] (if @(get-toggle-fn k) [:rotate-90]))} ico/showdetails]]
 
                       (r/with-let [value (r/atom title)
                                    set-fn (fn [k v] (db/database-update
@@ -160,21 +166,23 @@
                                                      (do #_(swap! light assoc-in [e :text] (str "uten-tittel-" e)))
                                                      (do (set-fn k @value) (reset! focus-field-id nil)))
                                                    (reset! act nil))
-                                   :style       {:background "white" #_"var(--surface000)"}
+                                   :style       {:background    "white" #_"var(--surface000)"
+                                                 :padding-block "var(--size-1)"
+                                                 :height        "100%"}
                                    :class       [:px-1 :cursor-text :focus:outline-none :h-full :w-full]}]
-                          [sc/text-clear {:on-click #(do
-                                                       (reset! focus-field-id e)
-                                                       (reset! value title)
-                                                       (when @act
-                                                         (do
-                                                           (tap> "Attempt focus")
-                                                           (.focus @act)))
-                                                       #_(.stopPropagation %))
-                                          :class    [:px-1 :cursor-pointer :truncate :w-full (if deleted :line-through)]}
+                          [sc/text1 {:on-click #(do
+                                                  (reset! focus-field-id e)
+                                                  (reset! value title)
+                                                  (when @act
+                                                    (do
+                                                      (tap> "Attempt focus")
+                                                      (.focus @act)))
+                                                  #_(.stopPropagation %))
+                                     :class    [:px-1 :cursor-pointer :truncate :w-full (if deleted :line-through)]}
                            title]))
 
-                      [scb/static-listitem
-                       [sc/icon-small [:> (if (empty? (:description v)) outline/DocumentIcon outline/DocumentTextIcon)]]]
+                      #_[scb/static-listitem
+                         [sc/icon-small [:> (if (empty? (:description v)) outline/DocumentIcon outline/DocumentTextIcon)]]]
 
                       (let [source (if @sort-by-created date created)
                             date (or (some-> source (t/instant) (t/date) (ta/tech-date-format)))
@@ -185,7 +193,7 @@
                       ;[:div.grow]
 
                       (visible k v)
-                      ;(locked k v)
+                      (locked k v)
                       (trashcan k v)]]
 
                     [:div
@@ -243,3 +251,18 @@
      [sc/icon-small
       {:style {:color (if (get-in @light [e :lock]) "var(--red-8)" "var(--surface1)")}}
       [:> (if (get-in @light [e :lock]) outline/LockClosedIcon outline/LockOpenIcon)]]]))
+
+(defn panel []
+  (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
+               show-content (schpaa.state/listen :activitylist/show-content)]
+    [sc/row-sc-g2-w
+     ;[hoc.toggles/switch :activitylist/show-editing "Rediger"]
+     [hoc.toggles/switch :filemanager/show-deleted "Vis slettede"]
+     [hoc.toggles/switch :activitylist/left-aligned "Bruk hele skjermbredden"]
+     [hoc.toggles/switch :activitylist/limit-timeline "Bare vis mine innlegg"]
+     [hoc.toggles/switch :activitylist/limit-active "Skjult historie"]]))
+
+(defn always-panel []
+  [sc/row-sc-g2-w
+   [schpaa.style.hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} ico/plus "Nytt innlegg"]
+   [schpaa.style.hoc.buttons/pill {:class [:regular :narrow]} "Annet?"]])
