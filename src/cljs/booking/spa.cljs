@@ -207,27 +207,32 @@
                           {:style {:margin-left "-2px"}
                            :href  (kee-frame.core/path-for [a])}
                           b])
-           md #(sc/markdown (schpaa.markdown/md->html %))]
+           md #(sc/markdown (schpaa.markdown/md->html %))
+           user-state (rf/subscribe [:lab/user-state])
+           some-state (some #{(:role @user-state)} [:member :waitinglist :registered])]
        [+page-builder r
         {:frontpage true
          :panel     (fn [] [:div "panel"])
          :render    (fn []
                       [:div.overflow-y-auto.h-full.relative
-                       {:style {:background "var(--surface1)"}}
+                       {:style {:background "var(--content)"}}
 
-                       [:div.sticky.top-0.z-100 [booking.common-views/header-line r]]
-                       [:div.relative.w-full
+                       [:div.sticky.top-0.z-10 [booking.common-views/header-line r]]
+
+                       [:div.relative.w-full.z-0
 
                         [:img {:style {:filter          "contrast(0.275)"
                                        :object-fit      :cover
                                        :object-position "center center"
                                        :width           "100%"
-                                       :height          "calc(100vh - 10rem)"
-                                       :min-height      "20rem"
-                                       :xaaspect-ratio  "1/1"}
+                                       :height          (str "calc(100vh - " (if some-state "18rem" "9rem") ")")
+                                       :min-height      "20rem"}
+
                                :src   "/img/brygge.jpeg"}]
+                        ;logo
                         [:div
                          {:style {:position      :absolute
+
                                   :display       :grid
                                   :place-content :center
                                   :top           "0"
@@ -243,6 +248,7 @@
                          [sc/hero {:style {:color          "white"
                                            :font-size      "var(--font-size-fluid-2)"
                                            :letter-spacing "0"}} "Velkommen til NRPK"]]
+
                         [:div.absolute.left-4.top-2.w-auto
                          {:style {:background     "var(--surface00)"
                                   :border-radius  "var(--radius-1)"
@@ -295,6 +301,22 @@
                   (let [data [[:r.xxx "Båtlisten på Nøklevann"]
                               [:r.forsiden "Utlånsaktivitet"]]]
                     (map f (sort-by second data)))]]]
+               [sc/col-space-1
+                [md "# Bli medlem\n ## Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]
+
+                [sc/row-sc-g2-w
+                 (let [data [[:r.forsiden "Registrer deg her"]]]
+                   (map f (sort-by second data)))]]
+
+               [sc/col-space-1
+                [md "# Livredningskurs\n## NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."]
+                [sc/row-sc-g2-w
+                 (let [data [[:r.forsiden "Meld deg på innmeldingskurs"]
+                             [:r.forsiden "Mer om livredningskurs"]]]
+
+
+
+                   (map f (sort-by second data)))]]
                [sc/col-space-1
                 (md "# Sjøbasen\n## NRPK’s sjøbase er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her.")
                 [sc/row-sc-g2-w

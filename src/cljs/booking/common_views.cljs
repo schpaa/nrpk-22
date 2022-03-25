@@ -25,7 +25,7 @@
             [booking.routes]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [booking.ico :as ico]
-            [schpaa.style.hoc.buttons :as buttons :refer [pill icon-with-caption]]
+            [schpaa.style.hoc.buttons :as buttons :refer [pill icon-with-caption icon-with-caption-and-badge]]
             [schpaa.debug :as l]))
 
 (defn set-focus [el a]
@@ -388,97 +388,113 @@
 
 (defn header-line [r]
   [err-boundary
-   [sc/col {:class [:border-b :duration-200]
-            :style {:background   "var(--toolbar)"
-                    :border-color "var(--toolbar-)"}}
-    [:div
-     [:div {:class [:m-4]}
-      (r/with-let [user-state (rf/subscribe [:lab/user-state])
-                   bookingx (rf/subscribe [:lab/booking])
-                   nokkelvakt (rf/subscribe [:lab/nokkelvakt])
-                   admin (rf/subscribe [:lab/admin])
-                   st (r/atom {:admin      admin
-                               :nøkkelvakt nokkelvakt
-                               :booking    bookingx})]
-        (let [registered (some #{(:role @user-state)} [:member])
-              status (:role @user-state)]
-          [:<>
-           ;[l/ppre-x @user-state bookingx]
-           [sc/row-sc-g2-w
-            [pill
-             {:class    [:regular :pad-right (when (= :none status) :outlined)]
-              :on-click #(rf/dispatch [:lab/set-sim-type :none])} [icon-with-caption ico/anonymous "anonym"]]
-            [pill
-             {:disabled false
-              :class    [:regular :pad-right (when (= :registered status) :outlined)]
-              :on-click #(rf/dispatch [:lab/set-sim-type :registered])}
-             [icon-with-caption ico/user "registrert"]]
-            [pill
-             {:class    [:regular :pad-right (when (= :waitinglist status) :outlined)]
-              :on-click #(rf/dispatch [:lab/set-sim-type :waitinglist])} [icon-with-caption ico/waitinglist "venteliste"]]
-            [pill
-             {:class    [:regular :pad-right (when (= :member status) :outlined)]
-              :on-click #(rf/dispatch [:lab/set-sim-type :member])}
-             [icon-with-caption ico/member "medlem"]]
-            #_[pill
-               {:class    [:regular :pad-right (when (= :admin status) :outlined)]
-                :on-click #(rf/dispatch [:lab/set-sim-type :admin])} [icon-with-caption ico/admin "admin"]]
-            [schpaa.style.hoc.toggles/small-switch-base
-             {:disabled (not registered)}
-             "admin"
-             (r/cursor st [:admin])
-             #(do
-                (swap! st update-in [:admin] (constantly %))
-                (rf/dispatch [:lab/set-sim :admin %]))]
+   (let [user-state (rf/subscribe [:lab/user-state])]
+     [sc/col {:class [:border-b :duration-200]
+              :style {:background   "var(--toolbar)"
+                      :border-color "var(--toolbar-)"}}
+      [:div
+       [sc/surface-d {:class [:m-4]}
+        (r/with-let [
+                     bookingx (rf/subscribe [:lab/booking])
+                     nokkelvakt (rf/subscribe [:lab/nokkelvakt])
+                     admin (rf/subscribe [:lab/admin])
+                     st (r/atom {:admin      admin
+                                 :nøkkelvakt nokkelvakt
+                                 :booking    bookingx})]
+          (let [registered (some #{(:role @user-state)} [:member])
+                status (:role @user-state)
+                f-icon (fn [action token content]
+                         [pill
+                          {:class    [:regular :pad-right (when (= token status) :outlined)]
+                           :on-click #(rf/dispatch action)}
+                          content])]
+            [:<>
+             ;[l/ppre-x @user-state bookingx]
+             [sc/row-sc-g2-w
+              [pill
+               {:class    [:regular :pad-right (when (= :none status) :outlined)]
+                :on-click #(rf/dispatch [:lab/set-sim-type :none])} [icon-with-caption ico/anonymous "anonym"]]
 
-            [schpaa.style.hoc.toggles/small-switch-base
-             {:disabled (not registered)}
-             "booking"
-             (r/cursor st [:booking])
-             #(do
-                (swap! st update-in [:booking] (constantly %))
-                (rf/dispatch [:lab/set-sim :booking %]))]
+              [pill
+               {:disabled false
+                :class    [:regular :pad-right (when (= :registered status) :outlined)]
+                :on-click #(rf/dispatch [:lab/set-sim-type :registered])}
+               [icon-with-caption ico/user "registrert"]]
 
-            [schpaa.style.hoc.toggles/small-switch-base
-             {:disabled (not registered)}
-             "nøkkelvakt"
-             (r/cursor st [:nøkkelvakt])
-             #(do
-                (swap! st update-in [:nøkkelvakt] (constantly %))
-                (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))]
+              (f-icon [:lab/set-sim-type :waitinglist] :waitinglist
+                      [icon-with-caption-and-badge ico/waitinglist "venteliste" 382])
 
-     [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
-      [sc/row-std
-       (when-not @(rf/subscribe [:lab/in-search-mode?])
-         (let [titles (compute-page-titles r)]
-           [:<>
-            [:div.hidden.sm:block.grow
+              [pill
+               {:class    [:regular :pad-right (when (= :waitinglist status) :outlined)]
+                :on-click #(rf/dispatch [:lab/set-sim-type :waitinglist])}
+               [icon-with-caption ico/waitinglist "venteliste"]]
+
+              [pill
+               {:class    [:regular :pad-right (when (= :member status) :outlined)]
+                :on-click #(rf/dispatch [:lab/set-sim-type :member])}
+               [icon-with-caption ico/member "medlem"]]
+              #_[pill
+                 {:class    [:regular :pad-right (when (= :admin status) :outlined)]
+                  :on-click #(rf/dispatch [:lab/set-sim-type :admin])} [icon-with-caption ico/admin "admin"]]
+              [schpaa.style.hoc.toggles/small-switch-base
+               {:disabled (not registered)}
+               "admin"
+               (r/cursor st [:admin])
+               #(do
+                  (swap! st update-in [:admin] (constantly %))
+                  (rf/dispatch [:lab/set-sim :admin %]))]
+
+              [schpaa.style.hoc.toggles/small-switch-base
+               {:disabled (not registered)}
+               "booking"
+               (r/cursor st [:booking])
+               #(do
+                  (swap! st update-in [:booking] (constantly %))
+                  (rf/dispatch [:lab/set-sim :booking %]))]
+
+              [schpaa.style.hoc.toggles/small-switch-base
+               {:disabled (not registered)}
+               "nøkkelvakt"
+               (r/cursor st [:nøkkelvakt])
+               #(do
+                  (swap! st update-in [:nøkkelvakt] (constantly %))
+                  (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))]
+
+       [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
+        [sc/row-std
+         (when-not @(rf/subscribe [:lab/in-search-mode?])
+           (let [titles (compute-page-titles r)]
              [:<>
-              (if (vector? titles)
-                [:div.flex.items-center.gap-1
-                 (interpose [:div.text-2xl.opacity-20 "/"]
-                            (for [[idx e] (map-indexed vector titles)
-                                  :let [last? (= idx (dec (count titles)))]]
-                              (if last?
-                                [sc/text1 e]
-                                (let [{:keys [text link]} e]
-                                  [sc/subtext-with-link {
-                                                         :href (k/path-for [link])} text]))))]
-                [sc/text1 titles])]]
-            [:div.xs:block.sm:hidden.grow
-             (if (vector? titles)
-               [sc/col-space-1
-                (when (< 1 (count titles))
-                  (let [{:keys [text link]} (first titles)]
-                    [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
-                                                 :href  (k/path-for [link])} text]]))
-                [sc/text1 (last titles)]]
-               [sc/col
-                [sc/text1 titles]])]]))
+              [:div.hidden.sm:block.grow
+               [:<>
+                (if (vector? titles)
+                  [:div.flex.items-center.gap-1
+                   (interpose [:div.text-2xl.opacity-20 "/"]
+                              (for [[idx e] (map-indexed vector titles)
+                                    :let [last? (= idx (dec (count titles)))]]
+                                (if last?
+                                  [sc/text1 e]
+                                  (let [{:keys [text link]} e]
+                                    [sc/subtext-with-link {
+                                                           :href (k/path-for [link])} text]))))]
+                  [sc/text1 titles])]]
+              [:div.xs:block.sm:hidden.grow
+               (if (vector? titles)
+                 [sc/col-space-1
+                  (when (< 1 (count titles))
+                    (let [{:keys [text link]} (first titles)]
+                      [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
+                                                   :href  (k/path-for [link])} text]]))
+                  [sc/text1 (last titles)]]
+                 [sc/col
+                  [sc/text1 titles]])]]))
 
-       [search-menu]
-       [main-menu]]]]]])
-
+         ;[l/ppre-x (= :none (:role @user-state))]
+         (if (= :none (:role @user-state))
+           [schpaa.style.hoc.buttons/cta {:on-click #(js/alert "register here") :class [:bluetan]} "Logg inn & Registrer deg"]
+           ;[:div.p-2.border [schpaa.style.hoc.buttons/icon-with-caption ico/user "logg inn"]]
+           [search-menu])
+         [main-menu]]]]])])
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -555,9 +571,10 @@
             ;endregion
 
             ;region horizontal toolbar on small screens
-            (when @has-chrome?
-              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t
-               {:style {:box-shadow   "var(--inner-shadow-3)"
+            (when (and @has-chrome? (some #{(:role @user-state)} [:member :waitinglist :registered]))
+              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t.sticky.bottom-0
+               {:style {:z-index      1000
+                        :box-shadow   "var(--inner-shadow-3)"
                         :border-color "var(--toolbar-)"
                         :background   "var(--toolbar)"}}
                (into [:<>] (map horizontal-button
