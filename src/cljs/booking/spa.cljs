@@ -35,7 +35,8 @@
             [booking.yearwheel]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [booking.design-debug]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [user.database]))
 
 ;region related to flex-date and how to display relative time
 
@@ -525,18 +526,37 @@
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [+page-builder r
-        {:render (fn [_] [sc/col-space-2
+        {:render (fn [_] [sc/col-space-2]
+                   [:div
+                    [sc/text0 "Sjøbasen oversikt"]
+                    [sc/text1 "Sjøbasen oversikt"]
+                    [l/ppre-x @(rf/subscribe [:lab/user-state])]
+                    (let [status (:status @(rf/subscribe [:lab/user-state]))]
+                      (cond
+                        (some #{:admin} status)
+                        [sc/col-space-8
+                         [sc/title1 "ADMIN MODE"]
+                         [sc/col (into [:div.space-y-px]
+                                       (map user.database/booking-users-listitem
+                                            (user.database/booking-users
+                                              user.database/request-booking-xf
+                                              user.database/not-yet-accepted-booking-xf)))]
+                         [:hr]
+                         [sc/col (into [:div.space-y-px]
+                                       (map user.database/booking-users-listitem
+                                            (user.database/booking-users
+                                              user.database/request-booking-xf
+                                              user.database/accepted-booking-xf)))]]))
 
-                          [:div
-                           (-> "./content/frontpage1.md"
-                               inline
-                               schpaa.markdown/md->html
-                               sc/markdown)]
-                          [sc/row-end
-                           [hoc.buttons/cta
-                            {:type     "button"
-                             :on-click open-dialog-signin}
-                            "Begynn her"]]])}]))
+                    #_(-> "./content/frontpage1.md"
+                          inline
+                          schpaa.markdown/md->html
+                          sc/markdown)
+                    [sc/row-end
+                     [hoc.buttons/cta
+                      {:type     "button"
+                       :on-click open-dialog-signin}
+                      "Begynn her"]]])}]))
 
    :r.yearwheel
    (fn [r]

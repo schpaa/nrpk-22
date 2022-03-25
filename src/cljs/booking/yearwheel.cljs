@@ -62,7 +62,7 @@
             [sci/combobox props :kind? [:w-56] "Kategori" :type]
             [sci/input props :date [:w-40] "Dato" :date]
             [sci/input props :text [:w-full] "TL;DR (too long, didn't read)" :tldr]
-            [sci/textarea props :text [:w-full] "Beskrivelse (blog)" :content]]]
+            [sci/textarea props :text {:class [:w-full]} "Beskrivelse (blog)" :content]]]
 
           [sc/row-ec
            [hoc.buttons/regular {:type     "button"

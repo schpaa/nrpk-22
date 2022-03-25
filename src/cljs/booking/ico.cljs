@@ -22,3 +22,4 @@
 (def nokkelvakt [:> solid/KeyIcon])
 (def showdetails [:> outline/ChevronRightIcon])
 (def closewindow [:> outline/XIcon])
+(def earlierchanges [:> outline/DocumentIcon])

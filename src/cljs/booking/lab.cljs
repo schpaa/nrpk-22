@@ -19,6 +19,7 @@
             [booking.qrcode]
             [schpaa.style.hoc.buttons :as hoc.buttons]))
 
+
 ;region temporary, perhaps for later
 
 (rf/reg-event-db :lab/show-popover (fn [db]
@@ -370,3 +371,16 @@
 
 (rf/reg-sub :lab/toggle-userstate-panel :-> :lab/toggle-userstate-panel)
 (rf/reg-event-db :lab/toggle-userstate-panel (fn [db _] (update db :lab/toggle-userstate-panel (fnil not false))))
+
+;region
+
+(rf/reg-fx :lab/showuserinfo-fx (fn [data]
+                                  (schpaa.style.dialog/open-user-info-dialog data)))
+
+(rf/reg-event-fx :lab/show-userinfo (fn [_ [_ uid]] {:fx [[:lab/showuserinfo-fx uid]]}))
+
+
+(rf/reg-fx :lab/login-fx (fn [_] (schpaa.style.dialog/open-dialog-signin)))
+
+(rf/reg-event-fx :app/login (fn [_ _]
+                              {:fx [[:lab/login-fx nil]]}))

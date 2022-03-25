@@ -8,8 +8,8 @@
             [tick.core :as t]
             [shadow.resource :refer [inline]]
 
-            [times.api :as ta]
-
+            [times.api :as ta :refer [relative-time]]
+            [arco.react]
             [user.database]
             [nrpk.fsm-helpers :refer [send]]
             [eykt.content.rapport-side :refer [top-bottom-view map-difference]]
@@ -35,7 +35,8 @@
             [schpaa.style.button2 :as scb2]
             [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [schpaa.style.dialog]))
+            [schpaa.style.dialog]
+            [eykt.content.rapport-side :refer [map-difference]]))
 
 (defn confirm-registry []
   #_(apply send
@@ -134,18 +135,18 @@
 
 ;endregion
 
+
+
 (defn sist-oppdatert [data]
-  (let [user-info @(rf/subscribe [::db/user-auth])]
-    [:div.flex.items-center.px-4
-     [sc/dim
-      [sc/col {:class [:space-y-2]}
-       (if-let [tm (:timestamp @data)]
-         (try [:div "Sist oppdatert " [:span (schpaa.time/y (t/date-time (t/instant tm)))]]
-              (catch js/Error e (.-message e)))
-         [sc/small1 "Sist oppdatert: aldri"])
-       [sc/small1 (:email user-info)]
-       [sc/small1 (:display-name user-info)]
-       [sc/small1 (:uid user-info)]]]]))
+  (let [user-info @(rf/subscribe [::db/user-auth])
+        tm (:timestamp data)]
+    [sc/col-space-8
+     [sc/col-space-1
+      (when tm
+        [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert"] (relative-time tm)]])
+      [sc/small1 (:display-name user-info)]
+      [sc/small1 (:email user-info)]
+      [sc/small1 (:uid user-info)]]]))
 
 ;duplicated
 
@@ -207,94 +208,176 @@
   :flex :items-center :pl-3 :h-12 :relative :select-none
   {:-border-top "1px solid var(--surface0)"})
 
+(def default-form-values
+  {:navn                     ""
+   :telefon                  ""
+   :alias                    ""
+   :epost                    ""
+   :våttkort                 "0"
+   :våttkortnr               ""
+   :medlem-fra-år            ""
+   :fødselsår                ""
+   :årstall-førstehjelpskurs ""
+   :årstall-livredningskurs  ""
+   :instruktør               false
+   :helgevakt                false
+   :vikar                    false
+   :kort-reisevei            false
+   :request-booking          false
+   :booking-expert           false})
+
+(rf/reg-event-fx :save-this-form-test (fn [{db :db} [_ {:keys [values path reset]}]]
+                                        (reset {:initial-values values :values values})
+                                        {:db (-> db (fork/set-submitting path true))}))
+
+(defn- aux [uid removal-date s]
+  [sc/col
+   [:div
+    [:div.xs:px-4
+     [:div.prose.max-w-md.mx-auto
+      (st/prose-markdown-styles
+        (md->html (str/replace (inline "./sletting.md") "@dato" (ta/date-format removal-date))))]]]
+
+   [:div.flex.justify-between.h-12.px-4
+    (removeaccount-command uid)
+    [:div.flex.gap-4
+
+     (hoc.buttons/cta
+       {:type     :button
+        :on-click #(readymade/message {:dialog-type :form
+                                       :flags       #{:force :wide :timeout}
+                                       :footer      nil
+                                       :header      "Samler sammen"
+                                       :content     [[:div.space-y-4
+                                                      [:div "Vi samler sammen alle data, dette kan ta litt tid – når vi er ferdige vil du få en e-post med en lenke du kan trykke på for å laste alt ned."]
+                                                      [:div "Du vil motta den på " [:span.font-semibold (some-> s deref :epost)]]]]})}
+
+       "Få epost!")]]])
+
 (defn user-form [uid]
-  (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :form)
-        path {:path ["users" uid]}
+  (let [path {:path ["users" uid]}
         form-state (r/atom {})
         s (if uid
             (db/on-value-reaction {:path ["users" uid]})
-            (atom {}))]
+            (atom {}))
+        initial-values (merge default-form-values
+                              (select-keys
+                                @s
+                                [;generelt
+                                 :timestamp
+                                 :uid
+                                 :navn :telefon :alias :epost :våttkort
+                                 ;booking
+                                 :våttkortnr :request-booking :booking-expert
+                                 ;nøkkelvakt
+                                 :medlem-fra-år :fødselsår
+                                 :årstall-førstehjelpskurs :årstall-livredningskurs
+                                 :instruktør :helgevakt :vikar :kort-reisevei]))]
+
     (fn [uid]
       (if-let [removal-date (some-> s deref :removal-date t/date)]
-        [sc/col
-         (let [{:keys [bg fg- fg fg+ hd p p- he]} (st/fbg' :surface)])
-         [:div {:class (concat bg fg)}
-          [:div.xs:px-4
-           [:div.prose.max-w-md.mx-auto
-            (st/prose-markdown-styles
-              (md->html (str/replace (inline "./sletting.md") "@dato" (ta/date-format removal-date))))]]]
+        [aux uid removal-date s]
+        [fork/form {:state                form-state
+                    :initial-values       initial-values
+                    :prevent-default?     true
+                    :clean-on-unmount?    false
+                    :keywordize-keys      true
+                    :-component-did-mount (fn [{:keys [set-values]}]
+                                            (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                             {;:uid             uid
+                                                              #_#_:request-booking (str (t/date))})]
+                                              (set-values (select-keys
+                                                            data
+                                                            [;generelt
+                                                             :navn :telefon :alias :epost :våttkort
+                                                             ;booking
+                                                             :våttkortnr :request-booking :booking-expert
+                                                             ;nøkkelvakt
+                                                             :medlem-fra-år :fødselsår
+                                                             :årstall-førstehjelpskurs :årstall-livredningskurs
+                                                             :instruktør :helgevakt :vikar :kort-reisevei]))))
+                    :on-submit            (fn [{:keys [state values] :as x}]
+                                            ;(js/alert values)
+                                            (user.forms/save-edit-changes
+                                              (:uid values)
+                                              (:uid @(rf/subscribe [::db/user-auth]))
+                                              (select-keys (:initial-values @state) (keys (map-difference values (:initial-values @state))))
+                                              (map-difference values (:initial-values @state))
+                                              (or (:endringsbeskrivelse values) (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state))))))))
+                                            (db/database-update {:path  ["users" (:uid values)]
+                                                                 :value (assoc values :timestamp (str (t/now)))})
+                                            (rf/dispatch [:save-this-form-test x]))
 
-         [:div.flex.justify-between.h-12.px-4
-          (removeaccount-command uid)
-          [:div.flex.gap-4
+                    #_#(send :e.store (assoc-in % [:values :uid] uid))}
+         (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
+           [:form.select-none
+            {
+             :id        form-id
+             :on-submit #(do
+                           (handle-submit %))}
+            ;(reset :initial-values values :values values))}
+            [sc/col-space-8
+             (into [:div]
+                   (interpose [:div.py-6]
+                              [[user.forms/my-basics-form' props]
+                               [user.forms/my-booking-form' props]
+                               (when true #_(= "eykt" @(rf/subscribe [:app/name]))
+                                 [user.forms/my-vakt-form' props]
+                                 #_[togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
+                                    (fn []
+                                      [fork/form {:state               form-state
+                                                  :prevent-default?    true
+                                                  :clean-on-unmount?   true
+                                                  :keywordize-keys     true
+                                                  :component-did-mount (fn [{:keys [set-values]}]
+                                                                         (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                                          {:uid             uid
+                                                                                           :request-booking (str (t/date))})]
+                                                                           (set-values data)))
+                                                  :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
+                                       user.forms/my-vakt-form'])])
+                               [user.forms/my-endrings-logg props]]))
 
-           (hoc.buttons/cta
-             {:type     :button
-              :on-click #(readymade/message {:dialog-type :form
-                                             :flags       #{:force :wide :timeout}
-                                             :footer      nil
-                                             :header      "Samler sammen"
-                                             :content     [[:div.space-y-4
-                                                            [:div "Vi samler sammen alle data, dette kan ta litt tid – når vi er ferdige vil du få en e-post med en lenke du kan trykke på for å laste alt ned."]
-                                                            [:div "Du vil motta den på " [:span.font-semibold (some-> s deref :epost)]]]]})}
+             #_[l/ppre-x
+                dirty
+                (:uid values)
+                (map-difference (dissoc values :endringsbeskrivelse) initial-values)]
+             #_[l/ppre-x
 
-             "Få epost!")]]]
+                {;:initial initial-values
+                 ;:dirty   dirty
+                 :diff (map-difference initial-values values)}]
+             ;what it were
+             ;(select-keys (:initial-values @state) (keys (map-difference values (:initial-values @state))))
+             ;what it became during this edit
+             ;(map-difference values (:initial-values @state))]
+             [sc/row-ec {:class [:py-4]}
+              [hoc.buttons/danger
+               {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
+               (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]
 
-        (into [:div]
-              (interpose [:div.py-6]
-                         [[togglepanel :user-form/grunnleggende "Grunnleggende"
-                           (fn []
-                             [fork/form {:state               form-state
-                                         :prevent-default?    true
-                                         :clean-on-unmount?   false
-                                         :keywordize-keys     true
-                                         :component-did-mount (fn [{:keys [set-values]}]
-                                                                (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                                 {;:uid             uid
-                                                                                  #_#_:request-booking (str (t/date))})]
-                                                                  (set-values data)))
-                                         :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-                              my-basics-form])]
-                          [togglepanel :user-form/booking "Booking"
-                           (fn []
-                             [fork/form {:state                form-state
-                                         :prevent-default?     true
-                                         :clean-on-unmount?    false
-                                         :keywordize-keys      true
-                                         :xcomponent-did-mount (fn [{:keys [set-values]}]
-                                                                 (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                                  {:uid             uid
-                                                                                   :request-booking (str (t/date))})]
-                                                                   (set-values data)))
-                                         :on-submit            #(send :e.store (assoc-in % [:values :uid] uid))}
-                              my-booking-form])]
-                          (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-                            [togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
-                             (fn []
-                               [fork/form {:state               form-state
-                                           :prevent-default?    true
-                                           :clean-on-unmount?   true
-                                           :keywordize-keys     true
-                                           :component-did-mount (fn [{:keys [set-values]}]
-                                                                  (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                                   {:uid             uid
-                                                                                    :request-booking (str (t/date))})]
-                                                                    (set-values data)))
-                                           :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-                                my-vakt-form])])]))))))
+              [:div.grow]
+              [hoc.buttons/regular {:type     :button
+                                    :on-click #(set-values initial-values)
+                                    :disabled (empty? dirty) #_(empty? (map-difference (dissoc values :endringsbeskrivelse) initial-values))} "Tilbakestill"]
 
-
+              [hoc.buttons/regular {:type     :submit
+                                    :disabled (empty? dirty #_(map-difference (dissoc values :endringsbeskrivelse) initial-values))} "Lagre"]]
+             [sist-oppdatert values]]])]))))
 
 (defn my-info []
   (let [user-auth @(rf/subscribe [::db/user-auth])
         uid (:uid user-auth)]
     (fn []
-      [sc/col-space-8
-       [user-form uid]
-       [:div.p-4x
-        [sc/row-ec
-         [hoc.buttons/danger
-          {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
-          (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]
-         [hoc.buttons/regular {:disabled 1} "Lagre"]]]
-       [sist-oppdatert (r/atom nil)]])))
+      [user-form uid])))
+
+;save-edit-changes
+
+(comment
+  (let [data {:name "peter"
+              :age  1}
+        #_#_this (cond-> {}
+                   (some? (:name data)))]
+    (merge {:name ""
+            :age  12
+            :sex  true} data)))

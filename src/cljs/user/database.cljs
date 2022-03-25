@@ -4,7 +4,13 @@
             [schpaa.debug :as l]
             [tick.core :as t]
             [re-frame.core :as rf]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+    ;extract!
+            [lambdaisland.ornament :as o]
+            [schpaa.style.ornament :as sc]
+            [booking.ico :as ico]
+            [schpaa.style.button :as scb]))
+
 
 (defn mark-account-for-removal [uid]
   (let [removal-date (t/>> (t/date) (t/new-period 14 :days))
@@ -59,3 +65,51 @@
   (if-some [_ @(rf/subscribe [::db/user-auth])]
     (:navn @(db/on-value-reaction {:path ["users" uid]}))
     nil))
+
+;region
+
+(def request-booking-xf
+  (filter (fn [[_ {:keys [request-booking]}]] (some? request-booking))))
+
+(def not-yet-accepted-booking-xf
+  (filter (fn [[_ {:keys [booking-godkjent]}]] (true? booking-godkjent))))
+
+(def accepted-booking-xf
+  (filter (fn [[_ {:keys [booking-godkjent]}]] (false? booking-godkjent))))
+
+(defn booking-users [& xf]
+  (transduce
+    (apply comp xf)
+    conj
+    []
+    @(db/on-value-reaction {:path ["users"]})))
+
+(defn locked [field icon-fn path-fn k v]
+  [scb/round-normal-listitem
+   {:on-click #(db/database-update
+                 {:path  (path-fn (name k))
+                  :value {field (not (field v))}})}
+   [apply sc/icon (icon-fn (field v))]])
+
+(o/defstyled listitem :div
+  :flex :justify-between :p-1
+  {:padding-block  "var(--size-2)"
+   :padding-inline "var(--size-3)"
+   :border-radius  "var(--radius-0)"
+   :-background    [:rgba 0 0 0 0.05]})
+
+(defn booking-users-listitem [[k {:keys [navn ekspert våttkort booking-godkjent telefon våttkortnr] :as v}]]
+  [listitem
+   [sc/row-std {:style {:align-items :center}}
+    [scb/round-normal-listitem {:on-click #(rf/dispatch [:lab/show-userinfo v])} [sc/icon ico/showdetails]]
+    [sc/text1 navn]
+    [:div.grow]
+    [sc/text1 telefon]
+    [locked
+     :booking-godkjent
+     #(-> [{:style {:color (if % "var(--button)" :blue)}} (if % ico/member ico/member)])
+     #(-> ["users" %]) k v]
+    [locked
+     :ekspert
+     #(-> [{:style {:color (if % "var(--button)" :red)}} (if % ico/admin ico/admin)])
+     #(-> ["users" %]) k v]]])
