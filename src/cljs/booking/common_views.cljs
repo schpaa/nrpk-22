@@ -394,8 +394,8 @@
               :style {:background   "var(--toolbar)"
                       :border-color "var(--toolbar-)"}}
       [:div
-       [l/ppre-x {:lab/at-least-registered @(rf/subscribe [:lab/at-least-registered])
-                  :lab/admin-access        @(rf/subscribe [:lab/admin-access])}]
+       #_[l/ppre-x {:lab/at-least-registered @(rf/subscribe [:lab/at-least-registered])
+                    :lab/admin-access        @(rf/subscribe [:lab/admin-access])}]
        (when @(rf/subscribe [:lab/toggle-userstate-panel])
          [sc/surface-d {:class [:m-4]}
           (r/with-let [bookingx (rf/subscribe [:lab/booking])
@@ -412,7 +412,7 @@
                              :on-click #(rf/dispatch action)}
                             content])]
               [:div.relative
-               [:div.absolute.top-1.right-1 (sc/icon-small {:on-click #(rf/dispatch [:lab/toggle-userstate-panel])} ico/closewindow)]
+               [:div.absolute.top-1.right-1 {:style {:color "var(--text1)"}} (sc/icon-small {:on-click #(rf/dispatch [:lab/toggle-userstate-panel])} ico/closewindow)]
                ;[l/ppre-x @user-state bookingx]
                [sc/row-sc-g2-w
 
@@ -475,7 +475,7 @@
                   [sc/text1 titles]])]]))
 
          ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-         (if (= :none (:role @user-state))
+         (if-not @(rf/subscribe [:lab/at-least-registered])
            [cta {:on-click #(rf/dispatch [:app/login])} "Logg inn & Registrer deg"]
            [search-menu])
          [main-menu]]]]])])
@@ -498,12 +498,20 @@
        :reagent-render
        (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
-          ;region modal dialog
+          ;region modal dialog (top)
           [schpaa.style.dialog/modal-generic
            {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
             :vis     (rf/subscribe [:lab/modal-example-dialog2])
             :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
           ;endregion
+
+          ;region modal dialog (top)
+          [schpaa.style.dialog/modaldialog-centered
+           {:context @(rf/subscribe [:lab/modaldialog-context])
+            :vis     (rf/subscribe [:lab/modaldialog-visible])
+            :close   #(rf/dispatch [:lab/modaldialog-visible false])}]
+          ;endregion
+
           ;region command-palette
           [schpaa.style.dialog/modal-selector
            {:context @(rf/subscribe [:lab/modal-selector-extra])
@@ -585,41 +593,60 @@
 
 (def max-width "50ch")
 
+(defn matches-access "" [r [status access :as all-access-tokens]]
+  (let [[req-status req-access :as req-tuple] (-> r :data :access)]
+    (if req-tuple
+      (and (= status req-status)
+           (if req-access (some access req-access) true))
+      true)))
+
+(defn no-access-view [r]
+  (let [required-access (-> r :data :access)]
+    [:div
+     {:style {:padding-top   "var(--size-10)"
+              :width         "min-content"
+              :margin-inline "auto"}}
+     [sc/col-c-space-1
+      [sc/hero {:style {:white-space :nowrap}} "Ikke åpent"]
+      [sc/small1 "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
+      [sc/small1 "For å komme inn --> " (str required-access)]]]))
+
 (defn +page-builder [r {:keys [frontpage render render-fullwidth panel always-panel]}]
   (let [pagename (some-> r :data :name)
         numberinput (rf/subscribe [:lab/number-input])
         left-aligned (schpaa.state/listen :activitylist/left-aligned)]
-
     (if frontpage
       [page-boundary r
        {:frontpage true}
        [render r]]
       [page-boundary r
        {:frontpage false}
-       [sc/col-space-8 {:class [:py-8]}
-        (when panel
-          [:div.mx-4
-           [:div.mx-auto
-            {:style {:width     "100%"
-                     :max-width max-width}}
-            [hoc.panel/togglepanel pagename "innstillinger" panel]]])
+       (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
+         (if-not have-access?
+           [no-access-view r]
+           [sc/col-space-8 {:class [:py-8]}
+            (when panel
+              [:div.mx-4
+               [:div.mx-auto
+                {:style {:width     "100%"
+                         :max-width max-width}}
+                [hoc.panel/togglepanel pagename "innstillinger" panel]]])
 
-        (when always-panel
-          [:div.mx-4
-           [:div.mx-auto
-            {:style {:width     "100%"
-                     :max-width max-width}}
-            [always-panel]]])
-
-        [:div.mx-4
-         [:div.duration-200
-          {:style {:margin-right :auto
-                   :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                   ;; force view to align to the left
-                                   0
-                                   :auto)
-                   :width        "100%"
-                   :max-width    max-width}}
-          (if render-fullwidth
-            [render-fullwidth r]
-            [render r])]]]])))
+            (when always-panel
+              [:div.mx-4
+               [:div.mx-auto
+                {:style {:width     "100%"
+                         :max-width max-width}}
+                [always-panel]]])
+            [:div.mx-4
+             [:div.duration-200
+              {:style {:margin-right :auto
+                       :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                       ;; force view to align to the left
+                                       0
+                                       :auto)
+                       :width        "100%"
+                       :max-width    max-width}}
+              (if render-fullwidth
+                [render-fullwidth r]
+                [render r])]]]))])))

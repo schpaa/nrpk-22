@@ -116,9 +116,9 @@
                  :action #(rf/dispatch [:lab/toggle-userstate-panel])}]
 
      [:menuitem {:label    "Logg ut"
-                 :disabled true
-                 :icon     (sc/icon [:> outline/LogoutIcon])
-                 :action   #(rf/dispatch [:app/toggle-config])}]
+                 :disabled false
+                 :icon     (sc/icon ico/showdetails)
+                 :action   #(rf/dispatch [:app/sign-out])}]
 
      #_[:space]
      #_[:div

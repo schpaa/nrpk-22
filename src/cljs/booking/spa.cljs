@@ -21,7 +21,7 @@
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style :as st]
-            ;[schpaa.style.booking]
+    ;[schpaa.style.booking]
             [schpaa.style.menu]
             [schpaa.style.ornament :as sc]
             [schpaa.time]
@@ -154,7 +154,7 @@
                        {:style {:margin-left "-2px"}
                         :href  (kee-frame.core/path-for [a])}
                        b])]
-    [sc/col                                                 ;-space-2 {:style {:width :auto}}
+    [sc/col-space-1
      [sc/ingress {:style {:text-align :rights
                           :font-size  "var(--font-size-fluid-1)"
                           :xcolor     "white"}} "Åpningstider"]
@@ -168,6 +168,7 @@
         ;[sc/subtext "Sesongen åpner xx.xx og frem til xx vil dette være våre åpningstider"]
         [:div {:style {:display               :grid
                        :column-gap            "0.25rem"
+                       :row-gap               "0.25rem"
                        :grid-template-columns "5rem min-content min-content min-content"
                        :place-content         :end}}
          (for [[day open close] data]
@@ -176,13 +177,13 @@
             [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} open]
             [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} "—"]
             [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} close]])]
-        [:div {:style {:margin-top "4px"}}
+        [:div {:style {:margin-top "12px"}}
          [sc/subtext-with-link
           {:href  ()
            :style {:white-space :normal
                    :margin-left "-3px"
                    :font-size   "var(--font-size-fluid-0)" :xcolor "white"}}
-          "Se alle åpningstidene"]]
+          "Om utvidet åpningstid i juni"]]
         #_(let [data [[1 :r.forsiden "Utvidet åpningstid i sommer"]
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
@@ -250,11 +251,11 @@
                                            :font-size      "var(--font-size-fluid-2)"
                                            :letter-spacing "0"}} "Velkommen til NRPK"]]
 
-                        [:div.absolute.left-4.top-2.w-auto
+                        [:div.absolute.left-4.top-4.w-auto
                          {:style {:background     "var(--surface00)"
                                   :border-radius  "var(--radius-1)"
                                   :padding-inline "var(--size-3)"
-                                  :padding-block  "var(--size-2)"}}
+                                  :padding-block  "var(--size-3)"}}
                          [opening-hours]]]
 
                        [:div.m-4
@@ -284,14 +285,14 @@
             [:div
              [:div
 
-              [sc/col-space-8 {:class [:py-8]}
+              [sc/col-space-8 {:class [:xpy-8]}
                [sc/col-space-8
                 [sc/col-space-1
                  (md "# NRPK\n## Nøklevann ro- og padleklubb tilbyr medlemmene å benytte klubbens materiell på Nøklevann i klubbens åpningstider. I tillegg har vi et tilbud til de som har våttkort grunnkurs hav å padle på Oslofjorden.")
                  [sc/row-sc-g2-w
                   (let [data [[1 :r.forsiden "Bli medlem"]
 
-                              [3 :r.forsidens "Organisasjon"]]]
+                              [3 :r.oversikt.organisasjon "Organisasjon"]]]
                     (map (comp f rest) (sort-by first data)))]]
 
                 [sc/col-space-1
@@ -556,6 +557,66 @@
      (+page-builder r
                     {:render (fn [] [:div "ok"])}))
 
+
+   :r.admin
+   (fn [r]
+     (+page-builder r
+                    {:render (fn []
+                               [:div
+                                (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                                [:div "admin"]])}))
+
+   :r.signedout
+   (fn [r]
+     (+page-builder r
+                    {:render (fn []
+                               [:div
+                                (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                                [:div "Du har altså logget ut"]])}))
+
+   :r.oversikt.organisasjon
+   (fn [r]
+     (+page-builder
+       r
+       {:render (fn []
+                  (do
+                    [:<>
+                     (-> (inline "./oversikt/organisasjon.md") schpaa.markdown/md->html sc/markdown)
+                     (let [data [[nil "Ulf Pedersen" ["Styreleder" "HMS" "Nøkkelvakt\u00adansvarlig"]]
+                                 [nil "Tormod Tørsdad" ["Nestleder" "Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
+                                 [nil "Stein-Owe Hansen" ["Sekretær"]]
+                                 [nil "Line Stolpestad" ["Aktivitets\u00ADansvarlig" "Midlertidig anleggs\u00ADansvarlig Nøklevann"]]
+                                 [nil "Adrian Mitch" ["Kasserer"]]
+                                 [nil "Chris Schreiner" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
+                                 [nil "Kjersti Selseth" []]
+                                 [nil "Ylva Morken Eide" []]
+                                 [nil "Jan Gunnar Jacobsen" []]
+                                 [nil "Ole H. Larsen" []]]]
+                       (o/defstyled card :div
+                         :p-4
+                         {:min-height       "12ch"
+                          :background-color :#fffe
+                          :border-radius    "var(--radius-1)"
+                          :box-shadow       "var(--inner-shadow-1),var(--shadow-2)"})
+
+                       (o/defstyled image :img
+                         {:background    :#0002
+                          ;:border "none"
+                          :aspect-ratio  "1/1"
+                          :height        "var(--size-9)"
+                          :box-shadow    "var(--inner-shadow-2)"
+                          :border-radius "var(--radius-round)"})
+                       [:div {:style {:display               :grid
+                                      :gap                   "8px 8px"
+                                      :grid-template-columns "repeat(auto-fit,minmax(21ch,1fr))"}}
+                        (for [[url navn ansvar] data]
+                          [card
+                           [:div.flex.items-start.gap-4
+                            [image
+                             {:src url}]
+                            [sc/col-space-1
+                             [sc/text0 navn]
+                             (map (fn [e] [sc/small1 {:style {:font-family "Merriweather"}} e]) ansvar)]]])])]))}))
 
    :r.page-not-found
    error-page})

@@ -17,7 +17,8 @@
             [clojure.set :as set]
             [schpaa.style.button2 :as scb2]
             [booking.qrcode]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.debug :as l]))
 
 ;region temporary, perhaps for later
 
@@ -226,6 +227,19 @@
                                                     :lab/modal-example-dialog2-extra extra)
                                           (update db :lab/modal-example-dialog2 (fnil not true)))))
 
+;region regular dialogs (centered)
+
+;todo This just seems overly complicated, can you simplify this?
+(rf/reg-sub :lab/modaldialog-visible :-> #(get % :lab/modaldialog-visible false))
+(rf/reg-sub :lab/modaldialog-context :-> #(get % :lab/modaldialog-context))
+(rf/reg-event-db :lab/modaldialog-visible
+                 (fn [db [_ arg extra]] (if arg
+                                          (assoc db :lab/modaldialog-visible true
+                                                    :lab/modaldialog-context extra)
+                                          (update db :lab/modaldialog-visible (fnil not true)))))
+
+;endregion
+
 (rf/reg-sub :lab/modal-selector-extra :-> (fn [db] (get db :lab/modal-selector-extra)))
 (rf/reg-sub :lab/modal-selector :-> (fn [db] (get db :lab/modal-selector false)))
 (rf/reg-event-db :lab/modal-selector
@@ -312,9 +326,9 @@
             :<- [::db/user-auth]
             :<- [:lab/sim?]
             (fn [[ua {:keys [status access] :as sim}] _]
-              (if sim
-                (some #{status} [:registered :waitinglist :member])
-                ua)))
+              (if (some? (:uid ua))
+                (some? (:uid ua))
+                (some #{status} [:registered :waitinglist :member]))))
 
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
                                      (tap> {:lab/set-sim-type arg})
@@ -368,6 +382,8 @@
             (fn [[_ {:keys [status access] :as sim} member?] _]
               (and member? (some #{:admin} access))))
 
+
+
 (rf/reg-sub :lab/booking
             :<- [:lab/sim?]
             (fn [{:keys [status access] :as sim} _]
@@ -391,6 +407,12 @@
                   (= :admin (some access [:admin])))
                 false)))
 
+(rf/reg-sub :lab/all-access-tokens
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            (fn [[_ {:keys [status access] :as sim}] _]
+              [(or status :none) (or access #{})]))
+
 ;endregion
 
 (comment
@@ -407,9 +429,64 @@
 
 (rf/reg-event-fx :lab/show-userinfo (fn [_ [_ uid]] {:fx [[:lab/showuserinfo-fx uid]]}))
 
-
 (rf/reg-fx :lab/login-fx (fn [_] (schpaa.style.dialog/open-dialog-signin)))
 
 (rf/reg-event-fx :app/login (fn [_ _]
                               {:fx [[:lab/login-fx nil]]}))
 
+(rf/reg-fx :lab/logout-fx (fn [_] (db.auth/sign-out)))
+
+
+
+;region
+
+(defn xx [{:keys [on-close] :as context}]
+  [sc/centered-dialog
+   {:style {;:position :relative
+            :z-index    10
+            :width      "50ch"
+            :max-height "80vh"
+            :max-width  "90vw"}
+    :class [:min-w-smx]}
+   [:div.py-4.px-4
+    [sc/dialog-title' "Er du velkommen?"]]
+   [:div.flex.flex-col.space-y-8.p-4
+    {:style {:border-radius    "var(--radius-1)"
+             :z-index          1000
+             :background-color "var(--floating)"
+             :box-shadow       "var(--inner-shadow-2),var(--shadow-1),var(--shadow-2)"}}
+    [sc/col-space-2
+     [:div.space-y-4
+      [:img.w-24.float-right {:src "/img/logo-n.png"}]
+      [sc/text1 {:style {:font-family "Merriweather"
+                         :line-height "var(--font-lineheight-4)"}
+                 :class [:clear-left]} "All presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
+      [sc/subtext1 "Toon Tellegen"]]]]
+   ;[sc/text1 {:class [:clear-left]} "Dette nettstedet åpner ikke for publikum før 28. April, som er dagen før bursdagen min."]
+   ;[sc/text2 "Da skal jeg feire i skogen sammen med venner og ukjente med bål, selv om det er ulovlig. Ekornet kommer, skogmusa og bjørnefamilien også. Det blir litt av vært å spise."]]]]
+
+   [:div.pt-4.pb-2.-debug
+    [sc/row-ec
+     [hoc.buttons/danger {} "Danger"]
+     [hoc.buttons/regular {:on-click on-close} "Videre"]]]])
+
+(rf/reg-event-fx :app/sign-out
+                 (fn [_ _] {:fx [[:lab/logout-fx nil]
+                                 [:dispatch [:app/navigate-to [:r.forsiden]]]
+                                 [:dispatch [:lab/modaldialog-visible
+                                             true
+                                             {:action     #(js/alert "!")
+                                              :context    "args"
+                                              :content-fn #(xx %)}]]]}))
+
+
+(rf/reg-event-fx :app/successful-login
+                 (fn [{db :db} [_ args]]
+                   {:fx [[:dispatch [:lab/modaldialog-visible
+                                     true
+                                     {;:auto-dismiss 5000
+                                      :action     #()
+                                      :context    args
+                                      :content-fn #(xx %)}]]]}))
+
+;endregion

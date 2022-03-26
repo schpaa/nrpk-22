@@ -274,26 +274,27 @@
             [sc/col-space-8
              (into [:div]
                    (interpose [:div.py-6]
-                              [[user.forms/generalinformation-panel props]
-                               [user.forms/booking-panel props]
-                               (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-                                 [user.forms/nokkelvakt-panel props]
-                                 #_[togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
-                                    (fn []
-                                      [fork/form {:state               form-state
-                                                  :prevent-default?    true
-                                                  :clean-on-unmount?   true
-                                                  :keywordize-keys     true
-                                                  :component-did-mount (fn [{:keys [set-values]}]
-                                                                         (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                                          {:uid             uid
-                                                                                           :request-booking (str (t/date))})]
-                                                                           (set-values data)))
-                                                  :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-                                       user.forms/nokkelvakt-panel])])
-                               (when @(rf/subscribe [:lab/admin-access])
-                                 [user.forms/status-panel props])
-                               [user.forms/changelog-panel props]]))
+                              (remove nil? [[user.forms/generalinformation-panel props]
+                                            [user.forms/booking-panel props]
+                                            (when true #_(= "eykt" @(rf/subscribe [:app/name]))
+                                              [user.forms/nokkelvakt-panel props]
+                                              #_[togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
+                                                 (fn []
+                                                   [fork/form {:state               form-state
+                                                               :prevent-default?    true
+                                                               :clean-on-unmount?   true
+                                                               :keywordize-keys     true
+                                                               :component-did-mount (fn [{:keys [set-values]}]
+                                                                                      (let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                                                       {:uid             uid
+                                                                                                        :request-booking (str (t/date))})]
+                                                                                        (set-values data)))
+                                                               :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
+                                                    user.forms/nokkelvakt-panel])])
+                                            (when @(rf/subscribe [:lab/admin-access])
+                                              [user.forms/status-panel props])
+                                            (when @(rf/subscribe [:lab/admin-access])
+                                              [user.forms/changelog-panel props])])))
 
              [sc/row-ec {:class [:py-4]}
               [hoc.buttons/danger

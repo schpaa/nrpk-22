@@ -23,3 +23,4 @@
 (def showdetails [:> outline/ChevronRightIcon])
 (def closewindow [:> outline/XIcon])
 (def earlierchanges [:> outline/DocumentIcon])
+(def signout [:> outline/LogoutIcon])
