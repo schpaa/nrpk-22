@@ -19,7 +19,6 @@
             [booking.qrcode]
             [schpaa.style.hoc.buttons :as hoc.buttons]))
 
-
 ;region temporary, perhaps for later
 
 (rf/reg-event-db :lab/show-popover (fn [db]
@@ -297,7 +296,9 @@
 (rf/reg-sub :lab/has-chrome (fn [db]
                               (get-in db [:settings :state :lab/toggle-chrome])))
 
-
+(rf/reg-event-db :lab/toggle-chrome
+                 (fn [db _]
+                   (update-in db [:settings :state :lab/toggle-chrome] (fnil not false))))
 
 ;region
 
@@ -318,10 +319,6 @@
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
                                      (tap> {:lab/set-sim-type arg})
                                      (assoc-in db [:lab/sim :status] arg)))
-
-(rf/reg-event-db :lab/toggle-chrome
-                 (fn [db _]
-                   (update-in db [:settings :state :lab/toggle-chrome] (fnil not false))))
 
 (rf/reg-event-db :lab/set-sim (fn [db [_ arg opt]]
                                 (cond
@@ -393,6 +390,8 @@
                   (some #{status} [:member])
                   (= :admin (some access [:admin])))
                 false)))
+
+;endregion
 
 (comment
   (let [status #{:bookings}]

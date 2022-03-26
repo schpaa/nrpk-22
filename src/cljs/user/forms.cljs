@@ -26,15 +26,20 @@
              "3" "Teknikk, sikkerhet eller grunnkurs-2"
              "4" "Aktivitetsleder, trener-1 eller høyere"}]])])
 
-(defn booking-panel [props]
+(defn booking-panel [{:keys [handle-change enable values disable disabled?] :as props}]
   [togglepanel :a/a2 "Booking på sjøbasen"
    (fn []
      [:<>
       [:div.flex.gap-4.flex-wrap
        [sci/input props :text [:w-32] "Våttkort-nr" :våttkortnr]]
       [:div.flex.gap-4.flex-wrap
-       [hoc.buttons/checkbox props [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
-       [hoc.buttons/checkbox props [] "Jeg ønsker tilgang til de utfordrende båtene" :booking-expert]]])])
+       [hoc.buttons/checkbox (assoc props :handle-change
+                                          #(let [value (-> % .-target .-checked)]
+                                             (if value
+                                               (enable :booking-expert)
+                                               (disable :booking-expert))
+                                             (handle-change %))) [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
+       [hoc.buttons/checkbox (assoc props :disabled (not (values :request-booking))) [] "Jeg ønsker også tilgang til de utfordrende båtene" :booking-expert]]])])
 
 (defn nokkelvakt-panel [{:keys [form-id handle-submit dirty readonly? values] :as props}]
   [togglepanel :a/a3 "Nøkkelvakt"
@@ -57,6 +62,39 @@
          [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Timekrav" :name :timekrav]
          [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Nøkkelnummer" :name :nøkkelnummer]
          [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Godkjent" :name :godkjent]]])])
+
+(defn status-panel [{:keys [handle-change set-values disable enable] :as props}]
+  [togglepanel :a/a5 "Status"
+   (fn []
+     [sc/col-space-8
+      [sc/row-sc-g4-w
+       ;todo Just a hack to make text-fields and checkboxes visually aligned
+       [sc/row-sc-g2
+        [hoc.buttons/checkbox (assoc props
+                                :handle-change #(let [value (-> % .-target .-checked)]
+                                                  (when value
+                                                    (set-values {:dato-godkjent-booking (str (t/date))}))
+                                                  (handle-change %))) [:w-44] "Godkjent booking" :booking-godkjent]
+        [input props :date [:w-36] "Godkjent booking" :dato-godkjent-booking]]
+
+       [sc/row-sc-g2
+        [hoc.buttons/checkbox (assoc props
+                                :handle-change #(let [value (-> % .-target .-checked)]
+                                                  (if value
+                                                    (do (enable :dato-godkjent-nøkkelvakt)
+                                                        (set-values {:dato-godkjent-nøkkelvakt (str (t/date))}))
+                                                    (disable :dato-godkjent-nøkkelvakt))
+                                                  (handle-change %))) [:w-44] "Godkjent nøkkelvakt" :godkjent]
+        [input props :date [:w-36] "Godkjent nøkkelvakt" :dato-godkjent-nøkkelvakt]]
+       [input props :text [:w-24] "Nøkkelnr" :nøkkelnummer]
+       [input props :date [:w-36] "Mottatt nøkkel" :dato-mottatt-nøkkel]
+
+       [input props :text [:w-24] "Timekrav" :timekrav]]])])
+
+;[hoc.buttons/checkbox props [] "Foretrekker helgevakt" :helgevakt]]])])
+;[hoc.buttons/checkbox props [] "Kan stille som vikar" :vikar]
+;[hoc.buttons/checkbox props [] "Kort reisevei" :kort-reisevei]]])])
+
 
 (comment
   (empty? (eykt.content.rapport-side/map-difference

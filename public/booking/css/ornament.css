@@ -935,3 +935,5 @@ body {
 .user_database__listitem{display:flex;justify-content:space-between;padding:.25rem;padding-block:var(--size-2);padding-inline:var(--size-3);border-radius:var(--radius-0);-background:hsla(0,0%,0%,0.05)}
 .schpaa_style_ornament__subtext1{color:var(--text1);font-size:var(--font-size-1);font-weight:var(--font-weight-3)}
 .schpaa_style_ornament__hidden_link{cursor:pointer;display:inline-block;font-family:unset;font-weight:var(--font-weight-3);text-decoration:none}.schpaa_style_ornament__hidden_link:hover{text-decoration:underline}
+
+.schpaa_style_input__labbel:disabled{color:red}

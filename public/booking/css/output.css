@@ -1661,11 +1661,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   margin-right: 0.25rem;
 }
 
-.my-8 {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-}
-
 .mb-1 {
   margin-bottom: 0.25rem;
 }
@@ -1724,6 +1719,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .mb-px {
   margin-bottom: 1px;
+}
+
+.mt-4 {
+  margin-top: 1rem;
 }
 
 .block {
@@ -1942,8 +1941,8 @@ Ensure the default browser behavior of the `hidden` attribute.
   width: 100vw;
 }
 
-.w-96 {
-  width: 24rem;
+.w-36 {
+  width: 9rem;
 }
 
 .max-w-xs {
@@ -2221,13 +2220,6 @@ Ensure the default browser behavior of the `hidden` attribute.
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
-}
-
-.select-text {
-  -webkit-user-select: text;
-     -moz-user-select: text;
-      -ms-user-select: text;
-          user-select: text;
 }
 
 .resize {
@@ -2919,6 +2911,22 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .pt-3 {
   padding-top: 0.75rem;
+}
+
+.pt-6 {
+  padding-top: 1.5rem;
+}
+
+.pt-5 {
+  padding-top: 1.25rem;
+}
+
+.pt-1 {
+  padding-top: 0.25rem;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem;
 }
 
 .text-left {

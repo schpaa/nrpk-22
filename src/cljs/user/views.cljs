@@ -166,7 +166,14 @@
    :vikar                    false
    :kort-reisevei            false
    :request-booking          false
-   :booking-expert           false})
+   :booking-expert           false
+   :godkjent                 false
+   :nøkkelnummer             ""
+   :dato-godkjent-nøkkelvakt ""
+   :dato-godkjent-booking    ""
+   :timekrav                 "12"
+   :godkjent-booking         false
+   :dato-mottatt-nøkkel      ""})
 
 (rf/reg-event-fx :save-this-form-test (fn [{db :db} [_ {:keys [values path reset]}]]
                                         (reset {:initial-values values :values values})
@@ -214,7 +221,11 @@
                                  ;nøkkelvakt
                                  :medlem-fra-år :fødselsår
                                  :årstall-førstehjelpskurs :årstall-livredningskurs
-                                 :instruktør :helgevakt :vikar :kort-reisevei]))]
+                                 :instruktør :helgevakt :vikar :kort-reisevei
+                                 ;status
+                                 :godkjent-booking :dato-godkjent-booking
+                                 :godkjent :dato-godkjent-nøkkelvakt
+                                 :nøkkelnummer :dato-mottatt-nøkkel :timekrav]))]
 
     (fn [uid]
       (if-let [removal-date (some-> s deref :removal-date t/date)]
@@ -224,7 +235,9 @@
                     :prevent-default?    true
                     :clean-on-unmount?   false
                     :keywordize-keys     true
-                    :component-did-mount (fn [{:keys [set-values] :as p}]
+                    :component-did-mount (fn [{:keys [set-values disable values] :as p}]
+                                           ;(if-not (values :request-booking))
+                                           (disable :booking-expert)
                                            (tap> {"comp didi m" p})
                                            #_(let [data (conj (if @s (walk/keywordize-keys @s) {})
                                                               {;:uid             uid
@@ -278,6 +291,8 @@
                                                                            (set-values data)))
                                                   :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
                                        user.forms/nokkelvakt-panel])])
+                               (when @(rf/subscribe [:lab/admin-access])
+                                 [user.forms/status-panel props])
                                [user.forms/changelog-panel props]]))
 
              [sc/row-ec {:class [:py-4]}
