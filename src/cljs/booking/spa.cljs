@@ -270,8 +270,6 @@
                        [:div
                         (sc/markdown' (schpaa.markdown/md->html "## Postadresse\nNøklevann ro- og padleklubb<br/>Postboks 37, 0621 Bogerud<br/>[styret@nrpk.no](mailto:styret@nrpk.no)<br/>[medlem@nrpk.no](mailto:medlem@nrpk.no)"))]])}]))
 
-
-
    :r.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])
@@ -343,15 +341,6 @@
                              [:r.forsiden "Vaktkalender"]]]
                    (map f (sort-by second data)))]]]]]])}]))
 
-
-
-
-
-
-
-
-
-
    :r.booking.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
@@ -361,8 +350,6 @@
                           {:uids (:uid @user-auth)
                            :data (or [{}]
                                      (sort-by (comp :number val) < (logg.database/boat-db)))}])}]))
-
-
 
    :r.new-booking
    (fn [r]
@@ -531,9 +518,9 @@
                     [sc/text0 "Sjøbasen oversikt"]
                     [sc/text1 "Sjøbasen oversikt"]
                     [l/ppre-x @(rf/subscribe [:lab/user-state])]
-                    (let [status (:status @(rf/subscribe [:lab/user-state]))]
+                    (let [admin-access? @(rf/subscribe [:lab/admin-access])]
                       (cond
-                        (some #{:admin} status)
+                        admin-access?
                         [sc/col-space-8
                          [sc/title1 "ADMIN MODE"]
                          [sc/col (into [:div.space-y-px]

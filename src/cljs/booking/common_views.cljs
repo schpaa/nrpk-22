@@ -25,8 +25,9 @@
             [booking.routes]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [booking.ico :as ico]
-            [schpaa.style.hoc.buttons :as buttons :refer [pill icon-with-caption icon-with-caption-and-badge]]
+            [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
             [schpaa.debug :as l]))
+
 
 (defn set-focus [el a]
   (when-not @a
@@ -393,17 +394,18 @@
               :style {:background   "var(--toolbar)"
                       :border-color "var(--toolbar-)"}}
       [:div
+       [l/ppre-x {:lab/at-least-registered @(rf/subscribe [:lab/at-least-registered])
+                  :lab/admin-access        @(rf/subscribe [:lab/admin-access])}]
        (when @(rf/subscribe [:lab/toggle-userstate-panel])
          [sc/surface-d {:class [:m-4]}
-          (r/with-let [
-                       bookingx (rf/subscribe [:lab/booking])
+          (r/with-let [bookingx (rf/subscribe [:lab/booking])
                        nokkelvakt (rf/subscribe [:lab/nokkelvakt])
                        admin (rf/subscribe [:lab/admin])
                        st (r/atom {:admin      admin
                                    :nøkkelvakt nokkelvakt
                                    :booking    bookingx})]
-            (let [registered (some #{(:role @user-state)} [:member])
-                  status (:role @user-state)
+            (let [registered (some #{(:status @user-state)} [:member])
+                  status (:status @user-state)
                   f-icon (fn [action token content]
                            [pill
                             {:class    [:regular :pad-right (when (= token status) :outlined)]
@@ -413,26 +415,12 @@
                [:div.absolute.top-1.right-1 (sc/icon-small {:on-click #(rf/dispatch [:lab/toggle-userstate-panel])} ico/closewindow)]
                ;[l/ppre-x @user-state bookingx]
                [sc/row-sc-g2-w
-                [pill
-                 {:class    [:regular :pad-right (when (= :none status) :outlined)]
-                  :on-click #(rf/dispatch [:lab/set-sim-type :none])} [icon-with-caption ico/anonymous "anonym"]]
 
-                [pill
-                 {:disabled false
-                  :class    [:regular :pad-right (when (= :registered status) :outlined)]
-                  :on-click #(rf/dispatch [:lab/set-sim-type :registered])}
-                 [icon-with-caption ico/user "registrert"]]
+                (f-icon [:lab/set-sim-type :none] :none [icon-with-caption ico/anonymous "anonym"])
+                (f-icon [:lab/set-sim-type :registered] :registered [icon-with-caption ico/user "registrert"])
+                (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [icon-with-caption-and-badge ico/waitinglist "venteliste" 123])
+                (f-icon [:lab/set-sim-type :member] :member [icon-with-caption ico/member "medlem"])
 
-                (f-icon [:lab/set-sim-type :waitinglist] :waitinglist
-                        [icon-with-caption-and-badge ico/waitinglist "venteliste" (rand-int 382)])
-
-                [pill
-                 {:class    [:regular :pad-right (when (= :member status) :outlined)]
-                  :on-click #(rf/dispatch [:lab/set-sim-type :member])}
-                 [icon-with-caption ico/member "medlem"]]
-                #_[pill
-                   {:class    [:regular :pad-right (when (= :admin status) :outlined)]
-                    :on-click #(rf/dispatch [:lab/set-sim-type :admin])} [icon-with-caption ico/admin "admin"]]
                 [schpaa.style.hoc.toggles/small-switch-base
                  {:disabled (not registered)}
                  "admin"
@@ -486,10 +474,9 @@
                  [sc/col
                   [sc/text1 titles]])]]))
 
-         ;[l/ppre-x (= :none (:role @user-state))]
+         ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
          (if (= :none (:role @user-state))
-           [schpaa.style.hoc.buttons/cta {:on-click #(js/alert "register here") :class [:bluetan]} "Logg inn & Registrer deg"]
-           ;[:div.p-2.border [schpaa.style.hoc.buttons/icon-with-caption ico/user "logg inn"]]
+           [cta {:on-click #(rf/dispatch [:app/login])} "Logg inn & Registrer deg"]
            [search-menu])
          [main-menu]]]]])])
 
@@ -502,11 +489,12 @@
         left-aligned (schpaa.state/listen :activitylist/left-aligned)]
     (r/create-class
       {:display-name "booking-page-boundary"
+
        :component-did-mount
        (fn [_]
-         (tap> "page-boundary component-did-mount")
          (when-let [el (.getElementById js/document "inner-document")]
            (.focus el)))
+
        :reagent-render
        (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
@@ -578,7 +566,7 @@
                                 (horizontal-toolbar (:uid @user-auth))))])]
            ;endregion
 
-           (when (and @has-chrome? (some #{(:role @user-state)} [:member :waitinglist :registered]))
+           (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]) #_(some #{(:role @user-state)} [:member :waitinglist :registered]))
              [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
               [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.border-l
                {:style {:z-index      1211
@@ -593,13 +581,7 @@
               [:div.absolute.right-16.xl:right-20.inset-y-0
                {:style {:width          "298px"
                         :pointer-events :none}}
-               [boatinput-menu]]])
-           #_[:div.hidden.sm:block
-              [:div.pl-4.h-fullx.flex.items-center.justify-end.h-full
-               {:style {:box-shadow   "var(--inner-shadow-3)"
-                        :border-color "var(--surface0)"
-                        :background   "var(--surface00)"}}
-               [:div [boatinput-sidebar]]]]]])})))
+               [boatinput-menu]]])]])})))
 
 (def max-width "50ch")
 

@@ -297,31 +297,48 @@
 (rf/reg-sub :lab/has-chrome (fn [db]
                               (get-in db [:settings :state :lab/toggle-chrome])))
 
+
+
+;region
+
+; status -> anonymous, registered, waitinglist, member
+; access -> admin, booking, nøkkelvakt
+
+;at-least-registered
+;(some #{(:role @user-state)} [:member :waitinglist :registered])
+
+(rf/reg-sub :lab/at-least-registered
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            (fn [[ua {:keys [status access] :as sim}] _]
+              (if sim
+                (some #{status} [:registered :waitinglist :member])
+                ua)))
+
+(rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
+                                     (tap> {:lab/set-sim-type arg})
+                                     (assoc-in db [:lab/sim :status] arg)))
+
 (rf/reg-event-db :lab/toggle-chrome
                  (fn [db _]
                    (update-in db [:settings :state :lab/toggle-chrome] (fnil not false))))
 
-(rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
-                                     (tap> arg)
-                                     (assoc-in db [:lab/sim :role] arg)))
-
 (rf/reg-event-db :lab/set-sim (fn [db [_ arg opt]]
-                                (tap> [arg opt (:lab/sim db)])
                                 (cond
                                   (= :booking arg)
                                   (if opt
-                                    (update-in db [:lab/sim :status] (fnil set/union #{}) #{:booking})
-                                    (update-in db [:lab/sim :status] (fnil set/difference #{}) #{:booking}))
+                                    (update-in db [:lab/sim :access] (fnil set/union #{}) #{:booking})
+                                    (update-in db [:lab/sim :access] (fnil set/difference #{}) #{:booking}))
 
                                   (= :admin arg)
                                   (if opt
-                                    (update-in db [:lab/sim :status] (fnil set/union #{}) #{:admin})
-                                    (update-in db [:lab/sim :status] (fnil set/difference #{}) #{:admin}))
+                                    (update-in db [:lab/sim :access] (fnil set/union #{}) #{:admin})
+                                    (update-in db [:lab/sim :access] (fnil set/difference #{}) #{:admin}))
 
                                   (= :nøkkelvakt arg)
                                   (if opt
-                                    (update-in db [:lab/sim :status] (fnil set/union #{}) #{:nøkkelvakt})
-                                    (update-in db [:lab/sim :status] (fnil set/difference #{}) #{:nøkkelvakt}))
+                                    (update-in db [:lab/sim :access] (fnil set/union #{}) #{:nøkkelvakt})
+                                    (update-in db [:lab/sim :access] (fnil set/difference #{}) #{:nøkkelvakt}))
                                   :else
                                   db)))
 
@@ -332,37 +349,49 @@
             :<- [:lab/sim?]
             (fn [[ua sim] _]
               (if-let [s sim]
-                (if (some #{(:role s)} [:member]) s s)
+                (if (some #{(:status s)} [:member]) s s)
                 ua)))
 
-(rf/reg-sub :lab/member
+;todo: Assume we are always simulating
+(rf/reg-sub :lab/status-is-none
+            :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [{:keys [role status] :as sim} _]
-              (if role
-                (some #{role} [:member])
-                false)))
+            (fn [[_ {:keys [status access] :as sim}] _]))
+
+(rf/reg-sub :lab/member
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            (fn [[_ {:keys [status] :as sim}] _]
+              (when sim (= :member status))))
+
+(rf/reg-sub :lab/admin-access
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            :<- [:lab/member]
+            (fn [[_ {:keys [status access] :as sim} member?] _]
+              (and member? (some #{:admin} access))))
 
 (rf/reg-sub :lab/booking
             :<- [:lab/sim?]
-            (fn [{:keys [role status] :as sim} _]
-              (if status
-                (= :booking (some status [:booking]))
+            (fn [{:keys [status access] :as sim} _]
+              (if access
+                (= :booking (some access [:booking]))
                 false)))
 
 (rf/reg-sub :lab/nokkelvakt
             :<- [:lab/sim?]
-            (fn [{:keys [role status] :as sim} _]
-              (if status
-                (= :nøkkelvakt (some status [:nøkkelvakt]))
+            (fn [{:keys [status access] :as sim} _]
+              (if access
+                (= :nøkkelvakt (some access [:nøkkelvakt]))
                 false)))
 
 (rf/reg-sub :lab/admin
             :<- [:lab/sim?]
-            (fn [{:keys [role status] :as sim} _]
-              (if status
+            (fn [{:keys [status access] :as sim} _]
+              (if access
                 (and
-                  (some #{role} [:member])
-                  (= :admin (some status [:admin])))
+                  (some #{status} [:member])
+                  (= :admin (some access [:admin])))
                 false)))
 
 (comment
@@ -384,3 +413,4 @@
 
 (rf/reg-event-fx :app/login (fn [_ _]
                               {:fx [[:lab/login-fx nil]]}))
+

@@ -1,17 +1,15 @@
 (ns user.forms
-  (:require [schpaa.style.hoc.buttons :as hoc.buttons]
+  (:require [schpaa.style.hoc.buttons :as hoc.buttons :refer [checkbox]]
             [schpaa.style.input :as sci :refer [input]]
             [schpaa.style.ornament :as sc]
             [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
-            [booking.ico :as ico]
-            [schpaa.debug :as l]
             [reagent.core :as r]
             [tick.core :as t]
-            [times.api :as ta :refer [relative-time]]
+            [times.api :refer [relative-time]]
             [eykt.content.rapport-side]
             [db.core :as db]))
 
-(defn my-basics-form' [props]
+(defn generalinformation-panel [props]
   [togglepanel :a/a1 "Generelle opplysninger"
    (fn [] [sc/row-sc-g4-w
            [sc/row-sc-g4-w
@@ -28,7 +26,7 @@
              "3" "Teknikk, sikkerhet eller grunnkurs-2"
              "4" "Aktivitetsleder, trener-1 eller høyere"}]])])
 
-(defn my-booking-form' [props]
+(defn booking-panel [props]
   [togglepanel :a/a2 "Booking på sjøbasen"
    (fn []
      [:<>
@@ -38,7 +36,7 @@
        [hoc.buttons/checkbox props [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
        [hoc.buttons/checkbox props [] "Jeg ønsker tilgang til de utfordrende båtene" :booking-expert]]])])
 
-(defn my-vakt-form' [{:keys [form-id handle-submit dirty readonly? values] :as props}]
+(defn nokkelvakt-panel [{:keys [form-id handle-submit dirty readonly? values] :as props}]
   [togglepanel :a/a3 "Nøkkelvakt"
    (fn []
      [sc/col-space-8
@@ -65,6 +63,8 @@
             initial-state
             (dissoc (:values @form-state) :style :created-time :created-date))))
 
+;region
+
 ;todo find a suitable namespace
 (defn save-edit-changes [uid by-uid before-values after-values endringsbeskrivelse]
   (db/firestore-add
@@ -80,9 +80,7 @@
     initial-state
     values))
 
-;(defonce show-changelog (r/atom false))
-
-(defn my-endrings-logg [{:keys [state initial-values values] :as props}]
+(defn changelog-panel [{:keys [state initial-values values] :as props}]
   (let [show-changelog (r/atom false)
         toggle #(swap! show-changelog not)
         path ["users" (:uid values) "endringslogg"]]
@@ -95,8 +93,8 @@
           (when @show-changelog
             (r/with-let [changelog (db.core/on-snapshot-docs-reaction {:path path})]
               (when @changelog
-                ;[l/ppre-x @changelog]
                 (into [sc/col-space-1]
+                      ;todo
                       (map (fn [e] (let [rt (some-> e :data (get "timestamp") .toDate t/date-time)]
                                      [sc/row-sc-g2-w {:style {:display "inline-flex"}}
                                       [sc/text1 {:style {:line-height   "var(--font-lineheight-2)"
@@ -107,6 +105,7 @@
 
                            @changelog)))))]))]))
 
+;endregion
 
 (comment
   (do
