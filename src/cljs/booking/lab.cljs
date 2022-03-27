@@ -448,27 +448,21 @@
             :max-height "80vh"
             :max-width  "90vw"}
     :class [:min-w-smx]}
-   [:div.py-4.px-4
-    [sc/dialog-title' "Er du velkommen?"]]
-   [:div.flex.flex-col.space-y-8.p-4
-    {:style {:border-radius    "var(--radius-1)"
-             :z-index          1000
-             :background-color "var(--floating)"
-             :box-shadow       "var(--inner-shadow-2),var(--shadow-1),var(--shadow-2)"}}
+   [sc/col-space-8
+    [sc/dialog-title' "Ekornets fødselsdag"]
     [sc/col-space-2
-     [:div.space-y-4
-      [:img.w-24.float-right {:src "/img/logo-n.png"}]
-      [sc/text1 {:style {:font-family "Merriweather"
-                         :line-height "var(--font-lineheight-4)"}
-                 :class [:clear-left]} "All presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
-      [sc/subtext1 "Toon Tellegen"]]]]
-   ;[sc/text1 {:class [:clear-left]} "Dette nettstedet åpner ikke for publikum før 28. April, som er dagen før bursdagen min."]
-   ;[sc/text2 "Da skal jeg feire i skogen sammen med venner og ukjente med bål, selv om det er ulovlig. Ekornet kommer, skogmusa og bjørnefamilien også. Det blir litt av vært å spise."]]]]
+     ;[:img.w-24.float-right {:src "/img/logo-n.png"}]
+     [sc/text1 {:style {:font-family "Merriweather"
+                        :line-height "var(--font-lineheight-4)"}
+                :class [:clear-left]} "All presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
+     [sc/subtext1 "Toon Tellegen"]]
+    ;[sc/text1 {:class [:clear-left]} "Dette nettstedet åpner ikke for publikum før 28. April, som er dagen før bursdagen min."]
+    ;[sc/text2 "Da skal jeg feire i skogen sammen med venner og ukjente med bål, selv om det er ulovlig. Ekornet kommer, skogmusa og bjørnefamilien også. Det blir litt av vært å spise."]]]]
 
-   [:div.pt-4.pb-2.-debug
-    [sc/row-ec
-     [hoc.buttons/danger {} "Danger"]
-     [hoc.buttons/regular {:on-click on-close} "Videre"]]]])
+    [:div.py-4x
+     [sc/row-ec
+      ;[hoc.buttons/danger {} "Farlig"]
+      [hoc.buttons/cta {:on-click on-close} "Videre"]]]]])
 
 (rf/reg-event-fx :app/sign-out
                  (fn [_ _] {:fx [[:lab/logout-fx nil]

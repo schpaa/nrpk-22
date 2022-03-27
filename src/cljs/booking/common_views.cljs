@@ -475,9 +475,19 @@
                   [sc/text1 titles]])]]))
 
          ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
+         [:div.grow]
          (if-not @(rf/subscribe [:lab/at-least-registered])
-           [cta {:on-click #(rf/dispatch [:app/login])} "Logg inn & Registrer deg"]
+           [cta {:style    {:padding-block  "var(--size-1)"
+                            :padding-inline "var(--size-2)"
+                            :min-width      "0rem"
+                            :font-weight    "var(--font-weight-6)"
+                            :box-shadow     "var(--shadow-1)"}
+                 :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0]
+                 :on-click #(rf/dispatch [:app/login])}
+            [:div "Logg inn"]
+            [:div "& Registrer deg"]]
            [search-menu])
+
          [main-menu]]]]])])
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
@@ -564,7 +574,7 @@
             ;endregion
 
             ;region horizontal toolbar on small screens
-            (when (and @has-chrome? (some #{(:role @user-state)} [:member :waitinglist :registered]))
+            (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]) #_(some #{(:role @user-state)} [:member :waitinglist :registered]))
               [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t.sticky.bottom-0
                {:style {:z-index      1000
                         :box-shadow   "var(--inner-shadow-3)"

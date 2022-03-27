@@ -22,11 +22,4 @@ Klubbens lov bygger på lovnormen til Norges Idrettsforbund. Klubben er medlem a
 Norges Idrettsforbund gjennom Oslo Idrettskrets og er også medlem i de to
 særforbundene Norges Roforbund og Norges Padleforbund.
 
-### Organisasjon
-
-Klubben er organisert med et styre, valgkomite, kontrollkomite og en revisor.
-Fra oktober 2020 har klubben engasjert en aktivitetskoordinator utenfor styret.
-Fra høsten 2021 er det Arnfinn Bjørshol som er aktivitetskoordinator.
-
-### Styret
-
+[Se også Styret i NRPK](/oversikt/styret)

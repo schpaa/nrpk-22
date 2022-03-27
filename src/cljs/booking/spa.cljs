@@ -36,7 +36,8 @@
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [booking.design-debug]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [user.database]))
+            [user.database]
+            [booking.ico :as ico]))
 
 ;region related to flex-date and how to display relative time
 
@@ -188,6 +189,20 @@
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
 
+(o/defstyled frontpage-image-hack :img
+  {:filter          "contrast(0.375) brightness(0.5)"       ; blur(2px) grayscale(50%)
+   :object-fit      :cover
+   :object-position "center center"
+   :width           "100%"
+   :min-height      "20rem"
+   :height          "calc(100vh - 8rem)"}
+  [:at-media {:min-width "511px"}
+   {:height "calc(100vh - 4rem)"}]
+  [:at-supports {:height :100dvh}
+   {:height "calc(100dvh - 8rem)"}
+   [:at-media {:min-width "511px"}
+    {:height "calc(100dvh - 4rem)"}]])
+
 (def routing-table
   {:r.welcome
    (fn [r]
@@ -223,14 +238,7 @@
 
                        [:div.relative.w-full.z-0
 
-                        [:img {:style {:filter          "contrast(0.275)"
-                                       :object-fit      :cover
-                                       :object-position "center center"
-                                       :width           "100%"
-                                       :height          (str "calc(100vh - " (if some-state "4rem" "4rem") ")")
-                                       :min-height      "20rem"}
-
-                               :src   "/img/brygge.jpeg"}]
+                        [frontpage-image-hack {:src "/img/brygge.jpeg"}]
                         ;logo
                         [:div
                          {:style {:position      :absolute
@@ -291,8 +299,8 @@
                  (md "# NRPK\n## Nøklevann ro- og padleklubb tilbyr medlemmene å benytte klubbens materiell på Nøklevann i klubbens åpningstider. I tillegg har vi et tilbud til de som har våttkort grunnkurs hav å padle på Oslofjorden.")
                  [sc/row-sc-g2-w
                   (let [data [[1 :r.forsiden "Bli medlem"]
-
-                              [3 :r.oversikt.organisasjon "Organisasjon"]]]
+                              [3 :r.oversikt.organisasjon "Organisasjon"]
+                              [4 :r.oversikt.styret "Styret"]]]
                     (map (comp f rest) (sort-by first data)))]]
 
                 [sc/col-space-1
@@ -574,6 +582,59 @@
                                 (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
                                 [:div "Du har altså logget ut"]])}))
 
+
+   :r.oversikt.styret
+   (fn [r]
+     (+page-builder
+       r
+       {:render (fn []
+                  (do
+                    [:<>
+                     (-> (inline "./oversikt/styret.md") schpaa.markdown/md->html sc/markdown)
+                     (let [data [[nil "Ulf Pedersen" "Styreleder" ["HMS" "Nøkkelvakt\u00adansvarlig"]]
+                                 [nil "Tormod Tørstad" "Nestleder" ["Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
+                                 [nil "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
+                                 [nil "Adrian Mitch" "Styremedlem" ["Kasserer"]]
+                                 [nil "Chris Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
+                                 [nil "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig" "Midlertidig anleggs\u00ADansvarlig Nøklevann"]]
+                                 [nil "Jan Gunnar Jacobsen" "Styremedlem" []]
+                                 [nil "Ylva Morken Eide" "Styremedlem" []]
+                                 [nil "Kjersti Selseth" "Vara" []]
+                                 [nil "Ole H. Larsen" "Vara" []]]]
+                       (o/defstyled card :div.relative
+                         :p-4
+                         {:min-height       "13ch"
+                          :background-color "var(--floating)"
+                          :border-radius    "var(--radius-1)"
+                          :box-shadow       "var(--shadow-1)"})
+
+                       (o/defstyled image :div
+                         {:background    "var(--text3)"
+                          ;:border "none"
+                          :color         "var(--text3)"
+                          :aspect-ratio  "1/1"
+                          :height        "var(--size-9)"
+                          :box-shadow    "var(--inner-shadow-1)"
+                          :border-radius "var(--radius-round)"})
+                       [:div {:style {:display               :grid
+                                      :gap                   "8px 8px"
+                                      :grid-template-columns "repeat(auto-fit,minmax(18ch,1fr))"}}
+                        (for [[url navn role ansvar] data]
+                          [card
+                           [:div                            ;.flex.items-start.justify-between.gap-4
+                            [:div.float-right.pl-2.-mr-2.-mt-2 [image {:src "/img/logo-n.png"}]]
+                            [:div.clear-left.space-y-1.mr-3
+                             [sc/small2 {:style {:font-family "Merriweather"}} role]
+                             [sc/text1 navn]
+                             [sc/small1
+                              (interpose ", "
+                                         (map (fn [e]
+                                                [:span {:style {:line-height "var(--font-lineheight-3)"}} e])
+                                              ansvar))]]]
+                           [:div.absolute.bottom-2.right-2
+                            (sc/icon-small
+                              {:style {:color "var(--text3)"}}
+                              ico/user)]])])]))}))
    :r.oversikt.organisasjon
    (fn [r]
      (+page-builder
@@ -581,42 +642,7 @@
        {:render (fn []
                   (do
                     [:<>
-                     (-> (inline "./oversikt/organisasjon.md") schpaa.markdown/md->html sc/markdown)
-                     (let [data [[nil "Ulf Pedersen" ["Styreleder" "HMS" "Nøkkelvakt\u00adansvarlig"]]
-                                 [nil "Tormod Tørsdad" ["Nestleder" "Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
-                                 [nil "Stein-Owe Hansen" ["Sekretær"]]
-                                 [nil "Line Stolpestad" ["Aktivitets\u00ADansvarlig" "Midlertidig anleggs\u00ADansvarlig Nøklevann"]]
-                                 [nil "Adrian Mitch" ["Kasserer"]]
-                                 [nil "Chris Schreiner" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
-                                 [nil "Kjersti Selseth" []]
-                                 [nil "Ylva Morken Eide" []]
-                                 [nil "Jan Gunnar Jacobsen" []]
-                                 [nil "Ole H. Larsen" []]]]
-                       (o/defstyled card :div
-                         :p-4
-                         {:min-height       "12ch"
-                          :background-color :#fffe
-                          :border-radius    "var(--radius-1)"
-                          :box-shadow       "var(--inner-shadow-1),var(--shadow-2)"})
-
-                       (o/defstyled image :img
-                         {:background    :#0002
-                          ;:border "none"
-                          :aspect-ratio  "1/1"
-                          :height        "var(--size-9)"
-                          :box-shadow    "var(--inner-shadow-2)"
-                          :border-radius "var(--radius-round)"})
-                       [:div {:style {:display               :grid
-                                      :gap                   "8px 8px"
-                                      :grid-template-columns "repeat(auto-fit,minmax(21ch,1fr))"}}
-                        (for [[url navn ansvar] data]
-                          [card
-                           [:div.flex.items-start.gap-4
-                            [image
-                             {:src url}]
-                            [sc/col-space-1
-                             [sc/text0 navn]
-                             (map (fn [e] [sc/small1 {:style {:font-family "Merriweather"}} e]) ansvar)]]])])]))}))
+                     (-> (inline "./oversikt/organisasjon.md") schpaa.markdown/md->html sc/markdown)]))}))
 
    :r.page-not-found
    error-page})
