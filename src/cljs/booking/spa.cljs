@@ -281,7 +281,7 @@
                         (sc/markdown'
                           [sc/col-space-2
                            (schpaa.markdown/md->html "## Postadresse\nNøklevann ro- og padleklubb<br/>Postboks 37, 0621 Bogerud<br/>[styret@nrpk.no](mailto:styret@nrpk.no)<br/>[medlem@nrpk.no](mailto:medlem@nrpk.no)")
-                           [:div [hoc.buttons/regoutline-pill-icon
+                           [:div [hoc.buttons/reg-pill-icon
                                   {:on-click #(rf/dispatch [:app/give-feedback {:source "forside"}])}
                                   ico/tilbakemelding "Har du en tilbakemelding?"]]])]])}]))
 

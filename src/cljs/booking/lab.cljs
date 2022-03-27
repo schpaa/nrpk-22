@@ -500,8 +500,10 @@
    (r/with-let [content (r/atom {})]
      (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
                (let [state (tag @content)]
-                 [sc/icon {:on-click #(swap! content update-in [tag] (fnil not false))
-                           :style    {:color (if state on-color off-color)}}
+                 [sc/icon {
+                           :on-click #(swap! content update-in [tag] (fnil not false))
+                           :style    {:cursor :pointer
+                                      :color  (if state on-color off-color)}}
                   (if state on-icon off-icon)]))]
        [sc/col-space-8
         [sc/dialog-title "Tilbakemelding"]
@@ -514,15 +516,16 @@
           [sci/textarea {:values        {:tilbakemelding (:text @content)}
                          :placeholder   "Skriv her"
                          :handle-change #(swap! content assoc :text (-> % .-target .-value))}
-           :text {:class [:-mx-1]} "Skriv her" :tilbakemelding]
+           :text {:class [:-mx-2]} "Skriv her" :tilbakemelding]
 
-          (let [off-color "var(--text2)"]
+          (let [off-color "var(--text2)"
+                on-color "var(--text1)"]
             [sc/row-sc-g4-w
-             (f :heart ["red" off-color] [ico/fill-heart ico/heart])
-             (f :thumbsup ["black" off-color] [ico/fill-thumbsup ico/thumbsup])
-             (f :thumbsdown ["black" off-color] [ico/fill-thumbsdown ico/thumbsdown])
-             (f :smiley ["orange" off-color] [ico/fill-smileyface ico/smileyface])
-             (f :frowny ["red" off-color] [ico/fill-frownyface ico/frownyface])])]]
+             (f :heart ["var(--red-6)" off-color] [ico/fill-heart ico/heart])
+             (f :thumbsup [on-color off-color] [ico/fill-thumbsup ico/thumbsup])
+             (f :thumbsdown [on-color off-color] [ico/fill-thumbsdown ico/thumbsdown])
+             (f :smiley ["var(--yellow-6)" off-color] [ico/fill-smileyface ico/smileyface])
+             (f :frowny ["var(--orange-6)" off-color] [ico/fill-frownyface ico/frownyface])])]]
 
         [sc/row-ec
          [hoc.buttons/regular {:on-click #(do
@@ -538,5 +541,7 @@
                    {:fx [[:dispatch [:lab/modaldialog-visible
                                      true
                                      {:context    args
-                                      :action     (fn [{:keys [carry]}] (js/alert carry))
+                                      :action     (fn [{:keys [carry]}]
+                                                    (db/firestore-add {:path  ["tilbakemeldinger"]
+                                                                       :value carry}))
                                       :content-fn #(feedback %)}]]]}))
