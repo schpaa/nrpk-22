@@ -413,8 +413,8 @@
                             content])]
               [:div.relative
                [:div.absolute.top-1.right-1 {:style {:color "var(--text1)"}} (sc/icon-small {:on-click #(rf/dispatch [:lab/toggle-userstate-panel])} ico/closewindow)]
-               ;[l/ppre-x @user-state bookingx]
-               [sc/row-sc-g2-w
+
+               [sc/row-sc-g2-w {:class [:mr-8]}
 
                 (f-icon [:lab/set-sim-type :none] :none [icon-with-caption ico/anonymous "anonym"])
                 (f-icon [:lab/set-sim-type :registered] :registered [icon-with-caption ico/user "registrert"])
@@ -449,28 +449,27 @@
         [sc/row-std
          (when-not @(rf/subscribe [:lab/in-search-mode?])
            (let [titles (compute-page-titles r)]
-             [:<>
+             [:div.truncate
               [:div.hidden.sm:block.grow
                [:<>
                 (if (vector? titles)
-                  [:div.flex.items-center.gap-1
-                   (interpose [:div.text-2xl.opacity-20 "/"]
+                  [sc/row-sc-g2
+                   (interpose [sc/text3 {:style {:font-size "var(--font-size-4)"}} "\\"]
                               (for [[idx e] (map-indexed vector titles)
                                     :let [last? (= idx (dec (count titles)))]]
                                 (if last?
-                                  [sc/text1 e]
+                                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
                                   (let [{:keys [text link]} e]
-                                    [sc/subtext-with-link {
-                                                           :href (k/path-for [link])} text]))))]
+                                    [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
                   [sc/text1 titles])]]
               [:div.xs:block.sm:hidden.grow
                (if (vector? titles)
-                 [sc/col-space-1
+                 [sc/col-space-1                            ;{:class [:truncate]}
                   (when (< 1 (count titles))
                     (let [{:keys [text link]} (first titles)]
                       [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
                                                    :href  (k/path-for [link])} text]]))
-                  [sc/text1 (last titles)]]
+                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
                  [sc/col
                   [sc/text1 titles]])]]))
 
@@ -479,13 +478,14 @@
          (if-not @(rf/subscribe [:lab/at-least-registered])
            [cta {:style    {:padding-block  "var(--size-1)"
                             :padding-inline "var(--size-2)"
-                            :min-width      "0rem"
-                            :font-weight    "var(--font-weight-6)"
+                            ;:min-width      "0rem"
+                            :width          "min-content"
+                            ;:font-weight    "var(--font-weight-6)"
                             :box-shadow     "var(--shadow-1)"}
-                 :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0]
+                 :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
                  :on-click #(rf/dispatch [:app/login])}
-            [:div "Logg inn"]
-            [:div "& Registrer deg"]]
+            [:div {:style {}} "Logg inn"]
+            [:div.whitespace-nowrap "& Registrer deg"]]
            [search-menu])
 
          [main-menu]]]]])])

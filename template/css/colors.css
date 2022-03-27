@@ -110,7 +110,7 @@ outline: 2px solid #a0a8;
 
     --gray-0: #fafaf9;
     --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;      
+    --gray-2: #e7e5e4;
     --gray-3: #d6d3d1;
     --gray-4: #a8a29e;
     --gray-5: #78716c;
@@ -118,6 +118,7 @@ outline: 2px solid #a0a8;
     --gray-7: #44403c;
     --gray-8: #292524;
     --gray-9: #171515;
+
 */
 
     --gray-0: #F0F1F1;
@@ -131,6 +132,8 @@ outline: 2px solid #a0a8;
     --gray-8: #3B3E3F;
     --gray-9: #222425;
     --gray-10: #1c1917;
+
+
 
     --light-toolbar: var(--gray-2);
     --light-toolbar-: var(--gray-3);
@@ -150,9 +153,9 @@ outline: 2px solid #a0a8;
     --dim-switchon: hsl(var(--switch-hue), 50%, 50%);
     --dim-switchoff: var(--gray-6);
 
-    --dim-brand1: hsl(var(--brand-hue), 50%, 60%);
+    --dim-brand1: hsl(var(--brand-hue), 50%, 40%);
     --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
-    --dim-brand1copy: hsl(var(--brand-hue), 50%, 10%);
+    --dim-brand1copy: hsl(var(--brand-hue), 50%, 80%);
     --light-brand1: hsl(var(--brand-hue), 50%, 40%);
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
     --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);

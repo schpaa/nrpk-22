@@ -18,7 +18,9 @@
             [schpaa.style.button2 :as scb2]
             [booking.qrcode]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style.input :as sci]
+            [booking.ico :as ico]))
 
 ;region temporary, perhaps for later
 
@@ -484,3 +486,57 @@
                                       :content-fn #(xx %)}]]]}))
 
 ;endregion
+
+;region feedback
+
+(defn feedback [{:keys [on-close on-save] :as context}]
+  [sc/centered-dialog
+   {:style {:background-color "var(--toolbar)"
+            :z-index          10
+            :width            "50ch"
+            :max-height       "80vh"
+            :max-width        "90vw"}
+    :class [:min-w-smx]}
+   (r/with-let [content (r/atom {})]
+     (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
+               (let [state (tag @content)]
+                 [sc/icon {:on-click #(swap! content update-in [tag] (fnil not false))
+                           :style    {:color (if state on-color off-color)}}
+                  (if state on-icon off-icon)]))]
+       [sc/col-space-8
+        [sc/dialog-title "Tilbakemelding"]
+        [sc/col-space-2
+         [sc/text1 {:style {;:font-family "Merriweather"
+                            :line-height "var(--font-lineheight-4)"}
+                    :class []} "Ris eller ros? — eller noen vennlige velvalgte ord mottaes med takk..."]
+         [sc/col-space-2
+          ;[l/ppre-x @content]
+          [sci/textarea {:values        {:tilbakemelding (:text @content)}
+                         :placeholder   "Skriv her"
+                         :handle-change #(swap! content assoc :text (-> % .-target .-value))}
+           :text {:class [:-mx-1]} "Skriv her" :tilbakemelding]
+
+          (let [off-color "var(--text2)"]
+            [sc/row-sc-g4-w
+             (f :heart ["red" off-color] [ico/fill-heart ico/heart])
+             (f :thumbsup ["black" off-color] [ico/fill-thumbsup ico/thumbsup])
+             (f :thumbsdown ["black" off-color] [ico/fill-thumbsdown ico/thumbsdown])
+             (f :smiley ["orange" off-color] [ico/fill-smileyface ico/smileyface])
+             (f :frowny ["red" off-color] [ico/fill-frownyface ico/frownyface])])]]
+
+        [sc/row-ec
+         [hoc.buttons/regular {:on-click #(do
+                                            (on-close)
+                                            (reset! content {}))} "Avbryt"]
+         [hoc.buttons/cta {:disabled (empty? (:text @content))
+                           :on-click #(do
+                                        (on-save @content)
+                                        (reset! content {}))} "Send"]]]))])
+
+(rf/reg-event-fx :app/give-feedback
+                 (fn [{db :db} [_ args]]
+                   {:fx [[:dispatch [:lab/modaldialog-visible
+                                     true
+                                     {:context    args
+                                      :action     (fn [{:keys [carry]}] (js/alert carry))
+                                      :content-fn #(feedback %)}]]]}))

@@ -236,23 +236,24 @@
 
                        [:div.sticky.top-0.z-10 [booking.common-views/header-line r]]
 
+                       ;image
                        [:div.relative.w-full.z-0
 
                         [frontpage-image-hack {:src "/img/brygge.jpeg"}]
                         ;logo
-                        [:div
-                         {:style {:position      :absolute
+                        #_[:div
+                           {:style {:position      :absolute
 
-                                  :display       :grid
-                                  :place-content :center
-                                  :top           "0"
-                                  :right         "0"
-                                  :bottom        "0"
-                                  :left          "0"}}
+                                    :display       :grid
+                                    :place-content :center
+                                    :top           "0"
+                                    :right         "0"
+                                    :bottom        "0"
+                                    :left          "0"}}
 
-                         [:img {:style {:width     "25vw"
-                                        :max-width "10rem"}
-                                :src   "/img/logo-n.png"}]]
+                           [:img {:style {:width     "25vw"
+                                          :max-width "10rem"}
+                                  :src   "/img/logo-n.png"}]]
 
                         [:div.absolute.bottom-4.left-4
                          [sc/hero {:style {:color          "white"
@@ -277,7 +278,12 @@
                                       [4 :r.oversikt "Oversikt"]]]
                             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])]]]
                        [:div
-                        (sc/markdown' (schpaa.markdown/md->html "## Postadresse\nNøklevann ro- og padleklubb<br/>Postboks 37, 0621 Bogerud<br/>[styret@nrpk.no](mailto:styret@nrpk.no)<br/>[medlem@nrpk.no](mailto:medlem@nrpk.no)"))]])}]))
+                        (sc/markdown'
+                          [sc/col-space-2
+                           (schpaa.markdown/md->html "## Postadresse\nNøklevann ro- og padleklubb<br/>Postboks 37, 0621 Bogerud<br/>[styret@nrpk.no](mailto:styret@nrpk.no)<br/>[medlem@nrpk.no](mailto:medlem@nrpk.no)")
+                           [:div [hoc.buttons/regoutline-pill-icon
+                                  {:on-click #(rf/dispatch [:app/give-feedback {:source "forside"}])}
+                                  ico/tilbakemelding "Har du en tilbakemelding?"]]])]])}]))
 
    :r.oversikt
    (fn forsiden [r]
