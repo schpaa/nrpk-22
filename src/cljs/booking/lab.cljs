@@ -531,7 +531,8 @@
          [hoc.buttons/regular {:on-click #(do
                                             (on-close)
                                             (reset! content {}))} "Avbryt"]
-         [hoc.buttons/cta {:disabled (empty? (:text @content))
+         [hoc.buttons/cta {:disabled (and (empty? (:text @content))
+                                          (every? #(false? (get @content % false)) [:heart :thumbsup :thumbsdown :smiley :frowny]))
                            :on-click #(do
                                         (on-save @content)
                                         (reset! content {}))} "Send"]]]))])
