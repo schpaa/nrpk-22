@@ -16,11 +16,34 @@ module.exports = {
   theme: {
     extend: {
         animation: {
+            'bounce': 'bounce 10000ms linear infinite',
+            'hbounce': 'hbounce 2000ms linear infinite',
             'pulse': 'pulse 2000ms linear infinite',
             'blink': 'blink 1000ms steps(2) infinite',
         	'slow-ping': 'slow-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
         },
         keyframes: {
+            bounce: {
+                '0%, 100%': {
+                    transform: 'translateY(0%)',
+
+                    animationTimingFunction: 'cubic-bezier(0,0,0.2,1)',
+                },
+                '50%': {
+                    transform: 'translateY(-25%)',
+                    animationTimingFunction: 'cubic-bezier(0.8,0,1,1)',
+                },
+            },
+            hbounce: {
+                '0%, 100%': {
+                    transform: 'translateX(0%)',
+                    animationTimingFunction: 'cubic-bezier(0.8,0,1,1)',
+                },
+                '50%': {
+                    transform: 'translateX(-25%)',
+                    animationTimingFunction: 'cubic-bezier(0,0,0.2,1)',
+                },
+            },
             'blink': {
                 '0%': {
                     opacity: '0.3',

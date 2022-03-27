@@ -489,7 +489,7 @@
 
 ;region feedback
 
-(defn feedback [{:keys [on-close on-save] :as context}]
+(defn feedback [{:keys [on-close on-save persona] :as ctx}]
   [sc/centered-dialog
    {:style {:background-color "var(--toolbar)"
             :z-index          10
@@ -497,6 +497,7 @@
             :max-height       "80vh"
             :max-width        "90vw"}
     :class [:min-w-smx]}
+   ;[l/ppre-x ctx]
    (r/with-let [content (r/atom {})]
      (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
                (let [state (tag @content)]
@@ -507,25 +508,30 @@
                   (if state on-icon off-icon)]))]
        [sc/col-space-8
         [sc/dialog-title "Tilbakemelding"]
-        [sc/col-space-2
-         [sc/text1 {:style {;:font-family "Merriweather"
-                            :line-height "var(--font-lineheight-4)"}
-                    :class []} "Ris eller ros? — eller noen vennlige velvalgte ord mottaes med takk..."]
+        [sc/row-sc-g3
+         [:img.w-16.hidden.xs:block {
+                                     :style {:object-fit :scale-down
+                                             :filter     "opacity(0.5) drop-shadow(0 0 0 var(--text3) )"}
+                                     :src   persona}]
          [sc/col-space-2
-          ;[l/ppre-x @content]
-          [sci/textarea {:values        {:tilbakemelding (:text @content)}
-                         :placeholder   "Skriv her"
-                         :handle-change #(swap! content assoc :text (-> % .-target .-value))}
-           :text {:class [:-mx-2]} "Skriv her" :tilbakemelding]
+          [sc/text1 {:style {;:font-family "Merriweather"
+                             :line-height "var(--font-lineheight-4)"}
+                     :class []} "Ris eller ros? — eller noen vennlige velvalgte ord mottas med takk..."]
+          [sc/col-space-2
+           ;[l/ppre-x @content]
+           [sci/textarea {:values        {:tilbakemelding (:text @content)}
+                          :placeholder   "Skriv her"
+                          :handle-change #(swap! content assoc :text (-> % .-target .-value))}
+            :text {:class [:-mx-2]} "Skriv her" :tilbakemelding]
 
-          (let [off-color "var(--text2)"
-                on-color "var(--text1)"]
-            [sc/row-sc-g4-w
-             (f :heart ["var(--red-6)" off-color] [ico/fill-heart ico/heart])
-             (f :thumbsup [on-color off-color] [ico/fill-thumbsup ico/thumbsup])
-             (f :thumbsdown [on-color off-color] [ico/fill-thumbsdown ico/thumbsdown])
-             (f :smiley ["var(--yellow-6)" off-color] [ico/fill-smileyface ico/smileyface])
-             (f :frowny ["var(--orange-6)" off-color] [ico/fill-frownyface ico/frownyface])])]]
+           (let [off-color "var(--text2)"
+                 on-color "var(--text1)"]
+             [sc/row-sc-g4-w
+              (f :heart ["var(--red-6)" off-color] [ico/fill-heart ico/heart])
+              (f :thumbsup [on-color off-color] [ico/fill-thumbsup ico/thumbsup])
+              (f :thumbsdown [on-color off-color] [ico/fill-thumbsdown ico/thumbsdown])
+              (f :smiley ["var(--yellow-6)" off-color] [ico/fill-smileyface ico/smileyface])
+              (f :frowny ["var(--orange-6)" off-color] [ico/fill-frownyface ico/frownyface])])]]]
 
         [sc/row-ec
          [hoc.buttons/regular {:on-click #(do
@@ -541,8 +547,20 @@
                  (fn [{db :db} [_ args]]
                    {:fx [[:dispatch [:lab/modaldialog-visible
                                      true
-                                     {:context    args
+                                     {:persona    (rand-nth ["/img/noun-persona-410775.png"
+                                                             "/img/noun-persona-410777.png"
+                                                             "/img/noun-persona-410780.png"
+                                                             "/img/noun-persona-410782.png"
+                                                             "/img/noun-persona-410788.png"
+                                                             "/img/noun-persona-410790.png"
+                                                             "/img/noun-persona-415635.png"
+                                                             "/img/noun-persona-426505.png"
+                                                             "/img/noun-persona-488544.png"
+                                                             "/img/noun-persona-497847.png"
+                                                             "/img/noun-persona-4144945.png"
+                                                             "/img/noun-persona-4145160.png"])
+
                                       :action     (fn [{:keys [carry]}]
                                                     (db/firestore-add {:path  ["tilbakemeldinger"]
-                                                                       :value carry}))
+                                                                       :value (conj {:uid (:uid @(rf/subscribe [::db/user-auth]))} carry)}))
                                       :content-fn #(feedback %)}]]]}))
