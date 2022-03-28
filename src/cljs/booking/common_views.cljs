@@ -226,29 +226,29 @@
       :on-click    schpaa.style.dialog/open-selector}]))
 
 (defn horizontal-toolbar [uid]
-  [{:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                       (if @st solid/CalculatorIcon outline/CalculatorIcon)))
+  [{:icon      solid/UserCircleIcon
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+    :page-name :r.user}
+
+   {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                       (if @st solid/TicketIcon outline/TicketIcon)))
     :special  true
     :on-click #(rf/dispatch [:lab/toggle-number-input])}
 
-   {:icon      solid/UserCircleIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-    :page-name :r.user}
-   {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                        (if @st solid/LightningBoltIcon outline/LightningBoltIcon)))
-    :special   true
-    :on-click  schpaa.style.dialog/open-selector #_#(rf/dispatch [:app/navigate-to [:r.debug]])
-    :page-name :r.debug}
-   {:icon      solid/BookOpenIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-    :badge     #(booking.content.booking-blog/count-unseen uid)
-    :page-name :r.booking-blog}
-   #_{:icon      solid/ClockIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-      :page-name :r.booking.oversikt}
    {:icon      solid/HomeIcon
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :page-name :r.forsiden}])
+    :page-name :r.forsiden}
+
+   {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                        (if @st solid/ClockIcon outline/ClockIcon)))
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
+    :page-name :r.booking.oversikt}
+
+   {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
+                        (if @st solid/InformationCircleIcon outline/InformationCircleIcon)))
+    :special   true
+    :on-click  schpaa.style.dialog/open-selector
+    :page-name :r.debug}])
 
 (def active-style {:border-radius "var(--radius-round)"
                    :padding       "var(--size-2)"
@@ -509,6 +509,14 @@
 
         [main-menu]]]])])
 
+(defn after-content []
+  (let [route @(rf/subscribe [:kee-frame/route])]
+    [:div.py-8.mx-auto.max-w-lg.px-4
+     ;[l/ppre-x route]
+     [:div.pt-16 [hoc.buttons/reg-pill-icon
+                  {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+                  ico/tilbakemelding "Har du en tilbakemelding?"]]]))
+
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
         user-state (rf/subscribe [:lab/user-state])
@@ -586,15 +594,16 @@
                    [:div.w-auto
                     (:whole (first contents))]
                    [:div.h-full.w-full
-
                     contents
-                    [:div.py-8.h-32]]))])
+                    [:div.py-8.h-32]
+                    [after-content]]))])
             ;endregion
 
             ;region horizontal toolbar on small screens
             (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-              [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t.sticky.bottom-0
-               {:style {:z-index      1000
+              [:div.sm:hidden.flex.justify-around.items-center.border-t.sticky.bottom-0
+               {:style {:min-height   "var(--size-10)"
+                        :z-index      1000
                         :box-shadow   "var(--inner-shadow-3)"
                         :border-color "var(--toolbar-)"
                         :background   "var(--toolbar)"}}
@@ -622,6 +631,7 @@
                         :pointer-events :none}}
                [boatinput-menu]]])]])})))
 
+
 (def max-width "50ch")
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
@@ -638,16 +648,24 @@
               :width         "min-content"
               :margin-inline "auto"}}
      [sc/col-c-space-2
-      [sc/hero {:style {:white-space :nowrap}} "Ikke åpent"]
+      [sc/hero {:style {:white-space :nowrap
+                        :color       "var(--text2)"}} "Beskyttet område"]
+      [sc/icon {:style {:color "var(--text2)"}} ico/stengt]
       [sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
       [sc/small1 {:style {:white-space :nowrap}} "For å komme inn --> " (str required-access)]]]))
 
+(rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
+(rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
+
 (defn +page-builder [r m]
-  (let [scrollpos (r/atom 0)
-        scroll-fn (fn [e]
-                    (reset! scrollpos (-> e .-target .-scrollTop))
-                    #_(tap> ["scroll" (-> e .-target .-scrollTop)]))
-        a (r/atom nil)]
+  (r/with-let [scrollpos (r/atom 0)
+               scroll-fn (fn [e]
+                           (let [v (-> e .-target .-scrollTop)]
+                             (if (< 50 v)
+                               (rf/dispatch [:lab/we-know-how-to-scroll true]))
+                             (reset! scrollpos v))
+                           #_(tap> ["scroll" (-> e .-target .-scrollTop)]))
+               a (r/atom nil)]
     (r/create-class
       {:display-name
        "+page-builder"
@@ -656,7 +674,9 @@
        (fn [_] (.removeEventListener @a "scroll" scroll-fn))
 
        :component-did-mount
-       (fn [_] (tap> :component-did-mount))
+       (fn [_]
+         (tap> :component-did-mount)
+         (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render
        (fn [r {:keys [frontpage render render-fullwidth panel always-panel]}]
@@ -673,39 +693,39 @@
                          (.addEventListener el "scroll" scroll-fn)
                          (reset! a el)))}
                [:div.sticky.top-0.z-10
-                {:style {:background-color (str "rgba(" 16rE5 "," 16rE6 "," 16rE6 ","
-                                                (/ (- (+ @scrollpos 0.001) 50) 100) ")")}}
+                {:style {:opacity (- 1 (/ (- (+ @scrollpos 0.001) 0) 150))}}
                 [booking.common-views/header-line r {:frontpage true}]]
                [:div.-mt-16 [render r]]]]
 
              [page-boundary r
               {:frontpage false}
               (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
-                (if-not have-access?
-                  [no-access-view r]
-                  [sc/col-space-8 {:class [:py-8]}
-                   (when panel
-                     [:div.mx-4
-                      [:div.mx-auto
-                       {:style {:width     "100%"
-                                :max-width max-width}}
-                       [hoc.panel/togglepanel pagename "innstillinger" panel]]])
+                [:div.min-h-full
+                 (if-not have-access?
+                   [no-access-view r]
+                   [sc/col-space-8 {:class [:py-8]}
+                    (when panel
+                      [:div.mx-4
+                       [:div.mx-auto
+                        {:style {:width     "100%"
+                                 :max-width max-width}}
+                        [hoc.panel/togglepanel pagename "innstillinger" panel]]])
 
-                   (when always-panel
-                     [:div.mx-4
-                      [:div.mx-auto
-                       {:style {:width     "100%"
-                                :max-width max-width}}
-                       [always-panel]]])
-                   [:div.mx-4
-                    [:div.duration-200
-                     {:style {:margin-right :auto
-                              :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                              ;; force view to align to the left
-                                              0
-                                              :auto)
-                              :width        "100%"
-                              :max-width    max-width}}
-                     (if render-fullwidth
-                       [render-fullwidth r]
-                       [render r])]]]))])))})))
+                    (when always-panel
+                      [:div.mx-4
+                       [:div.mx-auto
+                        {:style {:width     "100%"
+                                 :max-width max-width}}
+                        [always-panel]]])
+                    [:div.mx-4
+                     [:div.duration-200
+                      {:style {:margin-right :auto
+                               :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                               ;; force view to align to the left
+                                               0
+                                               :auto)
+                               :width        "100%"
+                               :max-width    max-width}}
+                      (if render-fullwidth
+                        [render-fullwidth r]
+                        [render r])]]])])])))})))

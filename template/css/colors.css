@@ -153,10 +153,10 @@ outline: 2px solid #a0a8;
     --dim-switchon: hsl(var(--switch-hue), 50%, 50%);
     --dim-switchoff: var(--gray-6);
 
-    --dim-brand1: hsl(var(--brand-hue), 50%, 40%);
+    --dim-brand1: hsl(var(--brand-hue), 40%, 60%);
     --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
     --dim-brand1copy: hsl(var(--brand-hue), 50%, 80%);
-    --light-brand1: hsl(var(--brand-hue), 50%, 40%);
+    --light-brand1: hsl(var(--brand-hue), 55%, 40%);
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
     --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);
 
@@ -199,7 +199,6 @@ outline: 2px solid #a0a8;
     --brand1-copy-dim: var(--orange-9); /* when copy is placed on --brand1-dim */
     --brand1-hover-dim: var(--orange-3);
     --brand1-copy-light: white; /* when copy is placed on --brand1-light */
-
 
    --brand2-dim: var(--green-1);
 
@@ -391,9 +390,9 @@ outline: 2px solid #a0a8;
     --text2: var(--text2-dim);
     --text3: var(--text3-dim);
 
-    --font-weight-1: var(--font-weight-2);
-    --font-weight-2: var(--font-weight-3);
-    --font-weight-3: var(--font-weight-4);
+    --font-weight-1: var(--font-weight-1);
+    --font-weight-2: var(--font-weight-2);
+    --font-weight-3: var(--font-weight-3);
 
     --field1: var(--surface000-dim); /* focused field */
     --field2: var(--surface00-dim); /* unfocused/passive field */

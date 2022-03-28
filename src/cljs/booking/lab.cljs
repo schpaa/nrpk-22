@@ -444,27 +444,21 @@
 
 (defn xx [{:keys [on-close] :as context}]
   [sc/centered-dialog
-   {:style {;:position :relative
-            :z-index    10
+   {:style {:z-index    10
             :width      "50ch"
             :max-height "80vh"
             :max-width  "90vw"}
-    :class [:min-w-smx]}
+    :class []}
    [sc/col-space-8
     [sc/dialog-title' "Ekornets fødselsdag"]
     [sc/col-space-2
-     ;[:img.w-24.float-right {:src "/img/logo-n.png"}]
      [sc/text1 {:style {:font-family "Merriweather"
                         :line-height "var(--font-lineheight-4)"}
-                :class [:clear-left]} "All presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
+                :class [:clear-left]} "Alle presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
      [sc/subtext1 "Toon Tellegen"]]
-    ;[sc/text1 {:class [:clear-left]} "Dette nettstedet åpner ikke for publikum før 28. April, som er dagen før bursdagen min."]
-    ;[sc/text2 "Da skal jeg feire i skogen sammen med venner og ukjente med bål, selv om det er ulovlig. Ekornet kommer, skogmusa og bjørnefamilien også. Det blir litt av vært å spise."]]]]
 
-    [:div.py-4x
-     [sc/row-ec
-      ;[hoc.buttons/danger {} "Farlig"]
-      [hoc.buttons/cta {:on-click on-close} "Videre"]]]]])
+    [sc/row-ec
+     [hoc.buttons/cta {:on-click on-close} "Videre"]]]])
 
 (rf/reg-event-fx :app/sign-out
                  (fn [_ _] {:fx [[:lab/logout-fx nil]
@@ -478,18 +472,19 @@
 
 (rf/reg-event-fx :app/successful-login
                  (fn [{db :db} [_ args]]
-                   {:fx [[:dispatch [:lab/modaldialog-visible
-                                     true
-                                     {;:auto-dismiss 5000
-                                      :action     #()
-                                      :context    args
-                                      :content-fn #(xx %)}]]]}))
+                   #_{:fx [[:dispatch [:lab/modaldialog-visible
+                                       true
+                                       {:action     #()
+                                        :context    args
+                                        :content-fn #(xx %)}]]]}))
 
 ;endregion
 
 ;region feedback
 
-(defn feedback [{:keys [on-close on-save persona] :as ctx}]
+(def max-comment-length 160)
+
+(defn feedback [{:keys [on-close on-save persona caption navn] :as ctx}]
   [sc/centered-dialog
    {:style {:background-color "var(--toolbar)"
             :z-index          10
@@ -497,32 +492,31 @@
             :max-height       "80vh"
             :max-width        "90vw"}
     :class [:min-w-smx]}
-   ;[l/ppre-x ctx]
    (r/with-let [content (r/atom {})]
      (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
                (let [state (tag @content)]
-                 [sc/icon {
-                           :on-click #(swap! content update-in [tag] (fnil not false))
+                 [sc/icon {:on-click #(swap! content update-in [tag] (fnil not false))
                            :style    {:cursor :pointer
                                       :color  (if state on-color off-color)}}
                   (if state on-icon off-icon)]))]
        [sc/col-space-8
-        [sc/dialog-title "Tilbakemelding"]
-        [sc/row-sc-g3
-         [:img.w-16.hidden.xs:block {
-                                     :style {:object-fit :scale-down
-                                             :filter     "opacity(0.5) drop-shadow(0 0 0 var(--text3) )"}
-                                     :src   persona}]
-         [sc/col-space-2
-          [sc/text1 {:style {;:font-family "Merriweather"
-                             :line-height "var(--font-lineheight-4)"}
-                     :class []} "Noen vennlige, konstruktive og velvalgte ord mottas med takk..."]
+        [sc/dialog-title (str "Tilbakemelding" (when navn (str " til " navn)))]
+        [:div.flex.justify-between {:class [:w-full]}
+         [sc/col-space-2 #_{:style {:width "100%"}}
+          [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption]
           [sc/col-space-2
-           ;[l/ppre-x @content]
-           [sci/textarea {:values        {:tilbakemelding (:text @content)}
-                          :placeholder   "Skriv her"
-                          :handle-change #(swap! content assoc :text (-> % .-target .-value))}
-            :text {:class [:-mx-2]} "Skriv her" :tilbakemelding]
+           [:div.relative
+            [sci/textarea {:rows          4
+                           :values        {:tilbakemelding (:text @content)}
+                           :placeholder   (str "Skriv her (max " max-comment-length " tegn)")
+                           :handle-change #(swap! content assoc :text (-> % .-target .-value))}
+             :text {:class [:min-w-full :relative]} "Skriv her" :tilbakemelding]
+            [:div.absolute.-top-1.right-1
+             [sc/label (if (zero? (count (:text @content)))
+                         (str "Maks " max-comment-length " tegn")
+                         (if (< max-comment-length (count (:text @content)))
+                           "Prøv å forkorte litt"
+                           (str (- max-comment-length (count (:text @content))) " tegn igjen")))]]]
 
            (let [off-color "var(--text2)"
                  on-color "var(--text1)"]
@@ -544,12 +538,16 @@
                                         (reset! content {}))} "Send"]]]))])
 
 (rf/reg-event-fx :app/give-feedback
-                 (fn [{db :db} [_ args]]
+                 (fn [{db :db} [_ {:keys [navn caption source]}]]
                    {:fx [[:dispatch [:lab/modaldialog-visible
                                      true
-                                     {:persona    (first (rand-nth booking.personas/faces))
-
+                                     {:navn       navn
+                                      :source     source
+                                      :caption    (or caption "Har du en kommentar til noe eller en ide om hvordan ting kan kommuniseres klarere? Kanskje fant du noe som må korrigeres? Da kan du begynne her:")
                                       :action     (fn [{:keys [carry]}]
                                                     (db/firestore-add {:path  ["tilbakemeldinger"]
-                                                                       :value (conj {:uid (:uid @(rf/subscribe [::db/user-auth]))} carry)}))
+                                                                       :value (conj {:til-navn navn
+                                                                                     :kilde    source
+                                                                                     :uid      (:uid @(rf/subscribe [::db/user-auth]))}
+                                                                                    carry)}))
                                       :content-fn #(feedback %)}]]]}))
