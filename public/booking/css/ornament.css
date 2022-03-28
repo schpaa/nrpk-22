@@ -228,6 +228,7 @@ outline: 2px solid #a0a8;
 
     /* body copy */
 
+    --text0-light: var(--gray-9);
     --text1-light: var(--gray-8);
     --text1-copy-light: var(--gray-2);
     --text2-light: var(--gray-5);
@@ -236,6 +237,7 @@ outline: 2px solid #a0a8;
 
     --textmarker-light:var(--gray-9);
     --textmarker-dim:var(--gray-9);
+    --text0-dim: var(--gray-1);
     --text1-dim: var(--gray-3);
     --text1-copy-dim: var(--gray-8);
     --text2-dim: var(--gray-4);
@@ -296,6 +298,7 @@ outline: 2px solid #a0a8;
 
     --textmarker: var(--textmarker-light);
     --textmarker-background: var(--textmarker-background-light);
+    --text0: var(--text0-light);
     --text1: var(--text1-light);
     --text1-copy: var(--text1-copy-light);
     --text2: var(--text2-light);
@@ -382,6 +385,7 @@ outline: 2px solid #a0a8;
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
+    --text0: var(--text0-dim);
     --text1: var(--text1-dim);
     --text1-copy: var(--text1-copy-dim);
     --text2: var(--text2-dim);
@@ -940,11 +944,20 @@ body {
 .schpaa_style_ornament__hidden_link{cursor:pointer;display:inline-block;font-family:unset;font-weight:var(--font-weight-3);text-decoration:none}.schpaa_style_ornament__hidden_link:hover{text-decoration:underline}
 
 .schpaa_style_input__labbel:disabled{color:red}
-.schpaa_style_ornament__col_c_space_1{display:flex;flex-direction:column;align-items:center}.schpaa_style_ornament__col_c_space_1>*+*{margin-top:.25rem}
+.schpaa_style_ornament__col_c_space_1{display:flex;flex-direction:column;align-items:center}.schpaa_style_ornament__col_c_space_1>*+*{margin-top:.5rem}
 .schpaa_style_ornament__centered_dialog{padding-inline:var(--size-5);padding-block:var(--size-5);color:var(--text1);background-color:var(--content);border-radius:var(--radius-2);box-shadow:var(--shadow-3);overflow-y:auto}
 .schpaa_style_ornament__dialog_title_SINGLEQUOTE_{color:var(--text1);font-family:Inter;font-weight:var(--font-weight-5);font-size:var(--font-size-4)}
 .booking_spa__card{padding:1rem;min-height:13ch;background-color:var(--floating);border-radius:var(--radius-1);box-shadow:var(--shadow-1)}
-.booking_spa__image{padding:.5rem;background:white;color:var(--text3);aspect-ratio:1/1;height:var(--size-10);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-round)}
+.booking_spa__image{padding:.5rem;background:var(--textmarker-background);color:var(--text3);aspect-ratio:1/1;height:var(--size-10);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-round)}
 .booking_spa__frontpage_image_hack{filter:contrast(0.375) brightness(0.5);object-fit:cover;object-position:center center;width:100%;min-height:20rem;height:calc(100vh - 9rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack{height:calc(100vh - 4rem)}}@supports(height:100dvh){.booking_spa__frontpage_image_hack{height:calc(100dvh - 9rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack{height:calc(100dvh - 4rem)}}}
-.booking_spa__frontpage_image_hack_SINGLEQUOTE_{filter:contrast(0.375) brightness(0.5);object-fit:cover;object-position:center center;width:100%;min-height:20rem;height:calc(100vh - 4rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack_SINGLEQUOTE_{height:calc(100vh - 4rem)}}@supports(height:100dvh){.booking_spa__frontpage_image_hack_SINGLEQUOTE_{height:calc(100dvh - 8rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack_SINGLEQUOTE_{height:calc(100dvh - 4rem)}}}
+.booking_spa__frontpage_image_hack_SINGLEQUOTE_{filter:opacity(20%) contrast(0.375);object-fit:cover;object-position:center center;width:100%;min-height:20rem;height:calc(100vh - 0rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack_SINGLEQUOTE_{height:calc(100vh - 4rem)}}@supports(height:100dvh){.booking_spa__frontpage_image_hack_SINGLEQUOTE_{height:calc(100dvh - 8rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack_SINGLEQUOTE_{height:calc(100dvh - 4rem)}}}
 .schpaa_style_ornament__row_sc_g3{gap:1.5rem;display:flex;align-items:start}
+
+.booking_common-views__header_top{display:flex;align-items:center;width:100%;padding-left:1rem;padding-right:1rem;gap:.5rem;background:var(--content);height:var(--size-9)}@media(min-width:511px){.booking_common-views__header_top{border-top-right-radius:var(--radius-3);xborder-right:1px solid var(--toolbar-)}}
+.booking_common-views__header_top_SINGLEQUOTE_{display:flex;align-items:center;width:100%;padding-left:1rem;padding-right:1rem;gap:.5rem;height:var(--size-9)}@media(min-width:511px){.booking_common-views__header_top_SINGLEQUOTE_{border-top-right-radius:var(--radius-3);xborder-right:1px solid var(--toolbar-)}}
+.schpaa_style_ornament__col_c_space_2{display:flex;flex-direction:column;align-items:center}.schpaa_style_ornament__col_c_space_2>*+*{margin-top:.5rem}
+.booking_common-views__header_top_frontpage{display:flex;align-items:center;width:100%;padding-left:1rem;padding-right:1rem;gap:.5rem;height:var(--size-9)}@media(min-width:511px){.booking_common-views__header_top_frontpage{border-top-right-radius:var(--radius-3);xborder-right:1px solid var(--toolbar-)}}
+.booking_spa__frontpage_image_hack_registered{filter:contrast(0.375) brightness(0.5);object-fit:cover;object-position:center center;width:100%;min-height:20rem;height:calc(100vh - 9rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack_registered{height:calc(100vh - 4rem)}}@supports(height:100dvh){.booking_spa__frontpage_image_hack_registered{height:calc(100dvh - 9rem)}@media(min-width:511px){.booking_spa__frontpage_image_hack_registered{height:calc(100dvh - 4rem)}}}
+.schpaa_style_ornament__small1_SINGLEQUOTE_{color:var(--text1)}.schpaa_style_ornament__small1_SINGLEQUOTE_{font-variant-numeric:tabular-nums;font-size:var(--font-size-0);font-weight:var(--font-weight-3)}
+.schpaa_style_ornament__ingress_SINGLEQUOTE_{color:var(--text0);font-size:var(--font-size-3);font-weight:var(--font-weight-3)}
+.schpaa_style_ornament__hero_SINGLEQUOTE_{margin-left:-1px;color:var(--text0);font-family:Inter;letter-spacing:var(--font-letterspacing-0);font-size:var(--font-size-6);font-weight:var(--font-weight-3)}

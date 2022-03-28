@@ -1,0 +1,43 @@
+(ns booking.personas)
+
+(def faces
+  [["/img/personas/noun-persona-410775.png" :m]
+   ["/img/personas/noun-persona-410777.png" :f]
+   ["/img/personas/noun-persona-410780.png" :f]
+   ["/img/personas/noun-persona-410782.png" :f]
+   ["/img/personas/noun-persona-410783.png" :m]
+   ["/img/personas/noun-persona-410786.png" :f]
+   ["/img/personas/noun-persona-410788.png" :m]
+   ["/img/personas/noun-persona-410790.png" :f]
+   ["/img/personas/noun-persona-415635.png" :f]
+   ["/img/personas/noun-persona-415668.png" :f]
+   ["/img/personas/noun-persona-426505.png" :m]
+   ["/img/personas/noun-persona-436706.png" :m]
+   ["/img/personas/noun-persona-488544.png" :m]
+   ["/img/personas/noun-persona-488556.png" :f]
+   ["/img/personas/noun-persona-497844.png" :f]
+   ["/img/personas/noun-persona-497847.png" :f]
+   ["/img/personas/noun-persona-622291.png" :m]
+   ["/img/personas/noun-persona-622293.png" :m]
+   ["/img/personas/noun-persona-623584.png" :m]
+   ["/img/personas/noun-persona-633475.png" :m]
+   ["/img/personas/noun-persona-633483.png" :m]
+   ["/img/personas/noun-persona-4144932.png" :m]
+   ["/img/personas/noun-persona-4144944.png" :f]
+   ["/img/personas/noun-persona-4144945.png" :m]
+   ["/img/personas/noun-persona-4144951.png" :f]
+   ["/img/personas/noun-persona-4144954.png" :f]
+   ["/img/personas/noun-persona-4145149.png" :f]
+   ["/img/personas/noun-persona-4145160.png" :m]
+   ["/img/personas/noun-persona-4145168.png" :m]
+   ["/img/personas/noun-persona-4145173.png" :m]
+   ["/img/personas/noun-persona-4145177.png" :m]
+   ["/img/personas/noun-persona-4145185.png" :m]
+   ["/img/personas/noun-persona-4145187.png" :m]
+   ["/img/personas/noun-persona-4145191.png" :f]
+   ["/img/personas/noun-persona-4145197.png" :m]
+   ["/img/personas/noun-persona-4145199.png" :f]
+   ["/img/personas/noun-persona-4145214.png" :m]])
+
+(def males (shuffle (filter (comp #(= % :m) second) faces)))
+(def females (shuffle (filter (comp #(= % :f) second) faces)))

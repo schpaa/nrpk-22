@@ -214,7 +214,7 @@
         :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
         :button       (fn [open]
                         [hoc.buttons/round {:class [:h-10] :on-click toggle-mainmenu}
-                         [sc/icon [:> solid/MenuIcon]]])}])))
+                         [sc/icon [:> solid/MenuAlt2Icon]]])}])))
 
 ;region extract!
 

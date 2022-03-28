@@ -228,6 +228,7 @@ outline: 2px solid #a0a8;
 
     /* body copy */
 
+    --text0-light: var(--gray-9);
     --text1-light: var(--gray-8);
     --text1-copy-light: var(--gray-2);
     --text2-light: var(--gray-5);
@@ -236,6 +237,7 @@ outline: 2px solid #a0a8;
 
     --textmarker-light:var(--gray-9);
     --textmarker-dim:var(--gray-9);
+    --text0-dim: var(--gray-1);
     --text1-dim: var(--gray-3);
     --text1-copy-dim: var(--gray-8);
     --text2-dim: var(--gray-4);
@@ -296,6 +298,7 @@ outline: 2px solid #a0a8;
 
     --textmarker: var(--textmarker-light);
     --textmarker-background: var(--textmarker-background-light);
+    --text0: var(--text0-light);
     --text1: var(--text1-light);
     --text1-copy: var(--text1-copy-light);
     --text2: var(--text2-light);
@@ -382,6 +385,7 @@ outline: 2px solid #a0a8;
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
+    --text0: var(--text0-dim);
     --text1: var(--text1-dim);
     --text1-copy: var(--text1-copy-dim);
     --text2: var(--text2-dim);

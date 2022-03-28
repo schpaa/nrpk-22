@@ -387,17 +387,36 @@
           (for [e data]
             [result-item e]))))
 
-(defn header-line [r]
+(o/defstyled header-top-frontpage :div
+  :flex :items-center :w-full :px-4 :gap-2
+  {;:background "var(--content)"
+   ;:background "transparent"
+   :height "var(--size-9)"}
+  [:at-media {:min-width "511px"}
+   {:border-top-right-radius "var(--radius-3)"
+    :xborder-right           "1px solid var(--toolbar-)"}])
+
+(o/defstyled header-top :div
+  :flex :items-center :w-full :px-4 :gap-2
+  {:background "var(--content)"
+   ;:background "transparent"
+   :height     "var(--size-9)"}
+  [:at-media {:min-width "511px"}
+   {:border-top-right-radius "var(--radius-3)"
+    :xborder-right           "1px solid var(--toolbar-)"}])
+
+(defn header-line [r {:keys [frontpage]}]
   [err-boundary
    (let [user-state (rf/subscribe [:lab/user-state])]
-     [sc/col {:class [:border-b :duration-200]
-              :style {:background   "var(--toolbar)"
-                      :border-color "var(--toolbar-)"}}
+     [sc/col #_{:class [:xborder-b :duration-200]
+                :style {:xbackground-color "var(--toolbar)"
+                        :xborder-color     "var(--toolbar-)"}}
       [:div
        #_[l/ppre-x {:lab/at-least-registered @(rf/subscribe [:lab/at-least-registered])
                     :lab/admin-access        @(rf/subscribe [:lab/admin-access])}]
        (when @(rf/subscribe [:lab/toggle-userstate-panel])
-         [sc/surface-d {:class [:m-4]}
+         [sc/surface-d {:class [:m-4 :z-50]
+                        :style {:z-index 1000}}
           (r/with-let [bookingx (rf/subscribe [:lab/booking])
                        nokkelvakt (rf/subscribe [:lab/nokkelvakt])
                        admin (rf/subscribe [:lab/admin])
@@ -445,50 +464,50 @@
                     (swap! st update-in [:nøkkelvakt] (constantly %))
                     (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))])
 
-       [:div.h-16.flex.items-center.w-full.px-4.shrink-0.grow
-        [sc/row-std
-         (when-not @(rf/subscribe [:lab/in-search-mode?])
-           (let [titles (compute-page-titles r)]
-             [:div.truncate
-              [:div.hidden.sm:block.grow
-               [:<>
-                (if (vector? titles)
-                  [sc/row-sc-g2
-                   (interpose [sc/text3 {:style {:font-size "var(--font-size-4)"}} "\\"]
-                              (for [[idx e] (map-indexed vector titles)
-                                    :let [last? (= idx (dec (count titles)))]]
-                                (if last?
-                                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
-                                  (let [{:keys [text link]} e]
-                                    [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
-                  [sc/text1 titles])]]
-              [:div.xs:block.sm:hidden.grow
+       [(if frontpage header-top-frontpage header-top)
+        (when-not @(rf/subscribe [:lab/in-search-mode?])
+          (let [titles (compute-page-titles r)]
+            [:div.truncate
+             [:div.hidden.sm:block.grow
+              [:<>
                (if (vector? titles)
-                 [sc/col-space-1                            ;{:class [:truncate]}
-                  (when (< 1 (count titles))
-                    (let [{:keys [text link]} (first titles)]
-                      [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
-                                                   :href  (k/path-for [link])} text]]))
-                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
-                 [sc/col
-                  [sc/text1 titles]])]]))
+                 [sc/row-sc-g2
+                  (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "\\"]
+                             (for [[idx e] (map-indexed vector titles)
+                                   :let [last? (= idx (dec (count titles)))]]
+                               (if last?
+                                 [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
+                                 (let [{:keys [text link]} e]
+                                   [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
+                 [sc/text1 titles])]]
+             [:div.xs:block.sm:hidden.grow
+              (if (vector? titles)
+                [sc/col-space-1                             ;{:class [:truncate]}
+                 (when (< 1 (count titles))
+                   (let [{:keys [text link]} (first titles)]
+                     [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
+                                                  :href  (k/path-for [link])} text]]))
+                 [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
+                [sc/col
+                 [sc/text1 titles]])]]))
 
-         ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-         [:div.grow]
-         (if-not @(rf/subscribe [:lab/at-least-registered])
-           [cta {:style    {:padding-block  "var(--size-1)"
-                            :padding-inline "var(--size-2)"
-                            ;:min-width      "0rem"
-                            :width          "min-content"
-                            ;:font-weight    "var(--font-weight-6)"
-                            :box-shadow     "var(--shadow-1)"}
-                 :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
-                 :on-click #(rf/dispatch [:app/login])}
-            [:div {:style {}} "Logg inn"]
-            [:div.whitespace-nowrap "& Registrer deg"]]
-           [search-menu])
+        ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
+        [:div.grow]
+        (when-not frontpage
+          (if-not @(rf/subscribe [:lab/at-least-registered])
+            [cta {:style    {:padding-block  "var(--size-1)"
+                             :padding-inline "var(--size-2)"
+                             ;:min-width      "0rem"
+                             :width          "min-content"
+                             ;:font-weight    "var(--font-weight-6)"
+                             :box-shadow     "var(--shadow-1)"}
+                  :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
+                  :on-click #(rf/dispatch [:app/login])}
+             [:div {:style {}} "Logg inn"]
+             [:div.whitespace-nowrap "& Registrer deg"]]
+            [search-menu]))
 
-         [main-menu]]]]])])
+        [main-menu]]]])])
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -496,9 +515,11 @@
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
         numberinput? (rf/subscribe [:lab/number-input])
         has-chrome? (rf/subscribe [:lab/has-chrome])
-        left-aligned (schpaa.state/listen :activitylist/left-aligned)]
+        left-aligned (schpaa.state/listen :activitylist/left-aligned)
+        a (r/atom nil)]
     (r/create-class
-      {:display-name "booking-page-boundary"
+      {:display-name
+       "page-boundary"
 
        :component-did-mount
        (fn [_]
@@ -528,31 +549,26 @@
             :vis     (rf/subscribe [:lab/modal-selector])
             :close   #(rf/dispatch [:lab/modal-selector false])}]
           ;endregion
-          [:div.fixed.inset-0.flex
-           ;region vertical toolbar left side
-           (when-not true                                   ;frontpage
-             (when @has-chrome?
-               [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.justify-around.items-center.flex-col.border-r
-                {:style {:padding-top  "var(--size-0)"
-                         :box-shadow   "var(--inner-shadow-3)"
-                         :border-color "var(--surface0)"
-                         :background   "var(--surface00)"}}
-                (into [:<>] (map #(if (nil? %)
-                                    [:div.grow]
-                                    [vertical-button %]) (vertical-toolbar (:uid @user-auth))))]))
-           ;endregion
+          [:div.fixed.inset-0.flex                          ;<- flex in order to show vertial menu
            [:div.flex-col.flex.h-full.w-full
-            (when-not frontpage
-              [header-line r])
+
+            (when-not frontpage [header-line r {:frontpage false}])
 
             ;region content
             (if frontpage
-              [:div.h-full
-               {:style     {:background "var(--content)"}
+              [:div.h-full                                  ;.overflow-y-auto
+               {#_#_:ref (fn [el]
+                           (tap> "add ref fp")
+                           (when-not @a
+                             (.addEventListener el "scroll" (fn [e] (tap> ["scroll" e])))
+                             (reset! a el)))
+                :style     {:background "var(--content)"}
                 :id        "inner-document"
                 :tab-index "0"}
                contents]
+
               [:div.overflow-y-auto.h-full.focus:outline-none.grow
+
                {:style     {:background "var(--content)"}
                 :id        "inner-document"
                 :tab-index "0"}
@@ -567,14 +583,16 @@
 
                  ;content
                  (if (map? (first contents))
-                   [:div.w-auto (:whole (first contents))]
-                   [:div.h-full.xmx-4.w-full
+                   [:div.w-auto
+                    (:whole (first contents))]
+                   [:div.h-full.w-full
+
                     contents
                     [:div.py-8.h-32]]))])
             ;endregion
 
             ;region horizontal toolbar on small screens
-            (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]) #_(some #{(:role @user-state)} [:member :waitinglist :registered]))
+            (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
               [:div.h-20.w-full.sm:hidden.flex.justify-around.items-center.border-t.sticky.bottom-0
                {:style {:z-index      1000
                         :box-shadow   "var(--inner-shadow-3)"
@@ -586,16 +604,19 @@
 
            (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]) #_(some #{(:role @user-state)} [:member :waitinglist :registered]))
              [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
-              [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.border-l
-               {:style {:z-index      1211
-                        :padding-top  "var(--size-0)"
-                        :box-shadow   (if @numberinput? "var(--shadow-5)"
-                                                        "var(--inner-shadow-1)")
-                        :border-color "var(--toolbar-)"
-                        :background   "var(--toolbar)"}}
+
+              [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
+               {:style {:z-index     1211
+                        :padding-top "var(--size-0)"
+                        :box-shadow  (if @numberinput? "var(--shadow-5)"
+                                                       "none" #_"var(--inner-shadow-1)")
+                        ;:border-color "var(--toolbar-)"
+                        ;:border-left "1px solid red"
+                        :background  "var(--toolbar)"}}
                (into [:<>] (map #(if (keyword? %)
                                    [:div.grow]
                                    [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
+
               [:div.absolute.right-16.xl:right-20.inset-y-0
                {:style {:width          "298px"
                         :pointer-events :none}}
@@ -616,47 +637,75 @@
      {:style {:padding-top   "var(--size-10)"
               :width         "min-content"
               :margin-inline "auto"}}
-     [sc/col-c-space-1
+     [sc/col-c-space-2
       [sc/hero {:style {:white-space :nowrap}} "Ikke åpent"]
-      [sc/small1 "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
-      [sc/small1 "For å komme inn --> " (str required-access)]]]))
+      [sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
+      [sc/small1 {:style {:white-space :nowrap}} "For å komme inn --> " (str required-access)]]]))
 
-(defn +page-builder [r {:keys [frontpage render render-fullwidth panel always-panel]}]
-  (let [pagename (some-> r :data :name)
-        numberinput (rf/subscribe [:lab/number-input])
-        left-aligned (schpaa.state/listen :activitylist/left-aligned)]
-    (if frontpage
-      [page-boundary r
-       {:frontpage true}
-       [render r]]
-      [page-boundary r
-       {:frontpage false}
-       (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
-         (if-not have-access?
-           [no-access-view r]
-           [sc/col-space-8 {:class [:py-8]}
-            (when panel
-              [:div.mx-4
-               [:div.mx-auto
-                {:style {:width     "100%"
-                         :max-width max-width}}
-                [hoc.panel/togglepanel pagename "innstillinger" panel]]])
+(defn +page-builder [r m]
+  (let [scrollpos (r/atom 0)
+        scroll-fn (fn [e]
+                    (reset! scrollpos (-> e .-target .-scrollTop))
+                    #_(tap> ["scroll" (-> e .-target .-scrollTop)]))
+        a (r/atom nil)]
+    (r/create-class
+      {:display-name
+       "+page-builder"
 
-            (when always-panel
-              [:div.mx-4
-               [:div.mx-auto
-                {:style {:width     "100%"
-                         :max-width max-width}}
-                [always-panel]]])
-            [:div.mx-4
-             [:div.duration-200
-              {:style {:margin-right :auto
-                       :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                       ;; force view to align to the left
-                                       0
-                                       :auto)
-                       :width        "100%"
-                       :max-width    max-width}}
-              (if render-fullwidth
-                [render-fullwidth r]
-                [render r])]]]))])))
+       :component-did-unmount
+       (fn [_] (.removeEventListener @a "scroll" scroll-fn))
+
+       :component-did-mount
+       (fn [_] (tap> :component-did-mount))
+
+       :reagent-render
+       (fn [r {:keys [frontpage render render-fullwidth panel always-panel]}]
+         (let [pagename (some-> r :data :name)
+               numberinput (rf/subscribe [:lab/number-input])
+               left-aligned (schpaa.state/listen :activitylist/left-aligned)]
+           (if frontpage
+             [page-boundary r
+              {:frontpage true}
+              [:div.overflow-y-auto.h-full
+               {:ref (fn [el]
+                       ;(tap> "addref")
+                       (when-not @a
+                         (.addEventListener el "scroll" scroll-fn)
+                         (reset! a el)))}
+               [:div.sticky.top-0.z-10
+                {:style {:background-color (str "rgba(" 16rE5 "," 16rE6 "," 16rE6 ","
+                                                (/ (- (+ @scrollpos 0.001) 50) 100) ")")}}
+                [booking.common-views/header-line r {:frontpage true}]]
+               [:div.-mt-16 [render r]]]]
+
+             [page-boundary r
+              {:frontpage false}
+              (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
+                (if-not have-access?
+                  [no-access-view r]
+                  [sc/col-space-8 {:class [:py-8]}
+                   (when panel
+                     [:div.mx-4
+                      [:div.mx-auto
+                       {:style {:width     "100%"
+                                :max-width max-width}}
+                       [hoc.panel/togglepanel pagename "innstillinger" panel]]])
+
+                   (when always-panel
+                     [:div.mx-4
+                      [:div.mx-auto
+                       {:style {:width     "100%"
+                                :max-width max-width}}
+                       [always-panel]]])
+                   [:div.mx-4
+                    [:div.duration-200
+                     {:style {:margin-right :auto
+                              :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                              ;; force view to align to the left
+                                              0
+                                              :auto)
+                              :width        "100%"
+                              :max-width    max-width}}
+                     (if render-fullwidth
+                       [render-fullwidth r]
+                       [render r])]]]))])))})))

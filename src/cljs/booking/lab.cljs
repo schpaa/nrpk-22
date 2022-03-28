@@ -516,7 +516,7 @@
          [sc/col-space-2
           [sc/text1 {:style {;:font-family "Merriweather"
                              :line-height "var(--font-lineheight-4)"}
-                     :class []} "Ris eller ros? — eller noen vennlige velvalgte ord mottas med takk..."]
+                     :class []} "Noen vennlige, konstruktive og velvalgte ord mottas med takk..."]
           [sc/col-space-2
            ;[l/ppre-x @content]
            [sci/textarea {:values        {:tilbakemelding (:text @content)}
@@ -547,18 +547,7 @@
                  (fn [{db :db} [_ args]]
                    {:fx [[:dispatch [:lab/modaldialog-visible
                                      true
-                                     {:persona    (rand-nth ["/img/noun-persona-410775.png"
-                                                             "/img/noun-persona-410777.png"
-                                                             "/img/noun-persona-410780.png"
-                                                             "/img/noun-persona-410782.png"
-                                                             "/img/noun-persona-410788.png"
-                                                             "/img/noun-persona-410790.png"
-                                                             "/img/noun-persona-415635.png"
-                                                             "/img/noun-persona-426505.png"
-                                                             "/img/noun-persona-488544.png"
-                                                             "/img/noun-persona-497847.png"
-                                                             "/img/noun-persona-4144945.png"
-                                                             "/img/noun-persona-4145160.png"])
+                                     {:persona    (first (rand-nth booking.personas/faces))
 
                                       :action     (fn [{:keys [carry]}]
                                                     (db/firestore-add {:path  ["tilbakemeldinger"]

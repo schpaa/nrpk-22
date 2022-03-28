@@ -37,7 +37,8 @@
             [booking.design-debug]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [user.database]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [booking.personas]))
 
 ;region related to flex-date and how to display relative time
 
@@ -189,7 +190,7 @@
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
 
-(o/defstyled frontpage-image-hack :img
+(o/defstyled frontpage-image-hack-registered :img
   {:filter          "contrast(0.375) brightness(0.5)"       ; blur(2px) grayscale(50%)
    :object-fit      :cover
    :object-position "center center"
@@ -204,18 +205,39 @@
     {:height "calc(100dvh - 4rem)"}]])
 
 (o/defstyled frontpage-image-hack' :img
-  {:filter          "contrast(0.375) brightness(0.5)"       ; blur(2px) grayscale(50%)
+  {:filter          "opacity(20%) contrast(0.375)"          ;"contrast(0.9375) brightness(0.95)"       ; blur(2px) grayscale(50%)
    :object-fit      :cover
    :object-position "center center"
    :width           "100%"
    :min-height      "20rem"
-   :height          "calc(100vh - 4rem)"}
+   :height          "calc(100vh - 0rem)"}
   [:at-media {:min-width "511px"}
    {:height "calc(100vh - 4rem)"}]
   [:at-supports {:height :100dvh}
    {:height "calc(100dvh - 8rem)"}
    [:at-media {:min-width "511px"}
     {:height "calc(100dvh - 4rem)"}]])
+
+(defn- stats []
+  (let [{:keys [online offline]} @(rf/subscribe [::db/presence-status])
+        nv @(db/on-value-reaction {:path ["users"]})]
+    [:div {:style {:opacity               0.66
+                   :display               :grid
+                   :column-gap            "4px"
+                   :row-gap               "4px"
+                   :grid-template-columns "4rem 1fr"}}
+
+     [:div.justify-self-end [sc/ingress' (str 4251)]]
+     [sc/ingress' "medlemmer"]
+     [:div.justify-self-end [sc/text0 (count (filter (comp :godkjent val) nv))]]
+     [sc/text0 "nøkkelvakter"]
+     [:div.justify-self-end [sc/text0 (count (filter (fn [[k {:keys [godkjent våttkort]}]] (and godkjent (< 0 våttkort))) nv))]]
+     [sc/text0 "med våttkort"]
+     [:div.justify-self-end [sc/text0 (str (count (filter (comp :instruktør val) nv)))]]
+     [sc/text0 "instruktører"]
+     [:div.justify-self-end [sc/text0 (str (count (filter (fn [[k {:keys [request-booking]}]] (and request-booking)) nv)))]]
+     [sc/text0 "havpadlere"]
+     #_[sc/text1 {:style {:color "var(--yellow-2)"}} (count online) ", " (count offline)]]))
 
 (def routing-table
   {:r.welcome
@@ -248,68 +270,47 @@
                       [:div.overflow-y-auto.h-full.relative
                        {:style {:background "var(--content)"}}
 
-                       [:div.sticky.top-0.z-10 [booking.common-views/header-line r]]
+                       ;[:div.sticky.top-0.z-10 [booking.common-views/header-line r]]
 
                        ;image
-                       [:div.relative.w-full.z-0
-
+                       [:div.relative.w-full
                         [(if @(rf/subscribe [:lab/at-least-registered])
-                           frontpage-image-hack
+                           frontpage-image-hack-registered
                            frontpage-image-hack') {:src "/img/brygge.jpeg"}]
-                        ;logo
-                        #_[:div.animate-bounce
-                           {:style {:position     :absolute
+                        #_[:div.absolute
+                           {:style {:top   "21vh"
+                                    :right "1rem"}}
+                           [stats]]
 
-                                    ;:display       :grid
-                                    ;:place-content :center
-                                    :inset-block  "auto 1rem"
-                                    :inset-inline "1rem auto"}}
-                           ;:top           "0"
-                           ;:right         "0"
-                           ;:bottom        "0"
-                           ;:left          "0"}}
-
-                           [:img {:style {:width     "12vw"
-                                          :max-width "5rem"}
-                                  :src   "/img/logo-n.png"}]]
-
-                        [:div.absolute.bottom-7.animate-bounce
-                         {:style {:left "1rem"}}
-                         [sc/row-sc-g2
-                          {:class [:items-end]
-                           :style {:align-items  :end
-                                   :xline-height "1"
-                                   :xheight      "4rem"}}
-                          #_[:img.self-end.p-1.mb-2 {:style {:height      "auto"
-                                                             :object-fit  :cover
-                                                             :xmax-height "4rem"}
-                                                     :src   "/img/logo-n.png"}]
-                          [sc/col
-                           [sc/ingress {:style {:line-height    "auto"
-                                                ;:margin-left "4.55rem"
-                                                ;:margin-bottom "0.4rem"
-                                                :color          "var(--brand1-bright)"
-                                                :text-transform :uppercase
-                                                :font-size      "var(--font-size-fluid-0)"}}
-                            "Velkommen til NRPK"]
-                           [sc/hero {:style {:line-height     "1"
-                                             :color           :#fffd
-                                             :font-family     "Inter"
-                                             ;:text-transform :uppercase
-                                             :font-size       "var(--font-size-fluid-2)"
-                                             :-letter-spacing "0"}}
+                        [:div.absolute
+                         {:style {:top   "21vh"
+                                  :left  "1rem"
+                                  :right "1rem"}}
+                         [sc/col-space-8 {:class []}
+                          [:div
+                           [:div
+                            [sc/ingress' {:style {:line-height      "auto"
+                                                  :transform        "rotate(-3deg) translate(-8px, 2px)"
+                                                  :transform-origin "top left"
+                                                  :margin-bottom    "4px"
+                                                  :text-transform   :uppercase
+                                                  :font-size        "var(--font-size-fluid-0)"}}
+                             [:span.bg-alt.text-white
+                              {:style {:font-weight    "var(--font-weight-5)"
+                                       :padding-inline "var(--size-2"
+                                       :padding-block  "var(--size-1)"
+                                       :border-radius  "var(--radius-0)"}} "Velkommen til NRPK"]]]
+                           [sc/hero' {:style {:line-height     "1"
+                                              ;:color           :#fffd
+                                              :font-family     "Inter"
+                                              :font-size       "var(--font-size-fluid-2)"
+                                              :-letter-spacing "0"}}
                             [:div "Nøklevann"]
-                            [:div {:style {:white-space :nowrap}} "ro- og padleklubb"]]]]]
-
-                        [:div.absolute.left-4.top-4.w-auto
-                         {:style {:background     "var(--surface00)"
-                                  :border-radius  "var(--radius-1)"
-                                  :padding-inline "var(--size-3)"
-                                  :padding-block  "var(--size-3)"}}
-                         [opening-hours]]]
+                            [:div {:style {:white-space :nowrap}} "ro- og padleklubb"]]]
+                          [sc/row-ec [stats]]]]]
 
                        [:div.m-4
-                        [sc/col-space-8 {:class [:xpy-4]}
+                        [sc/col-space-8
                          [sc/col-space-2
 
                           [sc/ingress "Etablert i 1987. Ved inngangen på 2022 har klubben over 4200 medlemmer."]
@@ -603,98 +604,87 @@
 
    :r.yearwheel
    (fn [r]
-     (+page-builder r {:panel        booking.yearwheel/header
+     [+page-builder r {:panel        booking.yearwheel/header
                        :always-panel booking.yearwheel/always-panel
-                       :render       booking.yearwheel/render}))
+                       :render       booking.yearwheel/render}])
 
    :r.nokkelvakt
    (fn [r]
-     (+page-builder r
-                    {:render (fn [] [:div "ok"])}))
+     [+page-builder r
+      {:render (fn [] [:div "ok"])}])
 
 
    :r.admin
    (fn [r]
-     (+page-builder r
-                    {:render (fn []
-                               [:div
-                                (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
-                                [:div "admin"]])}))
+     [+page-builder r
+      {:render (fn []
+                 [:div
+                  (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                  [:div "admin"]])}])
 
    :r.signedout
    (fn [r]
-     (+page-builder r
-                    {:render (fn []
-                               [:div
-                                (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
-                                [:div "Du har altså logget ut"]])}))
+     [+page-builder r
+      {:render (fn []
+                 [:div
+                  (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                  [:div "Du har altså logget ut"]])}])
 
 
    :r.oversikt.styret
    (fn [r]
-     (+page-builder
-       r
-       {:render (fn []
-                  (do
-                    [:<>
-                     (-> (inline "./oversikt/styret.md") schpaa.markdown/md->html sc/markdown)
-                     (let [data [[nil true "Ulf Pedersen" "Styreleder" ["HMS" "Nøkkelvakt\u00adansvarlig"]]
-                                 [nil true "Tormod Tørstad" "Nestleder" ["Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
-                                 [nil true "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
-                                 [nil true "Adrian Mitchell" "Styremedlem" ["Kasserer"]]
-                                 [nil true "Chris Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
-                                 [nil false "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig" "Midlertidig anleggs\u00ADansvarlig Nøklevann"]]
-                                 [nil true "Jan Gunnar Jakobsen" "Styremedlem" []]
-                                 [nil false "Ylva Eide" "Styremedlem" []]
-                                 [nil false "Kjersti Selseth" "Vara" []]
-                                 [nil true "Ole Håbjørn Larsen" "Vara" []]]]
-                       (o/defstyled card :div.relative
-                         :p-4
-                         {:min-height       "13ch"
-                          :background-color "var(--floating)"
-                          :border-radius    "var(--radius-1)"
-                          :box-shadow       "var(--shadow-1)"})
+     [+page-builder r
+      {:render (fn []
+                 [:<>
+                  (-> (inline "./oversikt/styret.md") schpaa.markdown/md->html sc/markdown)
+                  (let [data [["/img/personas/noun-persona-436706.png" :m "Ulf Pedersen" "Styreleder" ["HMS" "Nøkkelvakt\u00adansvarlig"]]
+                              ["/img/personas/noun-persona-622291.png" :m "Tormod Tørstad" "Nestleder" ["Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
+                              ["/img/personas/noun-persona-633483.png" :m "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
+                              ["/img/personas/noun-persona-410775.png" :m "Adrian Mitchell" "Styremedlem" ["Kasserer"]]
+                              ["/img/personas/noun-persona-622293.png" :m "Chris Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
+                              ["/img/personas/noun-persona-497844.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig" "Midlertidig anleggs\u00ADansvarlig Nøklevann"]]
+                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" []]
+                              ["/img/personas/noun-persona-4144954.png" :f "Ylva Eide" "Styremedlem" []]
+                              ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Vara" []]
+                              ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" []]]]
+                    (o/defstyled card :div.relative
+                      :p-4
+                      {:min-height       "13ch"
+                       :background-color "var(--floating)"
+                       :border-radius    "var(--radius-1)"
+                       :box-shadow       "var(--shadow-1)"})
 
-                       (o/defstyled image :img
-                         :p-2
-                         {:background    "white"            ;"var(--text1)"
-                          ;:border "none"
-                          :color         "var(--text3)"
-                          :aspect-ratio  "1/1"
-                          :height        "var(--size-10)"
-                          :box-shadow    "var(--inner-shadow-1)"
-                          :border-radius "var(--radius-round)"})
-                       [:div {:style {:display               :grid
-                                      :gap                   "8px 8px"
-                                      :grid-template-columns "repeat(auto-fit,minmax(18ch,1fr))"}}
-                        (for [[idx [url gender navn role ansvar]] (map-indexed vector data)]
-                          [card
-                           [:div                            ;.flex.items-start.justify-between.gap-4
-                            [:div.float-right.pl-2.-mr-2.-mt-2
-                             [image {:src (nth ["/img/noun-persona-488544.png"
-                                                "/img/noun-persona-410775.png"
-                                                "/img/noun-persona-410777.png"
-                                                "/img/noun-persona-410780.png"
-                                                "/img/noun-persona-410782.png"
-                                                "/img/noun-persona-410788.png"
-                                                "/img/noun-persona-410790.png"
-                                                "/img/noun-persona-415635.png"
-                                                "/img/noun-persona-426505.png"
-                                                "/img/noun-persona-497847.png"
-                                                "/img/noun-persona-4144945.png"
-                                                "/img/noun-persona-4145160.png"] idx "/img/noun-persona-410775.png")}]]
-                            [:div.clear-left.space-y-1.mr-3
-                             [sc/small2 {:style {:font-family "Merriweather"}} role]
-                             [sc/text1 navn]
-                             [sc/small1
-                              (interpose ", "
-                                         (map (fn [e]
-                                                [:span {:style {:line-height "var(--font-lineheight-3)"}} e])
-                                              ansvar))]]]
-                           [:div.absolute.bottom-2.right-2
-                            (sc/icon-small
-                              {:style {:color "var(--text3)"}}
-                              ico/user)]])])]))}))
+                    (o/defstyled image :img
+                      :p-2
+                      {:background    "var(--textmarker-background)"
+                       ;:border "none"
+                       :color         "var(--text3)"
+                       :aspect-ratio  "1/1"
+                       :height        "var(--size-10)"
+                       :box-shadow    "var(--inner-shadow-1)"
+                       :border-radius "var(--radius-round)"})
+                    [:div {:style {:display               :grid
+                                   :gap                   "8px 8px"
+                                   :grid-template-columns "repeat(auto-fit,minmax(18ch,1fr))"}}
+                     (for [[idx [url gender navn role ansvar]] (map-indexed vector data)]
+                       [card
+                        [:div                               ;.flex.items-start.justify-between.gap-4
+                         [:div.float-right.pl-2.-mr-2.-mt-2
+                          [image {:src (if url
+                                         url
+                                         (first (nth (filter (comp #(= gender %) second) booking.personas/faces) idx)))}]]
+                         [:div.clear-left.space-y-1.mr-3
+                          [sc/small2 {:style {:font-family "Merriweather"}} role]
+                          [sc/text1 navn]
+                          [sc/small1
+                           (interpose ", "
+                                      (map (fn [e]
+                                             [:span {:style {:line-height "var(--font-lineheight-3)"}} e])
+                                           ansvar))]]]
+                        [:div.absolute.bottom-2.right-2
+                         (sc/icon-small
+                           {:style {:color "var(--text3)"}}
+                           ico/user)]])])])}])
    :r.oversikt.organisasjon
    (fn [r]
      (+page-builder

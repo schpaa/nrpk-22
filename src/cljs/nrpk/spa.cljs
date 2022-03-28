@@ -233,6 +233,6 @@
         route @(rf/subscribe [:kee-frame/route])
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute body "class" "font-sans")
-    (.setAttribute body "style" "background-color:var(--surface4)")
+    (.setAttribute body "style" "background-color:var(--toolbar)")
     (when-let [page (get route-table @route-name)]
       (make-route-component page route))))
