@@ -316,7 +316,7 @@
                  (fn [db _]
                    (update-in db [:settings :state :lab/toggle-chrome] (fnil not false))))
 
-;region
+;region access
 
 ; status -> anonymous, registered, waitinglist, member
 ; access -> admin, booking, nøkkelvakt
@@ -324,13 +324,22 @@
 ;at-least-registered
 ;(some #{(:role @user-state)} [:member :waitinglist :registered])
 
+;:app/master-state-emulation
+
+(rf/reg-sub :lab/master-state-emulation :-> :lab/master-state-emulation)
+(rf/reg-event-db :lab/master-state-emulation (fn [db _]
+                                               (update db :lab/master-state-emulation (fnil not false))))
+
 (rf/reg-sub :lab/at-least-registered
+            :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[ua {:keys [status access] :as sim}] _]
-              (if (some? (:uid ua))
-                (some? (:uid ua))
-                (some #{status} [:registered :waitinglist :member]))))
+            (fn [[master-switch ua {:keys [status access] :as sim}] _]
+              (if master-switch
+                (if (some? (:uid ua))
+                  (some? (:uid ua))
+                  (some #{status} [:registered :waitinglist :member]))
+                (some? (:uid ua)))))
 
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
                                      (tap> {:lab/set-sim-type arg})
@@ -366,6 +375,7 @@
                 ua)))
 
 ;todo: Assume we are always simulating
+
 (rf/reg-sub :lab/status-is-none
             :<- [::db/user-auth]
             :<- [:lab/sim?]
@@ -551,3 +561,5 @@
                                                                                      :uid      (:uid @(rf/subscribe [::db/user-auth]))}
                                                                                     carry)}))
                                       :content-fn #(feedback %)}]]]}))
+
+;endregion

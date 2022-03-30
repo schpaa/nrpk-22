@@ -518,6 +518,10 @@
              [:div {:style {}} "Logg inn"]
              #_[:div.whitespace-nowrap "& Registrer deg"]]
             [search-menu]))
+
+        ;[l/ppre-x @(rf/subscribe [:lab/master-state-emulation])]
+        (when goog.DEBUG
+          [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
         [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]
         [main-menu]]]])])
 

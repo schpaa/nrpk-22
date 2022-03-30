@@ -12,7 +12,8 @@
             [re-frame.core :as rf]
             [tick.core :as t]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.hoc.toggles :as hoc.toggles]))
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [booking.bookinglist]))
 
 #_(defn boat-number-list [colormap {:keys [fetch-boatdata-for selected]}]
     (when fetch-boatdata-for
