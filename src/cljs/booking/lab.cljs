@@ -553,7 +553,9 @@
                                      true
                                      {:navn       navn
                                       :source     source
-                                      :caption    (or caption "Har du en kommentar til noe eller en ide om hvordan ting kan kommuniseres klarere? Kanskje fant du noe som må korrigeres? Da kan du begynne her:")
+                                      :caption    (or caption
+                                                      "Har du sett noe som ikke stemmer, eller er det noe du ikke har fått svar på?"
+                                                      #_"Har du en kommentar til noe eller en ide om hvordan ting kan kommuniseres klarere? Kanskje fant du noe som må korrigeres? Da kan du begynne her:")
                                       :action     (fn [{:keys [carry]}]
                                                     (db/firestore-add {:path  ["tilbakemeldinger"]
                                                                        :value (conj {:til-navn navn

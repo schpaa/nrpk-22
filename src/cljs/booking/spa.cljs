@@ -213,14 +213,10 @@
 
    :r.forsiden
    (fn forsiden [r]
-     (let [
-           md #(sc/markdown (schpaa.markdown/md->html %))
-           user-state (rf/subscribe [:lab/user-state])
-           some-state (some #{(:role @user-state)} [:member :waitinglist :registered])]
-       [+page-builder r
-        {:frontpage true
-         :panel     (fn [] [:div "panel"])
-         :render    booking.frontpage/frontpage}]))
+     [+page-builder r
+      {:frontpage true
+       :panel     (fn [] [:div "panel"])
+       :render    booking.frontpage/frontpage}])
 
    :r.oversikt
    (fn oversikt [r]

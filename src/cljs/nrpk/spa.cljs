@@ -252,6 +252,6 @@
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute html "class" (if @user-screenmode "dark" "light"))
     (.setAttribute body "class" "font-sans")
-    (.setAttribute body "style" "background-color:var(--toolbar)")
+    (.setAttribute body "style" "background-color:var(--content)")
     (when-let [page (get route-table @route-name)]
       (make-route-component page route))))
