@@ -36,4 +36,4 @@
 (def frownyface [:> outline/EmojiSadIcon])
 (def fill-frownyface [:> solid/EmojiSadIcon])
 (def stengt [:> solid/LockClosedIcon])
-(def more-if-you-scroll-down [:> solid/ArrowDownIcon])
+(def more-if-you-scroll-down [:> solid/ChevronDoubleDownIcon])

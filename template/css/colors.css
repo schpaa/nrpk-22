@@ -1,3 +1,11 @@
+:where(html) {
+    --animation-spin:  spin-sun 7s ease-in-out infinite;
+}
+@keyframes spin-sun {
+  to { transform: rotate(0.3turn) scale(.9,.9); }
+}
+
+
 .-debug {
 outline: 2px solid #a008;
 }
@@ -24,26 +32,6 @@ outline: 2px solid #a0a8;
   font-family: 'Lora', serif;
 }
 
-.blinking-cursor {
-  font-weight: 500;
-  font-size: unset;
-  
-  color: var(--surface4);
-  -webkit-animation: 2s blink step-end infinite;
-  -moz-animation: 1s blink step-end infinite;
-  -ms-animation: 1s blink step-end infinite;
-  -o-animation: 1s blink step-end infinite;
-  animation: 2s blink step-end infinite;
-}
-
-@keyframes "blink" {
-  from, to {
-    color: transparent;
-  }
-  20% {
-    color: black;
-  }
-}
 
 @-moz-keyframes blink {
   from, to {
@@ -228,8 +216,9 @@ outline: 2px solid #a0a8;
     /* body copy */
 
     --text0-light: var(--gray-9);
+    --text0-copy-light: var(--gray-0);
     --text1-light: var(--gray-8);
-    --text1-copy-light: var(--gray-2);
+    --text1-copy-light: var(--gray-1);
     --text2-light: var(--gray-5);
     --text3-light: var(--gray-4);
     --label-light: var(--gray-5);
@@ -237,6 +226,7 @@ outline: 2px solid #a0a8;
     --textmarker-light:var(--gray-9);
     --textmarker-dim:var(--gray-9);
     --text0-dim: var(--gray-1);
+    --text0-copy-dim: var(--gray-9);
     --text1-dim: var(--gray-3);
     --text1-copy-dim: var(--gray-8);
     --text2-dim: var(--gray-4);
@@ -288,8 +278,11 @@ outline: 2px solid #a0a8;
 
 }
 
-@media (prefers-color-scheme: light) {
-    :root {
+
+/*@media (prefers-color-scheme: light) {*/
+:root {
+
+    
 
     --brand1: var(--brand1-light);
     --brand1-copy: var(--brand1-copy-light);
@@ -297,14 +290,15 @@ outline: 2px solid #a0a8;
 
     --textmarker: var(--textmarker-light);
     --textmarker-background: var(--textmarker-background-light);
+    --text0-copy: var(--text0-copy-light);
     --text0: var(--text0-light);
     --text1: var(--text1-light);
     --text1-copy: var(--text1-copy-light);
     --text2: var(--text2-light);
     --text3: var(--text3-light);
 
-    --field1: var(--surface000-light); /* focused field */
-    --field2: var(--surface00-light); /* unfocused/passive field */
+    --field1: white; /*var(--gray-0); /* surface000-light  focused field */
+    --field2: var(--gray-1); /* surface00-light unfocused/passive field */
 
        --brand000: var(--brand000-light);
        --brand00: var(--brand00-light);
@@ -371,28 +365,30 @@ outline: 2px solid #a0a8;
         --field: var(--light-field);
         --field-focus: var(--light-field-focus);
         --fieldcopy: var(--light-fieldcopy);
-
-    }
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
 
+.dark {
+
+    
     --brand1: var(--brand1-dim);
     --brand1-copy: var(--brand1-copy-dim);
     --brand1-hover: var(--brand1-hover-dim);
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
+    --text0-copy: var(--text0-copy-dim);
     --text0: var(--text0-dim);
     --text1: var(--text1-dim);
     --text1-copy: var(--text1-copy-dim);
     --text2: var(--text2-dim);
     --text3: var(--text3-dim);
 
+/*
     --font-weight-1: var(--font-weight-1);
     --font-weight-2: var(--font-weight-2);
     --font-weight-3: var(--font-weight-3);
+*/
 
     --field1: var(--surface000-dim); /* focused field */
     --field2: var(--surface00-dim); /* unfocused/passive field */
@@ -450,8 +446,9 @@ outline: 2px solid #a0a8;
         --field: var(--dim-field);
         --field-focus: var(--dim-field-focus);
         --fieldcopy: var(--dim-fieldcopy);
-    }
+    
 }
+
 
 .bg-unfocused-field {
     background: var(--field1);
@@ -467,3 +464,21 @@ outline: 2px solid #a0a8;
     outline: var(--brand1) 2px solid;
 }
 
+.blinking-cursor {
+  font-weight: 500;
+  font-size: unset;
+  -webkit-animation: 2s blinking step-end infinite;
+  -moz-animation: 1s blinking step-end infinite;
+  -ms-animation: 1s blinking step-end infinite;
+  -o-animation: 1s blinking step-end infinite;
+  animation: 2s blinking step-end infinite;
+}
+
+@keyframes "blinking" {
+  from, to {
+    color: transparent;
+  }
+  20% {
+    color: var(--red-5);
+  }
+}

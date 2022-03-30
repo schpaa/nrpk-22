@@ -26,7 +26,8 @@
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [booking.ico :as ico]
             [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [booking.data]))
 
 
 (defn set-focus [el a]
@@ -226,26 +227,34 @@
       :on-click    schpaa.style.dialog/open-selector}]))
 
 (defn horizontal-toolbar [uid]
-  [{:icon      solid/UserCircleIcon
+  [{:icon      [:> solid/HomeIcon] #_#(let [r (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
+                                        (cond
+                                          ;(= r :r.forsiden) solid/HomeIcon
+                                          (= r :r.oversikt) outline/HomeIcon
+                                          :else solid/HomeIcon))
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+    :page-name :r.forsiden}
+
+   {:icon      [:> solid/UserCircleIcon]
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
 
    {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                       (if @st solid/TicketIcon outline/TicketIcon)))
-    :special  true
+                       [:> (if @st solid/TicketIcon outline/TicketIcon)]))
+    :special  false
     :on-click #(rf/dispatch [:lab/toggle-number-input])}
 
-   {:icon      solid/HomeIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :page-name :r.forsiden}
-
    {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                        (if @st solid/ClockIcon outline/ClockIcon)))
+                        [:> (if @st solid/ClockIcon outline/ClockIcon)]))
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
     :page-name :r.booking.oversikt}
 
+   {:icon     ico/yearwheel
+    :special  false
+    :on-click #(rf/dispatch [:lab/toggle-number-input])}
+
    {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                        (if @st solid/InformationCircleIcon outline/InformationCircleIcon)))
+                        [:> (if @st solid/InformationCircleIcon outline/InformationCircleIcon)]))
     :special   true
     :on-click  schpaa.style.dialog/open-selector
     :page-name :r.debug}])
@@ -262,9 +271,9 @@
               :xbackground "var(--surface00)"}]]
   [:>.normal {:color "var(--text3)"}]
 
-  [:>.active {:color      "var(--text1-copy)"
+  [:>.active {:color      "var(--text0)"
               :box-shadow "var(--shadow-3)"
-              :background "var(--text1)"
+              :background "var(--text1-copy)"
               :padding    "var(--size-2)"}]
   ([attr & ch]
    [:div (conj attr {:class (if (:active attr) [:active] [:item :normal])}) ch]))
@@ -313,10 +322,10 @@
       (if icon-fn
         [sc/icon-large
          {:style (if special {:color "var(--brand1)"})}
-         [:> (icon-fn)]]
+         (icon-fn)]
         [sc/icon-large
          {:style (if special {:color "var(--brand1)"})}
-         [:> icon]])]]))
+         icon])]]))
 
 (defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :as m :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
@@ -328,6 +337,7 @@
      (when badge
        (when-some [b (badge)]
          [top-left-badge b]))
+
      [vert-button {:active active?
                    :style  (conj style (when (= page-name current-page) {:color color}))}
       (if icon-fn
@@ -478,14 +488,16 @@
                                (if last?
                                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
                                  (let [{:keys [text link]} e]
-                                   [sc/subtext-with-link {:href (k/path-for [link])} text]))))]
+                                   [sc/subtext-with-link {:style {:background "var(--content)"}
+                                                          :href  (k/path-for [link])} text]))))]
                  [sc/text1 titles])]]
              [:div.xs:block.sm:hidden.grow
               (if (vector? titles)
                 [sc/col-space-1                             ;{:class [:truncate]}
                  (when (< 1 (count titles))
                    (let [{:keys [text link]} (first titles)]
-                     [:div [sc/subtext-with-link {:style {:margin-left "-2px"}
+                     [:div [sc/subtext-with-link {:style {:background  "var(--content)"
+                                                          :margin-left "-2px"}
                                                   :href  (k/path-for [link])} text]]))
                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
                 [sc/col
@@ -504,18 +516,26 @@
                   :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
                   :on-click #(rf/dispatch [:app/login])}
              [:div {:style {}} "Logg inn"]
-             [:div.whitespace-nowrap "& Registrer deg"]]
+             #_[:div.whitespace-nowrap "& Registrer deg"]]
             [search-menu]))
-
+        [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]
         [main-menu]]]])])
 
-(defn after-content []
-  (let [route @(rf/subscribe [:kee-frame/route])]
-    [:div.py-8.mx-auto.max-w-lg.px-4
-     ;[l/ppre-x route]
-     [:div.pt-16 [hoc.buttons/reg-pill-icon
-                  {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-                  ico/tilbakemelding "Har du en tilbakemelding?"]]]))
+(defn- bottom-tabbar []
+  (let [user-auth (rf/subscribe [::db/user-auth])
+        has-chrome? (rf/subscribe [:lab/has-chrome])]
+    (when true                                              ;(and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
+      [:div.sm:hidden.flex.justify-around.items-center.border-t
+       {:style {:position     :sticky
+                :height       "var(--size-10)"
+                :min-height   "var(--size-10)"
+                :bottom       "0px"
+                :z-index      1000
+                :box-shadow   "var(--inner-shadow-3)"
+                :border-color "var(--toolbar-)"
+                :background   "var(--toolbar)"}}
+       (into [:<>] (map horizontal-button
+                        (horizontal-toolbar (:uid @user-auth))))])))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -526,13 +546,11 @@
         left-aligned (schpaa.state/listen :activitylist/left-aligned)
         a (r/atom nil)]
     (r/create-class
-      {:display-name
-       "page-boundary"
+      {:display-name        "page-boundary"
 
-       :component-did-mount
-       (fn [_]
-         (when-let [el (.getElementById js/document "inner-document")]
-           (.focus el)))
+       :component-did-mount (fn [_]
+                              (when-let [el (.getElementById js/document "inner-document")]
+                                (.focus el)))
 
        :reagent-render
        (fn [r {:keys [frontpage] :as options} & contents]
@@ -543,14 +561,12 @@
             :vis     (rf/subscribe [:lab/modal-example-dialog2])
             :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
           ;endregion
-
           ;region modal dialog (top)
           [schpaa.style.dialog/modaldialog-centered
            {:context @(rf/subscribe [:lab/modaldialog-context])
             :vis     (rf/subscribe [:lab/modaldialog-visible])
             :close   #(rf/dispatch [:lab/modaldialog-visible false])}]
           ;endregion
-
           ;region command-palette
           [schpaa.style.dialog/modal-selector
            {:context @(rf/subscribe [:lab/modal-selector-extra])
@@ -564,19 +580,15 @@
 
             ;region content
             (if frontpage
-              [:div.h-full                                  ;.overflow-y-auto
-               {#_#_:ref (fn [el]
-                           (tap> "add ref fp")
-                           (when-not @a
-                             (.addEventListener el "scroll" (fn [e] (tap> ["scroll" e])))
-                             (reset! a el)))
-                :style     {:background "var(--content)"}
+              [:div                                         ;.h-full
+               {:style     {;:background "var(--content)"
+                            :z-index 0}
                 :id        "inner-document"
                 :tab-index "0"}
                contents]
 
-              [:div.overflow-y-auto.h-full.focus:outline-none.grow
 
+              [:div.overflow-y-auto.h-full.focus:outline-none.grow
                {:style     {:background "var(--content)"}
                 :id        "inner-document"
                 :tab-index "0"}
@@ -590,42 +602,30 @@
                     (bottom-menu)]]]
 
                  ;content
-                 (if (map? (first contents))
-                   [:div.w-auto
-                    (:whole (first contents))]
-                   [:div.h-full.w-full
-                    contents
-                    [:div.py-8.h-32]
-                    [after-content]]))])
-            ;endregion
+                 [:<>
+                  (if (map? (first contents))
+                    [:div.w-auto
+                     (:whole (first contents))]
+                    [:div                                   ;.h-full.w-full
+                     contents
 
-            ;region horizontal toolbar on small screens
-            (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-              [:div.sm:hidden.flex.justify-around.items-center.border-t.sticky.bottom-0
-               {:style {:min-height   "var(--size-10)"
-                        :z-index      1000
-                        :box-shadow   "var(--inner-shadow-3)"
-                        :border-color "var(--toolbar-)"
-                        :background   "var(--toolbar)"}}
-               (into [:<>] (map horizontal-button
-                                (horizontal-toolbar (:uid @user-auth))))])]
+                     #_[:div.py-8.h-32]])])])
+            [bottom-tabbar]]
+
+
+
+
            ;endregion
-
-           (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]) #_(some #{(:role @user-state)} [:member :waitinglist :registered]))
+           (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
              [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
-
               [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
                {:style {:z-index     1211
                         :padding-top "var(--size-0)"
-                        :box-shadow  (if @numberinput? "var(--shadow-5)"
-                                                       "none" #_"var(--inner-shadow-1)")
-                        ;:border-color "var(--toolbar-)"
-                        ;:border-left "1px solid red"
+                        :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
                         :background  "var(--toolbar)"}}
                (into [:<>] (map #(if (keyword? %)
                                    [:div.grow]
                                    [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
-
               [:div.absolute.right-16.xl:right-20.inset-y-0
                {:style {:width          "298px"
                         :pointer-events :none}}
@@ -658,14 +658,14 @@
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
 (defn +page-builder [r m]
-  (r/with-let [scrollpos (r/atom 0)
-               scroll-fn (fn [e]
-                           (let [v (-> e .-target .-scrollTop)]
-                             (if (< 50 v)
-                               (rf/dispatch [:lab/we-know-how-to-scroll true]))
-                             (reset! scrollpos v))
-                           #_(tap> ["scroll" (-> e .-target .-scrollTop)]))
-               a (r/atom nil)]
+  (let [scrollpos (r/atom 0)
+        scroll-fn (fn [e]
+                    (let [v (-> e .-target .-scrollTop)]
+                      (if (< 50 v)
+                        (rf/dispatch [:lab/we-know-how-to-scroll true]))
+                      (reset! scrollpos v)
+                      (tap> ["scroll" (-> e .-target .-scrollTop)])))
+        a (r/atom nil)]
     (r/create-class
       {:display-name
        "+page-builder"
@@ -688,14 +688,19 @@
               {:frontpage true}
               [:div.overflow-y-auto.h-full
                {:ref (fn [el]
-                       ;(tap> "addref")
                        (when-not @a
+                         ;(tap> ["addrefxxx" el])
                          (.addEventListener el "scroll" scroll-fn)
                          (reset! a el)))}
-               [:div.sticky.top-0.z-10
-                {:style {:opacity (- 1 (/ (- (+ @scrollpos 0.001) 0) 150))}}
-                [booking.common-views/header-line r {:frontpage true}]]
-               [:div.-mt-16 [render r]]]]
+               (let [v (- 1 (/ (- (+ @scrollpos 0.001) 0) 150))]
+                 [:div.sticky.top-0.z-10.relative
+                  {:style {:opacity v}}
+                  [booking.common-views/header-line r {:frontpage true}]
+                  #_[:div.absolute.top-0.left-0
+                     [l/ppre-x @(rf/subscribe [:lab/we-know-how-to-scroll?]) v @scrollpos]]])
+               [:div.-mt-16
+
+                [render r]]]]
 
              [page-boundary r
               {:frontpage false}

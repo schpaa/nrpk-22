@@ -19,7 +19,8 @@
             [schpaa.icon :as icon]
             [booking.ico :as ico]
             [schpaa.style.input :as sci]
-            [arco.react]))
+            [arco.react]
+            [booking.data]))
 
 (defn date-row [start end]
   (let [start (t/date-time start)

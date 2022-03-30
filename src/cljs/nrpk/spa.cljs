@@ -1,5 +1,6 @@
 (ns nrpk.spa
   (:require [re-frame.core :as rf]
+            [goog.events :as gevents]
             [re-statecharts.core :as rs]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
@@ -58,6 +59,8 @@
        web-content]]]))
 
 ;; the wrapper is what defines the overall UI.
+
+
 
 (defn app-wrapper [route-table]
   (let [route-name (rf/subscribe [:app/route-name])
@@ -227,11 +230,27 @@
         (when-let [page (get route-table @route-name)]
           (make-route-component page route))]]]]))
 
+(comment
+  (do
+    (let [doc (.-firstElementChild js/document)]
+      (.setAttribute doc "color-scheme" "dark"))))
+
+(defonce _ (let [source (. js/window matchMedia "(prefers-color-scheme: dark)")
+                 type gevents/EventType.CHANGE
+                 dispatch #(do
+                             ;(tap> {:screen-mode (-> % .-target .-matches)})
+                             (schpaa.state/change :app/dark-mode (-> % .-target .-matches)))]
+             (gevents/listen source type dispatch)))
+
 (defn app-wrapper-clean
   [route-table]
   (let [route-name (rf/subscribe [:app/route-name])
         route @(rf/subscribe [:kee-frame/route])
+        ;(if @(schpaa.state/listen :app/dark-mode) :dark :light)
+        user-screenmode (schpaa.state/listen :app/dark-mode)
+        html (aget (.getElementsByTagName js/document "html") 0)
         body (aget (.getElementsByTagName js/document "body") 0)]
+    (.setAttribute html "class" (if @user-screenmode "dark" "light"))
     (.setAttribute body "class" "font-sans")
     (.setAttribute body "style" "background-color:var(--toolbar)")
     (when-let [page (get route-table @route-name)]

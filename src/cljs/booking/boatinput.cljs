@@ -89,13 +89,14 @@
   :w-full :h-full :duration-100
   {:display       :grid
    :place-content :center
-   :border-radius "var(--radius-3)"
-   :background    "var(--surface4)"
-   :color         "var(--surface1)"}
+   :border-radius "var(--radius-1)"
+   ;:border "1px solid"
+   :background    "var(--toolbar-)"
+   :color         "var(--text0)"}
   [:&:hover {;:background "var(--surface5)"
              :color "var(--surface000)"}]
   [:&:disabled {:color      "var(--surface3)"
-                :background "var(--surface2)"}]
+                :background "var(--content)"}]
   [:&:active:enabled {:background "var(--surface3)"
                       :color      "var(--surface000)"}]
   ([{:keys [ref on-click disabled enabled style]} ch]
@@ -147,7 +148,7 @@
 (o/defstyled panel :div
   :w-64 :h-auto
   {:display               :grid
-   :column-gap            "var(--size-2)"
+   :column-gap            "var(--size-1)"
    :row-gap               "var(--size-1)"
    :grid-template-columns "repeat(4,1fr)"
    :grid-auto-rows        "4rem"})
@@ -234,11 +235,11 @@
 
 (defn numberinput [st]
   [:div.h-full
-   [:div.p-3.h-full
+   [:div.xp-3.h-full
     {:style {:display               :grid
-             :border-radius         "var(--radius-1)"
-             :box-shadow            "var(--inner-shadow-2)"
-             :background            "var(--surface2)"
+             :border-radius         "var(--radius-0)"
+             ;:box-shadow            "var(--inner-shadow-2)"
+             :background            "var(--floating)"
              :gap                   "var(--size-1)"
              :grid-template-columns "repeat(3,1fr)"
              :grid-auto-rows        "1fr"}}
@@ -424,9 +425,10 @@
 
 (defn lookup [id]
   (if (< 3 (count id))
-    [sc/col {:class [:space-y-1]}
-     [sc/title1 "Test-navn"]
-     [sc/subtext "Test-kategori"]]
+    [sc/col {:style {:color "var(--blue-3)"}
+             :class [:space-y-1]}
+     [sc/header-title-cl "Test-navn"]
+     [sc/subtext-cl "Test-kategori"]]
     (case id
       "400" [sc/col {:class [:space-y-1]}
              [sc/header-title "Rebel Roy"]
@@ -517,8 +519,8 @@
                       :grid-column    "2/span 2"
                       :padding-inline "var(--size-2)"
                       :border-radius  "var(--radius-1)"
-                      :background     "var(--surface000)"
-                      :box-shadow     "var(--inner-shadow-0)"}}
+                      :background     "var(--field1)"
+                      :-box-shadow    "var(--inner-shadow-0)"}}
              [:div.flex.items-center.h-full
               {:style {:font-family "Oswald"
                        :font-weight 600
@@ -528,7 +530,7 @@
                  {:style {:display     "flex"
                           :align-items "center"
                           :font-size   "var(--font-size-5)"
-                          :color       "var(--surface5)"}}
+                          :color       "var(--text1)"}}
                  (when (empty? (:phonenumber @st))
                    [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
                  [input-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
@@ -538,12 +540,16 @@
                  {:style {:display     "flex"
                           :align-items "center"
                           :font-size   "var(--font-size-5)"
-                          :color       "var(--surface5)"}}
+                          :color       "var(--text1)"}}
                  (when (empty? (:item @st))
-                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
+                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["])
                  [input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
                  (when-not (empty? (:item @st))
-                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])])]]
+                   ;[:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["]
+                   (if (< 3 (count (:item @st)))
+                     [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "]"]
+                     [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]))])]]
+
 
             [:div
              {:style {:grid-row       "3"
