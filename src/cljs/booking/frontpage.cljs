@@ -11,7 +11,8 @@
             [arco.react]
             [schpaa.debug :as l]
             [times.api :as ta]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [booking.carousell]))
 
 (o/defstyled antialiased :div
   #_[:* {:x-webkit-font-smoothing  :auto
@@ -102,17 +103,18 @@
            :src     src}]
     ch]))
 
-(def frontpage-image (str "/img/frontpage/"
-                          (nth ["brygge.jpeg"
-                                ;"DSCF0075.JPG"
-                                "DSCF0051.JPG"
-                                "DSCF2668.jpeg"
-                                "Bilde 28.03.2022 klokken 16.58.jpg"
-                                "Bilde 28.03.2022 klokken 17.09.jpg"
-                                "animal-muppet.png"
-                                "Bilde 28.03.2022 klokken 16.59.jpg"
-                                "Bilde 28.03.2022 klokken 16.49.jpg"
-                                "Bilde 28.03.2022 klokken 16.45.jpg"] 0)))
+(def frontpage-image
+  (map #(str "/img/frontpage/" %)
+       ["brygge.jpeg"
+        ;"DSCF0075.JPG"
+        "DSCF0051.JPG"
+        "DSCF2668.jpeg"
+        "Bilde 28.03.2022 klokken 16.58.jpg"
+        "Bilde 28.03.2022 klokken 17.09.jpg"
+        "animal-muppet.png"
+        "Bilde 28.03.2022 klokken 16.59.jpg"
+        "Bilde 28.03.2022 klokken 16.49.jpg"
+        "Bilde 28.03.2022 klokken 16.45.jpg"]))
 
 (defn circular-logo-thing [dark-mode?]
   [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
@@ -389,7 +391,18 @@
 
           (when goog.DEBUG
             [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-             booking.common-views/master-control-box])]]]
+             booking.common-views/master-control-box])
+
+
+          [:div.w-screen.h-64
+           [booking.carousell/render-carousell
+            {:carousell-config {;:lazyLoad      true
+                                :autoplaySpeed 1500}
+             ;:onLazyLoad    #(tap> (str "onLazyLoad " %))}
+             :class            []
+             :view-config      {:bg [:bg-whitewhite]
+                                :fg [:text-gray-400]}
+             :contents         (into [] (mapv (fn [e] [:img.w-64.h-48 {:src e}]) frontpage-image))}]]]]]
 
        [booking.common-views/after-content]
 
