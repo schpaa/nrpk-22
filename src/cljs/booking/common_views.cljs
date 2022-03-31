@@ -227,15 +227,11 @@
       :on-click    schpaa.style.dialog/open-selector}]))
 
 (defn horizontal-toolbar [uid]
-  [{:icon      [:> solid/HomeIcon] #_#(let [r (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-                                        (cond
-                                          ;(= r :r.forsiden) solid/HomeIcon
-                                          (= r :r.oversikt) outline/HomeIcon
-                                          :else solid/HomeIcon))
+  [{:icon      ico/new-home
     :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
     :page-name :r.forsiden}
 
-   {:icon      [:> solid/UserCircleIcon]
+   {:icon      ico/user
     :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
     :page-name :r.user}
 
@@ -259,24 +255,18 @@
     :on-click  schpaa.style.dialog/open-selector
     :page-name :r.debug}])
 
-(def active-style {:border-radius "var(--radius-round)"
-                   :padding       "var(--size-2)"
-                   :background    "var(--surface000)"})
-
 (o/defstyled vert-button :div
-  [#{:.active :.item} {:border-radius "var(--radius-round)"}]
-  [:.item
-   [:&:hover {:color       "var(--text2)"
-              :padding     "var(--size-1)"
-              :xbackground "var(--surface00)"}]]
-  [:>.normal {:color "var(--text3)"}]
-
-  [:>.active {:color      "var(--text0)"
-              :box-shadow "var(--shadow-3)"
-              :background "var(--text1-copy)"
-              :padding    "var(--size-2)"}]
-  ([attr & ch]
-   [:div (conj attr {:class (if (:active attr) [:active] [:item :normal])}) ch]))
+  [:&
+   {:color         "var(--text2)"
+    :border-radius "var(--radius-round)"
+    :padding       "var(--size-1)"}
+   [:&:hover {:color   "var(--text1)"
+              :padding "var(--size-1)"}]
+   [:&.active {:color      "var(--text0)"
+               :box-shadow "var(--shadow-3)"
+               :background "var(--text1-copy)"
+               :padding    "var(--size-2)"}]
+   [:&.special {:color "var(--brand1)"}]])
 
 (o/defstyled top-left-badge :div
   :rounded-full :flex :flex-center
@@ -311,21 +301,19 @@
     [:div.flex.items-center.justify-center badge]]))
 
 (defn horizontal-button [{:keys [icon-fn special icon on-click style page-name badge] :or {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+        active? (= page-name current-page)]
     [:div.w-full.h-full.flex.items-center.justify-center.relative
      {:on-click on-click}
      (when badge
        (let [b (badge)]
          (when (pos? b) [top-right-tight-badge b])))
-     [vert-button {:active (= page-name current-page)
-                   :style  style}
-      (if icon-fn
-        [sc/icon-large
-         {:style (if special {:color "var(--brand1)"})}
-         (icon-fn)]
-        [sc/icon-large
-         {:style (if special {:color "var(--brand1)"})}
-         icon])]]))
+     [vert-button
+      {:style style
+       :class [(if active? :active)
+               (if special :special)]}
+      [sc/icon-large
+       (if icon-fn (icon-fn) icon)]]]))
 
 (defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :as m :or {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
@@ -338,15 +326,11 @@
        (when-some [b (badge)]
          [top-left-badge b]))
 
-     [vert-button {:active active?
-                   :style  (conj style (when (= page-name current-page) {:color color}))}
-      (if icon-fn
-        [:div
-         {:style (if special {:color "var(--brand1)"})}
-         (icon-fn)]
-        [(if active? sc/icon sc/icon-large)
-         {:style (if special {:color "var(--brand1)"})}
-         [:> icon]])]]))
+     [vert-button {:style style
+                   :class [(if active? :active)
+                           (if special :special)]}
+      [sc/icon-large
+       (if icon-fn (icon-fn) icon)]]]))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
@@ -521,7 +505,7 @@
         [main-menu]
         [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]]]])])
 
-(defn- bottom-tabbar []
+(defn bottom-tabbar []
   (let [user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
@@ -533,7 +517,7 @@
                 :min-height      "var(--size-10)"
                 :padding-inline  "var(--size-2)"
                 ;:bottom          "0px"
-                :z-index         1000
+                ;:z-index         10000
                 :box-shadow      "var(--inner-shadow-3)"
                 :border-color    "var(--toolbar-)"
                 :background      "var(--toolbar)"}}
@@ -684,6 +668,13 @@
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
           ico/tilbakemelding "Tilbakemelding?"]]]]]]))
 
+(defn set-ref [a scroll-fn]
+  (fn [el]
+    (when-not @a
+      ;(tap> ["addrefxxx" el])
+      (.addEventListener el "scroll" scroll-fn)
+      (reset! a el))))
+
 (defn +page-builder [r m]
   (let [scrollpos (r/atom 0)
         scroll-fn (fn [e]
@@ -716,18 +707,15 @@
             (if frontpage
               [page-boundary r
                {:frontpage true}
-               [:div.overflow-y-auto.h-full
-                {:ref (fn [el]
-                        (when-not @a
-                          ;(tap> ["addrefxxx" el])
-                          (.addEventListener el "scroll" scroll-fn)
-                          (reset! a el)))}
-                (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-                  [:div.sticky.top-0.z-10.relative
-                   {:style {:opacity v}}
-                   [booking.common-views/header-line r {:frontpage true}]])
-                [:div.-mt-16
-                 [render r]]]]
+               (into [:div.overflow-y-auto.h-full
+                      {:key "key-one"
+                       :ref (set-ref a scroll-fn)}]
+                     [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
+                        [:div.sticky.top-0.z-10.relative
+                         {:style {:opacity v}}
+                         [booking.common-views/header-line r {:frontpage true}]])
+                      [:div.-mt-16
+                       [render r]]])]
 
               [page-boundary r
                {:frontpage false}

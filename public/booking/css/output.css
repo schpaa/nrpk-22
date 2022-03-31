@@ -1638,6 +1638,14 @@ Ensure the default browser behavior of the `hidden` attribute.
   margin: -0.75rem;
 }
 
+.m-4 {
+  margin: 1rem;
+}
+
+.m-12 {
+  margin: 3rem;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
