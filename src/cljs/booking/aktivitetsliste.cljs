@@ -421,19 +421,19 @@
    [schpaa.style.hoc.buttons/reg-pill-icon {} ico/plus "Skade på materiell"]])
 
 (defn panel []
-  (when @(rf/subscribe [:lab/nokkelvakt])
-    (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
-                 show-content (schpaa.state/listen :activitylist/show-content)]
-      [sc/row-sc-g2-w
-       ;[l/ppre-x @(rf/subscribe [:lab/nokkelvakt])]
-       [hoc.toggles/switch :activitylist/show-editing "Rediger"]
+  ;(when @(rf/subscribe [:lab/nokkelvakt]))
+  (r/with-let [show-deleted (schpaa.state/listen :activitylist/show-deleted)
+               show-content (schpaa.state/listen :activitylist/show-content)]
+    [sc/row-sc-g2-w
+     ;[l/ppre-x @(rf/subscribe [:lab/all-access-tokens])]
+     [hoc.toggles/switch :activitylist/show-editing "Rediger"]
 
-       [hoc.toggles/twostate
-        {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
-         :alternate @show-deleted
-         :icon      (fn [_] [:> outline/TrashIcon])
-         :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-       [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]
-       [hoc.toggles/switch :activitylist/left-aligned "Venstre-juster listen"]
-       [hoc.toggles/switch :activitylist/limit-timeline "Bare økt-perioden"]
-       [hoc.toggles/switch :activitylist/limit-active "Bare aktive utlån"]])))
+     [hoc.toggles/twostate
+      {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
+       :alternate @show-deleted
+       :icon      (fn [_] [:> outline/TrashIcon])
+       :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
+     [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]
+     [hoc.toggles/switch :activitylist/left-aligned "Venstre-juster listen"]
+     [hoc.toggles/switch :activitylist/limit-timeline "Bare økt-perioden"]
+     [hoc.toggles/switch :activitylist/limit-active "Bare aktive utlån"]]))

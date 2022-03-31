@@ -350,7 +350,6 @@
              [:div.h-20.w-20 [circular-logo-thing dark-mode?]]]]
            [:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])]
         [:div.xrelative.space-y-12.w-full.mx-auto.max-w-lg.py-4.z-100
-
          (when-not at-least-registered?
            (when-not @(schpaa.state/listen :lab/skip-easy-login)
              [sc/surface-c {:class [:-mx-4]
@@ -368,7 +367,6 @@
                [sc/row-ec
                 [:div.grow]
                 [hoc.buttons/cta {:on-click #(rf/dispatch [:app/login])} "Logg inn nå"]]]]))
-
          [:div.space-y-4
           [fp-header "Nyheter"]
           [:div.ml-4 {:style {:display               "grid"

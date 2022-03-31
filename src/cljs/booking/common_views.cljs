@@ -505,16 +505,18 @@
         (if frontpage
           [:div.grow]
           (if-not @(rf/subscribe [:lab/at-least-registered])
-            [cta {:style    {:padding-block  "var(--size-1)"
-                             :padding-inline "var(--size-2)"
-                             ;:min-width      "0rem"
-                             :width          "min-content"
-                             ;:font-weight    "var(--font-weight-6)"
-                             :box-shadow     "var(--shadow-1)"}
-                  :class    [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
-                  :on-click #(rf/dispatch [:app/login])}
-             [:div {:style {}} "Logg inn"]
-             #_[:div.whitespace-nowrap "& Registrer deg"]]
+            [:<>
+             [:div.grow]
+             [cta {:-style   {:padding-block  "var(--size-1)"
+                              :padding-inline "var(--size-2)"
+                              ;:min-width      "0rem"
+                              :width          "min-content"
+                              ;:font-weight    "var(--font-weight-6)"
+                              :box-shadow     "var(--shadow-1)"}
+                   :-class   [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
+                   :on-click #(rf/dispatch [:app/login])}
+              "Logg inn"
+              #_[:div.whitespace-nowrap "& Registrer deg"]]]
             [:div.grow.flex.justify-end.items-center [search-menu]]))
         [main-menu]
         [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]]]])])
@@ -578,7 +580,8 @@
            [:div.flex-col.flex.h-full.w-full
 
             ;[:div.h-32 "X"]
-            (when-not frontpage [header-line r {:frontpage frontpage}])
+            (when-not frontpage
+              [header-line r {:frontpage frontpage}])
 
             ;region content
             (if frontpage
@@ -591,7 +594,8 @@
 
 
               [:div.overflow-y-auto.h-full.focus:outline-none.grow
-               {:style     {:background "var(--content)"}
+               {:style     {;:min-height "calc(100vh + 5rem)"
+                            :background "var(--content)"}
                 :id        "inner-document"
                 :tab-index "0"}
                (if @(rf/subscribe [:lab/is-search-running?])
@@ -608,11 +612,12 @@
                   (if (map? (first contents))
                     [:div.w-auto
                      (:whole (first contents))]
-                    [:div                                   ;.h-full.w-full
+                    [:div.min-h-full.w-full
+
                      contents
 
                      #_[:div.py-8.h-32]])])
-               [bottom-tabbar]])]
+               [:div.absolute.bottom-0.inset-x-0 [bottom-tabbar]]])]
 
 
 
@@ -646,7 +651,8 @@
 (defn no-access-view [r]
   (let [required-access (-> r :data :access)]
     [:div
-     {:style {:padding-top   "var(--size-10)"
+     {:style {:min-height    "100vh"
+              :padding-top   "var(--size-10)"
               :width         "min-content"
               :margin-inline "auto"}}
      [sc/col-c-space-2
@@ -662,19 +668,21 @@
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
-     [:div.mx-auto.max-w-lg.pt-4.pb-32
+     [:div.mx-auto.max-w-lg.pt-4.pb-24
 
       [:div.text-white.mx-4.py-4
-       [sc/col-space-1
-        [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
-        [sc/text1-cl "Postboks 37, 0621 Bogerud"]
-        [sc/text1-cl "Nøklevann ro- og padleklubb"]
-        [:div.flex.justify-start.flex-wrap.gap-2
-         [sc/subtext-with-link {:class [:dark]} "styret@nrpk.no"]
-         [sc/subtext-with-link {:class [:dark]} "medlem@nrpk.no"]
-         [:div [hoc.buttons/reg-pill-icon
-                {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-                ico/tilbakemelding "Tilbakemelding?"]]]]]]]))
+       [sc/col-space-2
+        [sc/col-space-1
+         [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
+         [sc/text1-cl "Postboks 37, 0621 Bogerud"]
+         [sc/text1-cl "Nøklevann ro- og padleklubb"]
+         [:div.flex.justify-start.flex-wrap.gap-2
+          [sc/subtext-with-link {:class [:dark]} "styret@nrpk.no"]
+          [sc/subtext-with-link {:class [:dark]} "medlem@nrpk.no"]]]
+        [sc/row-ec
+         [hoc.buttons/reg-pill-icon
+          {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+          ico/tilbakemelding "Tilbakemelding?"]]]]]]))
 
 (defn +page-builder [r m]
   (let [scrollpos (r/atom 0)
@@ -724,37 +732,36 @@
               [page-boundary r
                {:frontpage false}
                (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
-                 [:div.min-h-full
-                  (if-not have-access?
-                    [:<>
-                     [no-access-view r]
-                     [after-content]]
-                    [:<>
-                     [sc/col-space-8 {:class [:py-8]}
-                      (when (fn? panel)
-                        (when-some [p (panel)]
-                          [:div.mx-4
-                           [:div.mx-auto
-                            {:style {:width     "100%"
-                                     :max-width max-width}}
-                            [hoc.panel/togglepanel pagename "innstillinger" panel]]]))
-
-                      (when always-panel
-                        [:div.mx-4
-                         [:div.mx-auto
-                          {:style {:width     "100%"
-                                   :max-width max-width}}
-                          [always-panel]]])
-                      [:div.mx-4
-                       [:div.duration-200
-                        {:style {:margin-right :auto
-                                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                                 ;; force view to align to the left
-                                                 0
-                                                 :auto)
-                                 :width        "100%"
-                                 :max-width    max-width}}
-                        (if render-fullwidth
-                          [render-fullwidth r]
-                          [render r])]]]
-                     [after-content]])])]))])})))
+                 (if-not have-access?
+                   [:<>
+                    [no-access-view r]
+                    [after-content]]
+                   [:<>
+                    [sc/col-space-8 {:class [:py-8]
+                                     :style {:min-height "100vh"}}
+                     (when (fn? panel)
+                       (when-some [p (panel)]
+                         [:div.mx-4
+                          [:div.mx-auto
+                           {:style {:width     "100%"
+                                    :max-width max-width}}
+                           [hoc.panel/togglepanel pagename "innstillinger" panel]]]))
+                     (when always-panel
+                       [:div.mx-4
+                        [:div.mx-auto
+                         {:style {:width     "100%"
+                                  :max-width max-width}}
+                         [always-panel]]])
+                     [:div.mx-4.min-h-fullx
+                      [:div.duration-200
+                       {:style {:margin-right :auto
+                                :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                                ;; force view to align to the left
+                                                0
+                                                :auto)
+                                :width        "100%"
+                                :max-width    max-width}}
+                       (if render-fullwidth
+                         [render-fullwidth r]
+                         [render r])]]]
+                    [after-content]]))]))])})))

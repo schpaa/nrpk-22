@@ -25,7 +25,9 @@
    ["/terms" {:name :r.terms :header "Betingelser"}]
    ["/filer" {:name :r.fileman-temporary :header [:r.booking-blog "Filer"]}]
    ["/kalender" {:name :r.calendar :header "Kalender" :access [:member #{:nøkkelvakt}]}]
-   ["/aktivitetsliste" {:name :r.aktivitetsliste :header [:r.oversikt "Aktivitetsliste"]}]
+   ["/aktivitetsliste" {:name   :r.aktivitetsliste
+                        :header [:r.oversikt "Aktivitetsliste"]
+                        :access [:member #{:nøkkelvakt}]}]
 
    ["/arshjul" {:name   :r.yearwheel
                 :header [:r.oversikt "Årshjul"]

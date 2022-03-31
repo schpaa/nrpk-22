@@ -424,10 +424,13 @@
                 false)))
 
 (rf/reg-sub :lab/all-access-tokens
+            :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[_ {:keys [status access] :as sim}] _]
-              [(or status :none) (or access #{})]))
+            (fn [[master-switch _ {:keys [status access] :as sim}] _]
+              (if master-switch
+                [:member #{:nøkkelvakt}]
+                [(or status :none) (or access #{})])))
 
 ;endregion
 
