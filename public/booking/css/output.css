@@ -1458,12 +1458,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   left: 1rem;
 }
 
-.-top-1 {
-  top: -0.25rem;
+.top-1 {
+  top: 0.25rem;
 }
 
 .right-1 {
   right: 0.25rem;
+}
+
+.-top-1 {
+  top: -0.25rem;
 }
 
 .top-12 {
@@ -1530,10 +1534,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   left: -0.5rem;
 }
 
-.top-1 {
-  top: 0.25rem;
-}
-
 .top-24 {
   top: 6rem;
 }
@@ -1548,6 +1548,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .-bottom-1 {
   bottom: -0.25rem;
+}
+
+.top-2 {
+  top: 0.5rem;
 }
 
 .isolate {
@@ -1689,6 +1693,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   margin-top: 2rem;
 }
 
+.ml-4 {
+  margin-left: 1rem;
+}
+
 .mr-auto {
   margin-right: auto;
 }
@@ -1735,10 +1743,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .mt-2 {
   margin-top: 0.5rem;
-}
-
-.ml-4 {
-  margin-left: 1rem;
 }
 
 .mb-px {
@@ -1907,10 +1911,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .w-12 {
   width: 3rem;
-}
-
-.w-1 {
-  width: 0.25rem;
 }
 
 .w-20 {
@@ -2085,8 +2085,8 @@ Ensure the default browser behavior of the `hidden` attribute.
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
-.-translate-y-32 {
-  --tw-translate-y: -8rem;
+.-translate-y-24 {
+  --tw-translate-y: -6rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
@@ -2097,6 +2097,11 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .-translate-y-20 {
   --tw-translate-y: -5rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-y-32 {
+  --tw-translate-y: -8rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
@@ -2125,8 +2130,8 @@ Ensure the default browser behavior of the `hidden` attribute.
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
-.-translate-y-24 {
-  --tw-translate-y: -6rem;
+.-rotate-6 {
+  --tw-rotate: -6deg;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
@@ -2420,6 +2425,12 @@ Ensure the default browser behavior of the `hidden` attribute.
   margin-bottom: calc(2rem * var(--tw-space-y-reverse));
 }
 
+.space-y-12 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(3rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(3rem * var(--tw-space-y-reverse));
+}
+
 .space-y-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
@@ -2520,6 +2531,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   border-radius: 9999px;
 }
 
+.rounded-sm {
+  border-radius: 0.125rem;
+}
+
 .rounded {
   border-radius: 0.25rem;
 }
@@ -2530,10 +2545,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .rounded-none {
   border-radius: 0px;
-}
-
-.rounded-sm {
-  border-radius: 0.125rem;
 }
 
 .rounded-lg {
@@ -2907,12 +2918,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-bottom: 8rem;
 }
 
-.pt-40 {
-  padding-top: 10rem;
+.pt-32 {
+  padding-top: 8rem;
 }
 
-.pb-12 {
-  padding-bottom: 3rem;
+.pb-20 {
+  padding-bottom: 5rem;
+}
+
+.pr-8 {
+  padding-right: 2rem;
 }
 
 .pt-16 {
@@ -3541,6 +3556,11 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .last\:rounded-br:last-child {
   border-bottom-right-radius: 0.25rem;
+}
+
+.hover\:rotate-0:hover {
+  --tw-rotate: 0deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
 .hover\:bg-gray-200:hover {

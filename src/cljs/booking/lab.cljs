@@ -404,10 +404,14 @@
                 false)))
 
 (rf/reg-sub :lab/nokkelvakt
+            :<- [:lab/master-state-emulation]
+            :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [{:keys [status access] :as sim} _]
-              (if access
-                (= :nøkkelvakt (some access [:nøkkelvakt]))
+            (fn [master-switch ua {:keys [status access] :as sim} _]
+              (if master-switch
+                (if (and (= :member status) access)
+                  (= :nøkkelvakt (some access [:nøkkelvakt]))
+                  false)
                 false)))
 
 (rf/reg-sub :lab/admin
@@ -565,3 +569,9 @@
                                       :content-fn #(feedback %)}]]]}))
 
 ;endregion
+
+; region frontpage
+
+
+#_(rf/reg-event-fx :lab/skip-easy-login (fn [_ _]
+                                          (:db (update db :lab/skip-easy-login (fnil not false)))))

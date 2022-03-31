@@ -745,7 +745,7 @@ body {
 .schpaa_style_ornament__text2,.schpaa_style_ornament__text{color:var(--text2)}
 .schpaa_style_ornament__text3,.schpaa_style_ornament__text{color:var(--text3)}
 .schpaa_style_ornament__ingress{line-height:var(--font-lineheight-4);color:var(--text2);font-size:var(--font-size-3);font-weight:var(--font-weight-2)}
-.schpaa_style_ornament__ingress_SINGLEQUOTE_{color:var(--text0);font-size:var(--font-size-3);font-weight:var(--font-weight-3)}
+.schpaa_style_ornament__ingress_SINGLEQUOTE_{color:var(--text0);font-size:var(--font-size-2);font-weight:var(--font-weight-3)}
 .schpaa_style_ornament__checkbox_text{margin-top:var(--size-1);color:var(--text1);font-size:var(--font-size-1);font-weight:var(--font-weight-5)}
 .schpaa_style_ornament__text_clear{font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
 .schpaa_style_ornament__text_clear_large{font-size:var(--font-size-3);font-weight:var(--font-weight-6)}
@@ -779,7 +779,7 @@ body {
 .schpaa_style_ornament__surface_instillinger{margin:-1rem;padding:1rem;background:var(--floating);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}
 .schpaa_style_ornament__surface_a{padding:1rem;background:white;box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}
 .schpaa_style_ornament__surface_b{padding:1rem;background:var(--surface00);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}
-.schpaa_style_ornament__surface_c{padding:1rem}.schpaa_style_ornament__surface_c{overflow:hidden;background:var(--surface0);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
+.schpaa_style_ornament__surface_c{overflow:hidden;background:#0004;box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
 .schpaa_style_ornament__surface_u{background:var(--surface000);box-shadow:var(--shadow-4);border-radius:var(--radius-2);border:1px solid var(--surface1)}
 .schpaa_style_ornament__surface_e{overflow:hidden;background:var(--surface000);box-shadow:var(--inner-shadow-1);border:1px solid var(--surface1);border-radius:var(--radius-2)}
 .schpaa_style_ornament__surface_b_sans_bg{padding:.5rem;border-radius:var(--radius-2)}
@@ -833,7 +833,7 @@ body {
 .schpaa_style_ornament__badge_author{border-radius:var(--radius-2);margin-left:-0.5rem;padding-left:.5rem;padding-right:.5rem;font-weight:400;height:100%;font-size:1rem;line-height:1.5rem;background:var(--surface4);color:var(--surface000);display:inline flow}
 .schpaa_style_ornament__dialog,min-w-md{--gi-shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);box-shadow:var(--shadow-6);border-bottom-right-radius:.75rem;border-bottom-left-radius:.75rem;border:1px solid var(--surface1);color:var(--text1);background-color:var(--surface00)}
 .schpaa_style_ornament__centered_dialog{padding-inline:var(--size-5);padding-block:var(--size-5);color:var(--text1);background-color:var(--content);border-radius:var(--radius-2);box-shadow:var(--shadow-3);overflow-y:auto}
-.schpaa_style_ornament__dropdown_dialog{background:var(--content);padding:var(--size-6);border-bottom-left-radius:var(--radius-2);border-bottom-right-radius:var(--radius-2);border:2px solid var(--surface4);box-shadow:var(--shadow-3)}
+.schpaa_style_ornament__dropdown_dialog{background:var(--content);padding:var(--size-6);border-bottom-left-radius:var(--radius-2);border-bottom-right-radius:var(--radius-2);border:2px solid var(--toolbar-);box-shadow:var(--shadow-3)}
 .schpaa_style_ornament__selector,min-w-xsx,xmax-w-md,h-autox{box-shadow:var(--shadow-6);color:var(--text1);background-color:var(--toolbar)}
 .schpaa_style_ornament__dialog_title{color:var(--text2);font-family:Inter;font-weight:var(--font-weight-5);font-size:var(--font-size-3)}
 .schpaa_style_ornament__dialog_title_SINGLEQUOTE_{color:var(--text1);font-family:Inter;font-weight:var(--font-weight-5);font-size:var(--font-size-4)}
@@ -941,14 +941,14 @@ body {
 .schpaa_style_ornament__header_title_cl{font-family:Inter;font-size:var(--font-size-2);font-weight:var(--font-weight-5)}
 .booking_frontpage__frontpage_image_style{z-index:0}.booking_frontpage__frontpage_image_style img{--gi-bg-opacity:1;background-color:rgba(255,255,255,var(--gi-bg-opacity));object-fit:cover;object-position:center;width:100%;min-height:20rem}.booking_frontpage__frontpage_image_style .light{filter:contrast(0.3) brightness(1) grayscale(0.5)}.booking_frontpage__frontpage_image_style .dark{filter:opacity(0.1) brightness(.95) grayscale(.6)}.booking_frontpage__frontpage_image_style .anonymous{height:calc(100vh)}.booking_frontpage__frontpage_image_style .registered{height:calc(100vh)}@supports(height:100dvh){.booking_frontpage__frontpage_image_style{height:calc(100dvh - 15rem)}}
 .schpaa_style_ornament__ingress_cl{font-size:var(--font-size-3);font-weight:var(--font-weight-3)}
-.booking_frontpage__fp_header{color:var(--text0);font-weight:var(--font-weight-5)}.booking_frontpage__fp_header{margin-left:-1px;color:var(--text0);font-family:Inter;letter-spacing:var(--font-letterspacing-0);font-size:var(--font-size-5);font-weight:var(--font-weight-2)}
+.booking_frontpage__fp_header{margin-left:-1px;font-family:Inter;letter-spacing:var(--font-letterspacing-0);font-size:var(--font-size-4);color:var(--text1);font-weight:var(--font-weight-4)}
 .booking_frontpage__fp_topic,.schpaa_style_ornament__text{color:var(--text0)}
 .booking_frontpage__bg{position:relative;height:100vh}.booking_frontpage__bg:before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;xbackground:red;background-image:"url(\"img/frontpage/DSCF0051.JPG\")"}
 .booking_frontpage__bg_whatever{position:relative;height:100vh;z-index:0;pointer-events:auto}.booking_frontpage__bg_whatever:before{background-position:center center;right:0;top:0;background-repeat:no-repeat;height:100vh;position:absolute;background-blend-mode:normal;content:"";background-size:cover;background-color:blue;bottom:0;background-image:linear-gradient(to bottom,rgba(0,0,0,0) 30%,rgba(0,0,0,0.5) 50%,var(--content) 100%),var(--background-image);left:0}.booking_frontpage__bg_whatever:after{background-color:red;content:"";position:absolute;heigth:100px}
 .booking_frontpage__bg_whatever_dark{position:relative;height:100vh;z-index:0;pointer-events:auto}.booking_frontpage__bg_whatever_dark:before{background-position:center center;right:0;top:0;background-repeat:no-repeat;position:absolute;xbackground:red;background-blend-mode:normal;content:"";background-size:cover;bottom:0;background-image:var(--background-image-dark);left:0}
 .booking_frontpage__bg_light{position:relative;height:100vh;background-position:center center;background-repeat:no-repeat;background-size:cover}.booking_frontpage__bg_light.light{background-image:var(--background-image-light)}.booking_frontpage__bg_light.dark{background-image:var(--background-image-dark)}@media(max-width:511px){.booking_frontpage__bg_light.bottom-toolbar{height:calc(100vh - 5rem)}}@supports(height:100dvh){.booking_frontpage__bg_light{height:calc(100dvh)}}
-.booking_frontpage__fp_right_aligned_link{color:var(--brand1);font-size:var(--font-size-3);font-weight:400;text-align:right;white-space:nowrap}
-.booking_frontpage__fp_left_aligned_link{color:var(--brand1);font-size:var(--font-size-3);font-weight:400;text-align:left;white-space:nowrap}
+.booking_frontpage__fp_right_aligned_link{color:var(--brand1);font-size:var(--font-size-2);font-weight:400;text-align:right;white-space:nowrap}
+.booking_frontpage__fp_left_aligned_link{color:var(--brand1);font-size:var(--font-size-2);font-weight:400;text-align:left;white-space:nowrap}
 .booking_styles__logo_thing{position:relative;box-shadow:var(--shadow-1);height:var(--size-fluid-7);width:var(--size-fluid-7);overflow:hidden;border-radius:var(--radius-round)}.booking_styles__logo_thing>.dark{margin:4rem;filter:contrast(0.98) brightness(0.5) saturate(.5)}.booking_styles__logo_thing>.light{filter:brightness(1)}
 .booking_styles__logothing{height:100%;width:100%}.booking_styles__logothing{position:relative;box-shadow:var(--shadow-1);overflow:hidden;border-radius:var(--radius-round)}.booking_styles__logothing.dark{-filter:contrast(0.98) brightness(0.75)}.booking_styles__logothing.light{-filter:brightness(1)}
 .booking_styles__scroll_up_animation{display:flex;justify-content:center;align-items:center;padding-block:var(--size-2);color:var(--text0)}.booking_styles__scroll_up_animation.keepgoing{animation:2000ms var(--animation-float)}.booking_styles__scroll_up_animation.fadeaway{animation:2000ms var(--animation-fade-out) forwards,var(--animation-scale-down) forwards}

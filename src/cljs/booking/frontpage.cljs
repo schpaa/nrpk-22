@@ -182,9 +182,14 @@
                :background "linear-gradient(0deg, var(--toolbar-) 0%, rgba(0,0,0,0) 100%)"
                :z-index    120}}]]))
 
-(o/defstyled fp-header sc/hero'
-  {:color       "var(--text0)"
-   :font-weight "var(--font-weight-5)"})
+(o/defstyled fp-header :div
+  {:margin-left    "-1px"
+
+   :font-family    "Inter"
+   :letter-spacing "var(--font-letterspacing-0)"
+   :font-size      "var(--font-size-4)"}
+  {:color       "var(--text1)"
+   :font-weight "var(--font-weight-4)"})
 
 (o/defstyled fp-topic sc/text0)
 {:color       "var(--text0)"
@@ -253,15 +258,15 @@
                                            (t/now)]
                                   :config booking.data/arco-datetime-config}
            (fn [formatted-t]
-             [sc/link on-click (formatted :text formatted-t)])]
+             [:div on-click (formatted :text formatted-t)])]
           [arco.react/time-to {:times  [(if (t/date-time? date)
                                           (t/date-time date)
                                           (t/at (t/date date) (t/midnight)))
                                         (t/now)]
                                :config booking.data/arco-datetime-config}
            (fn [formatted-t]
-             [sc/link on-click (formatted :text formatted-t)])])
-        [sc/link on-click (formatted :date date)]))))
+             [:div on-click (formatted :text formatted-t)])])
+        [:div on-click (formatted :date date)]))))
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -274,33 +279,54 @@
    :color       "var(--brand1)"})
 
 (defn listitem [a b]
-  [:<>
+  [:div.col-span-2.space-y-1.flex.items-baseline.gap-2
+   [:div..whitespace-nowrap [sc/ingress' {:style {:font-weight "400"}} b]]
+
    (if a
      [flex-datetime a (fn [type d]
                         (if (= :date type)
                           [:div.whitespace-nowrap.font-bold.flex.gap-1
                            [fp-right-aligned-link (some-> d t/day-of-month) "."]
                            [fp-left-aligned-link (some-> d ta/month-name)]]
-                          [fp-right-aligned-link d]))]
-     [:div])
-   [:div.self-center [sc/ingress' {:style {:font-weight "400"}} b]]])
+                          [fp-right-aligned-link d]))])])
+
+(defn listitem' [date text]
+  [:div.col-span-2.space-y-1
+   (if date
+     [flex-datetime date (fn [type d]
+                           (if (= :date type)
+                             [sc/subtext {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+                             #_[:div.whitespace-nowrap.font-bold.flex.gap-1
+                                [fp-right-aligned-link (some-> d t/day-of-month) "."]
+                                [fp-left-aligned-link (some-> d ta/month-name)]]
+                             [sc/subtext d]))])
+
+   [:div.flex.items-baseline.gap-2
+    [sc/ingress' {:style {:line-height "var(--font-lineheight-3)"
+                          :font-weight "400"}} text]]])
+
+
 
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
-        bottom-toolbar? @(rf/subscribe [:lab/at-least-registered])]
+        at-least-registered? @(rf/subscribe [:lab/at-least-registered])]
     [:div
      [bg-light {:class [(if dark-mode? :dark :light)
-                        (if bottom-toolbar? :bottom-toolbar)]}
+                        (if at-least-registered? :bottom-toolbar)]}
+      ;[:div.fixed.bottom-0.inset-x-0.h-24.bg-gradient-to-t.from-gray-400.z-10.pointer-events-none]
       [:div.min-h-full.z-0.relative
        [:div.mx-4
         [:div.max-w-lg.mx-auto
          (if true
-           [:div {:class [:pt-40 :pb-12 :--debug2]
-                  :style {:display               :grid
+           [:div {:class [:pt-32 :pb-20 :--debug2 :hover:rotate-0 :-rotate-6 :duration-500]
+                  :style {:-transform            "rotate(-6deg)"
+                          :transform-origin      "center right"
+                          :display               :grid
                           :gap                   "var(--size-4)"
                           :grid-template-columns "1fr min-content 1fr"}}
             [:div {:class [:--debug4]
                    :style {:justify-self :end
+                           ;:opacity 0.33
                            :align-self   :center}}
              [bs/logo-text {:class [:--debug3]
                             :style {:width        "auto"
@@ -309,9 +335,10 @@
               [sc/hero' {:style {:text-align  :right
                                  ;:font-family "Merriweather"
                                  ;:font-family "Merriweather"
+                                 :color       "var(--text1)"
                                  :font-weight "var(--font-weight-4)"}} "Nøklevann"]
               [sc/ingress-cl {:style {:white-space :nowrap
-
+                                      :color       "var(--text1)"
                                       :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
             [:div.h-24.w-auto.border-l.border-dashed
              {:style {:border-width "1px"
@@ -321,30 +348,53 @@
                    :style {:align-self   :center
                            :justify-self :start}}
              [:div.h-20.w-20 [circular-logo-thing dark-mode?]]]]
-           [:div.pt-40.pb-24 [bs/centered [circular-logo-thing dark-mode?]]])]
-        [:div.relative.space-y-8.w-full.mx-auto.max-w-lg.py-4.z-100
-         ;{:style {:background-color "red" #_"var(--content)"}}
-         [fp-header "Hva skjer?"]
-         ;[l/ppre-x @(rf/subscribe [:lab/at-least-registered])]
-         [:div {:style {:display               "grid"
-                        :gap                   "var(--size-4) var(--size-2)"
-                        :grid-template-columns "min-content 1fr"}}
-          [listitem (t/date "2022-04-04") "Nøkkelsjekk"]
-          [listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
-          [listitem (t/date "2022-05-08") "Sesongstart #35"]
-          [listitem nil [sc/link {} "se flere"]]]
-         [fp-header "Nyheter"]
-         [:div {:style {:display               "grid"
-                        :gap                   "var(--size-4) var(--size-2)"
-                        :grid-template-columns "min-content 1fr"}}
-          (for [e (range 15)]
-            [listitem (t/<< (t/date) (t/new-period e :days)) e])]
-         [listitem nil "<fp-topic>"]
+           [:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])]
+        [:div.xrelative.space-y-12.w-full.mx-auto.max-w-lg.py-4.z-100
+
+         (when-not at-least-registered?
+           (when-not @(schpaa.state/listen :lab/skip-easy-login)
+             [sc/surface-c {:class [:-mx-4]
+                            :style {:position   :relative
+                                    :background :#fffb
+                                    :box-shadow "var(--shadow-2)"
+                                    :padding    "var(--size-4)"}}
+              [:div.absolute.top-2.right-2
+               [sc/icon {:on-click #(schpaa.state/toggle :lab/skip-easy-login)} ico/closewindow]]
+              [sc/col-space-2
+               [sc/ingress' {:class [:pr-4]
+                             :style {:font-weight "var(--font-weight-4)"
+                                     :line-height "var(--font-lineheight-4)"}}
+                "Er du nøkkelvakt kan du logge inn med samme bruker som du brukte i Eykt. Har du ikke bruker på Eykt, kan du logge inn allikevel og lage en."]
+               [sc/row-ec
+                [:div.grow]
+                [hoc.buttons/cta {:on-click #(rf/dispatch [:app/login])} "Logg inn nå"]]]]))
+
+         [:div.space-y-4
+          [fp-header "Nyheter"]
+          [:div.ml-4 {:style {:display               "grid"
+                              :gap                   "var(--size-4) var(--size-2)"
+                              :grid-template-columns "1fr"}}
+
+           [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
+           [listitem' (t/date) "Nye båter er kjøpt inn."]
+           [listitem' (t/date) "Nøkkelvakter skal fra og med denne sesongen rapportere hms-hendelser og dokumentere materielle skader i Eykt/Økt."]]]
+         [:div.space-y-4
+          [fp-header "Hva skjer?"]
+          [:div.ml-4 {:style {:display               "grid"
+                              :gap                   "var(--size-4) var(--size-2)"
+                              :grid-template-columns "min-content 1fr"}}
+           [listitem (t/date "2022-04-04") "Nøkkelsjekk"]
+           [listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
+           [listitem (t/date "2022-05-08") "Sesongstart #35"]
+           [listitem nil [sc/link {} "se mer i årshjulet"]]]]
+
          (when goog.DEBUG
            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
             booking.common-views/master-control-box])]]]
+
       [booking.common-views/after-content]
+
       [bs/attached-to-bottom
-       {:class [(if bottom-toolbar? :bottom-toolbar)]}
+       {:class [(if at-least-registered? :bottom-toolbar) :z-20]}
        [scroll-up-animation]]]
      [:div.absolute.bottom-0.inset-x-0 [booking.common-views/bottom-tabbar]]]))

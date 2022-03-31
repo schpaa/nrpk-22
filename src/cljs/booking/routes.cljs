@@ -28,7 +28,8 @@
    ["/aktivitetsliste" {:name :r.aktivitetsliste :header [:r.oversikt "Aktivitetsliste"]}]
 
    ["/arshjul" {:name   :r.yearwheel
-                :header [:r.oversikt "Årshjul"] :access [:member nil]}]
+                :header [:r.oversikt "Årshjul"]
+                :access [:member nil]}]
 
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 

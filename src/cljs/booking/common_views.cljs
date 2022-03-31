@@ -481,7 +481,7 @@
               [:div.hidden.sm:block.grow
                (if (vector? titles)
                  [sc/row-sc-g2
-                  (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "|"]
+                  (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "/"]
                              (for [[idx e] (map-indexed vector titles)
                                    :let [last? (= idx (dec (count titles)))]]
                                (if last?
@@ -661,8 +661,8 @@
 
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])]
-    [:div {:style {:background "var(--gray-10)"}}
-     [:div.mx-auto.max-w-lg
+    [:div.z-1 {:style {:background "var(--gray-10)"}}
+     [:div.mx-auto.max-w-lg.pt-4.pb-32
 
       [:div.text-white.mx-4.py-4
        [sc/col-space-1
@@ -689,8 +689,10 @@
       {:display-name
        "+page-builder"
 
-       :component-did-unmount
-       (fn [_] (.removeEventListener @a "scroll" scroll-fn))
+       :component-will-unmount
+       (fn [_]
+         (when @a
+           (.removeEventListener @a "scroll" scroll-fn)))
 
        :component-did-mount
        (fn [_]
@@ -699,58 +701,60 @@
 
        :reagent-render
        (fn [r {:keys [frontpage render render-fullwidth panel always-panel]}]
-         (let [pagename (some-> r :data :name)
-               numberinput (rf/subscribe [:lab/number-input])
-               left-aligned (schpaa.state/listen :activitylist/left-aligned)]
-           (if frontpage
-             [page-boundary r
-              {:frontpage true}
-              [:div.overflow-y-auto.h-full
-               {:ref (fn [el]
-                       (when-not @a
-                         ;(tap> ["addrefxxx" el])
-                         (.addEventListener el "scroll" scroll-fn)
-                         (reset! a el)))}
-               (let [v (- 1 (/ (- (+ @scrollpos 0.001) 0) 150))]
-                 [:div.sticky.top-0.z-10.relative
-                  {:style {:opacity v}}
-                  [booking.common-views/header-line r {:frontpage true}]])
-               [:div.-mt-16
-                [render r]]]]
+         [err-boundary
+          (let [pagename (some-> r :data :name)
+                numberinput (rf/subscribe [:lab/number-input])
+                left-aligned (schpaa.state/listen :activitylist/left-aligned)]
+            (if frontpage
+              [page-boundary r
+               {:frontpage true}
+               [:div.overflow-y-auto.h-full
+                {:ref (fn [el]
+                        (when-not @a
+                          ;(tap> ["addrefxxx" el])
+                          (.addEventListener el "scroll" scroll-fn)
+                          (reset! a el)))}
+                (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
+                  [:div.sticky.top-0.z-10.relative
+                   {:style {:opacity v}}
+                   [booking.common-views/header-line r {:frontpage true}]])
+                [:div.-mt-16
+                 [render r]]]]
 
-             [page-boundary r
-              {:frontpage false}
-              (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
-                [:div.min-h-full
-                 (if-not have-access?
-                   [:<>
-                    [no-access-view r]
-                    [after-content]]
-                   [:<>
-                    [sc/col-space-8 {:class [:py-8]}
-                     (when panel
-                       [:div.mx-4
-                        [:div.mx-auto
-                         {:style {:width     "100%"
-                                  :max-width max-width}}
-                         [hoc.panel/togglepanel pagename "innstillinger" panel]]])
+              [page-boundary r
+               {:frontpage false}
+               (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
+                 [:div.min-h-full
+                  (if-not have-access?
+                    [:<>
+                     [no-access-view r]
+                     [after-content]]
+                    [:<>
+                     [sc/col-space-8 {:class [:py-8]}
+                      (when (fn? panel)
+                        (when-some [p (panel)]
+                          [:div.mx-4
+                           [:div.mx-auto
+                            {:style {:width     "100%"
+                                     :max-width max-width}}
+                            [hoc.panel/togglepanel pagename "innstillinger" panel]]]))
 
-                     (when always-panel
-                       [:div.mx-4
-                        [:div.mx-auto
-                         {:style {:width     "100%"
-                                  :max-width max-width}}
-                         [always-panel]]])
-                     [:div.mx-4
-                      [:div.duration-200
-                       {:style {:margin-right :auto
-                                :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                                ;; force view to align to the left
-                                                0
-                                                :auto)
-                                :width        "100%"
-                                :max-width    max-width}}
-                       (if render-fullwidth
-                         [render-fullwidth r]
-                         [render r])]]]
-                    [after-content]])])])))})))
+                      (when always-panel
+                        [:div.mx-4
+                         [:div.mx-auto
+                          {:style {:width     "100%"
+                                   :max-width max-width}}
+                          [always-panel]]])
+                      [:div.mx-4
+                       [:div.duration-200
+                        {:style {:margin-right :auto
+                                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                                 ;; force view to align to the left
+                                                 0
+                                                 :auto)
+                                 :width        "100%"
+                                 :max-width    max-width}}
+                        (if render-fullwidth
+                          [render-fullwidth r]
+                          [render r])]]]
+                     [after-content]])])]))])})))
