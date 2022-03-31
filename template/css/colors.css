@@ -1,11 +1,11 @@
 :where(html) {
-    --background-image-light: url('/img/bg-light-2.jpg');
-    --background-image-dark: url('/img/bg-dark-2.jpg');
+    --background-image-light: url('/img/bg/bg-light-1.jpg');
+    --background-image-dark: url('/img/bg/bg-dark-1.jpg');
     --animation-spin:  spin-sun 7s ease-in-out infinite;
 }
 @keyframes spin-sun {
   to { transform: rotate(0.3turn) scale(.9,.9); }
-}
+}                     
 
 @keyframes spin3 {
   from { transform: rotate(0);
@@ -129,7 +129,7 @@ outline: 2px solid #a0a8;
     --gray-7: #54595A;
     --gray-8: #3B3E3F;
     --gray-9: #222425;
-    --gray-10: #1c1917;
+    --gray-10: #1a1c1d;
 
 
 
@@ -229,7 +229,7 @@ outline: 2px solid #a0a8;
     --text0-copy-light: var(--gray-0);
     --text1-light: var(--gray-8);
     --text1-copy-light: var(--gray-1);
-    --text2-light: var(--gray-5);
+    --text2-light: var(--gray-6);
     --text3-light: var(--gray-4);
     --label-light: var(--gray-5);
 
@@ -381,7 +381,7 @@ outline: 2px solid #a0a8;
 .dark {
 
     
-    --brand1: var(--brand1-dim);
+    --brand1: #69A741; /*var(--brand1-dim);*/
     --brand1-copy: var(--brand1-copy-dim);
     --brand1-hover: var(--brand1-hover-dim);
 
@@ -444,7 +444,7 @@ outline: 2px solid #a0a8;
         --floating: var(--dim-floating);
         --switchon: var(--dim-switchon);
         --switchoff: var(--dim-switchoff);
-        --brand1: var(--dim-brand1);
+        --brand1: #69A741; /* var(--dim-brand1);*/
         --brand1-bright: var(--dim-brand1-bright);
         --brand1copy: var(--dim-brand1copy);
         --button: var(--dim-button);

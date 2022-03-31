@@ -469,39 +469,41 @@
      [sc/col
       [:div
        {:style (when-not frontpage {:background "var(--toolbar)"})}
-       [(if frontpage header-top-frontpage header-top)
+       [(if frontpage header-top-frontpage header-top)      ;{:class [:-debug2]}
+        (when goog.DEBUG
+          [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
+
+        ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
         [:div.flex.flex-col
          (when-not @(rf/subscribe [:lab/in-search-mode?])
            (let [titles (compute-page-titles r)]
              [:div.truncate
               [:div.hidden.sm:block.grow
-               [:<>
-                (if (vector? titles)
-                  [sc/row-sc-g2
-                   (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "\\"]
-                              (for [[idx e] (map-indexed vector titles)
-                                    :let [last? (= idx (dec (count titles)))]]
-                                (if last?
-                                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
-                                  (let [{:keys [text link]} e]
-                                    [sc/subtext-with-link {:style {:background "var(--content)"}
-                                                           :href  (k/path-for [link])} text]))))]
-                  [sc/text1 titles])]]
+               (if (vector? titles)
+                 [sc/row-sc-g2
+                  (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "|"]
+                             (for [[idx e] (map-indexed vector titles)
+                                   :let [last? (= idx (dec (count titles)))]]
+                               (if last?
+                                 [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
+                                 (let [{:keys [text link]} e]
+                                   [sc/subtext-with-link {:style {:-background "var(--content)"}
+                                                          :href  (k/path-for [link])} text]))))]
+                 [sc/text1 titles])]
               [:div.xs:block.sm:hidden.grow
                (if (vector? titles)
                  [sc/col-space-1                            ;{:class [:truncate]}
                   (when (< 1 (count titles))
                     (let [{:keys [text link]} (first titles)]
-                      [:div [sc/subtext-with-link {:style {:background  "var(--content)"
+                      [:div [sc/subtext-with-link {:style {:-background "var(--content)"
                                                            :margin-left "-2px"}
                                                    :href  (k/path-for [link])} text]]))
                   [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
                  [sc/col
                   [sc/text1 titles]])]]))]
-
-        ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-        [:div.grow]
-        (when-not frontpage
+        ;[:div.grow]
+        (if frontpage
+          [:div.grow]
           (if-not @(rf/subscribe [:lab/at-least-registered])
             [cta {:style    {:padding-block  "var(--size-1)"
                              :padding-inline "var(--size-2)"
@@ -513,26 +515,22 @@
                   :on-click #(rf/dispatch [:app/login])}
              [:div {:style {}} "Logg inn"]
              #_[:div.whitespace-nowrap "& Registrer deg"]]
-            [search-menu]))
-
-        ;[l/ppre-x @(rf/subscribe [:lab/master-state-emulation])]
-        (when goog.DEBUG
-          [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
-        [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]
-        [main-menu]]]])])
+            [:div.grow.flex.justify-end.items-center [search-menu]]))
+        [main-menu]
+        [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]]]])])
 
 (defn- bottom-tabbar []
   (let [user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.sm:hidden.flex.border-t
-       {:style {:position        :sticky
+       {:style {;:position        :sticky
                 :width           "100%"
                 :justify-content :space-around
                 :height          "var(--size-10)"
                 :min-height      "var(--size-10)"
                 :padding-inline  "var(--size-2)"
-                :bottom          "0px"
+                ;:bottom          "0px"
                 :z-index         1000
                 :box-shadow      "var(--inner-shadow-3)"
                 :border-color    "var(--toolbar-)"
@@ -663,11 +661,20 @@
 
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])]
-    [:div {:style {:background "var(--brand1)"}}
-     [:div.py-4.mx-auto.max-w-lg.px-4
-      [:div [hoc.buttons/reg-pill-icon
-             {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-             ico/tilbakemelding "Har du en tilbakemelding?"]]]]))
+    [:div {:style {:background "var(--gray-10)"}}
+     [:div.mx-auto.max-w-lg
+
+      [:div.text-white.mx-4.py-4
+       [sc/col-space-1
+        [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
+        [sc/text1-cl "Postboks 37, 0621 Bogerud"]
+        [sc/text1-cl "Nøklevann ro- og padleklubb"]
+        [:div.flex.justify-start.flex-wrap.gap-2
+         [sc/subtext-with-link {:class [:dark]} "styret@nrpk.no"]
+         [sc/subtext-with-link {:class [:dark]} "medlem@nrpk.no"]
+         [:div [hoc.buttons/reg-pill-icon
+                {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+                ico/tilbakemelding "Tilbakemelding?"]]]]]]]))
 
 (defn +page-builder [r m]
   (let [scrollpos (r/atom 0)
