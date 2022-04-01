@@ -376,10 +376,11 @@
 
 (defn search-result []
   (let [data (range 12)]
-    (into [:div.gap-px.grid.w-full
-           {:style {:grid-template-columns "repeat(auto-fill,minmax(24rem,1fr))"}}]
-          (for [e data]
-            [result-item e]))))
+    [:div.min-h-screen-
+     (into [:div.gap-px.grid.w-full
+            {:style {:grid-template-columns "repeat(auto-fill,minmax(24rem,1fr))"}}]
+           (for [e data]
+             [result-item e]))]))
 
 (o/defstyled header-top-frontpage :div
   :flex :items-center :w-full :px-4 :gap-2
@@ -505,10 +506,30 @@
         [main-menu]
         [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]]]])])
 
-(defn bottom-tabbar []
-  (let [user-auth (rf/subscribe [::db/user-auth])
+(defn right-tabbar []
+  (let [numberinput? (rf/subscribe [:lab/number-input])
+        user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
+      [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
+       [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
+        {:style {:z-index     1211
+                 :padding-top "var(--size-0)"
+                 :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
+                 :background  "var(--toolbar)"}}
+        (into [:<>] (map #(if (keyword? %)
+                            [:div.grow]
+                            [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
+       [:div.absolute.right-16.xl:right-20.inset-y-0
+        {:style {:width          "298px"
+                 :pointer-events :none}}
+        [boatinput-menu]]])))
+
+(defn bottom-tabbar []
+  (let [search (rf/subscribe [:lab/is-search-running?])
+        user-auth (rf/subscribe [::db/user-auth])
+        has-chrome? (rf/subscribe [:lab/has-chrome])]
+    (when (and @has-chrome? (not @search) @(rf/subscribe [:lab/at-least-registered]))
       [:div.sm:hidden.flex.border-t
        {:style {;:position        :sticky
                 :width           "100%"
@@ -523,6 +544,8 @@
                 :background      "var(--toolbar)"}}
        (into [:<>] (map horizontal-button
                         (horizontal-toolbar (:uid @user-auth))))])))
+
+(o/defstyled mainframe :div)
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
@@ -560,67 +583,109 @@
             :vis     (rf/subscribe [:lab/modal-selector])
             :close   #(rf/dispatch [:lab/modal-selector false])}]
           ;endregion
-          [:div.fixed.inset-0.flex                          ;<- flex in order to show vertial menu
-           [:div.flex-col.flex.h-full.w-full
-
-            ;[:div.h-32 "X"]
+          [:div.fixed.inset-0.flex
+           [:div.flex.flex-col
+            {:style {:flex "1 1 auto"}}
             (when-not frontpage
               [header-line r {:frontpage frontpage}])
+            [:div.flex.overflow-y-auto
+             (if (and
+                   @(rf/subscribe [:lab/is-search-running?])
+                   @(rf/subscribe [:lab/in-search-mode?]))
+               [:div
+                {:style {:flex "1 0 0px"}}
+                [:div
+                 {:style {:background "var(--surface2)"}}
+                 [search-result]]
+                [sc/row-center {:class [:py-4]}
+                 [hoc.buttons/regular {:on-click #(do
+                                                    ;(rf/dispatch [:lab/stop-search])
+                                                    ;(rf/dispatch [:lab/set-search-mode false])
+                                                    ;(rf/dispatch [:lab/set-search-expr ""])
+                                                    (rf/dispatch [:lab/quit-search]))} "Lukk"]]
+                [:div.absolute.bottom-8.sm:bottom-7.right-4
+                 [sc/row-end {:class [:pt-4]}
+                  (bottom-menu)]]]
+               [:div
+                {:style {:flex "1 1 auto"}}
+                contents])
+             #_(for [e (range 50)] [:div "X"])]
 
-            ;region content
-            (if frontpage
-              [:div                                         ;.h-full
-               {:style     {;:background "var(--content)"
-                            :z-index 0}
-                :id        "inner-document"
-                :tab-index "0"}
-               contents]
-
-
-              [:div.overflow-y-auto.h-full.focus:outline-none.grow
-               {:style     {;:min-height "calc(100vh + 5rem)"
-                            :background "var(--content)"}
-                :id        "inner-document"
-                :tab-index "0"}
-               (if @(rf/subscribe [:lab/is-search-running?])
-                 ;searchmode
-                 [:div.h-full
-                  {:style {:background "var(--surface2)"}}
-                  [search-result]
-                  [:div.absolute.bottom-24.sm:bottom-7.right-4
-                   [sc/row-end {:class [:pt-4]}
-                    (bottom-menu)]]]
-
-                 ;content
-                 [:<>
-                  (if (map? (first contents))
-                    [:div.w-auto
-                     (:whole (first contents))]
-                    [:div.min-h-full.w-full
-
-                     contents
-
-                     #_[:div.py-8.h-32]])])
-               [:div.absolute.bottom-0.inset-x-0 [bottom-tabbar]]])]
+            #_[:div {:style {:display :flex :flex "1 0 auto"}} ;<- flex in order to show vertial menu
 
 
 
+               [:div.flex-col.flex.h-full.w-full
+                [:div {:style {:min-height "12rem"}} "caro"]
 
-           ;endregion
-           (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-             [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
-              [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
-               {:style {:z-index     1211
-                        :padding-top "var(--size-0)"
-                        :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
-                        :background  "var(--toolbar)"}}
-               (into [:<>] (map #(if (keyword? %)
-                                   [:div.grow]
-                                   [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
-              [:div.absolute.right-16.xl:right-20.inset-y-0
-               {:style {:width          "298px"
-                        :pointer-events :none}}
-               [boatinput-menu]]])]])})))
+
+                (when-not frontpage
+                  [header-line r {:frontpage frontpage}])
+
+                ;region content
+                (if frontpage
+                  [:div                                     ;.h-full
+                   {:style     {;:background "var(--content)"
+                                :z-index 0}
+                    :id        "inner-document"
+                    :tab-index "0"}
+                   contents]
+
+
+                  [:div.overflow-y-auto.h-full.focus:outline-none.grow.-debug2
+                   {:style {;:min-height "calc(100vh + 5rem)"
+                            :background "var(--content)"}}
+
+                   (if @(rf/subscribe [:lab/is-search-running?])
+                     ;searchmode
+                     [:div.h-full
+                      {:style {:background "var(--surface2)"}}
+                      [search-result]
+                      [:div.absolute.bottom-24.sm:bottom-7.right-4
+                       [sc/row-end {:class [:pt-4]}
+                        (bottom-menu)]]]
+
+                     ;content
+                     [:<>
+                      (if (map? (first contents))
+                        [:div.w-auto
+                         (:whole (first contents))]
+                        [:div.min-h-full.w-full
+                         {:style {:id        "inner-document"
+                                  :tab-index "0"}}
+                         contents])])
+
+
+                   [:div.absolute.bottom-0.inset-x-0.-debug [bottom-tabbar]]])]
+
+
+
+
+               ;endregion
+               (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
+                 [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
+                  [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
+                   {:style {:z-index     1211
+                            :padding-top "var(--size-0)"
+                            :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
+                            :background  "var(--toolbar)"}}
+                   (into [:<>] (map #(if (keyword? %)
+                                       [:div.grow]
+                                       [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
+                  [:div.absolute.right-16.xl:right-20.inset-y-0
+                   {:style {:width          "298px"
+                            :pointer-events :none}}
+                   [boatinput-menu]]])]
+            #_[:div {:style {:display    :sticky
+                             :bottom     0
+                             :flex       "0 0 5rem"
+                             :width      "100%"
+                             :height     "5rem"
+                             :min-height "5rem"
+                             :background "red"}}]
+
+            [bottom-tabbar]]
+           [right-tabbar]]])})))
 
 
 (def max-width "50ch")
@@ -652,9 +717,8 @@
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
-     [:div.mx-auto.max-w-lg.pt-4.pb-24
-
-      [:div.text-white.mx-4.py-4
+     [:div.mx-auto.max-w-lg.py-8
+      [:div.text-white.mx-4
        [sc/col-space-2
         [sc/col-space-1
          [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
@@ -726,7 +790,7 @@
                     [after-content]]
                    [:<>
                     [sc/col-space-8 {:class [:py-8]
-                                     :style {:min-height "100vh"}}
+                                     :style {:-min-height "100%" #_"100vh"}}
                      (when (fn? panel)
                        (when-some [p (panel)]
                          [:div.mx-4
@@ -740,7 +804,7 @@
                          {:style {:width     "100%"
                                   :max-width max-width}}
                          [always-panel]]])
-                     [:div.mx-4.min-h-fullx
+                     [:div.mx-4
                       [:div.duration-200
                        {:style {:margin-right :auto
                                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)

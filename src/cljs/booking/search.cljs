@@ -7,7 +7,8 @@
             [schpaa.style.ornament :as sc]
             [lambdaisland.ornament :as o]
             [schpaa.style.button :as scb]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.debug :as l]))
 
 ;region search
 
@@ -15,10 +16,10 @@
                                         (assoc db :lab/search-expr search-expr)))
 
 (rf/reg-event-db :lab/set-search-mode (fn [db [_ searchmode?]]
-                                        (assoc db :lab/set-search-mode searchmode?)))
+                                        (assoc db :lab/in-search-mode searchmode?)))
 
 (rf/reg-event-db :lab/toggle-search-mode (fn [db]
-                                           (update db :lab/set-search-mode (fnil not false))))
+                                           (update db :lab/in-search-mode (fnil not false))))
 
 (rf/reg-event-db :lab/start-search (fn [db]
                                      (assoc db :lab/run-search true)))
@@ -26,9 +27,14 @@
 (rf/reg-event-db :lab/stop-search (fn [db]
                                     (assoc db :lab/run-search false)))
 
+(rf/reg-event-db :lab/quit-search (fn [db _]
+                                    (-> db (assoc :lab/in-search-mode false
+                                                  :lab/run-search false
+                                                  :lab/search-expr ""))))
+
 (rf/reg-sub :lab/is-search-running? :-> :lab/run-search)
 
-(rf/reg-sub :lab/in-search-mode? :-> :lab/set-search-mode)
+(rf/reg-sub :lab/in-search-mode? :-> :lab/in-search-mode)
 
 (rf/reg-sub :lab/search-expression :-> :lab/search-expr)
 
@@ -50,11 +56,12 @@
         enter-search #(rf/dispatch [:lab/set-search-mode true])
         exit-search #(do
                        (reset! a nil)
-                       (rf/dispatch [:lab/set-search-mode false])
-                       (rf/dispatch [:lab/stop-search])
-                       (rf/dispatch [:lab/set-search-expr ""]))
-        set-refs #(when @a
-                    (.addEventListener @a "keydown"
+                       (rf/dispatch [:lab/quit-search]))
+        ;(rf/dispatch [:lab/set-search-mode false])
+        ;(rf/dispatch [:lab/stop-search])
+        ;(rf/dispatch [:lab/set-search-expr ""]))
+        set-refs #(when %
+                    (.addEventListener % "keydown"
                                        (fn [event]
                                          (cond
                                            (= keycodes/ESC event.keyCode)
@@ -66,40 +73,50 @@
         search (rf/subscribe [:lab/in-search-mode?])]
 
     (r/create-class
-      {:display-name         "search-widget"
-       :component-did-update (fn [_] (when @a (.focus @a)))
+      {:display-name           "search-widget"
+       :component-did-update   (fn [new-props prev-props]
+                                 (if @search
+                                   (do
+                                     (tap> {":component-did-update" @search})
+                                     (when @a (.focus @a)))
+                                   (reset! a nil)))
+       :component-will-unmount (fn [_]
+                                 ;(tap> ":component-will-unmount")
+                                 (reset! a nil))
        :reagent-render
        (fn []
-         [:div.h-10.duration-200.rounded-full
-          {:class (into [:flex :gap-1]
-                        [(if @search :bg-white)
-                         (if @search :px-x1)
-                         (if @search :w-full :w-10)])}
+         [:div
+          ;[l/ppre-x @a]
+          [:div.h-10.duration-200.rounded-full
+           {:class (into [:flex :gap-1]
+                         [(if @search :bg-white)
+                          (if @search :px-x1)
+                          (if @search :w-full :w-10)])}
 
-          (if @search
-            [experiment3
-             [:div.flex.items-center.justify-center.h-full {:class    [:w-10 :shrink-1]
-                                                            :on-click #(.stopPropagation %)}
-              [sc/icon [:> solid/SearchIcon]]]]
-            [hoc.buttons/round
-             {:on-click #(when-not @search (enter-search))}
-             [sc/icon [:> solid/SearchIcon]]])
+           (if @search
+             [experiment3
+              [:div.flex.items-center.justify-center.h-full {:class    [:w-10 :shrink-1]
+                                                             :on-click #(.stopPropagation %)}
+               [sc/icon [:> solid/SearchIcon]]]]
+             [hoc.buttons/round
+              {:on-click #(when-not @search (enter-search))}
+              [sc/icon [:> solid/SearchIcon]]])
 
-          (when @search
-            [:input.w-full.h-full.outline-none.focus:outline-none
-             {:style       {:xflex "1 1 100%"}
-              :placeholder "Søk (<linjeskift> å starte)"
-              :type        :text
-              :on-blur     #(let [s (-> % .-target .-value)]
-                              (if (empty? s)
-                                (exit-search)))
-              :ref         #(when-not @a
-                              ;(set-focus % a)
-                              (reset! a %)
-                              (set-refs))}])
+           (when @search
+             [:input.w-full.h-full.outline-none.focus:outline-none
+              {:style       {:xflex "1 1 100%"}
+               :placeholder "Søk (<linjeskift> å starte)"
+               :type        :text
+               :on-blur     #(let [s (-> % .-target .-value)]
+                               (if (empty? s)
+                                 (exit-search)))
+               :ref         (fn [el] (when-not @a
+                                       (reset! a el)
+                                       ;(set-focus % a)
+                                       (set-refs @a)))}])
 
-          (when @search
-            [experiment2
-             [:div.flex.items-center.justify-center.h-full {:class    [:w-10]
-                                                            :on-click exit-search}
-              [sc/icon [:> solid/XIcon]]]])])})))
+           (when @search
+             [experiment2
+              [:div.flex.items-center.justify-center.h-full {:class    [:w-10]
+                                                             :on-click exit-search}
+               [sc/icon [:> solid/XIcon]]]])]])})))

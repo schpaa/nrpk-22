@@ -296,18 +296,20 @@
                                             (when @(rf/subscribe [:lab/admin-access])
                                               [user.forms/changelog-panel props])])))
 
-             [sc/row-ec {:class [:py-4]}
+             [:div
+              [sc/row-ec {:class [:py-4]}
+
+
+               ;[:div.grow]
+               [hoc.buttons/regular {:type     :button
+                                     :on-click #(set-values initial-values)
+                                     :disabled (empty? dirty)} "Tilbakestill"]
+
+               [hoc.buttons/regular {:type     :submit
+                                     :disabled (empty? dirty)} "Lagre"]]
               [hoc.buttons/danger
                {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
-               (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]
-
-              [:div.grow]
-              [hoc.buttons/regular {:type     :button
-                                    :on-click #(set-values initial-values)
-                                    :disabled (empty? dirty)} "Tilbakestill"]
-
-              [hoc.buttons/regular {:type     :submit
-                                    :disabled (empty? dirty)} "Lagre"]]
+               (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]]
              [sist-oppdatert values]]])]))))
 
 (defn my-info []

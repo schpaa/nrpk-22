@@ -453,5 +453,5 @@
        [bs/attached-to-bottom
         {:class [(if at-least-registered? :bottom-toolbar) :z-20]}
         [scroll-up-animation]]]]
-     [:div.absolute.bottom-0.inset-x-0
-      [booking.common-views/bottom-tabbar]]]))
+     #_[:div.absolute.bottom-0.inset-x-0
+        [booking.common-views/bottom-tabbar]]]))

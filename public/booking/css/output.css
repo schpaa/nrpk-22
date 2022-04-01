@@ -1446,14 +1446,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   bottom: 6rem;
 }
 
-.right-4 {
-  right: 1rem;
-}
-
-.right-16 {
-  right: 4rem;
-}
-
 .left-4 {
   left: 1rem;
 }
@@ -1518,6 +1510,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   top: 1rem;
 }
 
+.right-4 {
+  right: 1rem;
+}
+
 .bottom-12 {
   bottom: 3rem;
 }
@@ -1552,6 +1548,14 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .-bottom-1 {
   bottom: -0.25rem;
+}
+
+.right-16 {
+  right: 4rem;
+}
+
+.bottom-8 {
+  bottom: 2rem;
 }
 
 .isolate {
@@ -1612,6 +1616,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .clear-left {
   clear: left;
+}
+
+.m-4 {
+  margin: 1rem;
 }
 
 .m-0 {
@@ -1917,20 +1925,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   width: 6rem;
 }
 
-.w-auto {
-  width: auto;
-}
-
 .w-12 {
   width: 3rem;
 }
 
-.w-20 {
-  width: 5rem;
+.w-auto {
+  width: auto;
 }
 
-.w-64 {
-  width: 16rem;
+.w-20 {
+  width: 5rem;
 }
 
 .w-10 {
@@ -1961,6 +1965,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   width: 14rem;
 }
 
+.w-64 {
+  width: 16rem;
+}
+
 .w-28 {
   width: 7rem;
 }
@@ -1971,10 +1979,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .w-36 {
   width: 9rem;
-}
-
-.w-96 {
-  width: 24rem;
 }
 
 .min-w-full {
@@ -2936,10 +2940,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-top: 0.25rem;
 }
 
-.pb-16 {
-  padding-bottom: 4rem;
-}
-
 .pt-4 {
   padding-top: 1rem;
 }
@@ -2960,12 +2960,12 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-bottom: 5rem;
 }
 
-.pr-4 {
-  padding-right: 1rem;
-}
-
 .pt-16 {
   padding-top: 4rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
 }
 
 .pt-12 {
@@ -3088,16 +3088,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   font-weight: 700;
 }
 
-.font-medium {
-  font-weight: 500;
-}
-
 .font-normal {
   font-weight: 400;
 }
 
 .font-extrabold {
   font-weight: 800;
+}
+
+.font-medium {
+  font-weight: 500;
 }
 
 .font-thin {
@@ -4377,16 +4377,16 @@ Ensure the default browser behavior of the `hidden` attribute.
 }
 
 @media (min-width: 512px) {
-  .sm\:bottom-7 {
-    bottom: 1.75rem;
-  }
-
   .sm\:bottom-4 {
     bottom: 1rem;
   }
 
   .sm\:left-20 {
     left: 5rem;
+  }
+
+  .sm\:bottom-7 {
+    bottom: 1.75rem;
   }
 
   .sm\:block {
