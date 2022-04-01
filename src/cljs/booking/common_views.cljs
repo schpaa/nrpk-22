@@ -370,13 +370,13 @@
    :min-width      "12rem"
    :padding-inline "var(--size-4)"
    :padding-block  "var(--size-3)"
-   :background     "var(--surface000)"
+   :background     "var(--content)"
    :color          "var(--text1)"}
-  [:&:hover {:background "var(--surface0)"}])
+  [:&:hover {:background "var(--toolbar-)"}])
 
 (defn search-result []
   (let [data (range 12)]
-    [:div.min-h-screen-
+    [:div.pt-px                                             ;.min-h-screen
      (into [:div.gap-px.grid.w-full
             {:style {:grid-template-columns "repeat(auto-fill,minmax(24rem,1fr))"}}]
            (for [e data]
@@ -614,7 +614,7 @@
                [:div
                 {:style {:flex "1 0 auto"}}
                 [:div
-                 {:style {:background "var(--surface2)"}}
+                 {:style {:background "var(--toolbar)"}}
                  [search-result]]
                 [sc/row-center {:class [:py-4]}
                  [hoc.buttons/regular {:on-click #(do

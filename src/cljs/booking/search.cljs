@@ -105,7 +105,7 @@
            (when @search
              [:input.w-full.h-full.outline-none.focus:outline-none
               {:style       {:xflex "1 1 100%"}
-               :placeholder "Søk (<linjeskift> å starte)"
+               :placeholder "Søk"
                :type        :text
                :on-blur     #(let [s (-> % .-target .-value)]
                                (if (empty? s)
