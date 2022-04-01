@@ -227,6 +227,7 @@
        [+page-builder r
         {:render
          (fn []
+           ;[:div [sc/col-space-8 (for [e (range 100)] [:div e])]]
            [sc/col-space-8
 
             [sc/col-space-8

@@ -1442,6 +1442,18 @@ Ensure the default browser behavior of the `hidden` attribute.
   right: 0px;
 }
 
+.right-16 {
+  right: 4rem;
+}
+
+.bottom-8 {
+  bottom: 2rem;
+}
+
+.right-4 {
+  right: 1rem;
+}
+
 .bottom-24 {
   bottom: 6rem;
 }
@@ -1510,10 +1522,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   top: 1rem;
 }
 
-.right-4 {
-  right: 1rem;
-}
-
 .bottom-12 {
   bottom: 3rem;
 }
@@ -1548,14 +1556,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .-bottom-1 {
   bottom: -0.25rem;
-}
-
-.right-16 {
-  right: 4rem;
-}
-
-.bottom-8 {
-  bottom: 2rem;
 }
 
 .isolate {
@@ -1909,10 +1909,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   width: 1.25rem;
 }
 
-.w-16 {
-  width: 4rem;
-}
-
 .w-screen {
   width: 100vw;
 }
@@ -1923,6 +1919,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .w-24 {
   width: 6rem;
+}
+
+.w-16 {
+  width: 4rem;
 }
 
 .w-12 {
@@ -2944,28 +2944,24 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-top: 1rem;
 }
 
-.pb-24 {
-  padding-bottom: 6rem;
-}
-
 .pb-32 {
   padding-bottom: 8rem;
 }
 
-.pt-32 {
-  padding-top: 8rem;
+.pt-24 {
+  padding-top: 6rem;
 }
 
 .pb-20 {
   padding-bottom: 5rem;
 }
 
-.pt-16 {
-  padding-top: 4rem;
-}
-
 .pr-4 {
   padding-right: 1rem;
+}
+
+.pt-16 {
+  padding-top: 4rem;
 }
 
 .pt-12 {
@@ -3084,16 +3080,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   font-weight: 600;
 }
 
-.font-bold {
-  font-weight: 700;
-}
-
 .font-normal {
   font-weight: 400;
 }
 
 .font-extrabold {
   font-weight: 800;
+}
+
+.font-bold {
+  font-weight: 700;
 }
 
 .font-medium {
@@ -3306,10 +3302,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .text-gray-700\/50 {
   color: rgb(68 64 60 / 0.5);
-}
-
-.text-opacity-20 {
-  --tw-text-opacity: 0.2;
 }
 
 .text-opacity-25 {
@@ -4377,16 +4369,16 @@ Ensure the default browser behavior of the `hidden` attribute.
 }
 
 @media (min-width: 512px) {
+  .sm\:bottom-7 {
+    bottom: 1.75rem;
+  }
+
   .sm\:bottom-4 {
     bottom: 1rem;
   }
 
   .sm\:left-20 {
     left: 5rem;
-  }
-
-  .sm\:bottom-7 {
-    bottom: 1.75rem;
   }
 
   .sm\:block {

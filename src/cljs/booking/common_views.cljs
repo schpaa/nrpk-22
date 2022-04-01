@@ -547,6 +547,25 @@
 
 (o/defstyled mainframe :div)
 
+(defn after-content []
+  (let [route @(rf/subscribe [:kee-frame/route])]
+    [:div.z-1 {:style {:background "var(--gray-10)"}}
+     [:div.mx-auto.max-w-lg.py-8
+      [:div.text-white.mx-4
+       [sc/col-space-2
+        [sc/col-space-1
+         [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
+         [sc/text1-cl "Postboks 37, 0621 Bogerud"]
+         [sc/text1-cl "Nøklevann ro- og padleklubb"]
+         [:div.flex.justify-start.flex-wrap.gap-2
+          [sc/subtext-with-link {:class [:dark]} "styret@nrpk.no"]
+          [sc/subtext-with-link {:class [:dark]} "medlem@nrpk.no"]]]
+        [sc/row-ec
+         [hoc.buttons/reg-pill-icon
+          {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+          ico/tilbakemelding "Tilbakemelding?"]]]]]]))
+
+
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
         user-state (rf/subscribe [:lab/user-state])
@@ -588,12 +607,12 @@
             {:style {:flex "1 1 auto"}}
             (when-not frontpage
               [header-line r {:frontpage frontpage}])
-            [:div.flex.overflow-y-auto
+            [:div.flex.flex-col.overflow-y-auto.h-full
              (if (and
                    @(rf/subscribe [:lab/is-search-running?])
                    @(rf/subscribe [:lab/in-search-mode?]))
                [:div
-                {:style {:flex "1 0 0px"}}
+                {:style {:flex "1 0 auto"}}
                 [:div
                  {:style {:background "var(--surface2)"}}
                  [search-result]]
@@ -606,87 +625,16 @@
                 [:div.absolute.bottom-8.sm:bottom-7.right-4
                  [sc/row-end {:class [:pt-4]}
                   (bottom-menu)]]]
-               [:div
-                {:style {:flex "1 1 auto"}}
-                contents])
-             #_(for [e (range 50)] [:div "X"])]
-
-            #_[:div {:style {:display :flex :flex "1 0 auto"}} ;<- flex in order to show vertial menu
-
-
-
-               [:div.flex-col.flex.h-full.w-full
-                [:div {:style {:min-height "12rem"}} "caro"]
-
-
-                (when-not frontpage
-                  [header-line r {:frontpage frontpage}])
-
-                ;region content
-                (if frontpage
-                  [:div                                     ;.h-full
-                   {:style     {;:background "var(--content)"
-                                :z-index 0}
-                    :id        "inner-document"
-                    :tab-index "0"}
-                   contents]
-
-
-                  [:div.overflow-y-auto.h-full.focus:outline-none.grow.-debug2
-                   {:style {;:min-height "calc(100vh + 5rem)"
-                            :background "var(--content)"}}
-
-                   (if @(rf/subscribe [:lab/is-search-running?])
-                     ;searchmode
-                     [:div.h-full
-                      {:style {:background "var(--surface2)"}}
-                      [search-result]
-                      [:div.absolute.bottom-24.sm:bottom-7.right-4
-                       [sc/row-end {:class [:pt-4]}
-                        (bottom-menu)]]]
-
-                     ;content
-                     [:<>
-                      (if (map? (first contents))
-                        [:div.w-auto
-                         (:whole (first contents))]
-                        [:div.min-h-full.w-full
-                         {:style {:id        "inner-document"
-                                  :tab-index "0"}}
-                         contents])])
-
-
-                   [:div.absolute.bottom-0.inset-x-0.-debug [bottom-tabbar]]])]
-
-
-
-
-               ;endregion
-               (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-                 [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
-                  [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
-                   {:style {:z-index     1211
-                            :padding-top "var(--size-0)"
-                            :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
-                            :background  "var(--toolbar)"}}
-                   (into [:<>] (map #(if (keyword? %)
-                                       [:div.grow]
-                                       [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
-                  [:div.absolute.right-16.xl:right-20.inset-y-0
-                   {:style {:width          "298px"
-                            :pointer-events :none}}
-                   [boatinput-menu]]])]
-            #_[:div {:style {:display    :sticky
-                             :bottom     0
-                             :flex       "0 0 5rem"
-                             :width      "100%"
-                             :height     "5rem"
-                             :min-height "5rem"
-                             :background "red"}}]
+               [:<>
+                [:div
+                 {:style {;:min-height "100%"
+                          :background-color "var(--content)"
+                          :flex             "1 1 auto"}}
+                 contents]
+                (when-not frontpage [after-content])])]
 
             [bottom-tabbar]]
            [right-tabbar]]])})))
-
 
 (def max-width "50ch")
 
@@ -710,27 +658,9 @@
       [sc/icon {:style {:color "var(--text2)"}} ico/stengt]
       [sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
       [sc/small1 {:style {:white-space :nowrap}} "For å komme inn --> " (str required-access)]]]))
-
 (rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
-(rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
-(defn after-content []
-  (let [route @(rf/subscribe [:kee-frame/route])]
-    [:div.z-1 {:style {:background "var(--gray-10)"}}
-     [:div.mx-auto.max-w-lg.py-8
-      [:div.text-white.mx-4
-       [sc/col-space-2
-        [sc/col-space-1
-         [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
-         [sc/text1-cl "Postboks 37, 0621 Bogerud"]
-         [sc/text1-cl "Nøklevann ro- og padleklubb"]
-         [:div.flex.justify-start.flex-wrap.gap-2
-          [sc/subtext-with-link {:class [:dark]} "styret@nrpk.no"]
-          [sc/subtext-with-link {:class [:dark]} "medlem@nrpk.no"]]]
-        [sc/row-ec
-         [hoc.buttons/reg-pill-icon
-          {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-          ico/tilbakemelding "Tilbakemelding?"]]]]]]))
+(rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
 (defn set-ref [a scroll-fn]
   (fn [el]
@@ -789,8 +719,11 @@
                     [no-access-view r]
                     [after-content]]
                    [:<>
-                    [sc/col-space-8 {:class [:py-8]
-                                     :style {:-min-height "100%" #_"100vh"}}
+                    [sc/col-space-8
+                     {:class [:py-8]
+                      :style {:flex             "1 1 auto"
+                              :background-color "var(--content)"}}
+
                      (when (fn? panel)
                        (when-some [p (panel)]
                          [:div.mx-4
@@ -804,16 +737,16 @@
                          {:style {:width     "100%"
                                   :max-width max-width}}
                          [always-panel]]])
-                     [:div.mx-4
-                      [:div.duration-200
-                       {:style {:margin-right :auto
-                                :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                                ;; force view to align to the left
-                                                0
-                                                :auto)
-                                :width        "100%"
-                                :max-width    max-width}}
+                     [:div.duration-200.grow
+                      {:style {:margin-right :auto
+
+                               :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                               ;; force view to align to the left
+                                               0
+                                               :auto)
+                               :width        "100%"
+                               :max-width    max-width}}
+                      [:div.mx-4.min-h-full.grow
                        (if render-fullwidth
                          [render-fullwidth r]
-                         [render r])]]]
-                    [after-content]]))]))])})))
+                         [render r])]]]]))]))])})))
