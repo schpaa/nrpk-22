@@ -31,7 +31,7 @@
 
    ["/arshjul" {:name   :r.yearwheel
                 :header [:r.oversikt "Årshjul"]
-                :access [:member nil]}]
+                :access [:registered nil]}]
 
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 

@@ -374,19 +374,20 @@
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         hide-image-carousell? (schpaa.state/listen :lab/hide-image-carousell)
-        at-least-registered? @(rf/subscribe [:lab/at-least-registered])]
+        at-least-registered? (rf/subscribe [:lab/at-least-registered])
+        master-emulation (rf/subscribe [:lab/master-state-emulation])]
     [:div
-
      [bg-light {:style {}
                 :class [(if dark-mode? :dark :light)
-                        (if at-least-registered? :bottom-toolbar)]}
+                        (if @at-least-registered? :bottom-toolbar)]}
 
       [:div.min-h-full.z-0.relative
-
        [:div
         [:div.mx-4
          [:div.max-w-lg.mx-auto
           [header-with-logo]]]
+
+        ;[l/ppre-x @master-emulation]
 
         (when-not @hide-image-carousell?
           [:div
@@ -394,9 +395,12 @@
                           :filter        (if dark-mode? "brightness(0.75)" "")})}
            [image-carousell]])
         [:div.mx-4
-         [:div.space-y-8.w-full.mx-auto.max-w-lg.py-4.z-100
+         [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4      ;.z-100
           ;todo registered?
-          (when-not at-least-registered?
+
+
+
+          (when-not @at-least-registered?
             (when-not @(schpaa.state/listen :lab/skip-easy-login)
               [sc/surface-c {:class [:-mx-4]
                              :style {:position   :relative
@@ -411,14 +415,21 @@
                               :style {:font-weight "var(--font-weight-4)"
                                       :line-height "var(--font-lineheight-4)"}}
                  "Er du nøkkelvakt kan du logge inn med samme bruker som du brukte i Eykt. Har du ikke bruker på Eykt, kan du logge inn allikevel og lage en."]]]))
-          (when-not at-least-registered?
+
+          (when-not @at-least-registered?
             [sc/row-ec
              [:div.grow]
-             [hoc.buttons/cta {:on-click #(rf/dispatch [:app/login])}
+             [hoc.buttons/cta {:style    {:box-shadow "var(--shadow-2)"}
+                               :on-click #(rf/dispatch [:app/login])}
               [sc/col {:style {:text-align :left}}
                [sc/ingress' {:style {:font-weight "var(--font-weight-6)"
                                      :color       "var(--gray-0)"}} "Logg inn"]
                [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
+
+          (when (and goog.DEBUG @master-emulation)
+            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+             booking.common-views/master-control-box])
+
           [:div.space-y-4
            [:div.flex.items-baseline.gap-2 [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
            [:div.ml-4 {:style {:display               "grid"
@@ -428,23 +439,18 @@
             [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
             [listitem' (t/date) "Nye båter er kjøpt inn."]
             [listitem' (t/date) "Nøkkelvakter skal fra og med denne sesongen rapportere hms-hendelser og dokumentere materielle skader i Eykt/Økt."]]]
+
           [:div.space-y-4
-           [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
+           {:style {:padding-bottom "var(--size-10)"}}
+           [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se også i årshjulet)")]
            [:div.ml-4 {:style {:display               "grid"
                                :gap                   "var(--size-2) var(--size-2)"
                                :grid-template-columns "min-content 1fr"}}
-            [listitem (t/date "2022-04-04") "Nøkkelsjekk"]
+            [listitem (t/date "2022-04-04") "Nøkkelvaktens infosjekk"]
             [listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
-            [listitem (t/date "2022-05-08") "Sesongstart #35"]
-            #_[listitem nil [sc/link {} "se mer i årshjulet"]]]]
-
-
-          (when (and goog.DEBUG at-least-registered?)
-            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-             booking.common-views/master-control-box])]]]]
-      #_[:div.h-32.bg-white "EXTERA"]
-
+            [listitem (t/date "2022-05-06") "Dugnad"]
+            [listitem (t/date "2022-05-08") "Sesongstart '22"]]]]]]]
       [bs/attached-to-bottom
-       {:class [(if at-least-registered? :bottom-toolbar) :z-20]}
+       {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
        [scroll-up-animation]]
       [booking.common-views/after-content]]]))

@@ -245,9 +245,10 @@
     :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
     :page-name :r.booking.oversikt}
 
-   {:icon     ico/yearwheel
-    :special  false
-    :on-click #(rf/dispatch [:lab/toggle-number-input])}
+   {:icon      ico/yearwheel
+    :special   false
+    :page-name :r.yearwheel
+    :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])}
 
    {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                         [:> (if @st solid/InformationCircleIcon outline/InformationCircleIcon)]))
@@ -421,7 +422,7 @@
             [sc/row-sc-g2-w
              (f-icon [:lab/set-sim-type :none] :none [icon-with-caption ico/anonymous "anonym"])
              (f-icon [:lab/set-sim-type :registered] :registered [icon-with-caption ico/user "registrert"])
-             (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [icon-with-caption-and-badge ico/waitinglist "venteliste" 123])
+             (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [icon-with-caption-and-badge ico/waitinglist "påmeldt" 123])
              (f-icon [:lab/set-sim-type :member] :member [icon-with-caption ico/member "medlem"])
 
              [schpaa.style.hoc.toggles/small-switch-base
@@ -453,9 +454,8 @@
    (let [user-state (rf/subscribe [:lab/user-state])]
      [sc/col
       [:div
-       {:style (conj
-                 {:border-bottom "1px solid var(--toolbar)"}
-                 (when-not frontpage {:background "var(--toolbar)"}))}
+       {:style (when-not frontpage {:background    "var(--toolbar)"
+                                    :border-bottom "1px solid var(--toolbar)"})}
        [(if frontpage header-top-frontpage header-top)      ;{:class [:-debug2]}
         (when goog.DEBUG
           [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
@@ -482,8 +482,8 @@
                  [sc/col-space-1                            ;{:class [:truncate]}
                   (when (< 1 (count titles))
                     (let [{:keys [text link]} (first titles)]
-                      [:div [sc/subtext-with-link {:style {:-background "var(--content)"
-                                                           :margin-left "-2px"}
+                      [:div [sc/subtext-with-link {:style {:-background  "var(--content)"
+                                                           :-margin-left "-2px"}
                                                    :href  (k/path-for [link])} text]]))
                   [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
                  [sc/col
@@ -559,9 +559,11 @@
          [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
          [sc/text1-cl "Postboks 37, 0621 Bogerud"]
          [sc/text1-cl "Nøklevann ro- og padleklubb"]
-         [:div.flex.justify-start.flex-wrap.gap-2
-          [sc/subtext-with-link {:class [:dark]} "styret@nrpk.no"]
-          [sc/subtext-with-link {:class [:dark]} "medlem@nrpk.no"]]]
+         [:div.flex.justify-start.flex-wrap.gap-4
+          [sc/subtext-with-link {:class [:dark]
+                                 :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
+          [sc/subtext-with-link {:class [:dark]
+                                 :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]
         [sc/row-ec
          [hoc.buttons/reg-pill-icon
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
@@ -630,6 +632,7 @@
                 [:div
                  {:style {;:min-height "100%"
                           :background-color "var(--content)"
+                          :padding-bottom   "var(--size-10)"
                           :flex             "1 1 auto"}}
                  contents]
                 (when-not frontpage [after-content])])]
@@ -648,17 +651,26 @@
 
 (defn no-access-view [r]
   (let [required-access (-> r :data :access)]
-    [:div
-     {:style {:min-height    "100vh"
-              :padding-top   "var(--size-10)"
-              :width         "min-content"
-              :margin-inline "auto"}}
-     [sc/col-c-space-2
+    [:div.max-w-lg.mx-4
+     {:style {:padding-inline "var(--size-4)"
+              :padding-top    "var(--size-10)"
+              :margin-inline  "auto"}}
+     [sc/col-space-2
       [sc/hero {:style {:white-space :nowrap
-                        :color       "var(--text2)"}} "Beskyttet område"]
-      [sc/icon {:style {:color "var(--text2)"}} ico/stengt]
-      [sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
-      [sc/small1 {:style {:white-space :nowrap}} "For å komme inn --> " (str required-access)]]]))
+                        :text-align  :center
+                        :color       "var(--text2)"}} "Ingen tilgang"]
+      [sc/row-center [sc/icon {:style {:text-align :center
+                                       :color      "var(--text3)"}} ico/stengt]]
+      #_[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
+      [sc/text {:style {;:white-space :nowrap
+                        :color "var(--brand1)"}} "For å se denne siden må du være "
+       (case (first required-access)
+         :registered "innlogget og ha registrert grunnleggende informasjon om deg selv."
+         :member "medlem i NRPK."
+         :waitinglist "påmeldt innmeldingskurset til NRPK."
+         "?")]
+      [sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))
+
 
 (rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
 
@@ -717,38 +729,35 @@
                {:frontpage false}
                (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
                  (if-not have-access?
-                   [:<>
-                    [no-access-view r]
-                    [after-content]]
-                   [:<>
-                    [sc/col-space-8
-                     {:class [:py-8]
-                      :style {:flex             "1 1 auto"
-                              :background-color "var(--content)"}}
+                   [no-access-view r]
+                   [sc/col-space-8
+                    {:class [:py-8]
+                     :style {:flex             "1 1 auto"
+                             :background-color "var(--content)"}}
 
-                     (when (fn? panel)
-                       (when-some [p (panel)]
-                         [:div.mx-4
-                          [:div.mx-auto
-                           {:style {:width     "100%"
-                                    :max-width max-width}}
-                           [hoc.panel/togglepanel pagename "innstillinger" panel]]]))
-                     (when always-panel
-                       [:div.mx-4
-                        [:div.mx-auto
-                         {:style {:width     "100%"
-                                  :max-width max-width}}
-                         [always-panel]]])
-                     [:div.duration-200.grow
-                      {:style {:margin-right :auto
+                    (when (fn? panel)
+                      (when-some [p (panel)]
+                        [:div.mx-4
+                         [:div.mx-auto
+                          {:style {:width     "100%"
+                                   :max-width max-width}}
+                          [hoc.panel/togglepanel pagename "innstillinger" panel]]]))
+                    (when always-panel
+                      [:div.mx-4
+                       [:div.mx-auto
+                        {:style {:width     "100%"
+                                 :max-width max-width}}
+                        [always-panel]]])
+                    [:div.duration-200.grow
+                     {:style {:margin-right :auto
 
-                               :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                               ;; force view to align to the left
-                                               0
-                                               :auto)
-                               :width        "100%"
-                               :max-width    max-width}}
-                      [:div.mx-4.min-h-full.grow
-                       (if render-fullwidth
-                         [render-fullwidth r]
-                         [render r])]]]]))]))])})))
+                              :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                              ;; force view to align to the left
+                                              0
+                                              :auto)
+                              :width        "100%"
+                              :max-width    max-width}}
+                     [:div.mx-4.min-h-full.grow
+                      (if render-fullwidth
+                        [render-fullwidth r]
+                        [render r])]]]))]))])})))
