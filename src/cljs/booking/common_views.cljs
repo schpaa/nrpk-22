@@ -453,7 +453,9 @@
    (let [user-state (rf/subscribe [:lab/user-state])]
      [sc/col
       [:div
-       {:style (when-not frontpage {:background "var(--toolbar)"})}
+       {:style (conj
+                 {:border-bottom "1px solid var(--toolbar)"}
+                 (when-not frontpage {:background "var(--toolbar)"}))}
        [(if frontpage header-top-frontpage header-top)      ;{:class [:-debug2]}
         (when goog.DEBUG
           [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
@@ -565,7 +567,6 @@
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
           ico/tilbakemelding "Tilbakemelding?"]]]]]]))
 
-
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])
         user-state (rf/subscribe [:lab/user-state])
@@ -658,6 +659,7 @@
       [sc/icon {:style {:color "var(--text2)"}} ico/stengt]
       [sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
       [sc/small1 {:style {:white-space :nowrap}} "For å komme inn --> " (str required-access)]]]))
+
 (rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
 
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))

@@ -156,34 +156,35 @@
       [:<>
        [:img.bg-alt {:style {:position          :absolute
                              :inset             "0px"
-                             :clip-path         "circle(36% at 50% 50%)"
+                             ;:clip-path         "circle(36% at 50% 50%)"
                              :object-fit        :contain
                              :border-radius     "var(--radius-round)"
                              #_#_:animation (if (odd? @c)
                                               "var(--animation-slide-in-up) "
                                               "var(--animation-slide-in-left) ")
-                             :-transition       "transform 500ms"
+                             :transition        "opacity 500ms"
+                             :opacity           (if (odd? @c) 0 1)
+                             ;:transition-property "opacity"
                              :-transform-origin "bottom left"
                              :-transform        "rotate(0deg)"}
-                     :src   (first (drop @c (cycle ["/img/circle.jpg" "/img/logo-n.png"])))}]
-       [:img.bg-alt {:style {:position          :absolute
-                             :inset             "0px"
-                             :clip-path         "circle(36% at 50% 50%)"
-                             :object-fit        :contain
-                             :border-radius     "var(--radius-round)"
-                             #_#_:animation (if (odd? @c)
-                                              "var(--animation-slide-in-up) "
-                                              "var(--animation-slide-in-left) ")
-                             :-transition       "transform 500ms"
-                             :-transform-origin "bottom left"
-                             :-transform        (if (odd? @c) "rotate(90deg)" "rotate(-90deg)")}
-                     :src   (first (drop @c (cycle ["/img/logo-n.png" "/img/circle.jpg"
-                                                    "/img/frontpage/Bilde 28.03.2022 klokken 16.58.jpg"
-                                                    "/img/frontpage/Bilde 28.03.2022 klokken 16.45.jpg"
-                                                    "/img/frontpage/brygge.jpeg"
-                                                    "/img/frontpage/Bilde 28.03.2022 klokken 16.59.jpg"])))}]]
+                     :src   (first (drop @c (cycle ["/img/logo-n.png" "/img/logo-m.png"])))}]
+       #_[:img.bg-alt {:style {:position          :absolute
+                               :inset             "0px"
+                               :clip-path         "circle(36% at 50% 50%)"
+                               :object-fit        :contain
+                               :border-radius     "var(--radius-round)"
+                               #_#_:animation (if (odd? @c)
+                                                "var(--animation-slide-in-up) "
+                                                "var(--animation-slide-in-left) ")
+                               :-transition       "transform 500ms"
+                               :-transform-origin "bottom left"
+                               :-transform        (if (odd? @c) "rotate(90deg)" "rotate(-90deg)")}
+                       :src   (first (drop @c (cycle ["/img/logo-n.png" "/img/logo-m.png"
+                                                      "/img/frontpage/Bilde 28.03.2022 klokken 16.58.jpg"
+                                                      "/img/frontpage/Bilde 28.03.2022 klokken 16.45.jpg"
+                                                      "/img/frontpage/brygge.jpeg"
+                                                      "/img/frontpage/Bilde 28.03.2022 klokken 16.59.jpg"])))}]]
       (finally (js/clearInterval tm)))]])
-
 
 
 (o/defstyled fp-topic sc/text0)
@@ -194,7 +195,12 @@
   (let [know-how-to-scroll? (rf/subscribe [:lab/we-know-how-to-scroll?])]
     [bs/scroll-up-animation
      {:class [(if @know-how-to-scroll? :fadeaway :keepgoing)]}
-     [sc/icon ico/more-if-you-scroll-down]]))
+     [:div.p-1
+      {:style {:border-radius "var(--radius-round)"
+               :box-shadow    "var(--shadow-6)"
+               :background    "var(--toolbar)"
+               :color         "var(--text1)"}}
+      [sc/icon ico/more-if-you-scroll-down]]]))
 
 (o/defstyled bg-light :div
   [:& {:position            :relative
@@ -388,12 +394,13 @@
                           :filter        (if dark-mode? "brightness(0.75)" "")})}
            [image-carousell]])
         [:div.mx-4
-         [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4.z-100
+         [:div.space-y-8.w-full.mx-auto.max-w-lg.py-4.z-100
           ;todo registered?
           (when-not at-least-registered?
             (when-not @(schpaa.state/listen :lab/skip-easy-login)
               [sc/surface-c {:class [:-mx-4]
                              :style {:position   :relative
+                                     ;:transform "rotate(1deg)"
                                      :background :#fffb
                                      :box-shadow "var(--shadow-2)"
                                      :padding    "var(--size-4)"}}
@@ -403,10 +410,15 @@
                 [sc/ingress' {:class [:pr-4]
                               :style {:font-weight "var(--font-weight-4)"
                                       :line-height "var(--font-lineheight-4)"}}
-                 "Er du nøkkelvakt kan du logge inn med samme bruker som du brukte i Eykt. Har du ikke bruker på Eykt, kan du logge inn allikevel og lage en."]
-                [sc/row-ec
-                 [:div.grow]
-                 [hoc.buttons/cta {:on-click #(rf/dispatch [:app/login])} "Logg inn nå"]]]]))
+                 "Er du nøkkelvakt kan du logge inn med samme bruker som du brukte i Eykt. Har du ikke bruker på Eykt, kan du logge inn allikevel og lage en."]]]))
+          (when-not at-least-registered?
+            [sc/row-ec
+             [:div.grow]
+             [hoc.buttons/cta {:on-click #(rf/dispatch [:app/login])}
+              [sc/col {:style {:text-align :left}}
+               [sc/ingress' {:style {:font-weight "var(--font-weight-6)"
+                                     :color       "var(--gray-0)"}} "Logg inn"]
+               [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
           [:div.space-y-4
            [:div.flex.items-baseline.gap-2 [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
            [:div.ml-4 {:style {:display               "grid"

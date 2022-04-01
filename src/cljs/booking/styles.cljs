@@ -23,9 +23,9 @@
        :color           "var(--text0)"}
    ;:animation-timing-function "var(--ease-iout-4)"
    [:&.keepgoing
-    {:animation "2000ms var(--animation-float)"}]
+    {:animation "var(--animation-float)"}]
    [:&.fadeaway
-    {:animation "2000ms var(--animation-fade-out) forwards, var(--animation-scale-down) forwards"}]])
+    {:animation "1s var(--animation-fade-out) forwards"}]])
 
 (o/defstyled logo-text :div
   {:color "var(--text0)"})
