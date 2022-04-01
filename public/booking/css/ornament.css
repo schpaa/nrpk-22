@@ -1,3 +1,9 @@
+.center {
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
 :where(html) {
     --background-image-light: url('/img/bg/bg-light-1.jpg');
     --background-image-dark: url('/img/bg/bg-dark-1.jpg');
@@ -955,3 +961,5 @@ body {
 .booking_styles__attached_to_bottom{position:fixed;pointer-events:none;bottom:0rem;left:0rem;right:4rem}@media(max-width:511px){.booking_styles__attached_to_bottom.bottom-toolbar{bottom:5rem;right:0rem}}
 .booking_styles__centered{display:flex;justify-content:center;align-items:center}
 .booking_styles__logo_text{color:var(--text0)}
+.booking_carousell__navbutton{padding:0;border-radius:var(--radius-1);color:var(--content);background:var(--text1)}
+.booking_frontpage__image_caro_style{width:calc(100vw)}.booking_frontpage__image_caro_style.toolbar{width:calc(100vw - 4rem)}@media(max-width:512px){.booking_frontpage__image_caro_style.toolbar{width:calc(100vw)}}

@@ -1,11 +1,14 @@
 (ns booking.carousell
   (:require
-
     [re-frame.core :as rf]
-
+    [lambdaisland.ornament :as o]
     [reagent.core :as r]
     ["react-slick" :default Slider]
-    [schpaa.icon :as icon]))
+    [schpaa.icon :as icon]
+    [schpaa.style.ornament :as sc]
+    [booking.ico :as ico]))
+
+(def react-slick (r/adapt-react-class Slider))
 
 (defn- dot [{:keys [border] :as view-config} active]
   [:svg.w-5.h-16
@@ -19,8 +22,6 @@
              :cy            5
              :r             (if active 3 1)}]])
 
-(def react-slick (r/adapt-react-class Slider))
-
 (defn widget [{:keys [icon on-click disabled]}]
   [:div.w-16.h-full.flex-shrink-0
    {:on-click on-click
@@ -33,23 +34,31 @@
    [:div.center
     [icon/touch icon]]])
 
+(o/defstyled navbutton :div
+  :p-0
+  {:border-radius "var(--radius-1)"
+   :color         "var(--content)"
+   :background    "var(--text1)"})
+
 (defn- page-scroll-button [{:keys [view-config class on-click icon icon-disabled component disabled]}]
   (let [inside? (:inside? view-config)
         hide-left-right? (:hide-left-right? view-config)]
-    [:div.absolute.flex.bottom-0.h-16
-     {:class (concat
-               (if-not inside? [:-mb-16] [])
+    [:div.absolute.flex.inset-y-0.items-center.p-2          ;bottom-0.h-16
+     {:on-click #(when-let [c @component] (on-click c))
+      :class    (concat
+                  (if-not inside? [:-mb-16] [])
 
-               class
-               [:bg-opacity-10]
-               (if disabled [:text-opacity-25]
-                            [:active:bg-gray-400
-                             :active:bg-opacity-30
-                             :active:text-gray-600]))}
-     [widget (merge {:disabled disabled
-                     :on-click #(when-let [c @component]
-                                  (on-click c))}
-                    (when-not hide-left-right? {:icon (if disabled icon-disabled icon)}))]]))
+                  class
+                  [:bg-opacity-10]
+                  (if disabled [:text-opacity-25]
+                               [:active:bg-gray-400
+                                :active:bg-opacity-30
+                                :active:text-gray-600]))}
+     [navbutton {} [sc/icon icon]]
+     #_[widget (merge {:disabled disabled
+                       :on-click #(when-let [c @component]
+                                    (on-click c))}
+                      (when-not hide-left-right? {:icon (if disabled icon-disabled icon)}))]]))
 
 (defn slick-config [{:keys [inside? border fg bg] :as view-config} state]
   {:dots             true
@@ -64,6 +73,11 @@
    :initialSlide     0
    :arrows           false
    :adaptiveHeight   false
+   :responsive       (clj->js [{:breakpoint 1024
+                                :settings
+                                {:slidesToShow 3
+                                 :dots         false}}])
+
    :fade             false
    :pauseOnDotsHover true
    :customPaging     (fn [e] (r/as-element
@@ -81,8 +95,9 @@
 (defn slide-aspect-16-9
   "helper to present slides with a certain height or aspectratio"
   [{:keys [on-click content class]}]
-  [:div.sw-full.xh-full.aspect-w-16.aspect-h-9.overflow-hidden.leading-snug.space-y-4
-   {:class    class
+  [:div.overflow-hidden.leading-snug.space-y-4
+   {:style    {:aspect-ratio "16/9"}
+    :class    class
     :on-click on-click}
    content])
 
@@ -106,23 +121,25 @@
 
     (fn []
       [:div
-       {:class (concat class
-                       (if inside? [] [:pb-16])
-                       ;[:mb-16]
-                       [:w-full]
-                       (:bg view-config)
-                       (:fg view-config))}
+       #_{:class (concat class
+                         (if inside? [] [:pb-32x]))}
+       ;[:mb-16]
+       ;[:w-full]
+       ;(:bg view-config)
+       ;(:fg view-config))}
        [:div.relative
         [:div {:class (concat
                         (:bg view-config)
                         (:ctrls view-config))}
-         (into [react-slick (assoc carousell-config :ref #(reset! *com %))] contents)]
+         (into [react-slick (assoc carousell-config :ref (fn [el]
+                                                           (when-not @*com)
+                                                           (reset! *com el)))] contents)]
         [:<>
          (page-scroll-button
            {:view-config   view-config
             :component     *com
             :on-click      #(.slickPrev ^js %)
-            :icon          :chevron-left
+            :icon          ico/prevImage
             :icon-disabled :chevron-left-end
             :disabled      (= @*active-page 0)
             :class         (concat [:left-0] (:ctrls view-config))})
@@ -130,7 +147,7 @@
            {:view-config   view-config
             :component     *com
             :on-click      #(.slickNext ^js %)
-            :icon          :chevron-right
+            :icon          ico/nextImage
             :icon-disabled :chevron-right-end
             :disabled      (= @*active-page (dec (count contents)))
             :class         (concat [:right-0] (:ctrls view-config))})]]])))

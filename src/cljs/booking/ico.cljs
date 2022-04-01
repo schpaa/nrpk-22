@@ -37,3 +37,5 @@
 (def fill-frownyface [:> solid/EmojiSadIcon])
 (def stengt [:> solid/LockClosedIcon])
 (def more-if-you-scroll-down [:> solid/ChevronDoubleDownIcon])
+(def nextImage [:> solid/ChevronRightIcon])
+(def prevImage [:> solid/ChevronLeftIcon])
