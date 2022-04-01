@@ -292,11 +292,11 @@
    :pauseOnHover     true
    :inside?          true
    :autoplay         true
-   ;:autoplaySpeed    1000
+   ;:autoplaySpeed    1000  
    :afterChange      (fn [e] #_(rf/dispatch [::set-active-menu-page e]))
    ;:beforeChange     (fn [_ e] (rf/dispatch [::set-active-menu-page]))
    :touchMove        true
-   :speed            200
+   :speed            300
    :initialSlide     1
    :fade             false
    :pauseOnDotsHover true})
@@ -438,7 +438,7 @@
 
             [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
             [listitem' (t/date) "Nye båter er kjøpt inn."]
-            [listitem' (t/date) "Nøkkelvakter skal fra og med denne sesongen rapportere hms-hendelser og dokumentere materielle skader i Eykt/Økt."]]]
+            [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]]
 
           [:div.space-y-4
            {:style {:padding-bottom "var(--size-10)"}}

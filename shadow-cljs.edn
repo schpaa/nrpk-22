@@ -54,7 +54,7 @@
                                                                       :infer-externs   :auto
                                                                       :optimizations   :advanced}}
 
-                               :dev               {:compiler-options {:closure-defines {goog.DEBUG           true
+                               :dev               {:compiler-options {:closure-defines {goog.DEBUG           false
                                                                                         booking.data/VERSION :shadow-git-inject/version}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :none}}}}}

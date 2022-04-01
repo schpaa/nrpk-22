@@ -27,7 +27,8 @@
             [booking.ico :as ico]
             [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
             [schpaa.debug :as l]
-            [booking.data]))
+            [booking.data]
+            [clojure.set :as set]))
 
 
 (defn set-focus [el a]
@@ -162,6 +163,7 @@
   (let [admin? (rf/subscribe [:lab/admin])
         member? (rf/subscribe [:lab/member])
         booking? (rf/subscribe [:lab/booking])
+        registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [{:icon-fn   #(sc/icon-large ico/new-home)
       ;:special    true
@@ -182,8 +184,6 @@
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
         :page-name :r.booking})
 
-
-
      (when (and @member? @nokkelvakt)
        {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
@@ -195,7 +195,8 @@
      #_{:icon-fn   (fn [] [sidebar "S"])
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
         :page-name :r.booking}
-     (when (or @member? @admin?)
+
+     (when (or @member? @admin? @registered?)
        {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
         :page-name :r.yearwheel})
@@ -645,9 +646,21 @@
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
     (if req-tuple
-      (and (= status req-status)
-           (if req-access (some access req-access) true))
+      (and (some #{status} (if (vector? req-status) req-status [req-status]))
+           #_(if req-access (some access req-access) true))
       true)))
+
+(defn can-modify? [route users-access-tokens]
+  (let [[route-status-requires route-access-requires] (-> route :data :modify)]
+    (some? (seq (set/intersection (second users-access-tokens) route-access-requires)))
+    #_(some? (some route-access-requires (second users-access-tokens)
+                   #_[l/ppre-x "undecided"]))))
+
+(comment
+  (can-modify? {:data {:modify [:member #{:admin}]}} [nil #{:admin}])
+  #_(some? (seq (set/intersection #{:as} #{:a}))))
+
+
 
 (defn no-access-view [r]
   (let [required-access (-> r :data :access)]
@@ -661,7 +674,13 @@
                         :color       "var(--text2)"}} "Ingen tilgang"]
       [sc/row-center [sc/icon {:style {:text-align :center
                                        :color      "var(--text3)"}} ico/stengt]]
-      #_[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
+      [sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
+      [sc/small1 {:style {:white-space :nowrap}} "Du trenger --> " (str required-access)]
+      [l/ppre-x
+       (matches-access r @(rf/subscribe [:lab/all-access-tokens]))
+       (-> r :data :access)
+       @(rf/subscribe [:lab/all-access-tokens])]
+
       [sc/text {:style {;:white-space :nowrap
                         :color "var(--brand1)"}} "For å se denne siden må du være "
        (case (first required-access)
@@ -670,7 +689,6 @@
          :waitinglist "påmeldt innmeldingskurset til NRPK."
          "?")]
       [sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))
-
 
 (rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
 
@@ -727,7 +745,9 @@
 
               [page-boundary r
                {:frontpage false}
-               (let [have-access? (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens]))]
+               (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
+                     have-access? (booking.common-views/matches-access r users-access-tokens)
+                     modify? (can-modify? r users-access-tokens)]
                  (if-not have-access?
                    [no-access-view r]
                    [sc/col-space-8
@@ -735,19 +755,28 @@
                      :style {:flex             "1 1 auto"
                              :background-color "var(--content)"}}
 
+                    ;modification could happen here
                     (when (fn? panel)
                       (when-some [p (panel)]
-                        [:div.mx-4
-                         [:div.mx-auto
-                          {:style {:width     "100%"
-                                   :max-width max-width}}
-                          [hoc.panel/togglepanel pagename "innstillinger" panel]]]))
+                        [:div
+                         [:div.mx-4
+                          [:div.mx-auto
+                           {:style {:width     "100%"
+                                    :max-width max-width}}
+                           (when goog.DEBUG
+                             [:div.pb-4 [l/ppre-x
+                                         {:users-access-tokens users-access-tokens
+                                          :r                   (-> r :data :modify)
+                                          :can-modify?         modify?}]])
+                           [hoc.panel/togglepanel pagename "innstillinger" panel modify?]]]]))
+
                     (when always-panel
                       [:div.mx-4
                        [:div.mx-auto
                         {:style {:width     "100%"
                                  :max-width max-width}}
-                        [always-panel]]])
+                        [always-panel modify?]]])
+
                     [:div.duration-200.grow
                      {:style {:margin-right :auto
 

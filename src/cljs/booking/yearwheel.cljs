@@ -22,7 +22,8 @@
     [re-frame.core :as rf]
     [booking.data]
     [booking.yearwheel-testdata]
-    [schpaa.style.hoc.buttons :as hoc.buttons]))
+    [schpaa.style.hoc.buttons :as hoc.buttons]
+    [schpaa.debug :as l]))
 
 (o/defstyled listitem :div
   [:& :cursor-pointer :p-1
@@ -113,33 +114,39 @@
     {:style {:color "var(--surface5)"}}
     (if deleted (icon/small :rotate-left) ico/trash)]])
 
-(defn always-panel []
-  [sc/row-sc-g2-w
-   [hoc.buttons/pill
-    {:class    [:cta :pad-right]
-     :on-click #(edit-event nil)}
-    (hoc.buttons/icon-with-caption (sc/icon-small ico/plus) "Nytt event")]
-   [hoc.buttons/pill
-    {:class    [:regular :pad-right]
-     :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
-    (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
-   [hoc.buttons/pill
-    {:on-click #(js/alert "wat")
-     :class    [:regular :pad-right]
-     :disabled true}
-    (hoc.buttons/icon-with-caption (sc/icon-small ico/nullstill) "Nullstill")]])
+(defn always-panel
+  ([]
+   (always-panel false))
+  ([modify?]
+   [sc/row-sc-g2-w
+    (when modify?
+      [hoc.buttons/pill
+       {:class    [:cta :pad-right]
+        :on-click #(edit-event nil)}
+       (hoc.buttons/icon-with-caption (sc/icon-small ico/plus) "Nytt event")])
+    [hoc.buttons/pill
+     {:class    [:regular :pad-right]
+      :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
+     (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
+    [hoc.buttons/pill
+     {:on-click #(js/alert "wat")
+      :class    [:regular :pad-right]
+      :disabled true}
+     (hoc.buttons/icon-with-caption (sc/icon-small ico/nullstill) "Nullstill")]]))
 
 
-(defn- header []
-  (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-               show-content (schpaa.state/listen :yearwheel/show-content)]
-
-    [sc/col-space-2
-
-     [sc/row-sc-g2-w
-      [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]
-      [hoc.toggles/switch :yearwheel/show-editing "Rediger"]
-      [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"]]]))
+(defn- header
+  ([]
+   (header false))
+  ([modify?]
+   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
+                show-content (schpaa.state/listen :yearwheel/show-content)]
+     [sc/col-space-2
+      ;[l/ppre-x modify?]
+      [sc/row-sc-g2-w
+       [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]
+       (when modify? [hoc.toggles/switch :yearwheel/show-editing "Rediger"])
+       (when modify? [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"])]])))
 
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))

@@ -22,4 +22,4 @@ Klubbens lov bygger på lovnormen til Norges Idrettsforbund. Klubben er medlem a
 Norges Idrettsforbund gjennom Oslo Idrettskrets og er også medlem i de to
 særforbundene Norges Roforbund og Norges Padleforbund.
 
-[Se også Styret i NRPK](/oversikt/styret)
+Se også [Styret i NRPK](/oversikt/styret)

@@ -336,9 +336,10 @@
             :<- [:lab/sim?]
             (fn [[master-switch ua {:keys [status access] :as sim}] _]
               (if master-switch
-                (if (some? (:uid ua))
-                  (some? (:uid ua))
-                  (some #{status} [:registered :waitinglist :member]))
+                (some #{status} [:registered :waitinglist :member])
+                #_(if (some? (:uid ua))
+                    (some #{status} [:registered :waitinglist :member])
+                    (some? (:uid ua)))
                 (some? (:uid ua)))))
 
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
@@ -429,8 +430,8 @@
             :<- [:lab/sim?]
             (fn [[master-switch _ {:keys [status access] :as sim}] _]
               (if master-switch
-                [:member #{:nøkkelvakt}]
-                [(or status :none) (or access #{})])))
+                [:member #{:sample :nøkkelvakt :admin}]
+                [:registered #_(or status :none) #{} #_(or access #{})])))
 
 ;endregion
 
