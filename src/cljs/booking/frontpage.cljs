@@ -104,17 +104,29 @@
     ch]))
 
 (def frontpage-image
-  (map #(str "/img/frontpage/" %)
-       ["brygge.jpeg"
-        ;"DSCF0075.JPG"
-        "DSCF0051.JPG"
-        "DSCF2668.jpeg"
-        "Bilde 28.03.2022 klokken 16.58.jpg"
-        "Bilde 28.03.2022 klokken 17.09.jpg"
-        "animal-muppet.png"
-        "Bilde 28.03.2022 klokken 16.59.jpg"
-        "Bilde 28.03.2022 klokken 16.49.jpg"
-        "Bilde 28.03.2022 klokken 16.45.jpg"]))
+  (map #(str "/img/caro/" %)
+       ["img-0.jpg"
+        "img-1.jpg"
+        "img-13.jpg"
+        "img-16.jpg"
+        "img-12.jpg"
+        ;"img-3.jpg"
+        "img-4.jpg"
+        ;"img-2.jpg"
+        ;"img-5.jpg"
+        ;"img-6.jpg"
+        ;"img-7.jpg"
+        "img-8.jpg"]
+       #_["brygge.jpeg"
+          ;"DSCF0075.JPG"
+          "DSCF0051.JPG"
+          "DSCF2668.jpeg"
+          "Bilde 28.03.2022 klokken 16.58.jpg"
+          "Bilde 28.03.2022 klokken 17.09.jpg"
+          "animal-muppet.png"
+          "Bilde 28.03.2022 klokken 16.59.jpg"
+          "Bilde 28.03.2022 klokken 16.49.jpg"
+          "Bilde 28.03.2022 klokken 16.45.jpg"]))
 
 (defn circular-logo-thing [dark-mode?]
   [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
@@ -172,18 +184,6 @@
                                                     "/img/frontpage/Bilde 28.03.2022 klokken 16.59.jpg"])))}]]
       (finally (js/clearInterval tm)))]])
 
-(defn front-image []
-  (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-    [frontpage-image-style
-     {:class [
-              (if @(rf/subscribe [:lab/at-least-registered]) :registered :anonymous)
-              (if dark-mode? :dark :light)]
-      :src   frontpage-image}
-     [:div.absolute.left-0.bottom-0.right-0.h-64
-      {:style {:color      "red"
-               :background "linear-gradient(0deg, var(--toolbar-) 0%, rgba(0,0,0,0) 100%)"
-               :z-index    120}}]]))
-
 (o/defstyled fp-header :div
   {:margin-left    "-1px"
 
@@ -218,29 +218,6 @@
      {:height "calc(100vh - 5rem)"}]]]
   [:at-supports {:height :100dvh}
    {:height "calc(100dvh)"}])
-
-
-(o/defstyled bg-whatever-dark :div
-  {:position       :relative
-   :height         "100vh"
-   :z-index        0
-   :pointer-events :auto}
-  [:&:before
-   {:content               [:str ""]
-    :position              :absolute
-    :left                  0
-    :right                 0
-    :top                   0
-    :bottom                0
-    :xbackground           "red"
-    :background-position   "center center"
-    :background-repeat     :no-repeat
-    :background-size       :cover
-    :background-blend-mode "normal"
-    ;:filter                "contrast(0.98) brightness(0.5) saturate(0)"
-    :background-image      [;"linear-gradient(green,var(--toolbar))"
-                            ;"linear-gradient(to bottom, rgba(0,0,0,0), white)"
-                            "var(--background-image-dark)"]}])
 
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
@@ -403,11 +380,13 @@
                          (if at-least-registered? :bottom-toolbar)]}
        [:div.min-h-full.z-0.relative
         [:div
-         [:div.pt-16 [image-carousell]]
+         ;[:div.pt-16 [image-carousell]]
          [:div.mx-4
           [:div.max-w-lg.mx-auto
            [header-with-logo]]]
          ;[image-carousell]
+         [:div.py-4 {:style (if dark-mode? {:filter "brightness(0.75)"})}
+          [image-carousell]]
          [:div.mx-4
           [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4.z-100
            (when-not at-least-registered?

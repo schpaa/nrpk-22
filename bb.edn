@@ -53,6 +53,7 @@
   clean        {:task (fs/delete-tree -dist-dir)}
   build        {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
   fonts        {:task (do
+                        (fs/copy-tree "template/booking/css" (str -dist-dir "/" -app-name "/css") :replace-existing)
                         (fs/copy-tree "template/booking/fonts" (str -dist-dir "/" -app-name "/fonts") :replace-existing)
                         (fs/copy-tree "template/booking/img" (str -dist-dir "/" -app-name "/img") :replace-existing))}
   ornament     {:task (do

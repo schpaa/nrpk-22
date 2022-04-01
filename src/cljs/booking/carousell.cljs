@@ -12,7 +12,8 @@
 
 (defn- dot [{:keys [border] :as view-config} active]
   [:svg.w-5.h-16
-   {:class   :currentColor
+   {:style   {:color "var(--brand1)"}
+    :class   :currentColor
     :viewBox "0 0 10 10"}
    [:circle {:vector-effect :non-scaling-stroke
              :fill          :currentColor
@@ -22,23 +23,12 @@
              :cy            5
              :r             (if active 3 1)}]])
 
-(defn widget [{:keys [icon on-click disabled]}]
-  [:div.w-16.h-full.flex-shrink-0
-   {:on-click on-click
-    :disabled disabled
-    :class    (concat
-                (if disabled [:text-opacity-20]
-                             [:active:bg-gray-400
-                              :active:bg-opacity-30
-                              :active:text-gray-600]))}
-   [:div.center
-    [icon/touch icon]]])
-
 (o/defstyled navbutton :div
-  :p-0
+  :p-0 :overflow-hidden
   {:border-radius "var(--radius-1)"
-   :color         "var(--content)"
-   :background    "var(--text1)"})
+   :color         "var(--brand1)"
+
+   :-background   "var(--text1)"})
 
 (defn- page-scroll-button [{:keys [view-config class on-click icon icon-disabled component disabled]}]
   (let [inside? (:inside? view-config)
@@ -54,11 +44,8 @@
                                [:active:bg-gray-400
                                 :active:bg-opacity-30
                                 :active:text-gray-600]))}
-     [navbutton {} [sc/icon icon]]
-     #_[widget (merge {:disabled disabled
-                       :on-click #(when-let [c @component]
-                                    (on-click c))}
-                      (when-not hide-left-right? {:icon (if disabled icon-disabled icon)}))]]))
+     [navbutton {} [sc/icon-large icon]]]))
+
 
 (defn slick-config [{:keys [inside? border fg bg] :as view-config} state]
   {:dots             true
