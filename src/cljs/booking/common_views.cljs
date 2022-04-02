@@ -28,6 +28,7 @@
             [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
             [schpaa.debug :as l]
             [booking.data]
+            [booking.access]
             [clojure.set :as set]))
 
 
@@ -650,12 +651,6 @@
            #_(if req-access (some access req-access) true))
       true)))
 
-(defn can-modify? [route users-access-tokens]
-  (let [[route-status-requires route-access-requires] (-> route :data :modify)]
-    (some? (seq (set/intersection (second users-access-tokens) route-access-requires)))
-    #_(some? (some route-access-requires (second users-access-tokens)
-                   #_[l/ppre-x "undecided"]))))
-
 (comment
   (can-modify? {:data {:modify [:member #{:admin}]}} [nil #{:admin}])
   #_(some? (seq (set/intersection #{:as} #{:a}))))
@@ -747,7 +742,7 @@
                {:frontpage false}
                (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
                      have-access? (booking.common-views/matches-access r users-access-tokens)
-                     modify? (can-modify? r users-access-tokens)]
+                     modify? (booking.access/can-modify? r users-access-tokens)]
                  (if-not have-access?
                    [no-access-view r]
                    [sc/col-space-8

@@ -25,11 +25,8 @@
                               {}
                               (map #(assoc % :created (str (t/now))
                                              :id (subs (str (random-uuid)) 0 5))
-                                   [{:date nil :content "c"}
-                                    {:type 8
-                                     :date nil}
-                                    {:type 11
-                                     :date nil}
+                                   [
+
                                     {:type 9
                                      :tldr "En lang tekst som viser hvordan bryting fungerer, dvs når setningene strekker seg over flere linjer"
                                      :date (str (t/at (t/new-date 2022 4 28) (t/noon)))}

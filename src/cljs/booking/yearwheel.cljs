@@ -8,11 +8,9 @@
     [times.api :as ta]
     [schpaa.time]
     [schpaa.style.button :as scb]
-    [schpaa.style.button2 :as scb2]
     [schpaa.style.input :as sci]
     [fork.re-frame :as fork]
     [db.core :as db]
-    [reagent.core :as r]
     [schpaa.state]
     [schpaa.icon :as icon]
     [schpaa.style.dialog]
@@ -23,12 +21,13 @@
     [booking.data]
     [booking.yearwheel-testdata]
     [schpaa.style.hoc.buttons :as hoc.buttons]
-    [schpaa.debug :as l]))
+    [booking.access]
+    [booking.flextime :refer [flex-datetime]]))
 
 (o/defstyled listitem :div
-  [:& :cursor-pointer :p-1
+  [:& :p-1
    {:min-height "var(--size-4)"}
-   [:.deleted {:color           "red"
+   [:.deleted {:color           "var(--text0)"
                :text-decoration :line-through
                :opacity         0.3}]
    [:&:hover {:background    "var(--surface00)"
@@ -81,17 +80,20 @@
 (defn submit-fn [{:keys [date content id type tldr] :as values}]
   (if id
     ;update
-    (swap! booking.yearwheel-testdata/data assoc (str id) {:date    (when date (t/date date))
-                                                           :type    type
-                                                           :tldr    tldr
-                                                           :updated (str (t/now))
-                                                           :content content})
+    (let [item {:date    (when date (str (t/date date)))
+                :type    type
+                :tldr    tldr
+                :updated (str (t/now))
+                :content content}]
+      (db/database-set {:path ["yearwheel" (name id)] :value item}))
+
     ;push
-    (swap! booking.yearwheel-testdata/data assoc (subs (str (random-uuid)) 0 5) {:date    (when date (t/date date))
-                                                                                 :type    type
-                                                                                 :tldr    tldr
-                                                                                 :created (str (t/now))
-                                                                                 :content content})))
+    (let [item {:date    (when date (str (t/date date)))
+                :type    type
+                :tldr    tldr
+                :created (str (t/now))
+                :content content}]
+      (db/database-push {:path ["yearwheel"] :value item}))))
 
 (defn edit-event [m]
   (schpaa.style.dialog/open-dialog-newevent
@@ -101,18 +103,23 @@
 
 (defn trashcan [k {:keys [deleted] :as v}]
   [(if deleted scb/round-normal-listitem scb/round-danger-listitem)
-
-   {;:style {:background "red"}
-    :on-click #(do
-                 (.stopPropagation %)
-                 (tap> ["DELETE" k v])
-                 (swap! booking.yearwheel-testdata/data update k assoc :deleted (not deleted)))}
-   #_#(db/database-update
-        {:path  ["booking-posts" "articles" (name k)]
-         :value {:deleted (not deleted)}})
+   {:on-click #(db/database-update
+                 {:path  ["yearwheel" (name k)]
+                  :value {:deleted (not deleted)}})}
    [sc/icon-small
-    {:style {:color "var(--surface5)"}}
+    {:style {:color "var(--text1)"}}
     (if deleted (icon/small :rotate-left) ico/trash)]])
+
+(defn edit [k {:keys [deleted] :as v}]
+  (if deleted
+    [:div.w-8]
+    [scb/round-danger-listitem
+     {:on-click #(do
+                   (.stopPropagation %)
+                   (edit-event v))}
+     [sc/icon-small
+      {:style {:color "var(--text1)"}}
+      ico/pencil]]))
 
 (defn always-panel
   ([]
@@ -134,52 +141,35 @@
       :disabled true}
      (hoc.buttons/icon-with-caption (sc/icon-small ico/nullstill) "Nullstill")]]))
 
-
 (defn- header
   ([]
    (header false))
   ([modify?]
-   (r/with-let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-                show-content (schpaa.state/listen :yearwheel/show-content)]
-     [sc/col-space-2
-      ;[l/ppre-x modify?]
-      [sc/row-sc-g2-w
-       [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]
-       (when modify? [hoc.toggles/switch :yearwheel/show-editing "Rediger"])
-       (when modify? [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"])]])))
+   [sc/col-space-2
+    [sc/row-sc-g2-w
+     (when modify? [hoc.toggles/switch :yearwheel/show-editing "Rediger"])
+     (when modify? [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"])
+     [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]]]))
 
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
 
-(defn flex-datetime [date formatted]
-  (let [relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
-        on-click {:on-click #(do
-                               (tap> ["toggle" @relative-time?])
-                               (.stopPropagation %)
-                               (toggle-relative-time))}]
-    (when date
-      (if @relative-time?
-        [sc/link on-click (formatted (ta/date-format-sans-year date))]
-        [arco.react/time-to {:times  [(if (t/date-time? date)
-                                        (t/date-time date)
-                                        (t/at (t/date date) (t/midnight)))
-                                      (t/now)]
-                             :config booking.data/arco-datetime-config}
-         (fn [formatted-t]
-           [sc/link on-click (formatted formatted-t)])]))))
-
-(defn- listitem-softwrap [{:keys [id date content tldr created deleted type] :as m}]
+(defn- listitem-softwrap [can-edit? {:keys [id date content tldr created deleted type] :as m}]
   (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)
         show-content (schpaa.state/listen :yearwheel/show-content)]
-    [listitem {:class    [:px-4x (when deleted :deleted)]
-               :on-click #(edit-event m)}
+    [listitem {:class     [:px-4x (when deleted :deleted)]
+               :-on-click #(edit-event m)}
      [:div
       {:style {:display               :grid
-               :grid-template-columns "min-content 1fr"}}
+               :grid-template-columns "min-content min-content 1fr"}}
 
-      (if show-editing
-        [:div.pr-2 (trashcan id m)]
-        [:div])
+      (if (and can-edit? show-editing)
+        [:<>
+         [:div.pr-2 (trashcan id m)]
+         [:div.pr-2 (edit id m)]]
+        [:<>
+         [:div]
+         [:div]])
 
       (do
         (o/defstyled line :div
@@ -194,35 +184,56 @@
            :font-weight "var(--font-weight-3)"})
 
         [line
-         (interpose ", "
+         (interpose [:span ", "]
                     (remove nil?
                             [(when date
                                (weak (str "uke " (ta/week-number (t/date date)))))
                              (when date
-                               (weak (flex-datetime date #(vector :span %))))
+                               (weak (flex-datetime date (fn [format content]
+                                                           (if (= :text format)
+                                                             [sc/subtext-inline content]
+                                                             [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year content)])))))
                              (when type
-                               (weak (->> type (get sci/person-by-id) :name)))
+                               (strong (->> type (get sci/person-by-id) :name)))
                              (when tldr
-                               (strong tldr))
+                               (sc/text-inline tldr))
                              (when (and content @show-content)
                                (-> (schpaa.markdown/md->html content)
                                    (sc/markdown)))]))])]]))
 
-(defn render [r]
-  (r/with-let [open? (r/atom true)]
-    (let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
-          show-editing (schpaa.state/listen :yearwheel/show-editing)]
+(defn get-all-events [show-deleted]
+  (let [xf (comp (if show-deleted
+                   identity
+                   (remove (fn [[_k v]] (:deleted v))))
+                 (filter (fn [[_k v]] (when (:date v)
+                                        (and
+                                          (t/<= (t/date (t/now)) (t/date (:date v)))
+                                          (= (t/year (t/now))
+                                             (t/year (t/date (:date v))))))))
+                 (map (fn [[k v]] [(name k) (assoc v :type-text (:name (get sci/person-by-id (:type v))))])))]
+    (transduce xf conj [] @(db/on-value-reaction {:path ["yearwheel"]}))))
 
-      [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
-       (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now))) #(some-> % t/date) :date val)
-                                                        (if (and @show-deleted @show-editing)
-                                                          @booking.yearwheel-testdata/data
-                                                          (remove (comp :deleted val) @booking.yearwheel-testdata/data))))]
-                [sc/col-space-2
-                 [sc/hero "'" (subs (str (t/int g)) 2 4)]
-                 (into [:div]
-                       (concat
-                         (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
-                           (listitem-softwrap (assoc data :id id)))
-                         (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
-                           (listitem-softwrap (assoc data :id id)))))]))])))
+(defn render [r]
+  (let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
+        data (get-all-events @show-deleted)
+        users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
+        modify? (booking.access/can-modify? r users-access-tokens)]
+    [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
+
+     (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now)))
+                                                            #(some-> % t/date)
+                                                            :date
+                                                            second)
+                                                      data))]
+
+              [sc/col-space-2
+               [sc/hero "'" (subs (str (t/int g)) 2 4)]
+               (into [:div]
+                     (concat
+                       (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
+                         (listitem-softwrap modify? (assoc data :id id)))
+                       (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
+                         (listitem-softwrap modify? (assoc data :id id)))))]))]))
+
+(comment
+  (get-all-events))

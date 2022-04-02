@@ -12,7 +12,9 @@
             [schpaa.debug :as l]
             [times.api :as ta]
             [tick.core :as t]
-            [booking.carousell]))
+            [booking.carousell]
+            [booking.flextime :refer [flex-datetime]]
+            [booking.yearwheel]))
 
 (o/defstyled antialiased :div
   #_[:* {:x-webkit-font-smoothing  :auto
@@ -219,33 +221,6 @@
   [:at-supports {:height :100dvh}
    {:height "calc(100dvh)"}])
 
-(defn- toggle-relative-time []
-  (schpaa.state/toggle :app/show-relative-time-toggle))
-
-(defn flex-datetime [date formatted]
-  (let [relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
-        on-click {:on-click #(do
-                               (tap> ["toggle" @relative-time?])
-                               (.stopPropagation %)
-                               (toggle-relative-time))}]
-    (when date
-      (if @relative-time?
-        (if (t/<= date (t/date))
-          [arco.react/time-since {:times  [(if (t/date-time? date)
-                                             (t/date-time date)
-                                             (t/at (t/date date) (t/midnight)))
-                                           (t/now)]
-                                  :config booking.data/arco-datetime-config}
-           (fn [formatted-t]
-             [:div on-click (formatted :text formatted-t)])]
-          [arco.react/time-to {:times  [(if (t/date-time? date)
-                                          (t/date-time date)
-                                          (t/at (t/date date) (t/midnight)))
-                                        (t/now)]
-                               :config booking.data/arco-datetime-config}
-           (fn [formatted-t]
-             [:div on-click (formatted :text formatted-t)])])
-        [:div on-click (formatted :date date)]))))
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -257,18 +232,22 @@
   {:font-weight "400"
    :color       "var(--brand1)"})
 
-(defn listitem [a b]
-  [:div.col-span-2.space-y-1.flex.items-baseline.gap-2
-   [:div..whitespace-nowrap [sc/fp-text b]]
-
-   (if a
-     [flex-datetime a (fn [type d]
-                        (if (= :date type)
-                          [sc/subtext {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-                          #_[sc/subtext                     ;:div.whitespace-nowrap.font-bold.flex.gap-1
-                             [fp-right-aligned-link (some-> d t/day-of-month) "."]
-                             [fp-left-aligned-link (some-> d ta/month-name)]]
-                          [sc/subtext d]))])])
+(defn listitem [date type-text tldr]
+  [:div.col-span-2.inline-block.gap-2
+   {:style {:color       "var(--text0)"
+            :line-height "var(--font-lineheight-3)"
+            :font-size   "var(--font-size-2)"
+            :font-weight "var(--font-weight-4)"}}
+   [:span {:style {:color "var(--text1)"}} type-text " - "]
+   (when tldr
+     [:span {:style {:color "var(--text0)"}} tldr])
+   (when date
+     [:span " "
+      [flex-datetime date
+       (fn [type d]
+         (if (= :date type)
+           [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+           [sc/subtext-inline d]))]])])
 
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
@@ -276,11 +255,7 @@
      [flex-datetime date (fn [type d]
                            (if (= :date type)
                              [sc/subtext {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-                             #_[:div.whitespace-nowrap.font-bold.flex.gap-1
-                                [fp-right-aligned-link (some-> d t/day-of-month) "."]
-                                [fp-left-aligned-link (some-> d ta/month-name)]]
                              [sc/subtext d]))])
-
    [:div.flex.items-baseline.gap-2
     [sc/fp-text text]]])
 
@@ -311,30 +286,34 @@
      {:width "calc(100vw)"}]]])
 
 (defn image-carousell []
-  (let [at-least-registered? @(rf/subscribe [:lab/at-least-registered])]
-    [image-caro-style {:class [(if at-least-registered? :toolbar)]}
-     [booking.carousell/render-carousell
-      {:carousell-config {:initialSlide  0
-                          :slidesToShow  2
-                          :autoplay      true
-                          :autoplaySpeed 5500}
-       :class            [:bg-alt :h-full :m-4]
-       :view-config      (config)
-       :contents
-       (into [] (map (fn [e] [:div.outline-none
-                              {:style {;:object-fit   :cover
-                                       ;:height       "100%"
-                                       ;:width        "100%"
-                                       ;:aspect-ratio "1/1"
-                                       :overflow-y :hidden}}
-                              [:img {:style  {:object-fit   :cover
-                                              :height       "100%"
-                                              :width        "100%"
-                                              :aspect-ratio "3/2"
-                                              :overflow-y   :hidden}
-                                     :width  "100%"
-                                     :height "100%"
-                                     :src    e}]])) frontpage-image)}]]))
+  (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
+        at-least-registered? @(rf/subscribe [:lab/at-least-registered])]
+    [:div
+     {:style (conj {:padding-block "var(--size-4)"
+                    :filter        (if dark-mode? "brightness(0.75)" "")})}
+     [image-caro-style {:class [(if at-least-registered? :toolbar)]}
+      [booking.carousell/render-carousell
+       {:carousell-config {:initialSlide  0
+                           :slidesToShow  2
+                           :autoplay      true
+                           :autoplaySpeed 5500}
+        :class            [:bg-alt :h-full :m-4]
+        :view-config      (config)
+        :contents
+        (into [] (map (fn [e] [:div.outline-none
+                               {:style {;:object-fit   :cover
+                                        ;:height       "100%"
+                                        ;:width        "100%"
+                                        ;:aspect-ratio "1/1"
+                                        :overflow-y :hidden}}
+                               [:img {:style  {:object-fit   :cover
+                                               :height       "100%"
+                                               :width        "100%"
+                                               :aspect-ratio "3/2"
+                                               :overflow-y   :hidden}
+                                      :width  "100%"
+                                      :height "100%"
+                                      :src    e}]])) frontpage-image)}]]]))
 
 (defn header-with-logo []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
@@ -392,22 +371,19 @@
     [sc/icon {:style    {:color "var(--textmarker)"}
               :on-click #(schpaa.state/toggle :lab/skip-easy-login)} ico/closewindow]]
 
-
-
    [:div
     {:style {:position :absolute
              :top      "-2rem"
              :right    "30%"
-             :width    "2rem"
-             :color    "var(--textmarker-background)"}}
+             :width    "2rem"}}
+
     [:svg {:height              "2rem"
            :width               "2rem"
            :preserveAspectRatio "none"
-           :fill                "none" :viewBox "-1 -1 32 24" :stroke "currentColor" :stroke-width "1"}
-     [:path {:fill           "currentColor"
-
+           :viewBox             "-1 -1 32 24"}
+     [:path {:fill           "var(--textmarker-background)"
+             :stroke         "none"
              :stroke-linecap "round" :stroke-linejoin "round" :d "M3 24 L0 0 L32 24 L3 24 "}]]]
-
 
    [sc/col-space-2
     [sc/subtext {:class [:pr-4]
@@ -442,16 +418,20 @@
     [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
 
 (defn yearwheel-feed []
-  [:div.space-y-4
-   {:style {:padding-bottom "var(--size-10)"}}
-   [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se også i årshjulet)")]
-   [:div.ml-4 {:style {:display               "grid"
-                       :gap                   "var(--size-2) var(--size-2)"
-                       :grid-template-columns "min-content 1fr"}}
-    [listitem (t/date "2022-04-04") "Nøkkelvaktens infosjekk"]
-    [listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
-    [listitem (t/date "2022-05-06") "Dugnad"]
-    [listitem (t/date "2022-05-08") "Sesongstart '22"]]])
+  (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
+    [:div.space-y-4
+     {:style {:padding-bottom "var(--size-10)"}}
+     [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se også i årshjulet)")]
+     ;[l/ppre-x data]
+     [:div.ml-4 {:style {:display               "grid"
+                         :gap                   "var(--size-2) var(--size-2)"
+                         :grid-template-columns "min-content 1fr"}}
+      (for [[id {:keys [date type-text tldr]}] data]
+        [listitem (t/date date) type-text tldr])]]))
+;[listitem (t/date "2022-04-04") "Nøkkelvaktens infosjekk"]
+;[listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
+;[listitem (t/date "2022-05-06") "Dugnad"]
+;[listitem (t/date "2022-05-08") "Sesongstart '22"]]]))
 
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
@@ -464,30 +444,28 @@
                         (if @at-least-registered? :bottom-toolbar)]}
 
       [:div.min-h-full.z-0.relative
-       [:div
-        [:div.mx-4
-         [:div.max-w-lg.mx-auto
-          [header-with-logo]]]
+       [:div.mx-4
+        [:div.max-w-lg.mx-auto
+         [header-with-logo]]]
 
-        (when-not @hide-image-carousell?
-          [:div
-           {:style (conj {:padding-block "var(--size-4)"
-                          :filter        (if dark-mode? "brightness(0.75)" "")})}
-           [image-carousell]])
-        [:div.mx-4
-         [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4
+       (when-not @hide-image-carousell?
+         [image-carousell])
 
-          (when (and (not @(schpaa.state/listen :lab/skip-easy-login)) (not @at-least-registered?))
-            [helpful-to-earlier-users])
+       [:div.mx-4
+        [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4
+         (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
+                    (not @at-least-registered?))
+           [helpful-to-earlier-users])
 
-          (when-not @at-least-registered?
-            [please-login-and-register])
+         (when-not @at-least-registered?
+           [please-login-and-register])
 
-          (when (and goog.DEBUG @master-emulation)
-            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-             booking.common-views/master-control-box])
-          [news-feed]
-          [yearwheel-feed]]]]]
+         (when (and goog.DEBUG @master-emulation)
+           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+            booking.common-views/master-control-box])
+
+         [news-feed]
+         [yearwheel-feed]]]]
 
       [bs/attached-to-bottom
        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
