@@ -758,11 +758,11 @@
                           [:div.mx-auto
                            {:style {:width     "100%"
                                     :max-width max-width}}
-                           (when goog.DEBUG
-                             [:div.pb-4 [l/ppre-x
-                                         {:users-access-tokens users-access-tokens
-                                          :r                   (-> r :data :modify)
-                                          :can-modify?         modify?}]])
+                           #_(when goog.DEBUG
+                               [:div.pb-4 [l/ppre-x
+                                           {:users-access-tokens users-access-tokens
+                                            :r                   (-> r :data :modify)
+                                            :can-modify?         modify?}]])
                            [hoc.panel/togglepanel pagename "innstillinger" panel modify?]]]]))
 
                     (when always-panel
@@ -774,7 +774,6 @@
 
                     [:div.duration-200.grow
                      {:style {:margin-right :auto
-
                               :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
                                               ;; force view to align to the left
                                               0

@@ -26,7 +26,8 @@
 
 (o/defstyled listitem :div
   [:& :p-1
-   {:min-height "var(--size-4)"}
+   {;:background :#fff1
+    :min-height "var(--size-4)"}
    [:.deleted {:color           "var(--text0)"
                :text-decoration :line-through
                :opacity         0.3}]
@@ -67,12 +68,12 @@
           [sc/row-ec
            [hoc.buttons/regular {:type     "button"
                                  :on-click #(on-close)} "Avbryt"]
-           [hoc.buttons/cta {:disabled false                ;(not changed?)
-                             :style    {:min-width 0}
-                             :type     "submit"
-                             :on-click #(do
-                                          (set-values {:id nil})
-                                          (on-save))} (sc/icon ico/plusplus)]
+           #_[hoc.buttons/cta {:disabled false              ;(not changed?)
+                               :style    {:min-width 0}
+                               :type     "submit"
+                               :on-click #(do
+                                            (set-values {:id nil})
+                                            (on-save))} (sc/icon ico/plusplus)]
            [hoc.buttons/cta {:disabled (not changed?)
                              :type     "submit"
                              :on-click #(on-save)} "Lagre"]]]]))]])
@@ -218,22 +219,21 @@
         data (get-all-events @show-deleted)
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         modify? (booking.access/can-modify? r users-access-tokens)]
-    [sc/col-space-2 {:class [:w-full :overflow-x-auto]}
+    (into [sc/col-space-2 {:class [:w-full :overflow-x-auto]}]
+          (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now)))
+                                                          #(some-> % t/date)
+                                                          :date
+                                                          second)
+                                                    data))]
 
-     (doall (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now)))
-                                                            #(some-> % t/date)
-                                                            :date
-                                                            second)
-                                                      data))]
-
-              [sc/col-space-2
-               [sc/hero "'" (subs (str (t/int g)) 2 4)]
-               (into [:div]
-                     (concat
-                       (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
-                         (listitem-softwrap modify? (assoc data :id id)))
-                       (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
-                         (listitem-softwrap modify? (assoc data :id id)))))]))]))
+            [sc/col-space-2
+             [sc/hero "'" (subs (str (t/int g)) 2 4)]
+             (into [:div.space-y-px]
+                   (concat
+                     (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
+                       (listitem-softwrap modify? (assoc data :id id)))
+                     (for [[id data] (sort-by (comp :date last) < (filter (comp :date last) data))]
+                       (listitem-softwrap modify? (assoc data :id id)))))]))))
 
 (comment
   (get-all-events))
