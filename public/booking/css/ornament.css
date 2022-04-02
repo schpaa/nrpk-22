@@ -785,7 +785,7 @@ body {
 .schpaa_style_ornament__surface_instillinger{margin:-1rem;padding:1rem;background:var(--floating);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}
 .schpaa_style_ornament__surface_a{padding:1rem;background:white;box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}
 .schpaa_style_ornament__surface_b{padding:1rem;background:var(--surface00);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}
-.schpaa_style_ornament__surface_c{overflow:hidden;background:#0004;box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
+.schpaa_style_ornament__surface_c{background:var(--floating);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-2)}
 .schpaa_style_ornament__surface_u{background:var(--surface000);box-shadow:var(--shadow-4);border-radius:var(--radius-2);border:1px solid var(--surface1)}
 .schpaa_style_ornament__surface_e{overflow:hidden;background:var(--surface000);box-shadow:var(--inner-shadow-1);border:1px solid var(--surface1);border-radius:var(--radius-2)}
 .schpaa_style_ornament__surface_b_sans_bg{padding:.5rem;border-radius:var(--radius-2)}
@@ -970,3 +970,6 @@ body {
 .schpaa_style_ornament__hero_p_SINGLEQUOTE_{font-size:var(--font-size-5);line-height:var(--font-lineheight-1);font-weight:var(--font-weight-2);margin-bottom:var(--size-4);color:var(--text2)}
 .schpaa_style_ornament__hero_summary{user-select:none;font-size:var(--font-size-5);line-height:var(--font-lineheight-1);font-weight:var(--font-weight-2);margin-bottom:var(--size-2);color:var(--text2)}.schpaa_style_ornament__hero_summary:focus{outline:0}
 .schpaa_style_ornament__ingress_details{color:var(--text2);font-size:var(--font-size-3);line-height:var(--font-lineheight-4);font-weight:var(--font-weight-3);margin-bottom:var(--size-4)}.schpaa_style_ornament__ingress_details[open]>summary::before{content:"-";width:var(--size-2);padding-right:var(--size-2)}.schpaa_style_ornament__ingress_details>summary::-webkit-details-marker{display:none}.schpaa_style_ornament__ingress_details>summary::marker{display:none}.schpaa_style_ornament__ingress_details>summary::before{content:"+";width:var(--size-2);padding-right:var(--size-2);list-style-type:none}
+.booking_frontpage__top_right_windowclosebutton{position:absolute;top:var(--size-2);right:var(--size-2)}
+.booking_frontpage__bottom_right_userfeedback{position:absolute;bottom:var(--size-2);right:var(--size-2);color:var(--text0)}
+.schpaa_style_ornament__inline_icon{width:1.5rem;height:1.5rem}

@@ -633,7 +633,7 @@
                 [:div
                  {:style {;:min-height "100%"
                           :background-color "var(--content)"
-                          :padding-bottom   "var(--size-10)"
+                          ;:padding-bottom   "var(--size-10)"
                           :flex             "1 1 auto"}}
                  contents]
                 (when-not frontpage [after-content])])]
@@ -740,7 +740,7 @@
                         [:div.sticky.top-0.z-10.relative
                          {:style {:opacity v}}
                          [booking.common-views/header-line r {:frontpage true}]])
-                      [:div.-mt-16
+                      [:div.-mt-16 {:style {:height "calc(100% - 4rem)"}}
                        [render r]]])]
 
               [page-boundary r

@@ -371,6 +371,88 @@
         [:div.h-20.w-20 [circular-logo-thing dark-mode?]]]]
       [:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
 
+(o/defstyled top-right-windowclosebutton :div
+  {:position :absolute
+   :top      "var(--size-2)"
+   :right    "var(--size-2)"})
+
+(o/defstyled bottom-right-userfeedback :div
+  {:position :absolute
+   :bottom   "var(--size-2)"
+   :right    "var(--size-2)"
+   :color    "var(--text0)"})
+
+(defn helpful-to-earlier-users []
+  [sc/surface-c {:class [:-mx-4]
+                 :style {:position   :relative
+                         :background "var(--textmarker-background)"
+                         :box-shadow "var(--shadow-2)"
+                         :padding    "var(--size-4)"}}
+   [top-right-windowclosebutton
+    [sc/icon {:style    {:color "var(--textmarker)"}
+              :on-click #(schpaa.state/toggle :lab/skip-easy-login)} ico/closewindow]]
+
+
+
+   [:div
+    {:style {:position :absolute
+             :top      "-2rem"
+             :right    "30%"
+             :width    "2rem"
+             :color    "var(--textmarker-background)"}}
+    [:svg {:height              "2rem"
+           :width               "2rem"
+           :preserveAspectRatio "none"
+           :fill                "none" :viewBox "-1 -1 32 24" :stroke "currentColor" :stroke-width "1"}
+     [:path {:fill           "currentColor"
+
+             :stroke-linecap "round" :stroke-linejoin "round" :d "M3 24 L0 0 L32 24 L3 24 "}]]]
+
+
+   [sc/col-space-2
+    [sc/subtext {:class [:pr-4]
+                 :style {:font-weight "var(--font-weight-4)"
+                         :color       "var(--textmarker)"
+                         :line-height "var(--font-lineheight-4)"}}
+     [:div.inline-block
+      "Er du nøkkelvakt kan du logge inn med samme bruker som du brukte i Eykt. Når du logger inn kan du registrere båtutlån og booking (hvis du har våttkort grunnkurs hav) fra disse nettsidene."
+      [:div.inline-block.px-2 [sc/icon-small {:style    {:color "var(--textmarker)"}
+                                              :on-click #(rf/dispatch [:app/give-feedback {:comment-length 600
+                                                                                           :caption        "Spørsmål eller tilbakemelding som gjelder innlogging (ta med e-post hvis du vil ha svar og du ikke er pålogget):"
+                                                                                           :source         "frontpage/yellow-welcome-sticker"}])} ico/tilbakemelding]]]]]])
+
+(defn please-login-and-register []
+  [sc/row-ec
+   [:div.grow]
+   [hoc.buttons/cta {:style    {:box-shadow "var(--shadow-2)"}
+                     :on-click #(rf/dispatch [:app/login])}
+    [sc/col {:style {:text-align :left}}
+     [sc/ingress' {:style {:font-weight "var(--font-weight-6)"
+                           :color       "var(--gray-0)"}} "Logg inn"]
+     [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
+
+(defn news-feed []
+  [:div.space-y-4
+   [:div.flex.items-baseline.gap-2 [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
+   [:div.ml-4 {:style {:display               "grid"
+                       :gap                   "var(--size-4) var(--size-2)"
+                       :grid-template-columns "1fr"}}
+    [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
+    [listitem' (t/date) "Nye båter er kjøpt inn."]
+    [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
+
+(defn yearwheel-feed []
+  [:div.space-y-4
+   {:style {:padding-bottom "var(--size-10)"}}
+   [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se også i årshjulet)")]
+   [:div.ml-4 {:style {:display               "grid"
+                       :gap                   "var(--size-2) var(--size-2)"
+                       :grid-template-columns "min-content 1fr"}}
+    [listitem (t/date "2022-04-04") "Nøkkelvaktens infosjekk"]
+    [listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
+    [listitem (t/date "2022-05-06") "Dugnad"]
+    [listitem (t/date "2022-05-08") "Sesongstart '22"]]])
+
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         hide-image-carousell? (schpaa.state/listen :lab/hide-image-carousell)
@@ -387,69 +469,26 @@
          [:div.max-w-lg.mx-auto
           [header-with-logo]]]
 
-        ;[l/ppre-x @master-emulation]
-
         (when-not @hide-image-carousell?
           [:div
            {:style (conj {:padding-block "var(--size-4)"
                           :filter        (if dark-mode? "brightness(0.75)" "")})}
            [image-carousell]])
         [:div.mx-4
-         [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4      ;.z-100
-          ;todo registered?
+         [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4
 
-
-
-          (when-not @at-least-registered?
-            (when-not @(schpaa.state/listen :lab/skip-easy-login)
-              [sc/surface-c {:class [:-mx-4]
-                             :style {:position   :relative
-                                     ;:transform "rotate(1deg)"
-                                     :background :#fffb
-                                     :box-shadow "var(--shadow-2)"
-                                     :padding    "var(--size-4)"}}
-               [:div.absolute.top-2.right-2
-                [sc/icon {:on-click #(schpaa.state/toggle :lab/skip-easy-login)} ico/closewindow]]
-               [sc/col-space-2
-                [sc/ingress' {:class [:pr-4]
-                              :style {:font-weight "var(--font-weight-4)"
-                                      :line-height "var(--font-lineheight-4)"}}
-                 "Er du nøkkelvakt kan du logge inn med samme bruker som du brukte i Eykt. Har du ikke bruker på Eykt, kan du logge inn allikevel og lage en."]]]))
+          (when (and (not @(schpaa.state/listen :lab/skip-easy-login)) (not @at-least-registered?))
+            [helpful-to-earlier-users])
 
           (when-not @at-least-registered?
-            [sc/row-ec
-             [:div.grow]
-             [hoc.buttons/cta {:style    {:box-shadow "var(--shadow-2)"}
-                               :on-click #(rf/dispatch [:app/login])}
-              [sc/col {:style {:text-align :left}}
-               [sc/ingress' {:style {:font-weight "var(--font-weight-6)"
-                                     :color       "var(--gray-0)"}} "Logg inn"]
-               [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
+            [please-login-and-register])
 
           (when (and goog.DEBUG @master-emulation)
             [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
              booking.common-views/master-control-box])
+          [news-feed]
+          [yearwheel-feed]]]]]
 
-          [:div.space-y-4
-           [:div.flex.items-baseline.gap-2 [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
-           [:div.ml-4 {:style {:display               "grid"
-                               :gap                   "var(--size-4) var(--size-2)"
-                               :grid-template-columns "1fr"}}
-
-            [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
-            [listitem' (t/date) "Nye båter er kjøpt inn."]
-            [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]]
-
-          [:div.space-y-4
-           {:style {:padding-bottom "var(--size-10)"}}
-           [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se også i årshjulet)")]
-           [:div.ml-4 {:style {:display               "grid"
-                               :gap                   "var(--size-2) var(--size-2)"
-                               :grid-template-columns "min-content 1fr"}}
-            [listitem (t/date "2022-04-04") "Nøkkelvaktens infosjekk"]
-            [listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
-            [listitem (t/date "2022-05-06") "Dugnad"]
-            [listitem (t/date "2022-05-08") "Sesongstart '22"]]]]]]]
       [bs/attached-to-bottom
        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
        [scroll-up-animation]]
