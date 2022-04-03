@@ -552,11 +552,13 @@
 (o/defstyled mainframe :div)
 
 (defn after-content []
-  (let [route @(rf/subscribe [:kee-frame/route])]
+  (let [route @(rf/subscribe [:kee-frame/route])
+        access-tokens @(rf/subscribe [:lab/all-access-tokens])]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
      [:div.mx-auto.max-w-lg.py-8
       [:div.text-white.mx-4
        [sc/col-space-2
+        (when goog.DEBUG [l/ppre-x access-tokens])
         [sc/col-space-1
          [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
          [sc/text1-cl "Postboks 37, 0621 Bogerud"]
@@ -655,8 +657,6 @@
   (can-modify? {:data {:modify [:member #{:admin}]}} [nil #{:admin}])
   #_(some? (seq (set/intersection #{:as} #{:a}))))
 
-
-
 (defn no-access-view [r]
   (let [required-access (-> r :data :access)]
     [:div.max-w-lg.mx-4
@@ -676,14 +676,20 @@
        (-> r :data :access)
        @(rf/subscribe [:lab/all-access-tokens])]
 
-      [sc/text {:style {;:white-space :nowrap
-                        :color "var(--brand1)"}} "For å se denne siden må du være "
-       (case (first required-access)
-         :registered "innlogget og ha registrert grunnleggende informasjon om deg selv."
-         :member "medlem i NRPK."
-         :waitinglist "påmeldt innmeldingskurset til NRPK."
-         "?")]
-      [sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))
+      [sc/text "For å se denne siden må du som minimum:"]
+      [sc/text2                                             ;{:style {:color "var(--brand1)"}}
+       (cond
+         (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunnleggende informasjon om deg selv."
+         (some #{:waitinglist} (first required-access)) "Være påmeldt innmeldingskurs."
+         :else #_(some #{:member} (first required-access)) "Være medlem i NRPK.")]
+
+      #_(case (first required-access)
+          :registered "innlogget og ha registrert grunnleggende informasjon om deg selv."
+          :member "medlem i NRPK."
+          :waitinglist "påmeldt innmeldingskurset til NRPK."
+          (str "?" (first required-access)))
+
+      #_[sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))
 
 (rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
 

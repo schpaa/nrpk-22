@@ -227,7 +227,7 @@
                                                     data))]
 
             [sc/col-space-2
-             [sc/hero "'" (subs (str (t/int g)) 2 4)]
+             [sc/hero (or (t/int g) (str "'" (subs (str (t/int g)) 2 4)))]
              (into [:div.space-y-px]
                    (concat
                      (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]

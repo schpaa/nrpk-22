@@ -428,10 +428,11 @@
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[master-switch _ {:keys [status access] :as sim}] _]
+            (fn [[master-switch ua {:keys [status access] :as sim}] _]
               (if master-switch
-                [:member #{:sample :nøkkelvakt :admin}]
-                [:registered #_(or status :none) #{} #_(or access #{})])))
+                [status access]                             ;:member #{:nøkkelvakt :admin}
+                (booking.access/compute-access-tokens ua))))
+
 
 ;endregion
 

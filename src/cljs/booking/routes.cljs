@@ -32,7 +32,7 @@
    ["/arshjul" {:name   :r.yearwheel
                 :header [:r.oversikt "Årshjul"]
                 :modify [nil #{:admin}]
-                :access [[:member :registered :waitinglist] #{}]}]
+                :access [[:registered :waitinglist :member] #{}]}]
 
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 
