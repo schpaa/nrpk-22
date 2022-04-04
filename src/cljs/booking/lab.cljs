@@ -389,13 +389,18 @@
               (when sim (= :member status))))
 
 (rf/reg-sub :lab/admin-access
+            :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            :<- [:lab/member]
-            (fn [[_ {:keys [status access] :as sim} member?] _]
-              (and member? (some #{:admin} access))))
-
-
+            (fn [[master-switch ua {:keys [status access] :as m}] _]
+              (if master-switch
+                (do
+                  (tap> {:m m})
+                  (some #{:admin} (or access [])))
+                (when-let [x (booking.access/compute-access-tokens ua)]
+                  (let [[s a] x]
+                    (tap> {:x x :a a})
+                    [2 1] #_(some? (some #{:admin} a)))))))
 
 (rf/reg-sub :lab/booking
             :<- [:lab/sim?]
@@ -428,7 +433,7 @@
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[master-switch ua {:keys [status access] :as sim}] _]
+            (fn [[master-switch ua {:keys [status access]}] _]
               (if master-switch
                 [status access]                             ;:member #{:nøkkelvakt :admin}
                 (booking.access/compute-access-tokens ua))))
@@ -506,7 +511,7 @@
 (defn feedback [{:keys [on-close on-save persona caption navn comment-length] :as ctx}]
   (let [max-comment-length (or comment-length max-comment-length)]
     [sc/centered-dialog
-     {:style {:background-color "var(--toolbar)"
+     {:style {:background-color "var(--content)"
               :z-index          10
               :width            "50ch"
               :max-height       "80vh"

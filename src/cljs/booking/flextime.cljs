@@ -3,7 +3,9 @@
             [lambdaisland.ornament :as o]
             [tick.alpha.interval]
             [schpaa.state]
-            [booking.data]))
+            [booking.data]
+            [times.api]
+            [schpaa.style.ornament :as sc]))
 
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
@@ -67,3 +69,35 @@
                                :config booking.data/arco-datetime-config}
            (fn [formatted-t]
              [sc/link on-click (formatted formatted-t)])]))))
+
+(defn relative-time
+  ([tm]
+   (relative-time tm times.api/datetime-format))
+  ([tm datetimeformat-fn]
+   (when-let [dt (if (t/date-time? tm)
+                   (t/date-time tm)
+                   (t/at (t/date tm) (t/midnight)))]
+     (let [ignore-time? (not (t/date-time? tm))
+           relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
+           on-time-click {:on-click #(schpaa.state/toggle :app/show-relative-time-toggle)}
+           format #(->
+                     [sc/hidden-link on-time-click %])]
+       (if @relative-time?
+         (if (t/<= dt (t/date-time))
+           (arco.react/time-since {:times  [dt (t/date-time)]
+                                   :config (conj booking.data/arco-datetime-config {:stringify? false})}
+                                  (fn [formatted-t]
+                                    (format (str (if (= "nå" (:interval formatted-t))
+                                                   "nå"
+                                                   (str
+                                                     (:time formatted-t) " "
+                                                     (:interval formatted-t) " "
+                                                     (:ago formatted-t)))))))
+           (arco.react/time-to {:times  [dt (t/date-time)]
+                                :config (conj booking.data/arco-datetime-config {:stringify? true})}
+                               (fn [formatted-t]
+                                 (format formatted-t))))
+         (format (datetimeformat-fn dt)))))))
+
+(comment
+  (do [relative-time (t/now) times.api/datetime-format]))

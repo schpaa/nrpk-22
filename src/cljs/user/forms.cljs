@@ -7,6 +7,7 @@
             [tick.core :as t]
             [times.api :refer [relative-time]]
             [eykt.content.rapport-side]
+            [booking.flextime]
             [db.core :as db]))
 
 (defn generalinformation-panel [props]
@@ -126,6 +127,7 @@
      (fn []
        (when (:uid values)
          [sc/col-space-2
+          ;(tap> props)
           [sci/textarea props :text {:rows 2} "Endringsbeskrivelse (valgfritt)" :endringsbeskrivelse]
           [sc/row-sc-g2-w [schpaa.style.hoc.toggles/small-switch-base {:type :button} "Vis tidligere endringer" show-changelog toggle]]
           (when @show-changelog
@@ -133,13 +135,15 @@
               (when @changelog
                 (into [sc/col-space-1]
                       ;todo
-                      (map (fn [e] (let [rt (some-> e :data (get "timestamp") .toDate t/date-time)]
-                                     [sc/row-sc-g2-w {:style {:display "inline-flex"}}
-                                      [sc/text1 {:style {:line-height   "var(--font-lineheight-2)"
-                                                         :padding-block "var(--size-1)"}}
-                                       [:span {:style {:color "var(--text1)"}} (relative-time rt)]
-                                       " "
-                                       [:span {:style {:color "var(--text2)"}} (some-> e :data (get "reason"))]]]))
+                      (map (fn [e]
+                             (let [rt (some-> e :data (get "timestamp") .toDate t/date-time)
+                                   reason (some-> e :data (get "reason"))]
+                               [sc/row-sc-g2-w {:style {:display "inline-flex"}}
+                                [sc/text1 {:style {:line-height   "var(--font-lineheight-2)"
+                                                   :padding-block "var(--size-1)"}}
+                                 [:span {:style {:color "var(--text1)"}} (booking.flextime/relative-time rt times.api/tech-date-format)]
+                                 " "
+                                 [:span {:style {:color "var(--text2)"}} reason]]]))
 
                            @changelog)))))]))]))
 

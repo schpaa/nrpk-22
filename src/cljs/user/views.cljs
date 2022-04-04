@@ -135,15 +135,24 @@
 
 ;endregion
 
-
-
 (defn sist-oppdatert [data]
   (let [user-info @(rf/subscribe [::db/user-auth])
-        tm (:timestamp data)]
+        tm (some->> (:timestamp data) (t/instant) (t/date-time))]
     [sc/col-space-8
      [sc/col-space-1
       (when tm
-        [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert"] (relative-time tm)]])
+        (booking.flextime/flex-datetime
+          tm
+          (fn [format content]
+            [:div.inline-block
+             [sc/text1-with
+              "Sist oppdatert "
+              (if (= :date format)
+                [sc/subtext-inline {:style {:text-decoration :none}} (ta/datetime-format content)]
+                [sc/subtext-inline content])]])
+          #_(fn [x] [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert " tm]]])))
+
+
       [sc/small1 (:display-name user-info)]
       [sc/small1 (:email user-info)]
       [sc/small1 (:uid user-info)]]]))
@@ -203,8 +212,9 @@
 
        "Få epost!")]]])
 
-(defn user-form [uid]
+(defn user-form [r uid]
   (let [path {:path ["users" uid]}
+        admin? (rf/subscribe [:lab/admin-access])
         form-state (r/atom {})
         s (if uid
             (db/on-value-reaction {:path ["users" uid]})
@@ -277,23 +287,10 @@
                               (remove nil? [[user.forms/generalinformation-panel props]
                                             [user.forms/booking-panel props]
                                             (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-                                              [user.forms/nokkelvakt-panel props]
-                                              #_[togglepanel :user-form/nøkkelvakt "Nøkkelvakt"
-                                                 (fn []
-                                                   [fork/form {:state               form-state
-                                                               :prevent-default?    true
-                                                               :clean-on-unmount?   true
-                                                               :keywordize-keys     true
-                                                               :component-did-mount (fn [{:keys [set-values]}]
-                                                                                      (let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                                                       {:uid             uid
-                                                                                                        :request-booking (str (t/date))})]
-                                                                                        (set-values data)))
-                                                               :on-submit           #(send :e.store (assoc-in % [:values :uid] uid))}
-                                                    user.forms/nokkelvakt-panel])])
-                                            (when @(rf/subscribe [:lab/admin-access])
+                                              [user.forms/nokkelvakt-panel props])
+                                            (when @admin?
                                               [user.forms/status-panel props])
-                                            (when @(rf/subscribe [:lab/admin-access])
+                                            (when @admin?
                                               [user.forms/changelog-panel props])])))
 
              [:div
@@ -312,8 +309,8 @@
                (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]]
              [sist-oppdatert values]]])]))))
 
-(defn my-info []
+(defn my-info [r]
   (let [user-auth @(rf/subscribe [::db/user-auth])
         uid (:uid user-auth)]
-    (fn []
-      [user-form uid])))
+    (fn [r]
+      [user-form r uid])))

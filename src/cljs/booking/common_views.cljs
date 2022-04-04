@@ -556,22 +556,25 @@
         access-tokens @(rf/subscribe [:lab/all-access-tokens])]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
      [:div.mx-auto.max-w-lg.py-8
-      [:div.text-white.mx-4
+      [:div.mx-4
        [sc/col-space-2
-        (when goog.DEBUG [l/ppre-x access-tokens])
+        ;(when goog.DEBUG [l/ppre-x access-tokens])
         [sc/col-space-1
-         [sc/text1-cl {:style {:font-weight "var(--font-weight-6)"}} "Postadresse"]
-         [sc/text1-cl "Postboks 37, 0621 Bogerud"]
-         [sc/text1-cl "Nøklevann ro- og padleklubb"]
-         [:div.flex.justify-start.flex-wrap.gap-4
-          [sc/subtext-with-link {:class [:dark]
-                                 :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
-          [sc/subtext-with-link {:class [:dark]
-                                 :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]
+         [sc/title {:style {:color "var(--gray-3)"}} "Postadresse"]
+         [sc/col-space-1
+          {:style {:user-select :contain
+                   :color       "var(--gray-5)"}}
+          [sc/text-cl "Nøklevann ro- og padleklubb"]
+          [sc/text-cl "Postboks 37, 0621 Bogerud"]
+          [:div.flex.justify-start.flex-wrap.gap-4
+           [sc/subtext-with-link {:class [:dark]
+                                  :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
+           [sc/subtext-with-link {:class [:dark]
+                                  :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
         [sc/row-ec
          [hoc.buttons/reg-pill-icon
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-          ico/tilbakemelding "Tilbakemelding?"]]]]]]))
+          ico/tilbakemelding "Tilbakemelding"]]]]]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])

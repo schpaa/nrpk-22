@@ -180,12 +180,12 @@ outline: 2px solid #a0a8;
     --dim-danger-bright: var(--red-6);
     --dim-dangercopy: white;
 
-    --light-field: var(--gray-1);
+    --light-field: var(--gray-2);
     --light-field-focus: var(--gray-0);
     --light-fieldcopy: var(--gray-7);
-    --dim-field: var(--red-1);
-    --dim-field-focus: var(--red-2);
-    --dim-fieldcopy: var(--red-4);
+    --dim-field: var(--gray-9);
+    --dim-field-focus: var(--gray-8);
+    --dim-fieldcopy: var(--gray-3);
 
 
     /* ----------------------------- */
@@ -314,7 +314,7 @@ outline: 2px solid #a0a8;
     --text3: var(--text3-light);
 
     --field1: white; /*var(--gray-0); /* surface000-light  focused field */
-    --field2: var(--gray-1); /* surface00-light unfocused/passive field */
+    --field2: var(--gray-0); /* surface00-light unfocused/passive field */
 
        --brand000: var(--brand000-light);
        --brand00: var(--brand00-light);
@@ -406,8 +406,8 @@ outline: 2px solid #a0a8;
     --font-weight-3: var(--font-weight-3);
 */
 
-    --field1: var(--surface000-dim); /* focused field */
-    --field2: var(--surface00-dim); /* unfocused/passive field */
+    --field1: var(--gray-6); /* focused field */
+    --field2: var(--gray-7); /* unfocused/passive field */
 
 
    --brand000: var(--brand000-dim);

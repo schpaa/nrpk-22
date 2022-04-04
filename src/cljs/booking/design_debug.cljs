@@ -8,7 +8,8 @@
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
             [booking.ico :as ico]
             [schpaa.style.button2 :as scb2]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [tick.core :as t]))
 
 
 (defn details-summary [tag header content]
@@ -96,130 +97,172 @@
    [:div 'panel]
    [:div 'panel]])
 
+(defn time-and-dates []
+  [sc/col-space-8
+   [sc/text1 (ta/datetime-format (t/date-time))]
+   [sc/ingress "Klikkbare med relativ tid"]
+
+   (let [dt (t/at (t/today) (t/noon))]
+     [sc/text1 {:style {:display :inline-block}}
+      [:span (ta/datetime-format dt) " er "]
+      [booking.flextime/relative-time dt]])
+
+   (let [dt (t/at (t/tomorrow) (t/midnight))]
+     [sc/text1 {:style {:display :inline-block}}
+      [:span (ta/datetime-format dt) " er "]
+      [booking.flextime/relative-time dt]])
+
+   (let [dt (t/at (t/today) (t/noon))]
+     [sc/text1 {:style {:display :inline-block}}
+      [:span (ta/datetime-format dt) " er "]
+      [booking.flextime/relative-time dt]])
+
+   (let [dt (t/at (t/yesterday) (t/>> (t/midnight) (t/new-duration 10 :hours)))]
+     [sc/text1 {:style {:display :inline-block}}
+      [:span (ta/datetime-format dt) " er "]
+      [booking.flextime/relative-time dt]])
+
+   [sc/col-space-1
+    [sc/title1 "Klikkbare med relativ klokke"]
+    (into [sc/col-space-1] (for [e '(-60 -30 1 30 60 120 200 300)]
+                             (let [dt (t/<< (t/date-time) (t/new-duration e :seconds))]
+                               [sc/small0
+                                [:span (ta/datetime-format dt) " er "]
+                                [sc/small1-inline [booking.flextime/relative-time dt]]])))]
+
+   [sc/col-space-1
+    [sc/title1 "Klikkbare med relativ dato"]
+    (into [sc/col-space-1] (for [e '(-10 -24 1 24 60 120 200 400 1000 10000 305000)]
+                             (let [dt (t/<< (t/date-time) (t/new-duration e :hours))]
+                               [sc/small0
+                                [:span (ta/date-format dt) " er "]
+                                [sc/small1-inline [booking.flextime/relative-time (t/date dt)]]])))]])
+
+
 (defn render []
-  [:div.pb-32
-   [togglepanel :debug/color-table "farger" color-table]
-   [details-summary
-    :color-palette
-    [sc/separator "Color and grayscale palette"]
-    (into [:div.grid.gap-2
-           {:style {:grid-template-columns "repeat(auto-fit,minmax(6rem,1fr))"}}]
-          (map (fn [[styles tag]]
-                 [sc/surface-b-sans-bg {:class []
-                                        :style (conj styles {:box-shadow   "var(--inner-shadow-2)"
-                                                             :font-size    "var(--font-size-0)"
-                                                             :aspect-ratio "1/1"})} tag])
-               [[{:color      "var(--green-0)"
-                  :background "var(--green-5)"} "call to action"]
+  [:div
+   (interpose [:div.py-6]
+              [[togglepanel :debug/color-table "farger" color-table]
+               [togglepanel :debug/dates "Tid og Dato" time-and-dates]
+               [details-summary
+                :color-palette
+                [sc/separator "Color and grayscale palette"]
+                (into [:div.grid.gap-2
+                       {:style {:grid-template-columns "repeat(auto-fit,minmax(6rem,1fr))"}}]
+                      (map (fn [[styles tag]]
+                             [sc/surface-b-sans-bg {:class []
+                                                    :style (conj styles {:box-shadow   "var(--inner-shadow-2)"
+                                                                         :font-size    "var(--font-size-0)"
+                                                                         :aspect-ratio "1/1"})} tag])
+                           [[{:color      "var(--green-0)"
+                              :background "var(--green-5)"} "call to action"]
 
 
-                [{:color      "var(--red-0)"
-                  :background "var(--red-5)"} "dangerous and irreversible actions"]
+                            [{:color      "var(--red-0)"
+                              :background "var(--red-5)"} "dangerous and irreversible actions"]
 
 
-                [{:color      "var(--surface5)"
-                  :background "var(--brand0)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--brand1)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--brand2)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--yellow-2)"} :highlighter]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface1)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface2)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface3)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface4)"} :tag]
-                [{:color      "var(--surface0)"
-                  :background "var(--surface5)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface0)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface00)"} :tag]
-                [{:color      "var(--surface5)"
-                  :background "var(--surface000)"} :tag]]))]
+                            [{:color      "var(--surface5)"
+                              :background "var(--brand0)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--brand1)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--brand2)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--yellow-2)"} :highlighter]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface1)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface2)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface3)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface4)"} :tag]
+                            [{:color      "var(--surface0)"
+                              :background "var(--surface5)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface0)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface00)"} :tag]
+                            [{:color      "var(--surface5)"
+                              :background "var(--surface000)"} :tag]]))]
+               [details-summary
+                :fonts
+                [sc/separator "Fonts"]
+                (let [f (fn [font-name font-size line-height e]
+                          (let [line-height (or line-height "auto")
+                                e (ta/format e font-name font-size line-height)]
+                            [:div
+                             {:style {:font-weight "400"
+                                      :font-family font-name
+                                      :font-size   font-size
+                                      :line-height line-height}}
+                             [:div e]
+                             [:div {:style {:font-style :italic}} e]
+                             [:div {:style {:font-weight "100"}} e " 100"]
+                             [:div {:style {:font-weight "900"}} e " 900"]
+                             [:div (apply str (range 10))]
+                             [:div [:strong (apply str (range 10))]]]))]
 
-   [details-summary
-    :fonts
-    [sc/separator "Fonts"]
-    (let [f (fn [font-name font-size line-height e]
-              (let [line-height (or line-height "auto")
-                    e (ta/format e font-name font-size line-height)]
-                [:div
-                 {:style {:font-weight "400"
-                          :font-family font-name
-                          :font-size   font-size
-                          :line-height line-height}}
-                 [:div e]
-                 [:div {:style {:font-style :italic}} e]
-                 [:div {:style {:font-weight "100"}} e " 100"]
-                 [:div {:style {:font-weight "900"}} e " 900"]
-                 [:div (apply str (range 10))]
-                 [:div [:strong (apply str (range 10))]]]))]
-
-      [:<>
-       [sc/col {:class [:space-y-8]}
-        [sc/col {:class [:space-y-4]}
-         (f "Inter" "16px" "20px" "%s %s/%s sans-serif")
-         (f "Inter" "24px" "26px" "%s %s/%s sans-serif")
-         (f "Montserrat" "18px" "22px" "%s %s/%s sans-serif")
-         (f "Montserrat" "24px" "28px" "%s %s/%s sans-serif")
-         (f "Montserrat" "32px" "38px" "%s %s/%s sans-serif")
-         (f "Lora" "16px" "18px" "%s %s/%s serif")
-         (f "Lora" "24px" "30px" "%s %s/%s serif")
-         (f "Lora" "32px" "38px" "%s %s/%s serif")]]])]
-
-   [details-summary
-    :markdown
-    [sc/separator "Markdown styles"]
-    [sc/surface-a
-     (-> (inline "./content/markdown-example.md") schpaa.markdown/md->html sc/markdown)]]
-   [details-summary
-    :styles
-    [sc/separator "Styles"]
-    (into [:div.space-y-1]
-          (map (fn [c] [sc/surface-a {:class [:p-2]} c])
-               [[sc/small1 "sc/small"]
-                [sc/separator "sc/separator"]
-                [sc/col-fields
-                 [sc/header-title "sc/header-title"]
-                 [sc/header-title "sc/header-title"]
-                 [sc/header-title "sc/header-title"]]
-                [sc/col
-                 [sc/dialog-title "sc/dialog-title"]
-                 [sc/dialog-title "sc/dialog-title"]
-                 [sc/dialog-title "sc/dialog-title"]]
-                [sc/subtitle "sc/subtitle"]
-                [sc/subtext "sc/subtext"]
-                [sc/text1 "sc/text"]
-                [sc/field-label "sc/field-label"]
-                [sc/title1 "sc/title"]
-                [sc/pill "sc/pill"]
-                [sc/text1 "sc/row-fields"
-                 [sc/row-fields
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]]]
-                [sc/text1 "sc/row-stretch"
-                 [sc/row-stretch
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]]]
-                [sc/text1 "sc/row-end"
-                 [sc/row-end
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]]]
-                [sc/text1 "sc/row-wrap (gap-4)"
-                 [sc/row-wrap
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]]]
-                [sc/text1 "sc/row-gap (gap-2)"
-                 [sc/row-gap
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]
-                  [sc/text1 "field"]]]]))]])
+                  [:<>
+                   [sc/col {:class [:space-y-8]}
+                    [sc/col {:class [:space-y-4]}
+                     (f "Inter" "16px" "20px" "%s %s/%s sans-serif")
+                     (f "Inter" "24px" "26px" "%s %s/%s sans-serif")
+                     (f "Montserrat" "18px" "22px" "%s %s/%s sans-serif")
+                     (f "Montserrat" "24px" "28px" "%s %s/%s sans-serif")
+                     (f "Montserrat" "32px" "38px" "%s %s/%s sans-serif")
+                     (f "Lora" "16px" "18px" "%s %s/%s serif")
+                     (f "Lora" "24px" "30px" "%s %s/%s serif")
+                     (f "Lora" "32px" "38px" "%s %s/%s serif")]]])]
+               [details-summary
+                :markdown
+                [sc/separator "Markdown styles"]
+                [sc/surface-a
+                 (-> (inline "./content/markdown-example.md") schpaa.markdown/md->html sc/markdown)]]
+               [details-summary
+                :styles
+                [sc/separator "Styles"]
+                (into [:div.space-y-1]
+                      (map (fn [c] [sc/surface-a {:class [:p-2]} c])
+                           [[sc/small1 "sc/small"]
+                            [sc/separator "sc/separator"]
+                            [sc/col-fields
+                             [sc/header-title "sc/header-title"]
+                             [sc/header-title "sc/header-title"]
+                             [sc/header-title "sc/header-title"]]
+                            [sc/col
+                             [sc/dialog-title "sc/dialog-title"]
+                             [sc/dialog-title "sc/dialog-title"]
+                             [sc/dialog-title "sc/dialog-title"]]
+                            [sc/subtitle "sc/subtitle"]
+                            [sc/subtext "sc/subtext"]
+                            [sc/text1 "sc/text"]
+                            [sc/field-label "sc/field-label"]
+                            [sc/title1 "sc/title"]
+                            [sc/pill "sc/pill"]
+                            [sc/text1 "sc/row-fields"
+                             [sc/row-fields
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]]]
+                            [sc/text1 "sc/row-stretch"
+                             [sc/row-stretch
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]]]
+                            [sc/text1 "sc/row-end"
+                             [sc/row-end
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]]]
+                            [sc/text1 "sc/row-wrap (gap-4)"
+                             [sc/row-wrap
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]]]
+                            [sc/text1 "sc/row-gap (gap-2)"
+                             [sc/row-gap
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]
+                              [sc/text1 "field"]]]]))]])])
