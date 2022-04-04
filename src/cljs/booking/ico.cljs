@@ -13,6 +13,7 @@
 (def new-home [:> solid/HomeIcon])
 (def old-home [:> outline/HomeIcon])
 (def yearwheel [:> solid/ViewGridAddIcon])
+(def fileman [:> solid/FolderIcon])
 (def user [:> solid/UserCircleIcon])
 (def anonymous [:> solid/QuestionMarkCircleIcon])
 (def waitinglist [:> solid/CollectionIcon])

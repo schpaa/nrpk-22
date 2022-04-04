@@ -161,7 +161,7 @@
    :background    "var(--gray-4)"})
 
 (defn vertical-toolbar-right [uid]
-  (let [admin? (rf/subscribe [:lab/admin])
+  (let [admin? (rf/subscribe [:lab/admin-access])
         member? (rf/subscribe [:lab/member])
         booking? (rf/subscribe [:lab/booking])
         registered? (rf/subscribe [:lab/at-least-registered])
@@ -180,12 +180,12 @@
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
 
-     (when (and @member? @booking?)
+     (when (or @admin? @booking?)
        {:icon-fn   (fn [] (sc/icon-large ico/booking))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
         :page-name :r.booking})
 
-     (when (and @member? @nokkelvakt)
+     (when (or @admin? @nokkelvakt)
        {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
         :page-name :r.nokkelvakt})
@@ -214,7 +214,7 @@
      :space
      (when @admin?
        {:tall-height true
-        :icon        solid/FolderIcon
+        :icon-fn     (fn [] (sc/icon-large ico/fileman))
 
         :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
         #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
@@ -558,7 +558,13 @@
      [:div.mx-auto.max-w-lg.py-8
       [:div.mx-4
        [sc/col-space-2
-        ;(when goog.DEBUG [l/ppre-x access-tokens])
+        (when goog.DEBUG
+          [l/ppre-x access-tokens])
+        (when goog.DEBUG
+          [sc/col-space-1
+           {:style {:user-select :contain
+                    :color       "var(--gray-5)"}}
+           [sc/text-cl "Admin access? " (str @(rf/subscribe [:lab/admin-access]))]])
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-3)"}} "Postadresse"]
          [sc/col-space-1

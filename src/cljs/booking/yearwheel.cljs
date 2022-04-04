@@ -58,7 +58,7 @@
           :on-submit handle-submit}
          [sc/col {:class [:space-y-8]}
           [sc/col-space-2                                   ;{:class [:space-y-2]}
-           [sc/dialog-title "Ny hendelse"]
+           [sc/dialog-title "Ny aktivitet"]
            [sc/row-sc-g2-w
             [sci/combobox props :kind? [:w-56] "Kategori" :type]
             [sci/input props :date [:w-40] "Dato" :date]
@@ -131,7 +131,7 @@
       [hoc.buttons/pill
        {:class    [:cta :pad-right]
         :on-click #(edit-event nil)}
-       (hoc.buttons/icon-with-caption (sc/icon-small ico/plus) "Nytt event")])
+       (hoc.buttons/icon-with-caption (sc/icon-small ico/plus) "Ny aktivitet")])
     [hoc.buttons/pill
      {:class    [:regular :pad-right]
       :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}

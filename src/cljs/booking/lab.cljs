@@ -394,13 +394,14 @@
             :<- [:lab/sim?]
             (fn [[master-switch ua {:keys [status access] :as m}] _]
               (if master-switch
-                (do
-                  (tap> {:m m})
-                  (some #{:admin} (or access [])))
-                (when-let [x (booking.access/compute-access-tokens ua)]
+                (some? (some #{:admin} (or access [])))
+                (if-let [x (booking.access/compute-access-tokens ua)]
                   (let [[s a] x]
-                    (tap> {:x x :a a})
-                    [2 1] #_(some? (some #{:admin} a)))))))
+                    (tap> {:s s
+                           :a a})
+                    (and (some #{:admin} (or a []))
+                         (= s :member)))
+                  false))))
 
 (rf/reg-sub :lab/booking
             :<- [:lab/sim?]

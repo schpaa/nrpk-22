@@ -547,16 +547,16 @@
       {:render (fn []
                  [:<>
                   (-> (inline "./oversikt/styret.md") schpaa.markdown/md->html sc/markdown)
-                  (let [data [["/img/personas/noun-persona-436706.png" :m "Ulf Pedersen" "Styreleder" ["HMS" "Nøkkelvakt\u00adansvarlig"]]
+                  (let [data [["/img/personas/noun-persona-436706.png" :m "Ulf Pedersen" "Styreleder" ["Nøkkelvakt\u00adansvarlig"]]
                               ["/img/personas/noun-persona-622291.png" :m "Tormod Tørstad" "Nestleder" ["Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
                               ["/img/personas/noun-persona-633483.png" :m "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
                               ["/img/personas/noun-persona-410775.png" :m "Adrian A. Mitchell" "Styremedlem" ["Kasserer"]]
                               ["/img/personas/noun-persona-622293.png" :m "Chris P. Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
-                              ["/img/personas/noun-persona-497844.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig" "Midlertidig anleggs\u00ADansvarlig Nøklevann"]]
-                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" []]
+                              ["/img/personas/noun-persona-497844.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
+                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" ["HMS"]]
                               ["/img/personas/noun-persona-4144954.png" :f "Ylva Eide" "Styremedlem" []]
                               ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Vara" []]
-                              ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" []]]]
+                              ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" ["Anleggs\u00ADansvarlig Nøklevann"]]]]
                     (o/defstyled card :div.relative
                       :p-4
                       {:min-height       "13ch"
