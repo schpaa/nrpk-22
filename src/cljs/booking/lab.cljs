@@ -382,6 +382,7 @@
             :<- [:lab/sim?]
             (fn [[_ {:keys [status access] :as sim}] _]))
 
+;todo
 (rf/reg-sub :lab/member
             :<- [::db/user-auth]
             :<- [:lab/sim?]
@@ -399,36 +400,41 @@
                   (let [[s a] x]
                     (tap> {:s s
                            :a a})
-                    (and (some #{:admin} (or a []))
-                         (= s :member)))
+                    (and (= s :member)
+                         (= :admin (some #{:admin} (or a [])))))
                   false))))
 
 (rf/reg-sub :lab/booking
+            :<- [:lab/master-state-emulation]
+            :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [{:keys [status access] :as sim} _]
-              (if access
-                (= :booking (some access [:booking]))
-                false)))
+            (fn [[master-switch ua {:keys [status access] :as m}] _]
+              (if master-switch
+                (and (= status :member)
+                     (some? (some #{:booking} (or access []))))
+                (if-let [x (booking.access/compute-access-tokens ua)]
+                  (let [[s a] x]
+                    (tap> {:s s
+                           :a a})
+                    (and (= s :member)
+                         (= :booking (some #{:booking} (or a [])))))
+                  false))))
 
 (rf/reg-sub :lab/nokkelvakt
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [master-switch ua {:keys [status access] :as sim} _]
+            (fn [[master-switch ua {:keys [status access] :as m}] _]
               (if master-switch
-                (if (and (= :member status) access)
-                  (= :nøkkelvakt (some access [:nøkkelvakt]))
-                  false)
-                false)))
-
-(rf/reg-sub :lab/admin
-            :<- [:lab/sim?]
-            (fn [{:keys [status access] :as sim} _]
-              (if access
-                (and
-                  (some #{status} [:member])
-                  (= :admin (some access [:admin])))
-                false)))
+                (and (= status :member)
+                     (some? (some #{:nøkkelvakt} (or access []))))
+                (if-let [x (booking.access/compute-access-tokens ua)]
+                  (let [[s a] x]
+                    (tap> {:s s
+                           :a a})
+                    (and (= s :member)
+                         (= :nøkkelvakt (some #{:nøkkelvakt} (or a [])))))
+                  false))))
 
 (rf/reg-sub :lab/all-access-tokens
             :<- [:lab/master-state-emulation]
@@ -436,7 +442,7 @@
             :<- [:lab/sim?]
             (fn [[master-switch ua {:keys [status access]}] _]
               (if master-switch
-                [status access]                             ;:member #{:nøkkelvakt :admin}
+                [status access]
                 (booking.access/compute-access-tokens ua))))
 
 

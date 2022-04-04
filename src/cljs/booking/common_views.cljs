@@ -203,13 +203,15 @@
         :page-name :r.yearwheel})
 
      :space
-     {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                         [centered-thing
-                          (sc/icon-large
-                            [:> (if @st solid/ChevronRightIcon
-                                        solid/ChevronLeftIcon)])]))
-      :special  true
-      :on-click #(rf/dispatch [:lab/toggle-number-input])}
+
+     (when (or @admin? @nokkelvakt)
+       {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                           [centered-thing
+                            (sc/icon-large
+                              [:> (if @st solid/ChevronRightIcon
+                                          solid/ChevronLeftIcon)])]))
+        :special  true
+        :on-click #(rf/dispatch [:lab/toggle-number-input])})
 
      :space
      (when @admin?
@@ -409,7 +411,7 @@
       [:div
        (r/with-let [bookingx (rf/subscribe [:lab/booking])
                     nokkelvakt (rf/subscribe [:lab/nokkelvakt])
-                    admin (rf/subscribe [:lab/admin])
+                    admin (rf/subscribe [:lab/admin-accessn])
                     st (r/atom {:admin      admin
                                 :nøkkelvakt nokkelvakt
                                 :booking    bookingx})]
@@ -565,6 +567,11 @@
            {:style {:user-select :contain
                     :color       "var(--gray-5)"}}
            [sc/text-cl "Admin access? " (str @(rf/subscribe [:lab/admin-access]))]])
+        (when goog.DEBUG
+          [sc/col-space-1
+           {:style {:user-select :contain
+                    :color       "var(--gray-5)"}}
+           [sc/text-cl "Nøkkelvakt access? " (str @(rf/subscribe [:lab/nokkelvakt]))]])
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-3)"}} "Postadresse"]
          [sc/col-space-1
