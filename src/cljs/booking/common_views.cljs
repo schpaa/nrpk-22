@@ -167,14 +167,10 @@
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [{:icon-fn   #(sc/icon-large ico/new-home)
-      ;:special    true
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-      :page-name :r.forsiden}
-
-     #_{:icon-fn   (fn [] (sc/icon-large ico/old-home))
-        ;:special   true
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden-iframe]])
-        :page-name :r.forsiden-iframe}
+      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
+      ;:on-click-active #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+      :class     #(if (= % :r.oversikt) :oversikt :active)
+      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
 
      {:icon-fn   (fn [] (sc/icon-large ico/user))
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
@@ -222,10 +218,11 @@
         #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
                       (when (pos? c) c))
         :page-name   :r.fileman-temporary})
+
      {:tall-height true
       :special     true
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                            (sc/icon-huge
+                            (sc/icon-large
                               [:> (if @st solid/InformationCircleIcon
                                           outline/InformationCircleIcon)])))
       :on-click    schpaa.style.dialog/open-selector}]))
@@ -262,16 +259,22 @@
 
 (o/defstyled vert-button :div
   [:&
-   {:color         "var(--text2)"
+   {;:outline       "1px solid green"
+    :color         "var(--text2)"
     :border-radius "var(--radius-round)"
     :padding       "var(--size-1)"}
    [:&:hover {:color   "var(--text1)"
               :padding "var(--size-1)"}]
-   [:&.active {:color      "var(--text0)"
+   [:&.active {:color      "var(--content)"
+               :background "var(--text1)"
                :box-shadow "var(--shadow-3)"
-               :background "var(--text1-copy)"
                :padding    "var(--size-2)"}]
-   [:&.special {:color "var(--brand1)"}]])
+   [:&.oversikt {:color      "var(--brand1-bright)"
+                 :background "var(--brand1)"
+                 :box-shadow "var(--shadow-3)"
+                 :padding    "var(--size-2)"}]
+   [:&.special {:color   "var(--brand1)"
+                :padding "var(--size-2)"}]])
 
 (o/defstyled top-left-badge :div
   :rounded-full :flex :flex-center
@@ -320,22 +323,35 @@
       [sc/icon-large
        (if icon-fn (icon-fn) icon)]]]))
 
-(defn vertical-button [{:keys [tall-height special icon icon-fn style on-click page-name color badge] :as m :or {style {}}}]
+(defn vertical-button [{:keys [tall-height special icon icon-fn class style on-click on-click-active page-name badge]
+                        :or   {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-        active? (= page-name current-page)]
-    [:div.w-full.flex.items-center.justify-center.relative
-     {:on-click on-click
-      :style    {:height (if tall-height "var(--size-10)" "var(--size-9)")}}
+        current-shorttitle (or (some-> (reitit/match-by-name (reitit/router booking.routes/routes) page-name) :data :shorttitle) page-name)
+        active? (if (fn? page-name)
+                  (page-name current-page)
+                  (= current-page page-name))]
+    [:div.flex.items-start.justify-center
+     {:style {:height (if tall-height "var(--size-10)" "var(--size-9)")}}
+     [:div.w-full.h-full.flex.flex-col.items-center.justify-around
+      {:style    {:height "var(--size-9)"}
+       :on-click #(on-click current-page)}
 
-     (when badge
-       (when-some [b (badge)]
-         [top-left-badge b]))
+      (when badge
+        (when-some [b (badge)]
+          [top-left-badge b]))
 
-     [vert-button {:style style
-                   :class [(if active? :active)
-                           (if special :special)]}
-      [sc/icon-large
-       (if icon-fn (icon-fn) icon)]]]))
+      [vert-button {:style style
+                    :class [(if active? (or (when class (class current-page)) :active))
+                            (if special :special)]}
+       [sc/icon-large
+        (if icon-fn
+          (icon-fn current-page)
+          icon)]]
+
+      #_[:div.absolute.grid.place-content-center.mt-6
+         [sc/small00 current-shorttitle]]]]))
+
+
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}

@@ -445,7 +445,6 @@
                 [status access]
                 (booking.access/compute-access-tokens ua))))
 
-
 ;endregion
 
 (comment
@@ -468,8 +467,6 @@
                               {:fx [[:lab/login-fx nil]]}))
 
 (rf/reg-fx :lab/logout-fx (fn [_] (db.auth/sign-out)))
-
-
 
 ;region
 
