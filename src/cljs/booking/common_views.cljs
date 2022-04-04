@@ -269,8 +269,8 @@
                :background "var(--text1)"
                :box-shadow "var(--shadow-3)"
                :padding    "var(--size-2)"}]
-   [:&.oversikt {:color      "var(--brand1-bright)"
-                 :background "var(--brand1)"
+   [:&.oversikt {:color      "var(--gray-0)"
+                 :background "var(--red-6)"
                  :box-shadow "var(--shadow-3)"
                  :padding    "var(--size-2)"}]
    [:&.special {:color   "var(--brand1)"
