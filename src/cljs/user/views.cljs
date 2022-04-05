@@ -308,6 +308,6 @@
     (fn [r]
       (if @uid
         [:div
-         [:div {:style {:padding-bottom "1rem"}} [l/ppre-x @uid]]
+         ;[:div {:style {:padding-bottom "1rem"}} [l/ppre-x @uid]]
          [user-form r @uid]]
         [:div "nope"]))))

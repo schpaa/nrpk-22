@@ -811,7 +811,7 @@ body {
 .schpaa_style_ornament__row_sc{display:flex;align-items:center;gap:1rem}
 .schpaa_style_ornament__row_sc_g2{gap:.5rem;display:flex;align-items:center}
 .schpaa_style_ornament__row_sc_g3{gap:1.5rem;display:flex;align-items:start}
-.schpaa_style_ornament__row_sc_g2_w{gap:.5rem;display:flex;align-items:center;flex-wrap:wrap;whitespace:normal}
+.schpaa_style_ornament__row_sc_g2_w{gap:1rem;display:flex;align-items:center;flex-wrap:wrap;whitespace:normal}
 .schpaa_style_ornament__row_sc_g4_w{gap:1rem;display:flex;align-items:center;flex-wrap:wrap}
 .schpaa_style_ornament__row_sba{display:flex;align-items:center;gap:.25rem}
 .schpaa_style_ornament__row_ec{display:flex;align-items:center;justify-content:flex-end;gap:.75rem}
