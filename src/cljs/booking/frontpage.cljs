@@ -368,15 +368,17 @@
               :on-click #(schpaa.state/toggle :lab/skip-easy-login)} ico/closewindow]]
 
    [:div
-    {:style {:position :absolute
-             :top      "-2rem"
-             :right    "30%"
-             :width    "2rem"}}
+    {:style {:position  :absolute
+             :bottom    "-2rem"
+             :right     "30%"
+             :width     "2rem"
+             :transform "scale(-1,-1)"}}
 
     [:svg {:height              "2rem"
            :width               "2rem"
            :preserveAspectRatio "none"
            :viewBox             "-1 -1 32 24"}
+
      [:path {:fill           "var(--textmarker-background)"
              :stroke         "none"
              :stroke-linecap "round" :stroke-linejoin "round" :d "M3 24 L0 0 L32 24 L3 24 "}]]]

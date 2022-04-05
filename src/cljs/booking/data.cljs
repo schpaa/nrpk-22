@@ -3,7 +3,8 @@
             [cljs.reader :refer [read-string]]
             [schpaa.state]))
 
-(goog-define VERSION "??")
+(goog-define VERSION "")
+(goog-define DATE "")
 
 ;region initial-state
 

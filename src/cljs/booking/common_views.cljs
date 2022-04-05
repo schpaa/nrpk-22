@@ -9,8 +9,6 @@
                                          open-dialog-config
                                          open-dialog-sampleformmessage]]
             [booking.content.booking-blog]
-            ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [reagent.core :as r]
@@ -30,7 +28,6 @@
             [booking.data]
             [booking.access]
             [clojure.set :as set]))
-
 
 (defn set-focus [el a]
   (when-not @a
@@ -110,42 +107,6 @@
    :font-size      "var(--font-size-5)"
    :font-weight    "var(--font-weight-5)"})
 
-(defn vertical-toolbar
-  "to add a badge (of unseen posts for instance):
-
-  #(let [c (booking.content.booking-blog/count-unseen uid)]
-    (when (pos? c) c))
-  "
-  [uid]
-  [#_{:icon      outline/HomeIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-      :page-name :r.forsiden}
-   {:icon      solid/CalendarIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.calendar]])
-    :page-name :r.calendar}
-   {:icon      solid/ClockIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-    :page-name :r.booking.oversikt}
-   {:icon      solid/UserCircleIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-    :page-name :r.user}
-   {:icon      solid/BookOpenIcon
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-    :badge     #(let [c (booking.content.booking-blog/count-unseen uid)]
-                  (when (pos? c) c))
-    :page-name :r.booking-blog}
-   #_{:icon      solid/ShieldCheckIcon
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
-      :page-name :r.booking.retningslinjer}
-   {:icon-fn   (fn [] [sidebar "n"])
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])
-    :page-name :r.aktivitetsliste}
-   nil
-   {:tall-height true
-    :icon        solid/FolderIcon
-    :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-    :page-name   :r.fileman-temporary}])
-
 (o/defstyled centered-thing :div
   :flex-center
   #_{:border-radius "var(--radius-round)"
@@ -186,13 +147,6 @@
         :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
         :page-name :r.nokkelvakt})
 
-     #_{:icon-fn   (fn [] [sidebar "N"])
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.welcome]])
-        :page-name :r.welcome}
-     #_{:icon-fn   (fn [] [sidebar "S"])
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
-        :page-name :r.booking}
-
      (when (or @member? @admin? @registered?)
        {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
@@ -201,13 +155,11 @@
      :space
 
      (when (or @admin? @nokkelvakt)
-       {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                           [centered-thing
-                            (sc/icon-large
-                              [:> (if @st solid/ChevronRightIcon
-                                          solid/ChevronLeftIcon)])]))
-        :special  true
-        :on-click #(rf/dispatch [:lab/toggle-number-input])})
+       {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                            [centered-thing (sc/icon-large (if @st ico/panelOpen ico/panelClosed))]))
+        :special   true
+        :centered? true
+        :on-click  #(rf/dispatch [:lab/toggle-number-input])})
 
      :space
      (when @admin?
@@ -223,71 +175,79 @@
       :special     true
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                             (sc/icon-large
-                              [:> (if @st solid/InformationCircleIcon
-                                          outline/InformationCircleIcon)])))
+                              (if @st ico/commandPaletteOpen ico/commandPaletteClosed))))
       :on-click    schpaa.style.dialog/open-selector}]))
 
 (defn horizontal-toolbar [uid]
-  [{:icon      ico/new-home
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-    :page-name :r.forsiden}
+  (let [admin? (rf/subscribe [:lab/admin-access])
+        member? (rf/subscribe [:lab/member])
+        booking? (rf/subscribe [:lab/booking])
+        registered? (rf/subscribe [:lab/at-least-registered])
+        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
+    [{:icon      ico/user
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :page-name :r.user}
+     #_{:icon      ico/new-home
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+        :page-name :r.forsiden}
 
-   {:icon      ico/user
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-    :page-name :r.user}
+     {:icon-fn  (fn [_] (when (or @admin? @nokkelvakt)
+                          (let [st (rf/subscribe [:lab/number-input])]
+                            (if @st ico/panelOpen ico/panelClosed))))
+      :special  false
+      :on-click #(rf/dispatch [:lab/toggle-number-input])}
 
-   {:icon-fn  (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                       [:> (if @st solid/TicketIcon outline/TicketIcon)]))
-    :special  false
-    :on-click #(rf/dispatch [:lab/toggle-number-input])}
+     {:icon-fn   #(sc/icon-large ico/new-home)
+      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
+      ;:on-click-active #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+      :class     #(if (= % :r.oversikt) :oversikt :active)
+      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
 
-   {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                        [:> (if @st solid/ClockIcon outline/ClockIcon)]))
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-    :page-name :r.booking.oversikt}
+     {:icon      ico/booking
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
+      :page-name :r.booking.oversikt}
 
-   {:icon      ico/yearwheel
-    :special   false
-    :page-name :r.yearwheel
-    :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])}
+     #_{:icon      ico/yearwheel
+        :special   false
+        :page-name :r.yearwheel
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])}
 
-   {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                        [:> (if @st solid/InformationCircleIcon outline/InformationCircleIcon)]))
-    :special   true
-    :on-click  schpaa.style.dialog/open-selector
-    :page-name :r.debug}])
+     {:icon-fn   (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
+                           (sc/icon-large (if st ico/commandPaletteOpen ico/commandPaletteClosed))))
+      :special   true
+      :on-click  schpaa.style.dialog/open-selector
+      :page-name :r.debug}]))
 
-(o/defstyled vert-button :div
+(o/defstyled toolbar-button :div
   [:&
-   {;:outline       "1px solid green"
-    :color         "var(--text2)"
+   {:color         "var(--text2)"
     :border-radius "var(--radius-round)"
-    :padding       "var(--size-1)"}
-   [:&:hover {:color   "var(--text1)"
-              :padding "var(--size-1)"}]
-   [:&.active {:color      "var(--content)"
-               :background "var(--text1)"
+    :padding       "var(--size-2)"}
+   [:&:hover {:color    "var(--text1)"
+              :-padding "var(--size-1)"}]
+   [:&.active {:color      "var(--text1)"
+               :background "var(--content)"
                :box-shadow "var(--shadow-3)"
-               :padding    "var(--size-2)"}]
+               :-padding   "var(--size-2)"}]
    [:&.oversikt {:color      "var(--gray-0)"
-                 :background "var(--red-6)"
+                 :background "var(--brand1)"
                  :box-shadow "var(--shadow-3)"
-                 :padding    "var(--size-2)"}]
-   [:&.special {:color   "var(--brand1)"
-                :padding "var(--size-2)"}]])
+                 :-padding   "var(--size-2)"}]
+   [:&.special {:color    "var(--brand1)"
+                :-padding "var(--size-2)"}]])
 
 (o/defstyled top-left-badge :div
-  :rounded-full :flex :flex-center
-  [:& :-top-1 :right-0 {:font-size    "var(--font-size-0)"
-                        :font-weight  "var(--font-weight-5)"
-                        :aspect-ratio "1/1"
-                        :background   "var(--brand1)"
-                        :color        "var(--brand1-copy)"
-                        :border       "var(--surface0) 3px solid"
-                        :width        "1.7rem"
-                        :height       "1.7rem"
-                        :position     :absolute}]
-
+  :rounded-full :flex :flex-center :-top-1 :right-0
+  [:&
+   {:font-size    "var(--font-size-0)"
+    :font-weight  "var(--font-weight-5)"
+    :aspect-ratio "1/1"
+    :background   "var(--brand1)"
+    :color        "var(--brand1-copy)"
+    :border       "var(--surface0) 3px solid"
+    :width        "1.7rem"
+    :height       "1.7rem"
+    :position     :absolute}]
   ([badge]
    [:<>
     [:div.flex.items-center.justify-center badge]]))
@@ -308,50 +268,54 @@
    [:<>
     [:div.flex.items-center.justify-center badge]]))
 
-(defn horizontal-button [{:keys [icon-fn special icon on-click style page-name badge] :or {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-        active? (= page-name current-page)]
-    [:div.w-full.h-full.flex.items-center.justify-center.relative
-     {:on-click on-click}
-     (when badge
-       (let [b (badge)]
-         (when (pos? b) [top-right-tight-badge b])))
-     [vert-button
-      {:style style
-       :class [(if active? :active)
-               (if special :special)]}
-      [sc/icon-large
-       (if icon-fn (icon-fn) icon)]]]))
+#_(defn horizontal-button [{:keys [icon-fn special icon on-click style page-name badge] :or {style {}}}]
+    (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+          active? (= page-name current-page)]
+      [:div.w-full.h-full.flex.items-center.justify-center.relative
+       {:on-click on-click}
+       (when badge
+         (let [b (badge)]
+           (when (pos? b) [top-right-tight-badge b])))
+       [toolbar-button
+        {:style style
+         :class [(if active? :active)
+                 (if special :special)]}
+        [sc/icon-large
+         (if icon-fn (icon-fn) icon)]]]))
 
-(defn vertical-button [{:keys [tall-height special icon icon-fn class style on-click on-click-active page-name badge]
+(defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge]
                         :or   {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-        current-shorttitle (or (some-> (reitit/match-by-name (reitit/router booking.routes/routes) page-name) :data :shorttitle) page-name)
         active? (if (fn? page-name)
                   (page-name current-page)
                   (= current-page page-name))]
-    [:div.flex.items-start.justify-center
-     {:style {:height (if tall-height "var(--size-10)" "var(--size-9)")}}
+    [:div
+     {:style (if centered?
+               {:pointer-events :none
+                :inset          0
+                :display        :grid
+                :place-content  :center
+                :position       :absolute}
+               {:display         :flex
+                :align-items     :start
+                :justify-content :center
+                :height          (if tall-height "var(--size-10)" "var(--size-9)")})}
      [:div.w-full.h-full.flex.flex-col.items-center.justify-around
-      {:style    {:height "var(--size-9)"}
+      {:style    {:pointer-events :auto
+                  :height         "var(--size-9)"}
        :on-click #(on-click current-page)}
 
       (when badge
         (when-some [b (badge)]
           [top-left-badge b]))
 
-      [vert-button {:style style
-                    :class [(if active? (or (when class (class current-page)) :active))
-                            (if special :special)]}
+      [toolbar-button {:style style
+                       :class [(if active? (or (when class (class current-page)) :active))
+                               (if special :special)]}
        [sc/icon-large
         (if icon-fn
           (icon-fn current-page)
-          icon)]]
-
-      #_[:div.absolute.grid.place-content-center.mt-6
-         [sc/small00 current-shorttitle]]]]))
-
-
+          icon)]]]]))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
@@ -534,14 +498,16 @@
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
-       [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col
-        {:style {:z-index     1211
-                 :padding-top "var(--size-0)"
-                 :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
-                 :background  "var(--toolbar)"}}
-        (into [:<>] (map #(if (keyword? %)
-                            [:div.grow]
-                            [vertical-button %]) (remove nil? (vertical-toolbar-right (:uid @user-auth)))))]
+       ;; force the toolbar to stay on top when boat-panel is displayed
+       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
+              {:style {:z-index     1211
+                       :padding-top "var(--size-0)"
+                       :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
+                       :background  "var(--toolbar)"}}]
+             (map #(if (keyword? %)
+                     [:div.grow]
+                     [vertical-button %])
+                  (remove nil? (vertical-toolbar-right (:uid @user-auth)))))
        [:div.absolute.right-16.xl:right-20.inset-y-0
         {:style {:width          "298px"
                  :pointer-events :none}}
@@ -552,19 +518,16 @@
         user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? (not @search) @(rf/subscribe [:lab/at-least-registered]))
-      [:div.sm:hidden.flex.border-t
-       {:style {;:position        :sticky
-                :width           "100%"
+      [:div.sm:hidden.flex.gap-0.border-t
+       {:style {:width           "100%"
                 :justify-content :space-around
                 :height          "var(--size-10)"
                 :min-height      "var(--size-10)"
                 :padding-inline  "var(--size-2)"
-                ;:bottom          "0px"
-                ;:z-index         10000
                 :box-shadow      "var(--inner-shadow-3)"
                 :border-color    "var(--toolbar-)"
                 :background      "var(--toolbar)"}}
-       (into [:<>] (map horizontal-button
+       (into [:<>] (map vertical-button
                         (horizontal-toolbar (:uid @user-auth))))])))
 
 (o/defstyled mainframe :div)
@@ -605,7 +568,9 @@
          [hoc.buttons/reg-pill-icon
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
           ico/tilbakemelding "Tilbakemelding"]]
-        [sc/small1 booking.data/VERSION]
+        [sc/col
+         [sc/small1 (or booking.data/VERSION "version")]
+         [sc/small1 (or booking.data/DATE "date")]]
         #_[:a {:href "/img/bg/bg-dark-1.jpg" :download "my-download.pdf"} "Download File"]]]]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
@@ -669,9 +634,7 @@
                   (bottom-menu)]]]
                [:<>
                 [:div
-                 {:style {;:min-height "100%"
-                          :background-color "var(--content)"
-                          ;:padding-bottom   "var(--size-10)"
+                 {:style {:background-color "var(--content)"
                           :flex             "1 1 auto"}}
                  contents]
                 (when-not frontpage [after-content])])]
@@ -733,7 +696,6 @@
 (defn set-ref [a scroll-fn]
   (fn [el]
     (when-not @a
-      ;(tap> ["addrefxxx" el])
       (.addEventListener el "scroll" scroll-fn)
       (reset! a el))))
 

@@ -49,11 +49,13 @@
                                :module-hash-names 4
                                :release           {:output-dir       "dist/booking/js"
                                                    :compiler-options {:closure-defines {goog.DEBUG           false
-                                                                                        booking.data/VERSION :shadow-git-inject/version}
+                                                                                        booking.data/VERSION :shadow-git-inject/version
+                                                                                        booking.data/DATE    :shadow-git-inject/build-iso-date-time}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :advanced}}
 
                                :dev               {:compiler-options {:closure-defines {goog.DEBUG           true
-                                                                                        booking.data/VERSION :shadow-git-inject/version}
+                                                                                        booking.data/VERSION "SAMPLE_VERSION"
+                                                                                        booking.data/DATE    "SAMPLE_DATE"}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :none}}}}}

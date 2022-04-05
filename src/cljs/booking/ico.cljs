@@ -40,3 +40,7 @@
 (def more-if-you-scroll-down [:> solid/ChevronDoubleDownIcon])
 (def nextImage [:> solid/ChevronRightIcon])
 (def prevImage [:> solid/ChevronLeftIcon])
+(def panelOpen [:> solid/CalculatorIcon])
+(def panelClosed [:> outline/CalculatorIcon])
+(def commandPaletteOpen [:> solid/InformationCircleIcon])
+(def commandPaletteClosed [:> outline/InformationCircleIcon])

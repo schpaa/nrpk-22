@@ -310,7 +310,7 @@
                          [:lab/open-new-blog-entry-dialog nil]]}))
 
 (rf/reg-sub :lab/has-chrome (fn [db]
-                              (get-in db [:settings :state :lab/toggle-chrome])))
+                              (get-in db [:settings :state :lab/toggle-chrome] true)))
 
 (rf/reg-event-db :lab/toggle-chrome
                  (fn [db _]

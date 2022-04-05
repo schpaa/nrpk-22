@@ -106,8 +106,8 @@
 (defn render [st data]
   (r/with-let [show-deleted (schpaa.state/listen :filemanager/show-deleted)
                sort-by-created (r/atom true)]
-    [:div {:class (into [:duration-200] (if @st [:h-64 :opacity-100]
-                                                [:h-0 :opacity-0]))}
+    [:div #_{:class (into [:duration-200] (if @st [:h-64 :opacity-100]
+                                                  [:h-0 :opacity-0]))}
      [:div {:style {:border-radius "var(--radius-0)"
                     :sbackground   "var(--surface000)"}}
       #_[toolbar]
