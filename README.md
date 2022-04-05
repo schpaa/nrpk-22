@@ -8,6 +8,9 @@ Hoved-repo for alt relatert NRPK
 - [ ] [Dokumentasjon](/docs/homepage/README.md)
 
 - [x] Lenke til [hjemmesiden](https://booking-22.web.app)
+- [ ] Få til en mer naturlig overgang mellom seksjonene i oversikt. La gjerne
+  den første ingressen alltid være åpen, for å beholde leserens orientering.
+- [x] Endre rekkefølgen i oversikt.
 
 #### Booking
 

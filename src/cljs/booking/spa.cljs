@@ -234,14 +234,24 @@
             [sc/col-space-8
 
              [sc/col
-              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/nrpk)
-                                   :open     @(schpaa.state/listen :oversikt/nrpk)}
+              [sc/ingress-details {:open true} #_{:on-click #(schpaa.state/toggle :oversikt/nrpk)
+                                                  :open     @(schpaa.state/listen :oversikt/nrpk)}
                [sc/hero-summary "NRPK"]
                "Nøklevann ro- og padleklubb tilbyr medlemmene å benytte klubbens materiell på Nøklevann i klubbens åpningstider. I tillegg har vi et tilbud til de som har våttkort grunnkurs hav å padle på Oslofjorden."]
               [sc/row-sc-g4-w
-               (let [data [[1 :r.forsiden "Bli medlem"]
-                           [3 :r.oversikt.organisasjon "Organisasjon"]
+               (let [data [[3 :r.oversikt.organisasjon "Historie"]
                            [4 :r.oversikt.styret "Styret"]]]
+
+                 (map (comp f rest) (sort-by first data)))]]
+
+             [sc/col
+              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/bli-medlem)
+                                   :open     @(schpaa.state/listen :oversikt/bli-medlem)}
+               [sc/hero-summary "Bli medlem"]
+               "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]
+              [sc/row-sc-g4-w
+               (let [data [[1 :r.forsiden "Registrer deg her"]
+                           [2 :r.forsiden "Hva årskontigenten dekker"]]]
                  (map (comp f rest) (sort-by first data)))]]
 
              [sc/col
@@ -250,52 +260,33 @@
                [sc/hero-summary "Nøklevann"]
                "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."]
               [sc/row-sc-g4-w
-               (let [data [[:r.xxx "Båtlisten på Nøklevann"]
-                           [:r.forsiden "Utlånsaktivitet"]]]
-                 (map f (sort-by second data)))]]]
+               (let [data [[:r.xxx "Hvilke båter på Nøklevann?"]
+                           [:r.xxx "Utlånsaktivitet"]
+                           [:r.xxx "HMS ved Nøklevann"]]]
+                 (map f (sort-by second data)))]]
 
-            [sc/col
              [sc/col
-              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/bli-medlem)
-                                   :open     @(schpaa.state/listen :oversikt/bli-medlem)}
-               [sc/hero-summary "Bli medlem"]
-               "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]]
-             [sc/row-sc-g4-w
-              (let [data [[:r.forsiden "Registrer deg her"]]]
-                (map f (sort-by second data)))]]
+              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Sjøbasen)
+                                   :open     @(schpaa.state/listen :oversikt/Sjøbasen)}
+               [sc/hero-summary "Sjøbasen"]
+               "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."]
+              [sc/row-sc-g4-w
+               (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
+                           [:r.booking.faq "Ofte spurte spørsmål"]
+                           [:r.booking.oversikt "Hvilke båter på Sjøbasen?"]
+                           [:r.forsiden "Booking"]
+                           [:r.xxx "HMS ved Sjøbasen"]]]
+                 (map f (sort-by second data)))]]
 
-            [sc/col
-             [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Livredningskurs)
-                                  :open     @(schpaa.state/listen :oversikt/Livredningskurs)}
-              [sc/hero-summary "Livredningskurs"]
-              "NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."]
-             [sc/row-sc-g4-w
-              (let [data [[:r.forsiden "Meld deg på innmeldingskurs"]
-                          [:r.forsiden "Mer om livredningskurs"]]]
-                (map f (sort-by second data)))]]
-
-            [sc/col
-             [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Sjøbasen)
-                                  :open     @(schpaa.state/listen :oversikt/Sjøbasen)}
-              [sc/hero-summary "Sjøbasen"]
-              "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."]
-             [sc/row-sc-g4-w
-              (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
-                          [:r.booking.faq "Ofte spurte spørsmål"]
-                          [:r.booking.oversikt "Båtlisten på Sjøbasen"]
-                          [:r.forsiden "Oversikt"]
-                          [:r.forsiden "Booking"]]]
-                (map f (sort-by second data)))]]
-
-            [sc/col
-             [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Årshjul)
-                                  :open     @(schpaa.state/listen :oversikt/Årshjul)}
-              [sc/hero-summary "Årshjul"]
-              "Ingress"]
-             [sc/row-sc-g4-w
-              (let [data [[:r.yearwheel "Oversikt 2022-23"]
-                          [:r.yearwheel "Tidligere sesonger"]]]
-                (map f (sort-by second data)))]]
+             [sc/col
+              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Livredningskurs)
+                                   :open     @(schpaa.state/listen :oversikt/Livredningskurs)}
+               [sc/hero-summary "Kurs"]
+               "NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."]
+              [sc/row-sc-g4-w
+               (let [data [[:r.forsiden "Mer om livredningskurs"]
+                           [:r.forsiden "Meld deg på innmeldingskurs"]]]
+                 (map f (sort-by second data)))]]]
 
             [sc/col
              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Nøkkelvakt)
@@ -304,10 +295,20 @@
               "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."]
              [sc/row-sc-g4-w
               (let [data [[:r.conditions "Plikter som nøkkelvakt"]
-                          [:r.user "Mine nøkkelvakt-opplysninger"]
-                          [:r.aktivitetsliste "Utlån på nøkkelvann"]
+
+                          [:r.aktivitetsliste "Utlån på nøklevann"]
                           [:r.terms "Betingelser"]
                           [:r.kalender "Vaktkalender"]]]
+                (map f (sort-by second data)))]]
+
+            [sc/col
+             [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Årshjul)
+                                  :open     @(schpaa.state/listen :oversikt/Årshjul)}
+              [sc/hero-summary "Årshjulet i NRPK"]
+              "Ingress"]
+             [sc/row-sc-g4-w
+              (let [data [[:r.yearwheel "Oversikt 2022-23"]
+                          [:r.yearwheel "Tidligere sesonger"]]]
                 (map f (sort-by second data)))]]])}]))
 
    :r.booking.oversikt

@@ -235,9 +235,11 @@
                :background "var(--content)"
                :box-shadow "var(--shadow-1)"}]
 
+
    [:&.oversikt {:color      "var(--gray-0)"
                  :background "var(--brand1)"
-                 :box-shadow "var(--shadow-1)"}]
+                 :box-shadow "var(--shadow-1)"}
+    [:&:enabled:hover {:color "var(--gray-1)"}]]
 
    [:&.special {:color "var(--brand1)"}]])
 
