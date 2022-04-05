@@ -48,7 +48,6 @@
                            :title         "NRPK-22"}))}
   dev          {:doc  "requires `booking` or `eykt`"
                 :task (run '-dev {:parallel true})}
-
   css          {:task (shell (str "npx tailwindcss -o " -css-output))}
   clean        {:task (fs/delete-tree -dist-dir)}
   build        {:task (shell (str "clj -M:shadow-cljs release " -app-name))}
@@ -63,7 +62,6 @@
                           (str "public/" -app-name "/css/ornament.css")
                           (str -dist-dir "/" -app-name "/css/ornament.css")
                           :replace-existing))}
-
   deploy       {:depends [clean build template ornament css fonts stats]
                 :task    (let [app-name (case -app-name "eykt" "eyktv-22" "booking" "booking-22")]
                            (shell (str "firebase deploy --only hosting:" app-name)))}}}

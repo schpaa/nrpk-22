@@ -318,7 +318,7 @@
 (defn header-with-logo []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
     (if true
-      [:div {:class [:pt-24 :pb-20 :--debug2 :hover:rotate-0 :-rotate-6 :duration-500]
+      [:div {:class [:pt-24 :pb-20 :--debug2 :xhover:rotate-0 :-rotate-6 :duration-500]
              :style {:-transform            "rotate(-6deg)"
                      :transform-origin      "center right"
                      :display               :grid
@@ -326,15 +326,11 @@
                      :grid-template-columns "1fr min-content 1fr"}}
        [:div {:class [:--debug4]
               :style {:justify-self :end
-                      ;:opacity 0.33
                       :align-self   :center}}
         [bs/logo-text {:class [:--debug3]
                        :style {:width        "auto"
-                               ;:font-family "Merriweather"
                                :justify-self :end}}
          [sc/hero' {:style {:text-align  :right
-                            ;:font-family "Merriweather"
-                            ;:font-family "Merriweather"
                             :color       "var(--text1)"
                             :font-weight "var(--font-weight-4)"}} "Nøklevann"]
          [sc/ingress-cl {:style {:white-space :nowrap
@@ -444,6 +440,13 @@
                         (if @at-least-registered? :bottom-toolbar)]}
 
       [:div.min-h-full.z-0.relative
+
+       [:div.max-w-lg.mx-auto
+        [:div.mx-4.py-4.pt-24
+         (when (and goog.DEBUG @master-emulation)
+           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+            booking.common-views/master-control-box])]]
+
        [:div.mx-4
         [:div.max-w-lg.mx-auto
          [header-with-logo]]]
@@ -459,10 +462,6 @@
 
          (when-not @at-least-registered?
            [please-login-and-register])
-
-         (when (and goog.DEBUG @master-emulation)
-           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-            booking.common-views/master-control-box])
 
          [news-feed]
          [yearwheel-feed]]]]

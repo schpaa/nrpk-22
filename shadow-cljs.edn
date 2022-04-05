@@ -1,10 +1,9 @@
 ;; shadow-cljs configuration for NRPK-22
-{
- :open-file-command ["idea" :pwd "--line" :line :file]
+{:open-file-command ["idea" :pwd "--line" :line :file]
  :deps              {:aliases [:shadow-cljs]}
  :nrepl             {:port 9000}
  :cache-blockers    #{lambdaisland.ornament}
- :dependencies      [[day8/shadow-git-inject "0.0.5"]]
+ ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
  :dev-http          {8010 "public/booking"
                      8020 "public/eykt"
                      3001 ["public/devcards" "public"]}
@@ -58,7 +57,3 @@
                                                                                         booking.data/VERSION :shadow-git-inject/version}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :none}}}}}
-
-
-
-  

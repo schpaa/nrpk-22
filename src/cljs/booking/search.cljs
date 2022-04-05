@@ -104,16 +104,17 @@
 
            (when @search
              [:input.w-full.h-full.outline-none.focus:outline-none
-              {:style       {:xflex "1 1 100%"}
-               :placeholder "Søk"
-               :type        :text
-               :on-blur     #(let [s (-> % .-target .-value)]
-                               (if (empty? s)
-                                 (exit-search)))
-               :ref         (fn [el] (when-not @a
-                                       (reset! a el)
-                                       ;(set-focus % a)
-                                       (set-refs @a)))}])
+              {:style        {:xflex "1 1 100%"}
+               :enterkeyhint "search"
+               :placeholder  "Søk"
+               :type         :text
+               :on-blur      #(let [s (-> % .-target .-value)]
+                                (if (empty? s)
+                                  (exit-search)))
+               :ref          (fn [el] (when-not @a
+                                        (reset! a el)
+                                        ;(set-focus % a)
+                                        (set-refs @a)))}])
 
            (when @search
              [experiment2

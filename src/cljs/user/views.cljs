@@ -8,7 +8,7 @@
             [tick.core :as t]
             [shadow.resource :refer [inline]]
 
-            [times.api :as ta :refer [relative-time]]
+            [times.api :as ta]
             [arco.react]
             [user.database]
             [nrpk.fsm-helpers :refer [send]]

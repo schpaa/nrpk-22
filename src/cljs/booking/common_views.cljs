@@ -588,6 +588,7 @@
            {:style {:user-select :contain
                     :color       "var(--gray-5)"}}
            [sc/text-cl "Nøkkelvakt access? " (str @(rf/subscribe [:lab/nokkelvakt]))]])
+
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-3)"}} "Postadresse"]
          [sc/col-space-1
@@ -603,7 +604,9 @@
         [sc/row-ec
          [hoc.buttons/reg-pill-icon
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-          ico/tilbakemelding "Tilbakemelding"]]]]]]))
+          ico/tilbakemelding "Tilbakemelding"]]
+        [sc/small1 booking.data/VERSION]
+        #_[:a {:href "/img/bg/bg-dark-1.jpg" :download "my-download.pdf"} "Download File"]]]]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [user-auth (rf/subscribe [::db/user-auth])

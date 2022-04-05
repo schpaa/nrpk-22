@@ -5,7 +5,6 @@
             [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
             [reagent.core :as r]
             [tick.core :as t]
-            [times.api :refer [relative-time]]
             [eykt.content.rapport-side]
             [booking.flextime]
             [db.core :as db]))
