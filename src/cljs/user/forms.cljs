@@ -58,6 +58,8 @@
        [hoc.buttons/checkbox props [] "Kan stille som vikar" :vikar]
        [hoc.buttons/checkbox props [] "Kort reisevei" :kort-reisevei]]
 
+      [hoc.buttons/checkbox props [] "Jeg ønsker å slutte som nøkkelvakt" :utmeldt]
+
       #_[:div.flex.gap-4.flex-wrap.justify-end
          [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Timekrav" :name :timekrav]
          [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Nøkkelnummer" :name :nøkkelnummer]
@@ -86,10 +88,17 @@
                                                     (disable :dato-godkjent-nøkkelvakt))
                                                   (handle-change %))) [:w-44] "Godkjent nøkkelvakt" :godkjent]
         [input props :date [:w-36] "Godkjent nøkkelvakt" :dato-godkjent-nøkkelvakt]]
-       [input props :text [:w-24] "Nøkkelnr" :nøkkelnummer]
-       [input props :date [:w-36] "Mottatt nøkkel" :dato-mottatt-nøkkel]
+       [sc/row-sc-g2
+        [input props :text [:w-20] "Nøkkelnr" :nøkkelnummer]
+        [input props :date [:w-36] "Utlevert" :dato-mottatt-nøkkel]
+        [input props :date [:w-36] "Innlevert" :dato-innlevert-nøkkel]]
 
-       [input props :text [:w-24] "Timekrav" :timekrav]]])])
+       [sc/row-sc-g4-w
+        [input props :text [:w-20] "Timekrav" :timekrav]
+        [hoc.buttons/checkbox props [] "Stjerne" :stjerne]
+        [hoc.buttons/checkbox props [] "Kald periode" :kald-periode]
+        [hoc.buttons/checkbox props [] "Utmeldt" :utmeldt]
+        [hoc.buttons/checkbox props [] "Administrator" :admin]]]])])
 
 ;[hoc.buttons/checkbox props [] "Foretrekker helgevakt" :helgevakt]]])])
 ;[hoc.buttons/checkbox props [] "Kan stille som vikar" :vikar]

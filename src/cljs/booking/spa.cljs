@@ -635,8 +635,11 @@
                              :nøkkelnummer false
                              :stjerne      false
                              :sluttet      false
-                             :timekrav     true
+                             :timekrav     false
                              :sist-endret  false
+                             :nøkkelvakter false
+                             :booking      false
+                             :admin        false
                              :reverse      false})]
        (let [data (transduce (comp
                                (map val)
@@ -644,7 +647,15 @@
                                       (let [p (js/parseInt timekrav)]
                                         (assoc v :timekrav (if (js/isNaN p) 0 p)))))
                                (filter (fn [v] (and
-                                                 (:godkjent v)
+                                                 (if @(r/cursor x [:admin])
+                                                   (:admin v)
+                                                   true)
+                                                 (if @(r/cursor x [:booking])
+                                                   (:booking-godkjent v)
+                                                   true)
+                                                 (if @(r/cursor x [:nøkkelvakter])
+                                                   (:godkjent v)
+                                                   true)
                                                  (if @(r/cursor x [:kald-periode])
                                                    (:kald-periode v)
                                                    true)
@@ -665,19 +676,23 @@
          [+page-builder
           r
           {:panel  (fn []
-                     [sc/col-space-2
-                      [sc/row-sc-g2-w
-                       [sc/small "vis"]
+                     [sc/col-space-8
+                      [sc/row-sc-g1
+                       [sc/text0 "vis"]
                        [hoc.toggles/switch-local (r/cursor x [:nøkkelnummer]) "nøkkelnummer"]]
 
-                      [sc/row-sc-g2-w
-                       [sc/small "filtrer"]
-                       [hoc.toggles/switch-local (r/cursor x [:sluttet]) "sluttet"]
-                       [hoc.toggles/switch-local (r/cursor x [:kald-periode]) "kald-periode"]
-                       [hoc.toggles/switch-local (r/cursor x [:stjerne]) "stjerne"]]
+                      [sc/col-space-1
+                       [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
+                        [sc/text0 "filter"]
+                        [hoc.toggles/switch-local (r/cursor x [:sluttet]) "utmeldt"]
+                        [hoc.toggles/switch-local (r/cursor x [:kald-periode]) "kald-periode"]
+                        [hoc.toggles/switch-local (r/cursor x [:stjerne]) "stjerne"]
+                        [hoc.toggles/switch-local (r/cursor x [:nøkkelvakter]) "nøkkelvakt"]
+                        [hoc.toggles/switch-local (r/cursor x [:booking]) "booking"]
+                        [hoc.toggles/switch-local (r/cursor x [:admin]) "administratorer"]]]
 
-                      [sc/row-sc-g2-w
-                       [sc/small "sorter"]
+                      [sc/row-sc-g1
+                       [sc/text0 "sortering"]
                        [hoc.toggles/switch-local (r/cursor x [:sist-endret]) "sist endret"]
                        [hoc.toggles/switch-local (r/cursor x [:timekrav]) "timekrav"]
                        [hoc.toggles/switch-local (r/cursor x [:reverse]) "omvendt"]]])
@@ -685,7 +700,7 @@
            :render (fn []
                      (let [c (count users)]
                        [sc/col-space-2
-                        [l/ppre-x fields]
+                        ;[l/ppre-x fields]
                         [sc/header-title (str c " person" (if (< 1 c) "er"))]
                         [sc/col-space-2
                          (into [:<>]
