@@ -27,7 +27,8 @@
             [schpaa.debug :as l]
             [booking.data]
             [booking.access]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [schpaa.style.input :as sci]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -386,12 +387,14 @@
     :xborder-right           "1px solid var(--toolbar-)"}])
 
 (defn master-control-box []
-  (let [user-state (rf/subscribe [:lab/user-state])]
+  (let [user-state (rf/subscribe [:lab/user-state])
+        user-uid (rf/subscribe [:lab/uid])]
     (when true                                              ;@(rf/subscribe [:lab/toggle-userstate-panel])
       [:div
        (r/with-let [bookingx (rf/subscribe [:lab/booking])
                     nokkelvakt (rf/subscribe [:lab/nokkelvakt])
                     admin (rf/subscribe [:lab/admin-accessn])
+                    sim-uid (r/atom "")
                     st (r/atom {:admin      admin
                                 :nøkkelvakt nokkelvakt
                                 :booking    bookingx})]
@@ -403,35 +406,40 @@
                           :on-click #(rf/dispatch action)}
                          content])]
            [:div.relative
-            [sc/row-sc-g2-w
-             (f-icon [:lab/set-sim-type :none] :none [icon-with-caption ico/anonymous "anonym"])
-             (f-icon [:lab/set-sim-type :registered] :registered [icon-with-caption ico/user "registrert"])
-             (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [icon-with-caption-and-badge ico/waitinglist "påmeldt" 123])
-             (f-icon [:lab/set-sim-type :member] :member [icon-with-caption ico/member "medlem"])
+            [sc/col-space-2
+             [l/ppre-x @(rf/subscribe [:lab/all-access-tokens])]
+             [sci/input {:values    {:label @(rf/subscribe [:lab/uid]) #_@sim-uid}
+                         :on-change #(rf/dispatch [:lab/set-sim :uid (-> % .-target .-value)]
+                                                  #_(reset! sim-uid (-> % .-target .-value)))} :text [] "UID" :label]
+             [sc/row-sc-g2-w
+              (f-icon [:lab/set-sim-type :none] :none [icon-with-caption ico/anonymous "anonym"])
+              (f-icon [:lab/set-sim-type :registered] :registered [icon-with-caption ico/user "registrert"])
+              (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [icon-with-caption-and-badge ico/waitinglist "påmeldt" 123])
+              (f-icon [:lab/set-sim-type :member] :member [icon-with-caption ico/member "medlem"])
 
-             [schpaa.style.hoc.toggles/small-switch-base
-              {:disabled (not registered)}
-              "admin"
-              (r/cursor st [:admin])
-              #(do
-                 (swap! st update-in [:admin] (constantly %))
-                 (rf/dispatch [:lab/set-sim :admin %]))]
+              [schpaa.style.hoc.toggles/small-switch-base
+               {:disabled (not registered)}
+               "admin"
+               (r/cursor st [:admin])
+               #(do
+                  (swap! st update-in [:admin] (constantly %))
+                  (rf/dispatch [:lab/set-sim :admin %]))]
 
-             [schpaa.style.hoc.toggles/small-switch-base
-              {:disabled (not registered)}
-              "booking"
-              (r/cursor st [:booking])
-              #(do
-                 (swap! st update-in [:booking] (constantly %))
-                 (rf/dispatch [:lab/set-sim :booking %]))]
+              [schpaa.style.hoc.toggles/small-switch-base
+               {:disabled (not registered)}
+               "booking"
+               (r/cursor st [:booking])
+               #(do
+                  (swap! st update-in [:booking] (constantly %))
+                  (rf/dispatch [:lab/set-sim :booking %]))]
 
-             [schpaa.style.hoc.toggles/small-switch-base
-              {:disabled (not registered)}
-              "nøkkelvakt"
-              (r/cursor st [:nøkkelvakt])
-              #(do
-                 (swap! st update-in [:nøkkelvakt] (constantly %))
-                 (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]))])))
+              [schpaa.style.hoc.toggles/small-switch-base
+               {:disabled (not registered)}
+               "nøkkelvakt"
+               (r/cursor st [:nøkkelvakt])
+               #(do
+                  (swap! st update-in [:nøkkelvakt] (constantly %))
+                  (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
 
 (defn header-line [r {:keys [frontpage]}]
   [err-boundary
@@ -719,7 +727,7 @@
 
        :component-did-mount
        (fn [_]
-         (tap> :component-did-mount)
+         ;(tap> :component-did-mount)
          (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render

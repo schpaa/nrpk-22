@@ -514,7 +514,7 @@
 
    :r.yearwheel
    (fn [r]
-     [+page-builder r {:panel        booking.yearwheel/header
+     [+page-builder r {:panel        booking.yearwheel/panel
                        :always-panel booking.yearwheel/always-panel
                        :render       booking.yearwheel/render}])
 

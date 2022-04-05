@@ -37,7 +37,7 @@
                         :access [:member #{:nøkkelvakt}]}]
 
    ["/arshjul" {:name       :r.yearwheel
-                :header     [:r.oversikt "Årshjul"]
+                :header     [:r.forsiden "Årshjul"]
                 :shorttitle "Årshjul"
                 :modify     [nil #{:admin}]
                 :access     [[:registered :waitinglist :member] #{}]}]

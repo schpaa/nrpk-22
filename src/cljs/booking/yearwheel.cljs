@@ -22,7 +22,8 @@
     [booking.yearwheel-testdata]
     [schpaa.style.hoc.buttons :as hoc.buttons]
     [booking.access]
-    [booking.flextime :refer [flex-datetime]]))
+    [booking.flextime :refer [flex-datetime]]
+    [schpaa.debug :as l]))
 
 (o/defstyled listitem :div
   [:& :p-1
@@ -37,44 +38,47 @@
    ^{:on-click on-click}
    [:<> [:div {:class class} children]]))
 
+(defn form-validation [e]
+  (into {}
+        (remove (comp nil? val)
+                {:date (cond-> nil
+                         (empty? (:date e)) ((fnil conj []) "mangler")
+                         (and (not (empty? (:date e)))
+                              (some #{(tick.alpha.interval/relation
+                                        (t/date (:date e)) (t/date))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+
+                 :type (cond-> nil
+                         (not (some? (:type e))) ((fnil conj []) "mangler"))})))
+
 (defn addpost-form [{:keys [data type on-close on-save on-submit] :as context}]
   [sc/dropdown-dialog
-   [fork/form {:initial-values    data #_{:title   ""
-                                          :type    type
-                                          :date    nil
-                                          :content ""}
+   [fork/form {:initial-values    data
                :form-id           "addpost-form"
-               ;:validation       #(-> {:stuff2 ["for lite"]})
+               :validation        form-validation
                :prevent-default?  true
                :clean-on-unmount? true
                :keywordize-keys   true
                :on-submit         (fn [{:keys [values]}]
                                     (on-submit values))}
-
-    (defn form-fn [{:keys [form-id handle-submit dirty values set-values] :as props}]
+    (defn form-fn [{:keys [errors form-id handle-submit dirty values set-values] :as props}]
       (let [changed? dirty]
         [:form
          {:id        form-id
           :on-submit handle-submit}
          [sc/col {:class [:space-y-8]}
-          [sc/col-space-2                                   ;{:class [:space-y-2]}
+          [sc/col-space-2
            [sc/dialog-title "Ny aktivitet"]
            [sc/row-sc-g2-w
             [sci/combobox props :kind? [:w-56] "Kategori" :type]
             [sci/input props :date [:w-40] "Dato" :date]
-            [sci/input props :text [:w-full] "TL;DR (too long, didn't read)" :tldr]
-            [sci/textarea props :text {:class [:w-full]} "Beskrivelse (blog)" :content]]]
+            [sci/input props :text [:w-full] "Beskrivelse" :tldr]
+            [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]
 
           [sc/row-ec
            [hoc.buttons/regular {:type     "button"
                                  :on-click #(on-close)} "Avbryt"]
-           #_[hoc.buttons/cta {:disabled false              ;(not changed?)
-                               :style    {:min-width 0}
-                               :type     "submit"
-                               :on-click #(do
-                                            (set-values {:id nil})
-                                            (on-save))} (sc/icon ico/plusplus)]
-           [hoc.buttons/cta {:disabled (not changed?)
+           [hoc.buttons/cta {:disabled (or (not (empty? errors))
+                                           (not changed?))
                              :type     "submit"
                              :on-click #(on-save)} "Lagre"]]]]))]])
 
@@ -122,6 +126,8 @@
       {:style {:color "var(--text1)"}}
       ico/pencil]]))
 
+;region panels
+
 (defn always-panel
   ([]
    (always-panel false))
@@ -142,9 +148,9 @@
       :disabled true}
      (hoc.buttons/icon-with-caption (sc/icon-small ico/nullstill) "Nullstill")]]))
 
-(defn- header
+(defn panel
   ([]
-   (header false))
+   (panel false))
   ([modify?]
    [sc/col-space-2
     [sc/row-sc-g2-w
@@ -152,8 +158,28 @@
      (when modify? [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"])
      [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]]]))
 
+;endregion
+
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
+
+(o/defstyled line :li
+  {:--thing      "var(--size-4)"
+   :list-style   [:outside :none :disc]
+   :padding-left "var(--thing)"
+   :text-indent  "calc(var(--thing) * -1)"
+   :color        "var(--text3)"
+   :line-height  "var(--font-lineheight-5)"})
+
+(o/defstyled strong :span
+  {;:display :inline-block
+   :color "var(--text1)"})
+
+(o/defstyled weak :span
+  {;:display :inline-block
+   :color       "var(--text2)"
+   :font-size   "var(--font-size-1)"
+   :font-weight "var(--font-weight-3)"})
 
 (defn- listitem-softwrap [can-edit? {:keys [id date content tldr created deleted type] :as m}]
   (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)
@@ -172,35 +198,23 @@
          [:div]
          [:div]])
 
-      (do
-        (o/defstyled line :div
-          {:color       "var(--text3)"
-           :margin-top  "var(--size-1)"
-           :line-height "var(--font-lineheight-3)"})
-        (o/defstyled strong :span
-          {:color "var(--text1)"})
-        (o/defstyled weak :span
-          {:color       "var(--text2)"
-           :font-size   "var(--font-size-1)"
-           :font-weight "var(--font-weight-3)"})
-
-        [line
-         (interpose [:span ", "]
-                    (remove nil?
-                            [(when date
-                               (weak (str "uke " (ta/week-number (t/date date)))))
-                             (when date
-                               (weak (flex-datetime date (fn [format content]
-                                                           (if (= :text format)
-                                                             [sc/subtext-inline content]
-                                                             [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year content)])))))
-                             (when type
-                               (strong (->> type (get sci/person-by-id) :name)))
-                             (when tldr
-                               (sc/text-inline tldr))
-                             (when (and content @show-content)
-                               (-> (schpaa.markdown/md->html content)
-                                   (sc/markdown)))]))])]]))
+      (into [line {:style {:display :inline-block}}]
+            (interpose [:span ", "]
+                       (remove nil?
+                               [(when date
+                                  (weak (str "uke " (ta/week-number (t/date date)))))
+                                (when date
+                                  (flex-datetime date (fn [format content]
+                                                        (if (= :text format)
+                                                          [sc/subtext-inline content]
+                                                          [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year content)]))))
+                                (when type
+                                  (strong (->> type (get sci/person-by-id) :name)))
+                                (when tldr
+                                  tldr)
+                                (when (and content @show-content)
+                                  (-> (schpaa.markdown/md->html content)
+                                      (sc/markdown)))])))]]))
 
 (defn get-all-events [show-deleted]
   (let [xf (comp (if show-deleted
@@ -209,8 +223,8 @@
                  (filter (fn [[_k v]] (when (:date v)
                                         (and
                                           (t/<= (t/date (t/now)) (t/date (:date v)))
-                                          (= (t/year (t/now))
-                                             (t/year (t/date (:date v))))))))
+                                          (t/<= (t/year (t/now))
+                                                (t/year (t/date (:date v))))))))
                  (map (fn [[k v]] [(name k) (assoc v :type-text (:name (get sci/person-by-id (:type v))))])))]
     (transduce xf conj [] @(db/on-value-reaction {:path ["yearwheel"]}))))
 
@@ -220,6 +234,15 @@
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         modify? (booking.access/can-modify? r users-access-tokens)]
     (into [sc/col-space-2 {:class [:w-full :overflow-x-auto]}]
+          #_[:div
+             [l/ppre-x data]
+             [l/ppre-x (sort-by first < (group-by (comp t/int
+                                                        ;#(if % (t/year %) (t/year (t/now)))
+                                                        t/year
+                                                        #(some-> % t/date)
+                                                        :date
+                                                        second)
+                                                  data))]]
           (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now)))
                                                           #(some-> % t/date)
                                                           :date
@@ -227,8 +250,8 @@
                                                     data))]
 
             [sc/col-space-2
-             [sc/hero (or (t/int g) (str "'" (subs (str (t/int g)) 2 4)))]
-             (into [:div.space-y-px]
+             [sc/hero (str "'" (subs (str (t/int g)) 2 4))]
+             (into [:ol]
                    (concat
                      (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
                        (listitem-softwrap modify? (assoc data :id id)))
@@ -237,3 +260,46 @@
 
 (comment
   (get-all-events))
+
+;region
+
+(defn yearwheel-listitem [date type-text tldr]
+  [:div.col-span-2.inline-block.gap-2
+   {:style {:color       "var(--text0)"
+            :line-height "var(--font-lineheight-3)"
+            :font-size   "var(--font-size-2)"
+            :font-weight "var(--font-weight-4)"}}
+   [:span {:style {:color "var(--text1)"}} type-text " - "]
+   (when tldr
+     [:span {:style {:color "var(--text0)"}} tldr])
+   (when date
+     [:span " "
+      [flex-datetime date
+       (fn [type d]
+         (if (= :date type)
+           [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+           [sc/subtext-inline d]))]])])
+
+(defn yearwheel-feed []
+  (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
+    [:div.space-y-4
+     {:style {:padding-bottom "var(--size-10)"}}
+     [sc/row-bl [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
+
+     [:ol {:style {:margin-left "var(--size-4)"}}
+      (for [[_id {:keys [date type tldr]}] data]
+        [line [:div (interpose [:span ", "]
+                               (remove nil? [(when date
+                                               [:span " "
+                                                [flex-datetime date
+                                                 (fn [type d]
+                                                   (if (= :date type)
+                                                     [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+                                                     [sc/subtext-inline d]))]])
+                                             (when type
+                                               (strong (->> type (get sci/person-by-id) :name)))
+                                             (when tldr
+                                               (weak tldr))]))]])]]))
+
+
+;end-region

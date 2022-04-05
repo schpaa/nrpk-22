@@ -139,8 +139,8 @@ outline: 2px solid #a0a8;
 
 
 
-    --light-toolbar: var(--gray-2);
-    --light-toolbar-: var(--gray-3);
+    --light-toolbar: var(--gray-3);
+    --light-toolbar-: var(--gray-4);
     --light-content: var(--gray-1);
     --light-floating: var(--gray-0);
 

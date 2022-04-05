@@ -135,9 +135,9 @@
 
 ;endregion
 
-(defn sist-oppdatert [data]
+(defn sist-oppdatert [uid values]
   (let [user-info @(rf/subscribe [::db/user-auth])
-        tm (some->> (:timestamp data) (t/instant) (t/date-time))]
+        tm (some->> (:timestamp values) (t/instant) (t/date-time))]
     [sc/col-space-8
      [sc/col-space-1
       (when tm
@@ -151,11 +151,9 @@
                 [sc/subtext-inline {:style {:text-decoration :none}} (ta/datetime-format content)]
                 [sc/subtext-inline content])]])
           #_(fn [x] [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert " tm]]])))
-
-
-      [sc/small1 (:display-name user-info)]
-      [sc/small1 (:email user-info)]
-      [sc/small1 (:uid user-info)]]]))
+      [sc/small1 (:navn values)]
+      [sc/small1 (:epost values)]
+      [sc/small1 uid]]]))
 
 ;duplicated
 
@@ -213,11 +211,11 @@
        "Få epost!")]]])
 
 (defn user-form [r uid]
-  (let [path {:path ["users" uid]}
+  (let [path ["users" uid]
         admin? (rf/subscribe [:lab/admin-access])
         form-state (r/atom {})
         s (if uid
-            (db/on-value-reaction {:path ["users" uid]})
+            (db/on-value-reaction {:path path})
             (atom {}))
         initial-values (merge default-form-values
                               (select-keys
@@ -237,7 +235,7 @@
                                  :godkjent :dato-godkjent-nøkkelvakt
                                  :nøkkelnummer :dato-mottatt-nøkkel :timekrav]))]
 
-    (fn [uid]
+    (fn [r uid]
       (if-let [removal-date (some-> s deref :removal-date t/date)]
         [aux uid removal-date s]
         [fork/form {:state               form-state
@@ -248,7 +246,7 @@
                     :component-did-mount (fn [{:keys [set-values disable values] :as p}]
                                            ;(if-not (values :request-booking))
                                            (disable :booking-expert)
-                                           (tap> {"comp didi m" p})
+                                           (tap> {:user-form/component-did-mount p})
                                            #_(let [data (conj (if @s (walk/keywordize-keys @s) {})
                                                               {;:uid             uid
                                                                #_#_:request-booking (str (t/date))})]
@@ -276,11 +274,8 @@
                     #_#(send :e.store (assoc-in % [:values :uid] uid))}
          (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
            [:form.select-none
-            {
-             :id        form-id
-             :on-submit #(do
-                           (handle-submit %))}
-            ;(reset :initial-values values :values values))}
+            {:id        form-id
+             :on-submit #(handle-submit %)}
             [sc/col-space-8
              (into [:div]
                    (interpose [:div.py-6]
@@ -292,7 +287,6 @@
                                               [user.forms/status-panel props])
                                             (when @admin?
                                               [user.forms/changelog-panel props])])))
-
              [:div
               [sc/row-ec {:class [:py-4]}
 
@@ -307,10 +301,13 @@
               [hoc.buttons/danger
                {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
                (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]]
-             [sist-oppdatert values]]])]))))
+             [sist-oppdatert uid values]]])]))))
 
 (defn my-info [r]
-  (let [user-auth @(rf/subscribe [::db/user-auth])
-        uid (:uid user-auth)]
+  (let [uid (rf/subscribe [:lab/uid])]
     (fn [r]
-      [user-form r uid])))
+      (if @uid
+        [:div
+         [:div {:style {:padding-bottom "1rem"}} [l/ppre-x @uid]]
+         [user-form r @uid]]
+        [:div "nope"]))))

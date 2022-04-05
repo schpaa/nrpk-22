@@ -16,11 +16,91 @@
             [booking.flextime :refer [flex-datetime]]
             [booking.yearwheel]))
 
+;region
+
 (o/defstyled antialiased :div
   #_[:* {:x-webkit-font-smoothing  :auto
          :x-moz-osx-font-smoothing :auto
          :-webkit-font-smoothing   :antialiased
          :-moz-osx-font-smoothing  :grayscale}])
+
+(o/defstyled bg-light :div
+  [:& {:position            :relative
+       :height              "100vh"
+       :background-position "center center"
+       :background-repeat   "no-repeat"
+       :background-size     "cover"
+
+       ;:background-blend-mode "normal"
+       #_#_:background-image "var(--background-image-light)"}
+   [:&.light {:background-image ["var(--background-image-light)"]}]
+   [:&.dark {:background-image ["var(--background-image-dark)"]}]
+   [:at-media {:max-width "511px"}
+    [:&.bottom-toolbar
+     {:height "calc(100vh - 5rem)"}]]]
+  [:at-supports {:height :100dvh}
+   {:height "calc(100dvh)"}])
+
+(o/defstyled fp-right-aligned-link sc/ingress'
+  :text-right :whitespace-nowrap
+  {:font-weight "400"
+   :color       "var(--brand1)"})
+
+(o/defstyled fp-left-aligned-link sc/ingress'
+  :text-left :whitespace-nowrap
+  {:font-weight "400"
+   :color       "var(--brand1)"})
+
+(o/defstyled frontpage-image-style :div.relative
+  [:&
+   {:z-index 0}
+   [:img :bg-white {:object-fit      :cover
+                    :object-position "center"
+                    :width           "100%"
+                    :min-height      "20rem"}]
+   [:.light
+    {:filter "contrast(0.3) brightness(1) grayscale(0.5)"}]
+   [:.dark
+    {:filter "opacity(0.1) brightness(.95) grayscale(.6)"}]
+   [:.anonymous {:height "calc(100vh)"}]
+   [:.registered {:height "calc(100vh)"}]
+   [:at-supports {:height :100dvh}
+    {:height "calc(100dvh - 15rem)"}]
+   #_[:at-media {:max-width "511px"}
+      [:.registered {:height "calc(100vh - 5rem)"}]
+      [:.anonymous {:height "calc(100vh - 5rem)"}]]
+   #_[:at-supports {:height "100dvh"}
+      [:.anonymous {:height "calc(100dvh)"}]
+      [:.registered {:height "calc(100dvh - 5rem)"}]]]
+  ([{:keys [src class style]} & ch]
+   [:<>
+    [:img {:class   class
+           :style   style
+           :loading :lazy
+           :src     src}]
+    ch]))
+
+(o/defstyled top-right-windowclosebutton :div
+  {:position :absolute
+   :top      "var(--size-2)"
+   :right    "var(--size-2)"})
+
+(o/defstyled bottom-right-userfeedback :div
+  {:position :absolute
+   :bottom   "var(--size-2)"
+   :right    "var(--size-2)"
+   :color    "var(--text0)"})
+
+(o/defstyled image-caro-style :div
+  [:&
+   {:width "calc(100vw)"}
+   [:&.toolbar
+    {:width "calc(100vw - 4rem)"}]
+   [:at-media {:max-width "512px"}
+    [:&.toolbar
+     {:width "calc(100vw)"}]]])
+
+;endregion
 
 (defn table-text [a b]
   [:<>
@@ -75,35 +155,6 @@
      ;[:div.justify-self-end [sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}}(str (count (filter (fn [[k {:keys [request-booking]}]] (and request-booking)) nv)))]]
      ;[sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} "havpadlere"]
      #_[sc/text1 {:style {:color "var(--yellow-2)"}} (count online) ", " (count offline)]]))
-
-(o/defstyled frontpage-image-style :div.relative
-  [:&
-   {:z-index 0}
-   [:img :bg-white {:object-fit      :cover
-                    :object-position "center"
-                    :width           "100%"
-                    :min-height      "20rem"}]
-   [:.light
-    {:filter "contrast(0.3) brightness(1) grayscale(0.5)"}]
-   [:.dark
-    {:filter "opacity(0.1) brightness(.95) grayscale(.6)"}]
-   [:.anonymous {:height "calc(100vh)"}]
-   [:.registered {:height "calc(100vh)"}]
-   [:at-supports {:height :100dvh}
-    {:height "calc(100dvh - 15rem)"}]
-   #_[:at-media {:max-width "511px"}
-      [:.registered {:height "calc(100vh - 5rem)"}]
-      [:.anonymous {:height "calc(100vh - 5rem)"}]]
-   #_[:at-supports {:height "100dvh"}
-      [:.anonymous {:height "calc(100dvh)"}]
-      [:.registered {:height "calc(100dvh - 5rem)"}]]]
-  ([{:keys [src class style]} & ch]
-   [:<>
-    [:img {:class   class
-           :style   style
-           :loading :lazy
-           :src     src}]
-    ch]))
 
 (def frontpage-image
   (map #(str "/img/caro/" %)
@@ -188,11 +239,6 @@
                                                       "/img/frontpage/Bilde 28.03.2022 klokken 16.59.jpg"])))}]]
       (finally (js/clearInterval tm)))]])
 
-
-(o/defstyled fp-topic sc/text0)
-{:color       "var(--text0)"
- :font-weight "var(--font-weight-5)"}
-
 (defn scroll-up-animation []
   (let [know-how-to-scroll? (rf/subscribe [:lab/we-know-how-to-scroll?])]
     [bs/scroll-up-animation
@@ -204,50 +250,7 @@
                :color         "var(--text1)"}}
       [sc/icon ico/more-if-you-scroll-down]]]))
 
-(o/defstyled bg-light :div
-  [:& {:position            :relative
-       :height              "100vh"
-       :background-position "center center"
-       :background-repeat   "no-repeat"
-       :background-size     "cover"
 
-       ;:background-blend-mode "normal"
-       #_#_:background-image "var(--background-image-light)"}
-   [:&.light {:background-image ["var(--background-image-light)"]}]
-   [:&.dark {:background-image ["var(--background-image-dark)"]}]
-   [:at-media {:max-width "511px"}
-    [:&.bottom-toolbar
-     {:height "calc(100vh - 5rem)"}]]]
-  [:at-supports {:height :100dvh}
-   {:height "calc(100dvh)"}])
-
-
-(o/defstyled fp-right-aligned-link sc/ingress'
-  :text-right :whitespace-nowrap
-  {:font-weight "400"
-   :color       "var(--brand1)"})
-
-(o/defstyled fp-left-aligned-link sc/ingress'
-  :text-left :whitespace-nowrap
-  {:font-weight "400"
-   :color       "var(--brand1)"})
-
-(defn listitem [date type-text tldr]
-  [:div.col-span-2.inline-block.gap-2
-   {:style {:color       "var(--text0)"
-            :line-height "var(--font-lineheight-3)"
-            :font-size   "var(--font-size-2)"
-            :font-weight "var(--font-weight-4)"}}
-   [:span {:style {:color "var(--text1)"}} type-text " - "]
-   (when tldr
-     [:span {:style {:color "var(--text0)"}} tldr])
-   (when date
-     [:span " "
-      [flex-datetime date
-       (fn [type d]
-         (if (= :date type)
-           [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-           [sc/subtext-inline d]))]])])
 
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
@@ -275,15 +278,6 @@
    :initialSlide     1
    :fade             false
    :pauseOnDotsHover true})
-
-(o/defstyled image-caro-style :div
-  [:&
-   {:width "calc(100vw)"}
-   [:&.toolbar
-    {:width "calc(100vw - 4rem)"}]
-   [:at-media {:max-width "512px"}
-    [:&.toolbar
-     {:width "calc(100vw)"}]]])
 
 (defn image-carousell []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
@@ -346,17 +340,6 @@
         [:div.h-20.w-20 [circular-logo-thing dark-mode?]]]]
       [:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
 
-(o/defstyled top-right-windowclosebutton :div
-  {:position :absolute
-   :top      "var(--size-2)"
-   :right    "var(--size-2)"})
-
-(o/defstyled bottom-right-userfeedback :div
-  {:position :absolute
-   :bottom   "var(--size-2)"
-   :right    "var(--size-2)"
-   :color    "var(--text0)"})
-
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4]
                  :style {:position   :relative
@@ -407,7 +390,7 @@
 
 (defn news-feed []
   [:div.space-y-4
-   [:div.flex.items-baseline.gap-2 [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
+   [sc/row-bl [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
    [:div.ml-4 {:style {:display               "grid"
                        :gap                   "var(--size-4) var(--size-2)"
                        :grid-template-columns "1fr"}}
@@ -415,21 +398,7 @@
     [listitem' (t/date) "Nye båter er kjøpt inn."]
     [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
 
-(defn yearwheel-feed []
-  (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
-    [:div.space-y-4
-     {:style {:padding-bottom "var(--size-10)"}}
-     [:div.flex.items-baseline.gap-2 [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se også i årshjulet)")]
-     ;[l/ppre-x data]
-     [:div.ml-4 {:style {:display               "grid"
-                         :gap                   "var(--size-2) var(--size-2)"
-                         :grid-template-columns "min-content 1fr"}}
-      (for [[id {:keys [date type-text tldr]}] data]
-        [listitem (t/date date) type-text tldr])]]))
-;[listitem (t/date "2022-04-04") "Nøkkelvaktens infosjekk"]
-;[listitem (t/date "2022-04-28") "Nøkkelvaktmøte"]
-;[listitem (t/date "2022-05-06") "Dugnad"]
-;[listitem (t/date "2022-05-08") "Sesongstart '22"]]]))
+
 
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
@@ -443,11 +412,12 @@
 
       [:div.min-h-full.z-0.relative
 
-       [:div.max-w-lg.mx-auto
-        [:div.mx-4.py-4.pt-24
-         (when (and goog.DEBUG @master-emulation)
+
+       (when (and goog.DEBUG @master-emulation)
+         [:div.max-w-lg.mx-auto
+          [:div.mx-4.py-4.pt-24
            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-            booking.common-views/master-control-box])]]
+            booking.common-views/master-control-box]]])
 
        [:div.mx-4
         [:div.max-w-lg.mx-auto
@@ -466,7 +436,7 @@
            [please-login-and-register])
 
          [news-feed]
-         [yearwheel-feed]]]]
+         [booking.yearwheel/yearwheel-feed]]]]
 
       [bs/attached-to-bottom
        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}

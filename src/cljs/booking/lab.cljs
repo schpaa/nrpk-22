@@ -348,6 +348,9 @@
 
 (rf/reg-event-db :lab/set-sim (fn [db [_ arg opt]]
                                 (cond
+                                  (= :uid arg)
+                                  (assoc-in db [:lab/sim :uid] opt)
+
                                   (= :booking arg)
                                   (if opt
                                     (update-in db [:lab/sim :access] (fnil set/union #{}) #{:booking})
@@ -367,6 +370,7 @@
 
 (rf/reg-sub :lab/sim? :-> #(get % :lab/sim))
 
+;deprecated
 (rf/reg-sub :lab/user-state
             :<- [::db/user-auth]
             :<- [:lab/sim?]
@@ -374,6 +378,15 @@
               (if-let [s sim]
                 (if (some #{(:status s)} [:member]) s s)
                 ua)))
+
+(rf/reg-sub :lab/uid
+            :<- [:lab/master-state-emulation]
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            (fn [[master-switch ua {:keys [uid] :as sim}] _]
+              (if master-switch
+                uid
+                (:uid ua))))
 
 ;todo: Assume we are always simulating
 
@@ -398,8 +411,8 @@
                 (some? (some #{:admin} (or access [])))
                 (if-let [x (booking.access/compute-access-tokens ua)]
                   (let [[s a] x]
-                    (tap> {:s s
-                           :a a})
+                    #_(tap> {:s s
+                             :a a})
                     (and (= s :member)
                          (= :admin (some #{:admin} (or a [])))))
                   false))))
@@ -414,8 +427,8 @@
                      (some? (some #{:booking} (or access []))))
                 (if-let [x (booking.access/compute-access-tokens ua)]
                   (let [[s a] x]
-                    (tap> {:s s
-                           :a a})
+                    #_(tap> {:s s
+                             :a a})
                     (and (= s :member)
                          (= :booking (some #{:booking} (or a [])))))
                   false))))
@@ -430,8 +443,8 @@
                      (some? (some #{:nøkkelvakt} (or access []))))
                 (if-let [x (booking.access/compute-access-tokens ua)]
                   (let [[s a] x]
-                    (tap> {:s s
-                           :a a})
+                    #_(tap> {:s s
+                             :a a})
                     (and (= s :member)
                          (= :nøkkelvakt (some #{:nøkkelvakt} (or a [])))))
                   false))))
@@ -440,9 +453,9 @@
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[master-switch ua {:keys [status access]}] _]
+            (fn [[master-switch ua {:keys [status access uid]}] _]
               (if master-switch
-                [status access]
+                [status access uid]
                 (booking.access/compute-access-tokens ua))))
 
 ;endregion

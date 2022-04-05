@@ -11,9 +11,9 @@
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
 
-(o/defstyled time-format :div
+(o/defstyled time-format :span
   :cursor-pointer
-  {:display :inline-block})
+  {:-display :inline-block})
 
 (defn flex-datetime [date formatted]
   (let [relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
@@ -21,7 +21,7 @@
                                (tap> ["toggle" @relative-time?])
                                (.stopPropagation %)
                                (toggle-relative-time))}]
-    (tap> {:date-is date})
+    ;(tap> {:date-is date})
     (when date
       (if @relative-time?
         (if (t/<= (t/date date) (t/date))
