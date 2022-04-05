@@ -4392,3 +4392,13 @@ Ensure the default browser behavior of the `hidden` attribute.
     padding-right: 0px;
   }
 }
+
+@media (min-width: 768px) {
+  .md\:block {
+    display: block;
+  }
+
+  .md\:hidden {
+    display: none;
+  }
+}

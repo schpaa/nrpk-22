@@ -180,7 +180,13 @@
    :dato-godkjent-booking    ""
    :timekrav                 "12"
    :godkjent-booking         false
-   :dato-mottatt-nøkkel      ""})
+   :dato-mottatt-nøkkel      ""
+   :dato-innlevert-nøkkel    ""
+   :admin                    false
+   :utmeldt                  false
+   :kald-periode             false
+   :stjerne                  false})
+
 
 (rf/reg-event-fx :save-this-form-test (fn [{db :db} [_ {:keys [values path reset]}]]
                                         (reset {:initial-values values :values values})
@@ -233,7 +239,10 @@
                                  ;status
                                  :godkjent-booking :dato-godkjent-booking
                                  :godkjent :dato-godkjent-nøkkelvakt
-                                 :nøkkelnummer :dato-mottatt-nøkkel :timekrav]))]
+                                 :nøkkelnummer :dato-mottatt-nøkkel
+                                 :dato-innlevert-nøkkel
+                                 :admin :kald-periode :stjerne :utmeldt
+                                 :timekrav]))]
 
     (fn [r uid]
       (if-let [removal-date (some-> s deref :removal-date t/date)]
