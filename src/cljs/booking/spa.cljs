@@ -708,7 +708,7 @@
                                  [sc/row-sc-g2
                                   [scb/round-normal-listitem
                                    [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
-                                             :style    {:color "var(--text3)"}} ico/pencil]]
+                                             :style    {:color "var(--text2)"}} ico/pencil]]
                                   (when @(r/cursor x [:nøkkelnummer])
                                     [sc/text2 {:style {:white-space :nowrap
                                                        :width       "4rem"}} (:nøkkelnummer v)])

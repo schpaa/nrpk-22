@@ -168,7 +168,7 @@
    :list-style   [:outside :none :disc]
    :padding-left "var(--thing)"
    :text-indent  "calc(var(--thing) * -1)"
-   :color        "var(--text3)"
+   :color        "var(--text2)"
    :line-height  "var(--font-lineheight-5)"})
 
 (o/defstyled strong :span

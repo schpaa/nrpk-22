@@ -138,11 +138,6 @@
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
 
-     (when (or @admin?)
-       {:icon-fn   (fn [] (sc/icon-large ico/users))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.users]])
-        :page-name :r.users})
-
      (when (or @admin? @booking?)
        {:icon-fn   (fn [] (sc/icon-large ico/booking))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
@@ -177,6 +172,12 @@
                       (when (pos? c) c))
         :page-name   :r.fileman-temporary})
 
+     (when (or @admin?)
+       {:icon-fn     (fn [] (sc/icon-large ico/users))
+        :tall-height true
+        :on-click    #(rf/dispatch [:app/navigate-to [:r.users]])
+        :page-name   :r.users})
+
      {:tall-height true
       :special     true
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
@@ -190,57 +191,56 @@
         booking? (rf/subscribe [:lab/booking])
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-    [{:icon      ico/user
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-      :page-name :r.user}
-     #_{:icon      ico/new-home
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-        :page-name :r.forsiden}
-
-     {:icon-fn  (fn [_] (when (or @admin? @nokkelvakt)
-                          (let [st (rf/subscribe [:lab/number-input])]
-                            (if @st ico/panelOpen ico/panelClosed))))
-      :special  false
-      :on-click #(rf/dispatch [:lab/toggle-number-input])}
-
-     {:icon-fn   #(sc/icon-large ico/new-home)
+    [{:icon-fn   #(sc/icon-large ico/new-home)
       :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
       ;:on-click-active #(rf/dispatch [:app/navigate-to [:r.oversikt]])
       :class     #(if (= % :r.oversikt) :oversikt :active)
       :page-name #(some #{%} [:r.forsiden :r.oversikt])}
 
-     {:icon      ico/booking
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-      :page-name :r.booking.oversikt}
+     {:icon     ico/mystery2
+      :disabled true}
 
-     #_{:icon      ico/yearwheel
-        :special   false
-        :page-name :r.yearwheel
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])}
+     #_{:icon-fn  (fn [_] (when (or @admin? @nokkelvakt)
+                            (let [st (rf/subscribe [:lab/number-input])]
+                              (if @st ico/panelOpen ico/panelClosed))))
+        :special  false
+        :on-click #(rf/dispatch [:lab/toggle-number-input])}
 
      {:icon-fn   (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
                            (sc/icon-large (if st ico/commandPaletteOpen ico/commandPaletteClosed))))
       :special   true
       :on-click  schpaa.style.dialog/open-selector
-      :page-name :r.debug}]))
+      :page-name :r.debug}
 
-(o/defstyled toolbar-button :div
+     {:icon     ico/mystery1
+      :disabled true}
+     #_{:icon      ico/booking
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
+        :page-name :r.booking.oversikt}
+
+     {:icon      ico/user
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :page-name :r.user}]))
+
+(o/defstyled toolbar-button :button
+  :outline-none
   [:&
    {:color         "var(--text2)"
     :border-radius "var(--radius-round)"
     :padding       "var(--size-2)"}
-   [:&:hover {:color    "var(--text1)"
-              :-padding "var(--size-1)"}]
+   [:&:disabled {:color "var(--text3)"}]
+   [:&:enabled:hover {:color "var(--text1)"}]
+
    [:&.active {:color      "var(--text1)"
                :background "var(--content)"
-               :box-shadow "var(--shadow-3)"
-               :-padding   "var(--size-2)"}]
+               :box-shadow "var(--shadow-1)"}]
+
    [:&.oversikt {:color      "var(--gray-0)"
                  :background "var(--brand1)"
-                 :box-shadow "var(--shadow-3)"
-                 :-padding   "var(--size-2)"}]
-   [:&.special {:color    "var(--brand1)"
-                :-padding "var(--size-2)"}]])
+                 :box-shadow "var(--shadow-1)"}]
+
+   [:&.special {:color "var(--brand1)"}]])
+
 
 (o/defstyled top-left-badge :div
   :rounded-full :flex :flex-center :-top-1 :right-0
@@ -289,7 +289,7 @@
         [sc/icon-large
          (if icon-fn (icon-fn) icon)]]]))
 
-(defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge]
+(defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
                         :or   {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (if (fn? page-name)
@@ -315,10 +315,12 @@
         (when-some [b (badge)]
           [top-left-badge b]))
 
-      [toolbar-button {:style style
-                       :class [(if active? (or (when class (class current-page)) :active))
-                               (if special :special)]}
+      [toolbar-button {:disabled disabled
+                       :style    style
+                       :class    [(if active? (or (when class (class current-page)) :active))
+                                  (if special :special)]}
        [sc/icon-large
+        {}
         (if icon-fn
           (icon-fn current-page)
           icon)]]]]))
@@ -458,11 +460,12 @@
           [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
 
         ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-        [:div.flex.flex-col
+        [:div.flex.flex-col.truncate
          (when-not @(rf/subscribe [:lab/in-search-mode?])
            (let [titles (compute-page-titles r)]
-             [:div.truncate
-              [:div.hidden.sm:block.grow
+             [:div
+              ;large/wide
+              [:div.hidden.md:block.grow
                (if (vector? titles)
                  [sc/row-sc-g2
                   (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "/"]
@@ -473,13 +476,15 @@
                                  (let [{:keys [text link]} e]
                                    [sc/subtext-with-link {:style {:-background "var(--content)"}
                                                           :href  (k/path-for [link])} text]))))]
-                 [sc/text1 titles])]
-              [:div.xs:block.sm:hidden.grow
+                 [sc/text1 {:class [:truncate]} titles])]
+              ;small/stacked
+              [:div.sm:block.md:hidden.grow
                (if (vector? titles)
-                 [sc/col-space-1                            ;{:class [:truncate]}
+                 [sc/col-space-1
+                  {:class [:truncate]}
                   (when (< 1 (count titles))
                     (let [{:keys [text link]} (first titles)]
-                      [:div [sc/subtext-with-link {:style {:-background  "var(--content)"
+                      [:div [sc/subtext-with-link {:style {:-background  "red"
                                                            :-margin-left "-2px"}
                                                    :href  (k/path-for [link])} text]]))
                   [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
