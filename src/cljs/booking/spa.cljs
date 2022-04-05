@@ -39,7 +39,8 @@
             [user.database]
             [booking.ico :as ico]
             [booking.personas]
-            [booking.frontpage]))
+            [booking.frontpage]
+            [schpaa.style.button :as scb]))
 
 ;region related to flex-date and how to display relative time
 
@@ -628,6 +629,89 @@
                    [:<>
                     (-> (inline "./oversikt/organisasjon.md") schpaa.markdown/md->html sc/markdown)]))}])
 
+   :r.users
+   (fn [r]
+     (r/with-let [x (r/atom {:kald-periode false
+                             :nøkkelnummer false
+                             :stjerne      false
+                             :sluttet      false
+                             :timekrav     true
+                             :sist-endret  false
+                             :reverse      false})]
+       (let [data (transduce (comp
+                               (map val)
+                               (map (fn [{:keys [timekrav] :as v}]
+                                      (let [p (js/parseInt timekrav)]
+                                        (assoc v :timekrav (if (js/isNaN p) 0 p)))))
+                               (filter (fn [v] (and
+                                                 (:godkjent v)
+                                                 (if @(r/cursor x [:kald-periode])
+                                                   (:kald-periode v)
+                                                   true)
+                                                 (if @(r/cursor x [:sluttet])
+                                                   (:utmeldt v)
+                                                   (not (:utmeldt v)))
+                                                 (if @(r/cursor x [:stjerne])
+                                                   (:stjerne v)
+                                                   true)))))
+                             conj [] @(db/on-value-reaction {:path ["users"]}))
+             fields (remove nil? [(when @(r/cursor x [:sist-endret]) :timestamp)
+                                  (when @(r/cursor x [:timekrav]) :timekrav)])
+             fields (if (empty? fields) [:navn] fields)
+             data (sort-by (apply juxt fields) data)
+             users (if @(r/cursor x [:reverse]) (reverse data) data)]
+
+         (o/defstyled line :div)
+         [+page-builder
+          r
+          {:panel  (fn []
+                     [sc/col-space-2
+                      [sc/row-sc-g2-w
+                       [sc/small "vis"]
+                       [hoc.toggles/switch-local (r/cursor x [:nøkkelnummer]) "nøkkelnummer"]]
+
+                      [sc/row-sc-g2-w
+                       [sc/small "filtrer"]
+                       [hoc.toggles/switch-local (r/cursor x [:sluttet]) "sluttet"]
+                       [hoc.toggles/switch-local (r/cursor x [:kald-periode]) "kald-periode"]
+                       [hoc.toggles/switch-local (r/cursor x [:stjerne]) "stjerne"]]
+
+                      [sc/row-sc-g2-w
+                       [sc/small "sorter"]
+                       [hoc.toggles/switch-local (r/cursor x [:sist-endret]) "sist endret"]
+                       [hoc.toggles/switch-local (r/cursor x [:timekrav]) "timekrav"]
+                       [hoc.toggles/switch-local (r/cursor x [:reverse]) "omvendt"]]])
+           ;:always-panel (fn [] [:div "some"])
+           :render (fn []
+                     (let [c (count users)]
+                       [sc/col-space-2
+                        [l/ppre-x fields]
+                        [sc/header-title (str c " person" (if (< 1 c) "er"))]
+                        [sc/col-space-2
+                         (into [:<>]
+                               (for [v users]
+                                 [sc/row-sc-g2
+                                  [scb/round-normal-listitem
+                                   [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
+                                             :style    {:color "var(--text3)"}} ico/pencil]]
+                                  (when @(r/cursor x [:nøkkelnummer])
+                                    [sc/text2 {:style {:white-space :nowrap
+                                                       :width       "4rem"}} (:nøkkelnummer v)])
+                                  (when @(r/cursor x [:sist-endret])
+                                    [booking.flextime/flex-datetime
+                                     (some-> (:timestamp v) t/instant t/date-time)
+                                     (fn [type content]
+                                       [sc/text2 (cond
+                                                   (= :date type) (ta/time-format content)
+                                                   :else content)])])
+
+                                  [sc/text0 {:style {:width "1rem"}} (or (:timekrav v) "—")]
+                                  [sc/text1 (:navn v)]]))]]))}])))
+
    :r.page-not-found
    error-page})
 
+
+(comment
+  (sort-by (juxt (comp js/parseInt :b) :a) <
+           [{:a 1 :b "222"} {:a 2 :b "1"} {:b "111"}]))

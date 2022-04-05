@@ -138,6 +138,11 @@
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
 
+     (when (or @admin?)
+       {:icon-fn   (fn [] (sc/icon-large ico/users))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.users]])
+        :page-name :r.users})
+
      (when (or @admin? @booking?)
        {:icon-fn   (fn [] (sc/icon-large ico/booking))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])

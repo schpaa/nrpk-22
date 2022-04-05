@@ -15,6 +15,7 @@
 (def yearwheel [:> solid/ViewGridAddIcon])
 (def fileman [:> solid/FolderIcon])
 (def user [:> solid/UserCircleIcon])
+(def users [:> solid/UserGroupIcon])
 (def anonymous [:> solid/QuestionMarkCircleIcon])
 (def waitinglist [:> solid/CollectionIcon])
 (def member [:> solid/BadgeCheckIcon])
