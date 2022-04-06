@@ -137,10 +137,22 @@
 
 (defn sist-oppdatert [uid values]
   (let [user-info @(rf/subscribe [::db/user-auth])
-        tm (some->> (:timestamp values) (t/instant) (t/date-time))]
+        #_#_tm (some->> (:timestamp values) (t/instant) (t/date-time))]
     [sc/col-space-8
+     ;(when goog.DEBUG [l/ppre-x values])
      [sc/col-space-1
-      (when tm
+      (when-let [tm (some->> (:timestamp-lastvisit-userpage values) (t/instant) (t/date-time))]
+        (booking.flextime/flex-datetime
+          tm
+          (fn [format content]
+            [:div.inline-block
+             [sc/text1-with
+              "Sist sett "
+              (if (= :date format)
+                [sc/subtext-inline {:style {:text-decoration :none}} (ta/datetime-format content)]
+                [sc/subtext-inline content])]])
+          #_(fn [x] [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert " tm]]])))
+      (when-let [tm (some->> (:timestamp values) (t/instant) (t/date-time))]
         (booking.flextime/flex-datetime
           tm
           (fn [format content]
@@ -221,102 +233,100 @@
         form-state (r/atom {})
         s (if uid
             (db/on-value-reaction {:path path})
-            (atom {}))
-        initial-values (merge default-form-values
-                              (select-keys
-                                @s
-                                [;generelt
-                                 :timestamp
-                                 :uid
-                                 :navn :telefon :alias :epost :våttkort
-                                 ;booking
-                                 :våttkortnr :request-booking :booking-expert
-                                 ;nøkkelvakt
-                                 :medlem-fra-år :fødselsår
-                                 :årstall-førstehjelpskurs :årstall-livredningskurs
-                                 :instruktør :helgevakt :vikar :kort-reisevei
-                                 ;status
-                                 :godkjent-booking :dato-godkjent-booking
-                                 :godkjent :dato-godkjent-nøkkelvakt
-                                 :nøkkelnummer :dato-mottatt-nøkkel
-                                 :dato-innlevert-nøkkel
-                                 :admin :kald-periode :stjerne :utmeldt
-                                 :timekrav])
-                              {:uid uid})]
-
+            (atom {}))]
     (fn [r uid]
-      (if-let [removal-date (some-> s deref :removal-date t/date)]
-        [aux uid removal-date s]
-        [fork/form {:state               form-state
-                    :initial-values      initial-values
-                    :prevent-default?    true
-                    :clean-on-unmount?   false
-                    :keywordize-keys     true
-                    :component-did-mount (fn [{:keys [set-values disable values] :as p}]
-                                           ;(if-not (values :request-booking))
-                                           (disable :booking-expert)
-                                           (tap> {:user-form/component-did-mount p})
-                                           #_(let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                              {;:uid             uid
-                                                               #_#_:request-booking (str (t/date))})]
-                                               (set-values (select-keys
-                                                             data
-                                                             [;generelt
-                                                              :navn :telefon :alias :epost :våttkort
-                                                              ;booking
-                                                              :våttkortnr :request-booking :booking-expert
-                                                              ;nøkkelvakt
-                                                              :medlem-fra-år :fødselsår
-                                                              :årstall-førstehjelpskurs :årstall-livredningskurs
-                                                              :instruktør :helgevakt :vikar :kort-reisevei]))))
-                    :on-submit           (fn [{:keys [state values] :as x}]
-                                           (let [author (:uid @(rf/subscribe [::db/user-auth]))]
-                                             (user.forms/save-edit-changes
-                                               uid
-                                               author
-                                               (select-keys
-                                                 (:initial-values @state)
-                                                 (keys (map-difference values (:initial-values @state))))
-                                               (map-difference values (:initial-values @state))
-                                               (or (:endringsbeskrivelse values)
-                                                   (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state)))))))))
+      (let [initial-values (merge default-form-values
+                                  (select-keys
+                                    @s
+                                    [;generelt
+                                     :timestamp
+                                     :timestamp-lastvisit-userpage
+                                     :uid
+                                     :navn :telefon :alias :epost :våttkort
+                                     ;booking
+                                     :våttkortnr :request-booking :booking-expert
+                                     ;nøkkelvakt
+                                     :medlem-fra-år :fødselsår
+                                     :årstall-førstehjelpskurs :årstall-livredningskurs
+                                     :instruktør :helgevakt :vikar :kort-reisevei
+                                     ;status
+                                     :godkjent-booking :dato-godkjent-booking
+                                     :godkjent :dato-godkjent-nøkkelvakt
+                                     :nøkkelnummer :dato-mottatt-nøkkel
+                                     :dato-innlevert-nøkkel
+                                     :admin :kald-periode :stjerne :utmeldt
+                                     :timekrav])
 
-                                           (db/database-update {:path  ["users" uid]
-                                                                :value (assoc values :timestamp (str (t/now)))})
-                                           (rf/dispatch [:save-this-form-test x]))
+                                  {:uid uid})]
+        [:<>
+         ;(when goog.DEBUG [l/ppre-x path initial-values])
+         (if-let [removal-date (some-> s deref :removal-date t/date)]
+           [aux uid removal-date s]
+           [fork/form {:state               form-state
+                       :initial-values      initial-values
+                       :prevent-default?    true
+                       :clean-on-unmount?   true
+                       :keywordize-keys     true
+                       :component-did-mount (fn [{:keys [set-values disable values] :as p}]
+                                              (db/database-update {:path  ["users" uid]
+                                                                   :value {:timestamp-lastvisit-userpage (str (t/now))}})
+                                              ;(if-not (values :request-booking))
+                                              (disable :booking-expert)
+                                              (tap> {:user-form/component-did-mount (:navn initial-values)})
+                                              (set-values initial-values)
+                                              #_(let [data (conj (if @s (walk/keywordize-keys @s) {})
+                                                                 {;:uid             uid
+                                                                  #_#_:request-booking (str (t/date))})]
+                                                  (set-values (select-keys
+                                                                data
+                                                                [;generelt
+                                                                 :navn :telefon :alias :epost :våttkort
+                                                                 ;booking
+                                                                 :våttkortnr :request-booking :booking-expert
+                                                                 ;nøkkelvakt
+                                                                 :medlem-fra-år :fødselsår
+                                                                 :årstall-førstehjelpskurs :årstall-livredningskurs
+                                                                 :instruktør :helgevakt :vikar :kort-reisevei]))))
+                       :on-submit           (fn [{:keys [state values] :as x}]
+                                              (let [author (:uid @(rf/subscribe [::db/user-auth]))]
+                                                (user.forms/save-edit-changes
+                                                  uid
+                                                  author
+                                                  (select-keys
+                                                    (:initial-values @state)
+                                                    (keys (map-difference values (:initial-values @state))))
+                                                  (map-difference values (:initial-values @state))
+                                                  (or (:endringsbeskrivelse values)
+                                                      (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state)))))))))
 
-                    #_#(send :e.store (assoc-in % [:values :uid] uid))}
-         (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
-           [:form.select-none
-            {:id        form-id
-             :on-submit #(handle-submit %)}
-            [sc/col-space-8
-             (into [:div]
-                   (interpose [:div.py-6]
-                              (remove nil? [[user.forms/generalinformation-panel props]
-                                            [user.forms/booking-panel props]
-                                            (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-                                              [user.forms/nokkelvakt-panel props])
-                                            (when @admin?
-                                              [user.forms/status-panel props])
-                                            (when @admin?
-                                              [user.forms/changelog-panel uid props])])))
-             [:div
-              [sc/row-ec {:class [:py-4]}
+                                              (db/database-update {:path  ["users" uid]
+                                                                   :value (assoc values :timestamp (str (t/now)))})
+                                              (rf/dispatch [:save-this-form-test x]))
 
-
-               ;[:div.grow]
-               [hoc.buttons/regular {:type     :button
-                                     :on-click #(set-values initial-values)
-                                     :disabled (empty? dirty)} "Tilbakestill"]
-
-               [hoc.buttons/regular {:type     :submit
-                                     :disabled (empty? dirty)} "Lagre"]]
-              ;todo Put this in settings
-              #_[hoc.buttons/danger
-                 {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
-                 (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]]
-             [sist-oppdatert uid values]]])]))))
+                       #_#(send :e.store (assoc-in % [:values :uid] uid))}
+            (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
+              [:form.select-none
+               {:id        form-id
+                :on-submit #(handle-submit %)}
+               [sc/col-space-8
+                (into [:div]
+                      (interpose [:div.py-6]
+                                 (remove nil? [[user.forms/generalinformation-panel props]
+                                               [user.forms/booking-panel props]
+                                               (when true #_(= "eykt" @(rf/subscribe [:app/name]))
+                                                 [user.forms/nokkelvakt-panel props])
+                                               (when @admin?
+                                                 [user.forms/status-panel props])
+                                               (when @admin?
+                                                 [user.forms/changelog-panel uid props])])))
+                [:div
+                 [sc/row-ec {:class [:py-4]}
+                  [hoc.buttons/regular {:type     :button
+                                        :on-click #(set-values initial-values)
+                                        :disabled (empty? dirty)} "Tilbakestill"]
+                  [hoc.buttons/regular {:type     :submit
+                                        :disabled (empty? dirty)} "Lagre"]]]
+                [sist-oppdatert uid values]]])])]))))
 
 (defn my-info [r]
   (let [uid (rf/subscribe [:lab/uid])]
