@@ -22,5 +22,6 @@
      (into #{} (remove nil?
                        [(when (:admin user) :admin)
                         (when (:booking-godkjent user) :booking)
-                        (when (:nøkkelvakt user) :nøkkelvakt)]))]))
+                        (when (:nøkkelvakt user) :nøkkelvakt)]))
+     uid]))
 

@@ -7,7 +7,8 @@
             [tick.core :as t]
             [eykt.content.rapport-side]
             [booking.flextime]
-            [db.core :as db]))
+            [db.core :as db]
+            [schpaa.debug :as l]))
 
 (defn generalinformation-panel [props]
   [togglepanel :a/a1 "Generelle opplysninger"
@@ -127,15 +128,15 @@
     initial-state
     values))
 
-(defn changelog-panel [{:keys [state initial-values values] :as props}]
+(defn changelog-panel [uid {:keys [state initial-values values] :as props}]
   (let [show-changelog (r/atom false)
         toggle #(swap! show-changelog not)
-        path ["users" (:uid values) "endringslogg"]]
+        path ["users" uid "endringslogg"]]
     [togglepanel :a/a4 "Endringslogg"
      (fn []
-       (when (:uid values)
+       (when uid                                            ;(:uid values)
          [sc/col-space-2
-          ;(tap> props)
+          (when goog.DEBUG [l/ppre-x uid])
           [sci/textarea props :text {:rows 2} "Endringsbeskrivelse (valgfritt)" :endringsbeskrivelse]
           [sc/row-sc-g2-w [schpaa.style.hoc.toggles/small-switch-base {:type :button} "Vis tidligere endringer" show-changelog toggle]]
           (when @show-changelog

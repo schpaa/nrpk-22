@@ -187,7 +187,6 @@
    :kald-periode             false
    :stjerne                  false})
 
-
 (rf/reg-event-fx :save-this-form-test (fn [{db :db} [_ {:keys [values path reset]}]]
                                         (reset {:initial-values values :values values})
                                         {:db (-> db (fork/set-submitting path true))}))
@@ -242,7 +241,8 @@
                                  :nøkkelnummer :dato-mottatt-nøkkel
                                  :dato-innlevert-nøkkel
                                  :admin :kald-periode :stjerne :utmeldt
-                                 :timekrav]))]
+                                 :timekrav])
+                              {:uid uid})]
 
     (fn [r uid]
       (if-let [removal-date (some-> s deref :removal-date t/date)]
@@ -270,13 +270,18 @@
                                                               :årstall-førstehjelpskurs :årstall-livredningskurs
                                                               :instruktør :helgevakt :vikar :kort-reisevei]))))
                     :on-submit           (fn [{:keys [state values] :as x}]
-                                           (user.forms/save-edit-changes
-                                             (:uid values)
-                                             (:uid @(rf/subscribe [::db/user-auth]))
-                                             (select-keys (:initial-values @state) (keys (map-difference values (:initial-values @state))))
-                                             (map-difference values (:initial-values @state))
-                                             (or (:endringsbeskrivelse values) (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state))))))))
-                                           (db/database-update {:path  ["users" (:uid values)]
+                                           (let [author (:uid @(rf/subscribe [::db/user-auth]))]
+                                             (user.forms/save-edit-changes
+                                               uid
+                                               author
+                                               (select-keys
+                                                 (:initial-values @state)
+                                                 (keys (map-difference values (:initial-values @state))))
+                                               (map-difference values (:initial-values @state))
+                                               (or (:endringsbeskrivelse values)
+                                                   (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state)))))))))
+
+                                           (db/database-update {:path  ["users" uid]
                                                                 :value (assoc values :timestamp (str (t/now)))})
                                            (rf/dispatch [:save-this-form-test x]))
 
@@ -295,7 +300,7 @@
                                             (when @admin?
                                               [user.forms/status-panel props])
                                             (when @admin?
-                                              [user.forms/changelog-panel props])])))
+                                              [user.forms/changelog-panel uid props])])))
              [:div
               [sc/row-ec {:class [:py-4]}
 
@@ -318,6 +323,5 @@
     (fn [r]
       (if @uid
         [:div
-         ;[:div {:style {:padding-bottom "1rem"}} [l/ppre-x @uid]]
          [user-form r @uid]]
         [:div "nope"]))))
