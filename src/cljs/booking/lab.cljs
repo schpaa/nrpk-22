@@ -238,7 +238,7 @@
                  (fn [db [_ arg extra]] (if arg
                                           (assoc db :lab/modaldialog-visible true
                                                     :lab/modaldialog-context extra)
-                                          (update db :lab/modaldialog-visible (fnil not true)))))
+                                          (assoc db :lab/modaldialog-visible false #_(fnil not true)))))
 
 ;endregion
 
@@ -522,7 +522,7 @@
 
 (def max-comment-length 160)
 
-(defn feedback [{:keys [on-close on-save persona caption navn comment-length] :as ctx}]
+(defn feedback [{:keys [title on-close on-save persona caption navn comment-length] :as ctx}]
   (let [max-comment-length (or comment-length max-comment-length)]
     [sc/centered-dialog
      {:style {:background-color "var(--content)"
@@ -539,7 +539,7 @@
                                         :color  (if state on-color off-color)}}
                     (if state on-icon off-icon)]))]
          [sc/col-space-8
-          [sc/dialog-title (str "Tilbakemelding" (when navn (str " til " navn)))]
+          [sc/dialog-title (or title (str "Tilbakemelding" (when navn (str " til " navn))))]
           [:div.flex.justify-between {:class [:w-full]}
            [sc/col-space-2 #_{:style {:width "100%"}}
             [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption]

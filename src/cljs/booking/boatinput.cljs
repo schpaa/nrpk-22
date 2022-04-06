@@ -12,16 +12,16 @@
             [tick.core :as t]
             [booking.aktivitetsliste]
             [goog.events.KeyCodes :as keycodes]
-            [schpaa.style.button :as scb]))
+            [schpaa.style.button :as scb]
+            [booking.ico :as ico]))
 
 (o/defstyled input-caption :div
-
   {:font-family "Oswald"                                    ;"IBM Plex Sans"
    :font-size   "var(--font-size-4)"
    :font-weight "var(--font-weight-6)"})
 
 (o/defstyled button-caption :div
-  {:font-family "Inter"                                     ;"IBM Plex Sans"
+  {:font-family "IBM Plex Sans"
    :font-size   "var(--font-size-4)"
    :font-weight "var(--font-weight-6)"})
 
@@ -48,13 +48,13 @@
   {:display       :grid
    :place-content :center
    :border-radius "var(--radius-1)"
-   ;:background    "var(--red-6)"
-   ;:color         "var(--surface1)"
-   ;:background    "var(--surface1)"
-   :color         "var(--red-6)"}
-  [:&:hover {;:background    "var(--red-5)"
-             :color "var(--red-8)"}]
-  [:&:disabled {:color      "var(--surface2)"
+   :background    "var(--red-9)"
+   :color         "var(--red-3)"}
+
+
+  [:&:hover {:background "var(--red-8)"
+             :color      "var(--red-2)"}]
+  [:&:disabled {:color      "var(--text3)"
                 :background "none" #_"var(--surface0)"}]
   [:&:active:enabled {:background "var(--red-7)"
                       :color      "var(--red-1)"}]
@@ -73,9 +73,9 @@
    ;:color         "var(--surface1)"
    :background    "var(--green-6)"
    :color         "var(--green-1)"}
-  [:&:hover {;:background    "var(--red-5)"
-             :color "var(--green-7)"}]
-  [:&:disabled {:color      "var(--surface2)"
+  [:&:hover {:background "var(--green-5)"
+             :color      "var(--green-1)"}]
+  [:&:disabled {:color      "var(--text3)"
                 :background "none" #_"var(--surface0)"}]
   [:&:active:enabled {:background "var(--green-7)"
                       :color      "var(--green-1)"}]
@@ -90,13 +90,12 @@
   {:display       :grid
    :place-content :center
    :border-radius "var(--radius-1)"
-   ;:border "1px solid"
-   :background    "var(--toolbar-)"
+   :background    "var(--content)"
    :color         "var(--text0)"}
-  [:&:hover {;:background "var(--surface5)"
-             :color "var(--surface000)"}]
-  [:&:disabled {:color      "var(--surface3)"
-                :background "var(--content)"}]
+  [:&:hover {:background "var(--floating)"
+             :color      "var(--text0)"}]
+  [:&:disabled {:color      "var(--text3)"
+                :background "var(--toolbar)"}]
   [:&:active:enabled {:background "var(--surface3)"
                       :color      "var(--surface000)"}]
   ([{:keys [ref on-click disabled enabled style]} ch]
@@ -107,14 +106,23 @@
 
 (o/defstyled up-down-button :div
   :h-full button-caption
-  {:box-shadow "var(--inner-shadow-1)"}
+  {;:outline "1px solid red"
+   :box-shadow    "var(--inner-shadow-1)"
+   :border-radius "var(--radius-1)"}
   [:.base
-   {:padding       "var(--size-2)"
-    :background    "var(--surface00)"
-    :color         "var(--surface5)"
-    :border-radius "var(--radius-1)"}]
-  [:.some {:opacity 1}]
-  [:.zero {:opacity 0.3}]
+   {:border-radius "var(--radius-1)"
+    ;:padding       "var(--size-2)"
+    :background    "var(--field2)"
+    :color         "var(--text1)"}]
+
+  [:.some {:opacity          1
+           :z-index          30
+           :color            "black"
+           :background-color "var(--yellow-5)"}]
+  [:.zero {:opacity          1
+           :color            "var(--text2)"
+           :background-color "var(--content)"}]
+
   [:.item:active {:background-color "var(--surface2)"}]
   [:.overlay {:overflow :hidden}]
   ([{:keys [increase decrease value content]}]
@@ -123,10 +131,12 @@
                   :flex-grow 1
                   :height    :100%
                   :overflow  :hidden}}
-         [:div.overlay.absolute.top-0.inset-x-0.item.z-10.overflow-hiddenx {:on-click decrease :style {:height "50%"}}]
-         [:div.overlay.absolute.bottom-0.inset-x-0.item.z-10.overflow-hiddenx {:on-click increase :style {:height "50%"}}]
+         [:div.overlay.absolute.top-0.inset-x-0.item.z-40
+          {:on-click decrease :style {:height "50%"}}]
+         [:div.overlay.absolute.bottom-0.inset-x-0.item.z-40
+          {:on-click increase :style {:height "50%"}}]
          [:div.flex.items-end.justify-center.h-full.z-50.pointer-events-none.base]
-         [:div.absolute.inset-0.z-20.pointer-events-none.mb-1
+         [:div.absolute.inset-0.z-20.pointer-events-none.pb-2
           {:class (if (pos? value) :some :zero)}
           (content value)]]]))
 
@@ -148,8 +158,8 @@
 (o/defstyled panel :div
   :w-64 :h-auto
   {:display               :grid
-   :column-gap            "var(--size-1)"
-   :row-gap               "var(--size-1)"
+   :column-gap            "var(--size-2)"
+   :row-gap               "var(--size-2)"
    :grid-template-columns "repeat(4,1fr)"
    :grid-auto-rows        "4rem"})
 
@@ -239,7 +249,7 @@
     {:style {:display               :grid
              :border-radius         "var(--radius-0)"
              ;:box-shadow            "var(--inner-shadow-2)"
-             :background            "var(--floating)"
+             ;:background            "var(--floating)"
              :gap                   "var(--size-1)"
              :grid-template-columns "repeat(3,1fr)"
              :grid-auto-rows        "1fr"}}
@@ -261,7 +271,7 @@
                                       (swap! st #(-> %
                                                      (update :phonenumber (fn [s] (subs s 0 (dec (count s)))))))
                                       (backspace-clicked st)))
-                   :style    {:color (if (not (empty? (:item @st))) "var(--surface0)" "var(--surface3)")}
+                   :style    {:color (if (not (empty? (:item @st))) "var(--red-8)" "var(--text2)")}
                    :enabled  (if (:phone @st)
                                (not (empty? (:phonenumber @st)))
                                (not (empty? (:item @st))))}
@@ -289,10 +299,11 @@
     :value     (:key @st)
     :off-style {:color      "var(--surface2)"
                 :background "none"}
-    :style     (if (:key @st) {:box-shadow "var(--shadow-3)"
-                               :color      "var(--surface4)"
-                               :background "var(--yellow-5)"})
-    :content   [sc/icon-large [:> (if (:key @st) solid/KeyIcon outline/KeyIcon)]]}])
+    :style     (if (:key @st) {:box-shadow "var(--shadow-1)"
+                               :color      "var(--gray-10)"
+                               :background "var(--yellow-5)"}
+                              {:background "var(--content)"})
+    :content   [sc/icon-large [:> (if (:key @st) outline/KeyIcon solid/KeyIcon)]]}])
 
 (defn- moon-command [st]
   (swap! st update :moon (fnil not false)))
@@ -303,9 +314,11 @@
     :value     (:moon @st)
     :off-style {:color      "var(--surface2)"
                 :background "none"}
-    :style     (if (:moon @st) {:color      "var(--surface4)"
-                                :background "var(--yellow-5)"})
-    :content   [sc/icon-large [:> (if (:moon @st) solid/MoonIcon outline/MoonIcon)]]}])
+    :style     (if (:moon @st) {:box-shadow "var(--shadow-1)"
+                                :color      "var(--gray-10)"
+                                :background "var(--yellow-5)"}
+                               {:background "var(--content)"})
+    :content   [sc/icon-large [:> (if (:moon @st) outline/MoonIcon solid/MoonIcon)]]}])
 
 (defn- add-command [st]
   (if (<= 3 (count (:item @st)))
@@ -325,7 +338,7 @@
                    (<= 3 (count (:item @st))))
     :on-style {:color      "var(--surface4)"
                :background "var(--surface1)"}}
-   (sc/icon-huge [:> solid/PlusCircleIcon])])
+   (sc/icon-huge [:> outline/PlusCircleIcon])])
 
 (defn- delete-clicked [st]
   (swap! st #(-> %
@@ -336,10 +349,10 @@
   [delete-button
    {:on-click #(delete-clicked st)
     :value    true
-    :on-style {:background "var(--surface1)"}
+    :on-style {:background "var(--toolbar)"}
     :enabled  (and (or (not (empty? (:selected @st)))
                        (not (empty? (:item @st)))))}
-   (sc/icon-huge [:> outline/XCircleIcon])])
+   (sc/icon-huge ico/trash)])
 
 (defn- restart-command [st]
   (reset! st nil))
@@ -380,16 +393,16 @@
         :enabled dirty?
         :style   (if dirty?
                    (if @timer
-                     {:transition-duration "0.5s"
-                      :color               "var(--orange-9)"
-                      :background          "var(--orange-1)"}
                      {:transition-duration "2s"
-                      :color               "var(--orange-6)"
-                      :background          "var(--surface000)" #_"var(--brand1-6)"})
+                      :color               "var(--gray-0)"
+                      :background          "var(--red-8)"}
+                     {;:transition-duration "2s"
+                      :color      "var(--text0)"
+                      :background "var(--content)" #_"var(--brand1-6)"})
                    {:transition-duration "0s"
-                    :color               "var(--surface2)"
+                    :color               "var(--text3)"
                     :background          "none"})}
-       [:div {:style {:transition-duration "0.5s"
+       [:div {:style {:transition-duration "1s"
                       :transform           (if @timer "rotate(-360deg)")}}
         (sc/icon-large (icon/adapt :refresh 3))]])
     (finally (.removeEventListener @a "mousedown" mousedown)
@@ -421,7 +434,7 @@
       :enabled  ok?
       :styles   (when ok? {:color      "var(--green-1)"
                            :background "var(--green-6)"})}
-     (sc/icon-huge [:> solid/CheckCircleIcon])]))
+     (sc/icon-huge [:> outline/CheckCircleIcon])]))
 
 (defn lookup [id]
   (if (< 3 (count id))
@@ -467,14 +480,9 @@
       {:reagent-render
        (fn [_]
          [:div.relative
-          {}
-          #_[:div.absolute.top-0.right-0
-             [scb/corner {:on-click toggle-numberinput} [sc/icon-large [:> solid/XIcon]]]]
-
-          [:div                                             ;.focus:outline-nonex.focus:ring-black.focus:ring-offset-2.focus:ring-offset-white.p-4
+          [:div
            {:class     [:focus:outline-none
                         :focus:ring-4
-                        ;:focus:ring-alt
                         :focus:ring-offset-2
                         :focus:ring-offset-clear]
             :style     (if mobile? {} {:padding                    "var(--size-4)"
@@ -494,7 +502,7 @@
            [panel
             [:div
              {:style {:grid-column "2/span 3"
-                      :grid-row    "5/span 4"}}
+                      :grid-row    "6/span 4"}}
              [numberinput st]]
             [:div.p-1x {:style {:grid-column "4"
                                 :grid-row    "1/span 2"}}
@@ -515,12 +523,12 @@
              [havekey st]]
 
             [:div
-             {:style {:grid-row       "4"
+             {:style {:grid-row       "5"
                       :grid-column    "2/span 2"
                       :padding-inline "var(--size-2)"
                       :border-radius  "var(--radius-1)"
                       :background     "var(--field1)"
-                      :-box-shadow    "var(--inner-shadow-0)"}}
+                      :box-shadow     "var(--inner-shadow-0)"}}
              [:div.flex.items-center.h-full
               {:style {:font-family "Oswald"
                        :font-weight 600
@@ -542,17 +550,17 @@
                           :font-size   "var(--font-size-5)"
                           :color       "var(--text1)"}}
                  (when (empty? (:item @st))
-                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["])
+                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
                  [input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
                  (when-not (empty? (:item @st))
                    ;[:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["]
                    (if (< 3 (count (:item @st)))
-                     [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "]"]
+                     [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]
                      [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]))])]]
 
 
             [:div
-             {:style {:grid-row       "3"
+             {:style {:grid-row       "3/span 2"
                       :grid-column    "1/span 4"
                       :padding-inline "var(--size-2)"
                       :display        :flex
@@ -564,14 +572,14 @@
                (lookup (:item @st))
                [sc/col {:class [:space-y-px :opacity-50]}
                 [sc/title1 [sc/row-sba "Skriv båtnummeret og"
-                            [sc/icon [:> solid/PlusCircleIcon]]]]
+                            [sc/icon [:> outline/PlusCircleIcon]]]]
                 [sc/subtext "Bruk 4 siffer for testing"]])]
 
             [:div.p-1
              {:style {:grid-column           "1"
-                      :grid-row              "5/span 2"
+                      :grid-row              "6/span 2"
                       :border-radius         "var(--radius-1)"
-                      :background            "var(--surface00)"
+                      :background            "var(--field1)"
                       :gap                   "var(--size-1)"
                       :display               :grid
                       :grid-template-columns "1fr"
@@ -585,22 +593,22 @@
                                     (swap! st #(-> %
                                                    (assoc :selected e)
                                                    (assoc :item e)))))} e])]
-            [:div {:style {:grid-row    "4"
+            [:div {:style {:grid-row    "5"
                            :grid-column "1"}}
              [delete st]]
-            [:div {:style {:grid-row    "4"
+            [:div {:style {:grid-row    "5"
                            :grid-column "4"}}
              [add st]]
-            [:div {:style {:grid-row    "8"
+            [:div {:style {:grid-row    "9"
                            :grid-column "1"}}
              [confirm st]]
-            [:div {:style {:grid-row    "7"
+            [:div {:style {:grid-row    "8"
                            :grid-column "1"}}
              [restart st]]
 
             (when (< 3 (count (:list @st)))
               [:div.p-1 {:style {:grid-column           "1/span 4"
-                                 :grid-row              "9/span 2"
+                                 :grid-row              "10/span 2"
                                  :border-radius         "var(--radius-1)"
                                  :background            "var(--surface00)"
                                  :gap                   "var(--size-1)"

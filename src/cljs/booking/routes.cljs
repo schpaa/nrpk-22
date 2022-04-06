@@ -21,6 +21,11 @@
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
 
    ["/om-meg" {:name :r.user :shorttitle "Meg" :header [:r.oversikt "Mine opplysninger"]}]
+
+   ["/tilstede" {:name       :r.presence
+                 :shorttitle "Tilstede"
+                 :header     [:r.forsiden "Tilstede"]
+                 :access     [[:member] #{:admin}]}]
    ["/brukere" {:name       :r.users
                 :shorttitle "Brukere"
                 :header     [:r.forsiden "Brukere"]

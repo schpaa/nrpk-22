@@ -137,7 +137,6 @@
      {:icon-fn   (fn [] (sc/icon-large ico/user))
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
-
      (when (or @admin? @booking?)
        {:icon-fn   (fn [] (sc/icon-large ico/booking))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
@@ -161,7 +160,6 @@
         :special   true
         :centered? true
         :on-click  #(rf/dispatch [:lab/toggle-number-input])})
-
      :space
      (when @admin?
        {:tall-height true
@@ -174,9 +172,10 @@
 
      (when (or @admin?)
        {:icon-fn     (fn [] (sc/icon-large ico/users))
+        :on-click    #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
         :tall-height true
-        :on-click    #(rf/dispatch [:app/navigate-to [:r.users]])
-        :page-name   :r.users})
+        :class       #(if (= % :r.users) :active :oversikt)
+        :page-name   #(some #{%} [:r.users :r.presence])})
 
      {:tall-height true
       :special     true
@@ -587,7 +586,12 @@
                                   :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
         [sc/row-ec
          [hoc.buttons/reg-pill-icon
-          {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+          {:style    {:background    "var(--gray-8)"
+                      :border-radius "var(--radius-round)"
+                      :box-shadow    "var(--shadow-1)"
+                      :border        "1px solid var(--gray-8)"
+                      :color         "var(--gray-0)"}
+           :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
           ico/tilbakemelding "Tilbakemelding"]]
         [sc/col
          [sc/small1 (or booking.data/VERSION "version")]
@@ -625,7 +629,7 @@
             :close   #(rf/dispatch [:lab/modaldialog-visible false])}]
           ;endregion
           ;region command-palette
-          [schpaa.style.dialog/modal-selector
+          [schpaa.style.dialog/command-palette
            {:context @(rf/subscribe [:lab/modal-selector-extra])
             :vis     (rf/subscribe [:lab/modal-selector])
             :close   #(rf/dispatch [:lab/modal-selector false])}]
@@ -803,8 +807,8 @@
                                               0
                                               :auto)
                               :width        "100%"
-                              :max-width    max-width}}
-                     [:div.mx-4.min-h-full.grow
+                              :max-width    (if render-fullwidth "" max-width)}}
+                     [:div.min-h-full.grow
                       (if render-fullwidth
                         [render-fullwidth r]
-                        [render r])]]]))]))])})))
+                        [:div.mx-4 [render r]])]]]))]))])})))

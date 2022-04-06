@@ -27,6 +27,7 @@
 (def earlierchanges [:> outline/DocumentIcon])
 (def signout [:> outline/LogoutIcon])
 (def tilbakemelding [:> outline/ChatAltIcon])
+(def melding [:> outline/ChatIcon])
 (def heart [:> outline/HeartIcon])
 (def fill-heart [:> solid/HeartIcon])
 (def thumbsup [:> outline/ThumbUpIcon])

@@ -183,12 +183,13 @@
 
                    :align-content   :center}))}
       [:div.select-none
-       {:style (conj
+       {:class [:drop-shadow-2xl]
+        :style (conj
                  {}
                  (if mobile? {:padding-block "var(--size-10)"
                               :overflow-y    :auto}
                              {:pointer-events            :none
-                              :background                :none ;#f00a
+                              ;:background                :red ;#f00a
                               :border-bottom-left-radius "var(--radius-3)"
                               :border-top-left-radius    "var(--radius-3)"
                               :box-shadow                "var(--shadow-6)"

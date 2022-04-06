@@ -234,21 +234,11 @@
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         modify? (booking.access/can-modify? r users-access-tokens)]
     (into [sc/col-space-2 {:class [:w-full :overflow-x-auto]}]
-          #_[:div
-             [l/ppre-x data]
-             [l/ppre-x (sort-by first < (group-by (comp t/int
-                                                        ;#(if % (t/year %) (t/year (t/now)))
-                                                        t/year
-                                                        #(some-> % t/date)
-                                                        :date
-                                                        second)
-                                                  data))]]
           (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now)))
                                                           #(some-> % t/date)
                                                           :date
                                                           second)
                                                     data))]
-
             [sc/col-space-2
              [sc/hero (str "'" (subs (str (t/int g)) 2 4))]
              (into [:ol]
@@ -262,23 +252,6 @@
   (get-all-events))
 
 ;region
-
-(defn yearwheel-listitem [date type-text tldr]
-  [:div.col-span-2.inline-block.gap-2
-   {:style {:color       "var(--text0)"
-            :line-height "var(--font-lineheight-3)"
-            :font-size   "var(--font-size-2)"
-            :font-weight "var(--font-weight-4)"}}
-   [:span {:style {:color "var(--text1)"}} type-text " - "]
-   (when tldr
-     [:span {:style {:color "var(--text0)"}} tldr])
-   (when date
-     [:span " "
-      [flex-datetime date
-       (fn [type d]
-         (if (= :date type)
-           [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-           [sc/subtext-inline d]))]])])
 
 (defn yearwheel-feed []
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
