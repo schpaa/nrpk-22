@@ -220,6 +220,7 @@
 
      {:icon      ico/user
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :disabled  (not (some? @registered?))
       :page-name :r.user}]))
 
 (o/defstyled toolbar-button :button
@@ -561,16 +562,16 @@
        [sc/col-space-2
         (when goog.DEBUG
           [l/ppre-x access-tokens])
-        (when goog.DEBUG
-          [sc/col-space-1
-           {:style {:user-select :contain
-                    :color       "var(--gray-5)"}}
-           [sc/text-cl "Admin access? " (str @(rf/subscribe [:lab/admin-access]))]])
-        (when goog.DEBUG
-          [sc/col-space-1
-           {:style {:user-select :contain
-                    :color       "var(--gray-5)"}}
-           [sc/text-cl "Nøkkelvakt access? " (str @(rf/subscribe [:lab/nokkelvakt]))]])
+        #_#_(when goog.DEBUG
+              [sc/col-space-1
+               {:style {:user-select :contain
+                        :color       "var(--gray-5)"}}
+               [sc/text-cl "Admin access? " (str @(rf/subscribe [:lab/admin-access]))
+                (when goog.DEBUG
+                  [sc/col-space-1
+                   {:style {:user-select :contain
+                            :color       "var(--gray-5)"}}
+                   [sc/text-cl "Nøkkelvakt access? " (str @(rf/subscribe [:lab/nokkelvakt]))]])]])
 
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-3)"}} "Postadresse"]

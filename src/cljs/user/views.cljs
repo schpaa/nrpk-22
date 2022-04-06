@@ -307,9 +307,10 @@
 
                [hoc.buttons/regular {:type     :submit
                                      :disabled (empty? dirty)} "Lagre"]]
-              [hoc.buttons/danger
-               {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
-               (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]]
+              ;todo Put this in settings
+              #_[hoc.buttons/danger
+                 {:on-click #(schpaa.style.dialog/open-dialog-confirmaccountdeletion)}
+                 (hoc.buttons/icon-with-caption ico/trash "Slett konto...")]]
              [sist-oppdatert uid values]]])]))))
 
 (defn my-info [r]

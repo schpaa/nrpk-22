@@ -334,12 +334,9 @@
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[master-switch ua {:keys [status access] :as sim}] _]
+            (fn [[master-switch ua {:keys [status access uid] :as sim}] _]
               (if master-switch
-                (some #{status} [:registered :waitinglist :member])
-                #_(if (some? (:uid ua))
-                    (some #{status} [:registered :waitinglist :member])
-                    (some? (:uid ua)))
+                (and uid (some #{status} [:registered :waitinglist :member]))
                 (some? (:uid ua)))))
 
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
@@ -349,7 +346,7 @@
 (rf/reg-event-db :lab/set-sim (fn [db [_ arg opt]]
                                 (cond
                                   (= :uid arg)
-                                  (assoc-in db [:lab/sim :uid] opt)
+                                  (assoc-in db [:lab/sim :uid] (if (seq opt) opt nil))
 
                                   (= :booking arg)
                                   (if opt
