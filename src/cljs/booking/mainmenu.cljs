@@ -19,18 +19,18 @@
 (defn address-me-as [user]
   (booking.database/bookers-name user))
 
-(defn mainmenu-definition [settings-atom]
+(defn mainmenu-definition []
   (let [at-least-registered? (rf/subscribe [:lab/at-least-registered])
         username-or-fakename (rf/subscribe [:lab/username-or-fakename])
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     (remove nil?
-            [[:space]
-             #_[:menuitem {:icon      ico/new-home
-                           :label     "Forsiden"
-                           :highlight (= :r.forsiden current-page)
-                           :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-                           :disabled  false
-                           :value     #()}]
+            [#_[:menuitem-close {:icon ico/closewindow}]
+             [:menuitem' {:icon     ico/closewindow
+                          :label    ""
+                          :shortcut "ESC"
+                          :action   #(rf/dispatch [:lab/close-menu])}]
+
+
              [:menuitem {:icon      ico/new-home
                          :label     "Oversikt"
                          :highlight (= :r.oversikt current-page)
@@ -172,27 +172,32 @@
        [scm/boatinput-panel-from-right
         [booking.boatinput/sample mobile?]]]]]))
 
-(rf/reg-event-db :lab/open-menu (fn [db _] (update db :lab/open-menu not)))
-(rf/reg-sub :lab/open-menu :-> #(get % :lab/open-menu false))
+(rf/reg-event-db :lab/open-menu (fn [db _]
+
+                                  (assoc db :lab/open-menu true)))
+
+(rf/reg-event-db :lab/close-menu (fn [db _]
+                                   (assoc db :lab/open-menu false)))
+
+(rf/reg-sub :lab/menu-open (fn [db] (get db :lab/open-menu false)))
 
 (defn main-menu []
-  (r/with-let [mainmenu-visible (rf/subscribe [:lab/open-menu]) #_(r/atom false)
-               numberinput-visible (rf/subscribe [:lab/number-input])]
-    (let [toggle-mainmenu #(rf/dispatch [:lab/open-menu]) #_#(swap! mainmenu-visible (fnil not false))
-          toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
-      [scm/mainmenu-example-with-args
-       {:data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
-        :showing      mainmenu-visible
-        :dir          #{:left :down}
-        :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
-        :button       (fn [open]
-                        [hoc.buttons/round'
-                         {:style {:cursor            :pointer
-                                  :-background-color (when @mainmenu-visible "var(--toolbar)")}
-                          :class [:h-12] :on-click toggle-mainmenu}
-                         (if @mainmenu-visible
-                           [sc/icon-large ico/closewindow]
-                           [sc/icon-large ico/menu])])}])))
+  (r/with-let [mainmenu-visible #_(r/atom false) (rf/subscribe [:lab/menu-open])]
+    [scm/mainmenu-example-with-args
+     {:data       (mainmenu-definition)
+      :showing!   mainmenu-visible
+      :close-menu #(rf/dispatch [:lab/close-menu])
+      :button     (fn [open]
+                    [hoc.buttons/round'
+                     {:style    {:cursor :pointer}
+                      :class    [:h-16]
+                      :on-click #(do
+                                   (tap> {"ZAP" open})
+                                   #_(if-not open
+                                       (rf/dispatch [:lab/open-menu])
+                                       #_(rf/dispatch [:lab/close-menu])))}
+
+                     [sc/icon-large (if open ico/closewindow ico/menu)]])}]))
 
 ;region extract!
 

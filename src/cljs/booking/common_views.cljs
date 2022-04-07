@@ -741,7 +741,9 @@
         scroll-fn (fn [e]
                     (let [v (-> e .-target .-scrollTop)]
                       (if (< 50 v)
-                        (rf/dispatch [:lab/we-know-how-to-scroll true]))
+                        (do
+                          (rf/dispatch [:lab/we-know-how-to-scroll true])
+                          (rf/dispatch [:lab/close-menu])))
                       (reset! scrollpos v)
                       (tap> ["scroll" (-> e .-target .-scrollTop)])))
         a (r/atom nil)]

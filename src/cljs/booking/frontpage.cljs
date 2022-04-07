@@ -412,7 +412,6 @@
 
       [:div.min-h-full.z-0.relative
 
-
        (when (and goog.DEBUG @master-emulation)
          [:div.max-w-lg.mx-auto
           [:div.mx-4.py-4.pt-24

@@ -490,7 +490,7 @@
 
 ;region
 
-(defn xx [{:keys [on-close] :as context}]
+(defn xx [{:keys [on-close context]}]
   [sc/centered-dialog
    {:style {:z-index    10
             :width      "50ch"
@@ -500,6 +500,7 @@
    [sc/col-space-8
     [sc/dialog-title' "Ekornets fødselsdag"]
     [sc/col-space-2
+     [l/ppre-x context]
      [sc/text1 {:style {:font-family "Merriweather"
                         :line-height "var(--font-lineheight-4)"}
                 :class [:clear-left]} "Alle presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
@@ -520,11 +521,11 @@
 
 (rf/reg-event-fx :app/successful-login
                  (fn [{db :db} [_ args]]
-                   #_{:fx [[:dispatch [:lab/modaldialog-visible
-                                       true
-                                       {:action     #()
-                                        :context    args
-                                        :content-fn #(xx %)}]]]}))
+                   {:fx [[:dispatch [:lab/modal-example-dialog2
+                                     true
+                                     {:action     #()
+                                      :context    args
+                                      :content-fn #(xx %)}]]]}))
 
 ;endregion
 
