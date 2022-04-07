@@ -339,6 +339,16 @@
                 (and uid (some #{status} [:registered :waitinglist :member]))
                 (some? (:uid ua)))))
 
+(rf/reg-sub :lab/username-or-fakename
+            :<- [:lab/master-state-emulation]
+            :<- [::db/user-auth]
+            :<- [:lab/sim?]
+            (fn [[master-switch ua {:keys [status access uid] :as sim}] _]
+              (if master-switch
+                uid
+                (:display-name ua))))
+
+
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
                                      (tap> {:lab/set-sim-type arg})
                                      (assoc-in db [:lab/sim :status] arg)))

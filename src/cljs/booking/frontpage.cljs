@@ -330,8 +330,9 @@
          [sc/ingress-cl {:style {:white-space :nowrap
                                  :color       "var(--text1)"
                                  :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
-       [:div.h-24.w-auto.border-l.border-dashed
+       [:div.h-24.w-auto
         {:style {:border-width "1px"
+                 :border-style "dashed"
                  :border-color (if dark-mode? "var(--brand1)" "var(--brand1)")}}]
 
        [:div {:class [:--debug3]
@@ -399,10 +400,9 @@
     [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
 
 
-
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
-        hide-image-carousell? (schpaa.state/listen :lab/hide-image-carousell)
+        show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
         at-least-registered? (rf/subscribe [:lab/at-least-registered])
         master-emulation (rf/subscribe [:lab/master-state-emulation])]
     [:div
@@ -423,7 +423,7 @@
         [:div.max-w-lg.mx-auto
          [header-with-logo]]]
 
-       (when-not @hide-image-carousell?
+       (when @show-image-carousell?
          [image-carousell])
 
        [:div.mx-4

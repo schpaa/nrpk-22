@@ -128,7 +128,13 @@
         booking? (rf/subscribe [:lab/booking])
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-    [{:icon-fn   #(sc/icon-large ico/new-home)
+    [#_{:icon-fn   (fn [] (if @(rf/subscribe [:lab/open-menu])
+                            (sc/icon-large ico/closewindow)
+                            (sc/icon-large ico/menu)))
+        :on-click  #(rf/dispatch [:lab/open-menu])
+        :page-name :r.user}
+
+     {:icon-fn   #(sc/icon-large ico/new-home)
       :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
       ;:on-click-active #(rf/dispatch [:app/navigate-to [:r.oversikt]])
       :class     #(if (= % :r.oversikt) :oversikt :active)
@@ -230,12 +236,9 @@
     :padding       "var(--size-2)"}
    [:&:disabled {:color "var(--text3)"}]
    [:&:enabled:hover {:color "var(--text1)"}]
-
    [:&.active {:color      "var(--text1)"
                :background "var(--content)"
                :box-shadow "var(--shadow-1)"}]
-
-
    [:&.oversikt {:color      "var(--gray-0)"
                  :background "var(--brand1)"
                  :box-shadow "var(--shadow-1)"}
@@ -378,7 +381,7 @@
              [result-item e]))]))
 
 (o/defstyled header-top-frontpage :div
-  :flex :items-center :w-full :px-4 :gap-2
+  :flex :items-center :w-full :px-2 :gap-2
   {;:background "var(--content)"
    ;:background "transparent"
    :height "var(--size-9)"}
@@ -387,7 +390,7 @@
     :xborder-right           "1px solid var(--toolbar-)"}])
 
 (o/defstyled header-top :div
-  :flex :items-center :w-full :px-4 :gap-2
+  :flex :items-center :w-full :px-2 :gap-2
   {:background "var(--content)"
    ;:background "transparent"
    :height     "var(--size-9)"}
@@ -457,60 +460,69 @@
       [:div
        {:style (when-not frontpage {:background    "var(--toolbar)"
                                     :border-bottom "1px solid var(--toolbar)"})}
+
        [(if frontpage header-top-frontpage header-top)      ;{:class [:-debug2]}
-        (when goog.DEBUG
-          [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
+        [main-menu]
+
+        #_(when goog.DEBUG
+            [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
 
         ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-        [:div.flex.flex-col.truncate
-         (when-not @(rf/subscribe [:lab/in-search-mode?])
-           (let [titles (compute-page-titles r)]
-             [:div
-              ;large/wide
-              [:div.hidden.md:block.grow
-               (if (vector? titles)
-                 [sc/row-sc-g2
-                  (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "/"]
-                             (for [[idx e] (map-indexed vector titles)
-                                   :let [last? (= idx (dec (count titles)))]]
-                               (if last?
-                                 [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
-                                 (let [{:keys [text link]} e]
-                                   [sc/subtext-with-link {:style {:-background "var(--content)"}
-                                                          :href  (k/path-for [link])} text]))))]
-                 [sc/text1 {:class [:truncate]} titles])]
-              ;small/stacked
-              [:div.sm:block.md:hidden.grow
-               (if (vector? titles)
-                 [sc/col-space-1
-                  {:class [:truncate]}
-                  (when (< 1 (count titles))
-                    (let [{:keys [text link]} (first titles)]
-                      [:div [sc/subtext-with-link {:style {:-background  "red"
-                                                           :-margin-left "-2px"}
-                                                   :href  (k/path-for [link])} text]]))
-                  [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} (last titles)]]
-                 [sc/col
-                  [sc/text1 titles]])]]))]
-        ;[:div.grow]
         (if frontpage
           [:div.grow]
           (if-not @(rf/subscribe [:lab/at-least-registered])
             [:<>
-             [:div.grow]
-             [cta {:-style   {:padding-block  "var(--size-1)"
-                              :padding-inline "var(--size-2)"
-                              ;:min-width      "0rem"
-                              :width          "min-content"
-                              ;:font-weight    "var(--font-weight-6)"
-                              :box-shadow     "var(--shadow-1)"}
-                   :-class   [:flex :flex-wrap :items-center :gap-x-1 :h-12 :space-y-0 :shrink-0]
-                   :on-click #(rf/dispatch [:app/login])}
+             [schpaa.style.hoc.buttons/cta {:style    {;:padding-block  "var(--size-2)"
+                                                       ;:height "2rem"
+                                                       :padding-inline "var(--size-4)"
+                                                       ;:min-width      "0rem"
+                                                       :width          "min-content"
+                                                       ;:font-weight    "var(--font-weight-6)"
+                                                       :box-shadow     "var(--shadow-1)"}
+                                            :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
+                                            :on-click #(rf/dispatch [:app/login])}
               "Logg inn"
-              #_[:div.whitespace-nowrap "& Registrer deg"]]]
-            [:div.grow.flex.justify-end.items-center [search-menu]]))
-        [main-menu]
-        [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""]]]])])
+              #_[:div.whitespace-nowrap "& Registrer deg"]]
+             [:div.grow]]
+            #_[:div.grow.flex.justify-end.items-center [search-menu]]))
+        [:div.grow]
+        [:div.flex.flex-col.truncate.px-2.text-right
+         (when-not @(rf/subscribe [:lab/in-search-mode?])
+           (let [titles (compute-page-titles r)]
+             [:div
+              ;large/wide
+              #_[:div.hidden.md:block.grow
+                 (if (vector? titles)
+                   [sc/row-sc-g2
+                    (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "/"]
+                               (for [[idx e] (map-indexed vector titles)
+                                     :let [last? (= idx (dec (count titles)))]]
+                                 (if last?
+                                   [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
+                                   (let [{:keys [text link]} e]
+                                     [sc/subtext-with-link {:style {:-background "var(--content)"}
+                                                            :href  (k/path-for [link])} text]))))]
+                   [sc/title1 {:class [:truncate]} titles])]
+              ;small/stacked
+              [:div                                         ;.sm:block.md:hidden.grow
+               (if (vector? titles)
+                 [sc/col
+                  {:class [:truncate]}
+                  [sc/title1 {:style {:font-weight "var(--font-weight-5)"}} (last titles)]
+                  (when (< 1 (count titles))
+                    (let [{:keys [text link]} (first titles)]
+                      [:div
+                       #_[sc/icon-tiny {:style {:margin-right "6px"
+                                                ;:padding-top "12px"
+                                                :color        "var(--text2)"
+                                                :display      :inline-block}} (schpaa.icon/inline :arrow-left-up)]
+                       [sc/subtext-with-link {:style {:-background  "red"
+                                                      :-margin-left "-2px"}
+                                              :href  (k/path-for [link])} text]]))]
+                 [sc/col
+                  [sc/title1 titles]])]]))]
+
+        #_[schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode "" (fn [t c] t)]]]])])
 
 (defn right-tabbar []
   (let [numberinput? (rf/subscribe [:lab/number-input])
@@ -573,7 +585,7 @@
              [sc/text-cl "Nøkkelvakt access? " (str @(rf/subscribe [:lab/nokkelvakt]))]])
 
         [sc/col-space-1
-         [sc/title {:style {:color "var(--gray-3)"}} "Postadresse"]
+         [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
          [sc/col-space-1
           {:style {:user-select :contain
                    :color       "var(--gray-5)"}}

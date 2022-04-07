@@ -20,117 +20,86 @@
   (booking.database/bookers-name user))
 
 (defn mainmenu-definition [settings-atom]
-  (let [userauth (rf/subscribe [::db/user-auth])
+  (let [at-least-registered? (rf/subscribe [:lab/at-least-registered])
+        username-or-fakename (rf/subscribe [:lab/username-or-fakename])
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-    ;[icon label action disabled value]
-    [[:div [:div.p-2 [sc/title1 {:style {:font-family "Merriweather"
-                                         :font-weight 300
-                                         :font-size   "var(--font-size-4)"}} (str "Hei " (address-me-as @userauth))]]]
-     [:menuitem {:filledicon (sc/icon [:> solid/HomeIcon])
+    (remove nil?
+            [[:space]
+             #_[:menuitem {:icon      ico/new-home
+                           :label     "Forsiden"
+                           :highlight (= :r.forsiden current-page)
+                           :action    #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+                           :disabled  false
+                           :value     #()}]
+             [:menuitem {:icon      ico/new-home
+                         :label     "Oversikt"
+                         :highlight (= :r.oversikt current-page)
+                         :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+                         :disabled  false
+                         :value     #()}]
 
-                 :label      "Forsiden"
-                 :color      "var(--red-6)"
-                 :highlight  (= :r.forsiden current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.forsiden]])
-                 :disabled   false
-                 :value      #()}]
-     ;[:space]
-     [:menuitem {:filledicon (sc/icon [:> solid/CalendarIcon])
-                 :label      "Kalender"
-                 :color      "var(--hva-er-nytt)"
-                 :highlight  (= :r.calendar current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.calendar]])
-                 :disabled   false
-                 :value      #()}]
-     [:menuitem {:filledicon (sc/icon [:> solid/BookOpenIcon])
-                 :label      "Innlegg"
-                 :color      "var(--hva-er-nytt)"
-                 :highlight  (= :r.booking-blog current-page)
-                 :action     #(rf/dispatch [:app/navigate-to [:r.booking-blog]])
-                 :disabled   false
-                 :value      #()}]
-     #_[:hr]
-     #_[:menuitem {:filledicon [:div {:class [:-m-1]
-                                      :style {:padding          "var(--size-1)"
-                                              :border-radius    "var(--radius-round)"
-                                              :background-color "var(--brand1)"
-                                              :color            :white}} (sc/icon [:> outline/CalculatorIcon])]
-                   :label      "Utlån"
-                   :color      "var(--brand1)"
-                   :shortcut   "cmd-l"
-                   :action     #(rf/dispatch [:lab/open-number-input])}]
-     #_[:menuitem {:filledicon (sc/icon [:> solid/TicketIcon])
-                   :label      "Ny booking"
-                   :color      "var(--new-booking)"
-                   :highlight  (= :r.debug current-page)
-                   :action     #(rf/dispatch [:app/navigate-to [:r.debug]])
-                   :disabled   false
-                   :value      #()}]
-     #_[:menuitem {:filledicon (sc/icon [:> solid/ClockIcon])
-                   :label      "Båtoversikt"
-                   :shortcut   "cmd-b"
-                   :color      "var(--booking-oversikt)"
-                   :highlight  (= :r.booking.oversikt current-page)
-                   :action     #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-                   :disabled   false
-                   :value      #()}]
+             (when @at-least-registered?
+               [:menuitem {:icon      ico/user
+                           :label     [sc/col
+                                       [sc/text1 "Mine opplysninger"]
+                                       [sc/small1 @username-or-fakename]]
 
+                           :highlight (= :r.user current-page)
+                           :action    #(rf/dispatch [:app/navigate-to [:r.user]])
+                           :disabled  false
+                           :value     #()}])
+             [:hr]
+             (when @at-least-registered?
+               [:toggle {:disabled  true
+                         :stay-open true
+                         :content   (fn [_]
+                                      [:div.w-full
+                                       [schpaa.style.hoc.toggles/toggle :lab/toggle-chrome "Flere knapper"
+                                        (fn [t c]
+                                          [:div.flex.justify-between.items-center.w-full.gap-2.h-12
+                                           [sc/text1 c] t])]])}])
 
-     #_[:menuitem {:filledicon (sc/icon [:> solid/MapIcon])
-                   :label      "Turlogg"
-                   :highlight  false
-                   :action     nil
-                   :disabled   true
-                   :value      #()}]
+             [:toggle {:disabled  true
+                       :stay-open true
+                       :content   (fn [_]
+                                    [:div.w-full
+                                     [schpaa.style.hoc.toggles/toggle :lab/show-image-carousell "Billedkarusell"
+                                      (fn [t c]
+                                        [:div.flex.justify-between.items-center.w-full.gap-2.h-12
+                                         [sc/text1 c] t])]])}]
 
-     #_[:menuitem {:filledicon (sc/icon [:> solid/ShieldCheckIcon])
-                   :label      "Retningslinjer"
-                   :color      "var(--blue-4)"
-                   :highlight  (= :r.booking.retningslinjer current-page)
-                   :action     #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])
-                   :disabled   false
-                   :value      #()}]
-     [:hr]
-     [:menuitem {:icon      (sc/icon [:> outline/UserCircleIcon])
-                 :label     "Mine opplysninger"
-                 :color     "var(--blue-4)"
-                 :highlight (= :r.user current-page)
-                 :action    #(rf/dispatch [:app/navigate-to [:r.user]])
-                 :disabled  false
-                 :value     #()}]
-     [:hr]
-     [:menuitem {:icon     (sc/icon [:> outline/CollectionIcon])
-                 :label    "Kommandoer"
-                 :color    "var(--brand1)"
-                 :shortcut "cmd-k"
-                 :action   #(rf/dispatch [:app/toggle-command-palette])}]
-     [:menuitem {:label    "Innstillinger"
-                 :icon     (sc/icon [:> outline/CogIcon])
-                 :shortcut "cmd-;"
-                 :action   #(rf/dispatch [:app/toggle-config])}]
+             [:toggle {:disabled  true
+                       :stay-open true
+                       :content   (fn [_]
+                                    [:div.w-full
+                                     [schpaa.style.switch/large-switch
+                                      {:tag      :lab/more-contrast
+                                       :caption  "Mer kontrast"
+                                       :disabled true
+                                       :view-fn  (fn [t c]
+                                                   [:div.flex.justify-between.items-center.w-full.gap-2.h-12
+                                                    [sc/text1 c] t])}]])}]
 
-     [:hr]
-     [:menuitem {:label  [sc/text1 "Toggle userstate-panel"]
-                 :icon   (sc/icon ico/eye)
-                 ;:shortcut "cmd-;"
-                 :action #(rf/dispatch [:lab/toggle-userstate-panel])}]
-
-     [:menuitem {:label    "Logg ut"
-                 :disabled false
-                 :icon     (sc/icon ico/showdetails)
-                 :action   #(rf/dispatch [:app/sign-out])}]
-
-     #_[:space]
-     #_[:div
-        [:<>
-         ;[l/ppre (:uid @userauth)]
-         [:div.flex.items-center.gap-2.justify-between
-          (if-not @userauth
-            [scb2/cta-small "Meld på"]
-            [:div.grow])
-          (if @userauth
-            [scb2/normal-small "Logg ut"]
-            [scb2/normal-small "Logg in"])]]]]))
+             [:hr]
+             [:menuitem {:icons  (sc/icon ico/commandPaletteClosed)
+                         :label  "Vis alle spørsmål"
+                         :action #(schpaa.state/change :lab/skip-easy-login false)}]
+             [:menuitem {:icon     (sc/icon ico/commandPaletteClosed)
+                         :label    "Hva kan jeg gjøre?"
+                         :shortcut "ctrl-k"
+                         :action   #(rf/dispatch [:app/toggle-command-palette])}]
+             (when @at-least-registered?
+               [:menuitem {:label    "Logg ut"
+                           :disabled false
+                           :icon     (sc/icon ico/logout)
+                           :action   #(rf/dispatch [:app/sign-out])}])
+             [:space]
+             [:div [:div.-m-1
+                    {:style {:background "var(--toolbar-)"}}
+                    [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""
+                     (fn [t c]
+                       [:div.flex.justify-between.items-center.w-full.gap-2.ml-12.mr-4.h-16
+                        [sc/text1 c] t])]]]])))
 
 (defn boatinput-sidebar []
   (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])]
@@ -203,19 +172,27 @@
        [scm/boatinput-panel-from-right
         [booking.boatinput/sample mobile?]]]]]))
 
+(rf/reg-event-db :lab/open-menu (fn [db _] (update db :lab/open-menu not)))
+(rf/reg-sub :lab/open-menu :-> #(get % :lab/open-menu false))
+
 (defn main-menu []
-  (r/with-let [mainmenu-visible (r/atom false)
+  (r/with-let [mainmenu-visible (rf/subscribe [:lab/open-menu]) #_(r/atom false)
                numberinput-visible (rf/subscribe [:lab/number-input])]
-    (let [toggle-mainmenu #(swap! mainmenu-visible (fnil not false))
+    (let [toggle-mainmenu #(rf/dispatch [:lab/open-menu]) #_#(swap! mainmenu-visible (fnil not false))
           toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
       [scm/mainmenu-example-with-args
-       {:showing      @mainmenu-visible
-        :dir          #{:right :down}
+       {:data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
+        :showing      mainmenu-visible
+        :dir          #{:left :down}
         :close-button (fn [open] [scb/corner {:on-click toggle-mainmenu} [sc/icon [:> solid/XIcon]]])
-        :data         (mainmenu-definition (r/atom {:toggle-mainmenu toggle-mainmenu}))
         :button       (fn [open]
-                        [hoc.buttons/round {:class [:h-10] :on-click toggle-mainmenu}
-                         [sc/icon [:> solid/MenuAlt2Icon]]])}])))
+                        [hoc.buttons/round'
+                         {:style {:cursor            :pointer
+                                  :-background-color (when @mainmenu-visible "var(--toolbar)")}
+                          :class [:h-12] :on-click toggle-mainmenu}
+                         (if @mainmenu-visible
+                           [sc/icon-large ico/closewindow]
+                           [sc/icon-large ico/menu])])}])))
 
 ;region extract!
 

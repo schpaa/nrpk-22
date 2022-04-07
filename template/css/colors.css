@@ -112,21 +112,6 @@ outline: 2px solid #a0a8;
  --gray-9: #011007;
 
 
-    --gray-0: #F0F1F1;
-    --gray-1: #E5E6E6;
-    --gray-2: #CDD0D0;
-    --gray-3: #B5BABA;
-    --gray-4: #9DA4A4;
-    --gray-5: #858E8E;
-    --gray-6: #6C7374;
-    --gray-7: #54595A;
-    --gray-8: #3B3E3F;
-    --gray-9: #222425;
-    --gray-10: #1a1c1d;
-
-*/
-
-
     --gray-0: #fafaf9;
     --gray-1: #f5f5f4;
     --gray-2: #e7e5e4;
@@ -139,11 +124,27 @@ outline: 2px solid #a0a8;
     --gray-9: #171515;
     --gray-10: #121010;
 
+*/
+    --gray-0: #F0F1F1;
+    --gray-1: #E5E6E6;
+    --gray-2: #CDD0D0;
+    --gray-3: #B5BABA;
+    --gray-4: #9DA4A4;
+    --gray-5: #858E8E;
+    --gray-6: #6C7374;
+    --gray-7: #54595A;
+    --gray-8: #3B3E3F;
+    --gray-9: #222425;
+    --gray-10: #1a1c1d;
 
 
 
-    --light-toolbar: var(--gray-3);
-    --light-toolbar-: var(--gray-4);
+
+
+
+
+    --light-toolbar: var(--gray-2);
+    --light-toolbar-: var(--gray-3);
     --light-content: var(--gray-1);
     --light-floating: var(--gray-0);
 
@@ -203,7 +204,7 @@ outline: 2px solid #a0a8;
 
 
 
-    --brand1-copy-dim: var(--gray-0); /* when copy is placed on --brand1-dim */
+    --brand1-copy-dim: white; /* when copy is placed on --brand1-dim */
     --brand1-hover-dim: var(--orange-3);
     --brand1-copy-light: white; /* when copy is placed on --brand1-light */
 

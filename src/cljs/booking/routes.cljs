@@ -2,8 +2,8 @@
 
 (def routes
   [["/" {:name       :r.forsiden
-         :header     [:r.oversikt "Hjem"]
-         :shorttitle "Hjem"}]
+         :header     [:r.oversikt "Forsiden"]
+         :shorttitle "Forsiden"}]
    ["/signed-out" {:name   :r.signedout
                    :header [:r.forsiden "Du har logget ut"]}]
 
