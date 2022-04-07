@@ -862,7 +862,7 @@ body {
 .schpaa_style_ornament__badge_author{border-radius:var(--radius-2);margin-left:-0.5rem;padding-left:.5rem;padding-right:.5rem;font-weight:400;height:100%;font-size:1rem;line-height:1.5rem;background:var(--surface4);color:var(--surface000);display:inline flow}
 .schpaa_style_ornament__dialog,min-w-md{--gi-shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);box-shadow:var(--shadow-6);border-bottom-right-radius:.75rem;border-bottom-left-radius:.75rem;border:1px solid var(--surface1);color:var(--text1);background-color:var(--surface00)}
 .schpaa_style_ornament__centered_dialog{padding-inline:var(--size-5);padding-block:var(--size-5);color:var(--text1);background-color:var(--content);border-radius:var(--radius-2);box-shadow:var(--shadow-3);overflow-y:auto}
-.schpaa_style_ornament__dropdown_dialog{background:var(--content);padding:var(--size-6);border-bottom-left-radius:var(--radius-2);border-bottom-right-radius:var(--radius-2);border:2px solid var(--toolbar-);box-shadow:var(--shadow-3)}
+.schpaa_style_ornament__dropdown_dialog{background:var(--content);padding:var(--size-6);border-bottom-left-radius:var(--radius-2);border-bottom-right-radius:var(--radius-2);border:2px solid var(--toolbar);box-shadow:var(--shadow-3)}
 .schpaa_style_ornament__selector,min-w-xsx,xmax-w-md,h-autox{-box-shadow:var(--shadow-6);color:var(--text1);-background-color:red}
 .schpaa_style_ornament__dialog_title{color:var(--text2);font-family:Inter;font-weight:var(--font-weight-5);font-size:var(--font-size-3)}
 .schpaa_style_ornament__dialog_title_SINGLEQUOTE_{color:var(--text1);font-family:Inter;font-weight:var(--font-weight-5);font-size:var(--font-size-4)}
