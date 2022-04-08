@@ -15,39 +15,49 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]))
 
+;region
 
-(defn address-me-as [user]
-  (booking.database/bookers-name user))
+(rf/reg-event-db :lab/open-menu
+                 (fn [db _]
+                   (assoc db :lab/open-menu true)))
+
+(rf/reg-event-db :lab/close-menu
+                 (fn [db _]
+                   (assoc db :lab/open-menu false)))
+
+(rf/reg-sub :lab/menu-open
+            (fn [db]
+              (get db :lab/open-menu false)))
+
+;endregion
 
 (defn mainmenu-definition []
   (let [at-least-registered? (rf/subscribe [:lab/at-least-registered])
         username-or-fakename (rf/subscribe [:lab/username-or-fakename])
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     (remove nil?
-            [#_[:menuitem-close {:icon ico/closewindow}]
-             [:menuitem' {:icon     ico/closewindow
-                          :label    ""
-                          :shortcut "ESC"
-                          :action   #(rf/dispatch [:lab/close-menu])}]
+            [#_[:header {:icon     ico/closewindow
+                         :label    ""
+                         :shortcut "ESC"
+                         :action   #(rf/dispatch [:lab/close-menu])}]
 
-
-             [:menuitem {:icon      ico/new-home
-                         :label     "Oversikt"
-                         :highlight (= :r.oversikt current-page)
-                         :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
-                         :disabled  false
-                         :value     #()}]
+             [:item {:icon      ico/new-home
+                     :label     "Oversikt"
+                     :highlight (= :r.oversikt current-page)
+                     :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+                     :disabled  false
+                     :value     #()}]
 
              (when @at-least-registered?
-               [:menuitem {:icon      ico/user
-                           :label     [sc/col
-                                       [sc/text1 "Mine opplysninger"]
-                                       [sc/small1 @username-or-fakename]]
+               [:item {:icon      ico/user
+                       :label     [sc/col
+                                   [sc/text1 "Mine opplysninger"]
+                                   [sc/small1 @username-or-fakename]]
 
-                           :highlight (= :r.user current-page)
-                           :action    #(rf/dispatch [:app/navigate-to [:r.user]])
-                           :disabled  false
-                           :value     #()}])
+                       :highlight (= :r.user current-page)
+                       :action    #(rf/dispatch [:app/navigate-to [:r.user]])
+                       :disabled  false
+                       :value     #()}])
              [:hr]
              (when @at-least-registered?
                [:toggle {:disabled  true
@@ -81,18 +91,18 @@
                                                     [sc/text1 c] t])}]])}]
 
              [:hr]
-             [:menuitem {:icons  (sc/icon ico/commandPaletteClosed)
-                         :label  "Vis alle spørsmål"
-                         :action #(schpaa.state/change :lab/skip-easy-login false)}]
-             [:menuitem {:icon     (sc/icon ico/commandPaletteClosed)
-                         :label    "Hva kan jeg gjøre?"
-                         :shortcut "ctrl-k"
-                         :action   #(rf/dispatch [:app/toggle-command-palette])}]
+             [:item {:icons  (sc/icon ico/commandPaletteClosed)
+                     :label  "Vis alle spørsmål"
+                     :action #(schpaa.state/change :lab/skip-easy-login false)}]
+             [:item {:icon     (sc/icon ico/commandPaletteClosed)
+                     :label    "Hva kan jeg gjøre?"
+                     :shortcut "ctrl-k"
+                     :action   #(rf/dispatch [:app/toggle-command-palette])}]
              (when @at-least-registered?
-               [:menuitem {:label    "Logg ut"
-                           :disabled false
-                           :icon     (sc/icon ico/logout)
-                           :action   #(rf/dispatch [:app/sign-out])}])
+               [:item {:label    "Logg ut"
+                       :disabled false
+                       :icon     (sc/icon ico/logout)
+                       :action   #(rf/dispatch [:app/sign-out])}])
              [:space]
              [:div [:div.-m-1
                     {:style {:background "var(--toolbar-)"}}
@@ -172,19 +182,11 @@
        [scm/boatinput-panel-from-right
         [booking.boatinput/sample mobile?]]]]]))
 
-(rf/reg-event-db :lab/open-menu (fn [db _]
-
-                                  (assoc db :lab/open-menu true)))
-
-(rf/reg-event-db :lab/close-menu (fn [db _]
-                                   (assoc db :lab/open-menu false)))
-
-(rf/reg-sub :lab/menu-open (fn [db] (get db :lab/open-menu false)))
-
 (defn main-menu []
   (r/with-let [mainmenu-visible #_(r/atom false) (rf/subscribe [:lab/menu-open])]
     [scm/mainmenu-example-with-args
      {:data       (mainmenu-definition)
+      :dir        #{:down}
       :showing!   mainmenu-visible
       :close-menu #(rf/dispatch [:lab/close-menu])
       :button     (fn [open]
@@ -201,16 +203,3 @@
 
 ;region extract!
 
-(defn sub-menu [{:keys [dir data]}]
-  (r/with-let [menu-visible (r/atom true)]
-    (let [toggle-menu #(swap! menu-visible (fnil not false))]
-      [scm/submenu
-       {:showing      @menu-visible
-        :dir          dir
-        :close-button (fn [open] [scb/corner {:on-click toggle-menu} [sc/icon [:> solid/XIcon]]])
-        :data         data
-        :button       (fn [open]
-                        [hoc.buttons/round {:class    [:h-10]
-                                            :on-click toggle-menu}
-                         [sc/icon [:div {:class [:duration-100 :transform (if open :rotate-180)]}
-                                   [:> solid/ChevronDownIcon]]]])}])))

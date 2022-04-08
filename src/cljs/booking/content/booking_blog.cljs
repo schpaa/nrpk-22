@@ -18,7 +18,8 @@
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
             [schpaa.style.dialog]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [booking.ico :as ico]))
 
 (defn article-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
@@ -228,40 +229,40 @@ Helt til slutt, en kinaputt"
 
 (defn bottom-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
-    [[:small-menuitem {:icon   (sc/icon [:> solid/TrashIcon])
-                       :label  "Slett alle kvitteringer"
-                       :action #(remove-receipts uid)}]
-     [:small-menuitem {:icon   (sc/icon [:> solid/PlusIcon])
-                       :label  "Ny artikkel A"
-                       :action #(add-article :a)}]
-     [:small-menuitem {:icon   (sc/icon [:> solid/PlusIcon])
-                       :label  "Ny artikkel B"
-                       :action #(add-article :b)}]
-     [:small-menuitem {:label  "Ny artikkel C"
-                       :action #(add-article :c)}]
-     [:small-menuitem {:label  "Ny artikkel D"
-                       :action #(add-article :d)}]
-     [:small-menuitem {:label  "Ny artikkel E"
-                       :action #(add-article :e)}]
-     [:small-menuitem {:label  "./markdown-example.md"
-                       :action #(add-article' (shadow.resource/inline "./markdown-example.md"))}]
-     [:small-menuitem {:icon     (sc/icon [:> solid/BeakerIcon])
-                       :label    "Generer"
-                       :color    "var(--red-4)"
-                       :action   #()
-                       :disabled true}]]))
+    [[:item {:icon   ico/trash
+             :label  "Slett alle kvitteringer"
+             :action #(remove-receipts uid)}]
+     [:item {:icon   ico/plus
+             :label  "Ny artikkel A"
+             :action #(add-article :a)}]
+     [:item {:icon   ico/plus
+             :label  "Ny artikkel B"
+             :action #(add-article :b)}]
+     [:item {:label  "Ny artikkel C"
+             :action #(add-article :c)}]
+     [:item {:label  "Ny artikkel D"
+             :action #(add-article :d)}]
+     [:item {:label  "Ny artikkel E"
+             :action #(add-article :e)}]
+     [:item {:label  "./markdown-example.md"
+             :action #(add-article' (shadow.resource/inline "./markdown-example.md"))}]
+     [:item {:icon     ico/experimental
+             :label    "Generer"
+             :color    "var(--red-4)"
+             :action   #()
+             :disabled true}]]))
 
 (defn bottom-menu [uid]
   (r/with-let [main-visible (r/atom false)]
     (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
-      [scm/small-menu
-       {:showing      @main-visible
-        :close-button #()
-        :dir          #{:up :left}
-        :data         (bottom-menu-definition (r/atom {:uid uid}))
-        :button       (fn [open]
-                        [scb/round-dark {:on-click toggle-mainmenu}
-                         [sc/icon [:> outline/FingerPrintIcon]]])}])))
+      [scm/mainmenu-example-with-args
+       {:data       (bottom-menu-definition (r/atom {:uid uid}))
+        :showing!   main-visible
+        :close-menu toggle-mainmenu
+        :dir        #{:up :left}
+        :button     (fn [open]
+                      [scb/round-dark {:on-click toggle-mainmenu}
+                       [sc/icon [:> outline/FingerPrintIcon]]])}])))
 
 (defn render [{:keys [path uid fsm]}]
   ;intent When opening this section, mark as read!

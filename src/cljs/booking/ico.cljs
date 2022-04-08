@@ -50,3 +50,4 @@
 (def mystery1 [:> outline/ShareIcon])
 (def mystery2 [:> outline/MapIcon])
 (def menu [:> solid/MenuAlt2Icon])
+(def experimental [:> solid/BeakerIcon])
