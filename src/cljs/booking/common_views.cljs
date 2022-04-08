@@ -453,7 +453,7 @@
                   (swap! st update-in [:nøkkelvakt] (constantly %))
                   (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
 
-(defn header-line [r {:keys [frontpage]}]
+(defn header-line [r frontpage]
   [err-boundary
    (let [user-state (rf/subscribe [:lab/user-state])]
      [sc/col
@@ -650,7 +650,7 @@
            [:div.flex.flex-col
             {:style {:flex "1 1 auto"}}
             (when-not frontpage
-              [header-line r {:frontpage frontpage}])
+              [header-line r false])
             [:div.flex.flex-col.overflow-y-auto.h-full
              (if (and
                    @(rf/subscribe [:lab/is-search-running?])
@@ -776,7 +776,7 @@
                      [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
                         [:div.sticky.top-0.z-10.relative
                          {:style {:opacity v}}
-                         [booking.common-views/header-line r {:frontpage true}]])
+                         [booking.common-views/header-line r true]])
                       [:div.-mt-16 {:style {:height "calc(100% - 4rem)"}}
                        [render r]]])]
 

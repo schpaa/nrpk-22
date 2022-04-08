@@ -189,13 +189,13 @@
       :close-menu #(rf/dispatch [:lab/close-menu])
       :button     (fn [open]
                     [hoc.buttons/round'
-                     {:style    {:cursor :pointer}
-                      :class    [:h-16]
-                      :on-click #(do
-                                   (tap> {"ZAP" open})
-                                   #_(if-not open
-                                       (rf/dispatch [:lab/open-menu])
-                                       #_(rf/dispatch [:lab/close-menu])))}
+                     {:style {:cursor :pointer}
+                      :class [:h-12]
+                      #_#_:on-click #(do
+                                       (tap> {"ZAP" open})
+                                       #_(if-not open
+                                           (rf/dispatch [:lab/open-menu])
+                                           #_(rf/dispatch [:lab/close-menu])))}
 
                      [sc/icon-large (if open ico/closewindow ico/menu)]])}]))
 
