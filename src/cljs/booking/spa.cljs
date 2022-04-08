@@ -236,8 +236,13 @@
              [sc/col
               [sc/ingress-details {:open true} #_{:on-click #(schpaa.state/toggle :oversikt/nrpk)
                                                   :open     @(schpaa.state/listen :oversikt/nrpk)}
+
+               ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
                [sc/hero-summary "NRPK"]
-               "Nøklevann ro- og padleklubb tilbyr medlemmene å benytte klubbens materiell på Nøklevann i klubbens åpningstider. I tillegg har vi et tilbud til de som har våttkort grunnkurs hav å padle på Oslofjorden."]
+               [:img.w-24.h-24.float-right.m-4.-mt-12 {:src "/img/logo-n.png"}]
+               [:span.clear-left "Medlemmer i Nøklevann ro- og padleklubb kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt.
+
+               Nøklevann er betjent av nøkkelvakter og har derfor sesongbasert åpningstid."]]
               [sc/row-sc-g4-w
                (let [data [[3 :r.oversikt.organisasjon "Historie"]
                            [4 :r.oversikt.styret "Styret"]]]
@@ -245,19 +250,19 @@
                  (map (comp f rest) (sort-by first data)))]]
 
              [sc/col
-              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/bli-medlem)
-                                   :open     @(schpaa.state/listen :oversikt/bli-medlem)}
-               [sc/hero-summary "Bli medlem"]
-               "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]
+              [sc/ingress-details
+               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/bli-medlem)
+                                 :open     @(schpaa.state/listen :oversikt/bli-medlem)} "Bli medlem"]
+               [:p "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]]
               [sc/row-sc-g4-w
                (let [data [[1 :r.forsiden "Registrer deg her"]
                            [2 :r.forsiden "Hva årskontigenten dekker"]]]
                  (map (comp f rest) (sort-by first data)))]]
 
              [sc/col
-              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/nøklevann)
-                                   :open     @(schpaa.state/listen :oversikt/nøklevann)}
-               [sc/hero-summary "Nøklevann"]
+              [sc/ingress-details
+               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/nøklevann)
+                                 :open     @(schpaa.state/listen :oversikt/nøklevann)} "Nøklevann"]
                "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."]
               [sc/row-sc-g4-w
                (let [data [[:r.xxx "Hvilke båter på Nøklevann?"]
@@ -266,9 +271,9 @@
                  (map f (sort-by second data)))]]
 
              [sc/col
-              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Sjøbasen)
-                                   :open     @(schpaa.state/listen :oversikt/Sjøbasen)}
-               [sc/hero-summary "Sjøbasen"]
+              [sc/ingress-details
+               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Sjøbasen)
+                                 :open     @(schpaa.state/listen :oversikt/Sjøbasen)} "Sjøbasen"]
                "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."]
               [sc/row-sc-g4-w
                (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
@@ -279,9 +284,9 @@
                  (map f (sort-by second data)))]]
 
              [sc/col
-              [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Livredningskurs)
-                                   :open     @(schpaa.state/listen :oversikt/Livredningskurs)}
-               [sc/hero-summary "Kurs"]
+              [sc/ingress-details
+               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Livredningskurs)
+                                 :open     @(schpaa.state/listen :oversikt/Livredningskurs)} "Kurs"]
                "NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."]
               [sc/row-sc-g4-w
                (let [data [[:r.forsiden "Mer om livredningskurs"]
@@ -289,23 +294,22 @@
                  (map f (sort-by second data)))]]]
 
             [sc/col
-             [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Nøkkelvakt)
-                                  :open     @(schpaa.state/listen :oversikt/Nøkkelvakt)}
-              [sc/hero-summary "Nøkkelvakt"]
+             [sc/ingress-details
+              [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Nøkkelvakt)
+                                :open     @(schpaa.state/listen :oversikt/Nøkkelvakt)} "Nøkkelvakt"]
               "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."]
              [sc/row-sc-g4-w
               (let [data [[:r.conditions "Plikter som nøkkelvakt"]
-
                           [:r.aktivitetsliste "Utlån på nøklevann"]
                           [:r.terms "Betingelser"]
                           [:r.kalender "Vaktkalender"]]]
                 (map f (sort-by second data)))]]
 
             [sc/col
-             [sc/ingress-details {:on-click #(schpaa.state/toggle :oversikt/Årshjul)
-                                  :open     @(schpaa.state/listen :oversikt/Årshjul)}
-              [sc/hero-summary "Årshjulet i NRPK"]
-              "Ingress"]
+             [sc/ingress-details
+              [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Årshjul)
+                                :open     @(schpaa.state/listen :oversikt/Årshjul)} "Årshjulet i NRPK"]
+              "Forslag til ingress?"]
              [sc/row-sc-g4-w
               (let [data [[:r.yearwheel "Oversikt 2022-23"]
                           [:r.yearwheel "Tidligere sesonger"]]]

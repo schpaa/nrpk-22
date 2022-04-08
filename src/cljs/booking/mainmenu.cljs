@@ -41,12 +41,29 @@
                          :shortcut "ESC"
                          :action   #(rf/dispatch [:lab/close-menu])}]
 
-             [:item {:icon      ico/new-home
-                     :label     "Oversikt"
-                     :highlight (= :r.oversikt current-page)
-                     :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
-                     :disabled  false
-                     :value     #()}]
+             (if (= :r.oversikt current-page)
+               [:item {:icon     ico/new-home
+                       :style    {:color "var(--text1)"}
+                       ;:background    "var(--brand1)"
+                       ;:margin        "-4px"
+                       ;:padding       "4px"
+                       ;:border-radius "var(--radius-round)"}
+                       :label    "Forsiden"
+                       ;:highlight (= :r.oversikt current-page)
+                       :action   #(rf/dispatch [:app/navigate-to [:r.forsiden]])
+                       :disabled false
+                       :value    #()}]
+               [:item {:icon      ico/new-home
+                       :style     {:color         "var(--gray-1)"
+                                   :background    "var(--brand1)"
+                                   :margin        "-4px"
+                                   :padding       "4px"
+                                   :border-radius "var(--radius-round)"}
+                       :label     "Oversikt"
+                       :highlight (= :r.oversikt current-page)
+                       :action    #(rf/dispatch [:app/navigate-to [:r.oversikt]])
+                       :disabled  false
+                       :value     #()}])
 
              (when @at-least-registered?
                [:item {:icon      ico/user
@@ -94,17 +111,21 @@
              [:item {:icons  (sc/icon ico/commandPaletteClosed)
                      :label  "Vis alle spørsmål"
                      :action #(schpaa.state/change :lab/skip-easy-login false)}]
-             [:item {:icon     (sc/icon ico/commandPaletteClosed)
-                     :label    "Hva kan jeg gjøre?"
-                     :shortcut "ctrl-k"
-                     :action   #(rf/dispatch [:app/toggle-command-palette])}]
+             [:item {:icon      (sc/icon ico/commandPaletteClosed)
+                     :style     {:color "var(--brand1)"}
+                     :label     "Hva kan jeg gjøre?"
+                     :stay-open true
+                     :shortcut  "ctrl-k"
+                     :action    #(rf/dispatch [:app/toggle-command-palette])}]
+             (when @at-least-registered?
+               [:hr])
              (when @at-least-registered?
                [:item {:label    "Logg ut"
                        :disabled false
                        :icon     (sc/icon ico/logout)
                        :action   #(rf/dispatch [:app/sign-out])}])
              [:space]
-             [:div [:div.-m-1
+             [:div [:div.-m-1x
                     {:style {:background "var(--toolbar-)"}}
                     [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""
                      (fn [t c]

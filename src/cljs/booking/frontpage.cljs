@@ -14,7 +14,8 @@
             [tick.core :as t]
             [booking.carousell]
             [booking.flextime :refer [flex-datetime]]
-            [booking.yearwheel]))
+            [booking.yearwheel]
+            [booking.openhours]))
 
 ;region
 
@@ -250,8 +251,6 @@
                :color         "var(--text1)"}}
       [sc/icon ico/more-if-you-scroll-down]]]))
 
-
-
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
    (if date
@@ -399,7 +398,6 @@
     [listitem' (t/date) "Nye båter er kjøpt inn."]
     [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
 
-
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
@@ -407,35 +405,38 @@
         master-emulation (rf/subscribe [:lab/master-state-emulation])]
     [:div
      [bg-light {:style {}
+
                 :class [(if dark-mode? :dark :light)
                         (if @at-least-registered? :bottom-toolbar)]}
 
-      [:div.min-h-full.z-0.relative
+      [:div.min-h-full.z-0.relative.mx-auto
+       {:style {:max-width booking.common-views/max-width}}
 
        (when (and goog.DEBUG @master-emulation)
-         [:div.max-w-lg.mx-auto
+         [:div.max-w-lgx.mx-auto
           [:div.mx-4.py-4.pt-24
            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
             booking.common-views/master-control-box]]])
 
        [:div.mx-4
-        [:div.max-w-lg.mx-auto
+        [:div.max-w-lgx.mx-auto
          [header-with-logo]]]
 
        (when @show-image-carousell?
          [image-carousell])
 
        [:div.mx-4
-        [:div.space-y-12.w-full.mx-auto.max-w-lg.py-4
+        [:div.space-y-12.w-full.mx-auto.max-w-lgx.py-4
+
          (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
                     (not @at-least-registered?))
            [helpful-to-earlier-users])
 
          (when-not @at-least-registered?
            [please-login-and-register])
-
          [news-feed]
-         [booking.yearwheel/yearwheel-feed]]]]
+         [booking.yearwheel/yearwheel-feed]
+         [booking.openhours/opening-hours]]]]
 
       [bs/attached-to-bottom
        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}

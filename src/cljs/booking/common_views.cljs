@@ -679,7 +679,7 @@
             [bottom-tabbar]]
            [right-tabbar]]])})))
 
-(def max-width "50ch")
+(def max-width "60ch")
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
