@@ -76,12 +76,15 @@
                        :disabled  false
                        :value     #()}])
              [:hr]
+             #_(when goog.DEBUG
+                 [schpaa.style.hoc.toggles/local-toggle :lab/master-state-emulation])
+
              (when @at-least-registered?
                [:toggle {:disabled  true
                          :stay-open true
                          :content   (fn [_]
                                       [:div.w-full
-                                       [schpaa.style.hoc.toggles/toggle :lab/toggle-chrome "Flere knapper"
+                                       [schpaa.style.hoc.toggles/stored-toggle :lab/toggle-chrome "Flere knapper"
                                         (fn [t c]
                                           [:div.flex.justify-between.items-center.w-full.gap-2.h-12
                                            [sc/text1 c] t])]])}])
@@ -90,7 +93,7 @@
                        :stay-open true
                        :content   (fn [_]
                                     [:div.w-full
-                                     [schpaa.style.hoc.toggles/toggle :lab/show-image-carousell "Billedkarusell"
+                                     [schpaa.style.hoc.toggles/stored-toggle :lab/show-image-carousell "Billedkarusell"
                                       (fn [t c]
                                         [:div.flex.justify-between.items-center.w-full.gap-2.h-12
                                          [sc/text1 c] t])]])}]
@@ -106,6 +109,16 @@
                                        :view-fn  (fn [t c]
                                                    [:div.flex.justify-between.items-center.w-full.gap-2.h-12
                                                     [sc/text1 c] t])}]])}]
+
+             (when goog.DEBUG
+               [:toggle {:disabled  true
+                         :stay-open true
+                         :content   (fn [_]
+                                      [:div.w-full
+                                       [schpaa.style.hoc.toggles/local-toggle :lab/master-state-emulation "Master state emulation"
+                                        (fn [t c]
+                                          [:div.flex.justify-between.items-center.w-full.gap-2.h-12
+                                           [sc/text1 c] t])]])}])
 
              [:hr]
              [:item {:icons  (sc/icon ico/commandPaletteClosed)

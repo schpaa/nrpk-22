@@ -461,11 +461,8 @@
        {:style (when-not frontpage {:background    "var(--toolbar)"
                                     :border-bottom "1px solid var(--toolbar)"})}
 
-       [(if frontpage header-top-frontpage header-top)      ;{:class [:-debug2]}
+       [(if frontpage header-top-frontpage header-top)
         [main-menu]
-
-        #_(when goog.DEBUG
-            [schpaa.style.hoc.toggles/large-toggle :lab/master-state-emulation])
 
         ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
         (if frontpage
