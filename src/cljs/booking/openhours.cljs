@@ -31,19 +31,19 @@
       {:class               [:timelane]
        :style               {:grid-area   (str "graph" region)
                              :display     :inline-block
-                             :height      "auto"
-                             :max-height  "3rem"
+                             :height      "100%"
+                             ;:max-height  "3rem"
                              :xbackground "var(--toolbar)"}
        :viewBox             (str show-start " " 0 " " (- show-end show-start) " " 5)
        :preserveAspectRatio "none" :width "100%" :height "auto"}
       [:rect {:x     show-start
-              :width (- show-end show-start) :height :100% :opacity 0.21
-              :fill  "var(--toolbar)"
+              :width (- show-end show-start) :height :100% :opacity 0.51
+              :fill  "var(--toolbar-)"
               :rx    "0.25"}]
       (into [:<>] (for [idx (range 12 24 6)]
                     [:line {:vector-effect :non-scaling-stroke
                             :stroke-width  1
-                            :stroke        "transparent"    ;"var(--floating)"
+                            :stroke        "var(--floating)"
                             :x1            idx :y1 0 :x2 idx :y2 "100%"}]))
       (when (some? r)
         (into [:<>]
@@ -58,7 +58,7 @@
      (sc/text1 {:style {:grid-area      (str "status" region)
                         :align-self     :center
                         :color          "var(--text0)"
-                        :width          "5rem"
+                        ;:width          "4rem"
                         :padding-inline "var(--size-1)"
                         :white-space    :nowrap}}
                (if (or (nil? r) (not (contains? r @aktiv)))
@@ -92,17 +92,18 @@
     [:div
      {:on-click #(swap! st not)
       :class    [:wheels]
-      :style    {:grid-area     "wheels"
-                 :border-radius "var(--radius-0)"
-                 :padding       "var(--size-3)"
-                 :background    "var(--toolbar)"}}
+      :style    {:grid-area      "wheels"
+                 :border-radius  "var(--radius-0)"
+                 :padding-block  "var(--size-3)"
+                 :padding-inline "var(--size-2)"
+                 :background     "var(--toolbar)"}}
      [:svg
       {:viewBox             "-1 -1 2 2"
        :preserveAspectRatio "xMidYMid meet"
-       :class               [:duration-200]
-       :style               {:width     "auto"
-                             :height    "100%"
-                             :max-width "6rem"
+       :class               [:duration-500]
+       :style               {:height    "100%"
+                             :width     "100%"
+                             :max-width "10rem"
                              :gap       "var(--size-1)"
                              :transform (if @st "rotate(-90deg)" "rotate(90deg)")}}
       (into [:<>]
@@ -130,23 +131,22 @@
                          :stroke         "var(--toolbar)"
                          :x1             x1 :y1 y1 :x2 x2 :y2 y2}])]))]]))
 
-
 (o/defstyled openinghourgrid :div
   [:&.wrapper
    {:display          :grid
     :grid-auto-column "1fr"
-    :gap              "var(--size-1) var(--size-1)"}
+    :grid-auto-rows   "3rem"
+    :gap              "var(--size-1) var(--size-2)"}
    [:at-media {:max-width "511px"}
-    [:.wheels {;:outline    "1px solid red"
-               :display    :none
-               :visibility :hidden}]
-    {:grid-template-areas [["day0" "status0" "graph0" #_"period0"]
-                           ["day1" "status1" "graph1" #_"period1"]
-                           ["day2" "status2" "graph2" #_"period2"]
-                           ["day3" "status3" "graph3" #_"period3"]
-                           ["day4" "status4" "graph4" #_"wheels"]
-                           ["day5" "status5" "graph5" #_"wheels"]
-                           ["day6" "status6" "graph6" #_"wheels"]]}]
+    [:.timelane {:display    :none
+                 :visibility :hidden}]
+    {:grid-template-areas [["day0" "status0" "period0"]
+                           ["day1" "status1" "period1"]
+                           ["day2" "status2" "period2"]
+                           ["day3" "status3" "period3"]
+                           ["day4" "status4" "wheels"]
+                           ["day5" "status5" "wheels"]
+                           ["day6" "status6" "wheels"]]}]
    [:at-media {:min-width "512px"}
     {:grid-template-areas [["day0" "status0" "graph0" "period0"]
                            ["day1" "status1" "graph1" "period1"]
@@ -157,11 +157,10 @@
                            ["day6" "status6" "graph6" "wheels"]]}]])
 
 (o/defstyled period-name :div
-  :h-full :flex :items-center :justify-center :w-full
+  :flex :items-center :justify-between :w-full :h-full :px-2 :py-1
   {:background    "var(--toolbar)"
    :border-radius "var(--radius-0)"
-   :cursor        :pointer
-   :align-self    :center}
+   :cursor        :pointer}
   [:&.active
    {:background "var(--text2)"}])
 
@@ -186,20 +185,20 @@
             (for [[idx [start end periodname [bg fg]]] (map-indexed vector (map conj data colors))
                   :let [active? (= idx @aktiv)]]
               [period-name
-               {:class    [(if active? :active) :wheels]
+               {:class    [(if active? :active) :wheels :w-full]
                 :style    {:color            (if active? fg "var(--text1)")
-                           :padding-inline   "var(--size-2)"
                            :background-color (when active? bg)
                            :grid-area        (str "period" idx)}
                 :on-click #(reset! aktiv idx)}
-               [sc/col
+               [sc/col {:style {:width "100%"}}
                 [sc/text1-cl {:style {:text-weight "var(--font-weight-6)"}} periodname]
-                [sc/subtext-cl
-                 (times.api/short-date-format (t/date start))
-                 "->" (times.api/short-date-format (t/date end))]]])
+                [:div.flex.justify-between.w-full.relative
+                 [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date start))]
+                 [sc/subtext-cl {:style {:font-family "Inter"
+                                         :text-align  :center}
+                                 :class [:absolute :inset-0 :opacity-50]} "-->"]
+                 [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date end))]]]])
 
-            #_[:div {:class [:wheels]
-                     :style {:grid-area "wheels"}}]
             (mini-yearwheel aktiv data')])
 
          (into [:<>] (map (fn [[n d]] (vector dag {:style {:align-self :center

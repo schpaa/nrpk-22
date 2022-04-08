@@ -280,7 +280,7 @@
 
 (defn image-carousell []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
-        at-least-registered? @(rf/subscribe [:lab/at-least-registered])]
+        at-least-registered? @(rf/subscribe [:lab/has-chrome])]
     [:div
      {:style (conj {:padding-block "var(--size-4)"
                     :filter        (if dark-mode? "brightness(0.75)" "")})}
@@ -388,6 +388,38 @@
                            :color       "var(--gray-0)"}} "Logg inn"]
      [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
 
+(defn siste-bevegelser []
+  [:div.space-y-4
+   [sc/row-bl [sc/fp-header "Aktiviteter"] (sc/link {} "(se flere)")]
+   [:div.ml-4 {:style {:display               "grid"
+                       :gap                   "var(--size-4) var(--size-2)"
+                       :grid-template-columns "1fr"}}
+    [sc/fp-text "Nøklevann"]
+    [sc/row-sc-g2-w {:class [:ml-4]}
+     [sc/text1 "16° i vannet"]
+     [sc/text1 "23° i luften"]
+     [sc/text1 [flex-datetime (t/date) (fn [type d]
+                                         (if (= :date type)
+                                           [sc/subtext {:style {:text-decoration :none}} "Registrert " (ta/date-format-sans-year d)]
+                                           [sc/subtext "Registrert for " d]))]]]
+    [sc/row-sc-g2-w {:class [:ml-4]}
+     [sc/text2 "62 utlån i dag"]
+     [sc/text1 "5 utlån nå"]
+     [sc/text2 "4 på overnatting"]]
+
+    [sc/fp-text "Sjøbasen"]
+    [sc/row-sc-g2-w {:class [:ml-4]}
+     [sc/text1 "13° i vannet"]
+     [sc/text1 "21° i luften"]
+     [sc/text1 [flex-datetime (t/<< (t/date) (t/new-period 5 :days))
+                (fn [type d]
+                  (if (= :date type)
+                    [sc/subtext {:style {:text-decoration :none}} "Registrert " (ta/date-format-sans-year d)]
+                    [sc/subtext "Registrert for " d]))]]]
+    [sc/row-sc-g2-w {:class [:ml-4]}
+     [sc/text2 "3 utlån i dag"]
+     [sc/text1 "1 utlån nå"]]]])
+
 (defn news-feed []
   [:div.space-y-4
    [sc/row-bl [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
@@ -410,7 +442,7 @@
                         (if @at-least-registered? :bottom-toolbar)]}
 
       [:div.min-h-full.z-0.relative.mx-auto
-       {:style {:max-width booking.common-views/max-width}}
+
 
        (when (and goog.DEBUG @master-emulation)
          [:div.max-w-lgx.mx-auto
@@ -425,8 +457,9 @@
        (when @show-image-carousell?
          [image-carousell])
 
-       [:div.mx-4
-        [:div.space-y-12.w-full.mx-auto.max-w-lgx.py-4
+       [:div.mx-4.py-8
+        [:div.space-y-16.w-full.mx-auto.max-w-lgx.py-4
+         {:style {:max-width booking.common-views/max-width}}
 
          (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
                     (not @at-least-registered?))
@@ -435,9 +468,10 @@
          (when-not @at-least-registered?
            [please-login-and-register])
 
-         [booking.openhours/opening-hours]
+         [siste-bevegelser]
          [news-feed]
-         [booking.yearwheel/yearwheel-feed]]]]
+         [booking.yearwheel/yearwheel-feed]
+         [booking.openhours/opening-hours]]]]
 
       [bs/attached-to-bottom
        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
