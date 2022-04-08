@@ -434,9 +434,10 @@
 
          (when-not @at-least-registered?
            [please-login-and-register])
+
+         [booking.openhours/opening-hours]
          [news-feed]
-         [booking.yearwheel/yearwheel-feed]
-         [booking.openhours/opening-hours]]]]
+         [booking.yearwheel/yearwheel-feed]]]]
 
       [bs/attached-to-bottom
        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
