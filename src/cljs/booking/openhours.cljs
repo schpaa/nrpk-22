@@ -26,44 +26,35 @@
   (let [colors (mapv (fn [[idx e]] (if (= idx @aktiv) e ["var(--text2)"]))
                      (map-indexed vector colors))
         show-start 6 show-end 24]
-    [:<>
-     [:svg
-      {:class               [:timelane]
-       :style               {:grid-area   (str "graph" region)
-                             :display     :inline-block
-                             :height      "100%"
-                             ;:max-height  "3rem"
-                             :xbackground "var(--toolbar)"}
-       :viewBox             (str show-start " " 0 " " (- show-end show-start) " " 5)
-       :preserveAspectRatio "none" :width "100%" :height "auto"}
-      [:rect {:x     show-start
-              :width (- show-end show-start) :height :100% :opacity 0.51
-              :fill  "var(--toolbar-)"
-              :rx    "0.25"}]
-      (into [:<>] (for [idx (range 12 24 6)]
-                    [:line {:vector-effect :non-scaling-stroke
-                            :stroke-width  1
-                            :stroke        "var(--floating)"
-                            :x1            idx :y1 0 :x2 idx :y2 "100%"}]))
-      (when (some? r)
-        (into [:<>]
-              (for [[idx [start end]] (map-indexed vector r)
-                    :let [idx (+ idx 1)]]
-                [:line {:vector-effect  :non-scaling-stroke
-                        :stroke-linecap :round
-                        :stroke-width   7
-                        ;:opacity        (if (= (nth colors (- idx 1)) ["var(--text2)"]) 0.5 1)
-                        :stroke         (first (nth colors (- idx 1)))
-                        :x1             start :y1 idx :x2 end :y2 idx}])))]
-     (sc/text1 {:style {:grid-area      (str "status" region)
-                        :align-self     :center
-                        :color          "var(--text0)"
-                        ;:width          "4rem"
-                        :padding-inline "var(--size-1)"
-                        :white-space    :nowrap}}
-               (if (or (nil? r) (not (contains? r @aktiv)))
-                 "Stengt"
-                 (apply str "kl " (interpose "—" (nth r @aktiv)))))]))
+    [:svg
+     {:class               [:timelane]
+      :style               {:grid-area   (str "graph" region)
+                            :display     :inline-block
+                            :height      "100%"
+                            ;:max-height  "3rem"
+                            :xbackground "var(--toolbar)"}
+      :viewBox             (str show-start " " 0 " " (- show-end show-start) " " 5)
+      :preserveAspectRatio "none" :width "100%" :height "auto"}
+     [:rect {:x     show-start
+             :width (- show-end show-start) :height :100% :opacity 0.51
+             :fill  "var(--toolbar-)"
+             :rx    "0.25"}]
+     (into [:<>] (for [idx (range 12 24 6)]
+                   [:line {:vector-effect :non-scaling-stroke
+                           :stroke-width  1
+                           :stroke        "var(--floating)"
+                           :x1            idx :y1 0 :x2 idx :y2 "100%"}]))
+     (when (some? r)
+       (into [:<>]
+             (for [[idx [start end]] (map-indexed vector r)
+                   :let [idx (+ idx 1)]]
+               [:line {:vector-effect  :non-scaling-stroke
+                       :stroke-linecap :round
+                       :stroke-width   7
+                       ;:opacity        (if (= (nth colors (- idx 1)) ["var(--text2)"]) 0.5 1)
+                       :stroke         (first (nth colors (- idx 1)))
+                       :x1             start :y1 idx :x2 end :y2 idx}])))]))
+
 
 (defn cell [aktiv n color caption start' end']
   [:div {:on-click #(reset! aktiv n)
@@ -137,24 +128,27 @@
     :grid-auto-column "1fr"
     :grid-auto-rows   "3rem"
     :gap              "var(--size-1) var(--size-2)"}
-   [:at-media {:max-width "511px"}
+   [:at-media {:max-width "499px"}
     [:.timelane {:display    :none
                  :visibility :hidden}]
-    {:grid-template-areas [["day0" "status0" "period0"]
-                           ["day1" "status1" "period1"]
-                           ["day2" "status2" "period2"]
-                           ["day3" "status3" "period3"]
-                           ["day4" "status4" "wheels"]
-                           ["day5" "status5" "wheels"]
-                           ["day6" "status6" "wheels"]]}]
-   [:at-media {:min-width "512px"}
-    {:grid-template-areas [["day0" "status0" "graph0" "period0"]
-                           ["day1" "status1" "graph1" "period1"]
-                           ["day2" "status2" "graph2" "period2"]
-                           ["day3" "status3" "graph3" "period3"]
-                           ["day4" "status4" "graph4" "wheels"]
-                           ["day5" "status5" "graph5" "wheels"]
-                           ["day6" "status6" "graph6" "wheels"]]}]])
+    {:grid-template-areas [["day0" "period0"]
+                           ["day1" "period1"]
+                           ["day2" "period2"]
+                           ["day3" "period3"]
+                           ["day4" "wheels"]
+                           ["day5" "wheels"]
+                           ["day6" "wheels"]]}]
+   [:at-media {:min-width "500px"}
+    [:.timelane {:display    :block
+                 :visibility :visible}]
+    {:grid-template-areas [
+                           ["day0" "graph0" "period0"]
+                           ["day1" "graph1" "period1"]
+                           ["day2" "graph2" "period2"]
+                           ["day3" "graph3" "period3"]
+                           ["day4" "graph4" "wheels"]
+                           ["day5" "graph5" "wheels"]
+                           ["day6" "graph6" "wheels"]]}]])
 
 (o/defstyled period-name :div
   :flex :items-center :justify-between :w-full :h-full :px-2 :py-1
@@ -163,6 +157,8 @@
    :cursor        :pointer}
   [:&.active
    {:background "var(--text2)"}])
+
+(declare thing)
 
 (defn opening-hours []
   (r/with-let [aktiv (r/atom nil)]
@@ -201,10 +197,19 @@
 
             (mini-yearwheel aktiv data')])
 
-         (into [:<>] (map (fn [[n d]] (vector dag {:style {:align-self :center
-                                                           :color      "var(--text2)"
-                                                           :grid-area  (str "day" n)}} d)))
-               (map-indexed vector ["Mandag" "Tirsdag" "Onsdag" "Torsdag" "Fredag" "Lørdag" "Søndag"]))
+         #_(into [:<>] (map (fn [[n d]] (vector dag {:style {:align-self :center
+                                                             :color      "var(--text2)"
+                                                             :grid-area  (str "day" n)}} d)))
+                 (map-indexed vector ["Mandag" "Tirsdag" "Onsdag" "Torsdag" "Fredag" "Lørdag" "Søndag"]))
+         (let [data [["Mandag" nil]
+                     ["Tirsdag" [[18 21] [12 21] [18 21]]]
+                     ["Onsdag" [[18 21] [18 21] [18 21] [17 20]]]
+                     ["Torsdag" [[18 21] [12 21] [18 21]]]
+                     ["Fredag" nil]
+                     ["Lørdag" [[11 17] [11 17] [11 17] [11 17]]]
+                     ["Søndag" [[11 17] [11 17] [11 17] [11 17]]]]]
+           (for [[idx [day r]] (map-indexed vector data)]
+             [thing aktiv idx day r]))
 
          (let [f (partial timelane colors aktiv)]
            [:<>
@@ -215,3 +220,13 @@
             [f "4" nil]
             [f "5" [[11 17] [11 17] [11 17] [11 17]]]
             [f "6" [[11 17] [11 17] [11 17] [11 17]]]])]]])))
+
+(defn thing [aktiv n d r]
+  [sc/col {:style {:grid-area (str "day" n)}}
+   (sc/text2 {:style {:color "var(--text2)"}} d)
+   (sc/text1 {:style {:color       "var(--text0)"
+                      ;:padding-inline "var(--size-1)"
+                      :white-space :nowrap}}
+             (if (or (nil? r) (not (contains? r @aktiv)))
+               "Stengt"
+               (apply str "kl " (interpose "—" (nth r @aktiv)))))])

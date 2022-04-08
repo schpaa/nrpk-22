@@ -287,7 +287,7 @@
      [image-caro-style {:class [(if at-least-registered? :toolbar)]}
       [booking.carousell/render-carousell
        {:carousell-config {:initialSlide  0
-                           :slidesToShow  2
+                           :slidesToShow  3
                            :autoplay      true
                            :autoplaySpeed 5500}
         :class            [:bg-alt :h-full :m-4]
@@ -390,7 +390,7 @@
 
 (defn siste-bevegelser []
   [:div.space-y-4
-   [sc/row-bl [sc/fp-header "Aktiviteter"] (sc/link {} "(se flere)")]
+   [sc/row-bl [sc/fp-header "Akkurat nå"] (sc/link {} "(se flere)")]
    [:div.ml-4 {:style {:display               "grid"
                        :gap                   "var(--size-4) var(--size-2)"
                        :grid-template-columns "1fr"}}

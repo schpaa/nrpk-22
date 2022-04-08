@@ -257,7 +257,7 @@
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
     [:div.space-y-4
      ;{:style {:padding-bottom "var(--size-10)"}}
-     [sc/row-bl [sc/fp-header "Hva skjer?"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
+     [sc/row-bl [sc/fp-header "Plan"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
 
      [:ol {:style {:margin-left "var(--size-4)"}}
       (for [[_id {:keys [date type tldr]}] data]
