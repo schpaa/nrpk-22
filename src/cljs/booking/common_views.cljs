@@ -455,71 +455,43 @@
 
 (defn header-line [r frontpage]
   [err-boundary
-   (let [user-state (rf/subscribe [:lab/user-state])]
-     [sc/col
-      [:div
-       {:style (when-not frontpage {:background    "var(--toolbar)"
-                                    :border-bottom "1px solid var(--toolbar)"})}
+   [:div
+    {:style (when-not frontpage {:background    "var(--toolbar)"
+                                 :border-bottom "1px solid var(--toolbar)"})}
 
-       [(if frontpage header-top-frontpage header-top)
-        [main-menu]
+    [(if frontpage header-top-frontpage header-top)
+     [:div.flex.flex-col.truncate.px-2
+      (when-not @(rf/subscribe [:lab/in-search-mode?])
+        (let [titles (compute-page-titles r)]
+          [:div
+           ;small/stacked
+           [:div
+            (if (vector? titles)
+              [sc/col
+               {:class [:truncate]}
+               [sc/title1 {:style {:font-weight "var(--font-weight-5)"}} (last titles)]
+               (when (< 1 (count titles))
+                 (let [{:keys [text link]} (first titles)]
+                   [sc/subtext-with-link {:href (k/path-for [link])} text]))]
+              [sc/col
+               [sc/title1 titles]])]]))]
 
-        ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-        (if frontpage
+     ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
+     [:div.grow]
+     (if frontpage
+       [:div.grow]
+       (if-not @(rf/subscribe [:lab/at-least-registered])
+         [:<>
           [:div.grow]
-          (if-not @(rf/subscribe [:lab/at-least-registered])
-            [:<>
-             [schpaa.style.hoc.buttons/cta {:style    {;:padding-block  "var(--size-2)"
-                                                       ;:height "2rem"
-                                                       :padding-inline "var(--size-4)"
-                                                       ;:min-width      "0rem"
-                                                       :width          "min-content"
-                                                       ;:font-weight    "var(--font-weight-6)"
-                                                       :box-shadow     "var(--shadow-1)"}
-                                            :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
-                                            :on-click #(rf/dispatch [:app/login])}
-              "Logg inn"
-              #_[:div.whitespace-nowrap "& Registrer deg"]]
-             [:div.grow]]
-            #_[:div.grow.flex.justify-end.items-center [search-menu]]))
-        [:div.grow]
-        [:div.flex.flex-col.truncate.px-2.text-right
-         (when-not @(rf/subscribe [:lab/in-search-mode?])
-           (let [titles (compute-page-titles r)]
-             [:div
-              ;large/wide
-              #_[:div.hidden.md:block.grow
-                 (if (vector? titles)
-                   [sc/row-sc-g2
-                    (interpose [sc/text1 {:style {:font-size "var(--font-size-4)"}} "/"]
-                               (for [[idx e] (map-indexed vector titles)
-                                     :let [last? (= idx (dec (count titles)))]]
-                                 (if last?
-                                   [sc/text1 {:style {:font-weight "var(--font-weight-6)"}} e]
-                                   (let [{:keys [text link]} e]
-                                     [sc/subtext-with-link {:style {:-background "var(--content)"}
-                                                            :href  (k/path-for [link])} text]))))]
-                   [sc/title1 {:class [:truncate]} titles])]
-              ;small/stacked
-              [:div                                         ;.sm:block.md:hidden.grow
-               (if (vector? titles)
-                 [sc/col
-                  {:class [:truncate]}
-                  [sc/title1 {:style {:font-weight "var(--font-weight-5)"}} (last titles)]
-                  (when (< 1 (count titles))
-                    (let [{:keys [text link]} (first titles)]
-                      [:div
-                       #_[sc/icon-tiny {:style {:margin-right "6px"
-                                                ;:padding-top "12px"
-                                                :color        "var(--text2)"
-                                                :display      :inline-block}} (schpaa.icon/inline :arrow-left-up)]
-                       [sc/subtext-with-link {:style {:-background  "red"
-                                                      :-margin-left "-2px"}
-                                              :href  (k/path-for [link])} text]]))]
-                 [sc/col
-                  [sc/title1 titles]])]]))]
+          [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
+                                                    :width          "min-content"
+                                                    :box-shadow     "var(--shadow-1)"}
+                                         :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
+                                         :on-click #(rf/dispatch [:app/login])}
+           "Logg inn"]]))
+     [main-menu]]]])
 
-        #_[schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode "" (fn [t c] t)]]]])])
+
 
 (defn right-tabbar []
   (let [numberinput? (rf/subscribe [:lab/number-input])
@@ -634,11 +606,13 @@
             :close   #(rf/dispatch [:lab/modal-selector false])}]
           ;endregion
           [:div.fixed.inset-0.flex
+           [right-tabbar]
            [:div.flex.flex-col
             {:style {:flex "1 1 auto"}}
             (when-not frontpage
               [header-line r false])
             [:div.flex.flex-col.xoverflow-y-auto.h-full
+             {:class (when-not frontpage [:overflow-y-auto])}
              (if (and
                    @(rf/subscribe [:lab/is-search-running?])
                    @(rf/subscribe [:lab/in-search-mode?]))
@@ -663,8 +637,7 @@
                  contents]
                 (when-not frontpage [after-content])])]
 
-            [bottom-tabbar]]
-           [right-tabbar]]])})))
+            [bottom-tabbar]]]])})))
 
 (def max-width "60ch")
 

@@ -220,7 +220,7 @@
   (r/with-let [mainmenu-visible #_(r/atom false) (rf/subscribe [:lab/menu-open])]
     [scm/mainmenu-example-with-args
      {:data       (mainmenu-definition)
-      :dir        #{:down}
+      :dir        #{:down :left}
       :showing!   mainmenu-visible
       :close-menu #(rf/dispatch [:lab/close-menu])
       :button     (fn [open]

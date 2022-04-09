@@ -388,7 +388,7 @@
                            :color       "var(--gray-0)"}} "Logg inn"]
      [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
 
-(defn siste-bevegelser []
+(defn current-status []
   [:div.space-y-4
    ;[sc/row-bl [sc/fp-header "Status"] (sc/link {} "(se flere)")]
    [:div {:style {:display               "grid"
@@ -396,28 +396,29 @@
                   :grid-template-columns "1fr"}}
     [sc/fp-text "Nøklevann"]
     [sc/row-sc-g2-w {:class [:ml-4]}
-     [sc/text1 "16° i vannet"]
-     [sc/text1 "23° i luften"]
+     ;[sc/text1 "16° i vannet"]
+     [sc/text1 "is på vannet,"]
+     [sc/text1 "9° i luften"]
      [sc/text1 [flex-datetime (t/date) (fn [type d]
                                          (if (= :date type)
                                            [sc/subtext {:style {:text-decoration :none}} "Registrert " (ta/date-format-sans-year d)]
                                            [sc/subtext "Registrert for " d]))]]]
-    [sc/row-sc-g2-w {:class [:ml-4]}
-     [sc/text2 "62 utlån i dag"]
-     [sc/text1 "5 utlån nå"]
-     [sc/text2 "4 på overnatting"]]
+    #_[sc/row-sc-g2-w {:class [:ml-4]}
+       [sc/text2 "ingen utlån i dag"]
+       [sc/text1 "ingen utlån nå"]
+       #_[sc/text2 "4 på overnatting"]]
 
     [sc/fp-text "Sjøbasen"]
     [sc/row-sc-g2-w {:class [:ml-4]}
-     [sc/text1 "13° i vannet"]
-     [sc/text1 "21° i luften"]
+     [sc/text1 "5° i vannet,"]
+     [sc/text1 "8° i luften"]
      [sc/text1 [flex-datetime (t/<< (t/date) (t/new-period 5 :days))
                 (fn [type d]
                   (if (= :date type)
                     [sc/subtext {:style {:text-decoration :none}} "Registrert " (ta/date-format-sans-year d)]
                     [sc/subtext "Registrert for " d]))]]]
     [sc/row-sc-g2-w {:class [:ml-4]}
-     [sc/text2 "3 utlån i dag"]
+     [sc/text2 "2 utlån i dag"]
      [sc/text1 "1 utlån nå"]]]])
 
 (defn news-feed []
@@ -464,17 +465,17 @@
           [please-login-and-register])
 
         [sc/fp-summary-detail :frontpage/status
-         [sc/row-bl [sc/fp-header "Status"] (sc/header-accomp-link {} "(tilpass)")]
-         [siste-bevegelser]]
+         [sc/row-bl [sc/fp-header "Status"] #_(sc/header-accomp-link {} "(tilpass)")]
+         [current-status]]
 
         [sc/fp-summary-detail :frontpage/news
-         [sc/row-bl [sc/fp-header "Nyheter"] (sc/header-accomp-link {} "(se mer)")]
+         [sc/row-bl [sc/fp-header "Nyheter"] #_(sc/header-accomp-link {} "(se mer)")]
          [news-feed]]
 
         [sc/fp-summary-detail :frontpage/yearwheel
          [sc/row-bl
-          [sc/fp-header "Plan"]
-          (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se mer)")]
+          [sc/fp-header "Hva skjer?"]
+          (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
          [booking.yearwheel/yearwheel-feed]]
 
         [sc/fp-summary-detail :frontpage/openinghours "Åpningstider"
