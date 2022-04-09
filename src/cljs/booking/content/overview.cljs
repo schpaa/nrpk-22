@@ -180,7 +180,7 @@
     [empty-list-message "Booking-listen er tom"]))
 
 (defn- panel []
-  [sc/col-space-2
+  [sc/col-space-4
    [sc/row-sc-g2-w
     [hoc.toggles/switch :booking/editing "Rediger"]
     [hoc.toggles/switch :booking/show-archived "Vis arkiverte"]

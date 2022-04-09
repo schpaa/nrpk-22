@@ -33,7 +33,7 @@
              [sc/dialog
               [:div.p-4
                [sc/col {:class [:space-y-8]}
-                [sc/col-space-2
+                [sc/col-space-4
                  (when-let [page-title (some-> link :data :header)]
                    [sc/title-p (if (seq? page-title) (last page-title) page-title)])
                  [sc/row-center [booking.qrcode/qr-code :r.forsiden 192]]]

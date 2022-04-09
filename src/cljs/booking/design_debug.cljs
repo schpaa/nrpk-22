@@ -26,7 +26,7 @@
   [:<>
    [sc/surface-a
     (togglepanel :debug/color-table.surface000 "surface000"
-                 (fn [] [sc/col-space-2
+                 (fn [] [sc/col-space-4
                          [sc/text1 "surface000 - brukes som primær-bakgrunn for all informasjon"]
                          [sc/text2 "normal tekst, men litt svakere (--text2) som standard subtext"]
                          [sc/text3 "normal tekst, men litt svakere (--text3) som standard small"]
@@ -41,7 +41,7 @@
                           "hvordan ser det ut med (--text1) ??"]]))]
    [sc/surface-b
     (togglepanel :debug/color-table.surface00 "surface00"
-                 (fn [] [sc/col-space-2
+                 (fn [] [sc/col-space-4
                          [sc/text1 "surface00 - brukes i toolbars og andre ikke-primære flater"]
                          [sc/text1 {:style {:color "var(--text1)"}} "Her er det kun to toner som gjelder, dette er (--text1) og brukes på aktive elementer"]
                          [sc/text1 {:style {:color "var(--text3)"}} "standardtonene er litt svakere (--text3) og brukes blant annet på ikonene til høyre"]
@@ -54,7 +54,7 @@
                          [sc/small1 {:style {:color "var(--text3)"}} "small: ...om denne passer bedre (gjerne som ledetekst etc)"]]))]
    [sc/surface-c
     (togglepanel :debug/color-table.surface0 "surface0"
-                 (fn [] [sc/col-space-2
+                 (fn [] [sc/col-space-4
                          [sc/text1 "surface0 - brukes i dialoger og andre modeless popups (menyer etc) der bakgrunnen ikke blir mørkere"]
                          [sc/text2 "her skal jeg undersøke hvordan knapper i ulike fasonger finner plass"]
 
@@ -82,7 +82,7 @@
                  (fn [] (do
                           (o/defstyled testx :div
                             :p-4)
-                          [sc/col-space-2
+                          [sc/col-space-4
                            [sc/text1 "Brand-color"]
                            [testx {:style {:background "var(--brand1)"}} "brand1"]
                            [testx {:style {:background "var(--brand1)"

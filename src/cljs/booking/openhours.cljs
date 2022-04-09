@@ -151,82 +151,74 @@
                            ["day6" "graph6" "wheels"]]}]])
 
 (o/defstyled period-name :div
-  :flex :items-center :justify-between :w-full :h-full :px-2 :py-1
-  {:background    "var(--toolbar)"
-   :border-radius "var(--radius-0)"
-   :cursor        :pointer}
-  [:&.active
-   {:background "var(--text2)"}])
+  [:& :flex :items-center :justify-between :w-full :h-full
+   {:padding       "var(--size-2)"
+    :background    "var(--toolbar)"
+    :border-radius "var(--radius-0)"
+    :cursor        :pointer}
+   [:&.active
+    {:background "var(--text2)"}]])
 
-(declare thing)
+(defn day-names-with-status [aktiv n day r]
+  [sc/col {:style {
+                   :grid-area (str "day" n)}}
+   [sc/text2 day]
+   [sc/text1 {:style {:white-space :nowrap}}
+    (if (or (nil? r) (not (contains? r @aktiv)))
+      "Stengt"
+      (apply str "kl " (interpose "—" (nth r @aktiv))))]])
 
 (defn opening-hours []
   (r/with-let [aktiv (r/atom nil)]
-    (let [dag #(sc/text1 %1 %2)]
+    [openinghourgrid {:class [:wrapper]}
+     (let [f #(let [a (times.api/yearday-number (t/date %1))
+                    b (times.api/yearday-number (t/date %2))]
+                [(/ a 365) (- (/ b 365) (/ a 365))])
+           data [["2022-05-08" "2022-06-10" "Vår"]
+                 ["2022-06-11" "2022-07-10" "Utvidet"]
+                 ["2022-07-11" "2022-09-10" "Sommer"]
+                 ["2022-09-11" "2022-10-12" "Høst"]]
+           data' (map conj (map #(apply f %) data) colors)]
+       [:<>
+        (for [[idx [start end periodname [bg fg]]] (map-indexed vector (map conj data colors))
+              :let [active? (= idx @aktiv)]]
+          [period-name
+           {:class    [(if active? :active) :wheels :w-full]
+            :style    {:color            (if active? fg "var(--text1)")
+                       :background-color (when active? bg)
+                       :grid-area        (str "period" idx)}
+            :on-click #(reset! aktiv idx)}
+           [sc/col {:style {:width "100%"}}
+            [sc/text1-cl {:style {:text-weight "var(--font-weight-6)"}} periodname]
+            [:div.flex.justify-between.w-full.relative
+             [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date start))]
+             [sc/subtext-cl {:style {:font-family "Inter"
+                                     :text-align  :center}
+                             :class [:absolute :inset-0 :opacity-50]} "-->"]
+             [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date end))]]]])
 
-      [:div.space-y-4
-       [sc/fp-header "Åpningstider 2022"]
+        (mini-yearwheel aktiv data')])
 
-       [:div.ml-4
-        [openinghourgrid {:class [:wrapper]}
-         (let [f #(let [a (times.api/yearday-number (t/date %1))
-                        b (times.api/yearday-number (t/date %2))]
-                    [(/ a 365) (- (/ b 365) (/ a 365))])
-               data [["2022-05-08" "2022-06-10" "Vår"]
-                     ["2022-06-11" "2022-07-10" "Utvidet"]
-                     ["2022-07-11" "2022-09-10" "Sommer"]
-                     ["2022-09-11" "2022-10-12" "Høst"]]
-               data' (map conj (map #(apply f %) data) colors)]
-           [:<>
-            (for [[idx [start end periodname [bg fg]]] (map-indexed vector (map conj data colors))
-                  :let [active? (= idx @aktiv)]]
-              [period-name
-               {:class    [(if active? :active) :wheels :w-full]
-                :style    {:color            (if active? fg "var(--text1)")
-                           :background-color (when active? bg)
-                           :grid-area        (str "period" idx)}
-                :on-click #(reset! aktiv idx)}
-               [sc/col {:style {:width "100%"}}
-                [sc/text1-cl {:style {:text-weight "var(--font-weight-6)"}} periodname]
-                [:div.flex.justify-between.w-full.relative
-                 [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date start))]
-                 [sc/subtext-cl {:style {:font-family "Inter"
-                                         :text-align  :center}
-                                 :class [:absolute :inset-0 :opacity-50]} "-->"]
-                 [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date end))]]]])
+     #_(into [:<>] (map (fn [[n d]] (vector dag {:style {:align-self :center
+                                                         :color      "var(--text2)"
+                                                         :grid-area  (str "day" n)}} d)))
+             (map-indexed vector ["Mandag" "Tirsdag" "Onsdag" "Torsdag" "Fredag" "Lørdag" "Søndag"]))
+     (let [data [["Mandag" nil]
+                 ["Tirsdag" [[18 21] [12 21] [18 21]]]
+                 ["Onsdag" [[18 21] [18 21] [18 21] [17 20]]]
+                 ["Torsdag" [[18 21] [12 21] [18 21]]]
+                 ["Fredag" nil]
+                 ["Lørdag" [[11 17] [11 17] [11 17] [11 17]]]
+                 ["Søndag" [[11 17] [11 17] [11 17] [11 17]]]]]
+       (for [[idx [day r]] (map-indexed vector data)]
+         [day-names-with-status aktiv idx day r]))
 
-            (mini-yearwheel aktiv data')])
-
-         #_(into [:<>] (map (fn [[n d]] (vector dag {:style {:align-self :center
-                                                             :color      "var(--text2)"
-                                                             :grid-area  (str "day" n)}} d)))
-                 (map-indexed vector ["Mandag" "Tirsdag" "Onsdag" "Torsdag" "Fredag" "Lørdag" "Søndag"]))
-         (let [data [["Mandag" nil]
-                     ["Tirsdag" [[18 21] [12 21] [18 21]]]
-                     ["Onsdag" [[18 21] [18 21] [18 21] [17 20]]]
-                     ["Torsdag" [[18 21] [12 21] [18 21]]]
-                     ["Fredag" nil]
-                     ["Lørdag" [[11 17] [11 17] [11 17] [11 17]]]
-                     ["Søndag" [[11 17] [11 17] [11 17] [11 17]]]]]
-           (for [[idx [day r]] (map-indexed vector data)]
-             [thing aktiv idx day r]))
-
-         (let [f (partial timelane colors aktiv)]
-           [:<>
-            [f "0" nil]
-            [f "1" [[18 21] [12 21] [18 21]]]
-            [f "2" [[18 21] [18 21] [18 21] [17 20]]]
-            [f "3" [[18 21] [12 21] [18 21]]]
-            [f "4" nil]
-            [f "5" [[11 17] [11 17] [11 17] [11 17]]]
-            [f "6" [[11 17] [11 17] [11 17] [11 17]]]])]]])))
-
-(defn thing [aktiv n d r]
-  [sc/col {:style {:grid-area (str "day" n)}}
-   (sc/text2 {:style {:color "var(--text2)"}} d)
-   (sc/text1 {:style {:color       "var(--text0)"
-                      ;:padding-inline "var(--size-1)"
-                      :white-space :nowrap}}
-             (if (or (nil? r) (not (contains? r @aktiv)))
-               "Stengt"
-               (apply str "kl " (interpose "—" (nth r @aktiv)))))])
+     (let [f (partial timelane colors aktiv)]
+       [:<>
+        [f "0" nil]
+        [f "1" [[18 21] [12 21] [18 21]]]
+        [f "2" [[18 21] [18 21] [18 21] [17 20]]]
+        [f "3" [[18 21] [12 21] [18 21]]]
+        [f "4" nil]
+        [f "5" [[11 17] [11 17] [11 17] [11 17]]]
+        [f "6" [[11 17] [11 17] [11 17] [11 17]]]])]))

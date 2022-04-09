@@ -499,7 +499,7 @@
     :class []}
    [sc/col-space-8
     [sc/dialog-title' "Ekornets fødselsdag"]
-    [sc/col-space-2
+    [sc/col-space-4
      [l/ppre-x context]
      [sc/text1 {:style {:font-family "Merriweather"
                         :line-height "var(--font-lineheight-4)"}
@@ -552,9 +552,9 @@
          [sc/col-space-8
           [sc/dialog-title (or title (str "Tilbakemelding" (when navn (str " til " navn))))]
           [:div.flex.justify-between {:class [:w-full]}
-           [sc/col-space-2 #_{:style {:width "100%"}}
+           [sc/col-space-4 #_{:style {:width "100%"}}
             [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption]
-            [sc/col-space-2
+            [sc/col-space-4
              [:div.relative
               [sci/textarea {:rows          4
                              :values        {:tilbakemelding (:text @content)}

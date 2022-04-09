@@ -66,7 +66,7 @@
          {:id        form-id
           :on-submit handle-submit}
          [sc/col {:class [:space-y-8]}
-          [sc/col-space-2
+          [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
            [sc/row-sc-g2-w
             [sci/combobox props :kind? [:w-56] "Kategori" :type]
@@ -152,7 +152,7 @@
   ([]
    (panel false))
   ([modify?]
-   [sc/col-space-2
+   [sc/col-space-4
     [sc/row-sc-g2-w
      (when modify? [hoc.toggles/switch :yearwheel/show-editing "Rediger"])
      (when modify? [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"])
@@ -172,8 +172,8 @@
    :line-height  "var(--font-lineheight-5)"})
 
 (o/defstyled strong :span
-  {;:display :inline-block
-   :color "var(--text1)"})
+  [:& {;:display :inline-block
+       :color "var(--text1)"}])
 
 (o/defstyled weak :span
   {;:display :inline-block
@@ -233,13 +233,13 @@
         data (get-all-events @show-deleted)
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         modify? (booking.access/can-modify? r users-access-tokens)]
-    (into [sc/col-space-2 {:class [:w-full :overflow-x-auto]}]
+    (into [sc/col-space-4 {:class [:w-full :overflow-x-auto]}]
           (for [[g data] (sort-by first < (group-by (comp #(if % (t/year %) (t/year (t/now)))
                                                           #(some-> % t/date)
                                                           :date
                                                           second)
                                                     data))]
-            [sc/col-space-2
+            [sc/col-space-4
              [sc/hero (str "'" (subs (str (t/int g)) 2 4))]
              (into [:ol]
                    (concat
@@ -257,9 +257,9 @@
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
     [:div.space-y-4
      ;{:style {:padding-bottom "var(--size-10)"}}
-     [sc/row-bl [sc/fp-header "Plan"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
+     #_[sc/row-bl [sc/fp-header "Plan"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
 
-     [:ol {:style {:margin-left "var(--size-4)"}}
+     [:ol
       (for [[_id {:keys [date type tldr]}] data]
         [line [:div (interpose [:span ", "]
                                (remove nil? [(when date
@@ -270,7 +270,7 @@
                                                      [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
                                                      [sc/subtext-inline d]))]])
                                              (when type
-                                               (strong (->> type (get sci/person-by-id) :name)))
+                                               (strong [sc/text-inline (->> type (get sci/person-by-id) :name)]))
                                              (when tldr
                                                (weak tldr))]))]])]]))
 

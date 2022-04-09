@@ -418,7 +418,7 @@
                           :on-click #(rf/dispatch action)}
                          content])]
            [:div.relative
-            [sc/col-space-2
+            [sc/col-space-4
              [l/ppre-x @(rf/subscribe [:lab/all-access-tokens])]
              [sci/input {:values    {:label @(rf/subscribe [:lab/uid]) #_@sim-uid}
                          :on-change #(rf/dispatch [:lab/set-sim :uid (-> % .-target .-value)]
@@ -567,27 +567,17 @@
     [:div.z-1 {:style {:background "var(--gray-10)"}}
      [:div.mx-auto.max-w-lg.py-8
       [:div.mx-4
-       [sc/col-space-2
+       [sc/col-space-4
         (when goog.DEBUG
           [l/ppre-x access-tokens])
-        #_(when goog.DEBUG
-            [sc/col-space-1
-             {:style {:user-select :contain
-                      :color       "var(--gray-5)"}}
-             [sc/text-cl "Admin access? " (str @(rf/subscribe [:lab/admin-access]))]])
-        #_(when goog.DEBUG
-            [sc/col-space-1
-             {:style {:user-select :contain
-                      :color       "var(--gray-5)"}}
-             [sc/text-cl "Nøkkelvakt access? " (str @(rf/subscribe [:lab/nokkelvakt]))]])
 
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
          [sc/col-space-1
           {:style {:user-select :contain
                    :color       "var(--gray-5)"}}
-          [sc/text-cl "Nøklevann ro- og padleklubb"]
-          [sc/text-cl "Postboks 37, 0621 Bogerud"]
+          [sc/text1-cl "Nøklevann ro- og padleklubb"]
+          [sc/text1-cl "Postboks 37, 0621 Bogerud"]
           [:div.flex.justify-start.flex-wrap.gap-4
            [sc/subtext-with-link {:class [:dark]
                                   :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
@@ -648,7 +638,7 @@
             {:style {:flex "1 1 auto"}}
             (when-not frontpage
               [header-line r false])
-            [:div.flex.flex-col.overflow-y-auto.h-full
+            [:div.flex.flex-col.xoverflow-y-auto.h-full
              (if (and
                    @(rf/subscribe [:lab/is-search-running?])
                    @(rf/subscribe [:lab/in-search-mode?]))
@@ -676,7 +666,7 @@
             [bottom-tabbar]]
            [right-tabbar]]])})))
 
-(def max-width "50ch")
+(def max-width "60ch")
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -695,7 +685,7 @@
      {:style {:padding-inline "var(--size-4)"
               :padding-top    "var(--size-10)"
               :margin-inline  "auto"}}
-     [sc/col-space-2
+     [sc/col-space-4
       [sc/hero {:style {:white-space :nowrap
                         :text-align  :center
                         :color       "var(--text2)"}} "Ingen tilgang"]
@@ -767,6 +757,7 @@
             (if frontpage
               [page-boundary r
                {:frontpage true}
+               ;intent: removed overflow!
                (into [:div.overflow-y-auto.h-full
                       {:key "key-one"
                        :ref (set-ref a scroll-fn)}]

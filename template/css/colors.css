@@ -137,12 +137,6 @@ outline: 2px solid #a0a8;
     --gray-9: #222425;
     --gray-10: #1a1c1d;
 
-
-
-
-
-
-
     --light-toolbar: var(--gray-2);
     --light-toolbar-: var(--gray-3);
     --light-content: var(--gray-1);
@@ -161,7 +155,12 @@ outline: 2px solid #a0a8;
     --dim-switchon: hsl(var(--switch-hue), 50%, 50%);
     --dim-switchoff: var(--dim-toolbar-);
 
-    --dim-brand1: hsl(var(--brand-hue), 40%, 60%);
+    --dim-brand1: hsl(calc(var(--brand-hue) - 0), 40%, 60%);
+    --dim-brand2: hsl(calc(var(--brand-hue) - 60), 40%, 60%);
+    --dim-brand3: hsl(calc(var(--brand-hue) + 60), 40%, 60%);
+    --dim-brand4: hsl(calc(var(--brand-hue) - 180), 40%, 60%);
+    --dim-brand5: hsl(calc(var(--brand-hue) + 270), 40%, 60%);
+
     --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
     --dim-brand1copy: hsl(var(--brand-hue), 50%, 80%);
     --light-brand1: #135C3D; /*hsl(var(--brand-hue), 55%, 40%);*/
@@ -391,9 +390,15 @@ outline: 2px solid #a0a8;
 .dark {
 
     
-    --brand1: #69A741; /*var(--brand1-dim);*/
+/*
+    --brand1: var(--dim-brand1);
+    --brand2: var(--dim-brand2);
+    --brand3: var(--dim-brand3);
+    --brand4: var(--dim-brand4);
+    --brand5: var(--dim-brand5);
     --brand1-copy: var(--brand1-copy-dim);
     --brand1-hover: var(--brand1-hover-dim);
+*/
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
@@ -417,7 +422,7 @@ outline: 2px solid #a0a8;
    --brand000: var(--brand000-dim);
    --brand00: var(--brand00-dim);
    --brand0: var(--brand0-dim);
-   --brand2: var(--brand2-dim);
+   
 
       --label: var(--label-dim);
 
@@ -454,9 +459,11 @@ outline: 2px solid #a0a8;
         --floating: var(--dim-floating);
         --switchon: var(--dim-switchon);
         --switchoff: var(--dim-switchoff);
-        --brand1: #69A741; /* var(--dim-brand1);*/
+        --brand1: var(--dim-brand1);
+        /*--brand1: #A7473D;*/
+        /*--brand1-copy: #EFDEDC;*/
         --brand1-bright: var(--dim-brand1-bright);
-        --brand1copy: var(--dim-brand1copy);
+        --brand1-copy: var(--dim-brand1copy);
         --button: var(--dim-button);
         --button-bright: var(--dim-button-bright);
         --buttoncopy: var(--dim-buttoncopy);

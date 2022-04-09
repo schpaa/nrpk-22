@@ -214,7 +214,7 @@
 
          (when @show-archived
            (when-some [d (filter-before today data)]
-             [sc/col-space-2
+             [sc/col-space-4
               [sc/hero "Arkivert"]
               (into [:div]
                     (map (fn [[id' {:keys [selected] :as m}]]
@@ -224,7 +224,7 @@
                          d))]))
 
          (when-some [d (filter-today today data)]
-           [sc/col-space-2
+           [sc/col-space-4
             [sc/hero "I dag"]
             (into [:div]
                   (map (fn [[id' {:keys [selected] :as m}]]
@@ -234,7 +234,7 @@
                        d))])
 
          (when-some [d (filter-after-today today data)]
-           [sc/col-space-2
+           [sc/col-space-4
             [sc/hero "Neste"]
             (into [:div]
                   (map (fn [[id' {:keys [selected] :as m}]]

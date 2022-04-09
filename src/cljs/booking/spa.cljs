@@ -222,82 +222,69 @@
 
    :r.oversikt
    (fn oversikt [r]
-     (let [user-auth (rf/subscribe [::db/user-auth])
-           md #(sc/markdown (schpaa.markdown/md->html %))
-           f (fn [[a b]] [sc/subtext-with-link {:style {:-margin-left "-2px"}
-                                                :href  (kee-frame.core/path-for [a])} b])]
+     (let [f (fn [[a b]] [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b])]
        [+page-builder r
         {:render
          (fn []
-           ;[:div [sc/col-space-8 (for [e (range 100)] [:div e])]]
-           [sc/col-space-8
-            [sc/col-space-8
+           [sc/col-space-1
 
-             [sc/col
-              [sc/ingress-details {:open true} #_{:on-click #(schpaa.state/toggle :oversikt/nrpk)
-                                                  :open     @(schpaa.state/listen :oversikt/nrpk)}
+            [sc/fp-summary-detail-always-show-links
+             nil
+             ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
+             "NRPK"
+             [:div
+              [:img.w-24.h-24.float-right.m-4.-mt-12 {:src "/img/logo-n.png"}]
+              [:span.clear-left "Medlemmer i Nøklevann ro- og padleklubb kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
+             [sc/row-sc-g4-w
+              (let [data [[3 :r.oversikt.organisasjon "Historie"]
+                          [4 :r.oversikt.styret "Styret"]]]
 
-               ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
-               [sc/hero-summary "NRPK"]
-               [:img.w-24.h-24.float-right.m-4.-mt-12 {:src "/img/logo-n.png"}]
-               [:span.clear-left "Medlemmer i Nøklevann ro- og padleklubb kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt.
+                (map (comp f rest) (sort-by first data)))]]
 
-               Nøklevann er betjent av nøkkelvakter og har derfor sesongbasert åpningstid."]]
-              [sc/row-sc-g4-w
-               (let [data [[3 :r.oversikt.organisasjon "Historie"]
-                           [4 :r.oversikt.styret "Styret"]]]
+            [sc/fp-summary-detail-always-show-links
+             :oversikt/bli-medlem
+             "Bli medlem"
+             [:p "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]
+             [sc/row-sc-g4-w
+              (let [data [[1 :r.forsiden "Registrer deg her"]
+                          [2 :r.forsiden "Hva årskontigenten dekker"]]]
+                (map (comp f rest) (sort-by first data)))]]
 
-                 (map (comp f rest) (sort-by first data)))]]
+            [sc/fp-summary-detail-always-show-links
+             :oversikt/nøklevann
+             "Nøklevann"
+             "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."
+             [sc/row-sc-g4-w
+              (let [data [[:r.xxx "Hvilke båter på Nøklevann?"]
+                          [:r.xxx "Utlånsaktivitet"]
+                          [:r.xxx "HMS ved Nøklevann"]]]
+                (map f (sort-by second data)))]]
 
-             [sc/col
-              [sc/ingress-details
-               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/bli-medlem)
-                                 :open     @(schpaa.state/listen :oversikt/bli-medlem)} "Bli medlem"]
-               [:p "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]]
-              [sc/row-sc-g4-w
-               (let [data [[1 :r.forsiden "Registrer deg her"]
-                           [2 :r.forsiden "Hva årskontigenten dekker"]]]
-                 (map (comp f rest) (sort-by first data)))]]
+            [sc/fp-summary-detail-always-show-links
+             :oversikt/Sjøbasen
+             "Sjøbasen"
+             "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."
+             [sc/row-sc-g4-w
+              (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
+                          [:r.booking.faq "Ofte spurte spørsmål"]
+                          [:r.booking.oversikt "Hvilke båter på Sjøbasen?"]
+                          [:r.forsiden "Booking"]
+                          [:r.xxx "HMS ved Sjøbasen"]]]
+                (map f (sort-by second data)))]]
 
-             [sc/col
-              [sc/ingress-details
-               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/nøklevann)
-                                 :open     @(schpaa.state/listen :oversikt/nøklevann)} "Nøklevann"]
-               "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."]
-              [sc/row-sc-g4-w
-               (let [data [[:r.xxx "Hvilke båter på Nøklevann?"]
-                           [:r.xxx "Utlånsaktivitet"]
-                           [:r.xxx "HMS ved Nøklevann"]]]
-                 (map f (sort-by second data)))]]
+            [sc/fp-summary-detail-always-show-links
+             :oversikt/Livredningskurs
+             "Kurs"
+             "NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."
+             [sc/row-sc-g4-w
+              (let [data [[:r.forsiden "Mer om livredningskurs"]
+                          [:r.forsiden "Meld deg på innmeldingskurs"]]]
+                (map f (sort-by second data)))]]
 
-             [sc/col
-              [sc/ingress-details
-               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Sjøbasen)
-                                 :open     @(schpaa.state/listen :oversikt/Sjøbasen)} "Sjøbasen"]
-               "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."]
-              [sc/row-sc-g4-w
-               (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
-                           [:r.booking.faq "Ofte spurte spørsmål"]
-                           [:r.booking.oversikt "Hvilke båter på Sjøbasen?"]
-                           [:r.forsiden "Booking"]
-                           [:r.xxx "HMS ved Sjøbasen"]]]
-                 (map f (sort-by second data)))]]
-
-             [sc/col
-              [sc/ingress-details
-               [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Livredningskurs)
-                                 :open     @(schpaa.state/listen :oversikt/Livredningskurs)} "Kurs"]
-               "NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."]
-              [sc/row-sc-g4-w
-               (let [data [[:r.forsiden "Mer om livredningskurs"]
-                           [:r.forsiden "Meld deg på innmeldingskurs"]]]
-                 (map f (sort-by second data)))]]]
-
-            [sc/col
-             [sc/ingress-details
-              [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Nøkkelvakt)
-                                :open     @(schpaa.state/listen :oversikt/Nøkkelvakt)} "Nøkkelvakt"]
-              "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."]
+            [sc/fp-summary-detail-always-show-links
+             :oversikt/Nøkkelvakt
+             "Nøkkelvakt"
+             "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
               (let [data [[:r.conditions "Plikter som nøkkelvakt"]
                           [:r.aktivitetsliste "Utlån på nøklevann"]
@@ -305,11 +292,10 @@
                           [:r.kalender "Vaktkalender"]]]
                 (map f (sort-by second data)))]]
 
-            [sc/col
-             [sc/ingress-details
-              [sc/hero-summary {:on-click #(schpaa.state/toggle :oversikt/Årshjul)
-                                :open     @(schpaa.state/listen :oversikt/Årshjul)} "Årshjulet i NRPK"]
-              "Forslag til ingress?"]
+            [sc/fp-summary-detail-always-show-links
+             :oversikt/Årshjul
+             "Årshjulet i NRPK"
+             "Forslag til ingress?"
              [sc/row-sc-g4-w
               (let [data [[:r.yearwheel "Oversikt 2022-23"]
                           [:r.yearwheel "Tidligere sesonger"]]]
@@ -486,7 +472,7 @@
    (fn [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]
        [+page-builder r
-        {:render (fn [_] [sc/col-space-2]
+        {:render (fn [_] [sc/col-space-4]
                    [:div
                     [sc/text0 "Sjøbasen oversikt"]
                     [sc/text1 "Sjøbasen oversikt"]
@@ -785,10 +771,10 @@
 
               {:render (fn []
                          (let [c (count users)]
-                           [sc/col-space-2
+                           [sc/col-space-4
                             ;[l/ppre-x fields]
                             [sc/header-title (str c " person" (if (< 1 c) "er"))]
-                            [sc/col-space-2
+                            [sc/col-space-4
                              (into [:ol]
 
                                    (for [v users]

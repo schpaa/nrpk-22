@@ -366,7 +366,7 @@
              :stroke         "none"
              :stroke-linecap "round" :stroke-linejoin "round" :d "M3 24 L0 0 L32 24 L3 24 "}]]]
 
-   [sc/col-space-2
+   [sc/col-space-4
     [sc/subtext {:class [:pr-4]
                  :style {:font-weight "var(--font-weight-4)"
                          :color       "var(--textmarker)"
@@ -390,10 +390,10 @@
 
 (defn siste-bevegelser []
   [:div.space-y-4
-   [sc/row-bl [sc/fp-header "Akkurat nå"] (sc/link {} "(se flere)")]
-   [:div.ml-4 {:style {:display               "grid"
-                       :gap                   "var(--size-4) var(--size-2)"
-                       :grid-template-columns "1fr"}}
+   ;[sc/row-bl [sc/fp-header "Status"] (sc/link {} "(se flere)")]
+   [:div {:style {:display               "grid"
+                  :gap                   "var(--size-4) var(--size-2)"
+                  :grid-template-columns "1fr"}}
     [sc/fp-text "Nøklevann"]
     [sc/row-sc-g2-w {:class [:ml-4]}
      [sc/text1 "16° i vannet"]
@@ -422,10 +422,10 @@
 
 (defn news-feed []
   [:div.space-y-4
-   [sc/row-bl [sc/fp-header "Nyheter"] (sc/link {} "(se flere nyheter)")]
-   [:div.ml-4 {:style {:display               "grid"
-                       :gap                   "var(--size-4) var(--size-2)"
-                       :grid-template-columns "1fr"}}
+
+   [:div {:style {:display               "grid"
+                  :gap                   "var(--size-4) var(--size-2)"
+                  :grid-template-columns "1fr"}}
     [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
     [listitem' (t/date) "Nye båter er kjøpt inn."]
     [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
@@ -435,45 +435,52 @@
         show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
         at-least-registered? (rf/subscribe [:lab/at-least-registered])
         master-emulation (rf/subscribe [:lab/master-state-emulation])]
-    [:div
-     [bg-light {:style {}
+    [bg-light {:class [(if dark-mode? :dark :light)
+                       (if @at-least-registered? :bottom-toolbar)]}
 
-                :class [(if dark-mode? :dark :light)
-                        (if @at-least-registered? :bottom-toolbar)]}
-
-      [:div.min-h-full.z-0.relative.mx-auto
-
-
-       (when (and goog.DEBUG @master-emulation)
-         [:div.max-w-lgx.mx-auto
-          [:div.mx-4.py-4.pt-24
-           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-            booking.common-views/master-control-box]]])
-
-       [:div.mx-4
+     [:div.min-h-full.z-0.relative.mx-auto
+      (when (and goog.DEBUG @master-emulation)
         [:div.max-w-lgx.mx-auto
-         [header-with-logo]]]
+         [:div.mx-4.py-4.pt-24
+          [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+           booking.common-views/master-control-box]]])
 
-       (when @show-image-carousell?
-         [image-carousell])
+      [:div.mx-4
+       [:div.max-w-lgx.mx-auto
+        [header-with-logo]]]
 
-       [:div.mx-4.py-8
-        [:div.space-y-16.w-full.mx-auto.max-w-lgx.py-4
-         {:style {:max-width booking.common-views/max-width}}
+      (when @show-image-carousell?
+        [image-carousell])
 
-         (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
-                    (not @at-least-registered?))
-           [helpful-to-earlier-users])
+      [:div.mx-4.py-8
+       [:div.w-full.mx-auto.py-4
+        {:style {:max-width booking.common-views/max-width}}
 
-         (when-not @at-least-registered?
-           [please-login-and-register])
+        (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
+                   (not @at-least-registered?))
+          [helpful-to-earlier-users])
 
-         [siste-bevegelser]
-         [news-feed]
-         [booking.yearwheel/yearwheel-feed]
-         [booking.openhours/opening-hours]]]]
+        (when-not @at-least-registered?
+          [please-login-and-register])
 
-      [bs/attached-to-bottom
-       {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
-       [scroll-up-animation]]
-      [booking.common-views/after-content]]]))
+        [sc/fp-summary-detail :frontpage/status
+         [sc/row-bl [sc/fp-header "Status"] (sc/header-accomp-link {} "(tilpass)")]
+         [siste-bevegelser]]
+
+        [sc/fp-summary-detail :frontpage/news
+         [sc/row-bl [sc/fp-header "Nyheter"] (sc/header-accomp-link {} "(se mer)")]
+         [news-feed]]
+
+        [sc/fp-summary-detail :frontpage/yearwheel
+         [sc/row-bl
+          [sc/fp-header "Plan"]
+          (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se mer)")]
+         [booking.yearwheel/yearwheel-feed]]
+
+        [sc/fp-summary-detail :frontpage/openinghours "Åpningstider"
+         [booking.openhours/opening-hours]]]]]
+
+     [bs/attached-to-bottom
+      {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
+      [scroll-up-animation]]
+     [booking.common-views/after-content]]))
