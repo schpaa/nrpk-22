@@ -4,6 +4,11 @@ justify-content: center;
 align-items: center;
 }
 
+html {
+    -webit-text-size-adjust: none;
+    touch-action: pan-y;
+}
+
 :where(html) {
     --background-image-light: url('/img/bg/bg-light-1.jpg');
     --background-image-dark: url('/img/bg/bg-dark-1.jpg');

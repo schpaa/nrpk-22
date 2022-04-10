@@ -26,8 +26,8 @@
         :keyCode keycodes/E}
        {:ctrlKey true
         :keyCode keycodes/K}
-       {:metaKey true
-        :keyCode keycodes/F}
+       #_{:metaKey true
+          :keyCode keycodes/F}
        {:metaKey true
         :keyCode keycodes/K}
        {:ctrlKey true

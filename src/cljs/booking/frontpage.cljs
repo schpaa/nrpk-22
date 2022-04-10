@@ -283,11 +283,13 @@
 (defn image-carousell []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         auto-scroll? (schpaa.state/listen :lab/image-carousell-autoscroll)
-        at-least-registered? @(rf/subscribe [:lab/has-chrome])]
+        left-side? (schpaa.state/listen :lab/menu-position-right)
+        at-least-registered? (rf/subscribe [:lab/at-least-registered])
+        has-chrome? (rf/subscribe [:lab/has-chrome])]
     [:div
      {:style (conj {:padding-block "var(--size-4)"
                     :filter        (if dark-mode? "brightness(0.75)" "")})}
-     [image-caro-style {:class [(if at-least-registered? :toolbar)]}
+     [image-caro-style {:class [(if (and @has-chrome? @at-least-registered?) :toolbar)]}
       [booking.carousell/render-carousell
        {:carousell-config {:initialSlide  0
                            :slidesToShow  3
@@ -340,7 +342,7 @@
       #_[:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
 
 (defn helpful-to-earlier-users []
-  [sc/surface-c {:class [:-mx-4]
+  [sc/surface-c {:class [:-mx-4x]
                  :style {:position   :relative
                          :background "var(--textmarker-background)"
                          :box-shadow "var(--shadow-2)"
@@ -439,6 +441,7 @@
                        (if @at-least-registered? :bottom-toolbar)]}
 
      [:div.min-h-full.z-0.relative.mx-auto
+
       (when (and goog.DEBUG @master-emulation)
         [:div.max-w-lgx.mx-auto
          [:div.mx-4.py-4.pt-24
@@ -446,19 +449,20 @@
            booking.common-views/master-control-box]]])
 
       [:div.mx-4
-       [:div.max-w-lgx.mx-auto
+       [:div.max-w-lg.mx-auto
         [header-with-logo]]]
 
       (when @show-image-carousell?
         [image-carousell])
 
-      [:div.mx-4.py-8
+      (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
+                 (not @at-least-registered?))
+        [:div.mx-4.pb-12
+         [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
+
+      [:div.mx-4.pb-8
        [:div.w-full.mx-auto.py-4
         {:style {:max-width booking.common-views/max-width}}
-
-        (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
-                   (not @at-least-registered?))
-          [helpful-to-earlier-users])
 
         (when-not @at-least-registered?
           [please-login-and-register])

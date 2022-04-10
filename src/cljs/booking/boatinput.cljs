@@ -21,9 +21,9 @@
    :font-weight "var(--font-weight-6)"})
 
 (o/defstyled button-caption :div
-  {:font-family "IBM Plex Sans"
+  {:font-family "Inter"
    :font-size   "var(--font-size-4)"
-   :font-weight "var(--font-weight-6)"})
+   :font-weight "var(--font-weight-8)"})
 
 (o/defstyled button :button
   :w-full :h-full
