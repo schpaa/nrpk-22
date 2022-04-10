@@ -157,20 +157,22 @@
      ;[sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} "havpadlere"]
      #_[sc/text1 {:style {:color "var(--yellow-2)"}} (count online) ", " (count offline)]]))
 
-(def frontpage-image
+(def frontpage-images
   (map #(str "/img/caro/" %)
        ["img-0.jpg"
         "img-1.jpg"
         "img-13.jpg"
         "img-16.jpg"
         "img-12.jpg"
-        ;"img-3.jpg"
-        "img-4.jpg"
-        ;"img-2.jpg"
-        ;"img-5.jpg"
-        ;"img-6.jpg"
-        ;"img-7.jpg"
-        "img-8.jpg"]
+        ;"img-3.jpg";
+        "img-4.jpg"]
+       ;"img-2.jpg";
+       ;"img-5.jpg";
+       ;"img-6.jpg"
+
+       ;"img-8.jpg"]
+       ;"img-7.jpg"]
+
        #_["brygge.jpeg"
           ;"DSCF0075.JPG"
           "DSCF0051.JPG"
@@ -268,18 +270,19 @@
    :slidesToShow     1
    :pauseOnHover     true
    :inside?          true
-   :autoplay         true
+   ;:autoplay         false
    ;:autoplaySpeed    1000  
    :afterChange      (fn [e] #_(rf/dispatch [::set-active-menu-page e]))
    ;:beforeChange     (fn [_ e] (rf/dispatch [::set-active-menu-page]))
    :touchMove        true
-   :speed            300
+   :speed            500
    :initialSlide     1
    :fade             false
    :pauseOnDotsHover true})
 
 (defn image-carousell []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
+        auto-scroll? (schpaa.state/listen :lab/image-carousell-autoscroll)
         at-least-registered? @(rf/subscribe [:lab/has-chrome])]
     [:div
      {:style (conj {:padding-block "var(--size-4)"
@@ -288,17 +291,13 @@
       [booking.carousell/render-carousell
        {:carousell-config {:initialSlide  0
                            :slidesToShow  3
-                           :autoplay      true
+                           :autoplay      @auto-scroll?
                            :autoplaySpeed 5500}
         :class            [:bg-alt :h-full :m-4]
         :view-config      (config)
         :contents
         (into [] (map (fn [e] [:div.outline-none
-                               {:style {;:object-fit   :cover
-                                        ;:height       "100%"
-                                        ;:width        "100%"
-                                        ;:aspect-ratio "1/1"
-                                        :overflow-y :hidden}}
+                               {:style {:overflow-y :hidden}}
                                [:img {:style  {:object-fit   :cover
                                                :height       "100%"
                                                :width        "100%"
@@ -306,13 +305,13 @@
                                                :overflow-y   :hidden}
                                       :width  "100%"
                                       :height "100%"
-                                      :src    e}]])) frontpage-image)}]]]))
+                                      :src    e}]])) frontpage-images)}]]]))
 
 (defn header-with-logo []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
     (if true
-      [:div {:class [:pt-24 :pb-20 :--debug2 :xhover:rotate-0 :-rotate-6 :duration-500]
-             :style {:-transform            "rotate(-6deg)"
+      [:div {:class [:pt-24 :pb-20 :duration-500]
+             :style {:transform             "rotate(-6deg)"
                      :transform-origin      "center right"
                      :display               :grid
                      :gap                   "var(--size-4)"
@@ -334,11 +333,11 @@
                  :border-style "dashed"
                  :border-color (if dark-mode? "var(--brand1)" "var(--brand1)")}}]
 
-       [:div {:class [:--debug3]
-              :style {:align-self   :center
+       [:div {:style {:transform    "rotate(6deg)"
+                      :align-self   :center
                       :justify-self :start}}
         [:div.h-20.w-20 [circular-logo-thing dark-mode?]]]]
-      [:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
+      #_[:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4]
@@ -481,7 +480,7 @@
         [sc/fp-summary-detail :frontpage/openinghours "Åpningstider"
          [booking.openhours/opening-hours]]]]]
 
-     [bs/attached-to-bottom
-      {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
-      [scroll-up-animation]]
+     #_[bs/attached-to-bottom
+        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
+        [scroll-up-animation]]
      [booking.common-views/after-content]]))

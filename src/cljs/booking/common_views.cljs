@@ -17,7 +17,7 @@
             [schpaa.style.combobox]
             [booking.fileman]
             [booking.boatinput]
-            [booking.mainmenu :refer [main-menu boatinput-menu boatinput-sidebar]]
+            [booking.mainmenu :refer [main-menu boatinput-menu]]
             [booking.search :refer [search-menu]]
             [kee-frame.core :as k]
             [booking.routes]
@@ -126,6 +126,7 @@
   (let [admin? (rf/subscribe [:lab/admin-access])
         member? (rf/subscribe [:lab/member])
         booking? (rf/subscribe [:lab/booking])
+        left-side? (schpaa.state/listen :lab/menu-position-right)
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [#_{:icon-fn   (fn [] (if @(rf/subscribe [:lab/open-menu])
@@ -157,12 +158,12 @@
        {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
         :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
         :page-name :r.yearwheel})
-
      :space
-
      (when (or @admin? @nokkelvakt)
        {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                            [centered-thing (sc/icon-large (if @st ico/panelOpen ico/panelClosed))]))
+                            [centered-thing (sc/icon-large (if @left-side?
+                                                             (if @st ico/panelOpen ico/panelClosed)
+                                                             (if @st ico/panelClosed ico/panelOpen)))]))
         :special   true
         :centered? true
         :on-click  #(rf/dispatch [:lab/toggle-number-input])})
@@ -170,21 +171,16 @@
      (when @admin?
        {:tall-height true
         :icon-fn     (fn [] (sc/icon-large ico/fileman))
-
         :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-        #_#_:badge #(let [c (booking.content.booking-blog/count-unseen uid)]
-                      (when (pos? c) c))
         :page-name   :r.fileman-temporary})
-
      (when (or @admin?)
        {:icon-fn     (fn [] (sc/icon-large ico/users))
         :on-click    #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
         :tall-height true
         :class       #(if (= % :r.users) :active :oversikt)
         :page-name   #(some #{%} [:r.users :r.presence])})
-
      {:tall-height true
-      :special     true
+      ;:special     true
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                             (sc/icon-large
                               (if @st ico/commandPaletteOpen ico/commandPaletteClosed))))
@@ -453,47 +449,58 @@
                   (swap! st update-in [:nøkkelvakt] (constantly %))
                   (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
 
-(defn header-line [r frontpage]
-  [err-boundary
-   [:div
-    {:style (when-not frontpage {:background    "var(--toolbar)"
-                                 :border-bottom "1px solid var(--toolbar)"})}
+(defn header-line [r frontpage v]
+  (let [switch? (schpaa.state/listen :lab/menu-position-right)]
+    [err-boundary
+     [:div.relative
 
-    [(if frontpage header-top-frontpage header-top)
-     [:div.flex.flex-col.truncate.px-2
-      (when-not @(rf/subscribe [:lab/in-search-mode?])
-        (let [titles (compute-page-titles r)]
-          [:div
-           ;small/stacked
-           [:div
-            (if (vector? titles)
-              [sc/col
-               {:class [:truncate]}
-               [sc/title1 {:style {:font-weight "var(--font-weight-5)"}} (last titles)]
-               (when (< 1 (count titles))
-                 (let [{:keys [text link]} (first titles)]
-                   [sc/subtext-with-link {:href (k/path-for [link])} text]))]
-              [sc/col
-               [sc/title1 titles]])]]))]
+      [:div.w-full.h-16.absolute.inset-x-0
+       {:style {:opacity             (- 1 v)
+                :background          (if frontpage "var(--toolbar)" "var(--content)")
+                :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
+                :border-bottom-style "solid"
+                :border-bottom-width "1px"}}]
 
-     ;todo (if @(rf/subscribe [:lab/role-is-none]) ...)
-     [:div.grow]
-     (if frontpage
-       [:div.grow]
-       (if-not @(rf/subscribe [:lab/at-least-registered])
-         [:<>
-          [:div.grow]
-          [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
-                                                    :width          "min-content"
-                                                    :box-shadow     "var(--shadow-1)"}
-                                         :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
-                                         :on-click #(rf/dispatch [:app/login])}
-           "Logg inn"]]))
-     [main-menu]]]])
+      (let [login (fn []
+                    (if-not @(rf/subscribe [:lab/at-least-registered])
+                      [:<>
+                       [:div.grow]
+                       [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
+                                                                 :width          "min-content"
+                                                                 :box-shadow     "var(--shadow-1)"}
+                                                      :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
+                                                      :on-click #(rf/dispatch [:app/login])}
+                        "Logg inn"]]))
+            location (fn [] [:div.flex.flex-col.truncate.px-2.w-full.z-100
+                             {:class [(when-not @switch? :text-right)]}
+                             (let [titles (compute-page-titles r)]
+                               (if (vector? titles)
+                                 [sc/col
+                                  {:class [:truncate]}
+                                  [sc/title1 {:style {:font-weight "var(--font-weight-5)"}} (last titles)]
+                                  (when (< 1 (count titles))
+                                    (let [{:keys [text link]} (first titles)]
+                                      [sc/subtext-with-link {:href (k/path-for [link])} text]))]
+                                 [sc/col
+                                  [sc/title1 titles]]))])]
+        [(if frontpage header-top-frontpage header-top)
+         (if @switch?
+           [:<>
+            [location]
+            [:div.grow]
+            (if frontpage
+              [:div.grow]
+              [login])
+            [main-menu @switch?]]
+           [:<>
+            [main-menu @switch?]
+            (if frontpage
+              [:div.grow]
+              [login])
+            [:div.grow]
+            [location]])])]]))
 
-
-
-(defn right-tabbar []
+(defn right-tabbar [left-side?]
   (let [numberinput? (rf/subscribe [:lab/number-input])
         user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
@@ -509,10 +516,15 @@
                      [:div.grow]
                      [vertical-button %])
                   (remove nil? (vertical-toolbar-right (:uid @user-auth)))))
-       [:div.absolute.right-16.xl:right-20.inset-y-0
-        {:style {:width          "298px"
-                 :pointer-events :none}}
-        [boatinput-menu]]])))
+       (if left-side?
+         [:div.absolute.left-16.xl:left-20.inset-y-0.z-100
+          {:style {:min-width      "298px"
+                   :pointer-events :none}}
+          [boatinput-menu true]]
+         [:div.absolute.right-16.xl:right-20.inset-y-0.z-100
+          {:style {:width          "298px"
+                   :pointer-events :none}}
+          [boatinput-menu false]])])))
 
 (defn bottom-tabbar []
   (let [search (rf/subscribe [:lab/is-search-running?])
@@ -570,7 +582,8 @@
         #_[:a {:href "/img/bg/bg-dark-1.jpg" :download "my-download.pdf"} "Download File"]]]]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
-  (let [user-auth (rf/subscribe [::db/user-auth])
+  (let [switch? (schpaa.state/listen :lab/menu-position-right)
+        user-auth (rf/subscribe [::db/user-auth])
         user-state (rf/subscribe [:lab/user-state])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
         numberinput? (rf/subscribe [:lab/number-input])
@@ -605,41 +618,43 @@
             :vis     (rf/subscribe [:lab/modal-selector])
             :close   #(rf/dispatch [:lab/modal-selector false])}]
           ;endregion
-          [:div.fixed.inset-0.flex
-           [right-tabbar]
-           [:div.flex.flex-col
-            {:style {:flex "1 1 auto"}}
-            (when-not frontpage
-              [header-line r false])
-            [:div.flex.flex-col.xoverflow-y-auto.h-full
-             {:class (when-not frontpage [:overflow-y-auto])}
-             (if (and
-                   @(rf/subscribe [:lab/is-search-running?])
-                   @(rf/subscribe [:lab/in-search-mode?]))
-               [:div
-                {:style {:flex "1 0 auto"}}
-                [:div
-                 {:style {:background "var(--toolbar)"}}
-                 [search-result]]
-                [sc/row-center {:class [:py-4]}
-                 [hoc.buttons/regular {:on-click #(do
-                                                    ;(rf/dispatch [:lab/stop-search])
-                                                    ;(rf/dispatch [:lab/set-search-mode false])
-                                                    ;(rf/dispatch [:lab/set-search-expr ""])
-                                                    (rf/dispatch [:lab/quit-search]))} "Lukk"]]
-                [:div.absolute.bottom-8.sm:bottom-7.right-4
-                 [sc/row-end {:class [:pt-4]}
-                  (bottom-menu)]]]
-               [:<>
-                [:div
-                 {:style {:background-color "var(--content)"
-                          :flex             "1 1 auto"}}
-                 contents]
-                (when-not frontpage [after-content])])]
+          (let [content [:div.flex.flex-col
+                         {:style {:flex "1 1 auto"}}
+                         (when-not frontpage
+                           [header-line r false])
+                         [:div.flex.flex-col.xoverflow-y-auto.h-full
+                          {:class (when-not frontpage [:overflow-y-auto])}
+                          (if (and
+                                @(rf/subscribe [:lab/is-search-running?])
+                                @(rf/subscribe [:lab/in-search-mode?]))
+                            [:div
+                             {:style {:flex "1 0 auto"}}
+                             [:div
+                              {:style {:background "var(--toolbar)"}}
+                              [search-result]]
+                             [sc/row-center {:class [:py-4]}
+                              [hoc.buttons/regular {:on-click #(rf/dispatch [:lab/quit-search])} "Lukk"]]
+                             [:div.absolute.bottom-8.sm:bottom-7.right-4
+                              [sc/row-end {:class [:pt-4]}
+                               (bottom-menu)]]]
+                            [:<>
+                             [:div
+                              {:style {:background-color "var(--content)"
+                                       :flex             "1 1 auto"}}
+                              contents]
+                             (when-not frontpage [after-content])])]
 
-            [bottom-tabbar]]]])})))
+                         [bottom-tabbar]]]
+            (if @switch?
+              [:div.fixed.inset-0.flex
+               [right-tabbar true]
+               content]
+              [:div.fixed.inset-0.flex
+               content
+               [right-tabbar false]]))])})))
 
-(def max-width "60ch")
+
+(def max-width "54ch")
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -736,8 +751,8 @@
                        :ref (set-ref a scroll-fn)}]
                      [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
                         [:div.sticky.top-0.z-10.relative
-                         {:style {:opacity v}}
-                         [booking.common-views/header-line r true]])
+                         ;{:style {:opacity v}}
+                         [booking.common-views/header-line r true v]])
                       [:div.-mt-16 {:style {:height "calc(100% - 4rem)"}}
                        [render r]]])]
 

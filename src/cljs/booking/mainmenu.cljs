@@ -11,7 +11,7 @@
             [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
             [booking.boatinput]
-            [schpaa.debug :as l]
+            [schpaa.debug :as l :refer [strp]]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]))
 
@@ -68,16 +68,13 @@
              (when @at-least-registered?
                [:item {:icon      ico/user
                        :label     [sc/col
-                                   [sc/text1 "Mine opplysninger"]
+                                   [sc/text1 {:style {:font-size "var(--font-size-2)"}} "Mine opplysninger"]
                                    [sc/small1 @username-or-fakename]]
-
                        :highlight (= :r.user current-page)
                        :action    #(rf/dispatch [:app/navigate-to [:r.user]])
                        :disabled  false
                        :value     #()}])
              [:hr]
-             #_(when goog.DEBUG
-                 [schpaa.style.hoc.toggles/local-toggle :lab/master-state-emulation])
 
              (when @at-least-registered?
                [:toggle {:disabled  true
@@ -102,13 +99,10 @@
                        :stay-open true
                        :content   (fn [_]
                                     [:div.w-full
-                                     [schpaa.style.switch/large-switch
-                                      {:tag      :lab/more-contrast
-                                       :caption  "Mer kontrast"
-                                       :disabled true
-                                       :view-fn  (fn [t c]
-                                                   [:div.flex.justify-between.items-center.w-full.gap-2.h-12
-                                                    [sc/text1 c] t])}]])}]
+                                     [schpaa.style.hoc.toggles/stored-toggle :lab/image-carousell-autoscroll "Auto-scroll"
+                                      (fn [t c]
+                                        [:div.flex.justify-between.items-center.w-full.gap-2.h-12
+                                         [sc/text1 c] t])]])}]
 
              (when goog.DEBUG
                [:toggle {:disabled  true
@@ -120,7 +114,24 @@
                                           [:div.flex.justify-between.items-center.w-full.gap-2.h-12
                                            [sc/text1 c] t])]])}])
 
+             [:toggle {:disabled  true
+                       :stay-open true
+                       :content   (fn [_]
+                                    [:div.w-full
+                                     [schpaa.style.switch/large-switch
+                                      {:tag      :lab/more-contrast
+                                       :caption  "Større kontrast"
+                                       :disabled true
+                                       :view-fn  (fn [t c]
+                                                   [:div.flex.justify-between.items-center.w-full.gap-2.h-12
+                                                    [sc/text1 c] t])}]])}]
+
              [:hr]
+
+             [:item {:label     "Speilvend"
+                     :action    #(schpaa.state/toggle :lab/menu-position-right)
+                     :stay-open true}]
+
              [:item {:icons  (sc/icon ico/commandPaletteClosed)
                      :label  "Vis alle spørsmål"
                      :action #(schpaa.state/change :lab/skip-easy-login false)}]
@@ -145,20 +156,17 @@
                        [:div.flex.justify-between.items-center.w-full.gap-2.ml-12.mr-4.h-16
                         [sc/text1 c] t])]]]])))
 
-(defn boatinput-sidebar []
-  (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])]
-    (when @numberinput-visible
-      [:div.w-auto
-       [scm/boatinput-panel-from-right
-        [booking.boatinput/sample false]]])))
+#_(defn boatinput-sidebar []
+    (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])]
+      (when @numberinput-visible
+        [:div.w-auto
+         [scm/boatinput-panel-from-right
+          [booking.boatinput/sample false]]])))
 
-(defn boatinput-menu []
+(defn boatinput-menu [left-side]
   (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])
                mobile? false]                               ;(= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
-    #_[:div.xabsolute.inset-0x.xw-auto.xinset-x-0.right-0x
-       #_{:style {:z-index        0
-                  :pointer-events :none
-                  :background     "blue"}}]
+
     [headlessui-reagent.core/transition
      (conj
        {:show  (or @numberinput-visible false)
@@ -172,28 +180,22 @@
           :leave      "transition  duration-200"
           :leave-from "opacity-100 translate-y-0"
           :leave-to   "opacity-0 translate-y-full"}
+
          {:enter      "transition duration-200 ease-out"
-          :enter-from "opacity-0 translate-x-full"
-          :enter-to   "opacity-100 translate-x-0"
-          ;:entered    "translate-x-0"
-          :leave      "transition  duration-300"
-          :leave-from "opacity-100 translate-x-0"
-          :leave-to   "opacity-0 translate-x-full"}))
+          :enter-from (strp "opacity-0 " (if left-side "-translate-x-full" "translate-x-full"))
+          :enter-to   (strp "opacity-100" (if left-side "translate-x-0" "translate-x-0"))
+          :leave      "transition duration-300"
+          :leave-from (strp "opacity-100" (if left-side "translate-x-0" "translate-x-0"))
+          :leave-to   (strp "opacity-0" (if left-side "-translate-x-full" "translate-x-full"))}))
      [:div.h-screen
-      {;:on-click #(tap> "clack")
-       :style (conj
-                ;{:pointer-events :none}
+      {:style (conj
                 {}
                 (if mobile?
                   {:display       :grid
                    :align-content :end}
                   {:pointer-events  :none
-
                    :display         :grid
-
-                   ;:z-index         10
                    :justify-content :end
-
                    :align-content   :center}))}
       [:div.select-none
        {:class [:drop-shadow-2xl]
@@ -201,26 +203,29 @@
                  {}
                  (if mobile? {:padding-block "var(--size-10)"
                               :overflow-y    :auto}
-                             {:pointer-events            :none
-                              ;:background                :red ;#f00a
-                              :border-bottom-left-radius "var(--radius-3)"
-                              :border-top-left-radius    "var(--radius-3)"
-                              :box-shadow                "var(--shadow-6)"
-                              ;:box-sizing :content-box
-                              ;:padding-top     "var(--size-9)"
-                              ;:padding-bottom  "var(--size-10)"
-                              :overflow-y                :auto
-                              :-margin-top               "var(--size-9)"
-                              :-margin-bottom            "var(--size-10)"
-                              :spadding-inline           "var(--size-4)"}))}
-       [scm/boatinput-panel-from-right
-        [booking.boatinput/sample mobile?]]]]]))
+                             (conj (if left-side
+                                     {:border-bottom-right-radius "var(--radius-3)"
+                                      :border-top-right-radius    "var(--radius-3)"}
+                                     {:border-bottom-left-radius "var(--radius-3)"
+                                      :border-top-left-radius    "var(--radius-3)"})
+                                   {;:overflow :hidden
+                                    :pointer-events :none
+                                    :box-shadow     "var(--shadow-6)"
+                                    :overflow-y     :auto
+                                    :-margin-top    "var(--size-9)"
+                                    :-margin-bottom "var(--size-10)"})))}
 
-(defn main-menu []
+       (if left-side
+         [scm/boatinput-panel-from-left
+          [booking.boatinput/sample mobile? true]]
+         [scm/boatinput-panel-from-right
+          [booking.boatinput/sample mobile? false]])]]]))
+
+(defn main-menu [switch?]
   (r/with-let [mainmenu-visible #_(r/atom false) (rf/subscribe [:lab/menu-open])]
     [scm/mainmenu-example-with-args
      {:data       (mainmenu-definition)
-      :dir        #{:down :left}
+      :dir        #{:down (if switch? :left :right)}
       :showing!   mainmenu-visible
       :close-menu #(rf/dispatch [:lab/close-menu])
       :button     (fn [open]

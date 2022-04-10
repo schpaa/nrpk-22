@@ -4,7 +4,7 @@
             [reagent.core :as r]
             [times.api]
             [tick.core :as t]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l :refer [strp]]))
 
 (defn getCoordinatesForPercent
   ([percent]
@@ -14,7 +14,7 @@
     :y (* k (Math/sin (* 2 Math/PI percent)))}))
 
 (defn pathData [{:keys [startX startY largeArcFlag endX endY]}]
-  (str "M" startX " " startY " A 1 1 0 " largeArcFlag " 1 " endX " " endY " L 0 0 "))
+  (strp "M" startX startY "A" 1 1 0 largeArcFlag 1 endX endY "L" 0 0))
 
 (def colors
   [["var(--brand1)" "var(--lime-1)"]

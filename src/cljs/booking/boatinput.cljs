@@ -156,12 +156,32 @@
          content]]))
 
 (o/defstyled panel :div
-  :w-64 :h-auto
-  {:display               :grid
-   :column-gap            "var(--size-2)"
-   :row-gap               "var(--size-2)"
-   :grid-template-columns "repeat(4,1fr)"
-   :grid-auto-rows        "4rem"})
+  [:& :w-64 :h-auto
+   {:outline               0
+    :border                0
+    :display               :grid
+    :column-gap            "var(--size-2)"
+    :row-gap               "var(--size-2)"
+    :grid-template-columns "repeat(4,1fr)"
+    :grid-auto-rows        "4rem"}
+   [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]
+                                         ["child " "juvenile" "key" "adult"]
+                                         ["boat" "boat" "boat" "boat"]
+                                         ["boat" "boat" "boat" "boat"]
+                                         ["trash" "input" "input" "add"]
+                                         ["boats" "numpad" "numpad" "numpad"]
+                                         ["boats" "numpad" "numpad" "numpad"]
+                                         ["restart" "numpad" "numpad" "numpad"]
+                                         ["complete" "numpad" "numpad" "numpad"]]}]
+   [:&.left-side {:grid-template-areas [["adult" "moon" "juvenile" "child"]
+                                        ["adult" "key" "juvenile" "child"]
+                                        ["boat" "boat" "boat" "boat"]
+                                        ["boat" "boat" "boat" "boat"]
+                                        ["add" "input" "input" "trash"]
+                                        ["numpad" "numpad" "numpad" "boats"]
+                                        ["numpad" "numpad" "numpad" "boats"]
+                                        ["numpad" "numpad" "numpad" "restart"]
+                                        ["numpad" "numpad" "numpad" "complete"]]}]])
 
 (o/defstyled pad :div
   [:div :flex-center
@@ -455,7 +475,7 @@
 
 (defonce st (r/atom {}))
 
-(defn sample [mobile?]
+(defn sample [mobile? left-side?]
   (let [keydown-f (fn [event]
                     (tap> event)
                     ;(.stopPropagation event)
@@ -481,17 +501,11 @@
        (fn [_]
          [:div.relative
           [:div
-           {:class     [:focus:outline-none
-                        :focus:ring-4
-                        :focus:ring-offset-2
-                        :focus:ring-offset-clear]
-            :style     (if mobile? {} {:padding                    "var(--size-4)"
-                                       :border-top-left-radius     "var(--radius-2)"
-                                       :border-bottom-left-radius  "var(--radius-2)"
-                                       :border-top-right-radius    "none"
-                                       :border-bottom-right-radius "none"
-                                       :pointer-events             :auto})
-            :tab-index 0
+           {:tab-index 0
+            :class     [:outline-none
+                        :focus:outline-none]
+            :style     (if mobile? {} {:padding        "var(--size-4)"
+                                       :pointer-events :auto})
             :ref       (fn [e]
                          (when-not @ref
                            (tap> ["adding for " e])
@@ -499,32 +513,19 @@
                            (.focus e)
                            (reset! ref e)))}
 
-           [panel
-            [:div
-             {:style {:grid-column "2/span 3"
-                      :grid-row    "6/span 4"}}
-             [numberinput st]]
-            [:div.p-1x {:style {:grid-column "4"
-                                :grid-row    "1/span 2"}}
-             [children st]]
+           [panel {:class [(if left-side? :left-side :right-side)]}
+            [:div {:style {:grid-area "numpad"}} [numberinput st]]
 
-            [:div.p-1x {:style {:grid-column "3"
-                                :grid-row    "1/span 2"}}
-             [juveniles st]]
-
-            [:div {:style {:grid-column "2"
-                           :grid-row    "1/span 2"}}
-             [adults st]]
-            [:div {:style {:grid-row    "1"
-                           :grid-column "1"}}
-             [moon st]]
-            [:div {:style {:grid-row    "2"
-                           :grid-column "1"}}
-             [havekey st]]
+            [:div {:style {:grid-area "child"}} [children st]]
+            [:div {:style {:grid-area "juvenile"}} [juveniles st]]
+            [:div {:style {:grid-area "adult"}} [adults st]]
+            [:div {:style {:grid-area "moon"}} [moon st]]
+            [:div {:style {:grid-area "key"}} [havekey st]]
 
             [:div
-             {:style {:grid-row       "5"
-                      :grid-column    "2/span 2"
+             {:style {:grid-area      "input"
+                      ;:grid-row       "5"
+                      ;:grid-column    "2/span 2"
                       :padding-inline "var(--size-2)"
                       :border-radius  "var(--radius-1)"
                       :background     "var(--field1)"
@@ -558,16 +559,12 @@
                      [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]
                      [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]))])]]
 
-
             [:div
-             {:style {:grid-row       "3/span 2"
-                      :grid-column    "1/span 4"
+             {:style {:grid-area      "boat"
                       :padding-inline "var(--size-2)"
                       :display        :flex
-                      :align-items    :center
-                      ;:border-radius "var(--radius-1)"
-                      ;:background    "var(--brand1)"
-                      #_#_:box-shadow "var(--inner-shadow-2)"}}
+                      :align-items    :center}}
+
              (if (<= 3 (count (:item @st)))
                (lookup (:item @st))
                [sc/col {:class [:space-y-px :opacity-50]}
@@ -576,8 +573,7 @@
                 [sc/subtext "Bruk 4 siffer for testing"]])]
 
             [:div.p-1
-             {:style {:grid-column           "1"
-                      :grid-row              "6/span 2"
+             {:style {:grid-area             "boats"
                       :border-radius         "var(--radius-1)"
                       :background            "var(--field1)"
                       :gap                   "var(--size-1)"
@@ -593,18 +589,10 @@
                                     (swap! st #(-> %
                                                    (assoc :selected e)
                                                    (assoc :item e)))))} e])]
-            [:div {:style {:grid-row    "5"
-                           :grid-column "1"}}
-             [delete st]]
-            [:div {:style {:grid-row    "5"
-                           :grid-column "4"}}
-             [add st]]
-            [:div {:style {:grid-row    "9"
-                           :grid-column "1"}}
-             [confirm st]]
-            [:div {:style {:grid-row    "8"
-                           :grid-column "1"}}
-             [restart st]]
+            [:div {:style {:grid-area "trash"}} [delete st]]
+            [:div {:style {:grid-area "add"}} [add st]]
+            [:div {:style {:grid-area "complete"}} [confirm st]]
+            [:div {:style {:grid-area "restart"}} [restart st]]
 
             (when (< 3 (count (:list @st)))
               [:div.p-1 {:style {:grid-column           "1/span 4"
