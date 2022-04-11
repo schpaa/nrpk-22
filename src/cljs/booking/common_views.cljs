@@ -505,10 +505,12 @@
        (if left-side?
          [:div.absolute.left-16.xl:left-20.inset-y-0.z-100
           {:style {:min-width      "298px"
+
                    :pointer-events :none}}
           [boatinput-menu true]]
          [:div.absolute.right-16.xl:right-20.inset-y-0.z-100
           {:style {:width          "298px"
+
                    :pointer-events :none}}
           [boatinput-menu false]])])))
 
@@ -561,7 +563,7 @@
                       :border        "1px solid var(--gray-8)"
                       :color         "var(--gray-0)"}
            :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-          ico/tilbakemelding "xTilbakemelding"]]
+          ico/tilbakemelding "Tilbakemelding"]]
         [sc/col
          [sc/small1 (or booking.data/VERSION "version")]
          [sc/small1 (or booking.data/DATE "date")]]

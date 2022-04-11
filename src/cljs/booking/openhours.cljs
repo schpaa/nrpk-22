@@ -189,13 +189,13 @@
                        :grid-area        (str "period" idx)}
             :on-click #(reset! aktiv idx)}
            [sc/col {:style {:width "100%"}}
-            [sc/text1-cl {:style {:text-weight "var(--font-weight-6)"}} periodname]
+            [sc/subtext-cl {:style {:text-weight "var(--font-weight-6)"}} periodname]
             [:div.flex.justify-between.w-full.relative
-             [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date start))]
-             [sc/subtext-cl {:style {:font-family "Inter"
-                                     :text-align  :center}
-                             :class [:absolute :inset-0 :opacity-50]} "-->"]
-             [sc/subtext-cl {:xclass [:tabular-nums :tracking-tighter]} (times.api/short-date-format (t/date end))]]]])
+             [sc/text1-cl (times.api/short-date-format (t/date start))]
+             [sc/text1-cl {:style {:font-family "Inter"
+                                   :text-align  :center}
+                           :class [:absolute :inset-0 :opacity-50]} "-->"]
+             [sc/text1-cl (times.api/short-date-format (t/date end))]]]])
 
         (mini-yearwheel aktiv data')])
 

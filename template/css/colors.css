@@ -90,8 +90,6 @@ outline: 2px solid #a0a8;
   }
 }
 
-
-
 :root {
     --radius-0: 3px;
     --radius-1: 6px;
@@ -152,23 +150,34 @@ outline: 2px solid #a0a8;
     --dim-content: var(--gray-8);
     --dim-floating: var(--gray-7);
 
-    --brand-hue: 130;
-    --switch-hue: calc(var(--brand-hue) - 280);
+    --weak-factor: 0.7;
+    --brand-hue: 146;
+    --dim-brand-hue: 92;
+    --switch-hue: calc(var(--brand-hue) - 0);
+    --dim-switch-hue: calc(var(--dim-brand-hue) - 0);
 
-    --light-switchon: hsl(var(--switch-hue), 50%, 50%);
-    --light-switchoff: var(--gray-4);
-    --dim-switchon: hsl(var(--switch-hue), 50%, 50%);
-    --dim-switchoff: var(--dim-toolbar-);
+    --light-switchon: hsl(var(--switch-hue), 36%, 26%);
+    --light-switchoff: hsl(var(--switch-hue), 40%, 10%);
+    --dim-switchon: hsl(var(--dim-switch-hue), 50%, 40%);
+    --dim-switchoff: hsl(var(--dim-switch-hue), 36%, 5%);
 
-    --dim-brand1: hsl(calc(var(--brand-hue) - 0), 40%, 60%);
-    --dim-brand2: hsl(calc(var(--brand-hue) - 60), 40%, 60%);
-    --dim-brand3: hsl(calc(var(--brand-hue) + 60), 40%, 60%);
+    --dim-brand1: hsl(calc(var(--dim-brand-hue) - 0), 36%, 58%);
+    --dim-brand1-weak: hsla(calc(var(--dim-brand-hue) - 0), 36%, 58%, var(--weak-factor));
+    --dim-brand2: hsl(calc(var(--dim-brand-hue) + 60), 36%, 48%);
+    --dim-brand2-weak: hsla(calc(var(--dim-brand-hue) + 60), 36%, 48%, var(--weak-factor));
+/*
+    --dim-brand3: hsl(calc(var(--brand-hue) - 60), 40%, 60%);
     --dim-brand4: hsl(calc(var(--brand-hue) - 180), 40%, 60%);
     --dim-brand5: hsl(calc(var(--brand-hue) + 270), 40%, 60%);
+*/
 
     --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
     --dim-brand1copy: hsl(var(--brand-hue), 50%, 80%);
-    --light-brand1: #135C3D; /*hsl(var(--brand-hue), 55%, 40%);*/
+
+    --light-brand1:  hsl(var(--brand-hue), 36%, 26%); /* #135C3D; */
+    --light-brand2: hsl(calc(var(--brand-hue) + 60), 40%, 60%);
+    --light-brand1-weak:  hsla(var(--brand-hue), 55%, 40%, var(--weak-factor)); /* #135C3D; */
+    --light-brand2-weak: hsla(calc(var(--brand-hue) + 60), 40%, 60%,var(--weak-factor));
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
     --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);
 
@@ -200,6 +209,7 @@ outline: 2px solid #a0a8;
 
    /* brand */
 
+/*
    --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
    --brand1-copy-light: white;
 
@@ -208,14 +218,20 @@ outline: 2px solid #a0a8;
 
 
 
-    --brand1-copy-dim: white; /* when copy is placed on --brand1-dim */
+    --brand1-copy-dim: white; */
+/* when copy is placed on --brand1-dim *//*
+
     --brand1-hover-dim: var(--orange-3);
-    --brand1-copy-light: white; /* when copy is placed on --brand1-light */
+    --brand1-copy-light: white; */
+/* when copy is placed on --brand1-light *//*
+
 
    --brand2-dim: var(--green-1);
+*/
 
     /* button dark */
 
+/*
    --buttoncta0-dim: hsl(100, 39%, 5%);
    --buttoncta1-dim: hsl(100, 39%, 50%);
    --buttoncta0-dim: var(--green-3);
@@ -227,15 +243,18 @@ outline: 2px solid #a0a8;
    --button0-dim: var(--gray-1);
    --button1-dim: var(--gray-8);
    --button2-dim: var(--gray-9);
+*/
 
     /* button light */
 
+/*
     --buttoncta0-light: white;
     --buttoncta1-light: var(--green-8);
     --buttoncta2-light: var(--green-7);
     --buttondanger0-light: var(--red-1);
     --buttondanger1-light: var(--red-6);
     --buttondanger2-light: var(--red-5);
+*/
 
     /* body copy */
 
@@ -260,13 +279,20 @@ outline: 2px solid #a0a8;
    /* background surfaces*/
 
     --textmarker-background-light: var(--yellow-2);
+/*
 
     --surface000-light: var(--gray-0);
     --surface00-light: var(--gray-1);
     --surface0-light: var(--gray-2);
-    --surface1-light: var(--gray-3); /* surface-background of entities and elements */
-    --surface2-light: var(--gray-4); /* content-background of slidein menu, a platform for content (on top of system-background) */
-    --surface3-light: var(--gray-5); /* surface-background of slidein menu, toolbar, system-background etc */
+    --surface1-light: var(--gray-3); */
+/* surface-background of entities and elements *//*
+
+    --surface2-light: var(--gray-4); */
+/* content-background of slidein menu, a platform for content (on top of system-background) *//*
+
+    --surface3-light: var(--gray-5); */
+/* surface-background of slidein menu, toolbar, system-background etc *//*
+
     --surface4-light: var(--gray-6);
     --surface5-light: var(--gray-9);
     --surface6-light: var(--gray-6);
@@ -274,6 +300,7 @@ outline: 2px solid #a0a8;
     --surface8-light: var(--gray-8);
     --surface9-light: var(--gray-9);
 
+*/
     --textmarker-background-dim: var(--yellow-5);
 
     --surface000-dim: var(--gray-9);
@@ -289,6 +316,8 @@ outline: 2px solid #a0a8;
 
     /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
 
+
+
     --button00-light: var(--gray-0);
     --button0-light: var(--gray-9);
     --button1-light: var(--gray-4);
@@ -299,6 +328,7 @@ outline: 2px solid #a0a8;
     --buttontext-light: var(--gray-7);
     --buttonbase-hover-light: var(--gray-2);
     --buttonbase-active-light: var(--gray-5);
+
 
 }
 
@@ -365,11 +395,13 @@ outline: 2px solid #a0a8;
     --buttonbase-active: var(--gray-3);
     --buttontext: var(--gray-7);
 
+/*
        --forsiden: var(--green-5);
        --new-booking: var(--yellow-6);
        --hva-er-nytt: var(--pink-6);
        --booking-oversikt: var(--teal-8);
        --logg-ut: var(--red-5);
+*/
 
         --toolbar: var(--light-toolbar);
         --toolbar-: var(--light-toolbar-);
@@ -378,8 +410,11 @@ outline: 2px solid #a0a8;
         --switchon: var(--light-switchon);
         --switchoff: var(--light-switchoff);
         --brand1: var(--light-brand1);
+        --brand1-weak: var(--light-brand1-weak);
         --brand1-bright: var(--light-brand1-bright);
         --brand1copy: var(--light-brand1copy);
+        --brand2: var(--light-brand2);
+        --brand2-weak: var(--light-brand2-weak);
         --button: var(--light-button);
         --button-bright: var(--light-button-bright);
         --buttoncopy: var(--light-buttoncopy);
@@ -420,7 +455,7 @@ outline: 2px solid #a0a8;
     --font-weight-3: var(--font-weight-3);
 */
 
-    --field1: var(--gray-6); /* focused field */
+    --field1: var(--gray-4); /* focused field */
     --field2: var(--gray-7); /* unfocused/passive field */
 
 
@@ -469,6 +504,7 @@ outline: 2px solid #a0a8;
         /*--brand1-copy: #EFDEDC;*/
         --brand1-bright: var(--dim-brand1-bright);
         --brand1-copy: var(--dim-brand1copy);
+        --brand2: var(--dim-brand2);
         --button: var(--dim-button);
         --button-bright: var(--dim-button-bright);
         --buttoncopy: var(--dim-buttoncopy);

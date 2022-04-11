@@ -158,7 +158,7 @@
 (o/defstyled panel :div
   [:& :w-64 :h-auto
    {:outline               0
-    :border                0
+    :border                :none
     :display               :grid
     :column-gap            "var(--size-2)"
     :row-gap               "var(--size-2)"
@@ -499,118 +499,117 @@
     (r/create-class
       {:reagent-render
        (fn [_]
-         [:div.relative
-          [:div
-           {:tab-index 0
-            :class     [:outline-none
-                        :focus:outline-none]
-            :style     (if mobile? {} {:padding        "var(--size-4)"
-                                       :pointer-events :auto})
-            :ref       (fn [e]
-                         (when-not @ref
-                           (tap> ["adding for " e])
-                           (.addEventListener e "keydown" keydown-f)
-                           (.focus e)
-                           (reset! ref e)))}
+         [:div
+          {:tab-index 0
+           :class     [:outline-none
+                       :focus:outline-none]
+           :style     (if mobile? {} {:padding        "var(--size-2)"
+                                      :pointer-events :auto})
+           :ref       (fn [e]
+                        (when-not @ref
+                          (tap> ["adding for " e])
+                          (.addEventListener e "keydown" keydown-f)
+                          (.focus e)
+                          (reset! ref e)))}
 
-           [panel {:class [(if left-side? :left-side :right-side)]}
-            [:div {:style {:grid-area "numpad"}} [numberinput st]]
+          [panel {:class [(if left-side? :left-side :right-side)]}
+           [:div {:style {:grid-area "numpad"}} [numberinput st]]
 
-            [:div {:style {:grid-area "child"}} [children st]]
-            [:div {:style {:grid-area "juvenile"}} [juveniles st]]
-            [:div {:style {:grid-area "adult"}} [adults st]]
-            [:div {:style {:grid-area "moon"}} [moon st]]
-            [:div {:style {:grid-area "key"}} [havekey st]]
+           [:div {:style {:grid-area "child"}} [children st]]
+           [:div {:style {:grid-area "juvenile"}} [juveniles st]]
+           [:div {:style {:grid-area "adult"}} [adults st]]
+           [:div {:style {:grid-area "moon"}} [moon st]]
+           [:div {:style {:grid-area "key"}} [havekey st]]
 
-            [:div
-             {:style {:grid-area      "input"
-                      ;:grid-row       "5"
-                      ;:grid-column    "2/span 2"
-                      :padding-inline "var(--size-2)"
-                      :border-radius  "var(--radius-1)"
-                      :background     "var(--field1)"
-                      :box-shadow     "var(--inner-shadow-0)"}}
-             [:div.flex.items-center.h-full
-              {:style {:font-family "Oswald"
-                       :font-weight 600
-                       :font-size   "var(--font-size-4)"}}
-              (if (:phone @st)
-                [:div
-                 {:style {:display     "flex"
-                          :align-items "center"
-                          :font-size   "var(--font-size-5)"
-                          :color       "var(--text1)"}}
-                 (when (empty? (:phonenumber @st))
-                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
-                 [input-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
-                 (when-not (empty? (:phonenumber @st))
-                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])]
-                [:div
-                 {:style {:display     "flex"
-                          :align-items "center"
-                          :font-size   "var(--font-size-5)"
-                          :color       "var(--text1)"}}
-                 (when (empty? (:item @st))
-                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
-                 [input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
-                 (when-not (empty? (:item @st))
-                   ;[:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["]
-                   (if (< 3 (count (:item @st)))
-                     [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]
-                     [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]))])]]
+           [:div
+            {:style {:grid-area      "input"
+                     ;:grid-row       "5"
+                     ;:grid-column    "2/span 2"
+                     :padding-inline "var(--size-2)"
+                     :border-radius  "var(--radius-1)"
+                     :background     "var(--field1)"
+                     :box-shadow     "var(--inner-shadow-0)"}}
+            [:div.flex.items-center.h-full
+             {:style {:font-family "Oswald"
+                      :font-weight 600
+                      :font-size   "var(--font-size-4)"}}
+             (if (:phone @st)
+               [:div
+                {:style {:display     "flex"
+                         :align-items "center"
+                         :font-size   "var(--font-size-5)"
+                         :color       "var(--text1)"}}
+                (when (empty? (:phonenumber @st))
+                  [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
+                [input-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
+                (when-not (empty? (:phonenumber @st))
+                  [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])]
+               [:div
+                {:style {:display     "flex"
+                         :align-items "center"
+                         :font-size   "var(--font-size-5)"
+                         :color       "var(--text1)"}}
+                (when (empty? (:item @st))
+                  [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
+                [input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
+                (when-not (empty? (:item @st))
+                  ;[:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["]
+                  (if (< 3 (count (:item @st)))
+                    [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]
+                    [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]))])]]
 
-            [:div
-             {:style {:grid-area      "boat"
-                      :padding-inline "var(--size-2)"
-                      :display        :flex
-                      :align-items    :center}}
+           [:div
+            {:style {:grid-area      "boat"
+                     :padding-inline "var(--size-2)"
+                     :display        :flex
+                     :align-items    :center}}
 
-             (if (<= 3 (count (:item @st)))
-               (lookup (:item @st))
-               [sc/col {:class [:space-y-px :opacity-50]}
-                [sc/title1 [sc/row-sba "Skriv båtnummeret og"
-                            [sc/icon [:> outline/PlusCircleIcon]]]]
-                [sc/subtext "Bruk 4 siffer for testing"]])]
+            (if (<= 3 (count (:item @st)))
+              (lookup (:item @st))
+              [sc/col {:class [:space-y-px :opacity-50]}
+               [sc/title1 [sc/row-sba "Skriv båtnummeret og"
+                           [sc/icon [:> outline/PlusCircleIcon]]]]
+               [sc/subtext "Bruk 4 siffer for testing"]])]
 
-            [:div.p-1
-             {:style {:grid-area             "boats"
-                      :border-radius         "var(--radius-1)"
-                      :background            "var(--field1)"
-                      :gap                   "var(--size-1)"
-                      :display               :grid
-                      :grid-template-columns "1fr"
-                      :grid-template-rows    "repeat(3,1fr)"}}
-             (for [e (take 3 (sort (:list @st)))]
-               [sc/badge
-                {:selected (and (= e (:selected @st)))
-                 :on-click (fn [] (if (= e (:selected @st))
-                                    (swap! st dissoc :selected
-                                           dissoc :item)
-                                    (swap! st #(-> %
-                                                   (assoc :selected e)
-                                                   (assoc :item e)))))} e])]
-            [:div {:style {:grid-area "trash"}} [delete st]]
-            [:div {:style {:grid-area "add"}} [add st]]
-            [:div {:style {:grid-area "complete"}} [confirm st]]
-            [:div {:style {:grid-area "restart"}} [restart st]]
+           [:div.p-1
+            {:style {:grid-area             "boats"
+                     :border-radius         "var(--radius-1)"
+                     :background            "var(--field1)"
+                     :gap                   "var(--size-1)"
+                     :display               :grid
+                     :grid-template-columns "1fr"
+                     :grid-template-rows    "repeat(3,1fr)"}}
+            (for [e (take 3 (sort (:list @st)))]
+              [sc/badge
+               {:selected (and (= e (:selected @st)))
+                :on-click (fn [] (if (= e (:selected @st))
+                                   (swap! st dissoc :selected
+                                          dissoc :item)
+                                   (swap! st #(-> %
+                                                  (assoc :selected e)
+                                                  (assoc :item e)))))} e])]
+           [:div {:style {:grid-area "trash"}} [delete st]]
+           [:div {:style {:grid-area "add"}} [add st]]
+           [:div {:style {:grid-area "complete"}} [confirm st]]
+           [:div {:style {:grid-area "restart"}} [restart st]]
 
-            (when (< 3 (count (:list @st)))
-              [:div.p-1 {:style {:grid-column           "1/span 4"
-                                 :grid-row              "10/span 2"
-                                 :border-radius         "var(--radius-1)"
-                                 :background            "var(--surface00)"
-                                 :gap                   "var(--size-1)"
-                                 :display               :grid
-                                 :grid-template-columns "repeat(4,1fr)"
-                                 :grid-template-rows    "repeat(3,1fr)"}}
-               (concat
-                 (for [e (take 11 (drop 3 (sort (:list @st))))]
-                   [sc/badge
-                    {:selected (and (= e (:selected @st)))
-                     :on-click (fn [] (if (= e (:selected @st))
-                                        (swap! st dissoc :selected
-                                               dissoc :item)
-                                        (swap! st #(-> %
-                                                       (assoc :selected e)
-                                                       (assoc :item e)))))} e])
-                 (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]]])})))
+           (when (< 3 (count (:list @st)))
+             [:div.p-1 {:style {:grid-column           "1/span 4"
+                                :grid-row              "10/span 2"
+                                :border-radius         "var(--radius-1)"
+                                :background            "var(--surface00)"
+                                :gap                   "var(--size-1)"
+                                :display               :grid
+                                :grid-template-columns "repeat(4,1fr)"
+                                :grid-template-rows    "repeat(3,1fr)"}}
+              (concat
+                (for [e (take 11 (drop 3 (sort (:list @st))))]
+                  [sc/badge
+                   {:selected (and (= e (:selected @st)))
+                    :on-click (fn [] (if (= e (:selected @st))
+                                       (swap! st dissoc :selected
+                                              dissoc :item)
+                                       (swap! st #(-> %
+                                                      (assoc :selected e)
+                                                      (assoc :item e)))))} e])
+                (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))

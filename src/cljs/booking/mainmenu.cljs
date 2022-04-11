@@ -109,7 +109,7 @@
                          :stay-open true
                          :content   (fn [_]
                                       [:div.w-full
-                                       [schpaa.style.hoc.toggles/local-toggle :lab/master-state-emulation "Master state emulation"
+                                       [schpaa.style.hoc.toggles/local-toggle :lab/master-state-emulation "State emu"
                                         (fn [t c]
                                           [:div.flex.justify-between.items-center.w-full.gap-2.h-12
                                            [sc/text1 c] t])]])}])
@@ -156,13 +156,6 @@
                        [:div.flex.justify-between.items-center.w-full.gap-2.ml-12.mr-4.h-16
                         [sc/text1 c] t])]]]])))
 
-#_(defn boatinput-sidebar []
-    (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])]
-      (when @numberinput-visible
-        [:div.w-auto
-         [scm/boatinput-panel-from-right
-          [booking.boatinput/sample false]]])))
-
 (defn boatinput-menu [left-side]
   (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])
                mobile? false]                               ;(= :mobile @(rf/subscribe [:breaking-point.core/screen]))]
@@ -170,8 +163,7 @@
     [headlessui-reagent.core/transition
      (conj
        {:show  (or @numberinput-visible false)
-        :style {:pointer-events :none
-                :-background    :#0f05}}
+        :style {:pointer-events :none}}
        (if mobile?
          {:enter      "transition duration-200 ease-out"
           :enter-from "opacity-0 translate-y-full"
@@ -180,46 +172,34 @@
           :leave      "transition  duration-200"
           :leave-from "opacity-100 translate-y-0"
           :leave-to   "opacity-0 translate-y-full"}
-
          {:enter      "transition duration-200 ease-out"
           :enter-from (strp "opacity-0 " (if left-side "-translate-x-full" "translate-x-full"))
           :enter-to   (strp "opacity-100" (if left-side "translate-x-0" "translate-x-0"))
           :leave      "transition duration-300"
           :leave-from (strp "opacity-100" (if left-side "translate-x-0" "translate-x-0"))
           :leave-to   (strp "opacity-0" (if left-side "-translate-x-full" "translate-x-full"))}))
-     [:div.h-screen
-      {:style (conj
-                {}
-                (if mobile?
-                  {:display       :grid
-                   :align-content :end}
-                  {:pointer-events  :none
-                   :display         :grid
-                   :justify-content :end
-                   :align-content   :center}))}
-      [:div.select-none
-       {:class [:drop-shadow-2xl]
+     [:div.h-screen.grid
+      [:div
+       {:class [(some-> (sc/inner-dlg) last :class first)]
         :style (conj
-                 {}
-                 (if mobile? {:padding-block "var(--size-10)"
-                              :overflow-y    :auto}
-                             (conj (if left-side
-                                     {:border-bottom-right-radius "var(--radius-3)"
-                                      :border-top-right-radius    "var(--radius-3)"}
-                                     {:border-bottom-left-radius "var(--radius-3)"
-                                      :border-top-left-radius    "var(--radius-3)"})
-                                   {;:overflow :hidden
-                                    :pointer-events :none
-                                    :box-shadow     "var(--shadow-6)"
-                                    :overflow-y     :auto
-                                    :-margin-top    "var(--size-9)"
-                                    :-margin-bottom "var(--size-10)"})))}
-
-       (if left-side
-         [scm/boatinput-panel-from-left
-          [booking.boatinput/sample mobile? true]]
-         [scm/boatinput-panel-from-right
-          [booking.boatinput/sample mobile? false]])]]]))
+                 {:place-self :center}
+                 (if mobile?
+                   {:display       :grid
+                    :align-content :end}
+                   {:pointer-events :none}))}
+       [:div.select-none
+        {:style (conj
+                  {:border-radius "var(--radius-2)"}
+                  (if mobile? {:padding-block "var(--size-10)"
+                               :overflow-y    :auto}
+                              {:pointer-events :none
+                               :box-shadow     "var(--shadow-6)"
+                               :overflow-y     :auto}))}
+        (if left-side
+          [scm/boatinput-panel-from-left
+           [booking.boatinput/sample mobile? true]]
+          [scm/boatinput-panel-from-right
+           [booking.boatinput/sample mobile? false]])]]]]))
 
 (defn main-menu [switch?]
   (r/with-let [mainmenu-visible #_(r/atom false) (rf/subscribe [:lab/menu-open])]
