@@ -30,7 +30,7 @@
 (defn show [link]
   (schpaa.style.dialog/open-dialog-any
     {:form (fn [{:keys [on-close]}]
-             [sc/dialog
+             [sc/dropdown-dialog                            ;dialog
               [:div.p-4
                [sc/col {:class [:space-y-8]}
                 [sc/col-space-4

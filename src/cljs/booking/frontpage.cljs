@@ -338,7 +338,7 @@
        [:div {:style {:transform    "rotate(6deg)"
                       :align-self   :center
                       :justify-self :start}}
-        [:div.h-20.w-20 [circular-logo-thing dark-mode?]]]]
+        [:div.h-24.w-24 [circular-logo-thing dark-mode?]]]]
       #_[:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
 
 (defn helpful-to-earlier-users []
@@ -382,8 +382,8 @@
 (defn please-login-and-register []
   [sc/row-ec
    [:div.grow]
-   [hoc.buttons/cta {:style    {:box-shadow "var(--shadow-2)"}
-                     :on-click #(rf/dispatch [:app/login])}
+   [hoc.buttons/cta
+    {:on-click #(rf/dispatch [:app/login])}
     [sc/col {:style {:text-align :left}}
      [sc/ingress' {:style {:font-weight "var(--font-weight-6)"
                            :color       "var(--gray-0)"}} "Logg inn"]
@@ -467,12 +467,16 @@
         (when-not @at-least-registered?
           [please-login-and-register])
 
-        [sc/fp-summary-detail :frontpage/status
-         [sc/row-bl [sc/fp-header "Status"] #_(sc/header-accomp-link {} "(tilpass)")]
-         [current-status]]
+        (when goog.DEBUG
+          [hoc.buttons/regular {:on-click #(rf/dispatch [:xapp/sign-out])} "Sign out"])
+
+        (when goog.DEBUG
+          [sc/fp-summary-detail :frontpage/status
+           [sc/row-bl [sc/fp-header "Status"]]
+           [current-status]])
 
         [sc/fp-summary-detail :frontpage/news
-         [sc/row-bl [sc/fp-header "Nyheter"] #_(sc/header-accomp-link {} "(se mer)")]
+         [sc/row-bl [sc/fp-header "Nyheter"]]
          [news-feed]]
 
         [sc/fp-summary-detail :frontpage/yearwheel

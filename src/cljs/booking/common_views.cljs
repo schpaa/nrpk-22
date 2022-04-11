@@ -28,7 +28,8 @@
             [booking.data]
             [booking.access]
             [clojure.set :as set]
-            [schpaa.style.input :as sci]))
+            [schpaa.style.input :as sci]
+            [schpaa.style.button2 :as scb2]))
 
 (defn set-focus [el a]
   (when-not @a
@@ -225,23 +226,23 @@
       :page-name :r.user}]))
 
 (o/defstyled toolbar-button :button
-  :outline-none
-  [:&
+  [:& scb2/focus-button
+
    {:color         "var(--text2)"
     :border-radius "var(--radius-round)"
     :padding       "var(--size-2)"}
    [:&:disabled {:color "var(--text3)"}]
    [:&:enabled:hover {:color "var(--text1)"}]
-   [:&.active {:color      "var(--text1)"
-               :background "var(--content)"
-               :box-shadow "var(--shadow-1)"}]
-   [:&.oversikt {:color      "var(--gray-0)"
-                 :background "var(--brand1)"
-                 :box-shadow "var(--shadow-1)"}
+   [:&.active scb2/focus-button
+    {:color      "var(--text1)"
+     :background "var(--content)"
+     :box-shadow "var(--shadow-1)"}]
+   [:&.oversikt scb2/focus-button {:color      "var(--gray-0)"
+                                   :background "var(--brand1)"
+                                   :box-shadow "var(--shadow-1)"}
     [:&:enabled:hover {:color "var(--gray-1)"}]]
 
    [:&.special {:color "var(--brand1)"}]])
-
 
 (o/defstyled top-left-badge :div
   :rounded-full :flex :flex-center :-top-1 :right-0
@@ -274,21 +275,6 @@
   ([badge]
    [:<>
     [:div.flex.items-center.justify-center badge]]))
-
-#_(defn horizontal-button [{:keys [icon-fn special icon on-click style page-name badge] :or {style {}}}]
-    (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-          active? (= page-name current-page)]
-      [:div.w-full.h-full.flex.items-center.justify-center.relative
-       {:on-click on-click}
-       (when badge
-         (let [b (badge)]
-           (when (pos? b) [top-right-tight-badge b])))
-       [toolbar-button
-        {:style style
-         :class [(if active? :active)
-                 (if special :special)]}
-        [sc/icon-large
-         (if icon-fn (icon-fn) icon)]]]))
 
 (defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
                         :or   {style {}}}]
@@ -462,7 +448,7 @@
                 :border-bottom-width "1px"}}]
 
       (let [login (fn []
-                    (if-not @(rf/subscribe [:lab/at-least-registered])
+                    (when-not @(rf/subscribe [:lab/at-least-registered])
                       [:<>
                        [:div.grow]
                        [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
@@ -471,16 +457,16 @@
                                                       :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
                                                       :on-click #(rf/dispatch [:app/login])}
                         "Logg inn"]]))
-            location (fn [] [:div.flex.flex-col.truncate.px-2.w-full.z-100
+            location (fn [] [:div.flex.flex-col.truncatex.px-2.w-auto.z-100
                              {:class [(when-not @switch? :text-right)]}
                              (let [titles (compute-page-titles r)]
                                (if (vector? titles)
-                                 [sc/col
-                                  {:class [:truncate]}
-                                  [sc/title1 {:style {:font-weight "var(--font-weight-5)"}} (last titles)]
+                                 [sc/col {:style {:justify-content :start}}
+                                  [sc/title1 {:class [:truncate]
+                                              :style {:font-weight "var(--font-weight-5)"}} (last titles)]
                                   (when (< 1 (count titles))
                                     (let [{:keys [text link]} (first titles)]
-                                      [sc/subtext-with-link {:href (k/path-for [link])} text]))]
+                                      [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))]
                                  [sc/col
                                   [sc/title1 titles]]))])]
         [(if frontpage header-top-frontpage header-top)
@@ -575,7 +561,7 @@
                       :border        "1px solid var(--gray-8)"
                       :color         "var(--gray-0)"}
            :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-          ico/tilbakemelding "Tilbakemelding"]]
+          ico/tilbakemelding "xTilbakemelding"]]
         [sc/col
          [sc/small1 (or booking.data/VERSION "version")]
          [sc/small1 (or booking.data/DATE "date")]]

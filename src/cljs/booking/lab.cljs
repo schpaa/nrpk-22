@@ -251,7 +251,6 @@
                                :lab/modal-selector-extra extra)
                      (update db :lab/modal-selector (fnil not true)))))
 
-
 (rf/reg-event-fx :lab/qr-code-for-current-page
                  (fn [_ _]
                    (let [link @(rf/subscribe [:kee-frame/route])]
@@ -509,6 +508,27 @@
     [sc/row-ec
      [hoc.buttons/cta {:on-click on-close} "Videre"]]]])
 
+(defn signed-out-message [{:keys [on-close]}]
+  [sc/centered-dialog
+   {:style {:position   :relative
+            :overflow   :clip
+            :z-index    10
+            :width      "50ch"
+            :max-height "80vh"
+            :max-width  "90vw"}}
+   [:div.absolute.-top-8.-right-8.rotate-45.opacity-20
+    [:img.w-32.h-32 {:src "/img/logo-n.png"}]]
+   [sc/col-space-8
+    [sc/dialog-title' "NRPK"]
+    [sc/col-space-4
+     [sc/text1 {:style {:font-family "Merriweather"
+                        :line-height "var(--font-lineheight-4)"}
+                :class [:clear-left]} "Du har logget ut!"]]
+
+
+    #_[sc/row-ec
+       [hoc.buttons/regular {:on-click on-close} "Lukk"]]]])
+
 (rf/reg-event-fx :app/sign-out
                  (fn [_ _] {:fx [[:lab/logout-fx nil]
                                  [:dispatch [:app/navigate-to [:r.forsiden]]]
@@ -516,7 +536,7 @@
                                              true
                                              {:action     #(js/alert "!")
                                               :context    "args"
-                                              :content-fn #(xx %)}]]]}))
+                                              :content-fn #(signed-out-message %)}]]]}))
 
 
 (rf/reg-event-fx :app/successful-login
