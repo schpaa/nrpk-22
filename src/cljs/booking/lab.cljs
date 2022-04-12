@@ -220,14 +220,13 @@
     :expanded true
     :selected false}])
 
-(rf/reg-sub :lab/modal-example-dialog2 :-> (fn [db] (get db :lab/modal-example-dialog2 false)))
-(rf/reg-sub :lab/modal-example-dialog2-extra :-> (fn [db] (get db :lab/modal-example-dialog2-extra)))
-
-(rf/reg-event-db :lab/modal-example-dialog2
+(rf/reg-sub :modal.slideout/visible? :-> (fn [db] (get db :modal.slideout/toggle false)))
+(rf/reg-sub :modal.slideout/extra :-> (fn [db] (get db :modal.slideout/extra)))
+(rf/reg-event-db :modal.slideout/toggle
                  (fn [db [_ arg extra]] (if arg
-                                          (assoc db :lab/modal-example-dialog2 arg
-                                                    :lab/modal-example-dialog2-extra extra)
-                                          (update db :lab/modal-example-dialog2 (fnil not true)))))
+                                          (assoc db :modal.slideout/toggle arg
+                                                    :modal.slideout/extra extra)
+                                          (update db :modal.slideout/toggle (fnil not true)))))
 
 ;region regular dialogs (centered)
 
@@ -238,18 +237,10 @@
                  (fn [db [_ arg extra]] (if arg
                                           (assoc db :lab/modaldialog-visible true
                                                     :lab/modaldialog-context extra)
-                                          (assoc db :lab/modaldialog-visible false #_(fnil not true)))))
+                                          (assoc db :lab/modaldialog-visible false
+                                                    :lab/modaldialog-context extra #_(fnil not true)))))
 
 ;endregion
-
-(rf/reg-sub :lab/modal-selector-extra :-> (fn [db] (get db :lab/modal-selector-extra)))
-(rf/reg-sub :lab/modal-selector :-> (fn [db] (get db :lab/modal-selector false)))
-(rf/reg-event-db :lab/modal-selector
-                 (fn [db [_ arg extra]]
-                   (if (some? arg)
-                     (assoc db :lab/modal-selector arg
-                               :lab/modal-selector-extra extra)
-                     (update db :lab/modal-selector (fnil not true)))))
 
 (rf/reg-event-fx :lab/qr-code-for-current-page
                  (fn [_ _]
@@ -530,18 +521,18 @@
        [hoc.buttons/regular {:on-click on-close} "Lukk"]]]])
 
 (rf/reg-event-fx :app/sign-out
-                 (fn [_ _] {:fx [[:lab/logout-fx nil]
-                                 [:dispatch [:app/navigate-to [:r.forsiden]]]
-                                 [:dispatch [:lab/modaldialog-visible
+                 (fn [_ _] {:fx [;todo [:lab/logout-fx nil]
+                                 [:dispatch [:modal.slideout/toggle
                                              true
                                              {:action     #(js/alert "!")
                                               :context    "args"
-                                              :content-fn #(signed-out-message %)}]]]}))
+                                              :content-fn #(signed-out-message %)}]]
+                                 [:dispatch [:app/navigate-to [:r.forsiden]]]]}))
 
 
 (rf/reg-event-fx :app/successful-login
                  (fn [{db :db} [_ args]]
-                   {:fx [[:dispatch [:lab/modal-example-dialog2
+                   {:fx [[:dispatch [:modal.slideout/toggle
                                      true
                                      {:action     #()
                                       :context    args
@@ -550,80 +541,6 @@
 ;endregion
 
 ;region feedback
-
-(def max-comment-length 160)
-
-(defn feedback [{:keys [title on-close on-save persona caption navn comment-length] :as ctx}]
-  (let [max-comment-length (or comment-length max-comment-length)]
-    [sc/centered-dialog
-     {:style {:background-color "var(--content)"
-              :z-index          10
-              :width            "50ch"
-              :max-height       "80vh"
-              :max-width        "90vw"}
-      :class [:min-w-smx]}
-     (r/with-let [content (r/atom {})]
-       (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
-                 (let [state (tag @content)]
-                   [sc/icon {:on-click #(swap! content update-in [tag] (fnil not false))
-                             :style    {:cursor :pointer
-                                        :color  (if state on-color off-color)}}
-                    (if state on-icon off-icon)]))]
-         [sc/col-space-8
-          [sc/dialog-title (or title (str "Tilbakemelding" (when navn (str " til " navn))))]
-          [:div.flex.justify-between {:class [:w-full]}
-           [sc/col-space-4 #_{:style {:width "100%"}}
-            [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption]
-            [sc/col-space-4
-             [:div.relative
-              [sci/textarea {:rows          4
-                             :values        {:tilbakemelding (:text @content)}
-                             :placeholder   (str "Skriv her (max " max-comment-length " tegn)")
-                             :handle-change #(swap! content assoc :text (-> % .-target .-value))}
-               :text {:class [:min-w-full :relative]} "Skriv her" :tilbakemelding]
-              [:div.absolute.-top-1.right-1
-               [sc/label (if (zero? (count (:text @content)))
-                           (str "Maks " max-comment-length " tegn")
-                           (if (< max-comment-length (count (:text @content)))
-                             "Prøv å forkorte litt"
-                             (str (- max-comment-length (count (:text @content))) " tegn igjen")))]]]
-
-             (let [off-color "var(--text2)"
-                   on-color "var(--text1)"]
-               [sc/row-sc-g4-w
-                (f :heart ["var(--red-6)" off-color] [ico/fill-heart ico/heart])
-                (f :thumbsup [on-color off-color] [ico/fill-thumbsup ico/thumbsup])
-                (f :thumbsdown [on-color off-color] [ico/fill-thumbsdown ico/thumbsdown])
-                (f :smiley ["var(--yellow-6)" off-color] [ico/fill-smileyface ico/smileyface])
-                (f :frowny ["var(--orange-6)" off-color] [ico/fill-frownyface ico/frownyface])])]]]
-
-          [sc/row-ec
-           [hoc.buttons/regular {:on-click #(do
-                                              (on-close)
-                                              (reset! content {}))} "Avbryt"]
-           [hoc.buttons/cta {:disabled (and (empty? (:text @content))
-                                            (every? #(false? (get @content % false)) [:heart :thumbsup :thumbsdown :smiley :frowny]))
-                             :on-click #(do
-                                          (on-save @content)
-                                          (reset! content {}))} "Send"]]]))]))
-
-(rf/reg-event-fx :app/give-feedback
-                 (fn [{db :db} [_ {:keys [navn caption source comment-length]}]]
-                   {:fx [[:dispatch [:lab/modaldialog-visible
-                                     true
-                                     {:navn           navn
-                                      :comment-length comment-length
-                                      :source         source
-                                      :caption        (or caption
-                                                          "Tenker du at noe kan gjøres bedre? Har du sett noe som bør korrigeres, eller er det noe du ikke har fått svar på? Gi oss en tilbakemelding!"
-                                                          #_"Har du en kommentar til noe eller en ide om hvordan ting kan kommuniseres klarere? Kanskje fant du noe som må korrigeres? Da kan du begynne her:")
-                                      :action         (fn [{:keys [carry]}]
-                                                        (db/firestore-add {:path  ["tilbakemeldinger"]
-                                                                           :value (conj {:til-navn navn
-                                                                                         :kilde    source
-                                                                                         :uid      (:uid @(rf/subscribe [::db/user-auth]))}
-                                                                                        carry)}))
-                                      :content-fn #(feedback %)}]]]}))
 
 ;endregion
 

@@ -3,11 +3,10 @@
             [schpaa.style.ornament :as sc]
             [booking.ico :as ico]
             [booking.lab]
-            [schpaa.style.button :as scb]
             [re-frame.core :as rf]
             [times.api :as ta]
             [tick.core :as t]
-            [schpaa.debug :as l]
+            [booking.modals.feedback]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [reagent.core :as r]
             [db.core :as db]))
@@ -56,24 +55,12 @@
       sc/text0
       {:max-width "10rem"}]]]])
 
-(defn send-message [uid]
-  (rf/dispatch [:lab/modaldialog-visible
-                true
-                {:comment-length 1000
-                 :title          "Send en melding"
-                 :caption        "caption"
-                 :content-fn     #(booking.lab/feedback %)
-                 :action         (fn [{:keys [carry]}]
-                                   (db.core/firestore-add {:path  ["users" uid "inbox"]
-                                                           :value (conj {:til-navn "navn"
-                                                                         :kilde    "source"
-                                                                         :uid      (:uid @(rf/subscribe [:db.core/user-auth]))}
-                                                                        carry)}))}]))
+
 
 (defn tableline-online [attr [k {:keys [connections ugh] :as v}]]
   (let [uid (name k)]
     [:tr attr
-     [:td (sc/icon {:on-click #(send-message uid)} ico/melding)]
+     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message uid])} ico/melding)]
      [:td (or (user.database/lookup-username uid) "—")]
      [:td (f ugh)]
      [:td connections]]))

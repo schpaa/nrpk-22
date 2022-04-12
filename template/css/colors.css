@@ -9,6 +9,13 @@ html {
     touch-action: pan-y;
 }
 
+@media (max-width: 511px) {
+html {
+    transition-duration: 0;
+    font-size: small;
+    }
+}
+
 :where(html) {
     --background-image-light: url('/img/bg/bg-light-1.jpg');
     --background-image-dark: url('/img/bg/bg-dark-1.jpg');

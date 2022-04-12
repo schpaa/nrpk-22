@@ -65,13 +65,13 @@
         [:form
          {:id        form-id
           :on-submit handle-submit}
-         [sc/col {:class [:space-y-8]}
+         [sc/col {:class [:space-y-8 :w-full]}
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
-           [sc/row-sc-g2-w
+           [sc/row-sc-g2-w {:class []}
             [sci/combobox props :kind? [:w-56] "Kategori" :type]
             [sci/input props :date [:w-40] "Dato" :date]
-            [sci/input props :text [:w-full] "Beskrivelse" :tldr]
+            [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
             [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]
 
           [sc/row-ec

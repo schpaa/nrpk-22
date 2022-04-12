@@ -468,7 +468,7 @@
           [please-login-and-register])
 
         (when goog.DEBUG
-          [hoc.buttons/regular {:on-click #(rf/dispatch [:xapp/sign-out])} "Sign out"])
+          [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
 
         (when goog.DEBUG
           [sc/fp-summary-detail :frontpage/status

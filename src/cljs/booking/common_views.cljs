@@ -6,7 +6,6 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.dialog :refer [open-dialog-logoutcommand
                                          open-dialog-sampleautomessage
-                                         open-dialog-config
                                          open-dialog-sampleformmessage]]
             [booking.content.booking-blog]
             [schpaa.style.menu :as scm]
@@ -14,11 +13,7 @@
             [reagent.core :as r]
             [re-frame.core :as rf]
             [db.core :as db]
-            [schpaa.style.combobox]
             [booking.fileman]
-            [booking.boatinput]
-            [booking.mainmenu :refer [main-menu boatinput-menu]]
-            [booking.search :refer [search-menu]]
             [kee-frame.core :as k]
             [booking.routes]
             [schpaa.style.hoc.page-controlpanel :as hoc.panel]
@@ -29,76 +24,13 @@
             [booking.access]
             [clojure.set :as set]
             [schpaa.style.input :as sci]
-            [schpaa.style.button2 :as scb2]))
+            [schpaa.style.button2 :as scb2]
+            [booking.modals.boatinput]
+            [booking.modals.feedback]
+            [booking.modals.commandpalette]
+            [booking.modals.mainmenu :refer [main-menu]]))
 
-(defn set-focus [el a]
-  (when-not @a
-    (tap> "set ref")
-    (reset! a el)
-    #_(when el (.focus el))))
-
-;region number-input
-
-(rf/reg-event-db :lab/toggle-number-input (fn [db]
-                                            (update db :lab/number-input (fnil not false))))
-
-(rf/reg-event-db :lab/open-number-input (fn [db]
-                                          (assoc db :lab/number-input true)))
-
-(rf/reg-event-db :lab/close-number-input (fn [db]
-                                           (assoc db :lab/number-input false)))
-
-(rf/reg-sub :lab/number-input :-> :lab/number-input)
-
-;endregion
-
-;region
-
-(rf/reg-event-fx :app/toggle-config (fn [{db :db} _]
-                                      (open-dialog-config)))
-
-(rf/reg-event-fx :app/toggle-command-palette
-                 (fn [{db :db} _]
-                   (tap> :app/toggle-command-palette)
-                   {:fx [[:dispatch [:lab/modal-selector
-                                     (-> db :lab/modal-selector not)
-                                     {:content-fn (fn [c] [schpaa.style.combobox/combobox-example c])}]]]}))
-
-;endregion
-
-(defn bottom-menu-definition [settings-atom]
-  [[:header [sc/row' {:class [:justify-between :items-end :w-44 :px-2]}
-             [sc/header-title "Booking"]
-             [sc/pill (or "dev.3.12" booking.data/VERSION)]]]
-
-
-   [:space]
-   [:div [:div.px-2 [sc/small1 "Skrevet av meg for NRPK"]]]
-   [:space]
-   [:div [:div.px-2 [sc/row-center {:class [:py-4]}
-                     [:div.relative.w-24.h-24
-                      [:div.absolute.rounded-full.-inset-1.blur
-                       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
-                                :group-hover:-inset-1 :duration-500]}]
-                      [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]]]
-   [:footer [:div.p-2
-             [sc/row-end {:class [:gap-1 :justify-end :items-center]}
-              [sc/small1 "Vilkår"]
-              [sc/small1 "&"]
-              [sc/small1 "Betingelser"]]]]])
-
-(defn bottom-menu []
-  (r/with-let [main-visible (r/atom false)]
-    (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
-      [scm/mainmenu-example-with-args
-       {:close-button #()
-        :showing      @main-visible
-        :dir          #{:up :right}
-        :data         (bottom-menu-definition (r/atom nil))
-        :button       (fn [open]
-                        [scb/round-mainpage {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
-
-;region
+;region styles
 
 (o/defstyled sidebar :div
   :cursor-pointer :m-0 :p-0 :w-8 :h-8 :grid
@@ -122,108 +54,6 @@
    :padding       "var(--size-2)"
    :color         :white
    :background    "var(--gray-4)"})
-
-(defn vertical-toolbar-right [uid]
-  (let [admin? (rf/subscribe [:lab/admin-access])
-        member? (rf/subscribe [:lab/member])
-        booking? (rf/subscribe [:lab/booking])
-        left-side? (schpaa.state/listen :lab/menu-position-right)
-        registered? (rf/subscribe [:lab/at-least-registered])
-        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-    [#_{:icon-fn   (fn [] (if @(rf/subscribe [:lab/open-menu])
-                            (sc/icon-large ico/closewindow)
-                            (sc/icon-large ico/menu)))
-        :on-click  #(rf/dispatch [:lab/open-menu])
-        :page-name :r.user}
-
-     {:icon-fn   #(sc/icon-large ico/new-home)
-      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      ;:on-click-active #(rf/dispatch [:app/navigate-to [:r.oversikt]])
-      :class     #(if (= % :r.oversikt) :oversikt :active)
-      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
-
-     {:icon-fn   (fn [] (sc/icon-large ico/user))
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-      :page-name :r.user}
-     (when (or @admin? @booking?)
-       {:icon-fn   (fn [] (sc/icon-large ico/booking))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
-        :page-name :r.booking})
-
-     (when (or @admin? @nokkelvakt)
-       {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
-        :page-name :r.nokkelvakt})
-
-     (when (or @member? @admin? @registered?)
-       {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
-        :page-name :r.yearwheel})
-     :space
-     (when (or @admin? @nokkelvakt)
-       {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                            [centered-thing (sc/icon-large (if @left-side?
-                                                             (if @st ico/panelOpen ico/panelClosed)
-                                                             (if @st ico/panelClosed ico/panelOpen)))]))
-        :special   true
-        :centered? true
-        :on-click  #(rf/dispatch [:lab/toggle-number-input])})
-     :space
-     (when @admin?
-       {:tall-height true
-        :icon-fn     (fn [] (sc/icon-large ico/fileman))
-        :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-        :page-name   :r.fileman-temporary})
-     (when (or @admin?)
-       {:icon-fn     (fn [] (sc/icon-large ico/users))
-        :on-click    #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
-        :tall-height true
-        :class       #(if (= % :r.users) :active :oversikt)
-        :page-name   #(some #{%} [:r.users :r.presence])})
-     {:tall-height true
-      ;:special     true
-      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                            (sc/icon-large
-                              (if @st ico/commandPaletteOpen ico/commandPaletteClosed))))
-      :on-click    schpaa.style.dialog/open-selector}]))
-
-(defn horizontal-toolbar [uid]
-  (let [admin? (rf/subscribe [:lab/admin-access])
-        member? (rf/subscribe [:lab/member])
-        booking? (rf/subscribe [:lab/booking])
-        registered? (rf/subscribe [:lab/at-least-registered])
-        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-    [{:icon-fn   #(sc/icon-large ico/new-home)
-      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      ;:on-click-active #(rf/dispatch [:app/navigate-to [:r.oversikt]])
-      :class     #(if (= % :r.oversikt) :oversikt :active)
-      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
-
-     {:icon     ico/mystery2
-      :disabled true}
-
-     #_{:icon-fn  (fn [_] (when (or @admin? @nokkelvakt)
-                            (let [st (rf/subscribe [:lab/number-input])]
-                              (if @st ico/panelOpen ico/panelClosed))))
-        :special  false
-        :on-click #(rf/dispatch [:lab/toggle-number-input])}
-
-     {:icon-fn   (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
-                           (sc/icon-large (if st ico/commandPaletteOpen ico/commandPaletteClosed))))
-      :special   true
-      :on-click  schpaa.style.dialog/open-selector
-      :page-name :r.debug}
-
-     {:icon     ico/mystery1
-      :disabled true}
-     #_{:icon      ico/booking
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])
-        :page-name :r.booking.oversikt}
-
-     {:icon      ico/user
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-      :disabled  (not (some? @registered?))
-      :page-name :r.user}]))
 
 (o/defstyled toolbar-button :button
   [:& scb2/focus-button
@@ -276,6 +106,156 @@
    [:<>
     [:div.flex.items-center.justify-center badge]]))
 
+(o/defstyled result-item :div
+  {:display        :flex
+   :align-items    :center
+   :min-width      "12rem"
+   :padding-inline "var(--size-4)"
+   :padding-block  "var(--size-3)"
+   :background     "var(--content)"
+   :color          "var(--text1)"}
+  [:&:hover {:background "var(--toolbar-)"}])
+
+(o/defstyled header-top-frontpage :div
+  :flex :items-center :w-full :px-2 :gap-2
+  {:height "var(--size-9)"}
+  [:at-media {:min-width "511px"}
+   {:border-top-right-radius "var(--radius-3)"
+    :xborder-right           "1px solid var(--toolbar-)"}])
+
+(o/defstyled header-top :div
+  :flex :items-center :w-full :px-2 :gap-2
+  {:background "var(--content)"
+   :height     "var(--size-9)"}
+  [:at-media {:min-width "511px"}
+   {:border-top-right-radius "var(--radius-3)"
+    :xborder-right           "1px solid var(--toolbar-)"}])
+
+;endregion
+
+;region junk
+
+(defn bottom-menu-definition [settings-atom]
+  [[:header [sc/row' {:class [:justify-between :items-end :w-44 :px-2]}
+             [sc/header-title "Booking"]
+             [sc/pill (or "dev.3.12" booking.data/VERSION)]]]
+
+
+   [:space]
+   [:div [:div.px-2 [sc/small1 "Skrevet av meg for NRPK"]]]
+   [:space]
+   [:div [:div.px-2 [sc/row-center {:class [:py-4]}
+                     [:div.relative.w-24.h-24
+                      [:div.absolute.rounded-full.-inset-1.blur
+                       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+                                :group-hover:-inset-1 :duration-500]}]
+                      [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]]]
+   [:footer [:div.p-2
+             [sc/row-end {:class [:gap-1 :justify-end :items-center]}
+              [sc/small1 "Vilkår"]
+              [sc/small1 "&"]
+              [sc/small1 "Betingelser"]]]]])
+
+(defn bottom-menu []
+  (r/with-let [main-visible (r/atom false)]
+    (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
+      [scm/mainmenu-example-with-args
+       {:close-button #()
+        :showing      @main-visible
+        :dir          #{:up :right}
+        :data         (bottom-menu-definition (r/atom nil))
+        :button       (fn [open]
+                        [scb/round-mainpage {:on-click toggle-mainmenu} [sc/corner-symbol "?"]])}])))
+
+;endregion
+
+;region toolbars
+
+(defn vertical-toolbar-definitions []
+  (let [admin? (rf/subscribe [:lab/admin-access])
+        member? (rf/subscribe [:lab/member])
+        booking? (rf/subscribe [:lab/booking])
+        left-side? (schpaa.state/listen :lab/menu-position-right)
+        registered? (rf/subscribe [:lab/at-least-registered])
+        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
+    [{:icon-fn   #(sc/icon-large ico/new-home)
+      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
+      :class     #(if (= % :r.oversikt) :oversikt :active)
+      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
+
+     {:icon-fn   (fn [] (sc/icon-large ico/user))
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :page-name :r.user}
+     (when (or @admin? @booking?)
+       {:icon-fn   (fn [] (sc/icon-large ico/booking))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name :r.booking})
+
+     (when (or @admin? @nokkelvakt)
+       {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
+        :page-name :r.nokkelvakt})
+
+     (when (or @member? @admin? @registered?)
+       {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
+        :page-name :r.yearwheel})
+     :space
+     (when (or @admin? @nokkelvakt)
+       {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
+                            [centered-thing (sc/icon-large (if @left-side?
+                                                             (if @st ico/panelOpen ico/panelClosed)
+                                                             (if @st ico/panelClosed ico/panelOpen)))]))
+        :special   true
+        :centered? true
+        :on-click  #(rf/dispatch [:lab/toggle-number-input])})
+     :space
+     (when @admin?
+       {:tall-height true
+        :icon-fn     (fn [] (sc/icon-large ico/fileman))
+        :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
+        :page-name   :r.fileman-temporary})
+     (when (or @admin?)
+       {:icon-fn     (fn [] (sc/icon-large ico/users))
+        :on-click    #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
+        :tall-height true
+        :class       #(if (= % :r.users) :active :oversikt)
+        :page-name   #(some #{%} [:r.users :r.presence])})
+     {:tall-height true
+      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
+                            (sc/icon-large
+                              (if @st ico/commandPaletteOpen ico/commandPaletteClosed))))
+      :on-click    #(rf/dispatch [:app/toggle-command-palette])}]))
+
+(defn horizontal-toolbar-definitions [uid]
+  (let [admin? (rf/subscribe [:lab/admin-access])
+        member? (rf/subscribe [:lab/member])
+        booking? (rf/subscribe [:lab/booking])
+        registered? (rf/subscribe [:lab/at-least-registered])
+        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
+
+    [{:icon-fn   #(sc/icon-large ico/new-home)
+      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
+      :class     #(if (= % :r.oversikt) :oversikt :active)
+      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
+
+     {:icon     ico/mystery2
+      :disabled true}
+
+     {:icon-fn   (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
+                           (sc/icon-large (if st ico/commandPaletteOpen ico/commandPaletteClosed))))
+      :special   true
+      :on-click  #(rf/dispatch [:app/toggle-command-palette])
+      :page-name :r.debug}
+
+     {:icon     ico/mystery1
+      :disabled true}
+
+     {:icon      ico/user
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
+      :disabled  (not (some? @registered?))
+      :page-name :r.user}]))
+
 (defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
                         :or   {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
@@ -312,6 +292,56 @@
           (icon-fn current-page)
           icon)]]]]))
 
+(defn vertical-toolbar [left-side?]
+  (let [numberinput? (rf/subscribe [:lab/number-input])
+        user-auth (rf/subscribe [::db/user-auth])
+        has-chrome? (rf/subscribe [:lab/has-chrome])]
+    (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
+      [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.w-full.relative
+       ;; force the toolbar to stay on top when boat-panel is displayed
+       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
+              {:style {:z-index     1211
+                       :padding-top "var(--size-0)"
+                       :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
+                       :background  "var(--toolbar)"}}]
+             (map #(if (keyword? %)
+                     [:div.grow]
+                     [vertical-button %])
+                  (remove nil? (vertical-toolbar-definitions))))
+       #_(if left-side?
+           [:div.absolute.left-4.inset-0.z-10.-debug
+            {:style {:width          "298px"
+                     :pointer-events :none}}
+            [boatinput-menu {:position :left-side}]]
+           [:div.absolute.left-4.inset-0.z-10.-debug
+            {:style {:width          "298px"
+                     :pointer-events :none}}
+            [boatinput-menu {:position :right-side}]])])))
+
+(defn bottom-toolbar []
+  (let [;search (rf/subscribe [:lab/is-search-running?])
+        user-auth (rf/subscribe [::db/user-auth])
+        has-chrome? (rf/subscribe [:lab/has-chrome])]
+    (when (and @has-chrome? #_(not @search) @(rf/subscribe [:lab/at-least-registered]))
+      [:div.sm:hidden.flex.gap-0.border-t
+       {:style {:width           "100%"
+                :justify-content :space-around
+                :height          "var(--size-10)"
+                :min-height      "var(--size-10)"
+                :padding-inline  "var(--size-2)"
+                :box-shadow      "var(--inner-shadow-2)"
+                :border-color    "var(--toolbar-)"
+                :background      "var(--toolbar)"}}
+
+       (into [:<>] (map vertical-button
+                        (horizontal-toolbar-definitions (:uid @user-auth))))
+       #_[:div.absolute.mx-auto.inset-y-0.overflow-y-auto
+          {:style {:width          "298px"
+                   :pointer-events :none}}
+          [boatinput-menu {:position :mobile}]]])))
+
+;endregion
+
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
   {:link link
@@ -321,12 +351,7 @@
                       :header)
              "wtf?")})
 
-(comment
-  (do
-    (some-> (reitit/match-by-name (reitit/router booking.routes/routes) :r.forsiden)
-            :data :header)))
-
-(defn compute-page-titles [r]
+(defn compute-pagetitles [r]
   (let [path-fn (some-> r :data :path-fn)
         page-title (-> r :data :header)]
     (if (vector? page-title)
@@ -340,19 +365,56 @@
             (path-fn r))
           (or page-title "no-title")))))
 
-(comment
-  (do
-    (compute-page-titles {:data {:header ["stuff"]}})))
+(defn header-line [r frontpage v]
+  (let [switch? (schpaa.state/listen :lab/menu-position-right)]
+    [err-boundary
+     [:div.relative
 
-(o/defstyled result-item :div
-  {:display        :flex
-   :align-items    :center
-   :min-width      "12rem"
-   :padding-inline "var(--size-4)"
-   :padding-block  "var(--size-3)"
-   :background     "var(--content)"
-   :color          "var(--text1)"}
-  [:&:hover {:background "var(--toolbar-)"}])
+      [:div.w-full.h-16.absolute.inset-x-0
+       {:style {:opacity             (- 1 v)
+                :background          (if frontpage "var(--toolbar)" "var(--content)")
+                :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
+                :border-bottom-style "solid"
+                :border-bottom-width "1px"}}]
+
+      (let [login (fn []
+                    (when-not @(rf/subscribe [:lab/at-least-registered])
+                      [:<>
+                       [:div.grow]
+                       [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
+                                                                 :width          "min-content"
+                                                                 :box-shadow     "var(--shadow-1)"}
+                                                      :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
+                                                      :on-click #(rf/dispatch [:app/login])}
+                        "Logg inn"]]))
+            location (fn [] [:div.flex.flex-col.truncatex.px-2.w-auto.z-100
+                             {:class [(when-not @switch? :text-right)]}
+                             (let [titles (compute-pagetitles r)]
+                               (if (vector? titles)
+                                 [sc/col {:style {:justify-content :start}}
+                                  [sc/title1 {:class [:truncate]
+                                              :style {:font-weight "var(--font-weight-5)"}} (last titles)]
+                                  (when (< 1 (count titles))
+                                    (let [{:keys [text link]} (first titles)]
+                                      [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))]
+                                 [sc/col
+                                  [sc/title1 titles]]))])]
+        [(if frontpage header-top-frontpage header-top)
+         (if @switch?
+           [:<>
+            [location]
+            [:div.grow]
+            (if frontpage
+              [:div.grow]
+              [login])
+            [main-menu @switch?]]
+           [:<>
+            [main-menu @switch?]
+            (if frontpage
+              [:div.grow]
+              [login])
+            [:div.grow]
+            [location]])])]]))
 
 (defn search-result []
   (let [data (range 12)]
@@ -361,24 +423,6 @@
             {:style {:grid-template-columns "repeat(auto-fill,minmax(24rem,1fr))"}}]
            (for [e data]
              [result-item e]))]))
-
-(o/defstyled header-top-frontpage :div
-  :flex :items-center :w-full :px-2 :gap-2
-  {;:background "var(--content)"
-   ;:background "transparent"
-   :height "var(--size-9)"}
-  [:at-media {:min-width "511px"}
-   {:border-top-right-radius "var(--radius-3)"
-    :xborder-right           "1px solid var(--toolbar-)"}])
-
-(o/defstyled header-top :div
-  :flex :items-center :w-full :px-2 :gap-2
-  {:background "var(--content)"
-   ;:background "transparent"
-   :height     "var(--size-9)"}
-  [:at-media {:min-width "511px"}
-   {:border-top-right-radius "var(--radius-3)"
-    :xborder-right           "1px solid var(--toolbar-)"}])
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -435,104 +479,6 @@
                   (swap! st update-in [:nøkkelvakt] (constantly %))
                   (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
 
-(defn header-line [r frontpage v]
-  (let [switch? (schpaa.state/listen :lab/menu-position-right)]
-    [err-boundary
-     [:div.relative
-
-      [:div.w-full.h-16.absolute.inset-x-0
-       {:style {:opacity             (- 1 v)
-                :background          (if frontpage "var(--toolbar)" "var(--content)")
-                :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
-                :border-bottom-style "solid"
-                :border-bottom-width "1px"}}]
-
-      (let [login (fn []
-                    (when-not @(rf/subscribe [:lab/at-least-registered])
-                      [:<>
-                       [:div.grow]
-                       [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
-                                                                 :width          "min-content"
-                                                                 :box-shadow     "var(--shadow-1)"}
-                                                      :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
-                                                      :on-click #(rf/dispatch [:app/login])}
-                        "Logg inn"]]))
-            location (fn [] [:div.flex.flex-col.truncatex.px-2.w-auto.z-100
-                             {:class [(when-not @switch? :text-right)]}
-                             (let [titles (compute-page-titles r)]
-                               (if (vector? titles)
-                                 [sc/col {:style {:justify-content :start}}
-                                  [sc/title1 {:class [:truncate]
-                                              :style {:font-weight "var(--font-weight-5)"}} (last titles)]
-                                  (when (< 1 (count titles))
-                                    (let [{:keys [text link]} (first titles)]
-                                      [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))]
-                                 [sc/col
-                                  [sc/title1 titles]]))])]
-        [(if frontpage header-top-frontpage header-top)
-         (if @switch?
-           [:<>
-            [location]
-            [:div.grow]
-            (if frontpage
-              [:div.grow]
-              [login])
-            [main-menu @switch?]]
-           [:<>
-            [main-menu @switch?]
-            (if frontpage
-              [:div.grow]
-              [login])
-            [:div.grow]
-            [location]])])]]))
-
-(defn right-tabbar [left-side?]
-  (let [numberinput? (rf/subscribe [:lab/number-input])
-        user-auth (rf/subscribe [::db/user-auth])
-        has-chrome? (rf/subscribe [:lab/has-chrome])]
-    (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-      [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
-       ;; force the toolbar to stay on top when boat-panel is displayed
-       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
-              {:style {:z-index     1211
-                       :padding-top "var(--size-0)"
-                       :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
-                       :background  "var(--toolbar)"}}]
-             (map #(if (keyword? %)
-                     [:div.grow]
-                     [vertical-button %])
-                  (remove nil? (vertical-toolbar-right (:uid @user-auth)))))
-       (if left-side?
-         [:div.absolute.left-16.xl:left-20.inset-y-0.z-100
-          {:style {:min-width      "298px"
-
-                   :pointer-events :none}}
-          [boatinput-menu true]]
-         [:div.absolute.right-16.xl:right-20.inset-y-0.z-100
-          {:style {:width          "298px"
-
-                   :pointer-events :none}}
-          [boatinput-menu false]])])))
-
-(defn bottom-tabbar []
-  (let [search (rf/subscribe [:lab/is-search-running?])
-        user-auth (rf/subscribe [::db/user-auth])
-        has-chrome? (rf/subscribe [:lab/has-chrome])]
-    (when (and @has-chrome? (not @search) @(rf/subscribe [:lab/at-least-registered]))
-      [:div.sm:hidden.flex.gap-0.border-t
-       {:style {:width           "100%"
-                :justify-content :space-around
-                :height          "var(--size-10)"
-                :min-height      "var(--size-10)"
-                :padding-inline  "var(--size-2)"
-                :box-shadow      "var(--inner-shadow-3)"
-                :border-color    "var(--toolbar-)"
-                :background      "var(--toolbar)"}}
-       (into [:<>] (map vertical-button
-                        (horizontal-toolbar (:uid @user-auth))))])))
-
-(o/defstyled mainframe :div)
-
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])
         access-tokens @(rf/subscribe [:lab/all-access-tokens])]
@@ -571,6 +517,7 @@
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [switch? (schpaa.state/listen :lab/menu-position-right)
+        numberinput2? (rf/subscribe [:lab/number-input2])
         user-auth (rf/subscribe [::db/user-auth])
         user-state (rf/subscribe [:lab/user-state])
         mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
@@ -589,10 +536,10 @@
        (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
           ;region modal dialog (top)
-          [schpaa.style.dialog/modal-generic
-           {:context @(rf/subscribe [:lab/modal-example-dialog2-extra])
-            :vis     (rf/subscribe [:lab/modal-example-dialog2])
-            :close   #(rf/dispatch [:lab/modal-example-dialog2 false])}]
+          [schpaa.style.dialog/slideout
+           {:context @(rf/subscribe [:modal.slideout/extra])
+            :vis     (rf/subscribe [:modal.slideout/visible?])
+            :close   #(rf/dispatch [:modal.slideout/toggle false])}]
           ;endregion
           ;region modal dialog (top)
           [schpaa.style.dialog/modaldialog-centered
@@ -600,21 +547,18 @@
             :vis     (rf/subscribe [:lab/modaldialog-visible])
             :close   #(rf/dispatch [:lab/modaldialog-visible false])}]
           ;endregion
-          ;region command-palette
-          [schpaa.style.dialog/command-palette
-           {:context @(rf/subscribe [:lab/modal-selector-extra])
-            :vis     (rf/subscribe [:lab/modal-selector])
-            :close   #(rf/dispatch [:lab/modal-selector false])}]
-          ;endregion
+
+          [booking.modals.commandpalette/window-anchor]
+
           (let [content [:div.flex.flex-col
                          {:style {:flex "1 1 auto"}}
                          (when-not frontpage
                            [header-line r false])
                          [:div.flex.flex-col.xoverflow-y-auto.h-full
                           {:class (when-not frontpage [:overflow-y-auto])}
-                          (if (and
-                                @(rf/subscribe [:lab/is-search-running?])
-                                @(rf/subscribe [:lab/in-search-mode?]))
+                          (if false #_(and
+                                        @(rf/subscribe [:lab/is-search-running?])
+                                        @(rf/subscribe [:lab/in-search-mode?]))
                             [:div
                              {:style {:flex "1 0 auto"}}
                              [:div
@@ -632,17 +576,19 @@
                               contents]
                              (when-not frontpage [after-content])])]
 
-                         [bottom-tabbar]]]
+                         #_(when @numberinput2?
+                             [:div.xs:hidden.flex.w-screen.bg-white
+                              [boatinput-menu {:position :mobile}]])
+
+
+                         [bottom-toolbar]]]
             (if @switch?
-              [:div.fixed.inset-0.flex
-               [right-tabbar true]
+              [:div.fixed.inset-0.flex.m-10x
+               [vertical-toolbar true]
                content]
-              [:div.fixed.inset-0.flex
+              [:div.fixed.inset-0.flex.m-10x
                content
-               [right-tabbar false]]))])})))
-
-
-(def max-width "54ch")
+               [vertical-toolbar false]]))])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -698,6 +644,8 @@
     (when-not @a
       (.addEventListener el "scroll" scroll-fn)
       (reset! a el))))
+
+(def max-width "54ch")
 
 (defn +page-builder [r m]
   (let [scrollpos (r/atom 0)

@@ -5,6 +5,7 @@
     ;; passively registers the fsm
     [db.core :as db]
     [re-statecharts.core :as rs]
+    [booking.modals.feedback]
     [booking.spa]
     [booking.data :as app-data]
     [booking.fsm-model]
@@ -13,7 +14,6 @@
     [nrpk.spa]
     [booking.routes]
     [booking.keyboard]))
-
 
 (defn kee-start []
   (k/start! {:routes         booking.routes/routes

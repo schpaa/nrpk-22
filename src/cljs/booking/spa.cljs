@@ -41,7 +41,8 @@
             [booking.personas]
             [booking.frontpage]
             [booking.presence]
-            [schpaa.style.button :as scb]))
+            [schpaa.style.button :as scb]
+            [booking.modals.commandpalette]))
 
 ;region related to flex-date and how to display relative time
 
@@ -150,7 +151,7 @@
 
     [sc/text1 "Finner ikke noe på denne adressen! Det er sikkert bare en gammel lenke. Kanskje du finner det du leter etter i denne listen?"]
     (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
-                                 (sort-by :name < schpaa.style.combobox/commands)]
+                                 (sort-by :name < booking.modals.commandpalette/commands)]
                              [:div [sc/subtext-with-link {:on-click action} name]]))]])
 
 
