@@ -56,22 +56,6 @@
    :color         :white
    :background    "var(--gray-4)"})
 
-(o/defstyled top-right-tight-badge :div
-  :rounded-full :flex :flex-center
-  [:& :top-0 :right-4 {:font-size    "var(--font-size-0)"
-                       :font-weight  "var(--font-weight-5)"
-                       :aspect-ratio "1/1"
-                       :background   "var(--brand1)"
-                       :color        "var(--brand1-copy)"
-                       :border       "var(--surface0) 3px solid"
-                       :width        "1.7rem"
-                       :height       "1.7rem"
-                       :position     :absolute}]
-
-  ([badge]
-   [:<>
-    [:div.flex.items-center.justify-center badge]]))
-
 (o/defstyled result-item :div
   {:display        :flex
    :align-items    :center
@@ -205,7 +189,7 @@
       :class     #(if (= % :r.oversikt) :oversikt :active)
       :page-name #(some #{%} [:r.forsiden :r.oversikt])}
 
-     {:icon     ico/mystery2
+     {:xicon    ico/mystery2
       :disabled true}
 
      {:icon-fn   (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
@@ -214,8 +198,11 @@
       :on-click  #(rf/dispatch [:app/toggle-command-palette])
       :page-name :r.debug}
 
-     {:icon     ico/mystery1
-      :disabled true}
+     {:icon      ico/mystery1
+      :badge     (fn [_] (-> nil))
+      :disabled  false
+      :page-name :r.utlan
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])}
 
      {:icon      ico/user
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
@@ -228,11 +215,13 @@
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.w-full.relative
+
        ;; force the toolbar to stay on top when boat-panel is displayed
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
+              ;{:style {:box-shadow "var(--inner-shadow-3)"}}
               {:style {:z-index     1211
                        :padding-top "var(--size-0)"
-                       :box-shadow  (if @numberinput? "var(--shadow-5)" "none")
+                       :box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
                        :background  "var(--toolbar)"}}]
              (map #(if (keyword? %)
                      [:div.grow]
@@ -418,8 +407,8 @@
      [:div.mx-auto.max-w-lg.py-8
       [:div.mx-4
        [sc/col-space-4
-        (when goog.DEBUG
-          [l/ppre-x access-tokens])
+        #_(when goog.DEBUG
+            [l/ppre-x access-tokens])
 
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
@@ -514,13 +503,9 @@
 
 
                          [bottom-toolbar]]]
-            (if @switch?
-              [:div.fixed.inset-0.flex.m-10x
-               [vertical-toolbar true]
-               content]
-              [:div.fixed.inset-0.flex.m-10x
-               content
-               [vertical-toolbar false]]))])})))
+            [:div.fixed.inset-0.flex (if @switch?
+                                       [:<> [vertical-toolbar true] content]
+                                       [:<> content [vertical-toolbar false]])])])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]

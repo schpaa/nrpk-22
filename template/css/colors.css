@@ -170,8 +170,8 @@ outline: 2px solid #a0a8;
 
     --dim-brand1: hsl(calc(var(--dim-brand-hue) - 0), 36%, 58%);
     --dim-brand1-weak: hsla(calc(var(--dim-brand-hue) - 0), 36%, 58%, var(--weak-factor));
-    --dim-brand2: hsl(calc(var(--dim-brand-hue) + 60), 36%, 48%);
-    --dim-brand2-weak: hsla(calc(var(--dim-brand-hue) + 60), 36%, 48%, var(--weak-factor));
+    --dim-brand2: hsl(calc(var(--dim-brand-hue) + 90), 36%, 68%);
+    --dim-brand2-weak: hsla(calc(var(--dim-brand-hue) + 90), 36%, 48%, var(--weak-factor));
 /*
     --dim-brand3: hsl(calc(var(--brand-hue) - 60), 40%, 60%);
     --dim-brand4: hsl(calc(var(--brand-hue) - 180), 40%, 60%);
@@ -179,14 +179,16 @@ outline: 2px solid #a0a8;
 */
 
     --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
-    --dim-brand1copy: hsl(var(--brand-hue), 50%, 80%);
+    --dim-brand1-copy: hsl(var(--brand-hue), 20%, 10%);
 
     --light-brand1:  hsl(var(--brand-hue), 36%, 26%); /* #135C3D; */
-    --light-brand2: hsl(calc(var(--brand-hue) + 60), 40%, 60%);
+    --light-brand2: hsl(calc(var(--brand-hue) - 120), 40%, 30%);
     --light-brand1-weak:  hsla(var(--brand-hue), 55%, 40%, var(--weak-factor)); /* #135C3D; */
-    --light-brand2-weak: hsla(calc(var(--brand-hue) + 60), 40%, 60%,var(--weak-factor));
+    --light-brand2-weak: hsla(calc(var(--brand-hue) - 120), 40%, 30%,var(--weak-factor));
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
-    --light-brand1copy: hsl(var(--brand-hue), 50%, 90%);
+    --light-brand2-bright: hsl(calc(var(--brand-hue) - 120), 50%, 60%);
+    --light-brand1-copy: hsl(var(--brand-hue), 50%, 90%);
+    /*--brand1-copy-light: white;*/
 
     --light-button: var(--gray-3);
     --light-button-bright: var(--gray-2);
@@ -215,6 +217,7 @@ outline: 2px solid #a0a8;
     /* ----------------------------- */
 
    /* brand */
+
 
 /*
    --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
@@ -323,8 +326,6 @@ outline: 2px solid #a0a8;
 
     /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
 
-
-
     --button00-light: var(--gray-0);
     --button0-light: var(--gray-9);
     --button1-light: var(--gray-4);
@@ -419,9 +420,10 @@ outline: 2px solid #a0a8;
         --brand1: var(--light-brand1);
         --brand1-weak: var(--light-brand1-weak);
         --brand1-bright: var(--light-brand1-bright);
-        --brand1copy: var(--light-brand1copy);
+        --brand1-copy: var(--light-brand1-copy);
         --brand2: var(--light-brand2);
         --brand2-weak: var(--light-brand2-weak);
+        --brand2-bright: var(--light-brand2-bright);
         --button: var(--light-button);
         --button-bright: var(--light-button-bright);
         --buttoncopy: var(--light-buttoncopy);
@@ -510,8 +512,9 @@ outline: 2px solid #a0a8;
         /*--brand1: #A7473D;*/
         /*--brand1-copy: #EFDEDC;*/
         --brand1-bright: var(--dim-brand1-bright);
-        --brand1-copy: var(--dim-brand1copy);
+        --brand1-copy: var(--dim-brand1-copy);
         --brand2: var(--dim-brand2);
+        --brand2-weak: var(--dim-brand2-weak);
         --button: var(--dim-button);
         --button-bright: var(--dim-button-bright);
         --buttoncopy: var(--dim-buttoncopy);

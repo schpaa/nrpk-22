@@ -380,7 +380,34 @@
           (:navn user)
           uid)))))
 
+(defn fetch-id-from-number [number]
+  (get (into {}
+             (map (fn [[k v]] [(:number v) k])
+                  (logg.database/boat-db)))
+       (str number)))
+
+;(def fetch-id-from-number (memoize fetch-id-from-number-))
+
+(comment
+  (do
+    (map fetch-id-from-number [481 487])))
+
 (defn fetch-boatdata-for [id]
   (get (into {} (logg.database/boat-db)) id))
 
+#_(def fetch-boatdata-for (memoize fetch-boatdata-for-))
+
+(comment
+  (let [id "-MeHFiIdLYmMk2CjA2Va"]
+    (fetch-boatdata-for (keyword id))))
+
+(comment
+  (map #(select-keys (val %) [:location :number :id :navn]) (logg.database/boat-db)))
+
 ;endregion
+
+(comment
+  (map :number (map #(-> %
+                         str
+                         booking.database/fetch-id-from-number
+                         booking.database/fetch-boatdata-for) [601 178 498 484 497 500 486 428])))

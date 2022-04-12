@@ -19,7 +19,7 @@
                 :align-items     :start
                 :justify-content :center
                 :height          (if tall-height "var(--size-10)" "var(--size-9)")})}
-     [:div.w-full.h-full.flex.flex-col.items-center.justify-around ;.-debug2
+     [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative ;.-debug2
       {:style    {:pointer-events :auto
                   :height         "var(--size-9)"}
        :on-click #(on-click current-page)}

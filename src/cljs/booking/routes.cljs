@@ -55,6 +55,8 @@
 
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 
+   ["/utlan" {:name :r.utlan :shorttitle "Utlån & Booking" :header [:r.oversikt "Utlån & Booking"]}]
+
    ["/booking" {:name :r.booking :shorttitle "Sjøbasen" :header [:r.oversikt "Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
    ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]

@@ -55,7 +55,7 @@
                                                                       :optimizations   :advanced}}
 
                                :dev               {:compiler-options {:closure-defines {goog.DEBUG           true
-                                                                                        booking.data/VERSION "SAMPLE_VERSION"
-                                                                                        booking.data/DATE    "SAMPLE_DATE"}
+                                                                                        booking.data/VERSION "0.0.1"
+                                                                                        booking.data/DATE    "TODAY"}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :none}}}}}

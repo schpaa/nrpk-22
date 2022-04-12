@@ -85,7 +85,7 @@
   (let [type-db @(db/on-value-reaction {:path ["boat-brand"]})]
     (into {}
       (comp
-        (filter (comp #(= % "1") :location val))
+        ;(filter (comp #(= % "1") :location val))
         ;(filter (fn [[_ {:keys [number]}]] (some #{number} ["477" "476" "473" "481"])))
         (map (fn [[id {:keys [boat-type] :as v}]]
                [id (conj v (get type-db (keyword boat-type)))])))

@@ -1,6 +1,5 @@
 (ns booking.modals.boatinput
-  (:require [lambdaisland.ornament :as o]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style.ornament :as sc]
@@ -11,7 +10,6 @@
             [booking.aktivitetsliste]
             [goog.events.KeyCodes :as keycodes]
             [booking.ico :as ico]
-            [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput.styles :as bis]))
 
@@ -472,17 +470,17 @@
                   :on-click on-close}]
 
                 [vertical-button
-                 {:xicon    [:> outline/DotsHorizontalIcon]
-                  :disabled true
-                  :on-click on-close}]
+                 {:xicon     [:> outline/DotsHorizontalIcon]
+                  :disabled  true
+                  :xon-click on-close}]
                 [vertical-button
-                 {:xicon    [:> outline/EmojiSadIcon]
-                  :disabled true
-                  :on-click on-close}]
+                 {:xicon     [:> outline/EmojiSadIcon]
+                  :disabled  true
+                  :xon-click on-close}]
                 [vertical-button
-                 {:icon     [:> solid/FingerPrintIcon]
-                  :disabled true
-                  :on-click on-close}]
+                 {:xicon     [:> solid/FingerPrintIcon]
+                  :disabled  true
+                  :xon-click on-close}]
                 [vertical-button
                  {:icon     ico/checkCircle
                   :on-click on-close}]

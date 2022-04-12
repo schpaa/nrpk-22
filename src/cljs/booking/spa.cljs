@@ -134,25 +134,23 @@
     #_[sc/text1 c]]))
 
 (defn error-page [r]
-  ;[:div "error"]
-  [page-boundary r
-   [sc/col {:class [:p-1 :space-y-4 :mx-auto :max-w-xs :sm:max-w-md]}
-    [:div.animate-pulse
-     {:style {:display       :grid
-              :min-height    "25vh"
-              :place-content :center
-              :font-size     "var(--font-size-7)"
-              :font-family   "IBM Plex Sans"}}
-     [:div.relative.w-24.h-24
-      [:div.absolute.rounded-full.-inset-1.blur
-       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
-                :sgroup-hover:-inset-1 :duration-500]}]
-      [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
+  [sc/col {:class [:p-1 :space-y-4 :xmx-auto :xmax-w-xs :xsm:max-w-md]}
+   [:div.animate-pulse
+    {:style {:display       :grid
+             :min-height    "25vh"
+             :place-content :center
+             :font-size     "var(--font-size-7)"
+             :font-family   "IBM Plex Sans"}}
+    [:div.relative.w-24.h-24
+     [:div.absolute.rounded-full.-inset-1.blur
+      {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
+               :sgroup-hover:-inset-1 :duration-500]}]
+     [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
 
-    [sc/text1 "Finner ikke noe på denne adressen! Det er sikkert bare en gammel lenke. Kanskje du finner det du leter etter i denne listen?"]
-    (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
-                                 (sort-by :name < booking.modals.commandpalette/commands)]
-                             [:div [sc/subtext-with-link {:on-click action} name]]))]])
+   [sc/text1 "Finner ikke noe på denne adressen! Det er kanskje en gammel lenke. Se om du finner det du leter etter i denne listen:"]
+   (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
+                                (sort-by :name < booking.modals.commandpalette/commands)]
+                            [:div [sc/subtext-with-link {:on-click action} name]]))])
 
 
 (defn opening-hours []
@@ -257,7 +255,8 @@
              "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."
              [sc/row-sc-g4-w
               (let [data [[:r.xxx "Hvilke båter på Nøklevann?"]
-                          [:r.xxx "Utlånsaktivitet"]
+                          [:r.utlan "Utlån"]
+                          [:r.aktivitetsliste "Aktivitetsliste"]
                           [:r.xxx "HMS ved Nøklevann"]]]
                 (map f (sort-by second data)))]]
 
@@ -269,7 +268,7 @@
               (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
                           [:r.booking.faq "Ofte spurte spørsmål"]
                           [:r.booking.oversikt "Hvilke båter på Sjøbasen?"]
-                          [:r.forsiden "Booking"]
+                          [:r.utlan "Booking"]
                           [:r.xxx "HMS ved Sjøbasen"]]]
                 (map f (sort-by second data)))]]
 
@@ -288,7 +287,8 @@
              "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
               (let [data [[:r.conditions "Plikter som nøkkelvakt"]
-                          [:r.aktivitetsliste "Utlån på nøklevann"]
+                          [:r.utlan "Utlån på nøklevann"]
+                          [:r.aktivitetsliste "Aktivitetsliste"]
                           [:r.terms "Betingelser"]
                           [:r.kalender "Vaktkalender"]]]
                 (map f (sort-by second data)))]]
@@ -825,9 +825,87 @@
                                                    [sc/text-inline {:style {:xwidth "1rem"}} (or (:timekrav v) "—") (when (:timekrav v) "t")]
                                                    [sc/text-inline {:style {:white-space :normal}} "Her er en linje til"]
                                                    [sc/text-inline #_{:style {:white-space :normal}} (:navn v)]])]]))]]))}))])))
+   :r.utlan
+   (fn [r]
+     (let [data {:utlån   (map (fn [{:keys [boats] :as m}]
+                                 (assoc m
+                                   :boats (mapv booking.database/fetch-id-from-number boats)))
+                               [{:id          (str (random-uuid))
+                                 :date        (t/at (t/date "2022-04-02") (t/noon))
+                                 :in-progress true
+                                 :boats       [484 481 195 601 702 140 146 155 433 707]}
+                                {:id          (str (random-uuid))
+                                 :date        (t/at (t/date "2022-04-03") (t/noon))
+                                 :in-progress true
+                                 :boats       [495 491 428]}
+                                {:id    (str (random-uuid))
+                                 :date  (t/at (t/date "2022-04-04") (t/noon))
+                                 :boats [496 492]}])
+                 :booking [{:id          (str (random-uuid))
+                            :date-out    (t/at (t/date "2022-04-02") (t/noon))
+                            :date-in     (t/at (t/date "2022-04-03") (t/noon))
+                            :in-progress true
+                            :boats       [123]}
+                           {:id          (str (random-uuid))
+                            :date-out    (t/at (t/date "2022-05-03") (t/noon))
+                            :date-in     (t/at (t/date "2022-05-04") (t/noon))
+                            :in-progress true
+                            :boats       [123 124]}]}]
+       (o/defstyled listitem' :div
+         [:& :gap-2
+          {:display     :inline-flex
+           :flex-wrap   :wrap
+           ;:outline     "1px solid red"
+           :align-items :baseline
+           :color       "var(--text1)"}])
+       [+page-builder
+        r
+        {:render
+         (fn []
+           [sc/col-space-8
+            [sc/col-space-8
+             [sc/col
+              (-> (inline "./oversikt/nøklevann.md") schpaa.markdown/md->html sc/markdown)
+
+              [sc/row-sc-g4-w
+               [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])} "Aktivitet i dag"]
+               [sc/link {:class    [:disabled]
+                         :on-click #(rf/dispatch [])} "Båtoversikt"]
+               [sc/link {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} "Nytt utlån"]
+               [sc/link {:class    [:disabled]
+                         :on-click #(rf/dispatch [])} "Mine utlån"]]]
+
+             [sc/col-space-2 (doall (for [{:keys [date boats] :as e} (:utlån data)
+                                          :let [date (booking.flextime/relative-time date (fn [dt] (str dt)))]]
+                                      [:div
+                                       ;[l/ppre-x e]
+                                       (apply listitem'
+                                              (doall (concat
+                                                       [[:div.inline-block date]]
+                                                       [(into [:<>]
+                                                              (mapv (fn [id]
+                                                                      (let [data (booking.database/fetch-boatdata-for id)
+                                                                            number (:number data)]
+                                                                        (sc/badge-2 {:on-click #(schpaa.style.dialog/open-modal-boatinfo data)} number))) (remove nil? boats)))]
+                                                       (interpose [:span.pr-2.inline-block ","]
+                                                                  [[sc/link {:on-click #(tap> "inn")} "Lever inn"]]))))]))]]
+
+            [sc/col-space-8
+             [sc/col
+              (-> (inline "./oversikt/sjøbasen.md") schpaa.markdown/md->html sc/markdown)
+              [sc/row-sc-g4-w
+               [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])} "Aktivitet i dag og framover"]
+               [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Båtoversikt"]
+               [sc/link {:on-click #(rf/dispatch [])} "Ny booking"]
+               [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Mine bookinger"]]]
+             [:div (for [e (:booking data)]
+                     [l/ppre-x e])]]])}]))
 
    :r.page-not-found
-   error-page})
+   (fn [r]
+     [+page-builder
+      r
+      {:render (fn [] [error-page r])}])})
 
 
 (comment
