@@ -12,6 +12,7 @@
             [goog.events.KeyCodes :as keycodes]
             [booking.ico :as ico]
             [schpaa.style.hoc.buttons :as hoc.buttons]
+            [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput.styles :as bis]))
 
 (defn lookup [id]
@@ -199,7 +200,7 @@
                    (<= 3 (count (:item @st))))
     :on-style {:color      "var(--surface4)"
                :background "var(--surface1)"}}
-   (sc/icon-huge [:> outline/PlusCircleIcon])])
+   (sc/icon-huge ico/plusCircle)])
 
 (defn- delete-clicked [st]
   (swap! st #(-> %
@@ -451,23 +452,50 @@
                                                       (assoc :item e)))))} e])
                 (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))
 
-(defn boatpanel [_]
+(defn boatpanel [{db :db}]
   {:fx [[:dispatch
          [:lab/modaldialog-visible
-          true                                              ;(-> db :lab/modaldialog-visible not)
+          (-> db :lab/modaldialog-visible not)
           {:content-fn
            (fn [{:keys [on-close]}]
-             [:div.overflow-y-auto.grid.h-full
-              {:style {:max-width  "18rem"
-                       :background "var(--toolbar)"}}
-              [sc/row-ec {:class [:px-4]
-                          :style {:height           "4rem"
-                                  :background-color "var(--content)"
-                                  :align-items      :center}}
-               [hoc.buttons/round' {:class    [:h-8
-                                               :rounded-full]
-                                    :on-click on-close} [sc/icon ico/closewindow]]]
-              [boatpanel-window true false]])}]]]})
+             [:div.overflow-y-auto.h-full
+              [:div.flex.flex-col
+               {:style {:align-self :start
+                        :height     "100%"
+                        :xmax-width "18rem"
+                        :background "var(--toolbar-)"}}
+               [:div.grow [boatpanel-window true false]]
+               [sc/bottom-toolbar-style {:class [:sticky :bottom-0]}
+
+                [vertical-button
+                 {:icon     ico/closewindow
+                  :on-click on-close}]
+
+                [vertical-button
+                 {:xicon    [:> outline/DotsHorizontalIcon]
+                  :disabled true
+                  :on-click on-close}]
+                [vertical-button
+                 {:xicon    [:> outline/EmojiSadIcon]
+                  :disabled true
+                  :on-click on-close}]
+                [vertical-button
+                 {:icon     [:> solid/FingerPrintIcon]
+                  :disabled true
+                  :on-click on-close}]
+                [vertical-button
+                 {:icon     ico/checkCircle
+                  :on-click on-close}]
+
+                #_[sc/row-center {:xclass [:shrink-0 :xpx-4 :z-100]
+                                  :style  {
+                                           :height            "5rem"
+                                           :xmin-height       "5rem"
+                                           :xbackground-color "var(--toolbar)"
+                                           :xalign-items      :center}}
+                   [sc/toolbar-button {:sclass   [:h-8
+                                                  :rounded-full]
+                                       :on-click on-close} [sc/icon-large ico/closewindow]]]]]])}]]]})
 
 (rf/reg-event-fx :lab/toggle-boatpanel [rf/trim-v] boatpanel)
 

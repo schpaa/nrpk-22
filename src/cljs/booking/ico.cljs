@@ -52,3 +52,5 @@
 (def mystery2 [:> outline/MapIcon])
 (def menu [:> solid/MenuAlt2Icon])
 (def experimental [:> solid/BeakerIcon])
+(def plusCircle [:> outline/PlusCircleIcon])
+(def checkCircle [:> solid/CheckCircleIcon])

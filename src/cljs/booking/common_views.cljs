@@ -25,6 +25,7 @@
             [clojure.set :as set]
             [schpaa.style.input :as sci]
             [schpaa.style.button2 :as scb2]
+            [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput]
             [booking.modals.feedback]
             [booking.modals.commandpalette]
@@ -54,41 +55,6 @@
    :padding       "var(--size-2)"
    :color         :white
    :background    "var(--gray-4)"})
-
-(o/defstyled toolbar-button :button
-  [:& scb2/focus-button
-
-   {:color         "var(--text2)"
-    :border-radius "var(--radius-round)"
-    :padding       "var(--size-2)"}
-   [:&:disabled {:color "var(--text3)"}]
-   [:&:enabled:hover {:color "var(--text1)"}]
-   [:&.active scb2/focus-button
-    {:color      "var(--text1)"
-     :background "var(--content)"
-     :box-shadow "var(--shadow-1)"}]
-   [:&.oversikt scb2/focus-button {:color      "var(--gray-0)"
-                                   :background "var(--brand1)"
-                                   :box-shadow "var(--shadow-1)"}
-    [:&:enabled:hover {:color "var(--gray-1)"}]]
-
-   [:&.special {:color "var(--brand1)"}]])
-
-(o/defstyled top-left-badge :div
-  :rounded-full :flex :flex-center :-top-1 :right-0
-  [:&
-   {:font-size    "var(--font-size-0)"
-    :font-weight  "var(--font-weight-5)"
-    :aspect-ratio "1/1"
-    :background   "var(--brand1)"
-    :color        "var(--brand1-copy)"
-    :border       "var(--surface0) 3px solid"
-    :width        "1.7rem"
-    :height       "1.7rem"
-    :position     :absolute}]
-  ([badge]
-   [:<>
-    [:div.flex.items-center.justify-center badge]]))
 
 (o/defstyled top-right-tight-badge :div
   :rounded-full :flex :flex-center
@@ -256,42 +222,6 @@
       :disabled  (not (some? @registered?))
       :page-name :r.user}]))
 
-(defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
-                        :or   {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-        active? (if (fn? page-name)
-                  (page-name current-page)
-                  (= current-page page-name))]
-    [:div
-     {:style (if centered?
-               {:pointer-events :none
-                :inset          0
-                :display        :grid
-                :place-content  :center
-                :position       :absolute}
-               {:display         :flex
-                :align-items     :start
-                :justify-content :center
-                :height          (if tall-height "var(--size-10)" "var(--size-9)")})}
-     [:div.w-full.h-full.flex.flex-col.items-center.justify-around
-      {:style    {:pointer-events :auto
-                  :height         "var(--size-9)"}
-       :on-click #(on-click current-page)}
-
-      (when badge
-        (when-some [b (badge)]
-          [top-left-badge b]))
-
-      [toolbar-button {:disabled disabled
-                       :style    style
-                       :class    [(if active? (or (when class (class current-page)) :active))
-                                  (if special :special)]}
-       [sc/icon-large
-        {}
-        (if icon-fn
-          (icon-fn current-page)
-          icon)]]]]))
-
 (defn vertical-toolbar [left-side?]
   (let [numberinput? (rf/subscribe [:lab/number-input])
         user-auth (rf/subscribe [::db/user-auth])
@@ -323,22 +253,24 @@
         user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? #_(not @search) @(rf/subscribe [:lab/at-least-registered]))
-      [:div.sm:hidden.flex.gap-0.border-t
-       {:style {:width           "100%"
-                :justify-content :space-around
-                :height          "var(--size-10)"
-                :min-height      "var(--size-10)"
-                :padding-inline  "var(--size-2)"
-                :box-shadow      "var(--inner-shadow-2)"
-                :border-color    "var(--toolbar-)"
-                :background      "var(--toolbar)"}}
+      [sc/bottom-toolbar-style
+       ;:div.sm:hidden.flex.gap-0.border-t
+       #_{:xstyle {:width           "100%"
+                   :justify-content :space-around
+                   :height          "var(--size-10)"
+                   :min-height      "var(--size-10)"
+                   :padding-inline  "var(--size-2)"
+                   :box-shadow      "var(--inner-shadow-2)"
+                   :border-color    "var(--toolbar-)"
+                   :background      "var(--toolbar)"}}]
 
-       (into [:<>] (map vertical-button
-                        (horizontal-toolbar-definitions (:uid @user-auth))))
-       #_[:div.absolute.mx-auto.inset-y-0.overflow-y-auto
-          {:style {:width          "298px"
-                   :pointer-events :none}}
-          [boatinput-menu {:position :mobile}]]])))
+      (into [sc/bottom-toolbar-style]
+            (mapv vertical-button
+                  (horizontal-toolbar-definitions (:uid @user-auth))))
+      #_[:div.absolute.mx-auto.inset-y-0.overflow-y-auto
+         {:style {:width          "298px"
+                  :pointer-events :none}}
+         [boatinput-menu {:position :mobile}]])))
 
 ;endregion
 

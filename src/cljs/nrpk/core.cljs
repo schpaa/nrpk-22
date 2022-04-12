@@ -2,7 +2,7 @@
   (:require [re-frame.core :as rf]))
 
 (def screen-breakpoints
-  {:breakpoints [:mobile 575 :tablet 992 :small-monitor 1200 :large-monitor],
+  {:breakpoints [:mobile 512 :tablet 992 :small-monitor 1200 :large-monitor],
    :debounce-ms 166})
 
 ;region events and subs
