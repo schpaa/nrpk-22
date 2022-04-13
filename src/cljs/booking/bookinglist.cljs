@@ -137,7 +137,8 @@
     (if deleted (icon/small :rotate-left) ico/trash)]])
 
 (o/defstyled listitem :div
-  :cursor-pointer :pt-0 :pb-1
+  [:& :cursor-pointer :pt-0 :pb-1]
+
   {:min-height "var(--size-4)"}
   [:&
    [:.deleted {:color           "red"
@@ -150,54 +151,75 @@
 
 
 (o/defstyled line :div
-  {:margin-top  "var(--size-1)"
-   :color       "var(--text3)"
-   :line-height "var(--font-lineheight-3)"})
+  [:& :gap-2
+   {:padding-left "2rem"
+    :display      :inline-flex
+    :text-indent  "-1rem"
+    :flex-wrap    :wrap
+    :align-items  :baseline
+    :margin-top   "var(--size-1)"
+    :color        "var(--text3)"
+    :line-height  "var(--font-lineheight-3)"}])
+
 (o/defstyled text :span
   {:color "var(--text3)"})
 (o/defstyled emph :span
   {:color "var(--text1)"})
 (o/defstyled dim :span
-  {:color       "var(--text3)"
+  {
+   :color       "var(--text3)"
    :font-size   "var(--font-size-1)"
    :font-weight "var(--font-weight-3)"})
 
 (defn- listitem-softwrap [{:keys [id selected start uid sleepover timestamp navn description deleted end created deleted type] :as m}]
   (let [show-editing @(schpaa.state/listen :booking/editing)
-        show-description (schpaa.state/listen :booking/show-description)]
+        show-description (schpaa.state/listen :booking/show-description)
+        relative-time? (schpaa.state/listen :app/show-relative-time-toggle)]
 
-    [listitem {:class     [:px-4x (when deleted :deleted)]
-               :xon-click #(js/alert m)}
-     [:div
-      {:style {:display               :grid
-               :grid-template-columns "min-content 1fr"}}
+    [listitem {:class [(when deleted :deleted)]}
 
-      (if show-editing
-        [:div.pr-2 (trashcan id m)]
-        [:div])
+     ;[l/ppre-x m]
 
-      [line
-       (interpose ", "
-                  (remove nil?
-                          [(when start
-                             (dim (flex-datetime (t/date-time start) #(vector :span %))))
+     (apply line
+            (remove nil?
+                    [(when show-editing (trashcan id m))
 
-                           (when end
-                             (dim (flex-datetime (t/date-time end) #(vector :span %))))
+                     (when start
+                       (dim (booking.flextime/relative-time (t/date-time start))))
 
-                           #_(when type
-                               (emph (or (some->> type (get sci/person-by-id) :name) "|?")))
 
-                           (when (pos? (count selected))
-                             [:span.inline-flex.gap-1.items-baseline
-                              (interpose ", " (map (fn [e] [sc/badge {:on-click #(open-modal-boatinfo e)}
-                                                            (:number e)]) selected))])
+                     (when end
+                       (let [overnatting (not= (t/day-of-month (t/date-time start))
+                                               (t/day-of-month (t/date-time end)))
+                             distance (tick.alpha.interval/new-interval
+                                        (t/date-time start)
+                                        (t/date-time end))
+                             days (t/days (t/duration distance))
+                             hours (t/hours (t/duration distance))]
+                         [:<>
+                          (when overnatting [sc/text1 "overnatting"])
+                          (if (zero? days)
+                            [sc/text1 hours " timer"]
+                            [sc/text1 (if (= 1 days) "1 dag" (str days " dager"))])
+                          (when-not @relative-time?
+                            (if (pos? days)
+                              (dim (booking.flextime/relative-time (t/date-time end) times.api/arrival-date))
+                              (dim (booking.flextime/relative-time (t/date-time end) times.api/time-format))))]
 
-                           (when sleepover "Overnatting")
-                           (when navn navn)
+                         #_(dim (flex-datetime (t/date-time end) #(vector :span %)))))
 
-                           (when (and description @show-description)
-                             description)]))]]]))
+                     #_(when type
+                         (emph (or (some->> type (get sci/person-by-id) :name) "|?")))
+
+                     ;(when sleepover [sc/text1 "Overnatting"])
+                     (when navn [sc/text1 navn])
+                     (when (pos? (count selected))
+                       (into [:div {:style {:text-indent :unset
+                                            :padding     :unset}}] (mapv (fn [e] [sc/badge-2 {
+                                                                                              :on-click #(open-modal-boatinfo e)}
+                                                                                  (:number e)]) selected)))
+                     (when (and description @show-description)
+                       [sc/small0 description])]))]))
 
 ;region
 

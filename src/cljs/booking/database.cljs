@@ -380,22 +380,51 @@
           (:navn user)
           uid)))))
 
-(defn fetch-id-from-number [number]
-  (get (into {}
-             (map (fn [[k v]] [(:number v) k])
-                  (logg.database/boat-db)))
-       (str number)))
+(defn fetch-id-from-number-' [number]
+  (tap> {:input number})
+  (let [data (rf/subscribe [:db/boat-db])
+        result (get (into {}
+                          (map (fn [[k v]] [(:number v) k])
+                               @data))
+                    (str number))]
+    (tap> {:result result})
+    result))
 
-;(def fetch-id-from-number (memoize fetch-id-from-number-))
+(defn fetch-id-from-number- [number]
+  (tap> {:input number})
+  (let [data (rf/subscribe [:db/boat-db])
+        result (get (into {}
+                          (map (fn [[k v]] [(:number v) k])
+                               @data))
+                    (str number))]
+    (tap> {:result result})
+    result))
+
+;todo ?
+;(logg.database/boat-db)
+
+(def fetch-id-from-number (memoize fetch-id-from-number-))
 
 (comment
   (do
     (map fetch-id-from-number [481 487])))
 
-(defn fetch-boatdata-for [id]
-  (get (into {} (logg.database/boat-db)) id))
+(defn fetch-boatdata-for- [id]
+  (tap> {:fetch-boatdata-for- id})
+  (let [data (rf/subscribe [:db/boat-db])
+        result (get (into {} @data) id "?")]
+    (tap> {:result result})
+    result))
 
-#_(def fetch-boatdata-for (memoize fetch-boatdata-for-))
+(defn fetch-boatdata-for-' [id data]
+  (tap> {:data                (count data)
+         :fetch-boatdata-for- id})
+  (let [;data (rf/subscribe [:db/boat-db])
+        result (get (into {} data) id "?")]
+    (tap> {:result result})
+    result))
+
+(def fetch-boatdata-for (memoize fetch-boatdata-for-))
 
 (comment
   (let [id "-MeHFiIdLYmMk2CjA2Va"]
@@ -410,4 +439,4 @@
   (map :number (map #(-> %
                          str
                          booking.database/fetch-id-from-number
-                         booking.database/fetch-boatdata-for) [601 178 498 484 497 500 486 428])))
+                         booking.database/fetch-boatdata-for) [601 178 498 484 497 500 486 428]))) 

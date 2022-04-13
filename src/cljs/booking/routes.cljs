@@ -1,4 +1,8 @@
-(ns booking.routes)
+(ns booking.routes
+  (:require [booking.ico :as ico]
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [reitit.core :as reitit]
+            [re-frame.core :as rf]))
 
 (def routes
   [["/" {:name       :r.forsiden
@@ -55,12 +59,28 @@
 
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 
-   ["/utlan" {:name :r.utlan :shorttitle "Utlån & Booking" :header [:r.oversikt "Utlån & Booking"]}]
+   ["/utlan" {:name       :r.utlan
+              :shorttitle "Utlån & Booking"
+              :access     [[:member] #{}]
+              :header     [:r.oversikt "Utlån & Booking"]}]
 
-   ["/booking" {:name :r.booking :shorttitle "Sjøbasen" :header [:r.oversikt "Sjøbasen"]}]
+   ["/booking" {:name       :r.booking
+                :shorttitle "Sjøbasen"
+                :icon       ico/booking
+                :header     [:r.oversikt "Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
    ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]
    ["/booking/faq" {:name :r.booking.faq :header [:r.booking "Ofte stilte spørsmål"]}]
 
    ["/oversikt/organisasjon" {:name :r.oversikt.organisasjon :header [:r.oversikt "Om NRPK"]}]
    ["/oversikt/styret" {:name :r.oversikt.styret :header [:r.oversikt "Styret i NRPK"]}]])
+
+
+(defn shortcut-link [route-name]
+  (let [{icon :icon caption :shorttitle} (some->> route-name
+                                                  (reitit/match-by-name (reitit/router routes))
+                                                  :data)]
+    [hoc.buttons/reg-pill-icon
+     {:on-click #(rf/dispatch [:app/navigate-to [:r.booking]])}
+     icon
+     caption]))

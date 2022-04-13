@@ -42,7 +42,8 @@
             [booking.frontpage]
             [booking.presence]
             [schpaa.style.button :as scb]
-            [booking.modals.commandpalette]))
+            [booking.modals.commandpalette]
+            [booking.utlan]))
 
 ;region related to flex-date and how to display relative time
 
@@ -827,79 +828,10 @@
                                                    [sc/text-inline #_{:style {:white-space :normal}} (:navn v)]])]]))]]))}))])))
    :r.utlan
    (fn [r]
-     (let [data {:utlån   (map (fn [{:keys [boats] :as m}]
-                                 (assoc m
-                                   :boats (mapv booking.database/fetch-id-from-number boats)))
-                               [{:id          (str (random-uuid))
-                                 :date        (t/at (t/date "2022-04-02") (t/noon))
-                                 :in-progress true
-                                 :boats       [484 481 195 601 702 140 146 155 433 707]}
-                                {:id          (str (random-uuid))
-                                 :date        (t/at (t/date "2022-04-03") (t/noon))
-                                 :in-progress true
-                                 :boats       [495 491 428]}
-                                {:id    (str (random-uuid))
-                                 :date  (t/at (t/date "2022-04-04") (t/noon))
-                                 :boats [496 492]}])
-                 :booking [{:id          (str (random-uuid))
-                            :date-out    (t/at (t/date "2022-04-02") (t/noon))
-                            :date-in     (t/at (t/date "2022-04-03") (t/noon))
-                            :in-progress true
-                            :boats       [123]}
-                           {:id          (str (random-uuid))
-                            :date-out    (t/at (t/date "2022-05-03") (t/noon))
-                            :date-in     (t/at (t/date "2022-05-04") (t/noon))
-                            :in-progress true
-                            :boats       [123 124]}]}]
-       (o/defstyled listitem' :div
-         [:& :gap-2
-          {:display     :inline-flex
-           :flex-wrap   :wrap
-           ;:outline     "1px solid red"
-           :align-items :baseline
-           :color       "var(--text1)"}])
-       [+page-builder
-        r
-        {:render
-         (fn []
-           [sc/col-space-8
-            [sc/col-space-8
-             [sc/col
-              (-> (inline "./oversikt/nøklevann.md") schpaa.markdown/md->html sc/markdown)
+     [+page-builder
+      r
+      {:render booking.utlan/render}])
 
-              [sc/row-sc-g4-w
-               [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])} "Aktivitet i dag"]
-               [sc/link {:class    [:disabled]
-                         :on-click #(rf/dispatch [])} "Båtoversikt"]
-               [sc/link {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} "Nytt utlån"]
-               [sc/link {:class    [:disabled]
-                         :on-click #(rf/dispatch [])} "Mine utlån"]]]
-
-             [sc/col-space-2 (doall (for [{:keys [date boats] :as e} (:utlån data)
-                                          :let [date (booking.flextime/relative-time date (fn [dt] (str dt)))]]
-                                      [:div
-                                       ;[l/ppre-x e]
-                                       (apply listitem'
-                                              (doall (concat
-                                                       [[:div.inline-block date]]
-                                                       [(into [:<>]
-                                                              (mapv (fn [id]
-                                                                      (let [data (booking.database/fetch-boatdata-for id)
-                                                                            number (:number data)]
-                                                                        (sc/badge-2 {:on-click #(schpaa.style.dialog/open-modal-boatinfo data)} number))) (remove nil? boats)))]
-                                                       (interpose [:span.pr-2.inline-block ","]
-                                                                  [[sc/link {:on-click #(tap> "inn")} "Lever inn"]]))))]))]]
-
-            [sc/col-space-8
-             [sc/col
-              (-> (inline "./oversikt/sjøbasen.md") schpaa.markdown/md->html sc/markdown)
-              [sc/row-sc-g4-w
-               [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])} "Aktivitet i dag og framover"]
-               [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Båtoversikt"]
-               [sc/link {:on-click #(rf/dispatch [])} "Ny booking"]
-               [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Mine bookinger"]]]
-             [:div (for [e (:booking data)]
-                     [l/ppre-x e])]]])}]))
 
    :r.page-not-found
    (fn [r]

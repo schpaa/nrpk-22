@@ -428,9 +428,10 @@
    [:div {:style {:display               "grid"
                   :gap                   "var(--size-4) var(--size-2)"
                   :grid-template-columns "1fr"}}
-    [listitem' (t/date) "Ny layout og organisering av hjemmesiden."]
-    [listitem' (t/date) "Nye båter er kjøpt inn."]
-    [listitem' (t/date) "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]]])
+    [listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
+    [listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
+    [listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
+    [listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]])
 
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)

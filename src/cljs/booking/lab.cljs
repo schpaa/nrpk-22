@@ -223,7 +223,7 @@
 (rf/reg-sub :modal.slideout/visible? :-> (fn [db] (get db :modal.slideout/toggle false)))
 (rf/reg-sub :modal.slideout/extra :-> (fn [db] (get db :modal.slideout/extra)))
 (rf/reg-event-db :modal.slideout/toggle
-                 (fn [db [_ arg extra]] (if arg
+                 (fn [db [_ arg extra]] (if (some? arg)
                                           (assoc db :modal.slideout/toggle arg
                                                     :modal.slideout/extra extra)
                                           (update db :modal.slideout/toggle (fnil not true)))))
@@ -234,7 +234,7 @@
 (rf/reg-sub :lab/modaldialog-visible :-> #(get % :lab/modaldialog-visible false))
 (rf/reg-sub :lab/modaldialog-context :-> #(get % :lab/modaldialog-context))
 (rf/reg-event-db :lab/modaldialog-visible
-                 (fn [db [_ arg extra]] (if arg
+                 (fn [db [_ arg extra]] (if (true? arg)
                                           (assoc db :lab/modaldialog-visible true
                                                     :lab/modaldialog-context extra)
                                           (assoc db :lab/modaldialog-visible false

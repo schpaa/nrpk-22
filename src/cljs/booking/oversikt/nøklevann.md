@@ -1,3 +1,3 @@
 ### Nøklevann for nøkkelvakter
 
-Som nøkkelvakt kan du — i og utenom åpningstid — administrere dine egne utlån.
+Som nøkkelvakt kan du administrere dine egne utlån.

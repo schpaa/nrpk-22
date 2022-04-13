@@ -460,7 +460,7 @@
           [schpaa.style.dialog/slideout
            {:context @(rf/subscribe [:modal.slideout/extra])
             :vis     (rf/subscribe [:modal.slideout/visible?])
-            :close   #(rf/dispatch [:modal.slideout/toggle false])}]
+            :close   #(rf/dispatch [:modal.slideout/toggle false nil])}]
           ;endregion
           ;region modal dialog (top)
           [schpaa.style.dialog/modaldialog-centered
