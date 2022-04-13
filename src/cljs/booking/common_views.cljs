@@ -29,6 +29,7 @@
             [booking.modals.boatinput]
             [booking.modals.feedback]
             [booking.modals.commandpalette]
+            [booking.modals.slideout]
             [booking.modals.mainmenu :refer [main-menu]]))
 
 ;region styles
@@ -457,7 +458,7 @@
        (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
           ;region modal dialog (top)
-          [schpaa.style.dialog/slideout
+          [booking.modals.slideout/render
            {:context @(rf/subscribe [:modal.slideout/extra])
             :vis     (rf/subscribe [:modal.slideout/visible?])
             :close   #(rf/dispatch [:modal.slideout/close])}]

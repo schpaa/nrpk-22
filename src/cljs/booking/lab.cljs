@@ -220,19 +220,6 @@
     :expanded true
     :selected false}])
 
-(rf/reg-sub :modal.slideout/visible? :-> (fn [db] (get db :modal.slideout/toggle false)))
-(rf/reg-sub :modal.slideout/extra :-> (fn [db] (get db :modal.slideout/extra)))
-(rf/reg-event-db :modal.slideout/toggle
-                 (fn [db [_ arg extra]] (if (some? arg)
-                                          (assoc db :modal.slideout/toggle arg
-                                                    :modal.slideout/extra extra)
-                                          (update db :modal.slideout/toggle (fnil not true)))))
-
-(rf/reg-event-db :modal.slideout/close
-                 (fn [db _] (assoc db :modal.slideout/toggle false)))
-
-(rf/reg-event-db :modal.slideout/clear
-                 (fn [db _] (assoc db :modal.slideout/extra nil)))
 
 ;region regular dialogs (centered)
 
