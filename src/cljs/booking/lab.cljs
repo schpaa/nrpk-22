@@ -223,19 +223,6 @@
 
 ;region regular dialogs (centered)
 
-;todo This just seems overly complicated, can you simplify this?
-(rf/reg-sub :lab/modaldialog-visible :-> #(get % :lab/modaldialog-visible false))
-(rf/reg-sub :lab/modaldialog-context :-> #(get % :lab/modaldialog-context))
-(rf/reg-event-db :lab/modaldialog-visible
-                 (fn [db [_ arg extra]] (if (true? arg)
-                                          (assoc db :lab/modaldialog-visible true
-                                                    :lab/modaldialog-context extra)
-                                          (assoc db :lab/modaldialog-visible false
-                                                    :lab/modaldialog-context extra #_(fnil not true)))))
-
-(rf/reg-event-db :lab/modaldialog-close
-                 (fn [db _] (assoc db :lab/modaldialog-visible false)))
-
 
 ;endregion
 

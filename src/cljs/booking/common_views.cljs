@@ -30,6 +30,7 @@
             [booking.modals.feedback]
             [booking.modals.commandpalette]
             [booking.modals.slideout]
+            [booking.modals.centered]
             [booking.modals.mainmenu :refer [main-menu]]))
 
 ;region styles
@@ -457,19 +458,9 @@
        :reagent-render
        (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
-          ;region modal dialog (top)
-          [booking.modals.slideout/render
-           {:context @(rf/subscribe [:modal.slideout/extra])
-            :vis     (rf/subscribe [:modal.slideout/visible?])
-            :close   #(rf/dispatch [:modal.slideout/close])}]
-          ;endregion
-          ;region modal dialog (top)
-          [schpaa.style.dialog/modaldialog-centered
-           {:context @(rf/subscribe [:lab/modaldialog-context])
-            :vis     (rf/subscribe [:lab/modaldialog-visible])
-            :close   #(rf/dispatch [:lab/modaldialog-visible false])}]
-          ;endregion
 
+          [booking.modals.slideout/render]
+          [booking.modals.centered/render]
           [booking.modals.commandpalette/window-anchor]
 
           (let [content [:div.flex.flex-col

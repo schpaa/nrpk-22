@@ -6,6 +6,7 @@
             [schpaa.style.dialog]))
 
 (rf/reg-sub :modal.slideout/visible? :-> (fn [db] (get db :modal.slideout/toggle false)))
+
 (rf/reg-sub :modal.slideout/extra :-> (fn [db] (get db :modal.slideout/extra)))
 
 (rf/reg-event-db :modal.slideout/toggle
@@ -20,8 +21,11 @@
 (rf/reg-event-db :modal.slideout/clear
                  (fn [db _] (assoc db :modal.slideout/extra nil)))
 
-(defn render [{:keys [context vis close]}]
-  (let [{:keys [action on-primary-action click-overlay-to-dismiss content-fn auto-dismiss on-close]
+(defn render []
+  (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.slideout/extra])
+                                     :vis     (rf/subscribe [:modal.slideout/visible?])
+                                     :close   #(rf/dispatch [:modal.slideout/close])}
+        {:keys [action on-primary-action click-overlay-to-dismiss content-fn auto-dismiss on-close]
          :or   {click-overlay-to-dismiss true}} context]
     (r/with-let [write-success (r/atom false)
                  tm (r/atom nil)
