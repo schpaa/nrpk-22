@@ -31,7 +31,8 @@
             [booking.modals.commandpalette]
             [booking.modals.slideout]
             [booking.modals.centered]
-            [booking.modals.mainmenu :refer [main-menu]]))
+            [booking.modals.mainmenu :refer [main-menu]]
+            [booking.account]))
 
 ;region styles
 

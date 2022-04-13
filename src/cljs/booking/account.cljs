@@ -1,0 +1,95 @@
+(ns booking.account
+  (:require [re-frame.core :as rf]
+            [schpaa.style.ornament :as sc]
+            [schpaa.debug :as l]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
+
+;sign out
+
+(defn signed-out-message [{:keys [on-close]}]
+  [sc/centered-dialog
+   {:style {:position   :relative
+            :overflow   :clip
+            :z-index    10
+            :max-height "80vh"}}
+   [:div.absolute.-top-8.-right-8.rotate-45.opacity-20
+    [:img.w-32.h-32 {:src "/img/logo-n.png"}]]
+   [sc/col-space-8
+    [sc/dialog-title' "NRPK"]
+    [sc/col-space-4
+     [sc/text1 {:style {:font-family "Merriweather"
+                        :line-height "var(--font-lineheight-4)"}
+                :class [:clear-left]} "Du har logget ut!"]]]])
+
+(rf/reg-fx :lab/logout-fx (fn [_] (db.auth/sign-out)))
+
+(rf/reg-event-fx :app/sign-out
+                 (fn [_ _] {:fx [[:lab/logout-fx nil]
+                                 [:dispatch [:modal.slideout/toggle
+                                             true
+                                             {:action     #(js/alert "!")
+                                              :context    "args"
+                                              :content-fn #(signed-out-message %)}]]
+                                 [:dispatch [:app/navigate-to [:r.forsiden]]]]}))
+
+;sign in
+
+(defn xx [{:keys [on-close context]}]
+  [sc/centered-dialog
+   {:style {:z-index    10
+            :width      "50ch"
+            :max-height "80vh"
+            :max-width  "90vw"}
+    :class []}
+   [sc/col-space-8
+    [sc/dialog-title' "Ekornets fødselsdag"]
+    [sc/col-space-4
+     ;[l/ppre-x context]
+     [sc/text1 {:style {:font-family "Merriweather"
+                        :line-height "var(--font-lineheight-4)"}
+                :class [:clear-left]} "Alle presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
+     [sc/subtext1 "Toon Tellegen"]]
+
+    [sc/row-ec
+     [hoc.buttons/cta {:on-click on-close} "(du har logget inn)"]]]])
+
+(rf/reg-event-fx :app/successful-login
+                 (fn [{db :db} [_ args]]
+                   {:fx [[:dispatch [:modal.slideout/toggle
+                                     true
+                                     {:action     #()
+                                      :context    args
+                                      :content-fn #(xx %)}]]]}))
+
+(rf/reg-fx :lab/login-fx (fn [_] (schpaa.style.dialog/open-dialog-signin)))
+
+(rf/reg-event-fx :app/login (fn [_ _]
+                              {:fx [[:lab/login-fx nil]]}))
+
+;region delete account
+
+(defn deleteaccount-form [{:keys [start selected on-close on-save] :as context}]
+  [sc/dropdown-dialog
+   [sc/col {:class [:space-y-8]}
+    [sc/col {:class [:space-y-2 :w-full]}
+     [sc/dialog-title "Slett konto"]
+     [sc/subtext-p "Kontoen din blir markert som inaktiv og du vil bli logget ut på alle enheter. Etter 14 dager slettes alle data relatert deg."]
+     [sc/text-p "Er du sikker på at du vil slette kontoen din?"]]
+    [sc/row-ec                                              ;{:class [:transition-none]}
+     [hoc.buttons/regular {:class    [:transition-none]
+                           :type     "button"
+                           :on-click #(on-close)} "Nei"]
+     [hoc.buttons/danger {:class    [:transition-none]
+                          :type     "button"
+                          :on-click #(on-save)} "Ja, slett!"]]]])
+
+(defn open-dialog-confirmaccountdeletion []
+  (rf/dispatch [:modal.slideout/toggle true
+                {:click-overlay-to-dismiss true
+                 ;:auto-dismiss             5000
+                 :content-fn               deleteaccount-form
+                 :buttons                  [[:cancel "Avbryt" nil] [:danger "Slett konto"]]
+                 :action                   #(tap> ["after pressing the primary button"])
+                 :on-primary-action        (fn [e] (tap> ["after closing the dialog" (keys e)]))}]))
+
+;endregion
