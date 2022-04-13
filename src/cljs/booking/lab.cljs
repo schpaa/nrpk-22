@@ -228,6 +228,12 @@
                                                     :modal.slideout/extra extra)
                                           (update db :modal.slideout/toggle (fnil not true)))))
 
+(rf/reg-event-db :modal.slideout/close
+                 (fn [db _] (assoc db :modal.slideout/toggle false)))
+
+(rf/reg-event-db :modal.slideout/clear
+                 (fn [db _] (assoc db :modal.slideout/extra nil)))
+
 ;region regular dialogs (centered)
 
 ;todo This just seems overly complicated, can you simplify this?
@@ -239,6 +245,10 @@
                                                     :lab/modaldialog-context extra)
                                           (assoc db :lab/modaldialog-visible false
                                                     :lab/modaldialog-context extra #_(fnil not true)))))
+
+(rf/reg-event-db :lab/modaldialog-close
+                 (fn [db _] (assoc db :lab/modaldialog-visible false)))
+
 
 ;endregion
 

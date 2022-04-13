@@ -238,10 +238,14 @@
 (rf/reg-event-db :lab/modal-selector
                  (fn [db [_ arg extra]]
                    (if (some? arg)
-                     (assoc db :lab/modal-selector arg
-                               :lab/modal-selector-extra extra)
+                     (if (true? arg)
+                       (assoc db :lab/modal-selector true
+                                 :lab/modal-selector-extra extra)
+                       (assoc db :lab/modal-selector false
+                                 #_#_:-lab/modal-selector-extra nil))
                      (update db :lab/modal-selector (fnil not true)))))
-
+(rf/reg-event-db :lab/modal-selector-clear (fn [db _]
+                                             (assoc db :lab/modal-selector-extra nil)))
 
 (defn window-anchor
   "Why this name? This function waits for a signal, subscribes to `vis` which when turned
@@ -253,8 +257,7 @@
   (let [{:keys [context vis close]} {:context @(rf/subscribe [:lab/modal-selector-extra])
                                      :vis     (rf/subscribe [:lab/modal-selector])
                                      :close   #(rf/dispatch [:lab/modal-selector false])}
-        {:keys [click-overlay-to-dismiss content-fn]
-         :or   {click-overlay-to-dismiss true}} context]
+        {:keys [click-overlay-to-dismiss content-fn] :or {click-overlay-to-dismiss true}} context]
     (let [open? @vis]
       [ui/transition
        {:appear true
@@ -277,15 +280,15 @@
             :entered    "translate-y-0"
             :leave      "ease-out duration-300"
             :leave-from "opacity-100  translate-y-0"
-            :leave-to   "opacity-0  translate-y-16"}
+            :leave-to   "opacity-0  translate-y-16"
+            :after-leave #(rf/dispatch [:lab/modal-selector-clear])}
            [:div {:style {:overflow         :hidden
-                          :background-color "var(--toolbar)"
-                          :-border-radius   "var(--radius-3)"}
+                          :background-color "var(--toolbar)"}
                   :class [:max-h-screen :outline-none :focus:outline-none]}
             (if content-fn
-              (content-fn (assoc context :on-click (fn [data]
+              (content-fn (assoc context :on-click (fn [{:keys [action]}]
                                                      (do
-                                                       (when (:action data)
-                                                         ((:action data)))
+                                                       (when action
+                                                         (action))
                                                        (close)))))
               #_[:div "Forgot content-fn?"])]]]]]])))

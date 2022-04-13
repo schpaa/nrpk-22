@@ -98,44 +98,37 @@
                                     (sc/badge-2 {:on-click #(schpaa.style.dialog/open-modal-boatinfo data)} number))))))
                [:div.inline-block date]])}))
 
-;region inn
+;region innlevering
 
-(defn disp [{:keys [data on-close on-save] :as ctx}]
+(defn disp [{:keys [data on-close on-save]}]
   (let [{:keys [initial]} data
         db (rf/subscribe [:db/boat-db])]
-    (r/with-let [
-                 st (r/atom initial)]
+    (r/with-let [st (r/atom initial)]
       [sc/dropdown-dialog
-       ;[l/ppre-x @db]
        [sc/col-space-8
         [sc/col-space-4
-         (for [[k v] @st]
-           [sc/row-sc-g2
-            ;(tap> (keys @db))
-            ;[l/ppre-x (get @db k) (keyword k)]
-            (schpaa.style.hoc.toggles/largeswitch-local
-              (r/cursor st [k])
-              (fn [t c] [sc/row-sc-g2
-                         t
-                         [sc/badge-2 {:style {:font-size "var(--font-size-4)"}} (:number (get @db k))]
-                         [sc/col {:style {:opacity (if @(r/cursor st [k]) 1 0.25)}}
-                          [sc/text1 (schpaa.components.views/normalize-kind (:kind (get @db k)))]
-                          [sc/small1 (:navn (get @db k))]]]))])]
+         (for [[k _v] @st
+               :let [{:keys [number kind navn]} (get @db k)]]
+           (schpaa.style.hoc.toggles/largeswitch-local
+             (r/cursor st [k])
+             (fn [t c] [:div {:style {:gap             "var(--size-2)"
+                                      :display         :flex
+                                      :align-items     :center
+                                      :justify-content :between
+                                      :width           "100%"}}
+                        [sc/badge-2 {:class [:big]} number]
+                        t
+                        [sc/col {:style {:flex    "1"
+                                         :opacity (if @(r/cursor st [k]) 1 0.25)}}
+                         [sc/text1 (schpaa.components.views/normalize-kind kind)]
+                         [sc/small1 navn]]])))]
         [sc/row-ec
-         [hoc.buttons/regular {:on-click (fn [] (swap! st #(reduce (fn [a [k _v]] (update a k (fnil not false))) % %)))} "Omvendt"]
+         #_[hoc.buttons/regular {:on-click (fn [] (swap! st #(reduce (fn [a [k _v]] (update a k (fnil not false))) % %)))} "Omvendt"]
          [:div.grow]
          [hoc.buttons/regular {:on-click on-close} "Avbryt"]
          [hoc.buttons/danger {:disabled (not (some true? (vals @st)))
                               :on-click #(on-save @st)} "Bekreft"]]]]
       (finally))))
-
-(comment
-  (do
-    (let [data {:a false :b false :c false}
-          st (atom data)]
-      #_(swap! st #(reduce (fn [a [k v]] (update a k (fnil not false))) % %))
-      ;(not-any? true? (vals @st))
-      (some true? (vec (vals @st))))))
 
 (defn innlevering
   "presents a window with a list of all entries, all selected by default and
@@ -148,9 +141,17 @@
                  ;called after the dialog has closed and after `action` is called (if defined)
                  ;todo Rename to `after-close`, action above is the primary
                  ;:on-primary-action #(tap> {"on-primary-action" %})
-                 :on-close   #(tap> "on-close")
+                 ;:on-close   #(tap> "on-close")
                  ;placed in function to allow displaying changes when hot-reloaded
                  :content-fn #(disp %)}]))
+
+(comment
+  (do
+    (let [data {:a false :b false :c false}
+          st (atom data)]
+      #_(swap! st #(reduce (fn [a [k v]] (update a k (fnil not false))) % %))
+      ;(not-any? true? (vals @st))
+      (some true? (vec (vals @st))))))
 
 ;endregion
 
@@ -171,8 +172,6 @@
         [shortcut-link :r.booking]
         [hoc.buttons/regular {:on-click prepare} "prep"]]
 
-       ;[shortcut-link :r.forsiden]
-       ;[shortcut-link :r.kalender]]
 
        (when @(rf/subscribe [:lab/nokkelvakt])
          [sc/col-space-8
@@ -215,4 +214,3 @@
               [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Mine bookinger"]]]
             [:div (for [e (:booking @data)]
                     [l/ppre-x e])]])])))
-
