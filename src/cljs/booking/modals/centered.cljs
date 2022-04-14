@@ -20,7 +20,8 @@
                  (fn [db _] (assoc db :lab/modaldialog-visible false)))
 
 (o/defstyled experimental :div
-  {:background-color "var(--toolbar)"
+  {:background-color "var(--toolbar-)"
+   :border-radius    "var(--radius-2)"
    :width            "18rem"}
   [:at-media {:max-width "511px"}
    {:width  "100vw"
@@ -124,25 +125,22 @@
                                  (when on-primary-action
                                    (on-primary-action context)))}
 
-                [experimental {:class [:w-screenx :sm:w-96
+                [experimental {;:style {:background-color "red"}
+                               :class [:w-screenx :sm:w-96
+
                                        ;:overflow-y-auto
                                        :xmax-h-screen
                                        :xmin-w-xs]}
-
-                 #_(when auto-dismiss
-                     [:svg.x-ml-4.x-mt-4.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}
-                      [:line {:stroke "var(--brand1)" :stroke-width 4 :x1 0 :y1 0 :x2 1 :y2 50}
-                       [:animate {:fill "freeze" :attributeName "y2" :from "50" :to "0" :dur (if auto-dismiss (str auto-dismiss "ms"))}]]])]
-
-                (when content-fn
-                  (content-fn (assoc context
-                                :on-close close
-                                :on-save #(do
-                                            (reset! write-success true)
-                                            (when action
-                                              (action {:context context
-                                                       :carry   %}))
-                                            ;todo remove comment to allow closing
-                                            (close))
-                                :action action))
-                  #_[:div "Forgot content-fn?"])]]]]])]))))
+                 ;[sc/title1 "test"]
+                 (when content-fn
+                   (content-fn (assoc context
+                                 :on-close close
+                                 :on-save #(do
+                                             (reset! write-success true)
+                                             (when action
+                                               (action {:context context
+                                                        :carry   %}))
+                                             ;todo remove comment to allow closing
+                                             (close))
+                                 :action action))
+                   #_[:div "Forgot content-fn?"])]]]]]])]))))

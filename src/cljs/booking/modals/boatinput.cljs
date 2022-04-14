@@ -458,10 +458,11 @@
            (fn [{:keys [on-close]}]
              [:div.overflow-y-auto.h-full
               [:div.flex.flex-col
-               {:style {:align-self :start
-                        :height     "100%"
-                        :xmax-width "18rem"
-                        :background "var(--toolbar-)"}}
+               {:style {:align-self    :start
+                        :border-radius "var(--radius-2)"
+                        :height        "100%"
+                        :xmax-width    "18rem"
+                        :background    "var(--toolbar-)"}}
                [:div.grow [boatpanel-window true false]]
                [sc/bottom-toolbar-style {:class [:sticky :bottom-0]}
 

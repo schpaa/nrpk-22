@@ -149,6 +149,7 @@
     :column-gap            "var(--size-2)"
     :row-gap               "var(--size-2)"
     ;:max-width "16rem"
+
     :xheight               "100%"
     :grid-template-columns "repeat(4,1fr)"
     :grid-auto-rows        "4rem"
