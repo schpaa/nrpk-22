@@ -6,7 +6,7 @@
             [schpaa.style.ornament :as sc]
     #_[schpaa.style.dialog :refer [open-dialog-logoutcommand
                                    open-dialog-sampleautomessage
-                                   open-dialog-sampleformmessage]
+                                   open-dialog-sampleformmessage]]
             [booking.content.booking-blog]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
@@ -23,7 +23,7 @@
             [booking.data]
             [booking.access]
             [clojure.set :as set]
-            [schpaa.style.input :as sci]]
+            [schpaa.style.input :as sci]
     #_[schpaa.style.button2 :as scb2
             [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput]
