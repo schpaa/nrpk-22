@@ -285,7 +285,8 @@
              "Nøkkelvakt"
              "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
-              (let [data [[:r.conditions "Plikter som nøkkelvakt"]
+              (let [data [[:r.user "Mine opplysninger"]
+                          [:r.conditions "Plikter som nøkkelvakt"]
                           [:r.utlan "Utlån på nøklevann"]
                           [:r.aktivitetsliste "Aktivitetsliste"]
                           [:r.terms "Betingelser"]
@@ -513,7 +514,7 @@
    :r.nokkelvakt
    (fn [r]
      [+page-builder r
-      {:render (fn [] [:div "ok"])}])
+      {:render (fn [] [sc/text1 "Dine utlån og vakter kommer her"])}])
 
 
    :r.admin

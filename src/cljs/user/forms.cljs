@@ -14,11 +14,11 @@
   [togglepanel :a/a1 "Generelle opplysninger"
    (fn [] [sc/row-sc-g4-w
            [sc/row-sc-g4-w
-            [input props :text [:w-56x] "Fullt navn" :navn]
-            [input props :text [:w-32] "Alias" :alias]]
+            [input props :text {:class [:w-56x]} "Fullt navn" :navn]
+            [input props :text {:class [:w-32]} "Alias" :alias]]
            [sc/row-sc-g4-w
-            [input props :text [:w-32] "Telefon" :telefon]
-            [input props :text [:w-64x] "E-post" :epost]]
+            [input props :text {:class [:w-32]} "Telefon" :telefon]
+            [input props :text {:class [:w-64x]} "E-post" :epost]]
 
            [sci/select props :våttkort [] "Våttkort" :våttkort "Velg"
             {"0" "Jeg har ikke våttkort"
@@ -32,14 +32,14 @@
    (fn []
      [:<>
       [:div.flex.gap-4.flex-wrap
-       [sci/input props :text [:w-32] "Våttkort-nr" :våttkortnr]]
+       [sci/input props :text {:class [:w-32]} "Våttkort-nr" :våttkortnr]]
       [:div.flex.gap-4.flex-wrap
        [hoc.buttons/checkbox (assoc props :handle-change
                                           #(let [value (-> % .-target .-checked)]
                                              (if value
                                                (enable :booking-expert)
                                                (disable :booking-expert))
-                                             (handle-change %))) [] "Jeg ønsker å bruke booking på sjøbasen" :request-booking]
+                                             (handle-change %))) [] "Jeg ønsker å booke båter på sjøbasen" :request-booking]
        [hoc.buttons/checkbox (assoc props :disabled (not (values :request-booking))) [] "Jeg ønsker også tilgang til de utfordrende båtene" :booking-expert]]])])
 
 (defn nokkelvakt-panel [{:keys [form-id handle-submit dirty readonly? values] :as props}]
@@ -48,10 +48,10 @@
      [sc/col-space-8
 
       [sc/row-sc-g4-w
-       [input props :text [:w-32] "Medlem fra år" :medlem-fra-år]
-       [input props :text [:w-32] "Fødselsår" :fødselsår]
-       [input props :text [:w-32] "Førstehjelp" :årstall-førstehjelpskurs]
-       [input props :text [:w-32] "Livredning" :årstall-livredningskurs]]
+       [input props :text {:class [:w-32]} "Medlem fra år" :medlem-fra-år]
+       [input props :text {:class [:w-32]} "Fødselsår" :fødselsår]
+       [input props :text {:class [:w-32]} "Førstehjelp" :årstall-førstehjelpskurs]
+       [input props :text {:class [:w-32]} "Livredning" :årstall-livredningskurs]]
 
       [sc/row-sc-g4-w
        [hoc.buttons/checkbox props [] "Jeg arbeider som instruktør for NRPK" :instruktør]
@@ -59,12 +59,7 @@
        [hoc.buttons/checkbox props [] "Kan stille som vikar" :vikar]
        [hoc.buttons/checkbox props [] "Kort reisevei" :kort-reisevei]]
 
-      [hoc.buttons/checkbox props [] "Jeg ønsker å slutte som nøkkelvakt" :utmeldt]
-
-      #_[:div.flex.gap-4.flex-wrap.justify-end
-         [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Timekrav" :name :timekrav]
-         [fields/text (-> props fields/small-field (assoc :readonly? true)) :label "Nøkkelnummer" :name :nøkkelnummer]
-         [fields/date (-> props fields/date-field (assoc :readonly? true)) :label "Godkjent" :name :godkjent]]])])
+      [hoc.buttons/checkbox props [] "Jeg ønsker å slutte som nøkkelvakt" :utmeldt]])])
 
 (defn status-panel [{:keys [handle-change set-values disable enable] :as props}]
   [togglepanel :a/a5 "Status"
@@ -78,7 +73,7 @@
                                                   (when value
                                                     (set-values {:dato-godkjent-booking (str (t/date))}))
                                                   (handle-change %))) [:w-44] "Godkjent booking" :booking-godkjent]
-        [input props :date [:w-36] "Godkjent booking" :dato-godkjent-booking]]
+        [input props :date {:class [:w-36]} "Godkjent booking" :dato-godkjent-booking]]
 
        [sc/row-sc-g2
         [hoc.buttons/checkbox (assoc props
@@ -88,14 +83,14 @@
                                                         (set-values {:dato-godkjent-nøkkelvakt (str (t/date))}))
                                                     (disable :dato-godkjent-nøkkelvakt))
                                                   (handle-change %))) [:w-44] "Godkjent nøkkelvakt" :godkjent]
-        [input props :date [:w-36] "Godkjent nøkkelvakt" :dato-godkjent-nøkkelvakt]]
+        [input props :date {:class [:w-36]} "Godkjent nøkkelvakt" :dato-godkjent-nøkkelvakt]]
        [sc/row-sc-g2
-        [input props :text [:w-20] "Nøkkelnr" :nøkkelnummer]
-        [input props :date [:w-36] "Utlevert" :dato-mottatt-nøkkel]
-        [input props :date [:w-36] "Innlevert" :dato-innlevert-nøkkel]]
+        [input props :text {:class [:w-20]} "Nøkkelnr" :nøkkelnummer]
+        [input props :date {:class [:w-36]} "Utlevert" :dato-mottatt-nøkkel]
+        [input props :date {:class [:w-36]} "Innlevert" :dato-innlevert-nøkkel]]
 
        [sc/row-sc-g4-w
-        [input props :text [:w-20] "Timekrav" :timekrav]
+        [input props :text {:class [:w-20]} "Timekrav" :timekrav]
         [hoc.buttons/checkbox props [] "Stjerne" :stjerne]
         [hoc.buttons/checkbox props [] "Kald periode" :kald-periode]
         [hoc.buttons/checkbox props [] "Utmeldt" :utmeldt]

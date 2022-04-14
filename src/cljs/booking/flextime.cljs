@@ -27,9 +27,11 @@
         (if (t/<= (t/date date) (t/date))
           [arco.react/time-since {:times  [(if (t/date-time? date)
                                              (t/date-time date)
-                                             (t/at (t/date date) (t/noon)))
-                                           (t/now)]
-                                  :config booking.data/arco-datetime-config}
+                                             (t/at (t/date date) (t/midnight)))
+                                           (if (t/date-time? date)
+                                             (t/now)
+                                             (t/at (t/date) (t/midnight)))]
+                                  :config (conj {:stringify? true} booking.data/arco-datetime-config)}
            (fn [formatted-t]
              [time-format on-click (formatted :text formatted-t)])]
           [arco.react/time-to {:times  [(if (t/date-time? date)

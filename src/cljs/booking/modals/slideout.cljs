@@ -89,12 +89,11 @@
                                (rf/dispatch [:modal.slideout/clear]))}
 
 
-              [:div {:-style {:width     "512px"
-                              :max-width "95vw"}
-                     :class  [:w-screen
-                              ;:max-h-screen :min-w-xs :max-w-md
-                              :max-w-md
-                              :overflow-y-auto]}
+              [:div {:style {:width     "512px"
+                             :max-width "90vw"}
+                     :class [:w-screenx
+                             :xmax-w-md
+                             :overflow-y-auto]}
 
                (when auto-dismiss
                  [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}

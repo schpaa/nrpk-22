@@ -256,10 +256,11 @@
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
    (if date
-     [flex-datetime date (fn [type d]
-                           (if (= :date type)
-                             [sc/subtext {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-                             [sc/subtext d]))])
+     [booking.flextime/flex-datetime date (fn [type d]
+                                            ;[l/ppre-x type d]
+                                            (if (= :date type)
+                                              [sc/subtext {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+                                              [sc/subtext d]))])
    [:div.flex.items-baseline.gap-2
     [sc/fp-text text]]])
 
@@ -423,15 +424,23 @@
      [sc/text1 "1 utlån nå"]]]])
 
 (defn news-feed []
-  [:div.space-y-4
+  (let [er-nøkkelvakt? (rf/subscribe [:lab/nokkelvakt])]
+    [:div.space-y-4
 
-   [:div {:style {:display               "grid"
-                  :gap                   "var(--size-4) var(--size-2)"
-                  :grid-template-columns "1fr"}}
-    [listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
-    [listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
-    [listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
-    [listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]])
+     [:div {:style {:display               "grid"
+                    :gap                   "var(--size-4) var(--size-2)"
+                    :grid-template-columns "1fr"}}
+      (when @er-nøkkelvakt?
+        [listitem' (t/at (t/date "2022-04-14") (t/time "18:00"))
+         [sc/col-space-2
+          [:div "Er du nøkkelvakt må du se til at våre opplysningene om deg fremdeles er riktige. "]
+          [:span "Dine opplysninger finner du "
+           [sc/link {:style {:display :inline-block}
+                     :href  (kee-frame.core/path-for [:r.user])} "her"]]]])
+      [listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
+      [listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
+      [listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
+      [listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]]))
 
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
