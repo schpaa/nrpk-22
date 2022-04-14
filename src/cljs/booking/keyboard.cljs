@@ -16,8 +16,8 @@
                                                   :keyCode keycodes/F}]]
                    [[:lab/toggle-boatpanel] [{:ctrlKey true
                                               :keyCode keycodes/E}]]
-                   [[:lab/toggle-number-input] [{:metaKey true
-                                                 :keyCode keycodes/E}]]
+                   #_[[:lab/toggle-number-input] [{:metaKey true
+                                                   :keyCode keycodes/E}]]
                    #_[[:lab/toggle-search-mode] [{:ctrlKey true
                                                   :keyCode keycodes/F}]]]
       :prevent-default-keys

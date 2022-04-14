@@ -241,16 +241,16 @@
         user-auth (rf/subscribe [::db/user-auth])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? #_(not @search) @(rf/subscribe [:lab/at-least-registered]))
-      [sc/bottom-toolbar-style
-       ;:div.sm:hidden.flex.gap-0.border-t
-       #_{:xstyle {:width           "100%"
-                   :justify-content :space-around
-                   :height          "var(--size-10)"
-                   :min-height      "var(--size-10)"
-                   :padding-inline  "var(--size-2)"
-                   :box-shadow      "var(--inner-shadow-2)"
-                   :border-color    "var(--toolbar-)"
-                   :background      "var(--toolbar)"}}]
+      #_[sc/bottom-toolbar-style
+         ;:div.sm:hidden.flex.gap-0.border-t
+         #_{:xstyle {:width           "100%"
+                     :justify-content :space-around
+                     :height          "var(--size-10)"
+                     :min-height      "var(--size-10)"
+                     :padding-inline  "var(--size-2)"
+                     :box-shadow      "var(--inner-shadow-2)"
+                     :border-color    "var(--toolbar-)"
+                     :background      "var(--toolbar)"}}]
 
       (into [sc/bottom-toolbar-style]
             (mapv vertical-button
@@ -458,6 +458,7 @@
 
           [booking.modals.slideout/render]
           [booking.modals.centered/render]
+          [booking.modals.boatinput/render-boatinput]
           [booking.modals.commandpalette/window-anchor]
 
           (let [content [:div.flex.flex-col

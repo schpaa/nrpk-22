@@ -548,11 +548,11 @@ outline: 2px solid #a0a8;
 .blinking-cursor {
   font-weight: 500;
   font-size: unset;
-  -webkit-animation: 2s blinking step-end infinite;
-  -moz-animation: 1s blinking step-end infinite;
-  -ms-animation: 1s blinking step-end infinite;
-  -o-animation: 1s blinking step-end infinite;
-  animation: 2s blinking step-end infinite;
+  -webkit-animation: 1.4s blinking step-end infinite;
+  -moz-animation: 1.4s blinking step-end infinite;
+  -ms-animation: 1.4s blinking step-end infinite;
+  -o-animation: 1.4s blinking step-end infinite;
+  animation: 1.4s blinking step-end infinite;
 }
 
 @keyframes "blinking" {
@@ -560,6 +560,6 @@ outline: 2px solid #a0a8;
     color: transparent;
   }
   20% {
-    color: var(--red-5);
+    color: var(--text0);
   }
 }

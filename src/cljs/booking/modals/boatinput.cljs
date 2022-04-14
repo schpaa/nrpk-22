@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
+            [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.icon :as icon]
             [clojure.set :as set]
@@ -11,7 +12,8 @@
             [goog.events.KeyCodes :as keycodes]
             [booking.ico :as ico]
             [booking.common-widgets :refer [vertical-button]]
-            [booking.modals.boatinput.styles :as bis]))
+            [booking.modals.boatinput.styles :as bis]
+            [headlessui-reagent.core :as ui]))
 
 (defn lookup [id]
   (if (< 3 (count id))
@@ -361,7 +363,7 @@
                      ;:grid-column    "2/span 2"
                      :padding-inline "var(--size-2)"
                      :border-radius  "var(--radius-1)"
-                     :background     "var(--field1)"
+                     :background     "var(--field2)"
                      :box-shadow     "var(--inner-shadow-0)"}}
             [:div.flex.items-center.h-full
              {:style {:font-family "Oswald"
@@ -450,53 +452,94 @@
                                                       (assoc :item e)))))} e])
                 (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))
 
-(defn boatpanel [{db :db}]
+(defn window-content [{:keys [on-close]}]
+  (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
+        right? (schpaa.state/listen :lab/menu-position-right)] ;[sc/centered-dialog]
+    [:div
+     {:style {:background-color "var(--toolbar)"
+              :display          :grid
+              :overflow-y       :auto
+              :place-content    :center}}
+     [:div
+      {:style {:width      "18rem"
+               :max-height "90vh"}}
+      [boatpanel-window @mobile? @right?]]]))
+
+(rf/reg-sub :modal.boatinput/is-visible :-> #(get % :modal.boatinput/visible false))
+(rf/reg-sub :modal.boatinput/get-context :-> :modal.boatinput/context)
+
+(rf/reg-event-db :modal.boatinput/show (fn [db [_ context]]
+                                         (assoc db :modal.boatinput/visible true
+                                                   :modal.boatinput/context context)))
+
+(rf/reg-event-db :modal.boatinput/close (fn [db _]
+                                          (assoc db :modal.boatinput/visible false)))
+
+(rf/reg-event-db :modal.boatinput/clear (fn [db _]
+                                          ;dont clear the state
+                                          ;(reset! st {})
+                                          (assoc db :modal.boatinput/context nil)))
+
+(defn open-boatpanel
+  ""
+  [{db :db}]
   {:fx [[:dispatch
-         [:lab/modaldialog-visible
-          (-> db :lab/modaldialog-visible not)
-          {:content-fn
-           (fn [{:keys [on-close]}]
-             [:div.overflow-y-auto.h-full
-              [:div.flex.flex-col
-               {:style {:align-self    :start
-                        :border-radius "var(--radius-2)"
-                        :height        "100%"
-                        :xmax-width    "18rem"
-                        :background    "var(--toolbar-)"}}
-               [:div.grow [boatpanel-window true false]]
-               [sc/bottom-toolbar-style {:class [:sticky :bottom-0]}
+         [:modal.boatinput/show                             ;lab/modaldialog-visible ;:lab/modal-selector
+          ;(-> db :modal.boatinput/visible not)
+          {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
+           :content-fn        #(window-content %)
+           #_(fn [{:keys [on-close]}]
+               #_[:div
+                  {:style {:align-self       :start
+                           :border-radius    "var(--radius-2)"
+                           ;:height           "100%"
+                           :width            "18rem"        ;"100%"
 
-                [vertical-button
-                 {:icon     ico/closewindow
-                  :on-click on-close}]
+                           ;:xmax-width       "18rem"
+                           :background-color "var(--toolbar)"}}
+                  ;[boatpanel-window true false]
+                  [:div.bg-altx.xw-full.overflow-auto       ;{:style {:height "150vh"}}
+                   ;[:div.grid {:style {:height "150vh"}}
+                   #_[boatpanel-window true false]
+                   [:div {:style {:max-height "90vh"
+                                  :height     "100%" :xwidth "20rem"}}
+                    #_(for [e (range 50)]
+                        [sc/text1 e])
+                    [boatpanel-window true false]
 
-                [vertical-button
-                 {:xicon     [:> outline/DotsHorizontalIcon]
-                  :disabled  true
-                  :xon-click on-close}]
-                [vertical-button
-                 {:xicon     [:> outline/EmojiSadIcon]
-                  :disabled  true
-                  :xon-click on-close}]
-                [vertical-button
-                 {:xicon     [:> solid/FingerPrintIcon]
-                  :disabled  true
-                  :xon-click on-close}]
-                [vertical-button
-                 {:icon     ico/checkCircle
-                  :on-click on-close}]
+                    [sc/bottom-toolbar-style {:-class [:sticky :bottom-0]}
 
-                #_[sc/row-center {:xclass [:shrink-0 :xpx-4 :z-100]
-                                  :style  {
-                                           :height            "5rem"
-                                           :xmin-height       "5rem"
-                                           :xbackground-color "var(--toolbar)"
-                                           :xalign-items      :center}}
-                   [sc/toolbar-button {:sclass   [:h-8
-                                                  :rounded-full]
-                                       :on-click on-close} [sc/icon-large ico/closewindow]]]]]])}]]]})
+                     [vertical-button
+                      {:icon     ico/closewindow
+                       :on-click on-close}]
 
-(rf/reg-event-fx :lab/toggle-boatpanel [rf/trim-v] boatpanel)
+                     [vertical-button
+                      {:xicon     [:> outline/DotsHorizontalIcon]
+                       :disabled  true
+                       :xon-click on-close}]
+                     [vertical-button
+                      {:xicon     [:> outline/EmojiSadIcon]
+                       :disabled  true
+                       :xon-click on-close}]
+                     [vertical-button
+                      {:xicon     [:> solid/FingerPrintIcon]
+                       :disabled  true
+                       :xon-click on-close}]
+                     [vertical-button
+                      {:icon     ico/checkCircle
+                       :on-click on-close}]
+
+                     #_[sc/row-center {:xclass [:shrink-0 :xpx-4 :z-100]
+                                       :style  {
+                                                :height            "5rem"
+                                                :xmin-height       "5rem"
+                                                :xbackground-color "var(--toolbar)"
+                                                :xalign-items      :center}}
+                        [sc/toolbar-button {:sclass   [:h-8
+                                                       :rounded-full]
+                                            :on-click on-close} [sc/icon-large ico/closewindow]]]]]]])}]]]})
+
+(rf/reg-event-fx :lab/toggle-boatpanel [rf/trim-v] open-boatpanel)
 
 (rf/reg-sub :lab/number-input2 :-> :lab/number-input2)
 
@@ -573,3 +616,65 @@
 ;endregion
 
 ;endregion
+
+(o/defstyled experimental :div
+  {:display          :grid
+   :place-content    :end
+   :background-color "var(--toolbar-)"
+   :border-radius    "var(--radius-2)"
+   :width            "18rem"
+   :height           "100%"}
+  [:at-media {:max-width "511px"}
+   {:width  "100vw"
+    :height "100vh"}]
+  [:at-media {:min-width "512px"}])
+
+(defn render-boatinput
+  "centered dialog used by this component"
+  []
+  (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.boatinput/get-context])
+                                     :vis     (rf/subscribe [:modal.boatinput/is-visible])
+                                     :close   #(rf/dispatch [:modal.boatinput/close])}
+        {:keys [action on-primary-action click-overlay-to-dismiss content-fn auto-dismiss]
+         :or   {click-overlay-to-dismiss true}} context]
+    (r/with-let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
+                 write-success (r/atom false)]
+      (let [open? @vis]
+        [ui/transition
+         {:appear      true
+          :after-enter #(tap> "modaldialog-centered after-enter")
+          :show        open?}
+         [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
+          [:div.fixed
+           {:class (cond
+                     @mobile? :inset-0
+                     (not @(schpaa.state/listen :lab/menu-position-right)) :right-8
+                     :else :left-8)}
+           [:div.text-center
+            [schpaa.style.dialog/standard-overlay]
+            [:span.inline-block.h-screen.align-middle
+             (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
+            [ui/transition-child
+             {
+              :class       [:inline-block :align-middle :text-left :transform
+                            (some-> (sc/inner-dlg) last :class first)]
+              :enter       "ease-out duration-100"
+              :enter-from  "opacity-0  translate-y-16"
+              :enter-to    "opacity-100  translate-y-0"
+              :leave       "ease-in duration-200"
+              :leave-from  "opacity-100  translate-y-0"
+              :leave-to    "opacity-0  translate-y-32"
+              :after-leave #(when on-primary-action
+                              (on-primary-action context))}
+             (when content-fn
+               (content-fn (assoc context
+                             :on-close close
+                             :on-save #(do
+                                         (reset! write-success true)
+                                         (when action
+                                           (action {:context context
+                                                    :carry   %}))
+                                         ;todo remove comment to allow closing
+                                         (close))
+                             :action action)))]]]]]))))
+

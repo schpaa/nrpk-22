@@ -433,7 +433,7 @@
       (when @er-nøkkelvakt?
         [listitem' (t/at (t/date "2022-04-14") (t/time "18:00"))
          [sc/col-space-2
-          [:div "Er du nøkkelvakt må du se til at våre opplysningene om deg fremdeles er riktige."]
+          [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at våre opplysningene om deg fremdeles er riktige."]
           [:span "Dine opplysninger finner du "
            [sc/link {:style {:display :inline-block}
                      :href  (kee-frame.core/path-for [:r.user])} "her"]]]])

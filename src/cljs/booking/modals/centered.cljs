@@ -20,13 +20,18 @@
                  (fn [db _] (assoc db :lab/modaldialog-visible false)))
 
 (o/defstyled experimental :div
-  {:background-color "var(--toolbar-)"
+  {:display          :grid
+   :place-content    :end
+   :background-color "var(--toolbar-)"
    :border-radius    "var(--radius-2)"
-   :width            "18rem"}
+   :width            "100%"
+   :height           "100%"}
   [:at-media {:max-width "511px"}
    {:width  "100vw"
     :height "100vh"}]
   [:at-media {:min-width "512px"}])
+
+
 
 (defn render
   "centered dialog used by boatinput and feedback"
@@ -104,9 +109,8 @@
                              (when auto-dismiss (open)))
              :show        open?}
             [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
-             [:div.fixed
-              {:class [(if @(schpaa.state/listen :lab/menu-position-right) :sm:left-16 :sm:right-16)]}
-
+             [:div.fixed.inset-0
+              ;{:class [(if @(schpaa.state/listen :lab/menu-position-right) :sm:left-16 :sm:right-16)]}
               [:div.text-center
                [schpaa.style.dialog/standard-overlay]
                [:span.inline-block.h-screen.align-middle
@@ -125,13 +129,8 @@
                                  (when on-primary-action
                                    (on-primary-action context)))}
 
-                [experimental {;:style {:background-color "red"}
-                               :class [:w-screenx :sm:w-96
-
-                                       ;:overflow-y-auto
-                                       :xmax-h-screen
-                                       :xmin-w-xs]}
-                 ;[sc/title1 "test"]
+                [experimental {:style  {:-background-color "red"}
+                               :xclass [:sm:w-96]}
                  (when content-fn
                    (content-fn (assoc context
                                  :on-close close

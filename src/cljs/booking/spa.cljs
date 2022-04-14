@@ -226,6 +226,8 @@
          (fn []
            [sc/col-space-1
 
+            (-> "##`Under arbeid, men du kan bidra! Send en tilbakemelding (se nederst på siden)`" schpaa.markdown/md->html sc/markdown)
+
             [sc/fp-summary-detail-always-show-links
              nil
              ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
