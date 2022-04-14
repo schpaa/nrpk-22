@@ -4,9 +4,6 @@
             [reagent.ratom]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
-    #_[schpaa.style.dialog :refer [open-dialog-logoutcommand
-                                   open-dialog-sampleautomessage
-                                   open-dialog-sampleformmessage]]
             [booking.content.booking-blog]
             [schpaa.style.menu :as scm]
             [schpaa.style.button :as scb]
@@ -24,7 +21,6 @@
             [booking.access]
             [clojure.set :as set]
             [schpaa.style.input :as sci]
-    #_[schpaa.style.button2 :as scb2
             [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput]
             [booking.modals.feedback]
@@ -32,7 +28,7 @@
             [booking.modals.slideout]
             [booking.modals.centered]
             [booking.modals.mainmenu :refer [main-menu]]
-            [booking.account]]))
+            [booking.account]))
 
 ;region styles
 
