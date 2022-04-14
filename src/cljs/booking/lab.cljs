@@ -334,48 +334,64 @@
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[master-switch ua {:keys [status access] :as m}] _]
+            (fn [[master-switch {:keys [uid] :as ua} {:keys [status access] :as m}] _]
               (if master-switch
                 (some? (some #{:admin} (or access [])))
-                (if-let [x (booking.access/compute-access-tokens ua)]
-                  (let [[s a] x]
-                    #_(tap> {:s s
-                             :a a})
-                    (and (= s :member)
-                         (= :admin (some #{:admin} (or a [])))))
-                  false))))
+                (let [u @(db/on-value-reaction {:path ["users" uid]})]
+                  (if-let [x (booking.access/compute-access-tokens' u)]
+                    (let [[s a] x]
+                      #_(tap> {:s s
+                               :a a})
+                      (and (= s :member)
+                           (= :admin (some #{:admin} (or a [])))))
+                    false)))))
 
 (rf/reg-sub :lab/booking
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            (fn [[master-switch ua {:keys [status access] :as m}] _]
+            (fn [[master-switch {:keys [uid] :as ua} {:keys [status access] :as m}] _]
               (if master-switch
                 (and (= status :member)
                      (some? (some #{:booking} (or access []))))
-                (if-let [x (booking.access/compute-access-tokens ua)]
-                  (let [[s a] x]
-                    #_(tap> {:s s
-                             :a a})
-                    (and (= s :member)
-                         (= :booking (some #{:booking} (or a [])))))
-                  false))))
+                (let [u @(db/on-value-reaction {:path ["users" uid]})]
+                  (if-let [x (booking.access/compute-access-tokens' u)]
+                    (let [[s a] x]
+                      #_(tap> {:s s
+                               :a a})
+                      (and (= s :member)
+                           (= :booking (some #{:booking} (or a [])))))
+                    false)))))
+
+(rf/reg-sub :user-data
+            (fn [[_ uid]]
+              (when-let [id @(db.auth/user-info)]
+                (db/on-value-reaction {:path ["users" id]})))
+            (fn [u _]
+              u))
 
 (rf/reg-sub :lab/nokkelvakt
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
+            #_(fn [_]
+                (let [uid (:uid @(db.auth/user-info))]
+                  (tap> {"uid" uid})
+                  (db/on-value-reaction {:path ["users" uid]})))
             (fn [[master-switch ua {:keys [status access] :as m}] _]
+              ;(tap> {:user u})
               (if master-switch
                 (and (= status :member)
                      (some? (some #{:nøkkelvakt} (or access []))))
-                (if-let [x (booking.access/compute-access-tokens ua)]
-                  (let [[s a] x]
-                    #_(tap> {:s s
-                             :a a})
-                    (and (= s :member)
-                         (= :nøkkelvakt (some #{:nøkkelvakt} (or a [])))))
-                  false))))
+                (let [uid (:uid ua)
+                      u @(db/on-value-reaction {:path ["users" uid]})]
+                  (tap> {:user u})
+                  (if-let [[s a _ :as x] (booking.access/compute-access-tokens' u)]
+                    (do
+                      (tap> {"X" x})
+                      (and (= s :member)
+                           (= :nøkkelvakt (some #{:nøkkelvakt} (or a [])))))
+                    false)))))
 
 (rf/reg-sub :lab/all-access-tokens
             :<- [:lab/master-state-emulation]
@@ -384,7 +400,8 @@
             (fn [[master-switch ua {:keys [status access uid]}] _]
               (if master-switch
                 [status access uid]
-                (booking.access/compute-access-tokens ua))))
+                (let [u @(db/on-value-reaction {:path ["users" (:uid ua)]})]
+                  (booking.access/compute-access-tokens' u)))))
 
 ;endregion
 

@@ -403,7 +403,7 @@
   (let [route @(rf/subscribe [:kee-frame/route])
         access-tokens @(rf/subscribe [:lab/all-access-tokens])]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
-     [:div.mx-auto.max-w-lg.py-8
+     [:div.mx-auto.max-w-xl.py-8
       [:div.mx-4
        [sc/col-space-4
         #_(when goog.DEBUG

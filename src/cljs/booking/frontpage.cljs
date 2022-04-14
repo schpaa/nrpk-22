@@ -424,13 +424,13 @@
      [sc/text1 "1 utlån nå"]]]])
 
 (defn news-feed []
-  (let [er-nøkkelvakt? (rf/subscribe [:lab/nokkelvakt])]
+  (let [er-nokkelvakt? (rf/subscribe [:lab/nokkelvakt])]
     [:div.space-y-4
 
      [:div {:style {:display               "grid"
                     :gap                   "var(--size-4) var(--size-2)"
                     :grid-template-columns "1fr"}}
-      (when @er-nøkkelvakt?
+      (when @er-nokkelvakt?
         [listitem' (t/at (t/date "2022-04-14") (t/time "18:00"))
          [sc/col-space-2
           [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at våre opplysningene om deg fremdeles er riktige."]
