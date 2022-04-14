@@ -400,15 +400,11 @@
                   (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
 
 (defn after-content []
-  (let [route @(rf/subscribe [:kee-frame/route])
-        access-tokens @(rf/subscribe [:lab/all-access-tokens])]
+  (let [route @(rf/subscribe [:kee-frame/route])]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
      [:div.mx-auto.max-w-xl.py-8
       [:div.mx-4
        [sc/col-space-4
-        #_(when goog.DEBUG
-            [l/ppre-x access-tokens])
-
         [sc/col-space-1
          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
          [sc/col-space-1
@@ -423,17 +419,12 @@
                                   :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
         [sc/row-ec
          [hoc.buttons/reg-pill-icon
-          {:style    {:background    "var(--gray-8)"
-                      :border-radius "var(--radius-round)"
-                      :box-shadow    "var(--shadow-1)"
-                      :border        "1px solid var(--gray-8)"
-                      :color         "var(--gray-0)"}
-           :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+          {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
           ico/tilbakemelding "Tilbakemelding"]]
         [sc/col
          [sc/small1 (or booking.data/VERSION "version")]
-         [sc/small1 (or booking.data/DATE "date")]]
-        #_[:a {:href "/img/bg/bg-dark-1.jpg" :download "my-download.pdf"} "Download File"]]]]]))
+         [sc/small1 (or booking.data/DATE "date")]]]]]]))
+
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [switch? (schpaa.state/listen :lab/menu-position-right)

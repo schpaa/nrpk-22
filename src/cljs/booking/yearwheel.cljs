@@ -134,10 +134,7 @@
   ([modify?]
    [sc/row-sc-g2-w
     (when modify?
-      [hoc.buttons/pill
-       {:class    [:cta :pad-right]
-        :on-click #(edit-event nil)}
-       (hoc.buttons/icon-with-caption (sc/icon-small ico/plus) "Ny aktivitet")])
+      (hoc.buttons/cta-pill-icon {:on-click #(edit-event nil)} ico/plus "Ny aktivitet"))
     [hoc.buttons/pill
      {:class    [:regular :pad-right]
       :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
@@ -146,7 +143,7 @@
      {:on-click #(js/alert "wat")
       :class    [:regular :pad-right]
       :disabled true}
-     (hoc.buttons/icon-with-caption (sc/icon-small ico/nullstill) "Nullstill")]]))
+     (hoc.buttons/icon-with-caption ico/nullstill "Nullstill")]]))
 
 (defn panel
   ([]
