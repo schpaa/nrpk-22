@@ -54,54 +54,6 @@
                                                  (t/at (t/date (:end-date e)) (t/time (:end-time e)))
                                                  (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "er før 'fra kl'"))})))
 
-(defn standard-menu-2 [data]
-  [[(sc/icon-large [:> solid/TrashIcon]) "Fjern alle" #()]
-   [(sc/icon-large [:> solid/CursorClickIcon]) "Siste valg" #()]
-   nil
-   [(sc/icon-large [:> solid/CogIcon]) "Book nå" #()]])
-
-(defn complex-menu [settings]
-  (let [show-1 #(swap! settings assoc :setting-1 %)
-        select-2 #(swap! settings assoc :setting-2 %)]
-    (concat [[(fn [v] (sc/icon-large (when v [:> solid/ShieldCheckIcon])))
-              (fn [e] (if e "Long" "Short"))
-              #(show-1 (not (:setting-1 @settings)))
-              false
-              #(:setting-1 @settings)]]
-            [nil]
-            (let [data [["small" 1]
-                        ["medium" 2]
-                        ["large" 3]]]
-              (map (fn [[caption value]]
-                     [(fn [v] (sc/icon-large (when (= value v) [:> outline/CheckIcon])))
-                      caption
-                      #(select-2 value)
-                      false
-                      #(:setting-2 @settings)])
-                   data))
-            [nil]
-            [[(sc/icon-large [:> solid/BadgeCheckIcon])
-              "Badge"
-              nil
-              true
-              #()]
-             [(sc/icon-large [:> solid/LightBulbIcon])
-              "Bulba?"
-              nil
-              true
-              #()]])))
-
-(defn timeinput-shortcuts-definition [settings-atom]
-  [[:header [sc/row {:class [:justify-between :items-end]}
-             [sc/title1 "Top"]
-             [sc/pill (or booking.data/VERSION "dev.x.y")]]]
-   [:menuitem [(sc/icon-large [:> solid/BadgeCheckIcon])
-               "Badge"
-               nil
-               true
-               #()]]
-   [:footer [sc/row-end {:class [:gap-4]} [sc/small1 "Terms"] [sc/small1 "Privacy"]]]])
-
 (defn time-input-form [time-state]
   (r/with-let [lightning-visible (r/atom nil)]
     (let [toggle-lightning #(swap! lightning-visible (fnil not false))]
@@ -220,12 +172,6 @@
     :expanded true
     :selected false}])
 
-
-;region regular dialogs (centered)
-
-
-;endregion
-
 (rf/reg-event-fx :lab/qr-code-for-current-page
                  (fn [_ _]
                    (let [link @(rf/subscribe [:kee-frame/route])]
@@ -283,8 +229,9 @@
                    {:fx [[:dispatch [:app/navigate-to [:r.fileman-temporary]]]
                          [:lab/open-new-blog-entry-dialog nil]]}))
 
-(rf/reg-sub :lab/has-chrome (fn [db]
-                              (get-in db [:settings :state :lab/toggle-chrome] true)))
+(rf/reg-sub :lab/has-chrome
+            (fn [db]
+              (get-in db [:settings :state :lab/toggle-chrome] true)))
 
 (rf/reg-event-db :lab/toggle-chrome
                  (fn [db _]

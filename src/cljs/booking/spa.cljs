@@ -21,14 +21,12 @@
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
             [schpaa.style :as st]
-    ;[schpaa.style.booking]
             [schpaa.style.menu]
             [schpaa.style.ornament :as sc]
             [schpaa.time]
             [tick.core :as t]
             [user.views]
-            [schpaa.style.dialog :refer [open-dialog-signin open-dialog-sampleautomessage]]
-            [schpaa.style.button2 :as scb2]
+            [schpaa.style.dialog :refer [open-dialog-sampleautomessage]]
             [times.api :as ta]
             [schpaa.time]
             [booking.aktivitetsliste]
@@ -503,7 +501,7 @@
                     [sc/row-end
                      [hoc.buttons/cta
                       {:type     "button"
-                       :on-click open-dialog-signin}
+                       :on-click #(js/alert "todo!")}
                       "Begynn her"]]])}]))
 
    :r.yearwheel
