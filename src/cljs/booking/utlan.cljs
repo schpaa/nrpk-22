@@ -168,9 +168,9 @@
           (count @(db/on-value-reaction {:path ["boat-brand"]}))
           (count @(db/on-value-reaction {:path ["boad-item"]}))]
 
-       [sc/row-sc-g1
+       [sc/row-sc-g2
         [shortcut-link :r.booking]
-        [hoc.buttons/regular {:on-click prepare} "prep"]]
+        [hoc.buttons/reg-pill {:on-click prepare} "Prep!"]]
 
 
        (when @(rf/subscribe [:lab/nokkelvakt])

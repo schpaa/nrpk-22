@@ -334,11 +334,12 @@
                                                  [user.forms/changelog-panel uid props])])))
                 [:div
                  [sc/row-ec {:class [:py-4]}
-                  [hoc.buttons/regular {:type     :button
-                                        :on-click #(set-values initial-values)
-                                        :disabled (empty? dirty)} "Tilbakestill"]
-                  [hoc.buttons/regular {:type     :submit
-                                        :disabled (empty? dirty)} "Lagre"]]]
+                  (when-not (empty? dirty)
+                    [hoc.buttons/regular {:type     :button
+                                          :on-click #(set-values initial-values)
+                                          :disabled (empty? dirty)} "Tilbakestill"])
+                  [hoc.buttons/cta {:type     :submit
+                                    :disabled (empty? dirty)} "Lagre"]]]
                 [sist-oppdatert uid values]]])])]))))
 
 (defn my-info [r]
