@@ -44,7 +44,7 @@
         [sc/text-clear (t/format "' kl ' HH.mm" end)]]])))
 
 (defn boat-numbers [selected]
-  [:div.inline-flex.gap-1 (mapv (fn [e] [sc/badge {:on-click #(open-modal-boatinfo e)}
+  [:div.inline-flex.gap-1 (mapv (fn [e] [sc/badge {:on-click #(js/alert "open-modal-boatinfo {:data ? :uid uid}")}
                                          (:number e)]) selected)])
 
 (o/defstyled listitem-past-present-future :div

@@ -169,7 +169,7 @@
 
 ;endregion
 
-(defn render []
+(defn render [uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
@@ -209,17 +209,15 @@
                            :let [date (some-> date booking.flextime/relative-time)]]
                        [apply listitem'
                         (doall (concat
-                                 ;[[l/ppre-x m]]
                                  [[hoc.buttons/reg-pill {:style    {:display    :inline-block
                                                                     :align-self :center}
                                                          :on-click #(innlevering m)} "Innlever"]]
-                                 #_[[sc/link {:on-click #(innlevering m)} "Innlever"]]
                                  [(into [:<>]
                                         (mapv (fn [id]
                                                 (let [number (get lookup-id->number id)]
-                                                  (sc/badge-2 {:on-click #(->> id
-                                                                               (get db)
-                                                                               dlg/open-modal-boatinfo)} number)))
+                                                  (sc/badge-2 {:on-click #(dlg/open-modal-boatinfo
+                                                                            {:uid  uid
+                                                                             :data (get db id)})} number)))
                                               (remove nil? boats)))]
                                  [[:div {:style {:text-indent 0}} date]]))])))]
 

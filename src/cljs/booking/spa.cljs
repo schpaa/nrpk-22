@@ -827,11 +827,14 @@
                                                    [sc/text-inline {:style {:xwidth "1rem"}} (or (:timekrav v) "—") (when (:timekrav v) "t")]
                                                    [sc/text-inline {:style {:white-space :normal}} "Her er en linje til"]
                                                    [sc/text-inline #_{:style {:white-space :normal}} (:navn v)]])]]))]]))}))])))
+
    :r.utlan
    (fn [r]
-     [+page-builder
-      r
-      {:render booking.utlan/render}])
+     (let [uid (:uid @(rf/subscribe [::db/user-auth]))
+           #_#_user @(db/on-value-reaction {:path ["users" uid]})]
+       [+page-builder
+        r
+        {:render #(booking.utlan/render uid)}]))
 
 
    :r.page-not-found
