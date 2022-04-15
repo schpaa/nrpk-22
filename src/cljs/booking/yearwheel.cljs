@@ -28,7 +28,9 @@
 (o/defstyled listitem :div
   [:& :p-1
    {;:background :#fff1
-    :min-height "var(--size-4)"}
+    :--thing     "var(--size-4)"
+    :text-indent "calc(var(--thing) * -1)"
+    :min-height  "var(--size-4)"}
    [:.deleted {:color           "var(--text0)"
                :text-decoration :line-through
                :opacity         0.3}]
@@ -166,7 +168,7 @@
    :padding-left "var(--thing)"
    :text-indent  "calc(var(--thing) * -1)"
    :color        "var(--text2)"
-   :line-height  "var(--font-lineheight-5)"})
+   :line-height  "var(--font-lineheight-4)"})
 
 (o/defstyled strong :span
   [:& {;:display :inline-block
@@ -174,6 +176,7 @@
 
 (o/defstyled weak :span
   {;:display :inline-block
+   :text-indent 0
    :color       "var(--text2)"
    :font-size   "var(--font-size-1)"
    :font-weight "var(--font-weight-3)"})
@@ -195,16 +198,16 @@
          [:div]
          [:div]])
 
-      (into [line {:style {:display :inline-block}}]
+      (into [line {:style {:displayd :inline-block}}]
             (interpose [:span ", "]
                        (remove nil?
                                [(when date
                                   (weak (str "uke " (ta/week-number (t/date date)))))
                                 (when date
-                                  (flex-datetime date (fn [format content]
-                                                        (if (= :text format)
-                                                          [sc/subtext-inline content]
-                                                          [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year content)]))))
+                                  (booking.flextime/flex-datetime date (fn [format content]
+                                                                         (if (= :text format)
+                                                                           [sc/datetimelink content]
+                                                                           [sc/datetimelink (ta/date-format-sans-year content)]))))
                                 (when type
                                   (strong (->> type (get sci/person-by-id) :name)))
                                 (when tldr
@@ -264,8 +267,8 @@
                                                 [flex-datetime date
                                                  (fn [type d]
                                                    (if (= :date type)
-                                                     [sc/subtext-inline {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-                                                     [sc/subtext-inline d]))]])
+                                                     [sc/datetimelink {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+                                                     [sc/datetimelink d]))]])
                                              (when type
                                                (strong [sc/text-inline (->> type (get sci/person-by-id) :name)]))
                                              (when tldr

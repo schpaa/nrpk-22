@@ -169,8 +169,10 @@
           (count @(db/on-value-reaction {:path ["boad-item"]}))]
 
        [sc/row-sc-g2
-        [shortcut-link :r.booking]
-        [hoc.buttons/reg-pill {:on-click prepare} "Prep!"]]
+        [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
+        ;[shortcut-link :r.booking]
+        [hoc.buttons/reg-pill {:on-click prepare} "Prep!"]
+        #_[sc/link {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} "Nytt utlån"]]
 
 
        (when @(rf/subscribe [:lab/nokkelvakt])
@@ -179,10 +181,11 @@
            (-> (inline "./oversikt/nøklevann.md") schpaa.markdown/md->html sc/markdown)
 
            [sc/row-sc-g4-w
-            [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])} "Aktivitet i dag"]
+            #_[sc/link {:href      (kee-frame.core/path-for [:r.aktivitetsliste])
+                        :-on-click #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])} "Aktivitet i dag"]
             [sc/link {:class    [:disabled]
                       :on-click #(rf/dispatch [])} "Båtoversikt"]
-            [sc/link {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} "Nytt utlån"]
+
             [sc/link {:class    [:disabled]
                       :on-click #(rf/dispatch [])} "Mine utlån"]]]])
 
@@ -193,7 +196,10 @@
                        [apply listitem'
                         (doall (concat
                                  ;[[l/ppre-x m]]
-                                 [[sc/link {:on-click #(innlevering m)} "Innlever"]]
+                                 [[hoc.buttons/reg-pill {:style    {:display :inline-block}
+                                                         ;:class [:-debug]
+                                                         :on-click #(innlevering m)} "Innlever"]]
+                                 #_[[sc/link {:on-click #(innlevering m)} "Innlever"]]
                                  [(into [:<>]
                                         (mapv (fn [id]
                                                 (let [number (get lookup-id->number id)]

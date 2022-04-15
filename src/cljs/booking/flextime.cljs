@@ -33,7 +33,7 @@
                                              (t/at (t/date) (t/midnight)))]
                                   :config (conj {:stringify? true} booking.data/arco-datetime-config)}
            (fn [formatted-t]
-             [time-format on-click (formatted :text formatted-t)])]
+             [sc/datetimelink on-click (formatted :text formatted-t)])]
           [arco.react/time-to {:times  [(if (t/date-time? date)
                                           (t/date-time date)
                                           (t/at (t/date date) (t/noon)))
@@ -46,8 +46,8 @@
                                           (= 1 (:time ft)))
                                    "I morgen"
                                    (apply str (interpose " " [(:in ft) (:time ft) (:interval ft)])))])
-             [time-format on-click (formatted :text ft)])])
-        [time-format on-click (formatted :date date)]))))
+             [sc/datetimelink on-click (formatted :text ft)])])
+        [sc/datetimelink on-click (formatted :date date)]))))
 
 (comment
   (let [date "2022-04-02"]
@@ -83,7 +83,7 @@
      (let [ignore-time? (not (t/date-time? tm))
            relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
            on-time-click {:on-click #(schpaa.state/toggle :app/show-relative-time-toggle)}
-           format #(vector sc/link on-time-click %)]
+           format #(vector sc/datetimelink on-time-click %)]
        (if @relative-time?
          (if (t/<= dt (t/date-time))
            (arco.react/time-since {:times  [dt (t/date-time)]

@@ -149,8 +149,8 @@
              [sc/text1-with
               "Sist sett "
               (if (= :date format)
-                [sc/subtext-inline {:style {:text-decoration :none}} (ta/datetime-format content)]
-                [sc/subtext-inline content])]])
+                [sc/datetimelink (ta/datetime-format content)]
+                [sc/datetimelink content])]])
           #_(fn [x] [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert " tm]]])))
       (when-let [tm (some->> (:timestamp values) (t/instant) (t/date-time))]
         (booking.flextime/flex-datetime
@@ -160,8 +160,8 @@
              [sc/text1-with
               "Sist oppdatert "
               (if (= :date format)
-                [sc/subtext-inline {:style {:text-decoration :none}} (ta/datetime-format content)]
-                [sc/subtext-inline content])]])
+                [sc/datetimelink (ta/datetime-format content)]
+                [sc/datetimelink content])]])
           #_(fn [x] [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert " tm]]])))
       [sc/small1 (:navn values)]
       [sc/small1 (:epost values)]
@@ -253,7 +253,7 @@
                                     @s
                                     [;generelt
                                      :timestamp
-                                     :timestamp-lastvisit-userpage
+                                     ;:timestamp-lastvisit-userpage
                                      :uid
                                      :navn :telefon :alias :epost :våttkort
                                      ;booking
@@ -283,23 +283,10 @@
                        :component-did-mount (fn [{:keys [set-values disable values] :as p}]
                                               (db/database-update {:path  ["users" uid]
                                                                    :value {:timestamp-lastvisit-userpage (str (t/now))}})
-                                              ;(if-not (values :request-booking))
                                               (disable :booking-expert)
                                               (tap> {:user-form/component-did-mount (:navn initial-values)})
-                                              (set-values initial-values)
-                                              #_(let [data (conj (if @s (walk/keywordize-keys @s) {})
-                                                                 {;:uid             uid
-                                                                  #_#_:request-booking (str (t/date))})]
-                                                  (set-values (select-keys
-                                                                data
-                                                                [;generelt
-                                                                 :navn :telefon :alias :epost :våttkort
-                                                                 ;booking
-                                                                 :våttkortnr :request-booking :booking-expert
-                                                                 ;nøkkelvakt
-                                                                 :medlem-fra-år :fødselsår
-                                                                 :årstall-førstehjelpskurs :årstall-livredningskurs
-                                                                 :instruktør :helgevakt :vikar :kort-reisevei]))))
+                                              (set-values initial-values))
+
                        :on-submit           (fn [{:keys [state values] :as x}]
                                               (let [author (:uid @(rf/subscribe [::db/user-auth]))]
                                                 (user.forms/save-edit-changes
@@ -314,9 +301,7 @@
 
                                               (db/database-update {:path  ["users" uid]
                                                                    :value (assoc values :timestamp (str (t/now)))})
-                                              (rf/dispatch [:save-this-form-test x]))
-
-                       #_#(send :e.store (assoc-in % [:values :uid] uid))}
+                                              (rf/dispatch [:save-this-form-test x]))}
             (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
               [:form.select-none
                {:id        form-id

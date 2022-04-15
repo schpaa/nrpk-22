@@ -256,11 +256,13 @@
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
    (if date
-     [booking.flextime/flex-datetime date (fn [type d]
-                                            ;[l/ppre-x type d]
-                                            (if (= :date type)
-                                              [sc/subtext {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-                                              [sc/subtext d]))])
+     [booking.flextime/flex-datetime
+      date
+      (fn [type d]
+        ;[l/ppre-x type d]
+        (if (= :date type)
+          [sc/datetimelink (ta/date-format-sans-year d)]
+          [sc/datetimelink d]))])
    [:div.flex.items-baseline.gap-2
     [sc/fp-text text]]])
 
