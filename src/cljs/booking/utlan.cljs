@@ -196,8 +196,8 @@
                        [apply listitem'
                         (doall (concat
                                  ;[[l/ppre-x m]]
-                                 [[hoc.buttons/reg-pill {:style    {:display :inline-block}
-                                                         ;:class [:-debug]
+                                 [[hoc.buttons/reg-pill {:style    {:display    :inline-block
+                                                                    :align-self :center}
                                                          :on-click #(innlevering m)} "Innlever"]]
                                  #_[[sc/link {:on-click #(innlevering m)} "Innlever"]]
                                  [(into [:<>]
