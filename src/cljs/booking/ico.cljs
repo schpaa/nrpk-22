@@ -54,3 +54,5 @@
 (def experimental [:> solid/BeakerIcon])
 (def plusCircle [:> outline/PlusCircleIcon])
 (def checkCircle [:> solid/CheckCircleIcon])
+(def stjerne [:> solid/StarIcon])
+(def ikkeStjerne [:> outline/StarIcon])

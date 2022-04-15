@@ -78,7 +78,8 @@
 (o/defstyled listitem' :div
   [:& :gap-2
    {:line-height  "var(--font-lineheight-4)"
-    :display      :flex
+
+    :display      :inline-flex
     :text-indent  "-1rem"
     :padding-left "1rem"
     :flex-wrap    :wrap
@@ -109,19 +110,32 @@
         [sc/col-space-4
          (for [[k _v] @st
                :let [{:keys [number kind navn]} (get @db k)]]
+
+           #_[sc/row-sc-g2
+
+              (schpaa.style.hoc.toggles/largeswitch-local
+                {:atoma   (r/cursor st [k])
+                 :view-fn (fn [t c] [sc/badge-2 {:class [:big]} t [:div.w-64 c]])
+                 :caption number})
+
+              [sc/col {:style {:flex    "1"
+                               :opacity (if @(r/cursor st [k]) 1 0.25)}}
+               [sc/text1 (schpaa.components.views/normalize-kind kind)]
+               [sc/small1 navn]]]
+
            (schpaa.style.hoc.toggles/largeswitch-local
-             (r/cursor st [k])
-             (fn [t c] [:div {:style {:gap             "var(--size-2)"
-                                      :display         :flex
-                                      :align-items     :center
-                                      :justify-content :between
-                                      :width           "100%"}}
-                        [sc/badge-2 {:class [:big]} number]
-                        t
-                        [sc/col {:style {:flex    "1"
-                                         :opacity (if @(r/cursor st [k]) 1 0.25)}}
-                         [sc/text1 (schpaa.components.views/normalize-kind kind)]
-                         [sc/small1 navn]]])))]
+             {:atoma   (r/cursor st [k])
+              :view-fn (fn [t c] [:div {:style {:gap             "var(--size-2)"
+                                                :display         :flex
+                                                :align-items     :center
+                                                :justify-content :between
+                                                :width           "100%"}}
+                                  t
+                                  [sc/badge-2 {:class [:big]} number]
+                                  [sc/col {:style {:flex    "1"
+                                                   :opacity (if @(r/cursor st [k]) 1 0.25)}}
+                                   [sc/text1 (schpaa.components.views/normalize-kind kind)]
+                                   [sc/small1 navn]]])}))]
         [sc/row-ec
          #_[hoc.buttons/regular {:on-click (fn [] (swap! st #(reduce (fn [a [k _v]] (update a k (fnil not false))) % %)))} "Omvendt"]
          [:div.grow]
