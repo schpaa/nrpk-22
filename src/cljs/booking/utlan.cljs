@@ -171,16 +171,11 @@
 
 (defn render [uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
-    (let [lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
+    (let [data (rf/subscribe [:rent/list])
+          lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
       [sc/col-space-8
        ;[l/ppre-x @data]
-       #_[l/ppre-x
-          lookup-id->number
-          @data
-          (count @(rf/subscribe [:db/boat-db]))
-          (count @(db/on-value-reaction {:path ["boat-brand"]}))
-          (count @(db/on-value-reaction {:path ["boad-item"]}))]
 
        [sc/row-sc-g2
         [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
@@ -205,16 +200,18 @@
 
        [sc/col-space-8
         (into [:<>]
-              (doall (for [{:keys [date boats id] :as m} (:utlån @data)
-                           :let [date (some-> date booking.flextime/relative-time)]]
+              (doall (for [[_k {:keys [timestamp list id] :as m}] @data
+                           :let [boats list
+                                 date (t/instant timestamp)
+                                 date (some-> date booking.flextime/relative-time)]]
                        [apply listitem'
                         (doall (concat
                                  [[hoc.buttons/reg-pill {:style    {:display    :inline-block
                                                                     :align-self :center}
-                                                         :on-click #(innlevering m)} "Innlever"]]
+                                                         :on-click #(innlevering {:boats list})} "Innlever"]]
                                  [(into [:<>]
                                         (mapv (fn [id]
-                                                (let [number (get lookup-id->number id)]
+                                                (let [number (get lookup-id->number id (str "?" id))]
                                                   (sc/badge-2 {:on-click #(dlg/open-modal-boatinfo
                                                                             {:uid  uid
                                                                              :data (get db id)})} number)))

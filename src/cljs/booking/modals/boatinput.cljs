@@ -15,22 +15,7 @@
             [booking.modals.boatinput.styles :as bis]
             [headlessui-reagent.core :as ui]))
 
-(defn lookup [id]
-  (if (< 3 (count id))
-    [sc/col {:style {:color "var(--blue-3)"}
-             :class [:space-y-1]}
-     [sc/header-title-cl "Test-navn"]
-     [sc/subtext-cl "Test-kategori"]]
-    (case id
-      "400" [sc/col {:class [:space-y-1]}
-             [sc/header-title "Rebel Roy"]
-             [sc/subtext "Grønnlandskajakk"]]
-      "401" [sc/col {:class [:space-y-1]}
-             [sc/header-title "Rebel Joy"]
-             [sc/subtext "Canadakajakk"]]
-      [sc/col {:class [:space-y-1]}
-       [sc/header-title "Rebel Soy"]
-       [sc/subtext "Canadasnoozegoose"]])))
+
 
 (defn- decrease-children [st]
   (let [n (r/cursor st [:children])]
@@ -272,6 +257,21 @@
              (.removeEventListener @a "mouseup" mouseup)
              (.removeEventListener @a "touchend" mouseup))))
 
+(rf/reg-sub :rent/list
+            (fn [_ _]
+              @(db.core/on-value-reaction {:path ["activity-22"]})))
+
+(rf/reg-fx :rent/write (fn [data]
+                         (db.core/database-push
+                           {:path  ["activity-22"]
+                            :value (conj {:timestamp (str (t/now))
+                                          :uid       "some-uid"}
+                                         data)})))
+
+(rf/reg-event-fx :rent/store
+                 (fn [_ [_ data]]
+                   {:fx [[:rent/write data]]}))
+
 (defn- confirm-command [st]
   (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
                  (pos? (count (:list @st)))
@@ -280,9 +280,30 @@
                      (empty? (:item @st))))]
     ;(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
     (when ok?
-      (rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])
-      (booking.aktivitetsliste/add-command (assoc @st :start (t/instant (t/now))))
-      (restart-command st))))
+      ;todo add to db here
+      (rf/dispatch [:rent/store @st])
+      (rf/dispatch [:app/navigate-to [:r.utlan]])
+      (rf/dispatch [:modal.boatinput/close])
+
+      #_(booking.aktivitetsliste/add-command (assoc @st :start (t/instant (t/now))))
+      #_(restart-command st))))
+
+(defn lookup [id]
+  (if (< 3 (count id))
+    [sc/col {:style {:color "var(--blue-3)"}
+             :class [:space-y-1]}
+     [sc/header-title-cl "Test-navn"]
+     [sc/subtext-cl "Test-kategori"]]
+    (case id
+      "400" [sc/col {:class [:space-y-1]}
+             [sc/header-title "Rebel Roy"]
+             [sc/subtext "Grønnlandskajakk"]]
+      "401" [sc/col {:class [:space-y-1]}
+             [sc/header-title "Rebel Joy"]
+             [sc/subtext "Canadakajakk"]]
+      [sc/col {:class [:space-y-1]}
+       [sc/header-title "Rebel Soy"]
+       [sc/subtext "Canadasnoozegoose"]])))
 
 (defn confirm [st]
   (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))

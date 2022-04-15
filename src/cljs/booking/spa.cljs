@@ -834,7 +834,10 @@
            #_#_user @(db/on-value-reaction {:path ["users" uid]})]
        [+page-builder
         r
-        {:render #(booking.utlan/render uid)}]))
+        {:-always-panel (fn []
+                          (let [data (rf/subscribe [:rent/list])]
+                            (l/ppre-x @data)))
+         :render        #(booking.utlan/render uid)}]))
 
 
    :r.page-not-found

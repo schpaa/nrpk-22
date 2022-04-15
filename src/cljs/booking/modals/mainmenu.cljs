@@ -106,7 +106,7 @@
                      :stay-open true}]
 
              [:item {:icons  (sc/icon ico/commandPaletteClosed)
-                     :label  "Vis alle spørsmål igjen"
+                     :label  "Vis alle meldinger igjen"
                      :action #(schpaa.state/change :lab/skip-easy-login false)}]
              [:item {:icon      (sc/icon ico/commandPaletteClosed)
                      :style     {:color "var(--brand1)"}
