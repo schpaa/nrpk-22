@@ -283,7 +283,7 @@
 
 (defn image-carousell []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
-        auto-scroll? (schpaa.state/listen :lab/image-carousell-autoscroll)
+        ;auto-scroll? (schpaa.state/listen :lab/image-carousell-autoscroll)
         left-side? (schpaa.state/listen :lab/menu-position-right)
         at-least-registered? (rf/subscribe [:lab/at-least-registered])
         has-chrome? (rf/subscribe [:lab/has-chrome])]
@@ -294,7 +294,7 @@
       [booking.carousell/render-carousell
        {:carousell-config {:initialSlide  0
                            :slidesToShow  3
-                           :autoplay      @auto-scroll?
+                           :autoplay      true              ; @auto-scroll?
                            :autoplaySpeed 5500}
         :class            [:bg-alt :h-full :m-4]
         :view-config      (config)
@@ -433,7 +433,7 @@
       (when @er-nokkelvakt?
         [listitem' (t/at (t/date "2022-04-14") (t/time "18:00"))
          [sc/col-space-2
-          [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at våre opplysningene om deg fremdeles er riktige."]
+          [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at informasjonen vi har om deg er oppdatert."]
           [:span "Dine opplysninger finner du "
            [sc/link {:style {:display :inline-block}
                      :href  (kee-frame.core/path-for [:r.user])} "her"]]]])
@@ -477,22 +477,25 @@
         (when-not @at-least-registered?
           [please-login-and-register])
 
-        (when goog.DEBUG
-          [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+        #_(when goog.DEBUG
+            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
 
-        (when goog.DEBUG
-          [sc/fp-summary-detail :frontpage/status
-           [sc/row-bl [sc/fp-header "Status"]]
-           [current-status]])
+        #_(when goog.DEBUG
+            [sc/fp-summary-detail :frontpage/status
+             [sc/row-bl [sc/fp-header "Status"]]
+             [current-status]])
 
         [sc/fp-summary-detail :frontpage/news
-         [sc/row-bl [sc/fp-header "Nyheter"]]
+         [sc/row-bl
+          [sc/fp-header "Hva skjer?"]
+          #_(sc/header-accomp-link {:class [:disabled]
+                                    :href  (kee-frame.core/path-for [:r.news])} "(se flere)")]
          [news-feed]]
 
         [sc/fp-summary-detail :frontpage/yearwheel
          [sc/row-bl
-          [sc/fp-header "Hva skjer?"]
-          (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
+          [sc/fp-header "Planlagt"]]
+         ;(sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se hele årshjulet)")]
          [booking.yearwheel/yearwheel-feed]]
 
         [sc/fp-summary-detail :frontpage/openinghours "Åpningstider"

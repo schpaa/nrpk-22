@@ -269,7 +269,8 @@
                                              (when type
                                                (strong [sc/text-inline (->> type (get sci/person-by-id) :name)]))
                                              (when tldr
-                                               (weak tldr))]))]])]]))
+                                               (weak tldr))]))]])]
+     [sc/text1 "Se flere planlagte hendelser i " (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "årshjulet")]]))
 
 
 ;end-region

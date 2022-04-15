@@ -75,19 +75,19 @@
                        :stay-open true
                        :content   (fn [_]
                                     [:div.w-full
-                                     [schpaa.style.hoc.toggles/stored-toggle :lab/show-image-carousell "Billedkarusell"
+                                     [schpaa.style.hoc.toggles/stored-toggle :lab/show-image-carousell "Vis bildekarusell"
                                       (fn [t c]
                                         [:div.flex.justify-between.items-center.w-full.gap-2.h-12x
                                          [sc/text1 c] t])]])}]
 
-             [:toggle {:disabled  true
-                       :stay-open true
-                       :content   (fn [_]
-                                    [:div.w-full
-                                     [schpaa.style.hoc.toggles/stored-toggle :lab/image-carousell-autoscroll "Auto-scroll"
-                                      (fn [t c]
-                                        [:div.flex.justify-between.items-center.w-full.gap-2.h-12x
-                                         [sc/text1 c] t])]])}]
+             #_[:toggle {:disabled  true
+                         :stay-open true
+                         :content   (fn [_]
+                                      [:div.w-full
+                                       [schpaa.style.hoc.toggles/stored-toggle :lab/image-carousell-autoscroll "Auto-scroll"
+                                        (fn [t c]
+                                          [:div.flex.justify-between.items-center.w-full.gap-2.h-12x
+                                           [sc/text1 c] t])]])}]
 
              (when goog.DEBUG
                [:toggle {:disabled  true
@@ -101,12 +101,12 @@
 
              [:hr]
 
-             [:item {:label     "Speilvend"
+             [:item {:label     "Speilvend grensesnittet"
                      :action    #(schpaa.state/toggle :lab/menu-position-right)
                      :stay-open true}]
 
              [:item {:icons  (sc/icon ico/commandPaletteClosed)
-                     :label  "Vis alle spørsmål"
+                     :label  "Vis alle spørsmål igjen"
                      :action #(schpaa.state/change :lab/skip-easy-login false)}]
              [:item {:icon      (sc/icon ico/commandPaletteClosed)
                      :style     {:color "var(--brand1)"}
