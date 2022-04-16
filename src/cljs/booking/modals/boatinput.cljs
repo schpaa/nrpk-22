@@ -269,16 +269,17 @@
 
 (rf/reg-sub :rent/list
             (fn [_ _]
-              @(db.core/on-value-reaction {:path ["activity-22"]})))
+              (sort-by (comp :timestamp val) >
+                       @(db.core/on-value-reaction {:path ["activity-22"]}))))
 
 (rf/reg-fx :rent/write (fn [data]
-                         (let [list (map :id (:list data))]
+                         (let [list (into {} (map (fn [{:keys [id]}] [id ""]) (:list data)))]
                            (tap> {:list list
                                   :data data})
                            (db.core/database-push
                              {:path  ["activity-22"]
                               :value {:timestamp (str (t/now))
-                                      :uid       "some-uid"
+                                      :uid       (:uid data)
                                       :list      list}}))))
 
 
@@ -287,7 +288,8 @@
                    {:fx [[:rent/write data]]}))
 
 (defn- confirm-command [st]
-  (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
+  (let [loggedin-uid (:uid @(rf/subscribe [:db.core/user-auth]))
+        ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
                  (pos? (count (:list @st)))
                  (or (and (pos? (count (:item @st)))
                           (some #{(:item @st)} (map :number (:list @st))))
@@ -295,7 +297,7 @@
     ;(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
     (when ok?
       ;todo add to db here
-      (rf/dispatch [:rent/store @st])
+      (rf/dispatch [:rent/store (assoc @st :uid loggedin-uid)])
       (rf/dispatch [:app/navigate-to [:r.utlan]])
       (rf/dispatch [:modal.boatinput/close])
 

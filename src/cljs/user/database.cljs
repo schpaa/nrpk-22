@@ -66,6 +66,12 @@
     (:navn @(db/on-value-reaction {:path ["users" uid]}))
     nil))
 
+(defn lookup-alias [uid]
+  ;(tap> ["U"])
+  (if-some [_ @(rf/subscribe [::db/user-auth])]
+    (:alias @(db/on-value-reaction {:path ["users" uid]}))
+    nil))
+
 ;region
 
 (def request-booking-xf
