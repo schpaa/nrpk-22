@@ -14,7 +14,10 @@
             [reagent.core :as r]
             [db.core :as db]
             [reitit.core :as reitit]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [schpaa.style.button :as scb]
+            [schpaa.icon :as icon]))
 
 ;region
 ;(logg.database/boat-db)
@@ -75,16 +78,7 @@
 
 ;endregion
 
-(o/defstyled listitem' :div
-  [:& :gap-2
-   {:line-height  "var(--font-lineheight-4)"
 
-    :display      :inline-flex
-    :text-indent  "-1rem"
-    :padding-left "1rem"
-    :flex-wrap    :wrap
-    :align-items  :baseline
-    :color        "var(--text1)"}])
 
 (comment
   (softlistwrapper
@@ -169,21 +163,79 @@
 
 ;endregion
 
+(defonce settings (r/atom {}))
+
+(o/defstyled round-normal-listitem :div
+  [:& :h-8 :w-8 :cursor-pointer :-mb-2
+   :justify-self-center
+   :items-center :justify-center
+   {:display       :inline-flex
+    :outline       "1px solid red"
+    ;:text-indent 0
+    :aspect-ratio  "1/1"
+    :border-radius "var(--radius-round)"
+    ;:background    "var(--surface000)"
+    ;:border        "1px solid var(--surface1)"
+    :color         "var(--surface4)"}]
+  [:&:active {:background "var(--surface1)"}]
+  [:&:hover {:background "white" #_"var(--surface000)"}]
+  [:&.deleted {:background "red"}])
+
+(defn trashcan [k {:keys [deleted] :as v}]
+  [hoc.buttons/reg-icon
+   {:class    (if deleted [:regular] [:danger])
+    :on-click #(db/database-update
+                 {:path  ["activity-22" (name k)]
+                  :value {:deleted (not deleted)}})}
+   (if deleted (icon/adapt :rotate-left) ico/trash)
+
+   #_[round-normal-listitem
+      {:class    [(if deleted :deleted)]
+       :on-click #(db/database-update
+                    {:path  ["activity-22" (name k)]
+                     :value {:deleted (not deleted)}})}
+      [sc/icon-small
+       {:style {:color "var(--text1)"}}
+       (if deleted (icon/small :rotate-left) ico/trash)]]])
+
+(o/defstyled inline-item :div
+  [:&
+   :inline-flex
+   :items-center
+   :justify-center
+
+   ;:gap-4
+   {:height         "4rem"
+
+    ;:max-height     "4rem"
+    ;:outline        "1px solid yellow"
+    :xmargin-right  "0.5rem"
+    :xmargin-bottom "0.5rem"}])
+
+
+(o/defstyled command-grid :div
+  {:display               :grid
+   :column-gap            "var(--size-3)"
+   :row-gap               "var(--size-2)"
+   :grid-template-columns "min-content 1fr"
+   :grid-template-areas   [["." "time"]
+                           ["edit" "content"]]})
+
+(o/defstyled listitem' :div
+  [:& :gap-2
+   {;:outline     "1px solid orange"
+    ;:line-height  "var(--font-lineheight-3)"
+    :display     :flex
+    :flex-wrap   :wrap
+    :align-items :start
+    :color       "var(--text1)"}])
+
 (defn render [uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
       [sc/col-space-8
-       ;[l/ppre-x @data]
-
-       [sc/row-sc-g2
-        [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
-        ;[shortcut-link :r.booking]
-        [hoc.buttons/reg-pill {:on-click prepare} "Prep!"]
-        #_[sc/link {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} "Nytt utlån"]]
-
-
        (when @(rf/subscribe [:lab/nokkelvakt])
          [sc/col-space-8
           [sc/col
@@ -198,25 +250,63 @@
             [sc/link {:class    [:disabled]
                       :on-click #(rf/dispatch [])} "Mine utlån"]]]])
 
+       #_[sc/col-space-8
+          (into [:ol {:style {:gap            "8px"
+                              :display        :flex
+                              :flex-direction :column}}]
+                (for [e (range 5)]
+                  [:li {:style {:text-indent  "-2rem"
+                                :padding-left "2rem"
+                                :gap          "8px"}}
+                   [:<>
+                    [hoc.buttons/reg-pill {} "Sample"]
+                    [hoc.buttons/reg-pill-icon {:class [:h-12]} ico/new-home "Sample"]
+                    [hoc.buttons/reg-pill-icon {:class [:h-16]} ico/mystery1 "Sample"]
+                    [hoc.buttons/reg-pill {} "Sample"]
+                    (for [z (range 10)]
+                      [sc/text1 {:style {:display          :inline-block
+                                         :text-indent      0
+                                         :margin-right     "0.25rem"
+                                         :margin-bottom    "0.25rem"
+                                         :background-color "green"
+                                         :outline          "1px solid green"
+                                         :width            "5rem"}} (l/strp e z)])]]))]
+
+
+
        [sc/col-space-8
-        (into [:<>]
-              (doall (for [[_k {:keys [timestamp list id] :as m}] @data
+        (into [:div {:style {:gap            "8px"
+                             :display        :flex
+                             :flex-direction :column}}]
+              (doall (for [[k {:keys [timestamp list id deleted] :as m}] (if @(r/cursor settings [:rent/show-deleted])
+                                                                           @data
+                                                                           (remove (comp :deleted val) @data))
                            :let [boats list
                                  date (t/instant timestamp)
                                  date (some-> date booking.flextime/relative-time)]]
-                       [apply listitem'
-                        (doall (concat
-                                 [[hoc.buttons/reg-pill {:style    {:display    :inline-block
-                                                                    :align-self :center}
-                                                         :on-click #(innlevering {:boats list})} "Innlever"]]
-                                 [(into [:<>]
-                                        (mapv (fn [id]
-                                                (let [number (get lookup-id->number id (str "?" id))]
-                                                  (sc/badge-2 {:on-click #(dlg/open-modal-boatinfo
-                                                                            {:uid  uid
-                                                                             :data (get db id)})} number)))
-                                              (remove nil? boats)))]
-                                 [[:div {:style {:text-indent 0}} date]]))])))]
+
+                       [command-grid
+                        [:div {:style {:grid-area    "time"
+                                       :justify-self :end}} date]
+                        [:div {:class [:h-8 :flex :items-center :gap-3]
+                               :style {:grid-area "edit"
+                                       :display   :flex}}
+                         (when @(r/cursor settings [:rent/edit])
+                           [trashcan k m])
+                         (if-not @(r/cursor settings [:rent/edit])
+                           [hoc.buttons/reg-pill {:class    [:narrow]
+                                                  :on-click #(innlevering {:boats (map keyword boats)})} "Inn"]
+                           [hoc.buttons/reg-icon {:class    [:regular]
+                                                  :on-click #()} ico/pencil])]
+                        (into [listitem' {:style {:opacity   (if deleted 0.3 1)
+                                                  :grid-area "content"}}]
+                              (map (fn [id]
+                                     (let [number (get lookup-id->number (keyword id) (str "?" id))]
+                                       (sc/badge-2 {:on-click #(dlg/open-modal-boatinfo
+                                                                 {:uid  uid
+                                                                  :data (get db (keyword id))})} number)))
+                                   (remove nil? boats)))])))]
+
 
        #_(when @(rf/subscribe [:lab/booking])
            [sc/col-space-8
@@ -229,3 +319,18 @@
               [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Mine bookinger"]]]
             [:div (for [e (:booking @data)]
                     [l/ppre-x e])]])])))
+
+(defn panel []
+  [sc/col-space-8
+   [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
+    [hoc.toggles/switch-local (r/cursor settings [:rent/edit]) "rediger"]
+    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]]])
+
+(defn commands []
+  (let [data (rf/subscribe [:rent/list])]
+    [sc/row-sc-g2
+     [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
+     ;[shortcut-link :r.booking]
+     #_[hoc.buttons/reg-pill {:on-click prepare} "Prep!"]
+     #_[sc/link {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} "Nytt utlån"]]
+    #_(l/ppre-x @data)))

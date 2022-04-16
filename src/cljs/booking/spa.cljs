@@ -255,7 +255,7 @@
              "Nøklevann"
              "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."
              [sc/row-sc-g4-w
-              (let [data [[:r.xxx "Hvilke båter på Nøklevann?"]
+              (let [data [[:r.xxx "Hvilke båter har vi på Nøklevann?"]
                           [:r.utlan "Utlån"]
                           [:r.aktivitetsliste "Aktivitetsliste"]
                           [:r.xxx "HMS ved Nøklevann"]]]
@@ -267,8 +267,8 @@
              "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."
              [sc/row-sc-g4-w
               (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
-                          [:r.booking.faq "Ofte spurte spørsmål"]
-                          [:r.booking.oversikt "Hvilke båter på Sjøbasen?"]
+                          [:r.booking.faq "Ofte stilte spørsmål"]
+                          [:r.booking.oversikt "Hvilke båter har vi på Sjøbasen?"]
                           [:r.utlan "Booking"]
                           [:r.xxx "HMS ved Sjøbasen"]]]
                 (map f (sort-by second data)))]]
@@ -834,10 +834,9 @@
            #_#_user @(db/on-value-reaction {:path ["users" uid]})]
        [+page-builder
         r
-        {:-always-panel (fn []
-                          (let [data (rf/subscribe [:rent/list])]
-                            (l/ppre-x @data)))
-         :render        #(booking.utlan/render uid)}]))
+        {:panel        booking.utlan/panel
+         :always-panel booking.utlan/commands
+         :render       #(booking.utlan/render uid)}]))
 
 
    :r.page-not-found

@@ -13,9 +13,8 @@
             [booking.ico :as ico]
             [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput.styles :as bis]
-            [headlessui-reagent.core :as ui]))
-
-
+            [headlessui-reagent.core :as ui]
+            [schpaa.debug :as l]))
 
 (defn- decrease-children [st]
   (let [n (r/cursor st [:children])]
@@ -80,8 +79,8 @@
     (swap! st #(-> %
                    (update :item str e)
                    ((fn [z]
-                      (tap> [z (some #{(:item z)} (:list z))])
-                      (if (some #{(:item z)} (:list z))
+                      ;(tap> [z (some #{(:item z)} (:list z))])
+                      (if (some #{(:item z)} (map :number (:list z)))
                         (assoc z :selected (:item z))
                         z)))))))
 
@@ -171,15 +170,17 @@
   (if (<= 3 (count (:item @st)))
     (swap! st #(-> %
                    ;(assoc :selected (:item %))
-                   (update :list (fnil conj #{}) (:item %))
+                   (update :list (fnil conj #{}) (:item-data %))
+                   ;;clear the item
                    ((fn [e] (if true (dissoc e :item) identity)))))))
 
 (defn add [st]
   [bis/add-button
    {:on-click #(add-command st)
     :value    true
-    :enabled  (and (not= (:item @st) (:selected @st))
-                   (not (some #{(:item @st)} (:list @st)))
+    :enabled  (and (some? (:item-data @st))
+                   (not= (:item @st) (:selected @st))
+                   (not (some #{(:item @st)} (mapv :number (:list @st))))
                    ;(not (some #{(:item @st)} (:list @st)))
                    ;(not (some? (:selected @st)))
                    (<= 3 (count (:item @st))))
@@ -215,16 +216,16 @@
                a (r/atom nil)
                timer (r/atom nil)
                ontimeout (fn [e]
-                           (tap> "reset!")
+                           ;(tap> "reset!")
                            (when @timer
                              (reset! timer nil)
                              (restart-command st)))
                mousedown (fn [e]
-                           (tap> "md")
+                           ;(tap> "md")
                            (when (form-dirty?)
                              (reset! timer (js/setTimeout ontimeout 1100))))
                mouseup (fn [e]
-                         (tap> "up")
+                         ;(tap> "up")
                          (when @timer
                            (js/clearTimeout @timer))
                          (reset! timer nil))]
@@ -257,16 +258,29 @@
              (.removeEventListener @a "mouseup" mouseup)
              (.removeEventListener @a "touchend" mouseup))))
 
+;region core
+
+(rf/reg-sub :rent/lookup
+            :<- [:db/boat-db]
+            :-> #(into {} (->> (remove (comp empty? :number val) %)
+                               (map (fn [[k v]]
+                                      [(:number v)
+                                       (assoc (select-keys v [:number :navn :kind :star-count :stability :material]) :id k)])))))
+
 (rf/reg-sub :rent/list
             (fn [_ _]
               @(db.core/on-value-reaction {:path ["activity-22"]})))
 
 (rf/reg-fx :rent/write (fn [data]
-                         (db.core/database-push
-                           {:path  ["activity-22"]
-                            :value (conj {:timestamp (str (t/now))
-                                          :uid       "some-uid"}
-                                         data)})))
+                         (let [list (map :id (:list data))]
+                           (tap> {:list list
+                                  :data data})
+                           (db.core/database-push
+                             {:path  ["activity-22"]
+                              :value {:timestamp (str (t/now))
+                                      :uid       "some-uid"
+                                      :list      list}}))))
+
 
 (rf/reg-event-fx :rent/store
                  (fn [_ [_ data]]
@@ -276,7 +290,7 @@
   (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
                  (pos? (count (:list @st)))
                  (or (and (pos? (count (:item @st)))
-                          (some #{(:item @st)} (:list @st)))
+                          (some #{(:item @st)} (map :number (:list @st))))
                      (empty? (:item @st))))]
     ;(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
     (when ok?
@@ -286,24 +300,13 @@
       (rf/dispatch [:modal.boatinput/close])
 
       #_(booking.aktivitetsliste/add-command (assoc @st :start (t/instant (t/now))))
-      #_(restart-command st))))
+      (restart-command st))))
 
 (defn lookup [id]
-  (if (< 3 (count id))
-    [sc/col {:style {:color "var(--blue-3)"}
-             :class [:space-y-1]}
-     [sc/header-title-cl "Test-navn"]
-     [sc/subtext-cl "Test-kategori"]]
-    (case id
-      "400" [sc/col {:class [:space-y-1]}
-             [sc/header-title "Rebel Roy"]
-             [sc/subtext "Grønnlandskajakk"]]
-      "401" [sc/col {:class [:space-y-1]}
-             [sc/header-title "Rebel Joy"]
-             [sc/subtext "Canadakajakk"]]
-      [sc/col {:class [:space-y-1]}
-       [sc/header-title "Rebel Soy"]
-       [sc/subtext "Canadasnoozegoose"]])))
+  (let [data @(rf/subscribe [:rent/lookup])]
+    (get data id)))
+
+;endregion
 
 (defn confirm [st]
   (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
@@ -323,10 +326,10 @@
 
 (defn boatpanel-window [mobile? left-side?]
   (let [keydown-f (fn [event]
-                    (tap> event)
+                    ;(tap> event)
                     ;(.stopPropagation event)
                     (let [kc (.-keyCode event)]
-                      (tap> kc)
+                      ;(tap> kc)
                       (cond
                         (= kc keycodes/S) (confirm-command st)
                         (= kc keycodes/R) (restart-command st)
@@ -362,11 +365,12 @@
                                    :pointer-events :auto})
            :ref       (fn [e]
                         (when-not @ref
-                          (tap> ["adding for " e])
+                          ;(tap> ["adding for " e])
                           (.addEventListener e "keydown" keydown-f)
                           (.focus e)
                           (reset! ref e)))}
 
+          ;(tap> @st)
           [bis/panel
            {:class [:p-4
                     (if mobile? :mobile (if left-side? :left-side :right-side))]}
@@ -421,12 +425,34 @@
                      :display        :flex
                      :align-items    :center}}
 
-            (if (<= 3 (count (:item @st)))
-              (lookup (:item @st))
-              [sc/col {:class [:space-y-px :opacity-50]}
-               [sc/title1 [sc/row-sba "Skriv båtnummeret og"
-                           [sc/icon [:> outline/PlusCircleIcon]]]]
-               [sc/subtext "Bruk 4 siffer for testing"]])]
+            (cond
+              (= 4 (count (:item @st)))
+              (let [n (subs (str (:item @st)) 0 3)]
+                [sc/col
+                 [sc/text1 "for testing " n]
+                 (if-let [boat (lookup n)]
+                   (do
+                     (swap! st assoc-in [:item-data] boat)
+                     [l/ppre-x boat])
+                   (do
+                     (swap! st assoc-in [:item-data] nil)
+                     [sc/text1 "Finner ikke " n]))])
+
+              (<= 3 (count (:item @st)))
+              (if-let [boat (lookup (:item @st))]
+                (do
+                  (swap! st assoc-in [:item-data] boat)
+                  [l/ppre-x boat])
+                (do
+                  (swap! st assoc-in [:item-data] nil)
+                  [sc/text1 "Finner ikke " (:item @st)]))
+
+              :else (do
+                      (swap! st assoc-in [:item-data] nil)
+                      [sc/col {:class [:space-y-px :opacity-50]}
+                       [sc/title1 [sc/row-sba "Skriv båtnummeret og"
+                                   [sc/icon [:> outline/PlusCircleIcon]]]]
+                       [sc/subtext "Bruk 4 siffer for testing"]]))]
 
            ;boats
            [:div.p-1
@@ -437,7 +463,7 @@
                      :display               :grid
                      :grid-template-columns "1fr"
                      :grid-template-rows    "repeat(3,1fr)"}}
-            (for [e (take 3 (sort (:list @st)))]
+            (for [e (take 3 (sort (map :number (:list @st))))]
               [sc/badge
                {:selected (and (= e (:selected @st)))
                 :on-click (fn [] (if (= e (:selected @st))
@@ -462,7 +488,7 @@
                                 :grid-template-columns "repeat(4,1fr)"
                                 :grid-template-rows    "repeat(3,1fr)"}}
               (concat
-                (for [e (take 11 (drop 3 (sort (:list @st))))]
+                (for [e (take 11 (drop 3 (sort (map :number (:list @st)))))]
                   [sc/badge
                    {:selected (and (= e (:selected @st)))
                     :on-click (fn [] (if (= e (:selected @st))
