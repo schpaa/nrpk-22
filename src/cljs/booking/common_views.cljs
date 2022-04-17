@@ -571,7 +571,7 @@
          (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render
-       (fn [r {:keys [frontpage render render-fullwidth panel always-panel]}]
+       (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title]}]
          [err-boundary
           (let [pagename (some-> r :data :name)
                 numberinput (rf/subscribe [:lab/number-input])
@@ -604,18 +604,18 @@
 
                     ;modification could happen here
                     (when (fn? panel)
-                      (when-some [p (panel)]
-                        [:div
-                         [:div.mx-4
-                          [:div.mx-auto
-                           {:style {:width     "100%"
-                                    :max-width max-width}}
-                           #_(when goog.DEBUG
-                               [:div.pb-4 [l/ppre-x
-                                           {:users-access-tokens users-access-tokens
-                                            :r                   (-> r :data :modify)
-                                            :can-modify?         modify?}]])
-                           [hoc.panel/togglepanel pagename "innstillinger" panel modify?]]]]))
+                      ;(when-some [p (panel)])
+                      [:div
+                       [:div.mx-4
+                        [:div.mx-auto
+                         {:style {:width     "100%"
+                                  :max-width max-width}}
+                         #_(when goog.DEBUG
+                             [:div.pb-4 [l/ppre-x
+                                         {:users-access-tokens users-access-tokens
+                                          :r                   (-> r :data :modify)
+                                          :can-modify?         modify?}]])
+                         [hoc.panel/togglepanel pagename (or panel-title "innstillinger") panel modify?]]]])
 
                     (when always-panel
                       [:div.mx-4

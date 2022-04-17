@@ -94,54 +94,44 @@
 ;region innlevering
 
 (defn disp [{:keys [data on-close on-save]}]
-  (let [{:keys [initial original]} data
+  (let [{:keys [initial original plain timestamp]} data
         innlevert (into #{} (keys original))
-        ute (set/difference (into #{} (keys initial)) innlevert)
         db (rf/subscribe [:db/boat-db])
-        ;initial (set/difference ute (into #{} (keys initial)))
         id->number #(->> % (get @db) :number)]
-    (r/with-let [st (r/atom initial)]
-      (let [markerte (into #{} (keys (filter (fn [[k v]] v) @st)))
-            intersection (set/difference innlevert markerte)]
-        [sc/dropdown-dialog
-
-         [sc/col-space-2
-          [l/ppre-x
-           ;initial
-           (into {} (map (fn [[k v]] [(id->number k) v]) initial))]
-          [sc/text1 "båter som er levert"]
-          [l/ppre-x (map id->number innlevert)]
-          [sc/text1 "båter som er ute"]
-          [l/ppre-x (map id->number ute)]
-          [sc/text1 "markerte"]
-          [l/ppre-x (map id->number markerte)]
-          [sc/text1 "intersection"]
-          [l/ppre-x (map id->number (set/difference markerte ute))]]
-
-         [sc/col-space-8
-          [sc/col-space-4
-           (for [[k v] @st
-                 :let [{:keys [number kind navn]} (get @db k)]]
-             (schpaa.style.hoc.toggles/largeswitch-local
-               {:atoma   (r/cursor st [k])
-                :view-fn (fn [t c] [:div {:style {:gap             "var(--size-2)"
-                                                  :display         :flex
-                                                  :align-items     :center
-                                                  :justify-content :between
-                                                  :width           "100%"}}
-                                    t
-                                    [sc/badge-2 {:class [:big (when-not (and v #_(get original k)) :in-use)]} number]
-                                    [sc/col {:style {:flex    "1"
-                                                     :opacity (if @(r/cursor st [k]) 1 0.25)}}
-                                     [sc/text1 (schpaa.components.views/normalize-kind kind)]
-                                     [sc/small1 navn]]])}))]
-          [sc/row-ec
-           #_[hoc.buttons/regular {:on-click (fn [] (swap! st #(reduce (fn [a [k _v]] (update a k (fnil not false))) % %)))} "Omvendt"]
-           [:div.grow]
-           [hoc.buttons/regular {:on-click on-close} "Avbryt"]
-           [hoc.buttons/danger {:disabled (empty? intersection)
-                                #_(not (some true? (vals @st)))
-                                :on-click #(on-save @st)} "Bekreft"]]]])
+    (r/with-let [st2 (r/atom initial)
+                 st (r/atom initial)]
+      [sc/dropdown-dialog
+       [sc/col-space-8
+        [sc/col-space-4
+         (let [f (fn [[k v] st original]
+                   (let [{:keys [number kind navn]} (get @db k)]
+                     (schpaa.style.hoc.toggles/largeswitch-local
+                       {:atoma   (r/cursor st [k])
+                        :view-fn (fn [t c] [:div {:style {:gap             "var(--size-2)"
+                                                          :display         :flex
+                                                          :align-items     :center
+                                                          :justify-content :between
+                                                          :width           "100%"}}
+                                            t
+                                            [sc/badge-2 {:class [:big (when-not (and v #_(get original k)) :in-use)]} number]
+                                            [sc/col {:style {:flex     "1"
+                                                             :-opacity (if @(r/cursor st [k]) 1 0.25)}}
+                                             [sc/text1 (schpaa.components.views/normalize-kind kind)]
+                                             [sc/small1 navn]
+                                             (if @(r/cursor st [k])
+                                               (if (some #{k} innlevert)
+                                                 (if-let [time (some->> k (get original) (t/instant) (t/date-time))]
+                                                   [sc/text1 "Sjekket ut " (booking.flextime/relative-time time times.api/arrival-date)])
+                                                 [sc/text1 "I ferd med å sjekke ut nå"])
+                                               (when-let [time (some->> timestamp (t/instant) (t/date-time))]
+                                                 [sc/text1 "Sjekket inn " (booking.flextime/relative-time time times.api/arrival-date)]))]])})))]
+           (map #(f % st original) @st))]
+        [sc/row-ec
+         [:div.grow]
+         [hoc.buttons/regular {:on-click on-close} "Avbryt"]
+         [hoc.buttons/danger {:disabled (= initial @st)
+                              #_(not (some true? (vals @st)))
+                              :on-click #(on-save @st)} "Bekreft"]]]]
       (finally))))
 
 (rf/reg-fx :rent/innlever-fx (fn [data]
@@ -174,9 +164,11 @@
   [data]
   (rf/dispatch [:modal.slideout/toggle
                 true
-                {:data       {:k        (:k data)
-                              :original (into {} (remove (comp empty? val) (:boats data)))
-                              :initial  (reduce (fn [a [k v]] (assoc a k (if (some? v) v ""))) {} (:boats data))}
+                {:data       {:k         (:k data)
+                              :timestamp (:timestamp data)
+                              :plain     (:boats data)
+                              :initial   (reduce-kv (fn [a k v] (assoc a k (if (empty? v) false true))) {} (:boats data))
+                              :original  (into {} (remove (comp empty? val) (:boats data)))}
                  :action     #(rf/dispatch [:rent/innlever {:original (into {} (remove (comp empty? val) (:boats data)))
                                                             :boats    (:carry %)
                                                             :k        (:k data)}]) #_#(tap> {"action (carry)" (:carry %)
@@ -274,7 +266,7 @@
 (rf/reg-sub :rent/common-edit-mode
             (fn [db]
               (and @(schpaa.state/listen :r.utlan)
-                   @(r/cursor settings [:rent/edit]))))
+                   #_@(r/cursor settings [:rent/edit]))))
 
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
@@ -283,7 +275,6 @@
           data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
-
       [sc/col-space-8
        (into [:div {:style {:gap            "var(--size-2)"
                             :display        :flex
@@ -311,8 +302,9 @@
                           [trashcan k m])
                         (if-not edit-mode?
                           [hoc.buttons/reg-pill {:class    [:narrow]
-                                                 :on-click #(innlevering {:k     k
-                                                                          :boats boats})} "Inn"]
+                                                 :on-click #(innlevering {:k         k
+                                                                          :timestamp timestamp
+                                                                          :boats     boats})} "Inn"]
                           [hoc.buttons/reg-icon {:class    [:regular]
                                                  :on-click #()} ico/pencil])]
                        (into [listitem' {:style {:opacity   (if deleted 0.2 1)
@@ -344,7 +336,7 @@
 (defn panel [{:keys [on-close]}]
   [sc/col-space-8
    [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
-    [hoc.toggles/switch-local (r/cursor settings [:rent/edit]) "rediger"]
+    ;[hoc.toggles/switch-local (r/cursor settings [:rent/edit]) "rediger"]
     [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]]])
 
 (defn commands []

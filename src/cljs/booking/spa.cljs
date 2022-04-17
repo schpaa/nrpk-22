@@ -834,7 +834,8 @@
            #_#_user @(db/on-value-reaction {:path ["users" uid]})]
        [+page-builder
         r
-        {:panel        booking.utlan/panel
+        {:panel-title  "rediger"
+         :panel        booking.utlan/panel
          :always-panel booking.utlan/commands
          :render       #(booking.utlan/render uid)}]))
 
