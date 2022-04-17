@@ -276,10 +276,12 @@
             [sc/fp-summary-detail-always-show-links
              :oversikt/Livredningskurs
              "Kurs"
-             "NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."
+             #_"NRPK arrangerer hvert år livredningskurs med instruktør fra Norges Livredningsselskap. Kurset varer ca 2,5 timer og holdes på Holmlia bad, hvor klubben også har sine bassengtreninger med kajakk."
+             "NRPK arrangerer ulike kurs for å øke sikkerhet og opplevelsen med padling."
              [sc/row-sc-g4-w
-              (let [data [[:r.forsiden "Mer om livredningskurs"]
-                          [:r.forsiden "Meld deg på innmeldingskurs"]]]
+              (let [data [[:r.forsiden "Innmeldingskurs for nye medlemmer"]
+                          [:r.forsiden "Våttkortkurs"]
+                          [:r.forsiden "Livredningskurs"]]]
                 (map f (sort-by second data)))]]
 
             [sc/fp-summary-detail-always-show-links
