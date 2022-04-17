@@ -41,7 +41,9 @@
             [booking.presence]
             [schpaa.style.button :as scb]
             [booking.modals.commandpalette]
-            [booking.utlan]))
+            [booking.utlan]
+            [schpaa.style.dialog :as dlg]
+            [booking.common-widgets :as widgets]))
 
 ;region related to flex-date and how to display relative time
 
@@ -517,8 +519,57 @@
 
    :r.nokkelvakt
    (fn [r]
-     [+page-builder r
-      {:render (fn [] [sc/text1 "Dine utlån og vakter kommer her"])}])
+     (let [user (rf/subscribe [::db/user-auth])
+           db (rf/subscribe [:db/boat-db])
+           boat-types (rf/subscribe [:db/boat-type])]
+
+       [+page-builder r
+        {:panel-title  "Experimental"
+         :panel        (fn [] [:div "inside"])
+         :always-panel (fn [] [sc/col-space-4
+                               [sc/row-sc-g2-w {:style {:gap "0.5rem"}}
+                                [hoc.buttons/reg-pill {:class [:narrow]} "Utlån"]
+                                [hoc.buttons/cta-pill {:class [:narrow]} "Vakter"]
+                                [hoc.buttons/reg-pill {:class [:narrow]} "Kalender"]
+                                [hoc.buttons/reg-pill {:class [:narrow]} "Favoritter"]]
+
+                               [sc/col
+                                [:div.ml-4 (r/with-let [sel (r/atom 2)]
+                                             (into [sc/row-sc-g2]
+                                                   (for [e (range 4)]
+                                                     [hoc.buttons/outline-pill
+                                                      {:on-click #(reset! sel e)
+                                                       :class    [:narrow (when (= @sel e) :active)]} e])))]
+                                [sc/surface-b
+                                 (for [e (range 4)]
+                                   [:div e])]]])
+
+
+         :render       (fn []
+                         (if-let [uid (:uid @user)]
+                           (let [data (map name (keys (filter val @(db/on-value-reaction {:path ["users" uid "starred"]}))))]
+                             [sc/col-space-4
+                              [sc/col-space-8
+                               (let [bt (filter (fn [[k v]] (some #{(name k)} data)) @boat-types)]
+                                 (for [[k v] bt]
+                                   [sc/col-space-2
+                                    [sc/row
+                                     [widgets/stability-name-category v]]
+
+                                    [sc/col-space-2 {:style {:margin-left "2rem"}}
+                                     [sc/text1 (:description v)]
+                                     [sc/col {:class []}
+                                      [sc/row-sc-g2 {:style {:flex-wrap :wrap}}
+                                       (map (fn [e] (sc/badge-2 {:on-click #(dlg/open-modal-boatinfo
+                                                                              {:uid  uid
+                                                                               :data e})} (:number e)))
+                                            (sort-by :number <
+                                                     (map val (filter (fn [[_ v]] (= (:boat-type v) (name k))) @db))))]]]]))]
+
+
+
+                              [sc/text1 "Dine utlån og vakter kommer her"]])
+                           [l/ppre-x @user]))}]))
 
 
    :r.admin

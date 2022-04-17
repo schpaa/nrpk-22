@@ -17,7 +17,8 @@
             [clojure.set :as set]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [schpaa.style.button :as scb]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [booking.common-widgets :as widgets]))
 
 ;region
 ;(logg.database/boat-db)
@@ -250,12 +251,13 @@
 
 (o/defstyled listitem' :div
   [:& :gap-2
-   {;:outline     "1px solid orange"
-    ;:line-height  "var(--font-lineheight-3)"
-    :display     :flex
+   {:display     :flex
     :flex-wrap   :wrap
     :align-items :start
-    :color       "var(--text1)"}])
+    :color       "var(--text1)"}
+   [:&.deleted {:color           "var(--text0)"
+                :text-decoration :line-through
+                :opacity         0.3}]])
 
 (rf/reg-sub :rent/common-show-deleted
             (fn [_]
@@ -299,11 +301,14 @@
                               :style {:grid-area "edit"
                                       :display   :flex}}
                         (when edit-mode?
-                          [trashcan k m])
+                          [widgets/trashcan (fn [_] (db/database-update
+                                                      {:path  ["activity-22" (name k)]
+                                                       :value {:deleted (not deleted)}})) m])
                         (if edit-mode?
-                          [hoc.buttons/reg-icon {:class    [:regular]
-                                                 :disabled (not goog.DEBUG)
-                                                 :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/pencil]
+                          [widgets/edit {:disabled (not goog.DEBUG)} #(rf/dispatch [:lab/toggle-boatpanel]) m]
+                          #_[hoc.buttons/reg-icon {:class    [:regular]
+                                                   :disabled (not goog.DEBUG)
+                                                   :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/pencil]
                           (if (= uid loggedin-uid)
                             [hoc.buttons/cta-pill {:class    [:narrow]
                                                    :on-click #(innlevering {:k         k
@@ -313,7 +318,8 @@
                                                    :on-click #(innlevering {:k         k
                                                                             :timestamp timestamp
                                                                             :boats     boats})} "Inn"]))]
-                       (into [listitem' {:style {:opacity   (if deleted 0.2 1)
+                       (into [listitem' {:class [(if deleted :deleted)]
+                                         :style {:opacity   (if deleted 0.2 1)
 
                                                  :grid-area "content"}}]
                              (map (fn [[id returned]]

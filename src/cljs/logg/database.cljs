@@ -102,6 +102,21 @@
                              [id (conj v (get type-db (keyword boat-type)))])))
                     boat-db)))
 
+(rf/reg-sub :db/boat-type
+            (fn [_]
+              (db/on-value-reaction {:path ["boat-brand"]}))
+
+            (fn [type-db _]
+              type-db #_(into {}
+                              (comp
+                                (map (fn [[id {:keys [boat-type] :as v}]]
+                                       [id (conj v (get type-db (keyword boat-type)))])))
+                              type-db)))
+
+(comment
+  (do
+    (rf/subscribe [:db/boat-type])))
+
 (comment
   (do
     (rf/subscribe [:db/boat-db])))

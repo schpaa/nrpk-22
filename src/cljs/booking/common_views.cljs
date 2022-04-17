@@ -136,10 +136,17 @@
      {:icon-fn   (fn [] (sc/icon-large ico/user))
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
-     (when (or @admin? @booking?)
-       {:icon-fn   (fn [] (sc/icon-large ico/booking))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
-        :page-name :r.booking})
+
+     #_(when (or @admin? @booking?)
+         {:icon-fn   (fn [] (sc/icon-large ico/booking))
+          :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
+          :page-name :r.booking})
+
+     {:icon      ico/mystery1
+      :badge     (fn [_] (-> nil))
+      :disabled  false
+      :page-name :r.utlan
+      :on-click  #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])}
 
      (when (or @admin? @nokkelvakt)
        {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
@@ -674,7 +681,7 @@
                                               :auto)
                               :width        "100%"
                               :max-width    (if render-fullwidth "" max-width)}}
-                     [:div.min-h-full.grow
+                     [:div.min-h-full.grow                  ;.max-w-xl ?
                       (if render-fullwidth
                         [render-fullwidth r]
                         [:div.mx-4 [render r]])]]]))]))])})))

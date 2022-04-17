@@ -23,7 +23,9 @@
     [schpaa.style.hoc.buttons :as hoc.buttons]
     [booking.access]
     [booking.flextime :refer [flex-datetime]]
-    [schpaa.debug :as l]))
+    [schpaa.debug :as l]
+    [booking.common-widgets :as widgets]
+    [reagent.core :as r]))
 
 (o/defstyled listitem :div
   [:& :p-1
@@ -108,26 +110,6 @@
      :data      m
      :on-submit submit-fn}))
 
-(defn trashcan [k {:keys [deleted] :as v}]
-  [(if deleted scb/round-normal-listitem scb/round-danger-listitem)
-   {:on-click #(db/database-update
-                 {:path  ["yearwheel" (name k)]
-                  :value {:deleted (not deleted)}})}
-   [sc/icon-small
-    {:style {:color "var(--text1)"}}
-    (if deleted (icon/small :rotate-left) ico/trash)]])
-
-(defn edit [k {:keys [deleted] :as v}]
-  (if deleted
-    [:div.w-8]
-    [scb/round-danger-listitem
-     {:on-click #(do
-                   (.stopPropagation %)
-                   (edit-event v))}
-     [sc/icon-small
-      {:style {:color "var(--text1)"}}
-      ico/pencil]]))
-
 ;region panels
 
 (defn always-panel
@@ -147,15 +129,17 @@
       :disabled true}
      (hoc.buttons/icon-with-caption ico/nullstill "Nullstill")]]))
 
+(defonce settings (r/atom {}))
+
 (defn panel
   ([]
    (panel false))
   ([modify?]
    [sc/col-space-4
     [sc/row-sc-g2-w
-     (when modify? [hoc.toggles/switch :yearwheel/show-editing "Rediger"])
-     (when modify? [hoc.toggles/switch :yearwheel/show-deleted "Vis Slettede"])
-     [hoc.toggles/switch :yearwheel/show-content "Vis innhold"]]]))
+     (when modify? [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-editing]) "Rediger"])
+     (when modify? [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-deleted]) "Vis Slettede"])
+     [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-content]) "Vis innhold"]]]))
 
 ;endregion
 
@@ -182,9 +166,9 @@
    :font-weight "var(--font-weight-3)"})
 
 (defn- listitem-softwrap [can-edit? {:keys [id date content tldr created deleted type] :as m}]
-  (let [show-editing @(schpaa.state/listen :yearwheel/show-editing)
-        show-content (schpaa.state/listen :yearwheel/show-content)]
-    [listitem {:class     [:px-4x (when deleted :deleted)]
+  (let [show-editing @(r/cursor settings [:yearwheel/show-editing])
+        show-content (r/cursor settings [:yearwheel/show-content])]
+    [listitem {:class     [(when deleted :deleted)]
                :-on-click #(edit-event m)}
      [:div
       {:style {:display               :grid
@@ -192,8 +176,10 @@
 
       (if (and can-edit? show-editing)
         [:<>
-         [:div.pr-2 (trashcan id m)]
-         [:div.pr-2 (edit id m)]]
+         [:div.pr-3.pl-1 (widgets/trashcan (fn [id] (db/database-update
+                                                      {:path  ["yearwheel" (name id)]
+                                                       :value {:deleted (not deleted)}})) m)]
+         [:div.pr-3 (widgets/edit {} (fn [m] (edit-event m)) m)]]
         [:<>
          [:div]
          [:div]])
@@ -229,7 +215,7 @@
     (transduce xf conj [] @(db/on-value-reaction {:path ["yearwheel"]}))))
 
 (defn render [r]
-  (let [show-deleted (schpaa.state/listen :yearwheel/show-deleted)
+  (let [show-deleted (r/cursor settings [:yearwheel/show-deleted])
         data (get-all-events @show-deleted)
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         modify? (booking.access/can-modify? r users-access-tokens)]
@@ -241,7 +227,7 @@
                                                     data))]
             [sc/col-space-4
              [sc/hero (str "'" (subs (str (t/int g)) 2 4))]
-             (into [:ol]
+             (into [:ol.space-y-1]
                    (concat
                      (for [[id data] (sort-by (comp :content last) < (remove (comp :date last) data))]
                        (listitem-softwrap modify? (assoc data :id id)))
