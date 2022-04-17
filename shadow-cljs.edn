@@ -56,6 +56,6 @@
 
                                :dev               {:compiler-options {:closure-defines {goog.DEBUG           true
                                                                                         booking.data/VERSION "0.0.1"
-                                                                                        booking.data/DATE    "TODAY"}
+                                                                                        booking.data/DATE    "2022-04-17T19:41"}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :none}}}}}

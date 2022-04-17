@@ -112,7 +112,7 @@
                      :style     {:color "var(--brand1)"}
                      :label     "Hva kan jeg gjøre?"
                      :stay-open true
-                     :shortcut  "ctrl-k"
+                     :shortcut  "ctrl-k / \u2318-k"
                      :action    #(rf/dispatch [:app/toggle-command-palette])}]
              (when @at-least-registered?
                [:hr])

@@ -432,17 +432,19 @@
      [:div {:style {:display               "grid"
                     :gap                   "var(--size-4) var(--size-2)"
                     :grid-template-columns "1fr"}}
+
       (when @er-nokkelvakt?
         [listitem' (t/at (t/date "2022-04-14") (t/time "18:00"))
          [sc/col-space-2
           [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at informasjonen vi har om deg er oppdatert."]
           [:span "Dine opplysninger finner du "
            [sc/link {:style {:display :inline-block}
-                     :href  (kee-frame.core/path-for [:r.user])} "her"]]]])
-      [listitem' (t/date "2022-04-13")
-       [:span "Bruk båtloggen for å registrere "
-        [sc/link {:style {:display :inline-block}
-                  :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt!"]]]
+                     :href  (kee-frame.core/path-for [:r.user])} "her."]]]])
+      (when @er-nokkelvakt?
+        [listitem' (t/date "2022-04-13")
+         [:span "Bruk båtloggen for å registrere "
+          [sc/link {:style {:display :inline-block}
+                    :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])
       ;[listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
       [listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
       [listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
