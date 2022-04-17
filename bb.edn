@@ -19,7 +19,7 @@
                          html (slurp (str "template/" app-name "/index.html"))]
                      (spit (str dist "/" app-name "/" index-file)
                        (-> (slurp (str "template/" app-name "/index.html"))
-                         (.replace "{title}" (str title " " app-name))
+                         (.replace "{title}" (str title))
                          (.replace "{css-source}" output-name-css)
                          (.replace "{js-source}" output-name-js))))))
 
@@ -45,7 +45,7 @@
                            :dist          "dist"
                            :manifest-file "/js/manifest.edn"
                            :index-file    "index.html"
-                           :title         "NRPK-22"}))}
+                           :title         "EYKT-22-A"}))}
   dev          {:doc  "requires `booking` or `eykt`"
                 :task (run '-dev {:parallel true})}
   css          {:task (shell (str "npx tailwindcss -o " -css-output))}

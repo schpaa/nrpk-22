@@ -97,7 +97,7 @@
   (let [{:keys [initial original plain timestamp]} data
         innlevert (into #{} (keys original))
         db (rf/subscribe [:db/boat-db])
-        id->number #(->> % (get @db) :number)]
+        _id->number #(->> % (get @db) :number)]
     (r/with-let [st2 (r/atom initial)
                  st (r/atom initial)]
       [sc/dropdown-dialog
@@ -113,9 +113,8 @@
                                                           :justify-content :between
                                                           :width           "100%"}}
                                             t
-                                            [sc/badge-2 {:class [:big (when-not (and v #_(get original k)) :in-use)]} number]
-                                            [sc/col {:style {:flex     "1"
-                                                             :-opacity (if @(r/cursor st [k]) 1 0.25)}}
+                                            [sc/badge-2 {:class [:big (when-not v :in-use)]} number]
+                                            [sc/col {:style {:flex "1"}}
                                              [sc/text1 (schpaa.components.views/normalize-kind kind)]
                                              [sc/small1 navn]
                                              (if @(r/cursor st [k])
@@ -270,7 +269,8 @@
 
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
-    (let [show-deleted? @(rf/subscribe [:rent/common-show-deleted])
+    (let [admin? (rf/subscribe [:lab/admin-access])
+          show-deleted? @(rf/subscribe [:rent/common-show-deleted])
           edit-mode? @(rf/subscribe [:rent/common-edit-mode])
           data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
@@ -300,13 +300,19 @@
                                       :display   :flex}}
                         (when edit-mode?
                           [trashcan k m])
-                        (if-not edit-mode?
-                          [hoc.buttons/reg-pill {:class    [:narrow]
-                                                 :on-click #(innlevering {:k         k
-                                                                          :timestamp timestamp
-                                                                          :boats     boats})} "Inn"]
+                        (if edit-mode?
                           [hoc.buttons/reg-icon {:class    [:regular]
-                                                 :on-click #()} ico/pencil])]
+                                                 :disabled (not goog.DEBUG)
+                                                 :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/pencil]
+                          (if (= uid loggedin-uid)
+                            [hoc.buttons/cta-pill {:class    [:narrow]
+                                                   :on-click #(innlevering {:k         k
+                                                                            :timestamp timestamp
+                                                                            :boats     boats})} "Inn"]
+                            [hoc.buttons/reg-pill {:class    [:narrow]
+                                                   :on-click #(innlevering {:k         k
+                                                                            :timestamp timestamp
+                                                                            :boats     boats})} "Inn"]))]
                        (into [listitem' {:style {:opacity   (if deleted 0.2 1)
 
                                                  :grid-area "content"}}]
