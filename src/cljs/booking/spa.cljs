@@ -568,8 +568,8 @@
 
 
 
-                              [sc/text1 "Dine utlån og vakter kommer her"]
-                              [eykt.content.mine-vakter/mine-vakter @user]
+                              ;[sc/text1 "Dine utlån og vakter kommer her"]
+                              ;[eykt.content.mine-vakter/mine-vakter @user]
                               [eykt.calendar.core/render r]])
                            [l/ppre-x @user]))}]))
 

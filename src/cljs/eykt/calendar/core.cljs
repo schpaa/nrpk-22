@@ -222,21 +222,21 @@
         listener (db/on-value-reaction {:path ["calendar"]})
         color-map (s/color-map :main)]
     (fn [r]
-      [:div.-mx-4.bg-gray-900
-       {:class (get-in s/color-map [:main :content :bg2])}
+      [:div                                                 ;.-mx-4.bg-gray-900
+       ;{:class (get-in s/color-map [:main :content :bg2])}
 
-       [:div                                                ;.sticky.top-0
-        [widgets/tab-machine
-         {:tabs-id          :basics
-          :class            (get-in color-map [:normal :bg])
-          :selected-classes (get-in color-map [:selected :tab])
-          :normal-classes   (get-in color-map [:normal :tab])
-          :current-tab      @(rf/subscribe [::widgets/get-tab :basics :table])}
-         render-tab-data]]
+       #_[:div                                              ;.sticky.top-0
+          [widgets/tab-machine
+           {:tabs-id          :basics
+            :class            (get-in color-map [:normal :bg])
+            :selected-classes (get-in color-map [:selected :tab])
+            :normal-classes   (get-in color-map [:normal :tab])
+            :current-tab      @(rf/subscribe [::widgets/get-tab :basics :table])}
+           render-tab-data]]
 
        ;[:div @uid]
-       [:div.p-4
-        {:class (get-in s/color-map [:main :content :bg])}
+       [:div                                                ;.p-4
+        ;{:class (get-in s/color-map [:main :content :bg])}
         (case @(rf/subscribe [::widgets/get-tab :basics :table])
           :table
           [views/table

@@ -1,5 +1,6 @@
 (ns eykt.calendar.views
   (:require [schpaa.debug :as l]
+            [lambdaisland.ornament :as o]
             [eykt.calendar.actions :as actions]
             [times.api :as ta]
             [db.core :as db]
@@ -7,180 +8,102 @@
             [re-frame.core :as rf]
             [times.api :refer [format]]
             [schpaa.button :as bu]
-            [schpaa.style :as st]))
+            [schpaa.style :as st]
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [booking.ico :as ico]
+            [schpaa.style.ornament :as sc]))
 
-(comment
-  (let [data {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-              {:2022-05-08T11:00
-               {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
-               :2022-05-08T14:00
-               {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
-              :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
-              {:2022-05-08T11:00
-               {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}}]
-    ;(routine data)
-    (->> (vals data)
-         (reduce (fn [a kvs]
-                   ;(prn kvs)
-                   (let [z (reduce (fn [a' [k v]]
-                                     ;(prn "> " k v)
-                                     (update a' k (fnil conj []) v)) a kvs)]
-                     ;(prn "z: " z)
-                     (conj a z))) {})
-         (map (fn [[k v]] [k (vec (sort-by vals > v))]))
-         (into {}))))
+(o/defstyled user-cell :div
+  [:&
+   :flex
+   :flex-center :w-24
+   :h-10
+   {:border-radius "var(--radius-0)"}])
 
-(comment
-  (let [data {"Kald periode helg"
-              {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-               {:2022-05-08T11:00
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
-                :2022-05-08T14:00
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
-               :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
-               {:2022-05-08T11:00
-                {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}},
-              "Kald periode ukedag"
-              {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-               {:2022-05-11T18:00
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:43:17.358"}}}}]
-    (reduce-kv (fn [m k v]
-                 (prn (vals v))
-                 (assoc m k
-                          (reduce-kv (fn [m' k' v']
-                                       (prn v')
-                                       m' #_(assoc m' k' v')) {}
-                                     (vals v)))
+(o/defstyled avail-user-slot :div
+  [:&
+   user-cell
+   {:color            "var(--text1)"
+    :background-color "var(--floating)"}])
 
-                 #_(assoc m k (reduce-kv (fn [m k v] m) (get m k) (vals v))))
-               {} data)))
+(o/defstyled taken-user-slot :div
+  [:&
+   :p-2
+   user-cell
+   {:color            "var(--text1)"
+    :background-color "var(--toolbar-)"}])
 
-(do
-  (defn invert [data]
-    (->> (vals data)
-         (reduce (fn [a kvs]
-                   ;(prn kvs)
-                   (let [z (reduce (fn [a' [k v]]
-                                     (prn "> " k (seq v))
-                                     (update a' k (fnil conj {}) v)) a kvs)]
-                     ;(prn "z: " z)
-                     (conj a z))) {})
-         (map (fn [[k v]] [k (into [] (sort-by val < v))]))))
-  (invert {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-           {:2022-05-08T11:00
-            {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
-            :2022-05-08T14:00
-            {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
-           :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
-           {:2022-05-08T11:00
-            {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}}))
+(o/defstyled time-slot :div
+  :w-32
+  :h-10
+  :flex :flex-center)
 
-(comment
-  (do
-    #_(reduce (fn [a kv] (assoc a (key kv) (val kv)))
-              {}
-              [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
-               {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T14:45:50.061"}])
-    (reduce (fn [a kv] (assoc a (key kv) (val kv)))
-            {}
-            [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
-             {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T14:45:50.061"}])))
 
+(defn invert [data]
+  (->> (vals data)
+       (reduce (fn [a kvs]
+                 (let [z (reduce (fn [a' [k v]]
+                                   (update a' k (fnil conj {}) v)) a kvs)]
+                   (conj a z))) {})
+       (map (fn [[k v]] [k (into [] (sort-by val < v))]))))
 
 (defn table [{:keys [base data]}]
   (let [uid @(rf/subscribe [::db/root-auth :uid])
-        uid (keyword uid)
-        {:keys [bg+ bg fg+ fg fg- p- p]} (st/fbg' :calender-table)]
+        uid (keyword uid)]
+    (into [:div.space-y-4]
+          (for [each (filter (fn [[e]] (pos? (:slots e))) data)
+                [{:keys [description dt slots] :as b} group] (group-by #(select-keys % [:dt :description :slots]) each)]
+            (let [alle-regs-i-denne-periodegruppen
+                  (invert (filter (fn [[k v]] true #_(= 1 (key v))) (clojure.walk/keywordize-keys (get base description))))]
+              (into [:div.w-full
+                     [sc/row-fields {:style {:width           "100%"
+                                             :align-items     :end
+                                             :justify-content :between}}
+                      [sc/title2 (booking.flextime/relative-time (t/date dt) ta/calendar-date-format)]
+                      [sc/small2 description]]]
+                    (for [{:keys [starttime endtime]} (sort-by :starttime < group)
+                          :let [key (-> (t/date dt) (t/at starttime) str keyword)
+                                slots-on-this-eykt (first (filter (fn [[k v]]
+                                                                    (= (name k)
+                                                                       (str (t/at (t/date dt) (t/time starttime)))))
+                                                                  alle-regs-i-denne-periodegruppen))
+                                count-slots-on-this-eykt (count (second slots-on-this-eykt))
+                                n (- slots count-slots-on-this-eykt)]]
 
-    [:div.space-y-2.bg-white
-     ;[l/ppre-x base]
-     ;[l/ppre-x (vals base)]
-     ;[l/ppre-x ">>> " (invert base)]
+                      [:div.ml-4
+                       [sc/col-space-2
+                        [time-slot [sc/text1 "kl. " (str starttime) "—" (str endtime)]]
 
-     #_[l/ppre-x (reduce-kv (fn [m k v]
-                              #_(reduce (fn [m kv] m) v v)
-                              (assoc m k (reduce (fn [m kv] m) (get m k) (vals v))))
-                            {} base)]
-     #_[l/ppre-x (reduce-kv (fn [m k v]
-                              (update m k #(reduce-kv (fn [m' k' v'] assoc m' k' v') {} (vals v))))
-                            {} base)]
-     ;[l/ppre-x data]
+                        [sc/row-sc-g2
+                         (let [remove? (get-in base [description uid key])]
+                           [(if remove? schpaa.style.hoc.buttons/danger-pill
+                                        hoc.buttons/cta-pill)
+                            {:class    [:narrow]
+                             :type     :button
+                             :on-click #(if remove?
+                                          (actions/delete {:uid uid :group description :timeslot key})
+                                          (actions/add {:uid uid :group description :timeslot key}))}
+                            (if remove? (sc/icon ico/trash) (sc/icon ico/plus))])
 
-     #_(into [:div.space-y-1]
-             (for [e (keys base)
-                   :let [e (keyword e)]]
-               (schpaa.components.views/modern-checkbox'
-                 {:set-details #(schpaa.state/change [:opt1 e] %)
-                  :get-details #(-> (schpaa.state/listen [:opt1 e]) deref)}
-                 (fn [checkbox]
-                   [:div.flex.items-center.justify-end.gap-2.w-full.px-2
-                    [:div.text-base.font-normal.space-y-0
-                     [:div {:class (concat fg p)} e]]
-                    checkbox]))))
-
-     ;[l/ppre-x base]
-     [:div.space-y-4.bg-white
-      (doall (for [each (filter (fn [[e]] (pos? (:slots e))) data)
-                   [{:keys [description dt slots] :as b} group] (group-by #(select-keys % [:dt :description :slots]) each)]
-               (let [alle-regs-i-denne-periodegruppen
-                     (invert (filter (fn [[k v]] true #_(= 1 (key v))) (clojure.walk/keywordize-keys (get base description))))]
-                 [:div {:class fg-}
-                  [:div (ta/date-format (t/date dt))]
-                  [:div description]
-                  ;[l/ppre-x b group] ;sier noe om det definerte
-                  ;[l/ppre-x #_(t/at (t/date dt) (t/time (:starttime group))) group] ;sier noe om det definerte
-                  ;[l/ppre-x (get base description)]
-                  ;[l/ppre-x (vals (get base description))]
-                  ;[l/ppre-x "::" dt]
-                  ;[l/ppre-x ">>" alle-regs-i-denne-periodegruppen]
-
-                  ;;for hver økt pr dag
-                  (doall (for [{:keys [starttime endtime]} (sort-by :starttime < group)
-                               :let [key (-> (t/date dt) (t/at starttime) str keyword)
-                                     slots-taken (sort-by second < (get-in base [description key]))
-                                     slots-on-this-eykt (first (filter (fn [[k v]]
-                                                                         (= (name k)
-                                                                            (str (t/at (t/date dt) (t/time starttime)))))
-                                                                       alle-regs-i-denne-periodegruppen))
-                                     count-slots-on-this-eykt (count (second slots-on-this-eykt))
-                                     n (- slots count-slots-on-this-eykt)]]
-
-                           [:div.space-y-1
-
-                            #_[l/ppre-x
-                               ;(map name (keys alle-regs-i-denne-periodegruppen))
-                               slots-on-this-eykt
-                               count-slots-on-this-eykt]
-                            ;[l/ppre-x "TM>> " (t/at (t/date dt) (t/time starttime))]
-                            ;[l/ppre-x slots count-slots-on-this-eykt slots-on-this-eykt]
-                            [:div "Plasser: " slots " (" (if (pos? n) (str n " ledig") "ingen ledige") ")"]
-                            ;[l/ppre [description key uid]]
-                            [:div.flex.gap-2
-                             ;(str (t/at (t/date dt) (t/time starttime))) " :: "
-                             [:div (str starttime) "–" (str endtime)]
-
-                             (if (get-in base [description uid key])
-                               [bu/danger-button-small {:type     :button
-                                                        :on-click #(actions/delete {:uid uid :group description :timeslot key})} "fjern"]
-                               (if (pos? n)
-                                 [bu/regular-button-small {:type     :button
-                                                           :on-click #(actions/add {:uid uid :group description :timeslot key})} "legg til"]))
-
-                             #_[l/ppre-x ">> "
-                                ;slots-on-this-eykt
-                                (last slots-on-this-eykt)]
-                             (into [:div.flex.gap-2]
-                                   (concat
-                                     (map (fn [[idx [a påmeldt-dato]]]
-                                            ;[l/ppre-x idx k v]
-                                            [:div.flex.gap-2.w-16.overflow-clip
-                                             {:class (concat bg (if (< (dec slots) idx) [:text-red-500] fg))}
-                                             [:div {:class (if (= (keyword uid) a) (concat bg+ fg+))}
-                                              [:div.truncate a]
-                                              [:div {:class p-} (ta/datetime-format (t/date-time påmeldt-dato))]]])
-                                          (map-indexed vector (last slots-on-this-eykt)))
-                                     (map (fn [e] [:div.w-16 {:class bg} "ledig"])
-                                          (range n))))]]))])))]]))
+                         (into [sc/row-sc-g2]
+                               (concat
+                                 (map (fn [[idx [this-uid påmeldt-dato]]]
+                                        [taken-user-slot
+                                         [sc/text1
+                                          {:class [:truncate]}
+                                          (or
+                                            (user.database/lookup-alias (name this-uid))
+                                            this-uid)]]
+                                        #_[:div.flex.gap-2.w-16.shrink-0.overflow-clip
+                                           {:class (concat bg (if (< (dec slots) idx) [:text-red-500] fg))}
+                                           [:div {:class (if (= (keyword uid) this-uid) (concat bg+ fg+))}
+                                            [:div.truncate (or
+                                                             (user.database/lookup-alias (name this-uid))
+                                                             this-uid)]
+                                            #_[:div {:class p-} (ta/datetime-format (t/date-time påmeldt-dato))]]])
+                                      (map-indexed vector (last slots-on-this-eykt)))
+                                 (map (fn [_] [avail-user-slot "ledig"])
+                                      (range n))))]]])))))))
 
 (comment
   (let [data [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
@@ -365,3 +288,73 @@
                            60)]])
                (map corrected)))]))
 ;todo Which of them is overflowed?
+
+(comment
+  (comment
+    (let [data {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                {:2022-05-08T11:00
+                 {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
+                 :2022-05-08T14:00
+                 {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
+                :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
+                {:2022-05-08T11:00
+                 {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}}]
+      ;(routine data)
+      (->> (vals data)
+           (reduce (fn [a kvs]
+                     ;(prn kvs)
+                     (let [z (reduce (fn [a' [k v]]
+                                       ;(prn "> " k v)
+                                       (update a' k (fnil conj []) v)) a kvs)]
+                       ;(prn "z: " z)
+                       (conj a z))) {})
+           (map (fn [[k v]] [k (vec (sort-by vals > v))]))
+           (into {}))))
+
+  (comment
+    (let [data {"Kald periode helg"
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:2022-05-08T11:00
+                  {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
+                  :2022-05-08T14:00
+                  {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
+                 :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:2022-05-08T11:00
+                  {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}},
+                "Kald periode ukedag"
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+                 {:2022-05-11T18:00
+                  {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:43:17.358"}}}}]
+      (reduce-kv (fn [m k v]
+                   (prn (vals v))
+                   (assoc m k
+                            (reduce-kv (fn [m' k' v']
+                                         (prn v')
+                                         m' #_(assoc m' k' v')) {}
+                                       (vals v)))
+
+                   #_(assoc m k (reduce-kv (fn [m k v] m) (get m k) (vals v))))
+                 {} data)))
+
+  (comment
+    (do
+      (invert {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
+               {:2022-05-08T11:00
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
+                :2022-05-08T14:00
+                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
+               :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
+               {:2022-05-08T11:00
+                {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}})))
+
+  (comment
+    (do
+      #_(reduce (fn [a kv] (assoc a (key kv) (val kv)))
+                {}
+                [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
+                 {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T14:45:50.061"}])
+      (reduce (fn [a kv] (assoc a (key kv) (val kv)))
+              {}
+              [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
+               {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T14:45:50.061"}]))))
+
