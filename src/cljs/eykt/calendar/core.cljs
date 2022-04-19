@@ -36,7 +36,16 @@
                    :slots     3}
                   {:starttime #time/time "14:00"
                    :endtime   #time/time "17:00"
-                   :slots     3}]}])
+                   :slots     3}]}
+   #_{:group       :z3
+      :description "klikk i vei - denne gjelder ikke"
+      :startdate   #time/date "2022-05-07"
+      :enddate     #time/date "2022-05-08"
+      :weekdays    [t/SATURDAY]
+      :times       [{:starttime #time/time "10:00"
+                     :endtime   #time/time "16:00"
+                     :slots     16}]}])
+
 
 ;region
 
@@ -82,7 +91,7 @@
 
 (defn expand-date-range []
   (let [config {:rules     (expand short-rules)
-                :utc-start (t/at (t/date "2022-05-08") (t/time "00:00"))
+                :utc-start (t/at (t/date "2022-05-07") (t/time "00:00"))
                 :utc-end   (t/at (t/date "2022-07-01") (t/time "00:00"))}]
 
     #_(filter (fn [[e]] (< 0 (:slots e)))

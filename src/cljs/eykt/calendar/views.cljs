@@ -23,7 +23,7 @@
 (o/defstyled avail-user-slot :div
   [:&
    user-cell
-   {:color            "var(--text1)"
+   {:color            "var(--text3)"
     :background-color "var(--floating)"}])
 
 (o/defstyled taken-user-slot :div
@@ -38,7 +38,6 @@
   :h-10
   :flex :flex-center)
 
-
 (defn invert [data]
   (->> (vals data)
        (reduce (fn [a kvs]
@@ -48,7 +47,7 @@
        (map (fn [[k v]] [k (into [] (sort-by val < v))]))))
 
 (defn table [{:keys [base data]}]
-  (let [uid @(rf/subscribe [::db/root-auth :uid])
+  (let [uid @(rf/subscribe [:lab/uid] #_[::db/root-auth :uid])
         uid (keyword uid)]
     (into [:div.space-y-4]
           (for [each (filter (fn [[e]] (pos? (:slots e))) data)
@@ -73,34 +72,46 @@
                       [:div.ml-4
                        [sc/col-space-2
                         [time-slot [sc/text1 "kl. " (str starttime) "—" (str endtime)]]
+                        [sc/row-sc-g4-w {:style {:align-items "start"}}
+                         [:div.h-10.flex.items-center
+                          (let [remove? (get-in base [description uid key])]
+                            (if (or (pos? n) remove?)
+                              [(if remove? schpaa.style.hoc.buttons/danger-pill
+                                           hoc.buttons/cta-pill)
+                               {:class    [:narrow :shrink-0]
+                                :type     :button
+                                :on-click #(if remove?
+                                             (actions/delete {:uid uid :group description :timeslot key})
+                                             (actions/add {:uid uid :group description :timeslot key}))}
+                               (if remove? (sc/icon ico/trash) (sc/icon ico/plus))]
+                              [hoc.buttons/reg-pill {:disabled true
+                                                     :class    [:disabled
+                                                                :invisible
+                                                                :narrow :shrink-0]} (sc/icon ico/check)]))]
 
-                        [sc/row-sc-g2
-                         (let [remove? (get-in base [description uid key])]
-                           [(if remove? schpaa.style.hoc.buttons/danger-pill
-                                        hoc.buttons/cta-pill)
-                            {:class    [:narrow]
-                             :type     :button
-                             :on-click #(if remove?
-                                          (actions/delete {:uid uid :group description :timeslot key})
-                                          (actions/add {:uid uid :group description :timeslot key}))}
-                            (if remove? (sc/icon ico/trash) (sc/icon ico/plus))])
-
-                         (into [sc/row-sc-g2]
+                         (into [sc/row-sc-g1-w]
                                (concat
                                  (map (fn [[idx [this-uid påmeldt-dato]]]
                                         [taken-user-slot
                                          [sc/text1
                                           {:class [:truncate]}
-                                          (or
-                                            (user.database/lookup-alias (name this-uid))
-                                            this-uid)]]
-                                        #_[:div.flex.gap-2.w-16.shrink-0.overflow-clip
-                                           {:class (concat bg (if (< (dec slots) idx) [:text-red-500] fg))}
-                                           [:div {:class (if (= (keyword uid) this-uid) (concat bg+ fg+))}
-                                            [:div.truncate (or
-                                                             (user.database/lookup-alias (name this-uid))
-                                                             this-uid)]
-                                            #_[:div {:class p-} (ta/datetime-format (t/date-time påmeldt-dato))]]])
+                                          #_(count (user.database/lookup-username (name this-uid)))
+                                          (let [alias (user.database/lookup-alias (name this-uid))]
+                                            (if (empty? alias)
+                                              (let [name (user.database/lookup-username (name this-uid))]
+                                                (if (empty? name)
+                                                  this-uid
+                                                  name))
+                                              alias #_"uten alias")
+                                            #_(or
+                                                (user.database/lookup-alias (name this-uid))
+                                                (if-let [u (user.database/lookup-username (name this-uid))]
+                                                  (if (empty? u)
+                                                    this-uid
+                                                    u)
+                                                  this-uid)))]])
+
+
                                       (map-indexed vector (last slots-on-this-eykt)))
                                  (map (fn [_] [avail-user-slot "ledig"])
                                       (range n))))]]])))))))

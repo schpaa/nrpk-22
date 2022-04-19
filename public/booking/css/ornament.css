@@ -1101,5 +1101,6 @@ body {
 .booking_utlan__command_grid{display:grid;column-gap:var(--size-3);row-gap:var(--size-2);grid-template-columns:min-content 1fr;grid-template-areas:". time" "edit content"}
 .eykt_calendar_views__time_slot{width:8rem;height:2.5rem;display:flex}.eykt_calendar_views__time_slot{display:flex;justify-content:center;align-items:center}
 .eykt_calendar_views__taken_user_slot{padding:.5rem;color:var(--text1);background-color:var(--toolbar-)}.eykt_calendar_views__taken_user_slot{display:flex;width:6rem;height:2.5rem;border-radius:var(--radius-0)}.eykt_calendar_views__taken_user_slot{display:flex;justify-content:center;align-items:center}
-.eykt_calendar_views__avail_user_slot{color:var(--text1);background-color:var(--floating)}.eykt_calendar_views__avail_user_slot{display:flex;width:6rem;height:2.5rem;border-radius:var(--radius-0)}.eykt_calendar_views__avail_user_slot{display:flex;justify-content:center;align-items:center}
+.eykt_calendar_views__avail_user_slot{color:var(--text3);background-color:var(--floating)}.eykt_calendar_views__avail_user_slot{display:flex;width:6rem;height:2.5rem;border-radius:var(--radius-0)}.eykt_calendar_views__avail_user_slot{display:flex;justify-content:center;align-items:center}
 .eykt_calendar_views__user_cell{display:flex;width:6rem;height:2.5rem;border-radius:var(--radius-0)}.eykt_calendar_views__user_cell{display:flex;justify-content:center;align-items:center}
+.schpaa_style_ornament__row_sc_g1_w{gap:.5rem;display:flex;align-items:center;flex-wrap:wrap;whitespace:normal}
