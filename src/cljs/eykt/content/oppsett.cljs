@@ -19,7 +19,7 @@
      {:class (concat fg bg)}
      [:div "..."]
      (into [:div.space-y-4]
-           (map item eykt.calendar.core/rules'))
+           (map item eykt.calendar.core/short-rules))
      [:div.space-y-1
-      (for [e eykt.calendar.core/rules']
+      (for [e eykt.calendar.core/short-rules]
         [l/ppre-x e])]]))

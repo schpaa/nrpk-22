@@ -317,7 +317,7 @@
              {:class bg}
              [:div.space-y-px.flex.flex-col
               {:style {:min-height "calc(100vh - 7rem)"}}
-              (if (seq eykt.calendar.core/rules')
+              (if (seq eykt.calendar.core/short-rules)
                 [:div.flex-1
                  {:class bg}
                  ;[l/ppre @user-auth]

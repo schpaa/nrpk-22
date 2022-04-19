@@ -10,7 +10,7 @@
           source (db/on-value-reaction {:path ["calendar"]})
 
           data (filter (fn [[k v]] (contains? v (keyword uid))) @source)
-          rules (group-by :group eykt.calendar.core/rules')
+          rules (group-by :group eykt.calendar.core/short-rules)
 
           straightened-rules (fn [a [k v]]
                                (if (< 1 (count (seq v)))
@@ -30,7 +30,7 @@
                                                  (name starttime)))) 0 rule-refs)))
                       0 prep-data)]
 
-      [:div.p-4.space-y-4
+      [:div.p-4.space-y-4.text-white
        {:class (concat fg bg)}
        [:div "en liste over mine vakter"]
        [:div {:class (concat hd fg+)} sum " timer"]

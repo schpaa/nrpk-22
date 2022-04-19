@@ -18,150 +18,25 @@
 (def all-week [t/MONDAY t/TUESDAY t/WEDNESDAY t/THURSDAY t/FRIDAY t/SATURDAY t/SUNDAY])
 
 (def short-rules
-  [;intent This is not really a rule, since it is a one-time-happening
-   {:group       :z1
-    :description "Åpen dag"
-    :startdate   #time/date "2022-02-01"
-    :times       [{:starttime #time/time "10:00"
-                   :endtime   #time/time "16:00"
-                   :slots     8}]}
-   {:group       :z1
-    :description "Vår-dugnad"
-    :startdate   #time/date "2022-02-03"
-    :enddate     #time/date "2022-02-04"
-    ;:weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-    :times       [{:starttime #time/time "10:00"
-                   :endtime   #time/time "12:00"
-                   :slots     4}
-                  {:starttime #time/time "12:00"
-                   :endtime   #time/time "14:00"
-                   :slots     4}
-                  {:starttime #time/time "14:00"
-                   :endtime   #time/time "16:00"
-                   :slots     4}]}
-   {:group       :z1
-    :description "UKE"
-    :startdate   #time/date "2022-01-12"
-    :enddate     #time/date "2022-06-13"
+  [{:group       :z1
+    :description "Kald periode ukedag"
+    :startdate   #time/date "2022-05-08"
+    :enddate     #time/date "2022-06-12"
     :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-    :times       [{:starttime #time/time "11:00"
-                   :endtime   #time/time "12:00"
+    :times       [{:starttime #time/time "18:00"
+                   :endtime   #time/time "21:00"
                    :slots     2}]}
    {:group       :z2
-    :description "HELG"
-    :startdate   #time/date "2022-01-31"
-    :enddate     #time/date "2022-05-13"
+    :description "Kald periode helg"
+    :startdate   #time/date "2022-05-08"
+    :enddate     #time/date "2022-06-12"
     :weekdays    [t/SATURDAY t/SUNDAY]
     :times       [{:starttime #time/time "11:00"
                    :endtime   #time/time "14:00"
                    :slots     3}
                   {:starttime #time/time "14:00"
                    :endtime   #time/time "17:00"
-                   :slots     3}]}
-   #_{:group       :c
-      :description "aftermath is a long title"
-      :startdate   #time/date "2022-01-31"
-      :enddate     #time/date "2022-02-13"
-      :weekdays    all-week                                 ;[t/MONDAY t/SUNDAY]
-      :times       [{:starttime #time/time "06:00"
-                     :endtime   #time/time "07:00"
-                     :slots     1}]}
-   #_{:group       :b
-      :description "Party"
-      :startdate   #time/date "2022-01-31"
-      :enddate     #time/date "2022-02-13"
-      ;:weekdays    [t/THURSDAY] ;t/SATURDAY t/SUNDAY
-      :weekdays    [t/MONDAY t/SUNDAY]
-      :times       [{:starttime #time/time "07:00"
-                     :endtime   #time/time "10:00"
-                     :slots     2}]}
-   #_{:group       :a
-      :description "SIMPLE test"
-      :startdate   #time/date "2022-01-31"
-      :enddate     #time/date "2022-02-13"
-      :weekdays    [t/MONDAY t/SUNDAY]
-      :times       [{:starttime #time/time "11:00"
-                     :endtime   #time/time "14:00"
-                     :slots     3}
-                    {:starttime #time/time "14:00"
-                     :endtime   #time/time "17:00"
-                     :slots     3}
-                    {:starttime #time/time "17:00"
-                     :endtime   #time/time "17:16"
-                     :slots     2}]}
-
-   #_#_#_{:description "helg"
-          :startdate   #time/date "2022-01-30"
-          :enddate     #time/date "2022-03-03"
-          :weekdays    [t/SATURDAY t/SUNDAY]
-          :times       [{:starttime #time/time "11:00" :endtime #time/time "14:00" :slots 3}
-                        {:starttime #time/time "14:00" :endtime #time/time "17:00" :slots 3}]}
-
-       {:description "uke"
-        :startdate   #time/date "2022-01-30"
-        :enddate     #time/date "2022-03-03"
-        :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-        :times       [{:starttime #time/time "18:00" :endtime #time/time "21:00" :slots 2}]}
-
-       {:description "ONSDAGSGRUPPA"
-        :startdate   #time/date "2022-01-30"
-        :enddate     #time/date "2022-02-03"
-        :weekdays    [t/WEDNESDAY]
-        :times       [{:starttime #time/time "10:00" :endtime #time/time "12:00" :slots 1}
-                      {:starttime #time/time "12:00" :endtime #time/time "14:10" :slots 3}]}])
-
-(def long-rules'
-  [#_{:description "Dugnad"
-      :startdate   #time/date "2022-05-01"
-      :enddate     #time/date "2022-05-04"
-      :weekdays    all-week
-      :times       [{:starttime #time/time "10:00" :endtime #time/time "12:00" :slots 8}
-                    {:starttime #time/time "12:00" :endtime #time/time "14:00" :slots 8}
-                    {:starttime #time/time "14:00" :endtime #time/time "16:00" :slots 8}]}
-   #_{:description "Kald periode"
-      :startdate   #time/date "2022-05-01"
-      :enddate     #time/date "2022-05-30"
-      :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY t/SATURDAY t/SUNDAY]
-      :times       [{:starttime #time/time "11:00" :endtime #time/time "14:00" :slots 4}
-                    {:starttime #time/time "15:00" :endtime #time/time "15:20" :slots 8}]}
-
-
-   #_{:description "Forbønn"
-      :startdate   #time/date "2022-01-01"
-      :enddate     #time/date "2022-12-31"
-      :weekdays    [t/MONDAY t/TUESDAY t/WEDNESDAY t/THURSDAY t/FRIDAY t/SATURDAY t/SUNDAY]
-      :times       [{:starttime #time/time "06:00" :endtime #time/time "06:15" :slots 5}
-                    {:starttime #time/time "06:15" :endtime #time/time "06:30" :slots 5}
-                    {:starttime #time/time "06:30" :endtime #time/time "06:45" :slots 5}]}
-
-   {:description "A"
-    :startdate   #time/date "2022-05-14"
-    :enddate     #time/date "2022-10-14"
-    :weekdays    [t/SUNDAY t/SATURDAY]
-    :times       [{:starttime #time/time "11:00" :endtime #time/time "14:00" :slots 2}
-                  {:starttime #time/time "14:00" :endtime #time/time "17:00" :slots 2}
-                  {:starttime #time/time "17:00" :endtime #time/time "17:10" :slots 2}
-                  {:starttime #time/time "17:10" :endtime #time/time "18:00" :slots 5}]}
-
-   {:description "B1"
-    :startdate   #time/date "2022-05-14"
-    :enddate     #time/date "2022-09-28"
-    :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-    :times       [{:starttime #time/time "18:00" :endtime #time/time "21:00" :slots 2}]}
-
-   {:description "utvidet sommeråpent"
-    :startdate   #time/date "2022-07-01"
-    :enddate     #time/date "2022-07-31"
-    :weekdays    [t/TUESDAY t/THURSDAY]
-    :times       [{:starttime #time/time "12:00" :endtime #time/time "15:00" :slots 2}
-                  {:starttime #time/time "15:00" :endtime #time/time "18:00" :slots 2}]}
-   {:description "begrenset høståpent"
-    :startdate   #time/date "2022-05-29"
-    :enddate     #time/date "2022-10-14"
-    :weekdays    [t/TUESDAY t/THURSDAY]
-    :times       [{:starttime #time/time "17:00" :endtime #time/time "20:00" :slots 2}]}])
-
-(def rules' short-rules)
+                   :slots     3}]}])
 
 ;region
 
@@ -180,6 +55,7 @@
 (def expand (comp expanded-times expanded-days))
 
 (defn matches [dt {:keys [startdate enddate weekday] :as timerange}]
+  (tap> [:dt+ dt startdate enddate weekday])
   (and
     (= weekday (t/day-of-week dt))
     (if (not-any? some? [startdate enddate])
@@ -190,7 +66,9 @@
 
 (defn calculate [{:keys [utc-start utc-end rules] :as config} n]
   (let [dt (t/>> utc-start (t/new-period n :days))
-        r (filter (partial matches dt) rules)]
+        r (filter #(matches (t/date dt) %) rules)]
+    (tap> {:dt      dt
+           :utc-end utc-end})
     (if (and (t/<= dt utc-end) utc-end)
       (if (seq r)
         (mapv #(assoc (dissoc % :startdate :enddate :weekday) :dt dt) r)
@@ -203,13 +81,21 @@
       (cons c (iterate-dates config (inc n))))))
 
 (defn expand-date-range []
-  (let [config {:rules     (expand rules')
-                :utc-start (t/at (t/date "2022-01-21") "00:00")
-                :utc-end   (t/at (t/date "2022-03-14") "00:00")}]
+  (let [config {:rules     (expand short-rules)
+                :utc-start (t/at (t/date "2022-05-08") (t/time "00:00"))
+                :utc-end   (t/at (t/date "2022-07-01") (t/time "00:00"))}]
 
     #_(filter (fn [[e]] (< 0 (:slots e)))
               (iterate-dates config 0))
     (iterate-dates config 0)))
+
+(comment
+  (do
+    (expand-date-range)))
+
+#_(do
+
+    (expand-date-range))
 
 ;endregion
 
@@ -294,13 +180,13 @@
 
 (comment
   (do
-    (->> (iterate-dates {:rules     (expand rules')
+    (->> (iterate-dates {:rules     (expand short-rules)
                          :utc-start (t/date "2022-01-31")
                          :utc-end   (t/date "2022-02-06")} 0)
          (massage))))
 
 (defn grab-for-graph [date-bounds]
-  (->> (iterate-dates {:rules     (expand rules')
+  (->> (iterate-dates {:rules     (expand short-rules)
                        :utc-start (t/date (t/beginning date-bounds)) ;(t/date "2022-09-30")
                        :utc-end   (t/date (t/end date-bounds)) #_(t/date "2022-10-04")} 0)
        (massage)))
@@ -310,8 +196,8 @@
   (do
     (grab-for-graph
       (tick.alpha.interval/new-interval
-        (t/date "2022-01-31")
-        (t/date "2022-02-05")))))
+        (t/date "2022-05-08")
+        (t/date "2022-06-12")))))
 
 (comment
   (do

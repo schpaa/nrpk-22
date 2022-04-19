@@ -30,7 +30,9 @@
   "add to database at [calendar uid timeslot]"
   [{:keys [uid group timeslot]}]
   (let [path ["calendar" (if (keyword? uid) (name uid) uid) group]]
-    (database-update {:path path :value {(name timeslot) (str (t/date-time))}})))
+    (database-update
+      {:path  path
+       :value {(name timeslot) {uid (str (t/date-time))}}})))
 
 (defn add'
   "add to database at [calendar uid timeslot]"
