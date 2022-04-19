@@ -174,10 +174,10 @@
      (let [f #(let [a (times.api/yearday-number (t/date %1))
                     b (times.api/yearday-number (t/date %2))]
                 [(/ a 365) (- (/ b 365) (/ a 365))])
-           data [["2022-05-08" "2022-07-03" "Vår"]
-                 ["2022-07-04" "2022-08-11" "Utvidet"]
-                 ["2022-08-12" "2022-09-04" "Sommer"]
-                 ["2022-09-05" "2022-10-09" "Høst"]]
+           data [["2022-05-08" "2022-07-03" "Vår/Sommer"]
+                 ["2022-07-04" "2022-08-14" "Utvidet"]
+                 ["2022-08-16" "2022-09-04" "Sensommer"]
+                 ["2022-09-06" "2022-10-09" "Høst"]]
            data' (map conj (map #(apply f %) data) colors)]
        [:<>
         (for [[idx [start end periodname [bg fg]]] (map-indexed vector (map conj data colors))

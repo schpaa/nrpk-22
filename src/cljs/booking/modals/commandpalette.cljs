@@ -15,7 +15,10 @@
 (def commands
   (mapv (fn [[idx {:keys [id] :as m}]] (assoc m :id (str idx)))
         (map-indexed vector
-                     [{:name   "Utlån på Nøklevann"
+                     [{:name   "Mine vakter"
+                       :icon   ico/nokkelvakt
+                       :action #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])}
+                      {:name   "Utlån på Nøklevann"
                        :icon   ico/ticket
                        :action #(rf/dispatch [:lab/toggle-boatpanel])
                        :group  1}
@@ -73,7 +76,7 @@
                       {:id "14", :name "Hvilke betingelser gjelder?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.terms]])}
                       {:id "15", :name "Plikter som nøkkelvakt" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.conditions]])}
                       {:id "16", :name "Hvilke retningslinjer på sjøbasen?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])}
-                      {:id "17", :name "Vaktkalender" :icon [:> outline/CalendarIcon] :action #(rf/dispatch [:app/navigate-to [:r.calendar]])}
+                      {:id "17", :name "Vaktkalender" :icon ico/nokkelvakt :action #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])}
                       {:id "18", :name "Veksle visning av krom" :icon [:> outline/LightningBoltIcon] :action #(rf/dispatch [:lab/toggle-chrome])}
                       {:id "19", :name "Vis filer" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])}
                       {:id "20", :name "Aktivitetsliste (utlån)" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])}

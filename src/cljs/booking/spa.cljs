@@ -296,7 +296,7 @@
                           [:r.utlan "Utlån på nøklevann"]
                           [:r.aktivitetsliste "Aktivitetsliste"]
                           [:r.terms "Betingelser"]
-                          [:r.kalender "Vaktkalender"]]]
+                          [:r.nokkelvakt "Vaktkalender"]]]
                 (map f (sort-by second data)))]]
 
             [sc/fp-summary-detail-always-show-links
@@ -354,7 +354,8 @@
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
        [+page-builder r
-        {:render user.views/my-info}]))
+        {:always-panel user.views/always-panel
+         :render       user.views/my-info}]))
 
    :r.logg
    (fn [r]
@@ -524,14 +525,14 @@
            boat-types (rf/subscribe [:db/boat-type])]
 
        [+page-builder r
-        {:panel-title  "Experimental"
-         :panel        (fn [] [:div "inside"])
+        {;:panel-title  "Experimental"
+         ;:panel        (fn [] [:div "inside"])
          :always-panel (fn [] [sc/col-space-4
                                [sc/row-sc-g2-w {:style {:gap "0.5rem"}}
-                                [hoc.buttons/reg-pill {:class [:narrow]} "Utlån"]
-                                [hoc.buttons/cta-pill {:class [:narrow]} "Vakter"]
-                                [hoc.buttons/reg-pill {:class [:narrow]} "Kalender"]
-                                [hoc.buttons/reg-pill {:class [:narrow]} "Favoritter"]]
+                                [hoc.buttons/cta-pill {:disabled false :class [:narrow]} "Vår/Sommer"]
+                                [hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Utvidet åpningstid"]
+                                [hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Sensommer"]
+                                [hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Høst"]]
 
                                #_[sc/col
                                   [:div.ml-4 (r/with-let [sel (r/atom 2)]
@@ -885,7 +886,7 @@
 
    :r.utlan
    (fn [r]
-     (let [uid (:uid @(rf/subscribe [::db/user-auth]))
+     (let [uid (:uid @(rf/subscribe [:lab/uid]))
            #_#_user @(db/on-value-reaction {:path ["users" uid]})]
        [+page-builder
         r
@@ -893,6 +894,43 @@
          :panel        booking.utlan/panel
          :always-panel booking.utlan/commands
          :render       #(booking.utlan/render uid)}]))
+
+
+   :r.mine-vakter
+   (fn [r]
+     (let [uid @(rf/subscribe [:lab/uid])]
+       [+page-builder
+        r
+        {:panel-title "rediger"
+         :render      (fn []
+                        (let [data @(db/on-value-reaction {:path ["calendar" uid]})
+                              data (clojure.walk/stringify-keys data)
+                              data (mapcat val data)]
+                          [sc/col-space-8
+
+                           [sc/row-sc-g4-w
+                            [sc/col-space-2
+                             [sc/title2 "Tidligere saldo"]
+                             [sc/text1 "-<n> timer"]]
+                            [sc/col-space-2
+                             [sc/title2 "Vaktkrav 2022"]
+                             [sc/text1 "<n> timer"]]]
+                           ;[l/ppre-x data]
+                           ;[l/ppre-x (mapcat val data)]
+                           (into [sc/col-space-4]
+                                 (for [[slot kv] data]
+                                   [sc/row-sc-g4-w
+                                    [sc/col
+                                     [sc/text1 [times.api/arrival-date (t/date-time slot)]]
+                                     [sc/small1 "Registrert " [times.api/arrival-date (t/date-time (get kv uid))]]]
+                                    [schpaa.style.hoc.buttons/reg-pill
+                                     {:class    [:narrow]
+                                      :disabled true}
+                                     "Bytt"]]))
+                           [sc/row-sc-g4-w
+                            [sc/col-space-2
+                             [sc/title2 "Overføres til neste år"]
+                             [sc/text1 "<n>" #_(* 3 (count data)) " timer"]]]]))}]))
 
 
    :r.page-not-found

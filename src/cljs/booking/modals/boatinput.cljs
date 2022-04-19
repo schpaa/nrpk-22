@@ -288,7 +288,7 @@
                    {:fx [[:rent/write data]]}))
 
 (defn- confirm-command [st]
-  (let [loggedin-uid (:uid @(rf/subscribe [:db.core/user-auth]))
+  (let [loggedin-uid @(rf/subscribe [:lab/uid])
         ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
                  (pos? (count (:list @st)))
                  (or (and (pos? (count (:item @st)))

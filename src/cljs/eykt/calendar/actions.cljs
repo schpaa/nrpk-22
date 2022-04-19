@@ -22,14 +22,14 @@
 
 (defn delete
   "delete from database at [calendar uid timeslot]"
-  [{:keys [uid group timeslot]}]
-  (let [path ["calendar" (if (keyword? uid) (name uid) uid) group (name timeslot)]]
+  [{:keys [uid section timeslot]}]
+  (let [path ["calendar" (if (keyword? uid) (name uid) uid) section (name timeslot)]]
     (database-set {:path path :value {}})))
 
 (defn add
   "add to database at [calendar uid timeslot]"
-  [{:keys [uid group timeslot]}]
-  (let [path ["calendar" (if (keyword? uid) (name uid) uid) group]]
+  [{:keys [uid section timeslot]}]
+  (let [path ["calendar" (if (keyword? uid) (name uid) uid) section]]
     (database-update
       {:path  path
        :value {(name timeslot) {uid (str (t/date-time))}}})))

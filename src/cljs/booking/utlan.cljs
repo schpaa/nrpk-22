@@ -269,6 +269,15 @@
               (and @(schpaa.state/listen :r.utlan)
                    #_@(r/cursor settings [:rent/edit]))))
 
+(defn user-alias [this-uid]
+  (let [alias (user.database/lookup-alias (name this-uid))]
+    (if (empty? alias)
+      (let [name (user.database/lookup-username (name this-uid))]
+        (if (empty? name)
+          this-uid
+          name))
+      alias #_"uten alias")))
+
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [admin? (rf/subscribe [:lab/admin-access])
@@ -294,7 +303,7 @@
                          :style {:grid-area       "time"
                                  :display         :flex
                                  :justify-content :between}}
-                        [sc/subtext {:class [:truncate]} [:div.truncate.w-32 (user.database/lookup-alias uid)]]
+                        [sc/subtext {:class [:truncate]} [:div.truncate.w-32 (user-alias uid)]]
                         [:div.grow]
                         [:div ddate]]
                        [:div {:class [:h-8 :pt-px :flex :items-center :gap-3]
@@ -320,7 +329,6 @@
                                                                             :boats     boats})} "Inn"]))]
                        (into [listitem' {:class [(if deleted :deleted)]
                                          :style {:opacity   (if deleted 0.2 1)
-
                                                  :grid-area "content"}}]
                              (map (fn [[id returned]]
                                     (let [returned (not (empty? returned))

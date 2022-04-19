@@ -14,6 +14,7 @@
    ["/oversikt" {:name       :r.oversikt
                  :header     [:r.forsiden "Oversikt"]
                  :shorttitle "Oversikt"}]
+
    ["/wix" {:name :r.forsiden-iframe :header "NRPK (wix)"}]
    ["/nytt" {:name :r.booking-blog :header [:r.forsiden "Hva er nytt?"] :access [[:member] nil]}]
    ["/nytt/:id" {:name     :r.booking-blog-doc
@@ -25,6 +26,7 @@
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
 
    ["/om-meg" {:name :r.user :shorttitle "Meg" :header [:r.oversikt "Mine opplysninger"]}]
+   ["/mine-vakter" {:name :r.mine-vakter :shorttitle "Mine vakter" :header [:r.user "Mine vakter"]}]
 
    ["/tilstede" {:name       :r.presence
                  :shorttitle "Tilstede"
@@ -39,7 +41,9 @@
    ["/not-found" {:name :r.page-not-found :header [:r.oversikt "Finner ikke siden"]}]
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
 
-   ["/nokkelvakt" {:name :r.nokkelvakt :shorttitle "Vakt" :header [:r.oversikt "Nøkkelvakt"]}]
+   ["/vakt-kalender" {:name   :r.nokkelvakt :shorttitle "Vakt-kalender"
+                      :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
+                      :header [:r.oversikt "Nøkkelvakt-kalender"]}]
    ["/admin" {:name :r.admin :header [:r.oversikt "Admin"] :access [[:member] #{:admin}]}]
    ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]

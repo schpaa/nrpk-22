@@ -48,12 +48,14 @@
 
 (defn table [{:keys [base data]}]
   (let [uid @(rf/subscribe [:lab/uid] #_[::db/root-auth :uid])
+        kald-periode? (:kald-periode (user.database/lookup-userinfo uid))
         uid (keyword uid)]
     (into [:div.space-y-4]
-          (for [each (filter (fn [[e]] (pos? (:slots e))) data)
-                [{:keys [description dt slots] :as b} group] (group-by #(select-keys % [:dt :description :slots]) each)]
+          (for [each (filter (fn [[e]] (and (pos? (:slots e))
+                                            (if (:kald-periode e) kald-periode? true))) data)
+                [{:keys [description dt slots section kald-periode] :as b} group] (group-by #(select-keys % [:dt :description :section :slots :kald-periode]) each)]
             (let [alle-regs-i-denne-periodegruppen
-                  (invert (filter (fn [[k v]] true #_(= 1 (key v))) (clojure.walk/keywordize-keys (get base description))))]
+                  (invert (filter (fn [[k v]] true #_(= 1 (key v))) (clojure.walk/keywordize-keys (get base section))))]
               (into [:div.w-full
                      [sc/row-fields {:style {:width           "100%"
                                              :align-items     :end
@@ -74,15 +76,15 @@
                         [time-slot [sc/text1 "kl. " (str starttime) "—" (str endtime)]]
                         [sc/row-sc-g4-w {:style {:align-items "start"}}
                          [:div.h-10.flex.items-center
-                          (let [remove? (get-in base [description uid key])]
+                          (let [remove? (get-in base [section uid key])]
                             (if (or (pos? n) remove?)
                               [(if remove? schpaa.style.hoc.buttons/danger-pill
                                            hoc.buttons/cta-pill)
                                {:class    [:narrow :shrink-0]
                                 :type     :button
                                 :on-click #(if remove?
-                                             (actions/delete {:uid uid :group description :timeslot key})
-                                             (actions/add {:uid uid :group description :timeslot key}))}
+                                             (actions/delete {:uid uid :section section :timeslot key})
+                                             (actions/add {:uid uid :section section :timeslot key}))}
                                (if remove? (sc/icon ico/trash) (sc/icon ico/plus))]
                               [hoc.buttons/reg-pill {:disabled true
                                                      :class    [:disabled
@@ -102,14 +104,8 @@
                                                 (if (empty? name)
                                                   this-uid
                                                   name))
-                                              alias #_"uten alias")
-                                            #_(or
-                                                (user.database/lookup-alias (name this-uid))
-                                                (if-let [u (user.database/lookup-username (name this-uid))]
-                                                  (if (empty? u)
-                                                    this-uid
-                                                    u)
-                                                  this-uid)))]])
+                                              alias #_"uten alias"))]])
+
 
 
                                       (map-indexed vector (last slots-on-this-eykt)))

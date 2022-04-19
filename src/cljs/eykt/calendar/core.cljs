@@ -18,18 +18,41 @@
 (def all-week [t/MONDAY t/TUESDAY t/WEDNESDAY t/THURSDAY t/FRIDAY t/SATURDAY t/SUNDAY])
 
 (def short-rules
-  [{:group       :z1
-    :description "Kald periode ukedag"
-    :startdate   #time/date "2022-05-08"
-    :enddate     #time/date "2022-06-12"
+  [{:section      "z1"
+    :kald-periode true
+    :description  "Kald periode ukedag"
+    :startdate    #time/date "2022-05-08"
+    :enddate      #time/date "2022-06-05"
+    :weekdays     [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+    :times        [{:starttime #time/time "18:00"
+                    :endtime   #time/time "21:00"
+                    :slots     2}]}
+   {:section      "z2"
+    :kald-periode true
+    :description  "Kald periode helg"
+    :startdate    #time/date "2022-05-08"
+    :enddate      #time/date "2022-06-05"
+    :weekdays     [t/SATURDAY t/SUNDAY]
+    :times        [{:starttime #time/time "11:00"
+                    :endtime   #time/time "14:00"
+                    :slots     3}
+                   {:starttime #time/time "14:00"
+                    :endtime   #time/time "17:00"
+                    :slots     3}]}
+
+
+   {:section     "z3"
+    :description "Sommer ukedag"
+    :startdate   #time/date "2022-06-06"
+    :enddate     #time/date "2022-07-03"
     :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
     :times       [{:starttime #time/time "18:00"
                    :endtime   #time/time "21:00"
                    :slots     2}]}
-   {:group       :z2
-    :description "Kald periode helg"
-    :startdate   #time/date "2022-05-08"
-    :enddate     #time/date "2022-06-12"
+   {:section     "z4"
+    :description "Sommer helg"
+    :startdate   #time/date "2022-06-06"
+    :enddate     #time/date "2022-07-03"
     :weekdays    [t/SATURDAY t/SUNDAY]
     :times       [{:starttime #time/time "11:00"
                    :endtime   #time/time "14:00"
@@ -37,14 +60,76 @@
                   {:starttime #time/time "14:00"
                    :endtime   #time/time "17:00"
                    :slots     3}]}
-   #_{:group       :z3
-      :description "klikk i vei - denne gjelder ikke"
-      :startdate   #time/date "2022-05-07"
-      :enddate     #time/date "2022-05-08"
-      :weekdays    [t/SATURDAY]
-      :times       [{:starttime #time/time "10:00"
-                     :endtime   #time/time "16:00"
-                     :slots     16}]}])
+
+
+   #_{:section     "z5"
+      :description "Utvidet åpningstid ukedag"
+      :startdate   #time/date "2022-07-04"
+      :enddate     #time/date "2022-08-14"
+      :weekdays    [t/TUESDAY t/THURSDAY]
+      :times       [{:starttime #time/time "12:00"
+                     :endtime   #time/time "15:00"
+                     :slots     3}
+                    {:starttime #time/time "15:00"
+                     :endtime   #time/time "18:00"
+                     :slots     3}
+                    {:starttime #time/time "18:00"
+                     :endtime   #time/time "21:00"
+                     :slots     3}]}
+
+   #_{:section     "z6"
+      :description "Utvidet åpningstid helg"
+      :startdate   #time/date "2022-07-04"
+      :enddate     #time/date "2022-08-14"
+      :weekdays    [t/SATURDAY t/SUNDAY]
+      :times       [
+                    {:starttime #time/time "11:00"
+                     :endtime   #time/time "14:00"
+                     :slots     3}
+                    {:starttime #time/time "14:00"
+                     :endtime   #time/time "17:00"
+                     :slots     3}]}
+
+   #_{:section     "z7"
+      :description "Sensommer ukedag"
+      :startdate   #time/date "2022-08-16"
+      :enddate     #time/date "2022-09-04"
+      :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+      :times       [{:starttime #time/time "18:00"
+                     :endtime   #time/time "21:00"
+                     :slots     2}]}
+   #_{:section     "z8"
+      :description "Sensommer helg"
+      :startdate   #time/date "2022-08-16"
+      :enddate     #time/date "2022-09-04"
+      :weekdays    [t/SATURDAY t/SUNDAY]
+      :times       [{:starttime #time/time "11:00"
+                     :endtime   #time/time "14:00"
+                     :slots     3}
+                    {:starttime #time/time "14:00"
+                     :endtime   #time/time "17:00"
+                     :slots     3}]}
+
+   #_{:section     "z9"
+      :description "Høst ukedag"
+      :startdate   #time/date "2022-09-06"
+      :enddate     #time/date "2022-10-09"
+      :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+      :times       [{:starttime #time/time "17:00"
+                     :endtime   #time/time "20:00"
+                     :slots     2}]}
+
+   #_{:section     "z10"
+      :description "Høst helg"
+      :startdate   #time/date "2022-09-06"
+      :enddate     #time/date "2022-10-09"
+      :weekdays    [t/SATURDAY t/SUNDAY]
+      :times       [{:starttime #time/time "11:00"
+                     :endtime   #time/time "14:00"
+                     :slots     3}
+                    {:starttime #time/time "14:00"
+                     :endtime   #time/time "17:00"
+                     :slots     3}]}])
 
 
 ;region
@@ -92,7 +177,7 @@
 (defn expand-date-range []
   (let [config {:rules     (expand short-rules)
                 :utc-start (t/at (t/date "2022-05-07") (t/time "00:00"))
-                :utc-end   (t/at (t/date "2022-07-01") (t/time "00:00"))}]
+                :utc-end   (t/at (t/date "2022-10-09") (t/time "00:00"))}]
 
     #_(filter (fn [[e]] (< 0 (:slots e)))
               (iterate-dates config 0))
@@ -161,7 +246,7 @@
 (defn z
   "?"
   [data]
-  (reduce (fn [a e] (update a (str (:dt e)) update (:group e) (fnil conj []) e)) {} data))
+  (reduce (fn [a e] (update a (str (:dt e)) update (:section e) (fnil conj []) e)) {} data))
 
 (comment
   (do

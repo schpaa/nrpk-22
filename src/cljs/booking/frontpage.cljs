@@ -433,6 +433,19 @@
                     :gap                   "var(--size-4) var(--size-2)"
                     :grid-template-columns "1fr"}}
 
+      (when-not @er-nokkelvakt?
+        [listitem' (t/at (t/date "2022-04-19") (t/time "19:00"))
+         [sc/col-space-2
+          [:div "Er du nøkkelvakt med nylaget konto (fordi Facebook ikke vil) og ser at du ikke er godkjent som nøkkelvakt?"]
+          [:span "Dette må du "
+           [sc/link {:style  {:display :inline-block}
+                     :target "_blank"
+                     :href   "https://news.ycombinator.com"} "gjøre!"]]]])
+
+      [listitem' (t/at (t/date "2022-04-18") (t/time "15:00"))
+       [sc/col-space-2
+        [:div "Hva skjer til hvilken tid? Oversikten finner du under Planlagt!"]]]
+
       (when @er-nokkelvakt?
         [listitem' (t/at (t/date "2022-04-14") (t/time "18:00"))
          [sc/col-space-2
