@@ -898,39 +898,46 @@
 
    :r.mine-vakter
    (fn [r]
-     (let [uid @(rf/subscribe [:lab/uid])]
+     (let [uid @(rf/subscribe [:lab/uid])
+           user (user.database/lookup-userinfo uid)
+           data (db/on-value-reaction {:path ["calendar" uid]})]
        [+page-builder
         r
-        {:panel-title "rediger"
-         :render      (fn []
-                        (let [data @(db/on-value-reaction {:path ["calendar" uid]})
-                              data (clojure.walk/stringify-keys data)
-                              data (mapcat val data)]
-                          [sc/col-space-8
+        {; :panel-title "rediger"
+         :render (fn []
+                   (let [data (clojure.walk/stringify-keys @data)
+                         data (mapcat val data)
+                         timekrav (:timekrav user "?")]
+                     [sc/col-space-8
 
-                           [sc/row-sc-g4-w
-                            [sc/col-space-2
-                             [sc/title2 "Tidligere saldo"]
-                             [sc/text1 "-<n> timer"]]
-                            [sc/col-space-2
-                             [sc/title2 "Vaktkrav 2022"]
-                             [sc/text1 "<n> timer"]]]
-                           ;[l/ppre-x data]
-                           ;[l/ppre-x (mapcat val data)]
-                           (into [sc/col-space-4]
-                                 (for [[slot kv] data]
-                                   [sc/row-sc-g4-w
-                                    [sc/col
-                                     [sc/text1 [times.api/arrival-date (t/date-time slot)]]
-                                     [sc/small1 "Registrert " [times.api/arrival-date (t/date-time (get kv uid))]]]
-                                    [schpaa.style.hoc.buttons/reg-pill
-                                     {:class    [:narrow]
-                                      :disabled true}
-                                     "Bytt"]]))
-                           [sc/row-sc-g4-w
-                            [sc/col-space-2
-                             [sc/title2 "Overføres til neste år"]
-                             [sc/text1 "<n>" #_(* 3 (count data)) " timer"]]]]))}]))
+                      ;[l/ppre-x data]
+                      ;[l/ppre-x (mapcat val data)]
+                      (if (seq data)
+                        (into [sc/col-space-4]
+                              (for [[slot kv] data]
+                                (when slot
+                                  [sc/row-sc-g4-w
+                                   [schpaa.style.hoc.buttons/reg-pill
+                                    {:class    [:narrow]
+                                     :disabled true}
+                                    "Bytt"]
+                                   [sc/col
+                                    [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
+                                    [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]])))
+                        [sc/text1 "Ingen vakter er registrert"])
+                      [sc/row-sc-g4-w
+                       [sc/surface-a
+                        [sc/col-space-2
+                         [sc/title2 "Overført"]
+                         [sc/text1 {:class [:text-right]} "-<n> timer"]]]
+                       [sc/surface-a
+                        [sc/col-space-2
+                         [sc/title2 "Vaktkrav"]
+                         [sc/text1 {:class [:text-right]} timekrav " timer"]]]
+                       [sc/surface-a
+                        [sc/col-space-2
+                         [sc/title2 "Ny saldo"]
+                         [sc/text1 {:class [:text-right]} (- timekrav (* 3 (count data))) " timer"]]]]]))}]))
 
 
    :r.page-not-found

@@ -36,7 +36,7 @@
 (o/defstyled time-slot :div
   :w-32
   :h-10
-  :flex :flex-center)
+  :flex :items-end)
 
 (defn invert [data]
   (->> (vals data)
@@ -73,7 +73,7 @@
 
                       [:div.ml-4
                        [sc/col-space-2
-                        [time-slot [sc/text1 "kl. " (str starttime) "—" (str endtime)]]
+                        [time-slot #_{:class [:-debug]} [sc/text1 "kl. " (str starttime) "—" (str endtime)]]
                         [sc/row-sc-g4-w {:style {:align-items "start"}}
                          [:div.h-10.flex.items-center
                           (let [remove? (get-in base [section uid key])]
