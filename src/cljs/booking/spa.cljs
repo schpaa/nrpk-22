@@ -193,6 +193,10 @@
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
 
+(defn shortlink [link-name]
+  (let [{:keys [link text]} (booking.common-views/lookup-page-ref-from-name link-name)]
+    [sc/link {:href (kee-frame.core/path-for [link])} text]))
+
 (def routing-table
   {:r.welcome
    (fn [r]
@@ -235,9 +239,12 @@
    :r.oversikt
    (fn oversikt [r]
      (let [f (fn [[a b]]
-               (if (vector? a)
-                 [sc/subtext-with-link {:href (kee-frame.core/path-for a)} b]
-                 [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b]))]
+               (if (nil? b)
+                 (let [{:keys [link text]} (booking.common-views/lookup-page-ref-from-name a)]
+                   [sc/link {:href (kee-frame.core/path-for [link])} text])
+                 (if (vector? a)
+                   [sc/subtext-with-link {:href (kee-frame.core/path-for a)} b]
+                   [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b])))]
        [+page-builder r
         {:render
          (fn []
@@ -248,10 +255,10 @@
             [sc/fp-summary-detail-always-show-links
              nil
              ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
-             "NRPK"
+             "Nøklevann ro– og padleklubb"
              [:div
-              [:img.w-24.h-24.float-right.m-4.-mt-12 {:src "/img/logo-n.png"}]
-              [:span.clear-left "Medlemmer i Nøklevann ro- og padleklubb kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
+              [:img.w-24.h-24.float-right.m-4.xmt-12 {:src "/img/logo-n.png"}]
+              [:span.clear-left "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
              [sc/row-sc-g4-w
               (let [data [[3 :r.oversikt.organisasjon "Historie"]
                           [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]
@@ -262,33 +269,34 @@
             [sc/fp-summary-detail-always-show-links
              :oversikt/bli-medlem
              "Bli medlem"
-             [:p "Alle som vil bli medlem i NRPK kan aller først registrere seg med ny konto her på hjemmesiden. Når ... kan du melde deg på innmeldingskurset."]
+             [:div "Forslag til ingress?"]
              [sc/row-sc-g4-w
-              (let [data [[1 :r.forsiden "Registrer deg her"]
-                          [2 :r.forsiden "Hva årskontigenten dekker"]]]
+              (let [data [;[1 :r.forsiden "Registrer deg her"]
+                          [2 :r.user "Mine opplysninger"]
+                          #_[3 :r.forsiden "Hva årskontigenten dekker"]]]
                 (map (comp f rest) (sort-by first data)))]]
 
             [sc/fp-summary-detail-always-show-links
              :oversikt/nøklevann
              "Nøklevann"
-             "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."
+             "Forslag til ingress?"
              [sc/row-sc-g4-w
-              (let [data [[[:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Nøklevann?"]
-                          [:r.utlan "Utlån"]
-                          [[:r.dokumenter {:id "hms-håndbok"}] "HMS ved Nøklevann"]]]
-                (map f (sort-by second data)))]]
+              (let [data [[1 [:r.dokumenter {:id "hms-håndbok"}] "HMS ved Nøklevann"]
+                          [2 [:r.dokumenter {:id "kommer"}] "Båtoversikt"]
+                          [3 :r.utlan "Utlån"]]]
+                (map (comp f rest) (sort-by first data)))]]
 
             [sc/fp-summary-detail-always-show-links
              :oversikt/Sjøbasen
              "Sjøbasen"
              "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."
              [sc/row-sc-g4-w
-              (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
+              (let [data [[[:r.dokumenter {:id "kommer"}] "HMS ved Sjøbasen"]
+                          [:r.booking "Booking"]
+                          [:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
                           [:r.booking.faq "Ofte stilte spørsmål"]
-                          [[:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Sjøbasen?"]
-                          [:r.utlan "Booking"]
-                          [[:r.dokumenter {:id "kommer"}] "HMS ved Sjøbasen"]]]
-                (map f (sort-by second data)))]]
+                          [[:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Sjøbasen?"]]]
+                (map (comp f) (sort-by second data)))]]
 
             [sc/fp-summary-detail-always-show-links
              :oversikt/Livredningskurs
@@ -307,15 +315,16 @@
              "Nøkkelvaktene er en gruppe med omtrent 130 frivillige medlemmer som betjener klubbens anlegg ved Nøklevann i klubbens åpningstider. Nøkkelvaktene hjelper medlemmene, sjekker medlemsskap og bidrar til sikkerheten i klubbens aktivitet."
              #_"Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
-              (let [data [[:r.user "Mine opplysninger"]
+              (let [data [
                           [[:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
                           [[:r.dokumenter {:id "vaktinstruks"}] "Nøkkelvaktinstruks"]
-                          [[:r.dokumenter {:id "regler-utenom-vakt"}] "Regler uteom vakt"]
+                          [[:r.dokumenter {:id "regler-utenom-vakt"}] "Regler utenom vakt"]
                           [:r.conditions "Plikter som nøkkelvakt"]
                           [:r.utlan "Utlån på nøklevann"]
                           [:r.aktivitetsliste "Aktivitetsliste"]
                           [:r.terms "Betingelser"]
-                          [:r.nokkelvakt "Vaktkalender"]]]
+                          ;(shortlink :r.nokkelvakt)
+                          [:r.nokkelvakt]]]
                 (map f (sort-by second data)))]]
 
             [sc/fp-summary-detail-always-show-links
@@ -623,7 +632,7 @@
                               ["/img/personas/noun-persona-410775.png" :m "Adrian A. Mitchell" "Styremedlem" ["Kasserer"]]
                               ["/img/personas/noun-persona-622293.png" :m "Chris P. Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
                               ["/img/personas/noun-persona-497844.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
-                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" ["HMS"]]
+                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" []]
                               ["/img/personas/noun-persona-4144954.png" :f "Ylva Eide" "Styremedlem" []]
                               ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Vara" []]
                               ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" ["Anleggs\u00ADansvarlig Nøklevann"]]]]
@@ -917,46 +926,132 @@
 
    :r.mine-vakter
    (fn [r]
-     (let [uid @(rf/subscribe [:lab/uid])
-           user (user.database/lookup-userinfo uid)
-           data (db/on-value-reaction {:path ["calendar" uid]})]
-       [+page-builder
-        r
-        {; :panel-title "rediger"
-         :render (fn []
-                   (let [data (clojure.walk/stringify-keys @data)
-                         data (mapcat val data)
-                         timekrav (:timekrav user "?")]
-                     [sc/col-space-8
+     [+page-builder
+      r
+      {; :panel-title "rediger"
+       :render (fn []
+                 (if-let [uid @(rf/subscribe [:lab/uid])]
+                   (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
+                     (let [user (user.database/lookup-userinfo uid)
+                           data (clojure.walk/stringify-keys @data)
+                           data (mapcat val data)
+                           timekrav (:timekrav user)]
+                       [sc/col-space-8
 
-                      ;[l/ppre-x data]
-                      ;[l/ppre-x (mapcat val data)]
-                      (if (seq data)
-                        (into [sc/col-space-4]
-                              (for [[slot kv] data]
-                                (when slot
-                                  [sc/row-sc-g4-w
-                                   [schpaa.style.hoc.buttons/reg-pill
-                                    {:class    [:narrow]
-                                     :disabled true}
-                                    "Bytt"]
-                                   [sc/col
-                                    [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                                    [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]])))
-                        [sc/text1 "Ingen vakter er registrert"])
-                      [sc/row-sc-g4-w
-                       [sc/surface-a
-                        [sc/col-space-2
-                         [sc/title2 "Overført"]
-                         [sc/text1 {:class [:text-right]} "-<n> timer"]]]
-                       [sc/surface-a
-                        [sc/col-space-2
-                         [sc/title2 "Vaktkrav"]
-                         [sc/text1 {:class [:text-right]} timekrav " timer"]]]
-                       [sc/surface-a
-                        [sc/col-space-2
-                         [sc/title2 "Ny saldo"]
-                         [sc/text1 {:class [:text-right]} (- timekrav (* 3 (count data))) " timer"]]]]]))}]))
+                        #_[l/ppre-x (->> @(db/on-value-reaction {:path ["calendar"]})
+                                         vals
+                                         flatten1
+                                         (mapcat vals))]
+
+
+
+
+                        ;[l/ppre-x (mapcat val data)]
+                        [sc/row-fields
+                         [sc/surface-a {:style {:flex "1 0 auto"}}
+                          [sc/col-space-2
+                           [sc/title2 "Overført"]
+                           (when false
+                             [sc/text1 {:class [:text-right]} "-<n> timer"])]]
+                         [sc/surface-a {:style {:flex "1 0 auto"}}
+                          [sc/col-space-2
+                           [sc/title2 "Vaktkrav"]
+                           (when timekrav
+                             [sc/text1 {:class [:text-right]} timekrav " timer"])]]
+                         [sc/surface-a {:style {:flex "1 0 auto"}}
+                          [sc/col-space-2
+                           [sc/title2 "Ny saldo"]
+                           (when (and (seq data) timekrav)
+                             [sc/text1 {:class [:text-right]} (- timekrav (* 3 (count (seq data)))) " timer"])]]]
+
+                        (if (seq data)
+                          (into [sc/col-space-4]
+                                (for [[slot kv] data]
+                                  (when slot
+                                    [sc/row-sc-g4-w
+                                     [schpaa.style.hoc.buttons/reg-pill
+                                      {:class    [:narrow]
+                                       :disabled true}
+                                      "Bytt"]
+                                     [sc/col
+                                      [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
+                                      [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]])))
+                          [sc/col
+                           [sc/row-sc-g4-w {:style {:margin-inline "var(--size-3)"}}
+                            [sc/text1 "Du har ikke valgt noen vakter. Se " (shortlink :r.nokkelvakt)]]])])
+                     [sc/title1 "Ingen definerte vakter"])
+                   [booking.common-views/no-access-view r]))}])
+
+   :r.reports
+   (fn [r]
+     (o/defstyled table-controller-report :div
+       :overflow-x-auto
+       {:width "calc(100vw - 4rem)"}
+       [:at-media {:max-width "511px"}
+        {:width "calc(100vw)"}])
+     (o/defstyled table-report :table
+       [:&
+        {:width           "100%"
+         :padding-inline  "1rem"
+         :border-collapse :collapse}
+        [:thead
+         {:height "3rem"}
+         [:tr
+          {:text-align :left}
+          [:th sc/small0
+           {:padding "var(--size-1)"}]]]
+        [:tbody
+         ["tr:nth-child(odd)"
+          {:background "var(--floating)"}]
+         [:tr
+          {:color "var(--text1)"}
+          [:&.online sc/text0]
+          [:&.offline sc/text2]
+          {:height     "var(--size-6)"
+           :background "var(--content)"}
+          [:td :truncate
+           {:padding-inline "4px"}]
+          ["td:nth-child(2)"
+           {:text-align :left}]
+          ["td:nth-child(4)"
+           sc/text0
+           {:max-width "10rem"}]]]])
+     [+page-builder
+      r
+      {:render-fullwidth
+       (fn []
+         (let [rapport-id (-> r :path-params :id)]
+           (case rapport-id
+             "siste-nye-vakter" (let [ordered-log (->> @(db/on-value-reaction {:path ["calendar"]})
+                                                       (mapcat val)
+                                                       (mapcat val)
+                                                       (reduce (fn [a [k v]]
+                                                                 (conj a
+                                                                       [(val (first v))
+                                                                        (key (first v))
+                                                                        k])) [])
+                                                       (sort-by first))]
+                                  [:div
+                                   [table-controller-report
+                                    [table-report
+                                     [:<>
+                                      [:thead
+                                       [:tr
+                                        [:th "registrert"]
+                                        [:th "navn"]
+                                        [:th "vaktdato"]
+                                        [:th "dag"]
+                                        [:th "kl"]]]
+                                      (into [:tbody]
+                                            (for [[time user-id slot] ordered-log]
+                                              [:tr {}
+                                               [:td.tabular-nums (times.api/very-compressed-date (t/date-time time))]
+                                               [:td.truncate (user.database/lookup-username (name user-id))]
+                                               [:td.tabular-nums (times.api/date-format-sans-year (t/date-time (name slot)))]
+                                               [:td.tabular-nums (times.api/day-name (t/date-time (name slot)) :length 3)]
+                                               [:td.tabular-nums (times.api/time-format-hour (t/date-time (name slot)))]]))]]]])
+
+             [l/ppre-x r])))}])
 
 
    :r.page-not-found

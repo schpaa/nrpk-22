@@ -42,9 +42,9 @@
    ["/not-found" {:name :r.page-not-found :header [:r.oversikt "Finner ikke siden"]}]
    ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
 
-   ["/vakt-kalender" {:name   :r.nokkelvakt :shorttitle "Vakt-kalender"
-                      :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
-                      :header [:r.oversikt "Nøkkelvakt-kalender"]}]
+   ["/vaktkalender" {:name   :r.nokkelvakt :shorttitle "Vaktkalender"
+                     :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
+                     :header [:r.oversikt "Vaktkalender"]}]
    ["/admin" {:name :r.admin :header [:r.oversikt "Admin"] :access [[:member] #{:admin}]}]
    ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
@@ -83,7 +83,12 @@
     {:name       :r.dokumenter
      :shorttitle "Dokumenter"
      ;:access     [[] #{}]
-     :header     [:r.oversikt "Dokumenter"]}]])
+     :header     [:r.oversikt "Dokumenter"]}]
+   ["/rapporter/:id"
+    {:name       :r.reports
+     :shorttitle "Rapporter"
+     :access     [[:member] #{:admin}]
+     :header     [:r.oversikt "Rapporter"]}]])
 
 
 (defn shortcut-link [route-name]

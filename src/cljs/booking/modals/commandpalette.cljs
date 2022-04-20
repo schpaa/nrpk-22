@@ -15,7 +15,11 @@
 (def commands
   (mapv (fn [[idx {:keys [id] :as m}]] (assoc m :id (str idx)))
         (map-indexed vector
-                     [{:name   "Mine vakter"
+                     [{:name   "Rapport: siste nye vakter"
+                       :access :admin
+                       :icon   ico/nokkelvakt
+                       :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])}
+                      {:name   "Mine vakter"
                        :icon   ico/nokkelvakt
                        :action #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])}
                       {:name   "Utlån på Nøklevann"

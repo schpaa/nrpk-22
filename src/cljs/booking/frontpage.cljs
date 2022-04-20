@@ -437,7 +437,7 @@
        [sc/col-space-2
         [:div "Nå kan dere velge vakter som går fram til og med 3. juli. Etter 29.
         april fyller vi på med rest-vakter for alle med utestående saldo.
-        Resten av vaktlisten åpner når vi ser at alt virker som det skal."]
+        Resten av vaktlisten åpner når vi ser at alt virker som det skal (2-3 dager)."]
         [:div "Vaktlisten finner du "
          [sc/link {:style {:display :inline-block}
                    :href  (kee-frame.core/path-for [:r.nokkelvakt])} "her!"]]]]
@@ -466,11 +466,11 @@
         [listitem' (t/date "2022-04-13")
          [:span "Bruk båtloggen for å registrere "
           [sc/link {:style {:display :inline-block}
-                    :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])
-      ;[listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
-      [listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
-      [listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
-      [listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]]))
+                    :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])]]))
+;[listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
+;[listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
+;[listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
+;[listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]]))
 
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
