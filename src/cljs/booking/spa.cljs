@@ -193,17 +193,29 @@
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
 
-
-
-
-
-
 (def routing-table
   {:r.welcome
    (fn [r]
      #_[page-boundary r
         [db.signin/login]
         [welcome]])
+
+   :r.dokumenter
+   (fn [r]
+     [+page-builder r
+      {:render (fn []
+                 (let [doc-id (-> r :path-params :id)]
+                   [:div
+                    (case doc-id
+                      "hms-håndbok" (-> (inline "./oversikt/hms-håndbok.md") schpaa.markdown/md->html sc/markdown)
+                      "vaktinstruks" (-> (inline "./content/vaktinstruks.md") schpaa.markdown/md->html sc/markdown)
+                      "regler-utenom-vakt" (-> (inline "./content/regler-utenom-vakt.md") schpaa.markdown/md->html sc/markdown)
+                      "hms-hendelse" (-> (inline "./oversikt/hms-hendelse.md") schpaa.markdown/md->html sc/markdown)
+                      "ved-underbemanning" (-> (inline "./oversikt/ved-underbemanning.md") schpaa.markdown/md->html sc/markdown)
+                      "vaktrapportskjemaet" (-> (inline "./oversikt/vaktrapportskjemaet.md") schpaa.markdown/md->html sc/markdown)
+                      "sikkerhetsutstyr-ved-nøklevann" (-> (inline "./oversikt/sikkerhetsutstyr-ved-nøklevann.md") schpaa.markdown/md->html sc/markdown)
+                      "kommer" (-> (inline "./oversikt/kommer.md") schpaa.markdown/md->html sc/markdown)
+                      [:div doc-id])]))}])
 
    :r.forsiden-iframe
    (fn forsiden [r]
@@ -222,13 +234,16 @@
 
    :r.oversikt
    (fn oversikt [r]
-     (let [f (fn [[a b]] [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b])]
+     (let [f (fn [[a b]]
+               (if (vector? a)
+                 [sc/subtext-with-link {:href (kee-frame.core/path-for a)} b]
+                 [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b]))]
        [+page-builder r
         {:render
          (fn []
            [sc/col-space-1
 
-            (-> "##`Under arbeid, men du kan bidra! Send en tilbakemelding (se nederst på siden)`" schpaa.markdown/md->html sc/markdown)
+            (-> "##`Under arbeid – og du kan bidra! Send en tilbakemelding (se nederst på siden)`" schpaa.markdown/md->html sc/markdown)
 
             [sc/fp-summary-detail-always-show-links
              nil
@@ -239,6 +254,7 @@
               [:span.clear-left "Medlemmer i Nøklevann ro- og padleklubb kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
              [sc/row-sc-g4-w
               (let [data [[3 :r.oversikt.organisasjon "Historie"]
+                          [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]
                           [4 :r.oversikt.styret "Styret"]]]
 
                 (map (comp f rest) (sort-by first data)))]]
@@ -257,10 +273,9 @@
              "Nøklevann"
              "Nøklevann ro- og padleklubb (NRPK) ble stiftet på Rustadsaga i februar 1988 etter et initiativ fra ledende personer innen ro- og padlemiljøet i Oslo. Initiativet ble tatt 21. desember 1987 og det er denne datoen som er blitt stående som stiftelsesdatoen. Ved inngangen på 2022 har klubben over 4200 medlemmer."
              [sc/row-sc-g4-w
-              (let [data [[:r.xxx "Hvilke båter har vi på Nøklevann?"]
+              (let [data [[[:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Nøklevann?"]
                           [:r.utlan "Utlån"]
-                          [:r.aktivitetsliste "Aktivitetsliste"]
-                          [:r.xxx "HMS ved Nøklevann"]]]
+                          [[:r.dokumenter {:id "hms-håndbok"}] "HMS ved Nøklevann"]]]
                 (map f (sort-by second data)))]]
 
             [sc/fp-summary-detail-always-show-links
@@ -270,9 +285,9 @@
              [sc/row-sc-g4-w
               (let [data [[:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
                           [:r.booking.faq "Ofte stilte spørsmål"]
-                          [:r.booking.oversikt "Hvilke båter har vi på Sjøbasen?"]
+                          [[:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Sjøbasen?"]
                           [:r.utlan "Booking"]
-                          [:r.xxx "HMS ved Sjøbasen"]]]
+                          [[:r.dokumenter {:id "kommer"}] "HMS ved Sjøbasen"]]]
                 (map f (sort-by second data)))]]
 
             [sc/fp-summary-detail-always-show-links
@@ -289,9 +304,13 @@
             [sc/fp-summary-detail-always-show-links
              :oversikt/Nøkkelvakt
              "Nøkkelvakt"
-             "Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
+             "Nøkkelvaktene er en gruppe med omtrent 130 frivillige medlemmer som betjener klubbens anlegg ved Nøklevann i klubbens åpningstider. Nøkkelvaktene hjelper medlemmene, sjekker medlemsskap og bidrar til sikkerheten i klubbens aktivitet."
+             #_"Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
               (let [data [[:r.user "Mine opplysninger"]
+                          [[:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
+                          [[:r.dokumenter {:id "vaktinstruks"}] "Nøkkelvaktinstruks"]
+                          [[:r.dokumenter {:id "regler-utenom-vakt"}] "Regler uteom vakt"]
                           [:r.conditions "Plikter som nøkkelvakt"]
                           [:r.utlan "Utlån på nøklevann"]
                           [:r.aktivitetsliste "Aktivitetsliste"]

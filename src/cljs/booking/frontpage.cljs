@@ -435,7 +435,7 @@
 
       [listitem' (t/at (t/date "2022-04-20") (t/time "10:00"))
        [sc/col-space-2
-        [:div "Nå kan dere velge vakter som går fram til 4. juni. Etter 29.
+        [:div "Nå kan dere velge vakter som går fram til og med 3. juli. Etter 29.
         april fyller vi på med rest-vakter for alle med utestående saldo.
         Resten av vaktlisten åpner når vi ser at alt virker som det skal."]
         [:div "Vaktlisten finner du "

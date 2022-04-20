@@ -1,4 +1,4 @@
-### Regler utenom vakt
+# Regler utenom vakt
 
 Nøkkelvakten kan låne utstyr utenom klubbens åpningstider og alle utlån skal
 loggføres i båtloggen.

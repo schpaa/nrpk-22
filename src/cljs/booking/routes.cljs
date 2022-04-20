@@ -8,6 +8,7 @@
   [["/" {:name       :r.forsiden
          :header     [:r.oversikt "Forsiden"]
          :shorttitle "Forsiden"}]
+
    ["/signed-out" {:name   :r.signedout
                    :header [:r.forsiden "Du har logget ut"]}]
 
@@ -77,7 +78,12 @@
    ["/booking/faq" {:name :r.booking.faq :header [:r.booking "Ofte stilte spørsmål"]}]
 
    ["/oversikt/organisasjon" {:name :r.oversikt.organisasjon :header [:r.oversikt "Om NRPK"]}]
-   ["/oversikt/styret" {:name :r.oversikt.styret :header [:r.oversikt "Styret i NRPK"]}]])
+   ["/oversikt/styret" {:name :r.oversikt.styret :header [:r.oversikt "Styret i NRPK"]}]
+   ["/dokumenter/:id"
+    {:name       :r.dokumenter
+     :shorttitle "Dokumenter"
+     ;:access     [[] #{}]
+     :header     [:r.oversikt "Dokumenter"]}]])
 
 
 (defn shortcut-link [route-name]

@@ -8,7 +8,7 @@ Møt opp 20 min før åpningstid – husk mobiltelefon.
 
 Er båtstativet i samsvar med loggen?
 
-Sørg for at klubben er [tilstrekkelig bemannet](/ved-underbemanning).
+Sørg for at klubben er [tilstrekkelig bemannet](/dokumenter/ved-underbemanning).
 
 Mål vanntemperatur og skriv det på tavla og i loggen.
 
@@ -29,7 +29,7 @@ Se til at klubbområdet er trygt og ryddig.
 
 Se til at klubbens aktivitet tar vare på natur og vann.
 
-Se forøvrig punktene i [vaktrapportskjemaet](/vaktrapportskjemaet).
+Se forøvrig punktene i [vaktrapportskjemaet](/dokumenter/vaktrapportskjemaet).
 
 ### Stenging
 
@@ -38,7 +38,8 @@ låser.
 
 ### Nøkkelvakt skal rapportere
 
-Rapporter [Melding om hendelse](/hms-hendelse) slik at vi kan forbedre oss.
+Rapporter [Melding om hendelse](/dokumenter/hms-hendelse) slik at vi kan
+forbedre oss.
 
 1. avvik, ulykker og uhell.
 

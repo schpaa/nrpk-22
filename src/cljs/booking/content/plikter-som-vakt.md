@@ -16,7 +16,7 @@ Alle som har nøkkel må holde seg oppdatert i de relevante rutinene.
   vakt@nrpk.no.
 
 - Skal holde seg oppdatert på, og følge, relevante regler og
-  nøkkelvaktenes [HMS-reglement](/hms).
+  nøkkelvaktenes [HMS-reglement](/dokumenter/hms).
 
 - Delta på oppfriskningskurs når klubben arrangerer dette.
 
