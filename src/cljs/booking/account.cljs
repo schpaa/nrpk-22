@@ -53,25 +53,38 @@
      [sc/text1 "Du har logget ut!"]]]])
 
 (defn xx [{:keys [on-close context]}]
-  [sc/centered-dialog
-   {:style {:position   :relative
-            :overflow   :hidden
-            :z-index    10
-            :max-height "80vh"}
-    :class []}
-   (corner-logo)
-   [sc/col-space-8
-    [sc/dialog-title' "Ekornets fødselsdag"]
-    [sc/col-space-4
-     [sc/text1 {:style {:font-family "Merriweather"
-                        :line-height "var(--font-lineheight-4)"}
-                :class [:clear-left]} "Alle presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
-     [sc/subtext1 "Toon Tellegen"]]
+  (let [uid @(rf/subscribe [:lab/uid])
+        user (user.database/lookup-userinfo uid)]
+    [sc/centered-dialog
+     {:style {:position   :relative
+              :overflow   :hidden
+              :z-index    10
+              :max-height "80vh"}
+      :class []}
+     (corner-logo)
+     [sc/col-space-8
+      [sc/dialog-title' "NRPK"]
 
-    [sc/text1 "Du har logget inn!"]
+      #_[sc/col-space-4
+         [sc/text1 {:style {:font-family "Merriweather"
+                            :line-height "var(--font-lineheight-4)"}
+                    :class [:clear-left]} "Alle presanger som tenkes kan, ble laget den kvelden. Snart har han fødselsdag, tenkte dyrene mens de jobbet. Snart ... Hvis de kunne kvekke eller synge, så kvekket eller sang de, men veldig veldig stille: \u00abSnart, snart, ja, snart ...\u00bb Slik var kvelden før ekornets fødselsdag."]
+         [sc/subtext1 "Toon Tellegen"]]
 
-    [sc/row-ec
-     [hoc.buttons/cta {:on-click on-close} "Lukk"]]]])
+      [sc/col-space-2
+       [sc/text1 "Du er logget inn, velkommen!"]
+       [sc/text1 "Din nøkkelvaktstatus er " [sc/strong (if (:godkjent user) "Godkjent" "Ikke godkjent")]]]
+
+      #_[l/ppre-x uid user]
+      (when-not (:godkjent user)
+        [sc/col-space-2
+         [sc/text1 "Hvis du vet at du er godkjent som nøkkelvakt har du sikkert logget med en annen konto."]
+         [sc/text1 "Kommer du ikke inn via din tidligere tilbyder (Facebook), må du registrere deg på nytt og sende en tilbakemelding (nederst på siden) slik at vi raskt kan godkjenne deg."]
+         [sc/link {:target "_blank"
+                   :href   "https://nrpk.no"} "Sak blir opprettet på nrpk.no"]])
+
+      [sc/row-ec
+       [hoc.buttons/cta {:on-click on-close} "Ok"]]]]))
 
 ;delete account
 

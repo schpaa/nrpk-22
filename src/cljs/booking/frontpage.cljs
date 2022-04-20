@@ -433,6 +433,12 @@
                     :gap                   "var(--size-4) var(--size-2)"
                     :grid-template-columns "1fr"}}
 
+      [listitem' (t/at (t/date "2022-04-20") (t/time "10:00"))
+       [sc/col-space-2
+        [:div "Nå kan dere velge vakter som går fram til 4. juni. Etter 29.
+        april fyller vi på med rest-vakter for alle med utestående saldo.
+        Resten av vaktlisten åpner når vi ser at alt virker som det skal."]]]
+
       (when-not @er-nokkelvakt?
         [listitem' (t/at (t/date "2022-04-19") (t/time "19:00"))
          [sc/col-space-2
@@ -440,7 +446,7 @@
           [:span "Dette må du "
            [sc/link {:style  {:display :inline-block}
                      :target "_blank"
-                     :href   "https://news.ycombinator.com"} "gjøre!"]]]])
+                     :href   "https://nrpk.no"} "gjøre!"]]]])
 
       [listitem' (t/at (t/date "2022-04-18") (t/time "15:00"))
        [sc/col-space-2
@@ -498,8 +504,11 @@
         (when-not @at-least-registered?
           [please-login-and-register])
 
-        #_(when goog.DEBUG
-            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+        (when goog.DEBUG
+          [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+
+        (when goog.DEBUG
+          [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
 
         #_(when goog.DEBUG
             [sc/fp-summary-detail :frontpage/status

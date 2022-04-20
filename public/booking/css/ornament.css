@@ -1104,3 +1104,4 @@ body {
 .eykt_calendar_views__avail_user_slot{color:var(--text3);background-color:var(--floating)}.eykt_calendar_views__avail_user_slot{display:flex;width:6rem;height:2.5rem;border-radius:var(--radius-0)}.eykt_calendar_views__avail_user_slot{display:flex;justify-content:center;align-items:center}
 .eykt_calendar_views__user_cell{display:flex;width:6rem;height:2.5rem;border-radius:var(--radius-0)}.eykt_calendar_views__user_cell{display:flex;justify-content:center;align-items:center}
 .schpaa_style_ornament__row_sc_g1_w{gap:.5rem;display:flex;align-items:center;flex-wrap:wrap;whitespace:normal}
+.schpaa_style_ornament__strong{font-weight:bold;color:var(--text1)}
