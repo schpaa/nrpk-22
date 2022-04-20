@@ -437,7 +437,10 @@
        [sc/col-space-2
         [:div "Nå kan dere velge vakter som går fram til 4. juni. Etter 29.
         april fyller vi på med rest-vakter for alle med utestående saldo.
-        Resten av vaktlisten åpner når vi ser at alt virker som det skal."]]]
+        Resten av vaktlisten åpner når vi ser at alt virker som det skal."]
+        [:div "Vaktlisten finner du "
+         [sc/link {:style {:display :inline-block}
+                   :href  (kee-frame.core/path-for [:r.nokkelvakt])} "her!"]]]]
 
       (when-not @er-nokkelvakt?
         [listitem' (t/at (t/date "2022-04-19") (t/time "19:00"))
