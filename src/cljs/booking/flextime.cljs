@@ -83,7 +83,7 @@
      (let [ignore-time? (not (t/date-time? tm))
            relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
            on-time-click {:on-click #(schpaa.state/toggle :app/show-relative-time-toggle)}
-           format #(vector sc/datetimelink on-time-click %)]
+           format #(vector sc/datetimelink-sans-size on-time-click %)]
        (if @relative-time?
          (if (t/<= dt (t/date-time))
            (arco.react/time-since {:times  [dt (t/date-time)]

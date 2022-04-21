@@ -23,6 +23,7 @@
 (def booking [:> solid/ClockIcon])
 (def ticket [:> solid/TicketIcon])
 (def nokkelvakt [:> solid/KeyIcon])
+(def moon [:> solid/MoonIcon])
 (def showdetails [:> outline/ChevronRightIcon])
 (def logout [:> outline/LogoutIcon])
 (def closewindow [:> solid/XIcon])

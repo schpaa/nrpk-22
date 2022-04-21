@@ -194,9 +194,7 @@
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
 
-(defn shortlink [link-name]
-  (let [{:keys [link text]} (booking.common-views/lookup-page-ref-from-name link-name)]
-    [sc/link {:href (kee-frame.core/path-for [link])} text]))
+
 
 (def routing-table
   {:r.welcome
@@ -979,7 +977,7 @@
                                       [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]])))
                           [sc/col
                            [sc/row-sc-g4-w {:style {:margin-inline "var(--size-3)"}}
-                            [sc/text1 "Du har ikke valgt noen vakter. Se " (shortlink :r.nokkelvakt)]]])])
+                            [sc/text1 "Du har ikke valgt noen vakter. Se " (widgets/auto-link :r.nokkelvakt)]]])])
                      [sc/title1 "Ingen definerte vakter"])
                    [booking.common-views/no-access-view r]))}])
 

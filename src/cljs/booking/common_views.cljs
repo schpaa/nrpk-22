@@ -440,7 +440,6 @@
                                              :value {"timestamp" booking.data/DATE}})}
             "Aktiver versjon"])]]]]]))
 
-
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [switch? (schpaa.state/listen :lab/menu-position-right)
         numberinput2? (rf/subscribe [:lab/number-input2])

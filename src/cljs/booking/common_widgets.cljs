@@ -1,9 +1,11 @@
 (ns booking.common-widgets
   (:require [schpaa.style.ornament :as sc]
+            [reitit.core :as reitit]
             [re-frame.core :as rf]
             [booking.ico :as ico]
             [schpaa.style.button :as scb]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [booking.routes]))
 
 (defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
                         :or   {style {}}}]
@@ -87,3 +89,16 @@
      [sc/icon-small
       {:style {:color "var(--text1)"}}
       ico/pencil]]))
+
+(defn lookup-page-ref-from-name [link]
+  {:pre [(keyword? link)]}
+  {:link link
+   :text (or (some->> link
+                      (reitit/match-by-name (reitit/router booking.routes/routes))
+                      :data
+                      :header)
+             "wtf?")})
+
+(defn auto-link [link]
+  (let [{:keys [link text]} (lookup-page-ref-from-name link)]
+    [sc/link {:href (kee-frame.core/path-for [link])} text]))

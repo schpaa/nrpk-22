@@ -88,7 +88,10 @@
     {:name       :r.reports
      :shorttitle "Rapporter"
      :access     [[:member] #{:admin}]
-     :header     [:r.oversikt "Rapporter"]}]])
+     :header     [:r.oversikt "Rapporter"]}]
+   ["/baatliste"
+    {:name   :r.båtliste
+     :header [:r.oversikt "Båtliste"]}]])
 
 
 (defn shortcut-link [route-name]
