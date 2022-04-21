@@ -95,6 +95,8 @@
                        :content-fn     #(feedback-window %)
                        :action         write-to-db}]]]}))
 
+(rf/reg-event-fx :app/give-feedback [rf/trim-v] feedback-map)
+
 (defn send-message [_ [uid]]
   (letfn [(write-to-db [uid {:keys [carry]}]
             (db.core/firestore-add
@@ -109,8 +111,7 @@
                        :title          "Send en melding"
                        :caption        "caption"
                        :content-fn     #(feedback-window %)
-                       :action         #(partial write-to-db uid)}]]]}))
-
-(rf/reg-event-fx :app/give-feedback [rf/trim-v] feedback-map)
+                       :action         #_#(js/alert %)
+                       #(write-to-db uid %)}]]]}))
 
 (rf/reg-event-fx :app/open-send-message [rf/trim-v] send-message)

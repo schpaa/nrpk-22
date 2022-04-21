@@ -913,7 +913,7 @@
 
    :r.utlan
    (fn [r]
-     (let [uid (:uid @(rf/subscribe [:lab/uid]))
+     (let [uid @(rf/subscribe [:lab/uid])
            #_#_user @(db/on-value-reaction {:path ["users" uid]})]
        [+page-builder
         r

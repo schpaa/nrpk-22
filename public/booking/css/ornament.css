@@ -1046,7 +1046,7 @@ body {
 .booking_frontpage__image_caro_style{width:calc(100vw)}.booking_frontpage__image_caro_style.toolbar{width:calc(100vw - 4rem)}@media(max-width:512px){.booking_frontpage__image_caro_style.toolbar{width:calc(100vw)}}
 .booking_utlan__round_normal_listitem{height:2rem;width:2rem;cursor:pointer;margin-bottom:-0.5rem;justify-self:center;align-items:center;justify-content:center;display:inline-flex;outline:1px solid red;aspect-ratio:1/1;border-radius:var(--radius-round);color:var(--surface4)}.booking_utlan__round_normal_listitem:active{background:var(--surface1)}.booking_utlan__round_normal_listitem:hover{background:white}.booking_utlan__round_normal_listitem.deleted{background:red}
 .booking_utlan__inline_item{display:inline-flex;align-items:center;justify-content:center;height:4rem;xmargin-right:.5rem;xmargin-bottom:.5rem}
-.booking_utlan__command_grid{display:grid;column-gap:var(--size-3);row-gap:var(--size-2);grid-template-columns:min-content 1fr;grid-template-areas:". time" "edit content"}
+.booking_utlan__command_grid{display:grid;border-radius:var(--radius-1);padding-inline:var(--size-2);column-gap:var(--size-2);row-gap:var(--size-0);grid-template-columns:min-content 1fr;grid-template-areas:". time" "edit content"}.booking_utlan__command_grid:hover{background:rgba(0,0,0,0.05)}
 .booking_utlan__listitem_SINGLEQUOTE_{gap:.5rem;display:flex;flex-wrap:wrap;align-items:start;color:var(--text1)}.booking_utlan__listitem_SINGLEQUOTE_.deleted{color:var(--text0);text-decoration:line-through;opacity:.3}
 
 

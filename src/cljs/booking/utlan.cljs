@@ -121,10 +121,10 @@
                                              (if @(r/cursor st [k])
                                                (if (some #{k} innlevert)
                                                  (if-let [time (some->> k (get original) (t/instant) (t/date-time))]
-                                                   [sc/text1 "Sjekket ut " (booking.flextime/relative-time time times.api/arrival-date)])
-                                                 [sc/text1 "I ferd med å sjekke ut nå"])
+                                                   [sc/text1 "Innlevert " (booking.flextime/relative-time time times.api/arrival-date)])
+                                                 [sc/text1 "I ferd med å lever inn nå"])
                                                (when-let [time (some->> timestamp (t/instant) (t/date-time))]
-                                                 [sc/text1 "Sjekket inn " (booking.flextime/relative-time time times.api/arrival-date)]))]])})))]
+                                                 [sc/text1 "Tatt ut " (booking.flextime/relative-time time times.api/arrival-date)]))]])})))]
            (map #(f % st original) @st))]
         [sc/row-ec
          [:div.grow]
@@ -244,13 +244,16 @@
     :xmargin-bottom "0.5rem"}])
 
 (o/defstyled command-grid :div
-  {:display               :grid
-   ;:background            "rgba(0,0,0,0.05)"
-   :column-gap            "var(--size-3)"
-   :row-gap               "var(--size-2)"
-   :grid-template-columns "min-content 1fr"
-   :grid-template-areas   [["." "time"]
-                           ["edit" "content"]]})
+  [:& {:display               :grid
+       :border-radius         "var(--radius-1)"
+       :padding-inline        "var(--size-2)"
+       :column-gap            "var(--size-2)"
+       :row-gap               "var(--size-0)"
+       :grid-template-columns "min-content 1fr"
+       :grid-template-areas   [["." "time"]
+                               ["edit" "content"]]}
+   [:&:hover
+    {:background "rgba(0,0,0,0.05)"}]])
 
 (o/defstyled listitem' :div
   [:& :gap-2
@@ -302,13 +305,13 @@
                   (+ (* 4 (t/hour x)) (quot (t/minute x) 15)))
                 nil)
               nil)
-        session-color "var(--text1)"
+        session-color "var(--text2)"
         color (if (nil? end) "var(--blue-8)" "var(--text1)")]
     [:div.h-8 {:on-click #(swap!
                             settings update :rent/graph-view-mode (fn [e] (mod (inc e) 2)))
-               :style    {:overflow         :clip
-                          :border-radius    "var(--radius-1)"
-                          :background-color "var(--floating)"}}
+               :style    {:overflow          :clip
+                          :border-radius     "var(--radius-0)"
+                          :xbackground-color "var(--floating)"}}
      (let [v-start (case @(r/cursor settings [:rent/graph-view-mode])
                      0 (* 4 6)
                      1 (- session-start 2))
@@ -337,9 +340,10 @@
                 :stroke-linecap :round
                 :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}]
 
-        [:rect {:fill   "rgba(0,0,0,0.1)"
-                :width  now
-                :height "100%"}]
+        [:rect {:fill    session-color                      ;"rgba(255,255,255,0.1)"
+                :opacity 0.1
+                :width   now
+                :height  "100%"}]
 
         (when (nil? end)
           [:path {:fill           color
@@ -358,13 +362,13 @@
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
       [sc/col-space-8
-       (into [:div {:style {:gap            "var(--size-2)"
+       (into [:div {:class []
+                    :style {:gap            "var(--size-2)"
                             :display        :flex
                             :flex-direction :column}}]
              (for [[k {:keys [uid timestamp list id deleted nøkkel] :as m}] (if show-deleted?
                                                                               @data
                                                                               (remove (comp :deleted val) @data))
-
                    :let [nøkkel (rand-nth [true false])
                          overnatting (rand-nth [true false])
                          adults (rand-int 5)
@@ -380,24 +384,10 @@
                   :style {:color           "var(--text1)"
                           :grid-area       "time"
                           :display         :flex
-                          ;:align-items :center
-                          :justify-content :between}}
+                          :justify-content :between}}]
 
-                 #_(when show-details?
-                     [:<>
-                      [sc/text1 {:class [:tabular-nums :tracking-wide]}
-                       (if (pos? adults) adults "–")
-                       "/"
-                       (if (pos? juveniles) juveniles "–")
-                       "/"
-                       (if (pos? children) children "–")]
-                      [:div.shrink-0.w-4.self-center (when overnatting [sc/icon-tiny ico/moon])]
-                      [:div.shrink-0.w-4.self-center (when nøkkel [sc/icon-tiny ico/nokkelvakt])]
-
-                      [sc/subtext {:class []} [:div.truncate.w-24 (user-alias uid)]]
-                      [:div.grow]])
-                 #_[:div ddate]]
-                [:div {:class [:h-12 :xpt-1 :flex :items-center :gap-x-3]
+                ;[l/ppre-x uid loggedin-uid]
+                [:div {:class [:h-12 :flex :items-center :gap-1]
                        :style {:grid-area "edit "
                                :display   :flex}}
                  (when edit-mode?
@@ -406,9 +396,7 @@
                                                 :value {:deleted (not deleted)}})) m])
                  (if edit-mode?
                    [widgets/edit {:disabled (not goog.DEBUG)} #(rf/dispatch [:lab/toggle-boatpanel]) m]
-                   #_[hoc.buttons/reg-icon {:class    [:regular]
-                                            :disabled (not goog.DEBUG)
-                                            :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/pencil]
+
                    (if (= uid loggedin-uid)
                      [hoc.buttons/cta-pill {:class    [:narrow]
                                             :on-click #(innlevering {:k         k
@@ -419,27 +407,32 @@
                                                                      :timestamp timestamp
                                                                      :boats     boats})} "Inn"]))]
                 (into [listitem' {:class [(if deleted :deleted)
+                                          :px-2
                                           :w-full]
                                   :style {:flex            "1 0 auto"
+                                          ;:background-color "rgba(0,0,0,0.1)"
                                           :justify-content :between
                                           :align-items     :center
                                           :opacity         (if deleted 0.2 1)
                                           :grid-area       "content"}}]
                       (concat
+                        [[sc/col-space-1 {:class [:w-4 :-debugx]}
+                          [:div.shrink-0.h-4.w-4.self-center (when overnatting [sc/icon-tiny ico/moon])]
+                          [:div.shrink-0.h-4.w-4.self-center (when nøkkel [sc/icon-tiny ico/nokkelvakt])]]]
+
                         [(if show-timegraph?
-                           [:div.w-36.h-8 [timegraph date boats (t/date-time)]]
+                           [:div.w-36.h-auto [timegraph date boats (t/date-time)]]
                            [sc/col {:class [:h-auto :self-center :w-36 :text-right :tabular-nums :tracking-tight]}
                             [sc/text1 #_{:style {:font-size "var(--font-size-1)"}} (times.api/compressed-date date)]
                             [sc/text1 "kl. 19:00"]])
                          #_[:div.grow]]
                         [(when show-details?
-                           [sc/col {:class [:w-24 :truncate]}
+                           [sc/col-space-1 {:class [:w-24 :truncate]}
                             [sc/row-sc-g2
-                             [:div.shrink-0.w-4.self-center (when nøkkel [sc/icon-tiny ico/nokkelvakt])]
-                             [sc/subtext {:class [:truncate]} (user-alias uid)]]
+                             [sc/small2 {:class [:truncate]} (user-alias uid)]]
                             [sc/row-sc-g2
-                             [:div.shrink-0.w-4.self-center (when overnatting [sc/icon-tiny ico/moon])]
-                             [sc/text1 {:class [:tabular-nums :tracking-wide]}
+                             [sc/small0 {:style {:font-weight "var(--font-weight-6)"}
+                                         :class [:tabular-nums :tracking-wide]}
                               (if (pos? adults) adults "–")
                               "/"
                               (if (pos? juveniles) juveniles "–")
@@ -462,7 +455,7 @@
                                                  :on-click #(dlg/open-modal-boatinfo
                                                               {:uid  loggedin-uid
                                                                :data (get db (keyword id))})} number)))
-                                (remove nil? (vec (repeatedly (rand-int 20) #(-> [(+ 100 (rand-int 800)) nil])))))]
+                                (remove nil? (vec (repeatedly (rand-int 5) #(-> [(+ 100 (rand-int 800)) nil])))))]
 
                         #_[[:div (if nøkkel "N" "-")]]))]))]
 
@@ -492,7 +485,7 @@
      [sc/row-sc-g2
       [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Vis detaljer"]
-      [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidsgraph"]]
+      [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
      [sc/row-sc-g4-w
       [widgets/auto-link :r.båtliste]]]))
 
