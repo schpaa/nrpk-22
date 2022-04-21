@@ -430,9 +430,15 @@
          [hoc.buttons/reg-pill-icon
           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
           ico/tilbakemelding "Tilbakemelding"]]
-        [sc/col
-         [sc/small1 (or booking.data/VERSION "version")]
-         [sc/small1 (or booking.data/DATE "date")]]]]]]))
+        [sc/row-sc-g4-w
+         [sc/col
+          [sc/small1 (or booking.data/VERSION "version")]
+          [sc/small1 (or booking.data/DATE "date")]]
+         (when @(rf/subscribe [:lab/admin-access])
+           [hoc.buttons/danger-pill
+            {:on-click #(db/database-update {:path  ["system"]
+                                             :value {"timestamp" booking.data/DATE}})}
+            "Aktiver versjon"])]]]]]))
 
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
@@ -590,43 +596,42 @@
           (try
             (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
               (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
-                (when-not goog.DEBUG
-                  (when (t/< app-timestamp db-timestamp)
-                    (rf/dispatch [:modal.slideout/toggle
-                                  true
-                                  {:content-fn
-                                   (fn [_] [sc/centered-dialog
-                                            {:style {:position   :relative
-                                                     :overflow   :auto
-                                                     :z-index    10
-                                                     :max-height "80vh"}}
-                                            [sc/col-space-8
-                                             [sc/dialog-title' "Oppfrisk nettsiden"]
-                                             [sc/col-space-4
-                                              [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
+                (when (t/< app-timestamp db-timestamp)
+                  (rf/dispatch [:modal.slideout/toggle
+                                true
+                                {:content-fn
+                                 (fn [_] [sc/centered-dialog
+                                          {:style {:position   :relative
+                                                   :overflow   :auto
+                                                   :z-index    10
+                                                   :max-height "80vh"}}
+                                          [sc/col-space-8
+                                           [sc/dialog-title' "Oppfrisk nettsiden"]
+                                           [sc/col-space-4
+                                            [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
 
-                                              (let [link @(rf/subscribe [:kee-frame/route])
-                                                    addr (or (some-> link :path) "")
-                                                    path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
-                                                [:<>
-                                                 ;[l/ppre-x link]
-                                                 [sc/text1 path]]
-                                                [sc/row-ec
-                                                 [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
+                                            (let [link @(rf/subscribe [:kee-frame/route])
+                                                  addr (or (some-> link :path) "")
+                                                  path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
+                                              [:<>
+                                               ;[l/ppre-x link]
+                                               [sc/text1 path]]
+                                              [sc/row-ec
+                                               [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
 
-                                              [schpaa.style.hoc.page-controlpanel/togglepanel-local
-                                               "Mer informasjon"
-                                               (fn [_]
-                                                 [sc/col-space-4
-                                                  [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
-                                                  [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
-                                                  [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
-                                              ;[sc/small1 db-timestamp]
-                                              #_[l/ppre-x
-                                                 {:db-timestamp  (times.api/arrival-date db-timestamp)
-                                                  :app-timestamp (times.api/arrival-date app-timestamp)
-                                                  :need-reload?  (t/< app-timestamp db-timestamp)}]
-                                              #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}])))))
+                                            [schpaa.style.hoc.page-controlpanel/togglepanel-local
+                                             "Mer informasjon"
+                                             (fn [_]
+                                               [sc/col-space-4
+                                                [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
+                                                [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
+                                                [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
+                                            ;[sc/small1 db-timestamp]
+                                            #_[l/ppre-x
+                                               {:db-timestamp  (times.api/arrival-date db-timestamp)
+                                                :app-timestamp (times.api/arrival-date app-timestamp)
+                                                :need-reload?  (t/< app-timestamp db-timestamp)}]
+                                            #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}]))))
             (catch js/Error _))
           (let [pagename (some-> r :data :name)
                 numberinput (rf/subscribe [:lab/number-input])
