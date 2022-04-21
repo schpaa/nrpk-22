@@ -8,41 +8,35 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (o/defstyled qr-code :div
-  ;:space-y-4 :flex :justify-center :flex-col :items-center
-  ;:border-2 :border-gray-500 :p-4 :rounded-sm
-  [:>a :w-full :px-4 {:overflow      :hidden
-                      :text-overflow :ellipsis
-                      :white-space   :nowrap}]
-  ([active-item size]
-   (let [addr active-item                                   ;(kee-frame.core/path-for [:r.topic {:id active-item}])
-         path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
-     [:<>
-      [:> QRCode {:title "Whatever"
-                  :size  size
-                  :level "Q"
-                  :value path}]
+  [:a :w-full :px-4 {:overflow      :hidden
+                     :text-overflow :ellipsis
+                     :white-space   :nowrap}])
 
-      ;[:div addr]
-      ;[:div (.-host js/window.location)]
-      ;[:div (.-protocol js/window.location)]
-      #_[:a {:href path} path]])))
 
 (defn show [link]
   (schpaa.style.dialog/open-dialog-any
     {:form (fn [{:keys [on-close]}]
-             [sc/dropdown-dialog                            ;dialog
-              [:div.p-4
-               [sc/col {:class [:space-y-8]}
-                [sc/col-space-4
-                 (when-let [page-title (some-> link :data :header)]
-                   [sc/title-p (if (seq? page-title) (last page-title) page-title)])
-                 [sc/row-center [booking.qrcode/qr-code :r.forsiden 192]]]
-                ;[l/ppre-x link]
-                (when-some [page-path (some-> link :path)]
-                  (let [;page-addr (kee-frame.core/path-for [page-name])
-                        url (str (.-protocol js/window.location) "//" (.-host js/window.location) page-path)]
-                    [sc/text1 {:class [:truncate]
-                               :style {:user-select :all
-                                       :white-space :nowrap}} url]))
-                [sc/row-ec
-                 [hoc.buttons/regular {:on-click on-close} "Lukk"]]]]])}))
+             (when-let [page-path (some-> link :path)]
+               (let [page-title (some-> link :data :header)
+                     size 192
+                     url (str (.-protocol js/window.location)
+                              "//"
+                              (.-host js/window.location)
+                              page-path)]
+                 [sc/dropdown-dialog
+                  [:div
+                   [sc/col {:class [:space-y-8]}
+                    [sc/col-space-4
+                     [sc/title-p (if (seq? page-title) (last page-title) page-title)]
+                     [sc/row-center
+                      [booking.qrcode/qr-code [:> QRCode {:title "untitled"
+                                                          :size  size
+                                                          :level "Q"
+                                                          :value url}]]]]
+                    [sc/link {:href   url
+                              :target "_blank"
+                              :class  [:truncate]
+                              :style  {:user-select :all
+                                       :white-space :nowrap}} url]
+                    [sc/row-ec
+                     [hoc.buttons/regular {:on-click on-close} "Lukk"]]]]])))}))

@@ -43,7 +43,8 @@
             [booking.modals.commandpalette]
             [booking.utlan]
             [schpaa.style.dialog :as dlg]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [booking.reports]))
 
 ;region related to flex-date and how to display relative time
 
@@ -982,85 +983,11 @@
                      [sc/title1 "Ingen definerte vakter"])
                    [booking.common-views/no-access-view r]))}])
 
-   :r.reports
-   (fn [r]
-     (o/defstyled table-controller-report :div
-       :overflow-x-auto
-       {:width "calc(100vw - 4rem)"}
-       [:at-media {:max-width "511px"}
-        {:width "calc(100vw)"}])
-     (o/defstyled table-report :table
-       [:&
-        {:width           "100%"
-         :padding-inline  "1rem"
-         :border-collapse :collapse}
-        [:thead
-         {:height "3rem"}
-         [:tr
-          {:text-align :left}
-          [:th sc/small0
-           {:padding "var(--size-1)"}]]]
-        [:tbody
-         ["tr:nth-child(odd)"
-          {:background "var(--floating)"}]
-         [:tr
-          {:color "var(--text1)"}
-          [:&.online sc/text0]
-          [:&.offline sc/text2]
-          {:height     "var(--size-6)"
-           :background "var(--content)"}
-          [:td :truncate
-           {:padding-inline "4px"}]
-          ["td:nth-child(2)"
-           {:text-align :left}]
-          ["td:nth-child(4)"
-           sc/text0
-           {:max-width "10rem"}]]]])
-     [+page-builder
-      r
-      {:render-fullwidth
-       (fn []
-         (let [rapport-id (-> r :path-params :id)]
-           (case rapport-id
-             "siste-nye-vakter" (let [ordered-log (->> @(db/on-value-reaction {:path ["calendar"]})
-                                                       (mapcat val)
-                                                       (mapcat val)
-                                                       (reduce (fn [a [k v]]
-                                                                 (conj a
-                                                                       [(val (first v))
-                                                                        (key (first v))
-                                                                        k])) [])
-                                                       (sort-by first))]
-                                  [:div
-                                   [table-controller-report
-                                    [table-report
-                                     [:<>
-                                      [:thead
-                                       [:tr
-                                        [:th "registrert"]
-                                        [:th "navn"]
-                                        [:th "vaktdato"]
-                                        [:th "dag"]
-                                        [:th "kl"]]]
-                                      (into [:tbody]
-                                            (for [[time user-id slot] ordered-log]
-                                              [:tr {}
-                                               [:td.tabular-nums (times.api/very-compressed-date (t/date-time time))]
-                                               [:td.truncate (user.database/lookup-username (name user-id))]
-                                               [:td.tabular-nums (times.api/date-format-sans-year (t/date-time (name slot)))]
-                                               [:td.tabular-nums (times.api/day-name (t/date-time (name slot)) :length 3)]
-                                               [:td.tabular-nums (times.api/time-format-hour (t/date-time (name slot)))]]))]]]])
-
-             [l/ppre-x r])))}])
-
-
-   :r.page-not-found
-   (fn [r]
-     [+page-builder
-      r
-      {:render (fn [] [error-page r])}])})
-
+   :r.reports        (fn [r] [+page-builder r (booking.reports/page r)])
+   :r.page-not-found (fn [r] [+page-builder r {:render (fn [] [error-page r])}])})
 
 (comment
   (sort-by (juxt (comp js/parseInt :b) :a) <
            [{:a 1 :b "222"} {:a 2 :b "1"} {:b "111"}]))
+
+

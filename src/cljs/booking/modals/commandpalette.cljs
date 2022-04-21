@@ -10,95 +10,98 @@
             [schpaa.style.ornament :as sc]
             [re-frame.core :as rf]
             [booking.ico :as ico]
-            [schpaa.style.dialog]))
+            [schpaa.style.dialog]
+            [booking.reports]))
 
 (def commands
   (mapv (fn [[idx {:keys [id] :as m}]] (assoc m :id (str idx)))
         (map-indexed vector
-                     [{:name   "Rapport: siste nye vakter"
-                       :access :admin
-                       :icon   ico/nokkelvakt
-                       :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])}
-                      {:name   "Mine vakter"
-                       :icon   ico/nokkelvakt
-                       :action #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])}
-                      {:name   "Utlån på Nøklevann"
-                       :icon   ico/ticket
-                       :action #(rf/dispatch [:lab/toggle-boatpanel])
-                       :group  1}
-                      {:name     "Årshjul"
-                       :keywords "aktiviteter nrpk plan"
-                       :action   #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
-                       :icon     ico/yearwheel
-                       :group    1}
-                      {:name     "Organisasjonen NRPK"
-                       :keywords "nrpk organisasjon styret"
-                       :action   #(rf/dispatch [:app/navigate-to [:r.oversikt.organisasjon]])}
-                      {:name     "Hvem sitter i styret"
-                       :keywords "nrpk styret"
-                       :action   #(rf/dispatch [:app/navigate-to [:r.oversikt.styret]])}
-                      {:name     "Logg ut"
-                       :keywords ""
-                       :action   #(rf/dispatch [:app/sign-out])}
-                      {:name     "Administrasjon"
-                       :keywords ""
-                       :action   #(rf/dispatch [:app/navigate-to [:r.admin]])}
-                      {:name     "Logg inn"
-                       :keywords ""
-                       :action   #(rf/dispatch [:app/login])}
-                      {:name     "Oversikt"
-                       :keywords "lenke link innhold nrpk"
-                       :action   #(rf/dispatch [:app/navigate-to [:r.oversikt]])}
+                     (concat
+                       booking.reports/report-list
+                       [#_{:name   "Rapport: siste nye vakter"
+                           :access :admin
+                           :icon   ico/nokkelvakt
+                           :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])}
+                        {:name   "Mine vakter"
+                         :icon   ico/nokkelvakt
+                         :action #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])}
+                        {:name   "Utlån på Nøklevann"
+                         :icon   ico/ticket
+                         :action #(rf/dispatch [:lab/toggle-boatpanel])
+                         :group  1}
+                        {:name     "Årshjul"
+                         :keywords "aktiviteter nrpk plan"
+                         :action   #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
+                         :icon     ico/yearwheel
+                         :group    1}
+                        {:name     "Organisasjonen NRPK"
+                         :keywords "nrpk organisasjon styret"
+                         :action   #(rf/dispatch [:app/navigate-to [:r.oversikt.organisasjon]])}
+                        {:name     "Hvem sitter i styret"
+                         :keywords "nrpk styret"
+                         :action   #(rf/dispatch [:app/navigate-to [:r.oversikt.styret]])}
+                        {:name     "Logg ut"
+                         :keywords ""
+                         :action   #(rf/dispatch [:app/sign-out])}
+                        {:name     "Administrasjon"
+                         :keywords ""
+                         :action   #(rf/dispatch [:app/navigate-to [:r.admin]])}
+                        {:name     "Logg inn"
+                         :keywords ""
+                         :action   #(rf/dispatch [:app/login])}
+                        {:name     "Oversikt"
+                         :keywords "lenke link innhold nrpk"
+                         :action   #(rf/dispatch [:app/navigate-to [:r.oversikt]])}
 
-                      {:name     "Sjøbasen oversikt"
-                       :keywords "lenke link innhold booking"
-                       :action   #(rf/dispatch [:app/navigate-to [:r.booking]])}
+                        {:name     "Sjøbasen oversikt"
+                         :keywords "lenke link innhold booking"
+                         :action   #(rf/dispatch [:app/navigate-to [:r.booking]])}
 
-                      {:id "0", :name "Registrer skade på utstyr" :icon [:> outline/PencilIcon] :disabled true}
-                      {:id "1", :name "Registrer hms-hendelse" :icon [:> outline/PencilIcon] :disabled true}
-                      {:id "2", :name "Avlys booking" :disabled true}
-                      {:id "3", :name "Kok kaffe" :disabled true}
-                      {:id "3", :name "Lage vafler" :keywords "mat" :disabled true}
-                      {:id "4", :name "Avlys kurs" :disabled true :icon [:> outline/LockClosedIcon]}
-                      {:id "5", :name "Reserver båter for kurs" :disabled true :icon [:> outline/ArrowRightIcon]}
-                      {:id "6", :name "Vis båtlisten på Nøklevann" :disabled true}
-                      {:id "7", :name "Vis båtlisten på Sjøbasen" :disabled true}
-                      {:id "8", :name "Endre mine opplysninger" :icon [:> outline/UserCircleIcon] :action #(rf/dispatch [:app/navigate-to [:r.user]])}
-                      {:id   "9",
-                       :name "Skriv nytt innlegg"
-                       :icon ico/pencil
-                       :action
-                       ;#(js/alert "!!!")
-                       #(rf/dispatch [:lab/new-blog-entry])}
-                      {:group    1
-                       :name     "Utlån på sjøbasen (booking)"
-                       :keywords "utlån booking sjøbase"
-                       :icon     ico/ticket :action #(rf/dispatch [:app/navigate-to [:r.debug]])}
-                      {:id "11", :name "Lage nytt båtnummer" :disabled true}
-                      {:id "12", :name "Gå til designspråk/mal" :icon [:> outline/ColorSwatchIcon] :action #(rf/dispatch [:app/navigate-to [:r.designlanguage]])}
-                      {:id "13", :name "Gå til forsiden" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.forsiden]])}
-                      {:id "14", :name "Hvilke betingelser gjelder?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.terms]])}
-                      {:id "15", :name "Plikter som nøkkelvakt" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.conditions]])}
-                      {:id "16", :name "Hvilke retningslinjer på sjøbasen?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])}
-                      {:id "17", :name "Vaktkalender" :icon ico/nokkelvakt :action #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])}
-                      {:id "18", :name "Veksle visning av krom" :icon [:> outline/LightningBoltIcon] :action #(rf/dispatch [:lab/toggle-chrome])}
-                      {:id "19", :name "Vis filer" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])}
-                      {:id "20", :name "Aktivitetsliste (utlån)" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])}
+                        {:id "0", :name "Registrer skade på utstyr" :icon [:> outline/PencilIcon] :disabled true}
+                        {:id "1", :name "Registrer hms-hendelse" :icon [:> outline/PencilIcon] :disabled true}
+                        {:id "2", :name "Avlys booking" :disabled true}
+                        {:id "3", :name "Kok kaffe" :disabled true}
+                        {:id "3", :name "Lage vafler" :keywords "mat" :disabled true}
+                        {:id "4", :name "Avlys kurs" :disabled true :icon [:> outline/LockClosedIcon]}
+                        {:id "5", :name "Reserver båter for kurs" :disabled true :icon [:> outline/ArrowRightIcon]}
+                        {:id "6", :name "Vis båtlisten på Nøklevann" :disabled true}
+                        {:id "7", :name "Vis båtlisten på Sjøbasen" :disabled true}
+                        {:id "8", :name "Endre mine opplysninger" :icon [:> outline/UserCircleIcon] :action #(rf/dispatch [:app/navigate-to [:r.user]])}
+                        {:id   "9",
+                         :name "Skriv nytt innlegg"
+                         :icon ico/pencil
+                         :action
+                         ;#(js/alert "!!!")
+                         #(rf/dispatch [:lab/new-blog-entry])}
+                        {:group    1
+                         :name     "Utlån på sjøbasen (booking)"
+                         :keywords "utlån booking sjøbase"
+                         :icon     ico/ticket :action #(rf/dispatch [:app/navigate-to [:r.debug]])}
+                        {:id "11", :name "Lage nytt båtnummer" :disabled true}
+                        {:id "12", :name "Gå til designspråk/mal" :icon [:> outline/ColorSwatchIcon] :action #(rf/dispatch [:app/navigate-to [:r.designlanguage]])}
+                        {:id "13", :name "Gå til forsiden" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.forsiden]])}
+                        {:id "14", :name "Hvilke betingelser gjelder?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.terms]])}
+                        {:id "15", :name "Plikter som nøkkelvakt" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.conditions]])}
+                        {:id "16", :name "Hvilke retningslinjer på sjøbasen?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])}
+                        {:id "17", :name "Vaktkalender" :icon ico/nokkelvakt :action #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])}
+                        {:id "18", :name "Veksle visning av krom" :icon [:> outline/LightningBoltIcon] :action #(rf/dispatch [:lab/toggle-chrome])}
+                        {:id "19", :name "Vis filer" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])}
+                        {:id "20", :name "Aktivitetsliste (utlån)" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])}
 
-                      {:id       "22", :name "Booking: Ofte stilte spørsmål"
-                       :keywords "faq"
-                       :icon     [:> solid/QuestionMarkCircleIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.faq]])}
-                      {:group    1
-                       :name     "Send en tilbakemelding"
-                       :keywords "hvordan hjelp"
-                       :icon     ico/tilbakemelding
-                       :action   #(rf/dispatch [:app/give-feedback {:source :command-palette}])}
-                      {:id     "24" :name "Gå til feilmelding" :keywords "feil"
-                       :action #(rf/dispatch [:app/navigate-to [:r.page-not-found]])}
-                      {:id       "25" :name "Vis QR-kode hit"
-                       :icon     ico/qrcode
-                       :keywords "lenke link"
-                       :action   #(rf/dispatch [:lab/qr-code-for-current-page])}])))
+                        {:id       "22", :name "Booking: Ofte stilte spørsmål"
+                         :keywords "faq"
+                         :icon     [:> solid/QuestionMarkCircleIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.faq]])}
+                        {:group    1
+                         :name     "Send en tilbakemelding"
+                         :keywords "hvordan hjelp"
+                         :icon     ico/tilbakemelding
+                         :action   #(rf/dispatch [:app/give-feedback {:source :command-palette}])}
+                        {:id     "24" :name "Gå til feilmelding" :keywords "feil"
+                         :action #(rf/dispatch [:app/navigate-to [:r.page-not-found]])}
+                        {:id       "25" :name "Vis QR-kode hit"
+                         :icon     ico/qrcode
+                         :keywords "lenke link"
+                         :action   #(rf/dispatch [:lab/qr-code-for-current-page])}]))))
 
 (defn command-by-id [] (zipmap (map :id commands) commands))
 
