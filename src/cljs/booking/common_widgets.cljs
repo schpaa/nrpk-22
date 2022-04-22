@@ -72,11 +72,11 @@
 ;region
 
 (defn trashcan [on-click {:keys [deleted id] :as v}]
-  [(if deleted scb/round-normal-listitem scb/round-danger-listitem)
+  [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
    {:on-click #(on-click id)}
    [sc/icon-small
     (if deleted
-      (icon/small :rotate-left)
+      (icon/adapt :rotate-left)
       ico/trash)]])
 
 (defn edit [attr on-click {:keys [deleted] :as m}]

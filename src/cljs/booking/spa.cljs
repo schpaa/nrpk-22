@@ -210,6 +210,7 @@
                  (let [doc-id (-> r :path-params :id)]
                    [:div
                     (case doc-id
+                      "tidslinje-forklaring" (-> (inline "./oversikt/tidslinje-forklaring.md") schpaa.markdown/md->html sc/markdown)
                       "hms-håndbok" (-> (inline "./oversikt/hms-håndbok.md") schpaa.markdown/md->html sc/markdown)
                       "vaktinstruks" (-> (inline "./content/vaktinstruks.md") schpaa.markdown/md->html sc/markdown)
                       "regler-utenom-vakt" (-> (inline "./content/regler-utenom-vakt.md") schpaa.markdown/md->html sc/markdown)

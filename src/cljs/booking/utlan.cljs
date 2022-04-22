@@ -295,8 +295,8 @@
       alias #_"uten alias")))
 
 (defn timegraph [from to now]
-  (let [session-start (* 4 12)
-        session-end (* 4 15)
+  (let [session-start (* 4 10)
+        session-end (* 4 17)
         now (+ (* 4 (t/hour now)) (quot (t/minute now) 15))
         start (+ (* 4 (t/hour from)) (quot (t/minute from) 15))
         end (if-let [to' (first (vals to))]
@@ -305,51 +305,67 @@
                   (+ (* 4 (t/hour x)) (quot (t/minute x) 15)))
                 nil)
               nil)
+        end (if (< now end) 10 end)
         session-color "var(--text2)"
+        time-color "var(--yellow-5)"
+        timeline-color "var(--text1)"
         color (if (nil? end) "var(--blue-8)" "var(--text1)")]
+
     [:div.h-8 {:on-click #(swap!
                             settings update :rent/graph-view-mode (fn [e] (mod (inc e) 2)))
                :style    {:overflow          :clip
+                          :box-shadow        "var(--inner-shadow-2),var(--shadow-2)"
                           :border-radius     "var(--radius-0)"
+                          :cursor            :pointer
                           :xbackground-color "var(--floating)"}}
      (let [v-start (case @(r/cursor settings [:rent/graph-view-mode])
                      0 (* 4 6)
-                     1 (- session-start 2))
+                     1 (- session-start 4))
            v-end (case @(r/cursor settings [:rent/graph-view-mode])
                    0 96
-                   1 (+ session-end 2))
+                   1 (+ session-end 4))
 
            arrow-length (/ (- v-end v-start) 15)]
        [:svg
         {:viewBox             (l/strp v-start 0 (- v-end v-start) 8)
-         :height              "auto"
+         :height              "100%"
          :width               "100%"
          :preserveAspectRatio "none"}
 
-        [:path {:stroke         session-color
-                :vector-effect  :non-scaling-stroke
-                :fill           "none"
-                :stroke-linecap :round
-                :stroke-width   4
-                :opacity        0.5
-                :d              (l/strp "M" session-start 0 "l" 0 7.5 "l" (- session-end session-start) 0 "l" 0 -7.5)}]
-
-        [:path {:stroke         color
-                :vector-effect  :non-scaling-stroke
-                :stroke-width   4
-                :stroke-linecap :round
-                :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}]
-
-        [:rect {:fill    session-color                      ;"rgba(255,255,255,0.1)"
-                :opacity 0.1
+        [:rect {:fill    session-color
+                :x       session-start
+                :width   (- session-end session-start)
+                :opacity 0.3
+                :height  "100%"}]
+        [:path
+         {:stroke  "none"
+          :opacity 0.4
+          :fill    time-color
+          :d       (l/strp "M" 0 0 "L" (- now 3) 0 "l" 6 "8" "H" 0 "z")}]
+        [:rect {:fill    session-color
+                :opacity 0.2
                 :width   now
                 :height  "100%"}]
-
+        [:line {:x2                "100"
+                :x1                0
+                :y2                "8"
+                :y1                "8"
+                :opacity           0.5
+                :stroke-dashoffset "0"
+                :stroke-dasharray  "4 4"
+                :stroke-width      2
+                :stroke            timeline-color}]
         (when (nil? end)
           [:path {:fill           color
                   :id             "arrow"
                   :stroke-linecap :round
-                  :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])])]))
+                  :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
+        (when true                                          ;(< start now)
+          [:path {:stroke         color
+                  :vector-effect  :non-scaling-stroke
+                  :stroke-width   4
+                  :stroke-linecap :round
+                  :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}])])]))
 
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
@@ -387,7 +403,7 @@
                           :justify-content :between}}]
 
                 ;[l/ppre-x uid loggedin-uid]
-                [:div {:class [:h-12 :flex :items-center :gap-1]
+                [:div {:class [:h-12 :flex :items-center :gap-2]
                        :style {:grid-area "edit "
                                :display   :flex}}
                  (when edit-mode?
@@ -416,9 +432,9 @@
                                           :opacity         (if deleted 0.2 1)
                                           :grid-area       "content"}}]
                       (concat
-                        [[sc/col-space-1 {:class [:w-4 :-debugx]}
-                          [:div.shrink-0.h-4.w-4.self-center (when overnatting [sc/icon-tiny ico/moon])]
-                          [:div.shrink-0.h-4.w-4.self-center (when nøkkel [sc/icon-tiny ico/nokkelvakt])]]]
+                        [[sc/row-ec-g1 {:class [:w-12 :-debugx]}
+                          (when overnatting [sc/icon-tiny-frame ico/moon])
+                          (when nøkkel [sc/icon-tiny-frame ico/nokkelvakt])]]
 
                         [(if show-timegraph?
                            [:div.w-36.h-auto [timegraph date boats (t/date-time)]]
@@ -429,7 +445,7 @@
                         [(when show-details?
                            [sc/col-space-1 {:class [:w-24 :truncate]}
                             [sc/row-sc-g2
-                             [sc/small2 {:class [:truncate]} (user-alias uid)]]
+                             [sc/small2 {:class [:truncate]} (user.database/lookup-alias uid)]]
                             [sc/row-sc-g2
                              [sc/small0 {:style {:font-weight "var(--font-weight-6)"}
                                          :class [:tabular-nums :tracking-wide]}
@@ -471,8 +487,6 @@
            [:div (for [e (:booking @data)]
                    [l/ppre-x e])]]))))
 
-;(defonce _ (rf/subscribe [:r.utlan]))
-
 (defn panel [{:keys [on-close]}]
   [sc/col-space-8
    [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
@@ -482,10 +496,11 @@
 (defn commands []
   (let [data (rf/subscribe [:rent/list])]
     [sc/col-space-4
-     [sc/row-sc-g2
+     [sc/row-sc-g2-w
       [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
-      [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Vis detaljer"]
+      [hoc.buttons/reg-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/eye "Oversikt"]
+      [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
      [sc/row-sc-g4-w
-      [widgets/auto-link :r.båtliste]]]))
-
+      [widgets/auto-link :r.båtliste]
+      [sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Trenger du hjelp?"]]]))
