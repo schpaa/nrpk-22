@@ -983,6 +983,7 @@
                    [booking.common-views/no-access-view r]))}])
 
    :r.reports        (fn [r] [+page-builder r (booking.reports/page r)])
+   :r.båtliste       (fn [r] [+page-builder r {:render (fn [] [:div])}])
    :r.page-not-found (fn [r] [+page-builder r {:render (fn [] [error-page r])}])})
 
 (comment

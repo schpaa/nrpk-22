@@ -287,6 +287,11 @@
                            (db.core/database-push
                              {:path  ["activity-22"]
                               :value {:timestamp (str (t/now))
+                                      :sleepover (:moon data)
+                                      :adults    (:adults data)
+                                      :havekey   (:key data)
+                                      :children  (:children data)
+                                      :juveniles (:juveniles data)
                                       :uid       (:uid data)
                                       :list      list}}))))
 
@@ -306,6 +311,7 @@
     (when ok?
       ;todo add to db here
       (rf/dispatch [:rent/store (assoc @st :uid loggedin-uid)])
+      ;todo add counter increment update here?
       (rf/dispatch [:app/navigate-to [:r.utlan]])
       (rf/dispatch [:modal.boatinput/close])
 
@@ -599,61 +605,6 @@
 (rf/reg-event-fx :lab/toggle-boatpanel [rf/trim-v] open-boatpanel)
 
 (rf/reg-sub :lab/number-input2 :-> :lab/number-input2)
-
-;region junk
-
-;(comment
-;  (rf/reg-event-db :lab/open-number-input2 (fn [db]
-;                                             (assoc db :lab/number-input2 true)))
-;
-;  (rf/reg-event-db :lab/close-number-input2 (fn [db]
-;                                              (assoc db :lab/number-input2 false))))
-
-;(comment
-;  (defn boatinput-menu [{:keys [position]}]
-;    (let [left-side (= position :left-side)
-;          mobile? (= position :mobile)]
-;      (r/with-let [numberinput-visible (rf/subscribe [:lab/number-input])]
-;        [headlessui-reagent.core/transition
-;         (conj
-;           {:show  (or @numberinput-visible false)
-;            :style {:pointer-events :none}}
-;           (if mobile?
-;             {:enter      "transition duration-200 ease-out"
-;              :enter-from (strp "opacity-0" "translate-y-full")
-;              :enter-to   (strp "opacity-100" "translate-y-0")
-;              :leave      "transition duration-300"
-;              :leave-from (strp "opacity-100" "translate-y-0")
-;              :leave-to   (strp "opacity-0" "translate-y-full")}
-;
-;             {:enter      "transition transform duration-100 ease-out"
-;              :enter-from (strp "opacity-0 " (if left-side "translate-x-full" "-translate-x-full"))
-;              :enter-to   (strp "opacity-100" (if left-side "translate-x-0" "translate-x-32"))
-;              :leave      "transition duration-300"
-;              :leave-from (strp "opacity-100" (if left-side "translate-x-0" "translate-x-0"))
-;              :leave-to   (strp "opacity-0" (if left-side "translate-x-full" "-translate-x-full"))}))
-;         [:div.h-screen.grid
-;          [:div
-;           {:class [(some-> (sc/inner-dlg) last :class first)]
-;            :style (conj
-;                     {:place-self :center}
-;                     (if mobile?
-;                       {}
-;                       {:pointer-events :none}))}
-;           [:div.select-none
-;            {:style (conj
-;                      {:border-radius "var(--radius-1)"}
-;                      (if mobile? {:pointer-events :auto
-;                                   :-padding-block "var(--size-10)"
-;                                   :overflow-y     :auto}
-;                                  {:pointer-events :none
-;                                   :box-shadow     "var(--shadow-6)"
-;                                   :overflow-y     :auto}))}
-;            (if left-side
-;              [scm/boatinput-panel-from-left
-;               [booking.modals.boatinput/boatpanel-window mobile? true]]
-;              [scm/boatinput-panel-from-right
-;               [booking.modals.boatinput/boatpanel-window mobile? false]])]]]]))))
 
 ;region number-input
 
