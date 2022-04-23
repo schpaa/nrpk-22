@@ -130,7 +130,7 @@
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [{:icon-fn   #(sc/icon-large ico/new-home)
       :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      :class     #(if (= % :r.oversikt) :oversikt :active)
+      :class     #(if (= % :r.oversikt) :oversikt :selected)
       :page-name #(some #{%} [:r.forsiden :r.oversikt])}
 
      {:icon-fn   (fn [] (sc/icon-large ico/user))
@@ -177,7 +177,7 @@
        {:icon-fn     (fn [] (sc/icon-large ico/users))
         :on-click    #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
         :tall-height true
-        :class       #(if (= % :r.users) :active :oversikt)
+        :class       #(if (= % :r.users) :selected :oversikt)
         :page-name   #(some #{%} [:r.users :r.presence])})
      {:tall-height true
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
@@ -223,17 +223,19 @@
         has-chrome? (rf/subscribe [:lab/has-chrome])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.w-full.relative
+       ;{:style {:z-index -1}}
 
        ;; force the toolbar to stay on top when boat-panel is displayed
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
               ;{:style {:box-shadow "var(--inner-shadow-3)"}}
-              {:style {:z-index     1211
+              {;:class [(if left-side? :left-side :right-side)]
+               :style {;:z-index     1211
                        :padding-top "var(--size-0)"
                        :box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
                        :background  "var(--toolbar)"}}]
              (map #(if (keyword? %)
                      [:div.grow]
-                     [vertical-button %])
+                     [vertical-button (assoc % :right-side (not left-side?))])
                   (remove nil? (vertical-toolbar-definitions))))
        #_(if left-side?
            [:div.absolute.left-4.inset-0.z-10.-debug
@@ -564,6 +566,10 @@
 
 (def max-width "54ch")
 
+(o/defstyled container :div
+  {:width         "min(calc(100% - 2rem),56ch)"
+   :margin-inline :auto})
+
 (defn +page-builder [r m]
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})
         scrollpos (r/atom 0)
@@ -663,35 +669,22 @@
 
                     ;modification could happen here
                     (when (fn? panel)
-                      ;(when-some [p (panel)])
-                      [:div
-                       [:div.mx-4
-                        [:div.mx-auto
-                         {:style {:width     "100%"
-                                  :max-width max-width}}
-                         #_(when goog.DEBUG
-                             [:div.pb-4 [l/ppre-x
-                                         {:users-access-tokens users-access-tokens
-                                          :r                   (-> r :data :modify)
-                                          :can-modify?         modify?}]])
-                         [hoc.panel/togglepanel pagename (or panel-title "innstillinger") panel modify?]]]])
+                      [container
+                       [hoc.panel/togglepanel pagename (or panel-title "innstillinger") panel modify?]])
 
                     (when always-panel
-                      [:div.mx-4
-                       [:div.mx-auto
-                        {:style {:width     "100%"
-                                 :max-width max-width}}
-                        [always-panel modify?]]])
+                      [container
+                       [always-panel modify?]])
 
-                    [:div.duration-200.grow
-                     {:style {:margin-right :auto
-                              :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                              ;; force view to align to the left
-                                              0
-                                              :auto)
-                              :width        "100%"
-                              :max-width    (if render-fullwidth "" max-width)}}
-                     [:div.min-h-full.grow                  ;.max-w-xl ?
-                      (if render-fullwidth
-                        [render-fullwidth r]
-                        [:div.mx-4 [render r]])]]]))]))])})))
+                    (if render-fullwidth
+                      [container                            ;:div.duration-200.grow
+                       {:style {:margin-right "unset"
+                                :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                                ;; force view to align to the left
+                                                0
+                                                "unset")
+                                :width        "100%"
+                                :max-width    (if render-fullwidth "" "inherit")}}
+                       [render-fullwidth r]]
+                      [container
+                       [render r]])]))]))])})))

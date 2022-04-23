@@ -270,7 +270,15 @@
 (rf/reg-sub :rent/list
             (fn [_ _]
               (sort-by (comp :timestamp val) >
-                       @(db.core/on-value-reaction {:path ["activity-22"]}))))
+                       (transduce
+                         (comp
+                           (map identity)
+                           (filter (fn [[k v]]
+                                     (t/<= (t/<< (t/today) (t/new-period 3 :days))
+                                           (t/date (t/instant (:timestamp v)))))))
+                         conj
+                         []
+                         @(db.core/on-value-reaction {:path ["activity-22"]})))))
 
 (rf/reg-fx :rent/write (fn [data]
                          (let [list (into {} (map (fn [{:keys [id]}] [id ""]) (:list data)))]

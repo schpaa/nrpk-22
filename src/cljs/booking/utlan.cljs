@@ -244,14 +244,16 @@
     :xmargin-bottom "0.5rem"}])
 
 (o/defstyled command-grid :div
-  [:& {:display               :grid
-       :border-radius         "var(--radius-1)"
-       :padding-inline        "var(--size-2)"
-       :column-gap            "var(--size-2)"
-       :row-gap               "var(--size-0)"
-       :grid-template-columns "min-content 1fr"
-       :grid-template-areas   [["." "time"]
-                               ["edit" "content"]]}
+  [:&
+   {:display               :grid
+    :border-radius         "var(--radius-1)"
+    :padding-inline        "var(--size-2)"
+    :margin-inline         "calc(-1 * var(--size-2))"
+    :column-gap            "var(--size-3)"
+    :row-gap               "0"
+    :grid-template-columns "min-content 48px 1fr"
+    :grid-template-areas   [["." "." "details"]
+                            ["edit" "badges" "content"]]}
    [:&:hover
     {:background "rgba(0,0,0,0.05)"}]])
 
@@ -260,8 +262,8 @@
    {:display     :flex
     :flex-wrap   :wrap
     :align-items :start
-    :color       "var(--text1)"}
-   [:&.deleted {:color           "var(--text0)"
+    :color       "var(--text1) "}
+   [:&.deleted {:color           "var(--text0) "
                 :text-decoration :line-through
                 :opacity         0.3}]])
 
@@ -292,11 +294,11 @@
         (if (empty? name)
           this-uid
           name))
-      alias #_"uten alias")))
+      alias #_" uten alias ")))
 
 (defn timegraph [from to now]
-  (let [session-start (* 4 10)
-        session-end (* 4 17)
+  (let [session-start (* 4 18)
+        session-end (* 4 21)
         now (+ (* 4 (t/hour now)) (quot (t/minute now) 15))
         start (+ (* 4 (t/hour from)) (quot (t/minute from) 15))
         end (if-let [to' (first (vals to))]
@@ -306,20 +308,21 @@
                 nil)
               nil)
         end (if (< now end) 10 end)
-        session-color "var(--text2)"
+        field-color "var(--floating)"
+        session-color "var(--pink-3)"
         time-color "var(--yellow-5)"
-        timeline-color "var(--text1)"
-        color (if (nil? end) "var(--blue-8)" "var(--text1)")]
+        timeline-color "var(--text2)"
+        color (if (nil? end) "var(--blue-8)" "var(--text1) ")]
 
     [:div.h-8 {:on-click #(swap!
                             settings update :rent/graph-view-mode (fn [e] (mod (inc e) 2)))
-               :style    {:overflow          :clip
-                          :box-shadow        "var(--inner-shadow-2),var(--shadow-2)"
-                          :border-radius     "var(--radius-0)"
-                          :cursor            :pointer
-                          :xbackground-color "var(--floating)"}}
+               :style    {:overflow         :clip
+                          :box-shadow       "var(--shadow-3),var(--shadow-2)"
+                          :border-radius    "var(--radius-0)"
+                          :cursor           :pointer
+                          :background-color field-color}}
      (let [v-start (case @(r/cursor settings [:rent/graph-view-mode])
-                     0 (* 4 6)
+                     0 (* 4 0)
                      1 (- session-start 4))
            v-end (case @(r/cursor settings [:rent/graph-view-mode])
                    0 96
@@ -331,41 +334,39 @@
          :height              "100%"
          :width               "100%"
          :preserveAspectRatio "none"}
-
         [:rect {:fill    session-color
                 :x       session-start
                 :width   (- session-end session-start)
-                :opacity 0.3
-                :height  "100%"}]
+                :opacity 0.5
+                :y       "0"
+                :height  "8"}]
+        (when (nil? end)
+          [:path {:fill           color
+                  :stroke-linecap :round
+                  :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
+
+        (when true
+          ;(< start now)
+          [:path {:stroke         color
+                  ;:vector-effect  :non-scaling-stroke
+                  :stroke-width   (if (< 1 (count to)) 2 1)
+                  :stroke-linecap :round
+                  :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}])
         [:path
          {:stroke  "none"
-          :opacity 0.4
+          :opacity 0.5
           :fill    time-color
-          :d       (l/strp "M" 0 0 "L" (- now 3) 0 "l" 6 "8" "H" 0 "z")}]
-        [:rect {:fill    session-color
-                :opacity 0.2
-                :width   now
-                :height  "100%"}]
-        [:line {:x2                "100"
+          :d       (l/strp "M" 0 0 "L" (- now 1) 0 "l" 3 "8" "H" 0 "z")}]
+
+        [:line {:x2                96
                 :x1                0
                 :y2                "8"
                 :y1                "8"
-                :opacity           0.5
+                :opacity           1
                 :stroke-dashoffset "0"
                 :stroke-dasharray  "4 4"
-                :stroke-width      2
-                :stroke            timeline-color}]
-        (when (nil? end)
-          [:path {:fill           color
-                  :id             "arrow"
-                  :stroke-linecap :round
-                  :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
-        (when true                                          ;(< start now)
-          [:path {:stroke         color
-                  :vector-effect  :non-scaling-stroke
-                  :stroke-width   4
-                  :stroke-linecap :round
-                  :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}])])]))
+                :stroke-width      1
+                :stroke            timeline-color}]])]))
 
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
@@ -378,10 +379,10 @@
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
       [sc/col-space-8
-       (into [:div {:class []
-                    :style {:gap            "var(--size-2)"
-                            :display        :flex
-                            :flex-direction :column}}]
+       (into [sc/col-space-4 #_#_:div {:class []
+                                       :style {:xgap           "var(--size-2) "
+                                               :display        :flex
+                                               :flex-direction :column}}]
              (for [[k {:keys [uid timestamp list id deleted nøkkel] :as m}] (if show-deleted?
                                                                               @data
                                                                               (remove (comp :deleted val) @data))
@@ -397,68 +398,73 @@
                [command-grid
                 [:div.w-full.truncate
                  {:class [:whitespace-nowrap :gap-1]
-                  :style {:color           "var(--text1)"
-                          :grid-area       "time"
+                  :style {:color           "var(--text1) "
+                          :grid-area       " time "
                           :display         :flex
                           :justify-content :between}}]
 
-                ;[l/ppre-x uid loggedin-uid]
-                [:div {:class [:h-12 :flex :items-center :gap-2]
-                       :style {:grid-area "edit "
+                [sc/row-ec-g1 {:style {:grid-area "badges"
+                                       :flex-wrap :nowrap}
+                               :class [:h-12x :place-content-center]}
+                 (when overnatting [sc/icon-tiny-frame ico/moon])
+                 (when nøkkel [sc/icon-tiny-frame ico/nokkelvakt])]
+
+                (when show-details?
+                  [sc/row-sc-g2 {:style {:grid-area "details"}
+                                 :class []}
+                   (when show-timegraph? [sc/text1 (times.api/logg-date-format date)])
+                   [sc/text2 {:style {:font-weight "var(--font-weight-5)"}
+                              :class [:tabular-nums]}
+                    (if (pos? adults) adults "–")
+                    "/"
+                    (if (pos? juveniles) juveniles "–")
+                    "/"
+                    (if (pos? children) children "–")]
+                   [sc/text2 {:class []} (user.database/lookup-alias uid)]]
+                  #_[:div.grow])
+
+                [:div {:class [:h-12x :flex :items-center :gap-2]
+                       :style {:grid-area "edit"
                                :display   :flex}}
                  (when edit-mode?
                    [widgets/trashcan (fn [_] (db/database-update
                                                {:path  ["activity-22" (name k)]
                                                 :value {:deleted (not deleted)}})) m])
                  (if edit-mode?
-                   [widgets/edit {:disabled (not goog.DEBUG)} #(rf/dispatch [:lab/toggle-boatpanel]) m]
+                   [widgets/edit {:disabled (not goog.DEBUG)} #(rf/dispatch [:lab/toggle-boatpanel]) m])
 
-                   (if (= uid loggedin-uid)
-                     [hoc.buttons/cta-pill {:class    [:narrow]
-                                            :on-click #(innlevering {:k         k
-                                                                     :timestamp timestamp
-                                                                     :boats     boats})} "Inn"]
-                     [hoc.buttons/reg-pill {:class    [:narrow]
-                                            :on-click #(innlevering {:k         k
-                                                                     :timestamp timestamp
-                                                                     :boats     boats})} "Inn"]))]
+                 (if (= uid loggedin-uid)
+                   [hoc.buttons/cta-pill {:class    [:narrow]
+                                          :on-click #(innlevering {:k         k
+                                                                   :timestamp timestamp
+                                                                   :boats     boats})} "Inn"]
+                   [hoc.buttons/reg-pill {:class    [:narrow]
+                                          :on-click #(innlevering {:k         k
+                                                                   :timestamp timestamp
+                                                                   :boats     boats})} "Inn"])]
                 (into [listitem' {:class [(if deleted :deleted)
-                                          :px-2
-                                          :w-full]
+                                          ;:px-2
+                                          ;:-debug2
+                                          :w-full :py-2]
                                   :style {:flex            "1 0 auto"
-                                          ;:background-color "rgba(0,0,0,0.1)"
+                                          ;:background-color " rgba (0, 0, 0, 0.1) "
                                           :justify-content :between
                                           :align-items     :center
                                           :opacity         (if deleted 0.2 1)
                                           :grid-area       "content"}}]
                       (concat
-                        [[sc/row-ec-g1 {:class [:w-12 :-debugx]}
-                          (when overnatting [sc/icon-tiny-frame ico/moon])
-                          (when nøkkel [sc/icon-tiny-frame ico/nokkelvakt])]]
+                        [(if (and (t/= (t/today) (t/date date)) show-timegraph?)
+                           [:div.w-56 [timegraph date boats (t/date-time)]]
+                           [sc/col-space-1 {:class [:tabular-nums :tracking-tighter :w-x44]}
+                            [sc/row-fields
+                             [sc/text1 (times.api/logg-date-format date)]
+                             [:div.grow]
+                             [sc/text1 "kl " (times.api/time-format date)]]
+                            [sc/text1 {:class [:w-full :h-auto :self-center :text-right]} "kl 99.99"]])]
 
-                        [(if show-timegraph?
-                           [:div.w-36.h-auto [timegraph date boats (t/date-time)]]
-                           [sc/col {:class [:h-auto :self-center :w-36 :text-right :tabular-nums :tracking-tight]}
-                            [sc/text1 #_{:style {:font-size "var(--font-size-1)"}} (times.api/compressed-date date)]
-                            [sc/text1 "kl. 19:00"]])
-                         #_[:div.grow]]
-                        [(when show-details?
-                           [sc/col-space-1 {:class [:w-24 :truncate]}
-                            [sc/row-sc-g2
-                             [sc/small2 {:class [:truncate]} (user.database/lookup-alias uid)]]
-                            [sc/row-sc-g2
-                             [sc/small0 {:style {:font-weight "var(--font-weight-6)"}
-                                         :class [:tabular-nums :tracking-wide]}
-                              (if (pos? adults) adults "–")
-                              "/"
-                              (if (pos? juveniles) juveniles "–")
-                              "/"
-                              (if (pos? children) children "–")]]]
-
-                           #_[:div.grow])]
                         [(map (fn [[id returned]]
                                 (let [returned (not (empty? returned))
-                                      number (get lookup-id->number (keyword id) (str "?" id))]
+                                      number (get lookup-id->number (keyword id) (str " ? " id))]
                                   (sc/badge-2 {:class    [(if-not returned :in-use)]
                                                :on-click #(dlg/open-modal-boatinfo
                                                             {:uid  loggedin-uid
@@ -473,24 +479,24 @@
                                                                :data (get db (keyword id))})} number)))
                                 (remove nil? (vec (repeatedly (rand-int 5) #(-> [(+ 100 (rand-int 800)) nil])))))]
 
-                        #_[[:div (if nøkkel "N" "-")]]))]))]
+                        #_[[:div (if nøkkel " N " " - ")]]))]))]
 
       #_(when @(rf/subscribe [:lab/booking])
           [sc/col-space-8
            [sc/col
-            (-> (inline "./oversikt/sjøbasen.md") schpaa.markdown/md->html sc/markdown)
+            (-> (inline " . / oversikt/sjøbasen.md ") schpaa.markdown/md->html sc/markdown)
             [sc/row-sc-g4-w
-             [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])} "Aktivitet i dag og framover"]
-             [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Båtoversikt"]
-             [sc/link {:on-click #(rf/dispatch [])} "Ny booking"]
-             [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} "Mine bookinger"]]]
+             [sc/link {:on-click #(rf/dispatch [:app/navigate-to [:r.booking.oversikt]])} " Aktivitet i dag og framover "]
+             [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} " Båtoversikt "]
+             [sc/link {:on-click #(rf/dispatch [])} " Ny booking "]
+             [sc/link {:on-click #(rf/dispatch []) :class [:disabled]} " Mine bookinger "]]]
            [:div (for [e (:booking @data)]
                    [l/ppre-x e])]]))))
 
 (defn panel [{:keys [on-close]}]
   [sc/col-space-8
    [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
-    ;[hoc.toggles/switch-local (r/cursor settings [:rent/edit]) "rediger"]
+    ;[hoc.toggles/switch-local (r/cursor settings [:rent/edit]) " rediger "]
     [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]]])
 
 (defn commands []
@@ -498,7 +504,8 @@
     [sc/col-space-4
      [sc/row-sc-g2-w
       [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
-      [hoc.buttons/reg-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/eye "Oversikt"]
+      [hoc.buttons/danger-pill {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS"]
+      [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
      [sc/row-sc-g4-w

@@ -7,9 +7,11 @@
             [schpaa.icon :as icon]
             [booking.routes]))
 
-(defn vertical-button [{:keys [centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
+(defn vertical-button [{:keys [right-side
+                               centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
                         :or   {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+  (let [
+        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (if (fn? page-name)
                   (page-name current-page)
                   (= current-page page-name))]
@@ -20,12 +22,14 @@
                 :display        :grid
                 :place-content  :center
                 :position       :absolute}
-               {:display         :flex
+               {
+                :display         :flex
                 :align-items     :start
                 :justify-content :center
                 :height          (if tall-height "var(--size-10)" "var(--size-9)")})}
-     [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative ;.-debug2
+     [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
       {:style    {:pointer-events :auto
+
                   :height         "var(--size-9)"}
        :on-click #(on-click current-page)}
 
@@ -34,10 +38,12 @@
           [sc/top-left-badge b]))
 
       [sc/toolbar-button
-       {:disabled disabled
-        :style    style
-        :class    [(if active? (or (when class (class current-page)) :active))
-                   (if special :special)]}
+       {:disabled  disabled
+        :tab-index (when active? "-1")
+        :style     style
+        :class     [(if right-side :right-side :left-side)
+                    (if active? (or (when class (class current-page)) :selected))
+                    (if special :special)]}
        [sc/icon-large
         (if icon-fn
           (icon-fn current-page)
