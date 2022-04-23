@@ -281,7 +281,9 @@
                          @(db.core/on-value-reaction {:path ["activity-22"]})))))
 
 (rf/reg-fx :rent/write (fn [data]
-                         (let [list (into {} (map (fn [{:keys [id]}] [id ""]) (:list data)))]
+                         (let [list (into {}
+                                          (map (fn [{:keys [id]}] [id ""])
+                                               (:list data)))]
                            (tap> {:list list
                                   :data data})
                            (db.core/database-push
@@ -294,7 +296,6 @@
                                       :juveniles (:juveniles data)
                                       :uid       (:uid data)
                                       :list      list}}))))
-
 
 (rf/reg-event-fx :rent/store
                  (fn [_ [_ data]]
@@ -685,4 +686,3 @@
                                          ;todo remove comment to allow closing
                                          (close))
                              :action action)))]]]]]))))
-
