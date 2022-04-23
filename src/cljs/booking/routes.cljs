@@ -65,14 +65,14 @@
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 
    ["/utlan" {:name       :r.utlan
-              :shorttitle "Utlån & Booking"
+              :shorttitle "Utlån"
               :access     [[:member] #{}]
-              :header     [:r.oversikt "Utlån & Booking"]}]
+              :header     [:r.oversikt "Utlån på Nøklevann"]}]
 
    ["/booking" {:name       :r.booking
                 :shorttitle "Sjøbasen"
                 :icon       ico/booking
-                :header     [:r.oversikt "Sjøbasen"]}]
+                :header     [:r.oversikt "Booking på Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
    ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]
    ["/booking/faq" {:name :r.booking.faq :header [:r.booking "Ofte stilte spørsmål"]}]
@@ -89,9 +89,9 @@
      :shorttitle "Rapporter"
      :access     [[:member] #{:admin}]
      :header     [:r.oversikt "Rapporter"]}]
-   ["/baatliste"
+   ["/baatlisten"
     {:name   :r.båtliste
-     :header [:r.oversikt "Båtliste"]}]])
+     :header [:r.oversikt "Båtlisten"]}]])
 
 
 (defn shortcut-link [route-name]

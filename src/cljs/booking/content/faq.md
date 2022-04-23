@@ -1,5 +1,7 @@
 # Ofte stilte spørsmål
 
+`under arbeid, mye av det som står her må revideres ifm. eykt!`
+
 ## Sitter du inne med et ubesvart spørsmål (etter å ha sett grundig i denne listen), kan du godt sende oss en [tilbakemelding](/tilbakemelding).
 
 <div class="qa"> 

@@ -531,5 +531,8 @@
     [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
     [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
    [sc/row-sc-g4-w
+    [sc/text1 "Se også"]
     [widgets/auto-link :r.båtliste]
-    [sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Trenger du hjelp?"]]])
+    [sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
+    [widgets/auto-link :r.booking]]])
+

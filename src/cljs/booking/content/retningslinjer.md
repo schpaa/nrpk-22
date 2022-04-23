@@ -1,5 +1,7 @@
 # Retningslinjer for bruk av sjøbasen
 
+`under arbeid'
+
 ## Medlemmer i NRPK som har våttkort grunnkurs hav kan bruke kajakkene på Sjøbasen. `Kravet til våttkort grunnkurs hav er absolutt.`
 
 ### Booking av båter

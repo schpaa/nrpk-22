@@ -253,7 +253,7 @@
             (-> "##`Under arbeid – og du kan bidra! Send en tilbakemelding (se nederst på siden)`" schpaa.markdown/md->html sc/markdown)
 
             [sc/fp-summary-detail-always-show-links
-             nil
+             :oversikt/nrpk
              ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
              "Nøklevann ro– og padleklubb"
              [:div
@@ -282,8 +282,9 @@
              "Forslag til ingress?"
              [sc/row-sc-g4-w
               (let [data [[1 [:r.dokumenter {:id "hms-håndbok"}] "HMS ved Nøklevann"]
-                          [2 [:r.dokumenter {:id "kommer"}] "Båtoversikt"]
-                          [3 :r.utlan "Utlån"]]]
+                          [2 :r.båtliste]
+                          [3 :r.utlan]
+                          [4 [:r.dokumenter {:id "tidslinje-forklaring"}] "Ofte stilte spørsmål"]]]
                 (map (comp f rest) (sort-by first data)))]]
 
             [sc/fp-summary-detail-always-show-links
@@ -291,12 +292,12 @@
              "Sjøbasen"
              "Sjøbasen er for medlemmer som har «Våttkort grunnkurs hav». Sjøbasen er selvbetjent, holder til på Ormsund Roklub og du må booke utstyr her."
              [sc/row-sc-g4-w
-              (let [data [[[:r.dokumenter {:id "kommer"}] "HMS ved Sjøbasen"]
-                          [:r.booking "Booking"]
-                          [:r.booking.retningslinjer "Retningslinjer på sjøbasen"]
-                          [:r.booking.faq "Ofte stilte spørsmål"]
-                          [[:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Sjøbasen?"]]]
-                (map (comp f) (sort-by second data)))]]
+              (let [data [[1 [:r.dokumenter {:id "kommer"}] "HMS ved Sjøbasen"]
+                          [2 :r.booking]
+                          [3 :r.booking.retningslinjer]
+                          [4 [:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Sjøbasen?"]
+                          [5 :r.booking.faq]]]
+                (map (comp f rest) (sort-by first data)))]]
 
             [sc/fp-summary-detail-always-show-links
              :oversikt/Livredningskurs
@@ -315,17 +316,16 @@
              "Nøkkelvaktene er en gruppe med omtrent 130 frivillige medlemmer som betjener klubbens anlegg ved Nøklevann i klubbens åpningstider. Nøkkelvaktene hjelper medlemmene, sjekker medlemsskap og bidrar til sikkerheten i klubbens aktivitet."
              #_"Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
-              (let [data [
-                          [[:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
-                          [[:r.dokumenter {:id "vaktinstruks"}] "Nøkkelvaktinstruks"]
-                          [[:r.dokumenter {:id "regler-utenom-vakt"}] "Regler utenom vakt"]
-                          [:r.conditions "Plikter som nøkkelvakt"]
-                          [:r.utlan "Utlån på nøklevann"]
-                          [:r.aktivitetsliste "Aktivitetsliste"]
-                          [:r.terms "Betingelser"]
+              (let [data [[1 [:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
+                          [2 [:r.dokumenter {:id "vaktinstruks"}] "Nøkkelvaktinstruks"]
+                          [3 [:r.dokumenter {:id "regler-utenom-vakt"}] "Regler utenom vakt"]
+                          [4 :r.conditions "Plikter som nøkkelvakt"]
+                          [5 :r.utlan]
+                          [6 :r.aktivitetsliste "Aktivitetsliste"]
+                          [7 :r.terms "Betingelser"]
                           ;(shortlink :r.nokkelvakt)
-                          [:r.nokkelvakt]]]
-                (map f (sort-by second data)))]]
+                          [8 :r.nokkelvakt]]]
+                (map (comp f rest) (sort-by first data)))]]
 
             [sc/fp-summary-detail-always-show-links
              :oversikt/Årshjul
@@ -504,41 +504,6 @@
      [+page-builder r
       {:render (fn [_] (-> (inline "./content/faq.md") schpaa.markdown/md->html sc/markdown))}])
 
-   :r.booking
-   (fn [r]
-     (let [user-auth (rf/subscribe [::db/user-auth])]
-       [+page-builder r
-        {:render (fn [_] [sc/col-space-4]
-                   [:div
-                    [sc/text0 "Sjøbasen oversikt"]
-                    [sc/text1 "Sjøbasen oversikt"]
-                    [l/ppre-x @(rf/subscribe [:lab/user-state])]
-                    (let [admin-access? @(rf/subscribe [:lab/admin-access])]
-                      (cond
-                        admin-access?
-                        [sc/col-space-8
-                         [sc/title1 "ADMIN MODE"]
-                         [sc/col (into [:div.space-y-px]
-                                       (map user.database/booking-users-listitem
-                                            (user.database/booking-users
-                                              user.database/request-booking-xf
-                                              user.database/not-yet-accepted-booking-xf)))]
-                         [:hr]
-                         [sc/col (into [:div.space-y-px]
-                                       (map user.database/booking-users-listitem
-                                            (user.database/booking-users
-                                              user.database/request-booking-xf
-                                              user.database/accepted-booking-xf)))]]))
-
-                    #_(-> "./content/frontpage1.md"
-                          inline
-                          schpaa.markdown/md->html
-                          sc/markdown)
-                    [sc/row-end
-                     [hoc.buttons/cta
-                      {:type     "button"
-                       :on-click #(js/alert "todo!")}
-                      "Begynn her"]]])}]))
 
    :r.yearwheel
    (fn [r]
@@ -984,6 +949,63 @@
 
    :r.reports        (fn [r] [+page-builder r (booking.reports/page r)])
    :r.båtliste       (fn [r] [+page-builder r {:render (fn [] [:div])}])
+   :r.booking
+   (fn [r]
+     (let [user-auth (rf/subscribe [::db/user-auth])]
+       [+page-builder r
+        {:always-panel (fn commands []
+                         [sc/col-space-4
+                          [sc/row-sc-g2-w
+                           [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
+                           [hoc.buttons/danger-pill {:disabled true
+                                                     :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
+                          #_[sc/row-sc-g2-w
+                             [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
+                             [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
+                             [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
+                          [sc/row-sc-g4-w
+                           [sc/text1 "Se også"]
+                           [widgets/auto-link :r.båtliste]
+                           [widgets/auto-link :r.booking.faq]
+                           #_[sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
+                           [widgets/auto-link :r.utlan]]])
+         :render       (fn [_] [sc/col-space-4]
+                         [:div "Booking"])}]))
+   #_(fn [r]
+       (let [user-auth (rf/subscribe [::db/user-auth])]
+         [+page-builder r
+          {:render (fn [_] [sc/col-space-4]
+                     [:div
+                      [sc/text0 "Sjøbasen oversikt"]
+                      [sc/text1 "Sjøbasen oversikt"]
+                      [l/ppre-x @(rf/subscribe [:lab/user-state])]
+                      (let [admin-access? @(rf/subscribe [:lab/admin-access])]
+                        (cond
+                          admin-access?
+                          [sc/col-space-8
+                           [sc/title1 "ADMIN MODE"]
+                           [sc/col (into [:div.space-y-px]
+                                         (map user.database/booking-users-listitem
+                                              (user.database/booking-users
+                                                user.database/request-booking-xf
+                                                user.database/not-yet-accepted-booking-xf)))]
+                           [:hr]
+                           [sc/col (into [:div.space-y-px]
+                                         (map user.database/booking-users-listitem
+                                              (user.database/booking-users
+                                                user.database/request-booking-xf
+                                                user.database/accepted-booking-xf)))]]))
+
+                      #_(-> "./content/frontpage1.md"
+                            inline
+                            schpaa.markdown/md->html
+                            sc/markdown)
+                      [sc/row-end
+                       [hoc.buttons/cta
+                        {:type     "button"
+                         :on-click #(js/alert "todo!")}
+                        "Begynn her"]]])}]))
+
    :r.page-not-found (fn [r] [+page-builder r {:render (fn [] [error-page r])}])})
 
 (comment
