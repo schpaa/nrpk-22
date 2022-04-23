@@ -201,7 +201,8 @@
                 :on-change     #(let [v (-> % .-target .-value)]
                                   (reset! !query (string->query v)))}]
               [:div.absolute.inset-0
-               {:style {:top            :50%
+               {:class [:pointer-events-none]
+                :style {:top            :50%
                         :padding-inline "var(--size-3)"
                         :padding-top    "3px"
                         :transform      "translate(0,-50%)"}}
