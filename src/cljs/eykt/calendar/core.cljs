@@ -69,13 +69,22 @@
     :weekdays    [t/TUESDAY t/THURSDAY]
     :times       [{:starttime #time/time "12:00"
                    :endtime   #time/time "15:00"
-                   :slots     3}
+                   :slots     2}
                   {:starttime #time/time "15:00"
                    :endtime   #time/time "18:00"
-                   :slots     3}
+                   :slots     2}
                   {:starttime #time/time "18:00"
                    :endtime   #time/time "21:00"
-                   :slots     3}]}
+                   :slots     2}]}
+
+   {:section     "z5-1"
+    :description "Utvidet åpningstid ukedag"
+    :startdate   #time/date "2022-07-04"
+    :enddate     #time/date "2022-08-14"
+    :weekdays    [t/WEDNESDAY]
+    :times       [{:starttime #time/time "18:00"
+                   :endtime   #time/time "21:00"
+                   :slots     2}]}
 
    {:section     "z6"
     :description "Utvidet åpningstid helg"
