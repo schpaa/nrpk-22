@@ -123,7 +123,7 @@
     :description "Høst ukedag"
     :startdate   #time/date "2022-09-06"
     :enddate     #time/date "2022-10-09"
-    :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+    :weekdays    [t/WEDNESDAY]
     :times       [{:starttime #time/time "17:00"
                    :endtime   #time/time "20:00"
                    :slots     2}]}

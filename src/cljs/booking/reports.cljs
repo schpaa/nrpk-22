@@ -204,11 +204,11 @@
                                                         (mapcat val)))
                                       saldo (js/parseInt (or saldo 0))
                                       timekrav (js/parseInt (or timekrav 0))
-                                      saldo' (+ (* 3 eykts) saldo timekrav)]
+                                      saldo' (- (+ saldo (* 3 eykts)) timekrav)]
                                   [sc/text1-cl {:class [:tabular-nums :tracking-tight]
                                                 :style {:color (if (or (pos? saldo') (zero? saldo')) "green" "red")}}
                                    (if (zero? saldo') 0 (str saldo' "t"))])]
-                   [:td.vcenter navn]]))]]]])))
+                   [:td.vcenter [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id (name uid)}])} navn]]]))]]]])))
 
 
 (def report-list
