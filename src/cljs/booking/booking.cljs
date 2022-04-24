@@ -35,7 +35,8 @@
 (defn commands []
   [sc/col-space-4
    [sc/row-sc-g2-w
-    [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
+    [hoc.buttons/cta-pill-icon {:disabled true
+                                :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
     [hoc.buttons/danger-pill {:disabled true
                               :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
    #_[sc/row-sc-g2-w

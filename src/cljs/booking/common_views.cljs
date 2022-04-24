@@ -323,11 +323,12 @@
                              (let [titles (compute-pagetitles r)]
                                (if (vector? titles)
                                  [sc/col {:style {:justify-content :start}}
-                                  [sc/title1 {:class [:truncate]
-                                              :style {:font-weight "var(--font-weight-5)"}} (last titles)]
+                                  [sc/title1 #_{:style {:font-weight "var(--font-weight-5)"}} (last titles)]
                                   (when (< 1 (count titles))
                                     (let [{:keys [text link]} (first titles)]
-                                      [:div [sc/subtext-with-link {:href (k/path-for [link])} text]]))]
+                                      [:div [sc/subtext-with-link
+                                             {:class [:opacity-50 :hover:opacity-100]
+                                              :href  (k/path-for [link])} text]]))]
                                  [sc/col
                                   [sc/title1 titles]]))])]
         [(if frontpage header-top-frontpage header-top)
@@ -527,7 +528,7 @@
                         :text-align  :center
                         :color       "var(--text2)"}} "Ingen tilgang"]
       [sc/row-center [sc/icon {:style {:text-align :center
-                                       :color      "var(--text3)"}} ico/stengt]]
+                                       :color      "var(--text2)"}} ico/stengt]]
       ;[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
       ;[sc/small1 {:style {:white-space :nowrap}} "Du trenger --> " (str required-access)]
       #_[l/ppre-x

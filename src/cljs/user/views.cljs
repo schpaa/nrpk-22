@@ -36,7 +36,8 @@
             [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.dialog]
-            [eykt.content.rapport-side :refer [map-difference]]))
+            [eykt.content.rapport-side :refer [map-difference]]
+            [booking.common-widgets :as widgets]))
 
 (defn confirm-registry []
   #_(apply send
@@ -337,5 +338,6 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [schpaa.style.hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])} ico/nokkelvakt "Mine vakter"]
+   [widgets/auto-link :r.mine-vakter]
+   #_[schpaa.style.hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])} ico/nokkelvakt "Mine vakter"]
    #_[schpaa.style.hoc.buttons/reg-pill-icon {} ico/plus "Skade på materiell"]])

@@ -44,7 +44,7 @@
 
    ["/vaktkalender" {:name   :r.nokkelvakt :shorttitle "Vaktkalender"
                      :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
-                     :header [:r.oversikt "Vaktkalender"]}]
+                     :header [:r.mine-vakter "Vaktkalender"]}]
    ["/admin" {:name :r.admin :header [:r.oversikt "Admin"] :access [[:member] #{:admin}]}]
    ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
@@ -72,6 +72,7 @@
    ["/booking" {:name       :r.booking
                 :shorttitle "Sjøbasen"
                 :icon       ico/booking
+                :access     [[:member] #{:admin}]
                 :header     [:r.oversikt "Booking på Sjøbasen"]}]
    ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
    ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]

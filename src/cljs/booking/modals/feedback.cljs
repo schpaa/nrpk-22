@@ -10,7 +10,8 @@
 (def max-comment-length 160)
 
 (defn feedback-window [{:keys [title on-close on-save persona caption navn comment-length] :as ctx}]
-  (let [max-comment-length (or comment-length max-comment-length)]
+  (let [uid (rf/subscribe [:lab/uid])
+        max-comment-length (or comment-length max-comment-length)]
     [:div
      {:style {;:background-color "var(--toolbar)"
               :background-color "var(--content)"
@@ -33,6 +34,7 @@
           :class [:min-w-smx]}
          [:div.w-full]]
       (r/with-let [content (r/atom {})]
+
         (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
                   (let [state (tag @content)]
                     [sc/icon {:on-click #(swap! content update-in [tag] (fnil not false))
@@ -44,13 +46,18 @@
            [:div.flex.justify-between {:class [:w-full]}
             [sc/col-space-4 #_{:style {:width "100%"}}
              [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption]
+             (when-not @uid
+               [sci/input {:type          :email
+                           :handle-change #(swap! content assoc :email (-> % .-target .-value))
+                           :values        {:email (:email @content)}}
+                :email {:class [:min-w-full :relative]} "E-post (hvis du vil ha svar)" :email])
              [sc/col-space-4
               [:div.relative
                [sci/textarea {:rows          4
                               :values        {:tilbakemelding (:text @content)}
-                              :placeholder   (str "Skriv her (max " max-comment-length " tegn)")
+                              ;:placeholder   (str "Skriv her (max " max-comment-length " tegn)")
                               :handle-change #(swap! content assoc :text (-> % .-target .-value))}
-                :text {:class [:min-w-full :relative]} "Skriv her" :tilbakemelding]
+                :text {:class [:min-w-full :relative]} "Hva det gjelder" :tilbakemelding]
                [:div.absolute.-top-1.right-1
                 [sc/label (if (zero? (count (:text @content)))
                             (str "Maks " max-comment-length " tegn")

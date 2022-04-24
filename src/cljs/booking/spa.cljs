@@ -325,8 +325,9 @@
                           [5 :r.utlan]
                           [6 :r.aktivitetsliste "Aktivitetsliste"]
                           [7 :r.terms "Betingelser"]
+                          [8 :r.nokkelvakt]
                           ;(shortlink :r.nokkelvakt)
-                          [8 :r.nokkelvakt]]]
+                          [9 :r.mine-vakter]]]
                 (map (comp f rest) (sort-by first data)))]]
 
             [sc/fp-summary-detail-always-show-links
@@ -663,7 +664,7 @@
                         [:div.absolute.bottom-2.right-2
                          (sc/icon-small
                            {:style    {:color "var(--text3)"}
-                            :on-click #(rf/dispatch [:app/give-feedback {:navn navn :caption "Vær kort og konstruktiv. Meldingen blir lest men ikke besvart."}])}
+                            :on-click #(rf/dispatch [:app/give-feedback {:navn navn :caption "Vær kort og konstruktiv. Meldingen blir ikke nødvendigvis besvart."}])}
                            ico/tilbakemelding)]])])])}])
    :r.oversikt.organisasjon
    (fn [r]
@@ -901,50 +902,77 @@
                      (let [user (user.database/lookup-userinfo uid)
                            data (clojure.walk/stringify-keys @data)
                            data (mapcat val data)
-                           timekrav (:timekrav user)]
+                           saldo (:saldo user)
+                           timekrav (:timekrav user)
+                           z (- saldo timekrav (- (* 3 (count (seq data)))))
+                           saldo' (- saldo timekrav)]
                        [sc/col-space-8
 
                         #_[l/ppre-x (->> @(db/on-value-reaction {:path ["calendar"]})
                                          vals
                                          flatten1
                                          (mapcat vals))]
-
-
-
-
                         ;[l/ppre-x (mapcat val data)]
-                        [sc/row-fields
-                         [sc/surface-a {:style {:flex "1 0 auto"}}
-                          [sc/col-space-2
-                           [sc/title2 "Overført"]
-                           (when false
-                             [sc/text1 {:class [:text-right]} "-<n> timer"])]]
-                         [sc/surface-a {:style {:flex "1 0 auto"}}
-                          [sc/col-space-2
-                           [sc/title2 "Vaktkrav"]
-                           (when timekrav
-                             [sc/text1 {:class [:text-right]} timekrav " timer"])]]
-                         [sc/surface-a {:style {:flex "1 0 auto"}}
-                          [sc/col-space-2
-                           [sc/title2 "Ny saldo"]
-                           (when (and (seq data) timekrav)
-                             [sc/text1 {:class [:text-right]} (- timekrav (* 3 (count (seq data)))) " timer"])]]]
+                        [:div {:style {:display         :flex
+                                       :justify-content :space-between
+                                       :width           "100%"
+                                       :gap             "var(--size-2)"}}
 
-                        (if (seq data)
-                          (into [sc/col-space-4]
-                                (for [[slot kv] data]
-                                  (when slot
-                                    [sc/row-sc-g4-w
-                                     [schpaa.style.hoc.buttons/reg-pill
-                                      {:class    [:narrow]
-                                       :disabled true}
-                                      "Bytt"]
-                                     [sc/col
-                                      [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                                      [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]])))
-                          [sc/col
-                           [sc/row-sc-g4-w {:style {:margin-inline "var(--size-3)"}}
-                            [sc/text1 "Du har ikke valgt noen vakter. Se " (widgets/auto-link :r.nokkelvakt)]]])])
+                         [sc/surface-a {:style {:flex "1 0 0"}}
+                          [sc/col-space-2 {:style {:height          "100%"
+                                                   :justify-content :space-between}}
+                           [sc/title2 "Overført '21"]
+                           ;[:div.grow]
+                           [sc/text1 {:style {:text-align  :right
+                                              :font-weight "var(--font-weight-6)"}
+                                      :class []} saldo " timer"]]]
+
+                         [sc/surface-a {:style {:flex "1 0 0"}}
+                          [sc/col-space-2 {:style {:height          "100%"
+                                                   :justify-content :space-between}}
+                           [sc/title2 "Vaktkrav '22"]
+                           (when timekrav
+                             [sc/text1 {:style {:text-align  :right
+                                                :font-weight "var(--font-weight-7)"}}
+                              (str timekrav " timer")])]]
+
+                         [sc/surface-a {:style {:flex       "1 0 0"
+                                                :background (if (<= 0 z) "var(--green-8)" "var(--red-8)")
+                                                :color      (if (<= 0 z) "var(--green-1)" "var(--red-1)")}}
+                          [sc/col {:style {:justify-content :space-between}}
+                           [sc/col
+                            [sc/title "Saldo"]
+                            [sc/small {:style {:font-weight    "var(--font-weight-3)"
+                                               :text-transform :uppercase}} (if (<= 0 z) "I din favør" "I vår favør")]]
+                           [sc/text1-cl {:style {:font-weight "var(--font-weight-7)"}
+                                         :class [:text-right]} (Math/abs z) " timer"]]]]
+
+                        [sc/col {:style {:margin-inline "var(--size-3)"}}
+                         (if (seq data)
+                           [sc/col-space-8
+                            (into [sc/col-space-4]
+                                  (concat
+                                    (for [[slot kv] data]
+                                      (when slot
+                                        [sc/row-sc-g4-w
+                                         [schpaa.style.hoc.buttons/reg-pill
+                                          {:class    [:narrow]
+                                           :disabled true}
+                                          "Bytt"]
+                                         [sc/col
+                                          [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
+                                          [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))))
+                            [sc/row-sc-g4-w
+                             [sc/text1 "For å velge flere vakter eller fjerne vakter, se " (widgets/auto-link :r.nokkelvakt)]]]
+
+                           [sc/row-sc-g4-w
+                            [sc/text1 "Du har ikke valgt noen vakter. Se " (widgets/auto-link :r.nokkelvakt)]])]
+
+                        [sc/surface-a {:style {:flex "1 0 auto"}}
+                         [sc/col-space-2
+                          [sc/title2 "Overføres til neste år"]
+                          [sc/text1 {:class [:text-right]} z " timer"]]]])
+
                      [sc/title1 "Ingen definerte vakter"])
                    [booking.common-views/no-access-view r]))}])
 
