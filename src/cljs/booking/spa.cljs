@@ -45,7 +45,8 @@
             [schpaa.style.dialog :as dlg]
             [booking.common-widgets :as widgets]
             [booking.reports]
-            [booking.modals.boatinput]))
+            [booking.modals.boatinput]
+            [booking.booking]))
 
 ;region related to flex-date and how to display relative time
 
@@ -889,7 +890,6 @@
          :always-panel booking.utlan/commands
          :render       #(booking.utlan/render uid)}]))
 
-
    :r.mine-vakter
    (fn [r]
      [+page-builder
@@ -950,31 +950,8 @@
 
    :r.reports        (fn [r] [+page-builder r (booking.reports/page r)])
    :r.båtliste       (fn [r] [+page-builder r {:render (fn [] [:div])}])
-   :r.booking
-   (fn [r]
-     (let [user-auth (rf/subscribe [::db/user-auth])]
-       [+page-builder r
-        {:always-panel (fn commands []
-                         [sc/col-space-4
-                          [sc/row-sc-g2-w
-                           [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
-                           [hoc.buttons/danger-pill {:disabled true
-                                                     :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
-                          #_[sc/row-sc-g2-w
-                             [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
-                             [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
-                             [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
-                          [sc/row-sc-g4-w
-                           [sc/text1 "Se også"]
-                           [widgets/auto-link :r.båtliste]
-                           [widgets/auto-link :r.booking.faq]
-                           #_[sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
-                           [widgets/auto-link :r.utlan]]])
-         :render       (fn [_]
-                         (let [data (rf/subscribe [:booking/list])]
-                           [sc/col-space-4
-                            [:div "Booking"]
-                            [l/ppre-x @data]]))}]))
+   :r.booking        (fn [r] [+page-builder r (booking.booking/page r)])
+
    #_(fn [r]
        (let [user-auth (rf/subscribe [::db/user-auth])]
          [+page-builder r
@@ -1012,55 +989,6 @@
 
    :r.page-not-found (fn [r] [+page-builder r {:render (fn [] [error-page r])}])})
 
-;region
-
-(defn- date->str [v]
-  (-> v
-      (cljs-time.coerce/from-string)
-      (cljs-time.coerce/to-long)
-      (times.api/ms->local-time)
-      (t/<< (t/new-duration 2 :hours))
-      ;t/instant
-      ;t/date-time
-      str))
-
-(rf/reg-sub :booking/list
-            (fn [_ _]
-              ;(sort-by (comp :timestamp val) >)
-              (transduce
-                (comp
-                  (map (fn [[k v]] [k (if (= 2 (:version v 1))
-                                        ;todo This is NOT utc but local-time, so add 2 hours
-                                        v
-                                        {:version   2
-                                         :timestamp (date->str (str (:date v) "Z"))
-                                         :start     (date->str (str (:checkin v) "Z"))
-                                         :end       (date->str (str (:checkout v) "Z"))
-                                         ;:bid       (:bid v)
-                                         :uid       (if (:book-for-andre v) nil (:uid v))
-                                         :alias     (:navn v)
-                                         :list
-                                         (into {}
-                                               (mapv (fn [k]
-                                                       [(or (:id (booking.modals.boatinput/lookup k)) k) ""]) [(str (:bid v))]))})]))
-                  #_(filter (fn [[k v]]
-                              ;(tap> {:date' (t/date-time (:timestamp v))})
-                              (t/= (t/date (t/date-time (t/instant (:timestamp v))))
-                                   (t/today))))
-
-                  ;(map identity)
-                  #_(filter (fn [[k v]]
-                              (t/<= (t/<< (t/today) (t/new-period 3 :days))
-                                    (t/date (t/instant (:timestamp v)))))))
-                conj
-                []
-                (filter (fn [[k v]] (pos? (compare (name k) "-N-YkbBWynjRcIXbeiPi")))
-                        @(db.core/on-value-reaction {:path ["booking"]})))))
-
-;endregion
-
 (comment
   (sort-by (juxt (comp js/parseInt :b) :a) <
            [{:a 1 :b "222"} {:a 2 :b "1"} {:b "111"}]))
-
-
