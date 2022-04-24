@@ -905,28 +905,22 @@
                            data (mapcat val data)
                            saldo (:saldo user)
                            timekrav (:timekrav user)
-                           z (- saldo timekrav (- (* 3 (count (seq data)))))
-                           saldo' (- saldo timekrav)]
+                           z (when (some? saldo)
+                               (- saldo timekrav (- (* 3 (count (seq data))))))]
                        [sc/col-space-8
-
-                        #_[l/ppre-x (->> @(db/on-value-reaction {:path ["calendar"]})
-                                         vals
-                                         flatten1
-                                         (mapcat vals))]
-                        ;[l/ppre-x (mapcat val data)]
                         [:div {:style {:display         :flex
                                        :justify-content :space-between
                                        :width           "100%"
                                        :gap             "var(--size-2)"}}
-
                          [sc/surface-a {:style {:flex "1 0 0"}}
                           [sc/col-space-2 {:style {:height          "100%"
                                                    :justify-content :space-between}}
                            [sc/title2 "Overført '21"]
-                           ;[:div.grow]
                            [sc/text1 {:style {:text-align  :right
-                                              :font-weight "var(--font-weight-6)"}
-                                      :class []} saldo " timer"]]]
+                                              :font-weight "var(--font-weight-6)"}}
+                            (if (some? saldo)
+                              (str saldo " timer")
+                              "Kommer snart")]]]
 
                          [sc/surface-a {:style {:flex "1 0 0"}}
                           [sc/col-space-2 {:style {:height          "100%"
@@ -938,41 +932,49 @@
                               (str timekrav " timer")])]]
 
                          [sc/surface-a {:style {:flex       "1 0 0"
-                                                :background (if (<= 0 z) "var(--green-8)" "var(--red-8)")
-                                                :color      (if (<= 0 z) "var(--green-1)" "var(--red-1)")}}
-                          [sc/col {:style {:justify-content :space-between}}
+                                                :background (when (some? z) (if (<= 0 z) "var(--green-8)" "var(--red-8)"))
+                                                :color      (when (some? z) (if (<= 0 z) "var(--green-1)" "var(--red-1)"))}}
+                          [sc/col {:style {:height          "100%"
+                                           :justify-content :space-between}}
                            [sc/col
-                            [sc/title "Saldo"]
-                            [sc/small {:style {:font-weight    "var(--font-weight-3)"
-                                               :text-transform :uppercase}} (if (<= 0 z) "I din favør" "I vår favør")]]
-                           [sc/text1-cl {:style {:font-weight "var(--font-weight-7)"}
-                                         :class [:text-right]} (Math/abs z) " timer"]]]]
+                            [sc/title2 {:style {:color (when (some? z) "unset")}} "Saldo"]
+                            (when (some? z)
+                              [sc/small {:style {:font-weight    "var(--font-weight-3)"
+                                                 :text-transform :uppercase}} (if (<= 0 z) "I din favør" "I vår favør")])]
+                           [sc/text1 {:style {:color       (if (some? z) "unset")
+                                              :font-weight "var(--font-weight-7)"}
+                                      :class [:text-right]}
+                            (if (some? z)
+                              (str (Math/abs z) " timer")
+                              "Kommer snart")]]]]
 
                         [sc/col {:style {:margin-inline "var(--size-3)"}}
                          (if (seq data)
                            [sc/col-space-8
-                            (into [sc/col-space-4]
-                                  (concat
-                                    (for [[slot kv] data]
-                                      (when slot
-                                        [sc/row-sc-g4-w
-                                         [schpaa.style.hoc.buttons/reg-pill
-                                          {:class    [:narrow]
-                                           :disabled true}
-                                          "Bytt"]
-                                         [sc/col
-                                          [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                                          [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))))
+                            [sc/col-space-4
+                             (into [:<>]
+                                   ;[[l/ppre-x data]]
+                                   (for [[slot kv] data]
+                                     [sc/row-sc-g4-w
+                                      [schpaa.style.hoc.buttons/reg-pill
+                                       {:class    [:narrow]
+                                        :disabled true}
+                                       "Bytt"]
+                                      [sc/col
+                                       [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
+                                       [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))]
                             [sc/row-sc-g4-w
                              [sc/text1 "For å velge flere vakter eller fjerne vakter, se " (widgets/auto-link :r.nokkelvakt)]]]
 
                            [sc/row-sc-g4-w
                             [sc/text1 "Du har ikke valgt noen vakter. Se " (widgets/auto-link :r.nokkelvakt)]])]
 
-                        [sc/surface-a {:style {:flex "1 0 auto"}}
-                         [sc/col-space-2
-                          [sc/title2 "Overføres til neste år"]
-                          [sc/text1 {:class [:text-right]} z " timer"]]]])
+                        (when (some? z)
+                          [sc/surface-a {:style {:flex "1 0 auto"}}
+                           [sc/col-space-2
+                            [sc/title2 "Overføres til neste år"]
+                            [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
+                                       :class [:text-right]} (str z " timer")]]])])
 
                      [sc/title1 "Ingen definerte vakter"])
                    [booking.common-views/no-access-view r]))}])
