@@ -15,7 +15,8 @@
             [booking.carousell]
             [booking.flextime :refer [flex-datetime]]
             [booking.yearwheel]
-            [booking.openhours]))
+            [booking.openhours]
+            [booking.common-widgets :as widgets]))
 
 ;region
 
@@ -433,6 +434,14 @@
                     :gap                   "var(--size-4) var(--size-2)"
                     :grid-template-columns "1fr"}}
 
+      [listitem' (t/at (t/date "2022-04-24") (t/time "18:00"))
+       [sc/col-space-2
+        [:div "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
+
+        [:div "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
+         [widgets/auto-link :r.mine-vakter]
+         #_[sc/link {:style {:display :inline-block}
+                     :href  (kee-frame.core/path-for [:r.mine-vakter])} "her!"]]]]
       [listitem' (t/at (t/date "2022-04-20") (t/time "10:00"))
        [sc/col-space-2
         [:div "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.

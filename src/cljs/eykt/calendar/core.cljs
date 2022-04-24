@@ -62,74 +62,74 @@
                    :slots     3}]}
 
 
-   #_{:section     "z5"
-      :description "Utvidet åpningstid ukedag"
-      :startdate   #time/date "2022-07-04"
-      :enddate     #time/date "2022-08-14"
-      :weekdays    [t/TUESDAY t/THURSDAY]
-      :times       [{:starttime #time/time "12:00"
-                     :endtime   #time/time "15:00"
-                     :slots     3}
-                    {:starttime #time/time "15:00"
-                     :endtime   #time/time "18:00"
-                     :slots     3}
-                    {:starttime #time/time "18:00"
-                     :endtime   #time/time "21:00"
-                     :slots     3}]}
+   {:section     "z5"
+    :description "Utvidet åpningstid ukedag"
+    :startdate   #time/date "2022-07-04"
+    :enddate     #time/date "2022-08-14"
+    :weekdays    [t/TUESDAY t/THURSDAY]
+    :times       [{:starttime #time/time "12:00"
+                   :endtime   #time/time "15:00"
+                   :slots     3}
+                  {:starttime #time/time "15:00"
+                   :endtime   #time/time "18:00"
+                   :slots     3}
+                  {:starttime #time/time "18:00"
+                   :endtime   #time/time "21:00"
+                   :slots     3}]}
 
-   #_{:section     "z6"
-      :description "Utvidet åpningstid helg"
-      :startdate   #time/date "2022-07-04"
-      :enddate     #time/date "2022-08-14"
-      :weekdays    [t/SATURDAY t/SUNDAY]
-      :times       [
-                    {:starttime #time/time "11:00"
-                     :endtime   #time/time "14:00"
-                     :slots     3}
-                    {:starttime #time/time "14:00"
-                     :endtime   #time/time "17:00"
-                     :slots     3}]}
+   {:section     "z6"
+    :description "Utvidet åpningstid helg"
+    :startdate   #time/date "2022-07-04"
+    :enddate     #time/date "2022-08-14"
+    :weekdays    [t/SATURDAY t/SUNDAY]
+    :times       [
+                  {:starttime #time/time "11:00"
+                   :endtime   #time/time "14:00"
+                   :slots     3}
+                  {:starttime #time/time "14:00"
+                   :endtime   #time/time "17:00"
+                   :slots     3}]}
 
-   #_{:section     "z7"
-      :description "Sensommer ukedag"
-      :startdate   #time/date "2022-08-16"
-      :enddate     #time/date "2022-09-04"
-      :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-      :times       [{:starttime #time/time "18:00"
-                     :endtime   #time/time "21:00"
-                     :slots     2}]}
-   #_{:section     "z8"
-      :description "Sensommer helg"
-      :startdate   #time/date "2022-08-16"
-      :enddate     #time/date "2022-09-04"
-      :weekdays    [t/SATURDAY t/SUNDAY]
-      :times       [{:starttime #time/time "11:00"
-                     :endtime   #time/time "14:00"
-                     :slots     3}
-                    {:starttime #time/time "14:00"
-                     :endtime   #time/time "17:00"
-                     :slots     3}]}
+   {:section     "z7"
+    :description "Sensommer ukedag"
+    :startdate   #time/date "2022-08-16"
+    :enddate     #time/date "2022-09-04"
+    :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+    :times       [{:starttime #time/time "18:00"
+                   :endtime   #time/time "21:00"
+                   :slots     2}]}
+   {:section     "z8"
+    :description "Sensommer helg"
+    :startdate   #time/date "2022-08-16"
+    :enddate     #time/date "2022-09-04"
+    :weekdays    [t/SATURDAY t/SUNDAY]
+    :times       [{:starttime #time/time "11:00"
+                   :endtime   #time/time "14:00"
+                   :slots     3}
+                  {:starttime #time/time "14:00"
+                   :endtime   #time/time "17:00"
+                   :slots     3}]}
 
-   #_{:section     "z9"
-      :description "Høst ukedag"
-      :startdate   #time/date "2022-09-06"
-      :enddate     #time/date "2022-10-09"
-      :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
-      :times       [{:starttime #time/time "17:00"
-                     :endtime   #time/time "20:00"
-                     :slots     2}]}
+   {:section     "z9"
+    :description "Høst ukedag"
+    :startdate   #time/date "2022-09-06"
+    :enddate     #time/date "2022-10-09"
+    :weekdays    [t/TUESDAY t/WEDNESDAY t/THURSDAY]
+    :times       [{:starttime #time/time "17:00"
+                   :endtime   #time/time "20:00"
+                   :slots     2}]}
 
-   #_{:section     "z10"
-      :description "Høst helg"
-      :startdate   #time/date "2022-09-06"
-      :enddate     #time/date "2022-10-09"
-      :weekdays    [t/SATURDAY t/SUNDAY]
-      :times       [{:starttime #time/time "11:00"
-                     :endtime   #time/time "14:00"
-                     :slots     3}
-                    {:starttime #time/time "14:00"
-                     :endtime   #time/time "17:00"
-                     :slots     3}]}])
+   {:section     "z10"
+    :description "Høst helg"
+    :startdate   #time/date "2022-09-06"
+    :enddate     #time/date "2022-10-09"
+    :weekdays    [t/SATURDAY t/SUNDAY]
+    :times       [{:starttime #time/time "11:00"
+                   :endtime   #time/time "14:00"
+                   :slots     3}
+                  {:starttime #time/time "14:00"
+                   :endtime   #time/time "17:00"
+                   :slots     3}]}])
 
 
 ;region
