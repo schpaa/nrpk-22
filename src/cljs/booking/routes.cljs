@@ -29,7 +29,7 @@
    ["/om-meg" {:name :r.user :shorttitle "Meg" :header [:r.oversikt "Mine opplysninger"]}]
    ["/dine-vakter/:id" {:name       :r.dine-vakter
                         :shorttitle "Dine vakter"
-                        ;:access     [[:member] #{:admin :nøkkelvakt}]
+                        :access     [[:member] #{:admin :nøkkelvakt}]
                         :header     [:r.oversikt "Dine opplysninger"]}]
    ["/mine-vakter" {:name :r.mine-vakter :shorttitle "Mine vakter" :header [:r.user "Mine vakter"]}]
 

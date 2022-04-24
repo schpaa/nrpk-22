@@ -531,10 +531,10 @@
                                        :color      "var(--text2)"}} ico/stengt]]
       ;[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
       ;[sc/small1 {:style {:white-space :nowrap}} "Du trenger --> " (str required-access)]
-      [l/ppre-x
-       (matches-access r @(rf/subscribe [:lab/all-access-tokens]))
-       (-> r :data :access)
-       @(rf/subscribe [:lab/all-access-tokens])]
+      (if goog.DEBUG [l/ppre-x
+                      (matches-access r @(rf/subscribe [:lab/all-access-tokens]))
+                      (-> r :data :access)
+                      @(rf/subscribe [:lab/all-access-tokens])])
 
       [sc/title2 "For at vi skal kunne vise deg denne siden må du"]
       [sc/text1
