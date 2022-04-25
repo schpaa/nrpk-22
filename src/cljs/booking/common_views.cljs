@@ -122,13 +122,16 @@
 ;region toolbars
 
 (defn vertical-toolbar-definitions []
-  (let [admin? (rf/subscribe [:lab/admin-access])
+  (let [presence (rf/subscribe [::db/presence-status])
+        admin? (rf/subscribe [:lab/admin-access])
         member? (rf/subscribe [:lab/member])
         booking? (rf/subscribe [:lab/booking])
         left-side? (schpaa.state/listen :lab/menu-position-right)
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [{:icon-fn   #(sc/icon-large ico/new-home)
+      :badge     (fn [_] (let [c (count (:online @presence))]
+                           (when (pos? c) c)))
       :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
       :class     #(if (= % :r.oversikt) :oversikt :selected)
       :page-name #(some #{%} [:r.forsiden :r.oversikt])}

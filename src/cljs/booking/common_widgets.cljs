@@ -35,7 +35,9 @@
 
       (when badge
         (when-some [b (badge)]
-          [sc/top-left-badge b]))
+          (if right-side
+            [sc/top-right-badge b]
+            [sc/top-left-badge b])))
 
       [sc/toolbar-button
        {:disabled  disabled
