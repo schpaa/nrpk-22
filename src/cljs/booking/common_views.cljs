@@ -289,7 +289,7 @@
       (vec (remove nil? [(if (keyword? (first page-title))
                            (lookup-page-ref-from-name (first page-title))
                            (first page-title))
-                         (or [:div.truncate (last page-title)] "no-title")
+                         (or (last page-title) "no-title")
                          (if path-fn
                            [:div.truncate (path-fn r)])]))
       (or (if path-fn
@@ -323,14 +323,22 @@
                              (let [titles (compute-pagetitles r)]
                                (if (vector? titles)
                                  [sc/col {:style {:justify-content :start}}
-                                  [sc/title1 #_{:style {:font-weight "var(--font-weight-5)"}} (last titles)]
+                                  [sc/title1 (if (fn? (last titles))
+                                               ;(l/ppre-x ((last titles) 12) #_(some-> r :path-params))
+                                               ((last titles) (some-> r :path-params))
+                                               (last titles))]
                                   (when (< 1 (count titles))
                                     (let [{:keys [text link]} (first titles)]
                                       [:div [sc/subtext-with-link
                                              {:class [:opacity-50 :hover:opacity-100]
                                               :href  (k/path-for [link])} text]]))]
                                  [sc/col
-                                  [sc/title1 titles]]))])]
+                                  [sc/title1 (if (fn? (last titles))
+                                               ;(l/ppre-x (some-> r :path-params))
+                                               ((last titles) (some-> r :path-params))
+                                               (last titles)) #_(if (fn? (last titles))
+                                                                  '(apply (last titles) (some-> r :data))
+                                                                  (last titles))]]))])]
         [(if frontpage header-top-frontpage header-top)
          (if @switch?
            [:<>

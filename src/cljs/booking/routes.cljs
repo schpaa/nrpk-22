@@ -2,7 +2,8 @@
   (:require [booking.ico :as ico]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [reitit.core :as reitit]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [schpaa.debug :as l]))
 
 (def routes
   [["/" {:name       :r.forsiden
@@ -30,7 +31,9 @@
    ["/dine-vakter/:id" {:name       :r.dine-vakter
                         :shorttitle "Dine vakter"
                         :access     [[:member] #{:admin :nøkkelvakt}]
-                        :header     [:r.oversikt "Dine opplysninger"]}]
+                        :header     [:r.oversikt (fn [{:keys [id] :as m}]
+                                                   (let [user (user.database/lookup-userinfo id)]
+                                                     (or (:navn user) (str m))))]}]
    ["/mine-vakter" {:name :r.mine-vakter :shorttitle "Mine vakter" :header [:r.user "Mine vakter"]}]
 
    ["/tilstede" {:name       :r.presence
