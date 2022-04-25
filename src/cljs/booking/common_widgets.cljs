@@ -105,6 +105,22 @@
                       :header)
              "wtf?")})
 
-(defn auto-link [link]
-  (let [{:keys [link text]} (lookup-page-ref-from-name link)]
-    [sc/link {:href (kee-frame.core/path-for [link])} text]))
+(defn auto-link
+  ([link]
+   (if (vector? link)
+     ;(let [{:keys [link text]} (lookup-page-ref-from-name (first link))])
+     [sc/link {:href (kee-frame.core/path-for link)} (second link)]
+     (let [{:keys [link text]} (lookup-page-ref-from-name link)]
+       [sc/link {:href (kee-frame.core/path-for [link])} text])))
+  ([link resolver]
+   (if (vector? link)
+     ;(let [{:keys [link text]} (lookup-page-ref-from-name (first link))])
+     [sc/link
+      {:href (kee-frame.core/path-for link)}
+      ((fn [{:keys [id]}]
+         (:caption (first (filter (fn [m]
+                                    (= id (:id m)))
+                                  resolver))
+           {:caption (str id)})) (second link))]
+     (let [{:keys [link text]} (lookup-page-ref-from-name link)]
+       [sc/link {:href (kee-frame.core/path-for [link])} text]))))

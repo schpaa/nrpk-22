@@ -31,9 +31,9 @@
    ["/dine-vakter/:id" {:name       :r.dine-vakter
                         :shorttitle "Dine vakter"
                         :access     [[:member] #{:admin :nøkkelvakt}]
-                        :header     [:r.oversikt (fn [{:keys [id] :as m}]
-                                                   (let [user (user.database/lookup-userinfo id)]
-                                                     (or (:navn user) (str m))))]}]
+                        :header     [:r.nokkelvakt (fn [{:keys [id] :as m}]
+                                                     (let [user (user.database/lookup-userinfo id)]
+                                                       (or (:navn user) (str m))))]}]
    ["/mine-vakter" {:name :r.mine-vakter :shorttitle "Mine vakter" :header [:r.user "Mine vakter"]}]
 
    ["/tilstede" {:name       :r.presence

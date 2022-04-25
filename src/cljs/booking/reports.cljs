@@ -6,7 +6,8 @@
             [schpaa.style.ornament :as sc]
             [schpaa.debug :as l]
             [re-frame.core :as rf]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [schpaa.style.button :as scb]))
 
 (o/defstyled table-controller-report :div
   :overflow-x-auto
@@ -29,18 +30,20 @@
     ["tr:nth-child(odd)"
      {:background "var(--floating)"}]
     [:tr
-     {:color "var(--text1)"}
+     {:color      "var(--text1)"
+      ;:vertical-align :middle
+      :background "var(--content)"}
      [:&.online sc/text0]
      [:&.offline sc/text2]
-     {:min-height "var(--size-6)"
-      :background "var(--content)"}
      [:td :whitespace-nowrap
-      {:padding-block  "var(--size-1)"
+      {:height         "var(--size-8)"
+       :padding-block  "var(--size-1)"
        :vertical-align :top
        :padding-inline "4px"}
       [:&.message-col
        :whitespace-normal
        {:width "100%"}]
+      [:&.hcenter {:padding-inline "1rem"}]
       [:&.vcenter {:vertical-align :middle}]]
      #_["td:nth-child(2)"
         {:text-align :left}]
@@ -136,69 +139,91 @@
   (r/with-let [act (r/atom nil)
                focus-field-id (r/atom nil)]
     (let [data (db/on-value-reaction {:path ["users"]})
-          data (filter (fn [[k v]] (:godkjent v)) @data)]
+          data (filter (fn [[k v]] (and (:godkjent v) (not (:utmeldt v)))) @data)]
       [:<>
        [table-controller-report
         [table-report
          [:<>
           [:thead
            [:tr
-            [:th "Nøkkel"]
-            [:th.w-24 "Timekrav '22"]
-            [:th.w-24 "Saldo '21"]
-            [:th.w-24 "Vakter '22"]
-            [:th "Telefon/Navn"]]]
+            [:th]
+            [:th "Nøkkelnummer"]
+            [:th "Timekrav '22"]
+            [:th "Saldo '21"]
+            [:th "Saldo '22"]
+            [:th "Navn"]]]
           (into [:tbody]
-                (for [[idx [k {:keys [uid nøkkelnummer navn saldo timekrav]}]] (map-indexed vector (sort-by (comp :navn val) < data))
+                (for [[idx [k {:keys [uid nøkkelnummer navn saldo timekrav] :as v}]] (map-indexed vector (sort-by (comp :navn val) < data))
                       :let [e idx]]
                   [:tr
+                   [:td.vcenter.hcenter
+                    [scb/round-normal-listitem
+                     [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
+                               :style    {:color "var(--text2)"}} ico/pencil]]]
                    [:td.vcenter (or nøkkelnummer "—")]
-                   [:td.vcenter [sc/text1 {:class [:tabular-nums :text-right]} (or (when timekrav (str timekrav "t")) "—")]]
+                   [:td.vcenter [sc/text1 {:class [:tabular-nums :xtext-right]} (or (when timekrav (str timekrav "t")) "—")]]
                    [:td.vcenter (r/with-let [value (r/atom saldo)
                                              set-fn (fn [k v] (db/database-update
                                                                 {:path  ["users" (name k)]
                                                                  :value {:timestamp (str (t/now))
                                                                          :saldo     (js/parseInt v)}}))]
-                                  (if (= e @focus-field-id)
-                                    [:input {:auto-focus  true
-                                             :ref         (fn [el] (if-not @act (reset! act el)))
-                                             :type        :text
-                                             :value       @value
-                                             :on-key-down #(cond
-                                                             (= 13 (.-keyCode %))
-                                                             (do (set-fn k @value) (reset! focus-field-id nil))
-                                                             (= 27 (.-keyCode %))
-                                                             (do (reset! focus-field-id nil)))
-                                             :on-change   #(do
-                                                             (tap> {:key (.-keyCode %)})
-                                                             (reset! value (-> % .-target .-value)))
-                                             :on-blur     #(let [v (-> % .-target .-value)]
-                                                             (if (empty? v)
-                                                               (do #_(swap! light assoc-in [e :text] (str "uten-tittel-" e)))
-                                                               (do (set-fn k @value) (reset! focus-field-id nil)))
-                                                             (reset! act nil))
-                                             :style       {:background     "white"
-                                                           :xpadding-block "var(--size-1)"
-                                                           :border         "0"
-                                                           :height         "2rem"}
-                                             :class       [:-debug :m-0 :xpy-0 :px-1 :cursor-text
-                                                           :focus:outline-none :w-full]}]
-                                    [sc/text1 {:on-click #(do
-                                                            (reset! focus-field-id e)
-                                                            (reset! value saldo)
-                                                            (when @act
-                                                              (do
-                                                                (tap> "Attempt focus")
-                                                                (.focus @act)))
-                                                            #_(.stopPropagation %))
-                                               :style    {:padding-block     "var(--size-1)"
-                                                          :height            "2rem"
-                                                          :border            "2px solid var(--toolbar)"
-                                                          :xbackground-color "var(--toolbar)"}
-                                               :class    [:tabular-nums :tracking-tight
-                                                          :px-1 :cursor-pointer :truncate :w-full]}
-                                     (or (when saldo (str saldo "t")) "—")]))]
+                                  [:div
+                                   {:style {:overflow      :hidden
+                                            :width         "4rem"
+                                            :height        "2rem"
+                                            :margin        0
+                                            :padding       0
 
+                                            :border-radius "var(--radius-0)"
+                                            :border        "2px solid var(--toolbar)"}}
+                                   (if (= e @focus-field-id)
+                                     [:input {:auto-focus  true
+                                              :ref         (fn [el] (if-not @act (reset! act el)))
+                                              :type        :text
+                                              :value       @value
+                                              :on-key-down #(cond
+                                                              (= 13 (.-keyCode %))
+                                                              (do (set-fn k @value) (reset! focus-field-id nil))
+                                                              (= 27 (.-keyCode %))
+                                                              (do (reset! focus-field-id nil)))
+                                              :on-change   #(do
+                                                              (tap> {:key (.-keyCode %)})
+                                                              (reset! value (-> % .-target .-value)))
+                                              :on-blur     #(let [v (-> % .-target .-value)]
+                                                              (if (empty? v)
+                                                                (do #_(swap! light assoc-in [e :text] (str "uten-tittel-" e)))
+                                                                (do (set-fn k @value) (reset! focus-field-id nil)))
+                                                              (reset! act nil))
+                                              :style       {;:background    "white"
+                                                            :overflow       :hidden
+                                                            :padding-inline "var(--size-2)"
+                                                            ;:padding-block "var(--size-2)"
+                                                            ;:border        "2px solid var(--toolbar)"
+                                                            :height         "100%"}
+                                              :class       [:-debug :m-0 :xpy-0 :cursor-text
+                                                            :focus:outline-none :w-full]}]
+                                     [sc/text1 {:on-click #(do
+                                                             (reset! focus-field-id e)
+                                                             (reset! value saldo)
+                                                             (when @act
+                                                               (do
+                                                                 (tap> "Attempt focus")
+                                                                 (.focus @act)))
+                                                             #_(.stopPropagation %))
+                                                :style    {;:padding-block     "var(--size-2)"
+                                                           ;:overflow :clip
+                                                           ;:background-color  "white"
+                                                           ;:vertical-align :middle
+                                                           :padding-inline    "var(--size-2)"
+                                                           :display           :flex
+                                                           :align-items       :center
+                                                           :height            "100%"
+                                                           ;:height            "2rem"
+
+                                                           :xbackground-color "var(--toolbar)"}
+                                                :class    [:tabular-nums :tracking-tight :cursor-text
+                                                           :w-full]}
+                                      (or (when saldo (str saldo "t")) "—")])])]
                    [:td.vcenter (let [eykts (count (->> @(db/on-value-reaction {:path ["calendar" (name uid)]})
                                                         (mapcat val)
                                                         (mapcat val)))
@@ -206,36 +231,40 @@
                                       timekrav (js/parseInt (or timekrav 0))
                                       saldo' (- (+ saldo (* 3 eykts)) timekrav)]
                                   [sc/text1-cl {:class [:tabular-nums :tracking-tight]
-                                                :style {:color (if (or (pos? saldo') (zero? saldo')) "green" "red")}}
+                                                :style {:color (if (or (pos? saldo') (zero? saldo')) "var(--green-5)" "var(--red-5)")}}
                                    (if (zero? saldo') 0 (str saldo' "t"))])]
                    [:td.vcenter [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id (name uid)}])} navn]]]))]]]])))
 
 
 (def report-list
-  [{:name   "Rapport: saldo for nøkkelvakter"
-    :id     "saldo-setter"
-    :access [:admin]
-    :icon   ico/nokkelvakt
-    :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "saldo-setter"}]])
-    :f      saldo-setter}
-   {:name   "Rapport: siste nye vakter"
-    :id     "siste-nye-vakter"
-    :access [:admin]
-    :icon   ico/nokkelvakt
-    :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])
-    :f      siste-nye-vakter}
-   {:name   "Rapport: brukere av booking på sjøbasen"
-    :id     "brukere-av-booking"
-    :access [:admin]
-    :icon   ico/nokkelvakt
-    :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "brukere-av-booking"}]])
-    :f      brukere-av-booking}
-   {:name   "Rapport: tilbakemeldinger"
-    :id     "tilbakemeldinger"
-    :access [:admin]
-    :icon   ico/nokkelvakt
-    :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "tilbakemeldinger"}]])
-    :f      tilbakemeldinger}])
+  [{:name    "Rapport: saldo for nøkkelvakter"
+    :caption "Nøkkelvakt-saldo"
+    :id      "saldo-setter"
+    :access  [:admin]
+    :icon    ico/nokkelvakt
+    :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "saldo-setter"}]])
+    :f       saldo-setter}
+   {:name    "Rapport: siste nye vakter"
+    :caption "Nyeste registrerte vakter"
+    :id      "siste-nye-vakter"
+    :access  [:admin]
+    :icon    ico/nokkelvakt
+    :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])
+    :f       siste-nye-vakter}
+   {:name    "Rapport: brukere av booking på sjøbasen"
+    :caption "Brukere av booking"
+    :id      "brukere-av-booking"
+    :access  [:admin]
+    :icon    ico/nokkelvakt
+    :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "brukere-av-booking"}]])
+    :f       brukere-av-booking}
+   {:name    "Rapport: tilbakemeldinger"
+    :caption "Tilbakemeldinger"
+    :id      "tilbakemeldinger"
+    :access  [:admin]
+    :icon    ico/nokkelvakt
+    :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "tilbakemeldinger"}]])
+    :f       tilbakemeldinger}])
 
 (defn page [r]
   (let [report-id (-> r :path-params :id)

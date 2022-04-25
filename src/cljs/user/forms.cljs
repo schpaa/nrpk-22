@@ -131,7 +131,7 @@
      (fn []
        (when uid                                            ;(:uid values)
          [sc/col-space-4
-          (when goog.DEBUG [l/ppre-x uid])
+          ;(when goog.DEBUG [l/ppre-x uid])
           [sci/textarea props :text {:rows 2} "Endringsbeskrivelse (valgfritt)" :endringsbeskrivelse]
           [sc/row-sc-g2-w [schpaa.style.hoc.toggles/small-switch-base {:type :button} "Vis tidligere endringer" show-changelog toggle]]
           (when @show-changelog
