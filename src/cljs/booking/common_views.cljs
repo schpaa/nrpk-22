@@ -667,29 +667,30 @@
                      modify? (booking.access/can-modify? r users-access-tokens)]
                  (if-not have-access?
                    [no-access-view r]
-                   [sc/col-space-8
-                    {:class [:py-8]
-                     :style {:flex             "1 1 auto"
-                             :background-color "var(--content)"}}
+                   [sc/basic-page
+                    [sc/col-space-8
+                     {:class [:pt-8]
+                      :style {:flex             "1 1 auto"
+                              :background-color "var(--content)"}}
 
-                    ;modification could happen here
-                    (when (fn? panel)
-                      [container
-                       [hoc.panel/togglepanel pagename (or panel-title "valg + Relevante lenker") panel modify?]])
+                     ;modification could happen here
+                     (when (fn? panel)
+                       [container
+                        [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
 
-                    (when always-panel
-                      [container
-                       [always-panel modify?]])
+                     (when always-panel
+                       [container
+                        [always-panel modify?]])
 
-                    (if render-fullwidth
-                      [container                            ;:div.duration-200.grow
-                       {:style {:margin-right "unset"
-                                :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                                ;; force view to align to the left
-                                                0
-                                                "unset")
-                                :width        "100%"
-                                :max-width    (if render-fullwidth "" "inherit")}}
-                       [render-fullwidth r]]
-                      [container
-                       [render r]])]))]))])})))
+                     (if render-fullwidth
+                       [container                           ;:div.duration-200.grow
+                        {:style {:margin-right "unset"
+                                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
+                                                 ;; force view to align to the left
+                                                 0
+                                                 "unset")
+                                 :width        "100%"
+                                 :max-width    (if render-fullwidth "" "inherit")}}
+                        [render-fullwidth r]]
+                       [container
+                        [render r]])]]))]))])})))

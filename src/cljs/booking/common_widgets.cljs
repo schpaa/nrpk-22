@@ -64,8 +64,8 @@
   [:<>
    [stability-expert m]
    [sc/col
-    [sc/text1 navn]
-    [sc/small2 (schpaa.components.views/normalize-kind kind)]]])
+    [sc/small1 {:style {:font-size "1em"}} navn]
+    [sc/text1 {:style {:font-size "1.2em"}} (schpaa.components.views/normalize-kind kind)]]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
@@ -126,3 +126,13 @@
            {:caption (str id)})) (second link))]
      (let [{:keys [link text]} (lookup-page-ref-from-name link)]
        [sc/link {:href (kee-frame.core/path-for [link])} text]))))
+
+(defn dimensions-and-material [{:keys [width length weight material]}]
+  [sc/text2 {:style {:font-size "unset"}}
+   [:span (interpose [:span ", "]
+                     [width length weight (case material
+                                            "0" "Plast"
+                                            "1" "Glassfiber"
+                                            "2" "Polyetylen"
+                                            "3" "Kevlar/Epoxy"
+                                            (str "Annet:" material))])]])

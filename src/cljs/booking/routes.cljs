@@ -72,15 +72,15 @@
    ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
 
    ["/utlan" {:name       :r.utlan
-              :shorttitle "Utlån"
+              :shorttitle "Utlånslogg"
               :access     [[:member] #{}]
-              :header     [:r.båtliste.nøklevann "Utlån på Nøklevann"]}]
+              :header     [:r.båtliste.nøklevann "Utlånslogg på Nøklevann"]}]
 
    ["/booking" {:name       :r.booking
                 :shorttitle "Sjøbasen"
                 :icon       ico/booking
                 :access     [[:member] #{:admin}]
-                :header     [:r.båtliste.sjøbasen "Booking på sjøbasen"]}]
+                :header     [:r.båtliste.sjøbasen "Utlånslogg på sjøbasen"]}]
    ["/booking/oversikt" {:name   :r.booking.oversikt
                          :header [:r.booking "Oversikt"]}]
    ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]
@@ -99,10 +99,10 @@
      :access     [[:member] #{:admin}]
      :header     [:r.oversikt "Rapporter"]}]
 
-   ["/båtliste/nøklevann"
+   ["/batliste/noklevann"
     {:name   :r.båtliste.nøklevann
-     :header [:r.oversikt "Båtliste"]}]
-   ["/båtliste/sjøbasen"
+     :header [:r.utlan "Båtliste"]}]
+   ["/batliste/sjobasen"
     {:name   :r.båtliste.sjøbasen
      :header [:r.booking "Båtliste"]}]])
 

@@ -119,15 +119,16 @@
    [sc/row-sc-g2-w
     (when modify?
       (hoc.buttons/cta-pill-icon {:on-click #(edit-event nil)} ico/plus "Ny aktivitet"))
-    [hoc.buttons/pill
-     {:class    [:regular :pad-right]
-      :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
-     (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
-    [hoc.buttons/pill
-     {:on-click #(js/alert "wat")
-      :class    [:regular :pad-right]
-      :disabled true}
-     (hoc.buttons/icon-with-caption ico/nullstill "Nullstill")]]))
+
+    #_[hoc.buttons/pill
+       {:class    [:regular :pad-right]
+        :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
+       (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
+    #_[hoc.buttons/pill
+       {:on-click #(js/alert "wat")
+        :class    [:regular :pad-right]
+        :disabled true}
+       (hoc.buttons/icon-with-caption ico/nullstill "Nullstill")]]))
 
 (defonce settings (r/atom {}))
 
@@ -135,7 +136,11 @@
   ([]
    (panel false))
   ([modify?]
-   [sc/col-space-4
+   [sc/col-space-8
+    [sc/row-sc-g2-w
+     [widgets/auto-link :r.oversikt.styret]
+     [widgets/auto-link :r.oversikt.organisasjon]]
+
     [sc/row-sc-g2-w
      (when modify? [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-editing]) "Rediger"])
      (when modify? [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-deleted]) "Vis Slettede"])

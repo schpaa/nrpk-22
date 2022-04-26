@@ -101,7 +101,7 @@
         _id->number #(->> % (get @db) :number)]
     (r/with-let [st2 (r/atom initial)
                  st (r/atom initial)]
-      [sc/dropdown-dialog
+      [sc/dropdown-dialog'
        [sc/col-space-8
         [sc/col-space-4
          (let [f (fn [[k v] st original]
@@ -116,17 +116,17 @@
                                             t
                                             [sc/badge-2 {:class [:big (when-not v :in-use)]} number]
                                             [sc/col {:style {:flex "1"}}
-                                             [sc/text1 (schpaa.components.views/normalize-kind kind)]
-                                             [sc/small1 navn]
+                                             [sc/text2 navn]
+                                             [sc/title1 (schpaa.components.views/normalize-kind kind)]
                                              (if @(r/cursor st [k])
                                                (if (some #{k} innlevert)
                                                  (if-let [time (some->> k (get original) (t/instant) (t/date-time))]
                                                    [sc/text1 "Innlevert " (booking.flextime/relative-time time times.api/arrival-date)])
-                                                 [sc/text1 "I ferd med å lever inn nå"])
+                                                 [sc/text1 "Innleveres nå"])
                                                (when-let [time (some->> timestamp (t/instant) (t/date-time))]
                                                  [sc/text1 "Tatt ut " (booking.flextime/relative-time time times.api/arrival-date)]))]])})))]
            (map #(f % st original) @st))]
-        [sc/row-ec
+        [sc/row-ec {:class [:pb-6]}
          [:div.grow]
          [hoc.buttons/regular {:on-click on-close} "Avbryt"]
          [hoc.buttons/danger {:disabled (= initial @st)
@@ -411,7 +411,7 @@
           data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
-      [sc/col-space-8
+      [:div
        (into [sc/col-space-1]
              (for [[k {:keys [test uid adults children havekey juveniles sleepover timestamp list deleted nøkkel] :as m}]
                    (if show-deleted?

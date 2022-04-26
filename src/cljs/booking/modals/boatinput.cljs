@@ -443,20 +443,7 @@
                      :display        :flex
                      :align-items    :center}}
             (tap> @st)
-            (cond
-              #_#_(= 4 (count (:item @st))
-                      (let [n (subs (str (:item @st)) 0 3)]
-                        [sc/col
-                         [sc/text1 "for testing " n]
-                         (if-let [boat (lookup n)]
-                           (do
-                             (swap! st assoc-in [:item-data] boat)
-                             [l/ppre-x boat])
-                           (do
-                             (swap! st assoc-in [:item-data] nil)
-                             [sc/text1 "Finner ikke " n]))]))
-
-              (<= 3 (count (:item @st)))
+            (if (<= 3 (count (:item @st)))
               (if-let [boat (lookup (:item @st))]
                 (do
                   (swap! st assoc-in [:item-data] boat)
@@ -464,14 +451,13 @@
                 (do
                   (swap! st assoc-in [:item-data] nil)
                   [sc/text1 "Finner ikke " (:item @st)]))
+              (do
+                (swap! st assoc-in [:item-data] nil)
+                [sc/col {:class [:space-y-px :opacity-50]}
 
-              :else (do
-                      (swap! st assoc-in [:item-data] nil)
-                      [sc/col {:class [:space-y-px :opacity-50]}
-
-                       [sc/hero [sc/row-center (if (pos? (count (:list @st))) "Hvem skal låne" "Tast båtnummeret")
-                                 #_[sc/icon [:> outline/PlusCircleIcon]]]]
-                       #_[sc/subtext "Bruk 4 siffer for testing"]]))]
+                 [sc/hero [sc/row-center (if (pos? (count (:list @st))) "Hvem skal låne" "Tast båtnummeret")
+                           #_[sc/icon [:> outline/PlusCircleIcon]]]]
+                 #_[sc/subtext "Bruk 4 siffer for testing"]]))]
 
            ;boats
            [:div.p-1

@@ -285,7 +285,7 @@
              "Forslag til ingress?"
              [sc/row-sc-g4-w
               (let [data [[1 [:r.dokumenter {:id "hms-håndbok"}] "HMS ved Nøklevann"]
-                          [2 :r.båtliste]
+                          [2 :r.båtliste.nøklevann]
                           [3 :r.utlan]
                           [4 [:r.dokumenter {:id "tidslinje-forklaring"}] "Ofte stilte spørsmål"]]]
                 (map (comp f rest) (sort-by first data)))]]
@@ -298,7 +298,7 @@
               (let [data [[1 [:r.dokumenter {:id "kommer"}] "HMS ved Sjøbasen"]
                           [2 :r.booking]
                           [3 :r.booking.retningslinjer]
-                          [4 [:r.dokumenter {:id "kommer"}] "Hvilke båter har vi på Sjøbasen?"]
+                          [4 :r.båtliste.sjøbasen]
                           [5 :r.booking.faq]]]
                 (map (comp f rest) (sort-by first data)))]]
 
@@ -566,9 +566,9 @@
                               ["/img/personas/noun-persona-633483.png" :m "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
                               ["/img/personas/noun-persona-410775.png" :m "Adrian A. Mitchell" "Styremedlem" ["Kasserer"]]
                               ["/img/personas/noun-persona-622293.png" :m "Chris P. Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
-                              ["/img/personas/noun-persona-497844.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
+                              ["/img/personas/noun-persona-4144954.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
                               ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" []]
-                              ["/img/personas/noun-persona-4144954.png" :f "Ylva Eide" "Styremedlem" []]
+                              ["/img/personas/noun-persona-497844.png" :f "Ylva Eide" "Styremedlem" []]
                               ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Vara" []]
                               ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" ["Anleggs\u00ADansvarlig Nøklevann"]]]]
                     (o/defstyled card :div.relative
@@ -981,11 +981,49 @@
                    [booking.common-views/no-access-view r]))}])
 
    :r.reports            (fn [r] [+page-builder r (booking.reports/page r)])
-   :r.båtliste.nøklevann (fn [r] [+page-builder r {:render (fn [] [:div])}])
-   :r.båtliste.sjøbasen  (fn [r] [+page-builder r {:render (fn [] [:div])}])
+   :r.båtliste.nøklevann (fn [r] [+page-builder r
+                                  {:render-fullwidth
+                                   (fn []
+                                     [sc/col
+                                      {:style {:font-size "110%"}}
+                                      (into [:div.grid.gap-1 {:style {:place-content         :center
+                                                                      :grid-template-columns "repeat(auto-fit,minmax(30ch,1fr))"}}]
+                                            (for [[boat-type-id group] (sort-by (comp :navn val) <
+                                                                                (group-by (comp :boat-type val)
+                                                                                          (remove (comp nil? :boat-type val)
+                                                                                                  @(rf/subscribe [:db/boat-db]))))
+                                                  :let [{:keys [description] :as m} (get-in @(rf/subscribe [:db/boat-type]) [(keyword boat-type-id)])]]
+                                              [sc/zebra
+                                               [sc/col-space-8
+                                                [sc/row-sc-g2-w
+                                                 [sc/row [widgets/stability-name-category m]]]
+                                                [:div.flex.justify-between.gap-2
+                                                 [sc/col-space-2
+                                                  {:style {:flex "1 0 0"}}
+                                                  [widgets/dimensions-and-material m]
+                                                  [sc/text1 {:style {:font-size "unset"}} description]]
+                                                 (into [sc/row-sc-g1-w' {:class []
+                                                                         :style {:align-items :start
+
+                                                                                 :flex        "1 0 0"}}]
+                                                       (for [[k v] (sort-by (comp :number val) < group)]
+                                                         [sc/badge-2 {:class    [:in-usex :out-of-order]
+                                                                      :style    {:font-size  "unset"
+                                                                                 :-transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
+                                                                      :on-click #(dlg/open-modal-boatinfo
+                                                                                   {:uid  'loggedin-uid
+                                                                                    :data (get @(rf/subscribe [:db/boat-db]) (keyword k))})} (:number v)]))]]]))])}])
+   :r.båtliste.sjøbasen  (fn [r] [+page-builder r {:render (fn [] [sc/col
+                                                                   (for [e (range 30)]
+                                                                     [sc/text1 {:class [:tabular-nums]}
+                                                                      (let [n (.toString e 2)
+                                                                            c (- 8 (count n))]
+                                                                        (apply str n (take c (repeatedly (constantly " 0 ")))))])])}])
    :r.booking            (fn [r] [+page-builder r (booking.booking/page r)])
    :r.page-not-found     (fn [r] [+page-builder r {:render (fn [] [error-page r])}])})
 
+
+
 (comment
   (sort-by (juxt (comp js/parseInt :b) :a) <
-           [{:a 1 :b "222"} {:a 2 :b "1"} {:b "111"}]))
+           [{:a 1 :b " 222 "} {:a 2 :b " 1 "} {:b " 111 "}]))

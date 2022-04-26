@@ -18,10 +18,10 @@
         (map-indexed vector
                      (concat
                        booking.reports/report-list
-                       [#_{:name   "Rapport: siste nye vakter"
-                           :access :admin
-                           :icon   ico/nokkelvakt
-                           :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])}
+                       [{:name   "Kontakt aktivitetskoordinator"
+                         ;:access :admin
+                         ;:icon   ico/nokkelvakt
+                         :action #(rf/dispatch [:app/navigate-to [:r.oversikt.styret]])}
                         {:name   "Mine vakter"
                          ;:icon   ico/nokkelvakt
                          :group  1

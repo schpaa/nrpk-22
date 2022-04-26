@@ -101,7 +101,7 @@
 
              [:hr]
 
-             [:item {:label     "Speilvend grensesnittet"
+             [:item {:label     "Flytt verktøylinjen hit"
                      :action    #(schpaa.state/toggle :lab/menu-position-right)
                      :stay-open true}]
 
