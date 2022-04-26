@@ -184,14 +184,14 @@
                    ;(not (some #{(:item @st)} (:list @st)))
                    ;(not (some? (:selected @st)))
                    (<= 3 (count (:item @st))))
-    :on-style {:color      "var(--surface4)"
+    :on-style {:color      "var(--blue-5)"
                :background "var(--surface1)"}}
    (sc/icon-huge ico/plusCircle)])
 
 (defn- delete-clicked [st]
   (swap! st #(-> %
                  (dissoc :item :selected)
-                 (update :list set/difference #{(:selected %)}))))
+                 (update :list set/difference #{(first (filter (fn [m] (= (:number m) (:selected %))) (:list @st)))}))))
 
 (defn delete [st]
   [bis/delete-button
@@ -442,19 +442,19 @@
                      :padding-inline "var(--size-2)"
                      :display        :flex
                      :align-items    :center}}
-
+            (tap> @st)
             (cond
-              (= 4 (count (:item @st)))
-              (let [n (subs (str (:item @st)) 0 3)]
-                [sc/col
-                 [sc/text1 "for testing " n]
-                 (if-let [boat (lookup n)]
-                   (do
-                     (swap! st assoc-in [:item-data] boat)
-                     [l/ppre-x boat])
-                   (do
-                     (swap! st assoc-in [:item-data] nil)
-                     [sc/text1 "Finner ikke " n]))])
+              #_#_(= 4 (count (:item @st))
+                      (let [n (subs (str (:item @st)) 0 3)]
+                        [sc/col
+                         [sc/text1 "for testing " n]
+                         (if-let [boat (lookup n)]
+                           (do
+                             (swap! st assoc-in [:item-data] boat)
+                             [l/ppre-x boat])
+                           (do
+                             (swap! st assoc-in [:item-data] nil)
+                             [sc/text1 "Finner ikke " n]))]))
 
               (<= 3 (count (:item @st)))
               (if-let [boat (lookup (:item @st))]
@@ -468,9 +468,10 @@
               :else (do
                       (swap! st assoc-in [:item-data] nil)
                       [sc/col {:class [:space-y-px :opacity-50]}
-                       [sc/title1 [sc/row-sba "Skriv båtnummeret og"
-                                   [sc/icon [:> outline/PlusCircleIcon]]]]
-                       [sc/subtext "Bruk 4 siffer for testing"]]))]
+
+                       [sc/hero [sc/row-center (if (pos? (count (:list @st))) "Hvem skal låne" "Tast båtnummeret")
+                                 #_[sc/icon [:> outline/PlusCircleIcon]]]]
+                       #_[sc/subtext "Bruk 4 siffer for testing"]]))]
 
            ;boats
            [:div.p-1
