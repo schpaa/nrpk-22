@@ -517,60 +517,25 @@
 
    :r.nokkelvakt
    (fn [r]
+     ;:calendar/show-only-available
      (let [user (rf/subscribe [::db/user-auth])
            db (rf/subscribe [:db/boat-db])
            boat-types (rf/subscribe [:db/boat-type])]
 
        [+page-builder r
-        {;:panel-title  "Experimental"
-         ;:panel        (fn [] [:div "inside"])
-         :-always-panel (fn [] [sc/col-space-4
-                                [sc/row-sc-g2-w {:style {:gap "0.5rem"}}
-                                 ;[sc/link {:href {:}}]
-                                 [hoc.buttons/cta-pill {:disabled false :class [:narrow]} "Vår/Sommer"]
-                                 [hoc.buttons/reg-pill {:disabled false :class [:narrow]} "Utvidet åpningstid"]
-                                 [hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Sensommer"]
-                                 [hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Høst"]]
+        {:always-panel (fn [] [sc/col-space-4
+                               [sc/row-sc-g2-w
+                                ;[hoc.buttons/cta-pill {:disabled false :class [:narrow]} "Vår/Sommer"]
+                                ;[hoc.buttons/reg-pill {:disabled false :class [:narrow]} "Utvidet åpningstid"]
+                                ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Sensommer"]
+                                ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Høst"]
+                                [hoc.toggles/switch :calendar/show-only-available "Skjul komplette økter"]]])
 
-                                #_[sc/col
-                                   [:div.ml-4 (r/with-let [sel (r/atom 2)]
-                                                (into [sc/row-sc-g2]
-                                                      (for [e (range 4)]
-                                                        [hoc.buttons/outline-pill
-                                                         {:on-click #(reset! sel e)
-                                                          :class    [:narrow (when (= @sel e) :active)]} e])))]
-                                   [sc/surface-b
-                                    (for [e (range 4)]
-                                      [:div e])]]])
-
-
-         :render        (fn []
-                          (if-let [uid (:uid @user)]
-                            (let [data (map name (keys (filter val @(db/on-value-reaction {:path ["users" uid "starred"]}))))]
-                              [sc/col-space-4
-                               #_[sc/col-space-8
-                                  (let [bt (filter (fn [[k v]] (some #{(name k)} data)) @boat-types)]
-                                    (for [[k v] bt]
-                                      [sc/col-space-2
-                                       [sc/row
-                                        [widgets/stability-name-category v]]
-
-                                       [sc/col-space-2 {:style {:margin-left "2rem"}}
-                                        [sc/text1 (:description v)]
-                                        [sc/col {:class []}
-                                         [sc/row-sc-g2 {:style {:flex-wrap :wrap}}
-                                          (map (fn [e] (sc/badge-2 {:on-click #(dlg/open-modal-boatinfo
-                                                                                 {:uid  uid
-                                                                                  :data e})} (:number e)))
-                                               (sort-by :number <
-                                                        (map val (filter (fn [[_ v]] (= (:boat-type v) (name k))) @db))))]]]]))]
-
-
-
-                               ;[sc/text1 "Dine utlån og vakter kommer her"]
-                               ;[eykt.content.mine-vakter/mine-vakter @user]
-                               [eykt.calendar.core/render r]])
-                            [l/ppre-x @user]))}]))
+         :render       (fn []
+                         (if-let [uid (:uid @user)]
+                           [sc/col-space-4
+                            [eykt.calendar.core/render r]]
+                           [l/ppre-x @user]))}]))
 
 
    :r.admin
@@ -917,12 +882,6 @@
                            z (when (some? saldo)
                                (- saldo timekrav (- (* 3 (count (seq data))))))]
                        [sc/col-space-8
-                        (when admin?
-                          [booking.mine-dine-vakter/header
-                           {:saldo    saldo
-                            :timekrav timekrav
-                            :z        z}])
-
                         [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
                          [sc/text1 "Telefon"]
                          (:telefon user)
@@ -933,6 +892,13 @@
 
                         [sc/text1 "E-post " [sc/link {:href (str "mailto:" (:epost user))} (:epost user)]]
 
+                        (when admin?
+                          [booking.mine-dine-vakter/header
+                           {:saldo    saldo
+                            :timekrav timekrav
+                            :z        z}])
+
+                        [sc/title1 "Vakter i '22"]
                         [sc/col {:style {:margin-inline "var(--size-3)"}}
                          (if (seq data)
                            [sc/col-space-8
@@ -948,13 +914,13 @@
                                       [sc/col
                                        [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
                                        [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))]])]
-                        (when admin?
-                          (when (some? z)
-                            [sc/surface-a {:style {:flex "1 0 auto"}}
-                             [sc/col-space-2
-                              [sc/title2 "Overføres til neste år"]
-                              [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
-                                         :class [:text-right]} (str z " timer")]]]))])
+                        #_(when admin?
+                            (when (some? z)
+                              [sc/surface-a {:style {:flex "1 0 auto"}}
+                               [sc/col-space-2
+                                [sc/title2 "Overføres til neste år"]
+                                [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
+                                           :class [:text-right]} (str z " timer")]]]))])
 
                      [sc/title1 "Ingen definerte vakter"])
                    [booking.common-views/no-access-view r]))}])

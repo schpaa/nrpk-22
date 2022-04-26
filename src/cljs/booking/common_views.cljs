@@ -130,8 +130,10 @@
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     [{:icon-fn   #(sc/icon-large ico/new-home)
-      :badge     (fn [_] (let [c (count (:online @presence))]
-                           (when (pos? c) c)))
+      :badge     (fn [] {:attr  {:style {:background-color "var(--floating)"
+                                         :color            "var(--text1)"}}
+                         :value (let [c (count (:online @presence))]
+                                  (when (pos? c) c))})
       :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
       :class     #(if (= % :r.oversikt) :oversikt :selected)
       :page-name #(some #{%} [:r.forsiden :r.oversikt])}
@@ -140,14 +142,16 @@
       :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
       :page-name :r.user}
 
-     #_(when (or @admin? @booking?)
-         {:icon-fn   (fn [] (sc/icon-large ico/booking))
-          :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
-          :page-name :r.booking})
+     (when (or @admin? @booking?)
+       {:icon-fn   (fn [] (sc/icon-large ico/booking))
+        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name :r.booking})
 
      (when (or @admin? @nokkelvakt)
        {:icon      ico/mystery1
-        :badge     (fn [_] (-> nil))
+        :badge     (fn [] {:value 2
+                           :attr  {:style {:background-color "var(--floating)"
+                                           :color            "var(--text1)"}}})
         :disabled  false
         :page-name :r.utlan
         :on-click  #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])})
@@ -221,34 +225,23 @@
       :page-name :r.user}]))
 
 (defn vertical-toolbar [left-side?]
-  (let [numberinput? (rf/subscribe [:lab/number-input])
-        user-auth (rf/subscribe [::db/user-auth])
-        has-chrome? (rf/subscribe [:lab/has-chrome])]
+  (let [has-chrome? (rf/subscribe [:lab/has-chrome])
+        numberinput? (rf/subscribe [:lab/number-input])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-      [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.w-full.relative
-       ;{:style {:z-index -1}}
-
-       ;; force the toolbar to stay on top when boat-panel is displayed
+      [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
+       ;; force the toolbar to stay on top when boat-panel is displayed (?)
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
-              ;{:style {:box-shadow "var(--inner-shadow-3)"}}
-              {;:class [(if left-side? :left-side :right-side)]
-               :style {;:z-index     1211
-                       :padding-top "var(--size-0)"
-                       :box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
-                       :background  "var(--toolbar)"}}]
+              {:style (conj
+                        #_(if left-side?
+                            {:border-right "1px var(--gray-9) solid"}
+                            {:border-left "1px var(--gray-9) solid"})
+                        {:padding-top "var(--size-0)"
+                         :box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
+                         :background  "var(--toolbar)"})}]
              (map #(if (keyword? %)
                      [:div.grow]
                      [vertical-button (assoc % :right-side (not left-side?))])
-                  (remove nil? (vertical-toolbar-definitions))))
-       #_(if left-side?
-           [:div.absolute.left-4.inset-0.z-10.-debug
-            {:style {:width          "298px"
-                     :pointer-events :none}}
-            [boatinput-menu {:position :left-side}]]
-           [:div.absolute.left-4.inset-0.z-10.-debug
-            {:style {:width          "298px"
-                     :pointer-events :none}}
-            [boatinput-menu {:position :right-side}]])])))
+                  (remove nil? (vertical-toolbar-definitions))))])))
 
 (defn bottom-toolbar []
   (let [;search (rf/subscribe [:lab/is-search-running?])

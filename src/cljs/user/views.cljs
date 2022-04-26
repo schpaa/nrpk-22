@@ -162,24 +162,19 @@
               "Sist oppdatert "
               (if (= :date format)
                 [sc/datetimelink (ta/datetime-format content)]
-                [sc/datetimelink content])]])
-          #_(fn [x] [sc/text2 [sc/row-sc-g2-w [sc/text1 "Sist oppdatert " tm]]])))
+                [sc/datetimelink content])]])))
+
       [sc/small1 (:navn values)]
       [sc/small1 (:epost values)]
       [sc/small1 uid]
-      #_(let [[status access uid] (booking.access/compute-access-tokens {:uid uid})]
-          [sc/row-sc-g2
-           [hoc.buttons/reg-pill {} (str (or status "nil"))]
-           [hoc.buttons/reg-pill {} (str (or (when access (apply str (interpose ", " (into [] access)))) "nil"))]
-           [hoc.buttons/reg-pill {} (str (or uid "nil"))]])
-      (when goog.DEBUG
-        [:<>
-         [l/ppre-x
-          (when-let [u (db/on-value-reaction {:path ["users" uid]})]
-            [(select-keys @u [:admin :godkjent :medlem :booking-godkjent :waitinglist :navn])
-             (booking.access/compute-access-tokens' @u)])]
-         [l/ppre-x @(rf/subscribe [:user-data uid])]
-         [l/ppre-x uid @(rf/subscribe [:lab/nokkelvakt uid])]])]]))
+      #_(when goog.DEBUG
+          [:<>
+           [l/ppre-x
+            (when-let [u (db/on-value-reaction {:path ["users" uid]})]
+              [(select-keys @u [:admin :godkjent :medlem :booking-godkjent :waitinglist :navn])
+               (booking.access/compute-access-tokens' @u)])]
+           [l/ppre-x @(rf/subscribe [:user-data uid])]
+           [l/ppre-x uid @(rf/subscribe [:lab/nokkelvakt uid])]])]]))
 
 ;duplicated
 

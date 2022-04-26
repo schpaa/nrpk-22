@@ -63,80 +63,84 @@
                    (conj a z))) {})
        (map (fn [[k v]] [k (into [] (sort-by val < v))]))))
 
+;region calendar elements/components
+
+(defn- week-component [dt description]
+  [sc/row-fields {:style {:width           "100%"
+                          :align-items     :end
+                          :justify-content :between}}
+   [sc/title2 (booking.flextime/relative-time dt ta/calendar-date-format)]
+   [sc/row-ec
+    [sc/small1 description]
+    [sc/small0 (str "UKE " (times.api/week-number dt))]]])
+
+(defn- badge-text [this-uid owner?]
+  (let [{:keys [alias navn]} (user.database/lookup-userinfo (name this-uid))
+        badge-text (cond
+                     (not (empty? alias)) alias
+                     (not (empty? navn)) navn
+                     :else "...")]
+    [sc/text1 {:style {:color (when owner? :unset)}
+               :class [:truncate]}
+     badge-text]))
+
+;endregion
+
+(defn- occupied-slot [uid [this-uid]]
+  (let [owner? (= this-uid uid)
+        path (if owner? [:r.mine-vakter] [:r.dine-vakter {:id this-uid}])]
+    [taken-user-slot
+     {:class    [(when owner? :owner)]
+      :on-click #(rf/dispatch [:app/navigate-to path])}
+     [badge-text this-uid owner?]]))
+
+(defn command [uid base section slots-free starttime-key]
+  [:div.h-10.flex.items-center
+   ;fix: duplicated owner?
+   (let [owner? (get-in base [section uid starttime-key])
+         path {:uid uid :section section :timeslot starttime-key}]
+     (if (or owner? (pos? slots-free))
+       [(if owner? schpaa.style.hoc.buttons/round-danger-pill
+                   hoc.buttons/round-cta-pill)
+        {:class    [:round :shrink-0]
+         :type     :button
+         :on-click #((if owner? actions/delete actions/add) path)}
+        (sc/icon (if owner? ico/trash ico/plus))]
+       [:div.w-8]))])
+
 (defn table [{:keys [base data]}]
-  (let [uid @(rf/subscribe [:lab/uid] #_[::db/root-auth :uid])
+  (let [show-only-available? @(schpaa.state/listen :calendar/show-only-available)
+        uid @(rf/subscribe [:lab/uid])
         kald-periode? (:kald-periode (user.database/lookup-userinfo uid))
         uid (keyword uid)]
     (into [:div.space-y-4]
-          (for [each (filter (fn [[e]] (and (pos? (:slots e))
-                                            (if (:kald-periode e) kald-periode? true))) data)
-                [{:keys [description dt slots section kald-periode] :as b} group] (group-by #(select-keys % [:dt :description :section :slots :kald-periode]) each)]
-            (let [alle-regs-i-denne-periodegruppen
-                  (invert (filter (fn [[k v]] true #_(= 1 (key v))) (clojure.walk/keywordize-keys (get base section))))]
-              (into [:div.w-full.space-y-2
-                     [sc/row-fields {:style {:width           "100%"
-                                             :align-items     :end
-                                             :justify-content :between}}
-                      [sc/title2 (booking.flextime/relative-time (t/date dt) ta/calendar-date-format)]
-                      [sc/row-ec
-                       [sc/small1 description]
-                       [sc/small0 (str "UKE " (times.api/week-number dt))]]]]
-                    (for [{:keys [starttime endtime]} (sort-by :starttime < group)
-                          :let [key (-> (t/date dt) (t/at starttime) str keyword)
-                                slots-on-this-eykt (first (filter (fn [[k v]]
-                                                                    (= (name k)
-                                                                       (str (t/at (t/date dt) (t/time starttime)))))
-                                                                  alle-regs-i-denne-periodegruppen))
-                                count-slots-on-this-eykt (count (second slots-on-this-eykt))
-                                n (- slots count-slots-on-this-eykt)]]
-
-                      [:div.ml-4
-                       [sc/col-space-2
-                        [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap
-                                                 :align-items "start"}}
-                         [:div.h-10.flex.items-center
-                          (let [remove? (get-in base [section uid key])]
-                            (if (or (pos? n) remove?)
-                              [(if remove? schpaa.style.hoc.buttons/round-danger-pill
-                                           hoc.buttons/round-cta-pill)
-                               {:class    [:round :shrink-0]
-                                :type     :button
-                                :on-click #(if remove?
-                                             (actions/delete {:uid uid :section section :timeslot key})
-                                             (actions/add {:uid uid :section section :timeslot key}))}
-                               (if remove? (sc/icon ico/trash) (sc/icon ico/plus))]
-                              [:div.w-8] #_[hoc.buttons/reg-pill {:disabled true
-                                                                  :class    [:disabled
-                                                                             :invisible
-                                                                             :narrow :shrink-0]} (sc/icon ico/check)]))]
-
-                         [sc/col-space-1 {:class [:justify-center :h-10]
-                                          :style {:white-space :nowrap
-                                                  :width       "3.5rem"}}
-                          [sc/text2 "kl. " (t/hour starttime) "–" (t/hour endtime)]]
-
-                         (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}
-                                                :class []}]
-                               (concat
-                                 (map (fn [[idx [this-uid påmeldt-dato]]]
-                                        (let [owner? (= this-uid uid)]
-                                          [taken-user-slot
-                                           {:class    [(when owner? :owner)]
-                                            :on-click #(rf/dispatch (if owner?
-                                                                      [:app/navigate-to [:r.mine-vakter]]
-                                                                      [:app/navigate-to [:r.dine-vakter {:id this-uid}]]))}
-                                           (let [user-info (user.database/lookup-userinfo (name this-uid))
-                                                 navn (cond
-                                                        (not (empty? (:alias user-info))) (:alias user-info)
-                                                        (not (empty? (:navn user-info))) (:navn user-info)
-                                                        :else "...")]
-                                             [sc/text1 {:style {:color (when owner? :unset)}
-                                                        :class [
-                                                                :truncate]}
-                                              navn])]))
-                                      (map-indexed vector (last slots-on-this-eykt)))
-                                 (map (fn [_] [avail-user-slot "ledig"])
-                                      (range n))))]]])))))))
+          (for [each (filter (fn [[{:keys [slots kald-periode]}]] (and (pos? slots) (if kald-periode kald-periode? true))) data)
+                ;todo superslow
+                [{:keys [description dt slots section]} group] (group-by #(select-keys % [:dt :description :section :slots :kald-periode]) each)
+                :let [dt (t/date dt)
+                      alle-regs-i-denne-periodegruppen (invert (get base section) #_(clojure.walk/keywordize-keys (get base section)))]]
+            ^{:key dt} (into [:div.w-full.space-y-2
+                              [week-component dt description]]
+                             (for [{:keys [starttime endtime]} (sort-by :starttime < group)
+                                   :let [starttime-key (-> (t/at dt starttime) str keyword)
+                                         starttime' (str (t/at dt (t/time starttime)))
+                                         slots-on-this-eykt (first (filter (fn [[k _v]] (= (name k) starttime')) alle-regs-i-denne-periodegruppen))
+                                         slots-free (- slots (count (second slots-on-this-eykt)))]
+                                   :when (if show-only-available? (or (pos? slots-free) (get-in base [section uid starttime-key])) true)]
+                               [:div.ml-4
+                                [sc/col-space-2
+                                 [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap
+                                                          :align-items "start"}}
+                                  [sc/col-space-1 {:class [:justify-center :h-10]
+                                                   :style {:white-space :nowrap
+                                                           :width       "3.5rem"}}
+                                   [sc/text2 "kl. " (t/hour starttime) "–" (t/hour endtime)]]
+                                  [command uid base section slots-free starttime-key]
+                                  ; for every line
+                                  (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
+                                        (concat
+                                          (map #(occupied-slot uid %) (last slots-on-this-eykt))
+                                          (map #(avail-user-slot "Ledig") (range slots-free))))]]]))))))
 
 (comment
   (let [data [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}

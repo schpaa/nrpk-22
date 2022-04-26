@@ -34,10 +34,10 @@
        :on-click #(on-click current-page)}
 
       (when badge
-        (when-some [b (badge)]
+        (let [{value :value attr :attr} (badge)]
           (if right-side
-            [sc/top-right-badge b]
-            [sc/top-left-badge b])))
+            [sc/top-right-badge attr value]
+            [sc/top-left-badge attr value])))
 
       [sc/toolbar-button
        {:disabled  disabled
