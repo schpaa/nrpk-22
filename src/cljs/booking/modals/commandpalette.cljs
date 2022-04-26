@@ -23,7 +23,8 @@
                            :icon   ico/nokkelvakt
                            :action #(rf/dispatch [:app/navigate-to [:r.reports {:id "siste-nye-vakter"}]])}
                         {:name   "Mine vakter"
-                         :icon   ico/nokkelvakt
+                         ;:icon   ico/nokkelvakt
+                         :group  1
                          :action #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])}
                         {:name   "Utlån på Nøklevann"
                          :icon   ico/ticket
@@ -56,12 +57,16 @@
                         {:name     "Sjøbasen oversikt"
                          :keywords "lenke link innhold booking"
                          :action   #(rf/dispatch [:app/navigate-to [:r.booking]])}
+                        #_{:name     "Mine vakter"
+                           :keywords "vakt eykt økt"
+                           :group    1
+                           :action   #(rf/dispatch [:app/navigate-to [:r.booking]])}
 
                         {:id "0", :name "Registrer skade på utstyr" :icon [:> outline/PencilIcon] :disabled true}
-                        {:id "1", :name "Registrer hms-hendelse" :icon [:> outline/PencilIcon] :disabled true}
+                        {:id "1", :name "Ny HMS-hendelse" :icon [:> outline/PencilIcon] :disabled true}
                         {:id "2", :name "Avlys booking" :disabled true}
-                        {:id "3", :name "Kok kaffe" :disabled true}
-                        {:id "3", :name "Lage vafler" :keywords "mat" :disabled true}
+                        ;{:id "3", :name "Kok kaffe" :disabled true}
+                        ;{:id "3", :name "Lage vafler" :keywords "mat" :disabled true}
                         {:id "4", :name "Avlys kurs" :disabled true :icon [:> outline/LockClosedIcon]}
                         {:id "5", :name "Reserver båter for kurs" :disabled true :icon [:> outline/ArrowRightIcon]}
                         {:id "6", :name "Vis båtlisten på Nøklevann" :disabled true}
@@ -74,31 +79,32 @@
                          ;#(js/alert "!!!")
                          #(rf/dispatch [:lab/new-blog-entry])}
                         {:group    1
-                         :name     "Utlån på sjøbasen (booking)"
-                         :keywords "utlån booking sjøbase"
+                         :name     "Booking på Sjøbasen"
+                         :keywords "utlån booking sjøbase malm øy"
                          :icon     ico/ticket :action #(rf/dispatch [:app/navigate-to [:r.debug]])}
                         {:id "11", :name "Lage nytt båtnummer" :disabled true}
-                        {:id "12", :name "Gå til designspråk/mal" :icon [:> outline/ColorSwatchIcon] :action #(rf/dispatch [:app/navigate-to [:r.designlanguage]])}
+                        ;{:id "12", :name "Gå til designspråk/mal" :icon [:> outline/ColorSwatchIcon] :action #(rf/dispatch [:app/navigate-to [:r.designlanguage]])}
                         {:id "13", :name "Gå til forsiden" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.forsiden]])}
                         {:id "14", :name "Hvilke betingelser gjelder?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.terms]])}
                         {:id "15", :name "Plikter som nøkkelvakt" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.conditions]])}
                         {:id "16", :name "Hvilke retningslinjer på sjøbasen?" :icon [:> outline/LightBulbIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.retningslinjer]])}
                         {:id "17", :name "Vaktkalender" :icon ico/nokkelvakt :action #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])}
-                        {:id "18", :name "Veksle visning av krom" :icon [:> outline/LightningBoltIcon] :action #(rf/dispatch [:lab/toggle-chrome])}
+                        {:id "18", :name "Flere knapper" :icon [:> outline/LightningBoltIcon] :action #(rf/dispatch [:lab/toggle-chrome])}
                         {:id "19", :name "Vis filer" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])}
                         {:id "20", :name "Aktivitetsliste (utlån)" :icon [:> outline/DocumentIcon] :action #(rf/dispatch [:app/navigate-to [:r.aktivitetsliste]])}
 
                         {:id       "22", :name "Booking: Ofte stilte spørsmål"
                          :keywords "faq"
                          :icon     [:> solid/QuestionMarkCircleIcon] :action #(rf/dispatch [:app/navigate-to [:r.booking.faq]])}
-                        {:group    1
-                         :name     "Send en tilbakemelding"
-                         :keywords "hvordan hjelp"
-                         :icon     ico/tilbakemelding
-                         :action   #(rf/dispatch [:app/give-feedback {:source :command-palette}])}
+                        #_{:group    1
+                           :name     "Send en tilbakemelding"
+                           :keywords "hvordan hjelp"
+                           :icon     ico/tilbakemelding
+                           :action   #(rf/dispatch [:app/give-feedback {:source :command-palette}])}
                         {:id     "24" :name "Gå til feilmelding" :keywords "feil"
                          :action #(rf/dispatch [:app/navigate-to [:r.page-not-found]])}
-                        {:id       "25" :name "Vis QR-kode hit"
+                        {:id       "25" :name "Vis QR-kode med lenke hit"
+                         :group    1
                          :icon     ico/qrcode
                          :keywords "lenke link"
                          :action   #(rf/dispatch [:lab/qr-code-for-current-page])}]))))

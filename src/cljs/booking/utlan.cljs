@@ -482,23 +482,27 @@
                                 (remove nil? boats))])))]))])))
 
 (defn panel [{:keys []}]
-  [sc/col-space-8
-   [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
-    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]]])
+  [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
+
+   [sc/row-sc-g4-w
+    ;[sc/text1 "Se også"]
+    [widgets/auto-link :r.båtliste]
+    [sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
+    [widgets/auto-link :r.booking]]
+
+   [sc/row-sc-g2-w
+    [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
+    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
+    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
+
+   [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
 
 (defn commands []
   [sc/col-space-4
    [sc/row-sc-g2-w
     [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
     [hoc.buttons/danger-pill {:disabled true
-                              :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
-   [sc/row-sc-g2-w
-    [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
-    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
-    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
-   [sc/row-sc-g4-w
-    [sc/text1 "Se også"]
-    [widgets/auto-link :r.båtliste]
-    [sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
-    [widgets/auto-link :r.booking]]])
+                              :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]])
+
+
 

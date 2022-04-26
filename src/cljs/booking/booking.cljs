@@ -42,16 +42,17 @@
    #_[sc/row-sc-g2-w
       [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
-      [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
-   [sc/row-sc-g4-w
-    [sc/text1 "Se også"]
-    [widgets/auto-link :r.båtliste]
-    [widgets/auto-link :r.booking.faq]
-    #_[sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
-    [widgets/auto-link :r.utlan]]])
+      [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]])
+
 
 (defn panel [{:keys []}]
   [sc/col-space-8
+   [sc/row-sc-g4-w
+    ;[sc/text1 "Se også"]
+    [widgets/auto-link :r.båtliste]
+    [widgets/auto-link :r.booking.faq]
+    #_[sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
+    [widgets/auto-link :r.utlan]]
    [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
     [hoc.toggles/switch-local (r/cursor settings [:booking/show-deleted]) "vis slettede"]]])
 
@@ -134,8 +135,7 @@
 (defn page [r]
   (let [user-auth (rf/subscribe [::db/user-auth])
         loggedin-uid @(rf/subscribe [:lab/uid])]
-    {:panel-title  "Tittel"
-     :panel        panel
+    {:panel        panel
      :always-panel commands
      :render
      (fn []

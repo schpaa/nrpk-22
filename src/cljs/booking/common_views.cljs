@@ -675,7 +675,7 @@
                     ;modification could happen here
                     (when (fn? panel)
                       [container
-                       [hoc.panel/togglepanel pagename (or panel-title "innstillinger") panel modify?]])
+                       [hoc.panel/togglepanel pagename (or panel-title "valg + Relevante lenker") panel modify?]])
 
                     (when always-panel
                       [container

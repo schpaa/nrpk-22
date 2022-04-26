@@ -80,8 +80,9 @@
                 :shorttitle "Sjøbasen"
                 :icon       ico/booking
                 :access     [[:member] #{:admin}]
-                :header     [:r.oversikt "Booking på Sjøbasen"]}]
-   ["/booking/oversikt" {:name :r.booking.oversikt :header [:r.booking "Oversikt"]}]
+                :header     [:r.båtliste.sjøbasen "Booking på sjøbasen"]}]
+   ["/booking/oversikt" {:name   :r.booking.oversikt
+                         :header [:r.booking "Oversikt"]}]
    ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]
    ["/booking/faq" {:name :r.booking.faq :header [:r.booking "Ofte stilte spørsmål"]}]
 
@@ -97,9 +98,13 @@
      :shorttitle "Rapporter"
      :access     [[:member] #{:admin}]
      :header     [:r.oversikt "Rapporter"]}]
-   ["/baatlisten"
-    {:name   :r.båtliste
-     :header [:r.oversikt "Båtlisten"]}]])
+
+   ["/båtlisten/nøklevann"
+    {:name   :r.båtliste.nøklevann
+     :header [:r.oversikt "Båtlisten på nøklevann"]}]
+   ["/båtlisten/sjøbasen"
+    {:name   :r.båtliste.sjøbasen
+     :header [:r.booking "Båtlisten på sjøbasen"]}]])
 
 
 (defn shortcut-link [route-name]
