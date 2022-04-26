@@ -856,10 +856,8 @@
 
    :r.utlan
    (fn [r]
-     (let [uid @(rf/subscribe [:lab/uid])
-           #_#_user @(db/on-value-reaction {:path ["users" uid]})]
-       [+page-builder
-        r
+     (let [uid @(rf/subscribe [:lab/uid])]
+       [+page-builder r
         {:panel        booking.utlan/panel
          :always-panel booking.utlan/commands
          :render       #(booking.utlan/render uid)}]))

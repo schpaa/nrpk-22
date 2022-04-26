@@ -74,7 +74,7 @@
    ["/utlan" {:name       :r.utlan
               :shorttitle "Utlån"
               :access     [[:member] #{}]
-              :header     [:r.oversikt "Utlån på Nøklevann"]}]
+              :header     [:r.båtliste.nøklevann "Utlån på Nøklevann"]}]
 
    ["/booking" {:name       :r.booking
                 :shorttitle "Sjøbasen"
@@ -99,12 +99,12 @@
      :access     [[:member] #{:admin}]
      :header     [:r.oversikt "Rapporter"]}]
 
-   ["/båtlisten/nøklevann"
+   ["/båtliste/nøklevann"
     {:name   :r.båtliste.nøklevann
-     :header [:r.oversikt "Båtlisten på nøklevann"]}]
-   ["/båtlisten/sjøbasen"
+     :header [:r.oversikt "Båtliste"]}]
+   ["/båtliste/sjøbasen"
     {:name   :r.båtliste.sjøbasen
-     :header [:r.booking "Båtlisten på sjøbasen"]}]])
+     :header [:r.booking "Båtliste"]}]])
 
 
 (defn shortcut-link [route-name]
