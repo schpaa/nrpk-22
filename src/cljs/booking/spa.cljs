@@ -214,6 +214,7 @@
                  (let [doc-id (-> r :path-params :id)]
                    [:div
                     (case doc-id
+                      "huskeliste-ved-nøkkelvakt" (-> (inline "./oversikt/huskeliste-ved-nøkkelvakt.md") schpaa.markdown/md->html sc/markdown)
                       "tidslinje-forklaring" (-> (inline "./oversikt/tidslinje-forklaring.md") schpaa.markdown/md->html sc/markdown)
                       "hms-håndbok" (-> (inline "./oversikt/hms-håndbok.md") schpaa.markdown/md->html sc/markdown)
                       "vaktinstruks" (-> (inline "./content/vaktinstruks.md") schpaa.markdown/md->html sc/markdown)
@@ -320,13 +321,15 @@
              "Nøkkelvaktene er en gruppe med omtrent 130 frivillige medlemmer som betjener klubbens anlegg ved Nøklevann i klubbens åpningstider. Nøkkelvaktene hjelper medlemmene, sjekker medlemsskap og bidrar til sikkerheten i klubbens aktivitet."
              #_"Nøkkelvaktene er en gruppe frivillige medlemmer som betjener klubbens anlegg ved Nøklevann, hjelper medlemmer i åpningstiden og bidrar til sikkerheten i klubbens aktiviteter."
              [sc/row-sc-g4-w
-              (let [data [[1 [:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
+              (let [data [[0 [:r.dokumenter {:id "huskeliste-ved-nøkkelvakt"}] "Huskeliste ved nøkkelvakt"]
+                          [1 [:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
                           [2 [:r.dokumenter {:id "vaktinstruks"}] "Nøkkelvaktinstruks"]
                           [3 [:r.dokumenter {:id "regler-utenom-vakt"}] "Regler utenom vakt"]
+
                           [4 :r.conditions "Plikter som nøkkelvakt"]
                           [5 :r.utlan]
-                          [6 :r.aktivitetsliste "Aktivitetsliste"]
-                          [7 :r.terms "Betingelser"]
+                          ;[6 :r.aktivitetsliste "Aktivitetsliste"]
+                          ;[7 :r.terms "Betingelser"]
                           [8 :r.nokkelvakt]
                           ;(shortlink :r.nokkelvakt)
                           [9 :r.mine-vakter]]]
