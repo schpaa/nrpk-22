@@ -21,7 +21,7 @@
             [booking.access]
             [clojure.set :as set]
             [schpaa.style.input :as sci]
-            [booking.common-widgets :refer [vertical-button]]
+            [booking.common-widgets :refer [vertical-button horizontal-button]]
             [booking.modals.boatinput]
             [booking.modals.feedback]
             [booking.modals.commandpalette]
@@ -129,42 +129,51 @@
         left-side? (schpaa.state/listen :lab/menu-position-right)
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-    [{:icon-fn   #(sc/icon-large ico/new-home)
-      :badge     (fn [] {:attr  {:style {:background-color "var(--floating)"
-                                         :color            "var(--text1)"}}
-                         :value (let [c (count (:online @presence))]
-                                  (when (pos? c) c))})
-      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      :class     #(if (= % :r.oversikt) :oversikt :selected)
-      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
+    [{:icon-fn      #(sc/icon-large ico/new-home)
+      :default-page :r.forsiden
 
-     {:icon-fn   (fn [] (sc/icon-large ico/user))
-      :on-click  #(rf/dispatch [:app/navigate-to [:r.user]])
-      :page-name :r.user}
+      :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
+      :class        #(if (= % :r.oversikt) :oversikt :selected)
+      :page-name    #(some #{%} [:r.forsiden :r.oversikt])}
+
+     {:icon-fn      (fn [] (sc/icon-large ico/user))
+      :caption      "Mine opplysninger"
+      :default-page :r.user
+      :on-click     #(rf/dispatch [:app/navigate-to [:r.user]])
+      :page-name    :r.user}
 
      (when (or @admin? @booking?)
-       {:icon-fn   (fn [] (sc/icon-large ico/booking))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.booking]])
-        :page-name :r.booking})
+       {:icon-fn      (fn [] (sc/icon-large ico/booking))
+        :caption      "Booking Sjøbasen"
+        :default-page :r.booking
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name    :r.booking})
 
      (when (or @admin? @nokkelvakt)
-       {:icon      ico/mystery1
-        :badge     (fn [] {:value 2
+       {:icon         ico/mystery1
+        #_#_:badge (fn [] {:value 2
                            :attr  {:style {:background-color "var(--floating)"
                                            :color            "var(--text1)"}}})
-        :disabled  false
-        :page-name :r.utlan
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])})
+        :disabled     false
+        :caption      "Utlån Nøklevann"
+        :default-page :r.utlan
+        ;:page-name :r.utlan
+        :page-name    #(some #{%} [:r.utlan :r.båtliste.nøklevann])
+        :class        #(if (= % :r.utlan) :selected :oversikt)
+        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])
+        #_#_:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])})
 
      (when (or @admin? @nokkelvakt)
-       {:icon-fn   (fn [] (sc/icon-large ico/nokkelvakt))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
-        :page-name :r.nokkelvakt})
+       {:icon-fn      (fn [] (sc/icon-large ico/nokkelvakt))
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
+        :default-page :r.nokkelvakt
+        :page-name    :r.nokkelvakt})
 
      (when (or @member? @admin? @registered?)
-       {:icon-fn   (fn [] (sc/icon-large ico/yearwheel))
-        :on-click  #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
-        :page-name :r.yearwheel})
+       {:icon-fn      (fn [] (sc/icon-large ico/yearwheel))
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
+        :default-page :r.yearwheel
+        :page-name    :r.yearwheel})
      #_:space
      #_(when (or @admin? @nokkelvakt)
          {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
@@ -176,21 +185,36 @@
           :on-click  #(rf/dispatch [:lab/toggle-number-input])})
      :space
      (when @admin?
-       {:tall-height true
-        :icon-fn     (fn [] (sc/icon-large ico/fileman))
-        :on-click    #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-        :page-name   :r.fileman-temporary})
+       {:tall-height  true
+        :default-page :r.fileman-temporary
+        :icon-fn      (fn [] (sc/icon-large ico/fileman))
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
+        :page-name    :r.fileman-temporary})
      (when (or @admin?)
-       {:icon-fn     (fn [] (sc/icon-large ico/users))
-        :on-click    #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
-        :tall-height true
-        :class       #(if (= % :r.users) :selected :oversikt)
-        :page-name   #(some #{%} [:r.users :r.presence])})
+       {:icon-fn      (fn [] (sc/icon-large ico/users))
+        :badge        (fn [] {:attr  {:style {:background-color "var(--yellow-7)"
+                                              :color            "var(--gray-9)"}}
+                              :value (let [c (count (:online @presence))]
+                                       (when (pos? c) c))})
+        :default-page :r.users
+        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
+        :tall-height  true
+        :class        #(if (= % :r.users) :selected :oversikt)
+        :page-name    #(some #{%} [:r.users :r.presence])})
      {:tall-height true
+
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                             (sc/icon-large
                               (if @st ico/commandPaletteOpen ico/commandPaletteClosed))))
-      :on-click    #(rf/dispatch [:app/toggle-command-palette])}]))
+      :on-click    #(rf/dispatch [:app/toggle-command-palette])}
+     {:tall-height true
+
+      :icon-fn     (fn [] (let [with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
+                                st (rf/subscribe [:lab/modal-selector])]
+                            (sc/icon-large
+                              (if with-caption? ico/prevImage ico/nextImage))))
+      ;with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
+      :on-click    #(schpaa.state/toggle :app/toolbar-with-caption)}]))
 
 (defn horizontal-toolbar-definitions [uid]
   (let [admin? (rf/subscribe [:lab/admin-access])
@@ -224,23 +248,43 @@
       :disabled  (not (some? @registered?))
       :page-name :r.user}]))
 
+(defn lookup-page-ref-from-name [link]
+  {:pre [(keyword? link)]}
+  {:link link
+   :text (or (some->> link
+                      (reitit/match-by-name (reitit/router booking.routes/routes))
+                      :data
+                      :header)
+             "wtf?")})
+
 (defn vertical-toolbar [left-side?]
   (let [has-chrome? (rf/subscribe [:lab/has-chrome])
+        with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
+        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         numberinput? (rf/subscribe [:lab/number-input])]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-      [:div.shrink-0.w-16.xl:w-20.h-full.sm:flex.hidden.relative
+      [:div.shrink-0.h-full.sm:flex.hidden.relative.select-none
+       {:class [(if with-caption? :w-56 :w-16)]
+        :style {:box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
+                :backgrounds "var(--gray-9)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
-       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative
+       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.xw-16.items-start
               {:style (conj
-                        #_(if left-side?
-                            {:border-right "1px var(--gray-9) solid"}
-                            {:border-left "1px var(--gray-9) solid"})
-                        {:padding-top "var(--size-0)"
-                         :box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
-                         :background  "var(--toolbar)"})}]
-             (map #(if (keyword? %)
-                     [:div.grow]
-                     [vertical-button (assoc % :right-side (not left-side?))])
+                        {:padding-top "var(--size-0)"})}]
+             (map #(let [caption (when with-caption?
+                                   (let [p (:page-name %)]
+                                     (if-some [caption (some->
+                                                         (if (fn? p) (p current-page) p)
+                                                         lookup-page-ref-from-name
+                                                         :text)]
+                                       caption
+                                       (when-let [dp (:default-page %)]
+                                         (:text (lookup-page-ref-from-name dp))))))]
+                     (if (keyword? %)
+                       [:div.grow]
+                       [vertical-button (assoc % :right-side (not left-side?)
+                                                 :caption caption)]))
+
                   (remove nil? (vertical-toolbar-definitions))))])))
 
 (defn bottom-toolbar []
@@ -260,7 +304,7 @@
                      :background      "var(--toolbar)"}}]
 
       (into [sc/bottom-toolbar-style]
-            (mapv vertical-button
+            (mapv horizontal-button
                   (horizontal-toolbar-definitions (:uid @user-auth))))
       #_[:div.absolute.mx-auto.inset-y-0.overflow-y-auto
          {:style {:width          "298px"
@@ -269,14 +313,7 @@
 
 ;endregion
 
-(defn lookup-page-ref-from-name [link]
-  {:pre [(keyword? link)]}
-  {:link link
-   :text (or (some->> link
-                      (reitit/match-by-name (reitit/router booking.routes/routes))
-                      :data
-                      :header)
-             "wtf?")})
+
 
 (defn compute-pagetitles [r]
   (let [path-fn (some-> r :data :path-fn)

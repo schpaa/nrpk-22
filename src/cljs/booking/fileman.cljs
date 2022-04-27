@@ -257,10 +257,10 @@
                show-content (schpaa.state/listen :activitylist/show-content)]
     [sc/row-sc-g2-w
      ;[hoc.toggles/switch :activitylist/show-editing "Rediger"]
-     [hoc.toggles/switch :filemanager/show-deleted "Vis slettede"]
-     [hoc.toggles/switch :activitylist/left-aligned "Bruk hele skjermbredden"]
-     [hoc.toggles/switch :activitylist/limit-timeline "Bare vis mine innlegg"]
-     [hoc.toggles/switch :activitylist/limit-active "Skjult historie"]]))
+     [hoc.toggles/ls-sm :filemanager/show-deleted "Vis slettede"]
+     [hoc.toggles/ls-sm :activitylist/left-aligned "Bruk hele skjermbredden"]
+     [hoc.toggles/ls-sm :activitylist/limit-timeline "Bare vis mine innlegg"]
+     [hoc.toggles/ls-sm :activitylist/limit-active "Skjult historie"]]))
 
 (defn always-panel []
   [sc/row-sc-g2-w

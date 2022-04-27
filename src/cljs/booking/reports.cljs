@@ -267,15 +267,11 @@
     :f       tilbakemeldinger}])
 
 (defn page [r]
-  (let [report-id (-> r :path-params :id)
+  (let [{report-id :id} (-> r :path-params)
         result (filter #(= (:id %) report-id) report-list)]
     (if-let [result (first result)]
-      {:always-panel (fn [] [:div.w-full
-                             [sc/title1 (:name result)]])
-       :render-fullwidth
-       (fn []
-         [sc/col {:class [:w-full]}
-          #_[sc/row {:class [:mx-auto :max-w-xl :px-4]}
-             [sc/title1 (:name result)]]
-          ((:f result))])}
+      {:always-panel     (fn [] [:div.w-full [sc/title1 (:name result)]])
+       :render-fullwidth (fn []
+                           [sc/col {:class [:w-full]}
+                            ((:f result))])}
       {:render (fn [] [:div "?"])})))

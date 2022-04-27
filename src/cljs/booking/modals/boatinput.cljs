@@ -536,60 +536,9 @@
   ""
   [{db :db}]
   {:fx [[:dispatch
-         [:modal.boatinput/show                             ;lab/modaldialog-visible ;:lab/modal-selector
-          ;(-> db :modal.boatinput/visible not)
+         [:modal.boatinput/show
           {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
-           :content-fn        #(window-content %)
-           #_(fn [{:keys [on-close]}]
-               #_[:div
-                  {:style {:align-self       :start
-                           :border-radius    "var(--radius-2)"
-                           ;:height           "100%"
-                           :width            "18rem"        ;"100%"
-
-                           ;:xmax-width       "18rem"
-                           :background-color "var(--toolbar)"}}
-                  ;[boatpanel-window true false]
-                  [:div.bg-altx.xw-full.overflow-auto       ;{:style {:height "150vh"}}
-                   ;[:div.grid {:style {:height "150vh"}}
-                   #_[boatpanel-window true false]
-                   [:div {:style {:max-height "90vh"
-                                  :height     "100%" :xwidth "20rem"}}
-                    #_(for [e (range 50)]
-                        [sc/text1 e])
-                    [boatpanel-window true false]
-
-                    [sc/bottom-toolbar-style {:-class [:sticky :bottom-0]}
-
-                     [vertical-button
-                      {:icon     ico/closewindow
-                       :on-click on-close}]
-
-                     [vertical-button
-                      {:xicon     [:> outline/DotsHorizontalIcon]
-                       :disabled  true
-                       :xon-click on-close}]
-                     [vertical-button
-                      {:xicon     [:> outline/EmojiSadIcon]
-                       :disabled  true
-                       :xon-click on-close}]
-                     [vertical-button
-                      {:xicon     [:> solid/FingerPrintIcon]
-                       :disabled  true
-                       :xon-click on-close}]
-                     [vertical-button
-                      {:icon     ico/checkCircle
-                       :on-click on-close}]
-
-                     #_[sc/row-center {:xclass [:shrink-0 :xpx-4 :z-100]
-                                       :style  {
-                                                :height            "5rem"
-                                                :xmin-height       "5rem"
-                                                :xbackground-color "var(--toolbar)"
-                                                :xalign-items      :center}}
-                        [sc/toolbar-button {:sclass   [:h-8
-                                                       :rounded-full]
-                                            :on-click on-close} [sc/icon-large ico/closewindow]]]]]]])}]]]})
+           :content-fn        #(window-content %)}]]]})
 
 (rf/reg-event-fx :lab/toggle-boatpanel [rf/trim-v] open-boatpanel)
 

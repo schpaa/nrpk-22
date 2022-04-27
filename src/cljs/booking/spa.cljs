@@ -47,7 +47,8 @@
             [booking.reports]
             [booking.modals.boatinput]
             [booking.booking]
-            [booking.mine-dine-vakter]))
+            [booking.mine-dine-vakter]
+            [booking.boatlist]))
 
 ;region related to flex-date and how to display relative time
 
@@ -464,8 +465,8 @@
                         [hoc.toggles/button-reg #(js/alert "!") "hurry!"]])
        :panel        (fn [c]
                        [sc/row-sc-g2-w
-                        [hoc.toggles/switch :calendar/show-history "Vis historikk2"]
-                        [hoc.toggles/switch :calendar/show-hidden "Vis skjulte2"]])
+                        [hoc.toggles/ls-sm :calendar/show-history "Vis historikk2"]
+                        [hoc.toggles/ls-sm :calendar/show-hidden "Vis skjulte2"]])
 
        :render       (fn [_] [:div {:class [:gap-1]
                                     :style {:display               :grid
@@ -529,7 +530,7 @@
                                 ;[hoc.buttons/reg-pill {:disabled false :class [:narrow]} "Utvidet åpningstid"]
                                 ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Sensommer"]
                                 ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Høst"]
-                                [hoc.toggles/switch :calendar/show-only-available "Skjul komplette økter"]]])
+                                [hoc.toggles/ls-sm :calendar/show-only-available "Skjul komplette økter"]]])
 
          :render       (fn []
                          (if-let [uid (:uid @user)]
@@ -981,49 +982,8 @@
                    [booking.common-views/no-access-view r]))}])
 
    :r.reports            (fn [r] [+page-builder r (booking.reports/page r)])
-   :r.båtliste.nøklevann (fn [r] [+page-builder r
-                                  {:always-panel (fn []
-                                                   [sc/row-sc-g2-w
-                                                    [hoc.toggles/switch "some-tag" "vis beskrivelse"]
-                                                    [hoc.toggles/switch "some-tag-too" "vis båtnummer"]])
-                                   :render-fullwidth
-                                   (fn []
-                                     (let [loggedin-uid (rf/subscribe [:lab/uid])]
-                                       [sc/col
-                                        {:style {:font-size "110%"}}
-                                        (into [:div.grid.gap-1 {:style {:place-content         :center
-                                                                        :grid-template-columns "repeat(auto-fit,minmax(30ch,1fr))"}}]
-                                              (for [[[boat-type-id xxx] group]
-                                                    (sort-by (comp second first) <
-                                                             (group-by (juxt (comp :boat-type val)
-                                                                             (comp :kind val))
-                                                                       (remove (comp nil? :boat-type val)
-                                                                               @(rf/subscribe [:db/boat-db]))))
-                                                    :let [{:keys [description] :as m}
-                                                          (get-in @(rf/subscribe [:db/boat-type]) [(keyword boat-type-id)])]]
-                                                [sc/zebra
-                                                 ;[:div "XXX " xxx]
-                                                 [sc/col-space-8
-                                                  [sc/row-sc-g2-w
-                                                   [sc/row [widgets/stability-name-category m]]]
-                                                  [:div.flex.justify-between.gap-2
-                                                   (when @(schpaa.state/listen "some-tag")
-                                                     [sc/col-space-2
-                                                      {:style {:flex "1 0 0"}}
-                                                      [widgets/dimensions-and-material m]
-                                                      [sc/text1 {:style {:font-size "unset"}} description]])
-                                                   (when @(schpaa.state/listen "some-tag-too")
-                                                     (into [sc/row-sc-g1-w' {:class []
-                                                                             :style {:align-items :start
+   :r.båtliste.nøklevann (fn [r] [+page-builder r (booking.boatlist/page r)])
 
-                                                                                     :flex        "1 0 0"}}]
-                                                           (for [[k v] (sort-by (comp :number val) < group)]
-                                                             [sc/badge-2 {:class    [:in-usex :out-of-orderx]
-                                                                          :style    {:font-size  "unset"
-                                                                                     :-transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-                                                                          :on-click #(dlg/open-modal-boatinfo
-                                                                                       {:uid  @loggedin-uid
-                                                                                        :data (get @(rf/subscribe [:db/boat-db]) (keyword k))})} (:number v)])))]]]))]))}])
    :r.båtliste.sjøbasen  (fn [r] [+page-builder r {:render (fn [] [sc/col
                                                                    (for [e (range 30)]
                                                                      [sc/text1 {:class [:tabular-nums]}

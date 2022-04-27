@@ -7,24 +7,22 @@
             [schpaa.icon :as icon]
             [booking.routes]))
 
-(defn vertical-button [{:keys [right-side
-                               centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
-                        :or   {style {}}}]
-  (let [
-        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+(defn horizontal-button [{:keys [right-side
+                                 centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
+                          :or   {style {}}}]
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (if (fn? page-name)
                   (page-name current-page)
                   (= current-page page-name))]
-    [:div
+    [:div.w-16
      {:style (if centered?                                  ;'vertically
                {:pointer-events :none
                 :inset          0
                 :display        :grid
                 :place-content  :center
                 :position       :absolute}
-               {
-                :display         :flex
-                :align-items     :start
+               {:display         :flex
+                :align-items     :center
                 :justify-content :center
                 :height          (if tall-height "var(--size-10)" "var(--size-9)")})}
      [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
@@ -51,6 +49,64 @@
           (icon-fn current-page)
           icon)]]]]))
 
+(defn vertical-button [{:keys [right-side caption
+                               centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
+                        :or   {style {}}}]
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+        active? (if (fn? page-name)
+                  (page-name current-page)
+                  (= current-page page-name))]
+    [sc/toolbar-button-with-caption
+     {:style    {:justify-content :space-between
+                 :display         :flex
+                 :align-items     :center}
+      :class    [:gap-0 :w-full]
+      :on-click #(on-click current-page)}
+
+     (when right-side
+       (if caption
+         [sc/text2 {:style {:text-align :right
+                            :flex-grow  1
+                            :color      "unset"
+                            :flex       "1 0 1"}} caption]
+         [:div]))
+
+     [:div.w-16
+      {:style {:display         :flex
+               :align-items     :center
+               :justify-content :center
+               :flex-shrink     0
+               ;:flex "0 2 52px"
+               :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
+      [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
+       {:style {:pointer-events :auto
+
+                :height         "var(--size-9)"}}
+
+
+       (when badge
+         (let [{value :value attr :attr} (badge)]
+           (if right-side
+             [sc/top-right-badge attr value]
+             [sc/top-left-badge attr value])))
+
+       [sc/toolbar-button
+        {:disabled  disabled
+         :tab-index (when active? "-1")
+         :style     style
+         :class     [(if right-side :right-side :left-side)
+                     (if active? (or (when class (class current-page)) :selected))
+                     (if special :special)]}
+        [sc/icon-large
+         (if icon-fn
+           (icon-fn current-page)
+           icon)]]]]
+     (when-not right-side
+       (when caption [sc/text2 {:style {:color      "unset"
+                                        :flex-grow  1
+                                        :text-align :left
+                                        :flex       "1 0 1"}} caption]))]))
+
 (defn stability-expert [{:keys [stability expert]}]
   [:div.w-8.flex.justify-center.items-center
    [:svg.w-4.inline-block {:viewBox "-2 -2 5 5"}
@@ -64,7 +120,7 @@
   [:<>
    [stability-expert m]
    [sc/col
-    [sc/small1 {:style {:font-size "1em"}} navn]
+    [sc/small0 {:style {:font-size "0.85em"}} navn]
     [sc/text1 {:style {:font-size "1.2em"}} (schpaa.components.views/normalize-kind kind)]]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
@@ -127,12 +183,24 @@
      (let [{:keys [link text]} (lookup-page-ref-from-name link)]
        [sc/link {:href (kee-frame.core/path-for [link])} text]))))
 
+(defn material->text [material]
+  (case (str material)
+    "0" "Plast"
+    "1" "Glassfiber"
+    "2" "Polyetylen"
+    "3" "Kevlar/Epoxy"
+    "" ""
+    (str "Annet:" material)))
+
 (defn dimensions-and-material [{:keys [width length weight material]}]
   [sc/text2 {:style {:font-size "unset"}}
    [:span (interpose [:span ", "]
-                     [width length weight (case material
-                                            "0" "Plast"
-                                            "1" "Glassfiber"
-                                            "2" "Polyetylen"
-                                            "3" "Kevlar/Epoxy"
-                                            (str "Annet:" material))])]])
+                     (remove #(or (empty? %) (nil? %))
+                             [weight
+                              (material->text material)
+                              (and width (str width " bred"))
+                              (and length (str length " lang"))]))]])
+
+
+(comment
+  (dimensions-and-material {:width 1 :length 2 :weight "" :material 2}))

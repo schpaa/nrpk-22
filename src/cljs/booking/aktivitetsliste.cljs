@@ -426,14 +426,14 @@
                show-content (schpaa.state/listen :activitylist/show-content)]
     [sc/row-sc-g2-w
      ;[l/ppre-x @(rf/subscribe [:lab/all-access-tokens])]
-     [hoc.toggles/switch :activitylist/show-editing "Rediger"]
+     [hoc.toggles/ls-sm :activitylist/show-editing "Rediger"]
 
      [hoc.toggles/twostate
       {:on-click  #(schpaa.state/toggle :activitylist/show-deleted)
        :alternate @show-deleted
        :icon      (fn [_] [:> outline/TrashIcon])
        :caption   (fn [e] (if e "Skjul slettede" "Vis slettede"))}]
-     [hoc.toggles/switch :activitylist/show-narrow-scope "Vis skjulte"]
-     [hoc.toggles/switch :activitylist/left-aligned "Venstre-juster listen"]
-     [hoc.toggles/switch :activitylist/limit-timeline "Bare økt-perioden"]
-     [hoc.toggles/switch :activitylist/limit-active "Bare aktive utlån"]]))
+     [hoc.toggles/ls-sm :activitylist/show-narrow-scope "Vis skjulte"]
+     [hoc.toggles/ls-sm :activitylist/left-aligned "Venstre-juster listen"]
+     [hoc.toggles/ls-sm :activitylist/limit-timeline "Bare økt-perioden"]
+     [hoc.toggles/ls-sm :activitylist/limit-active "Bare aktive utlån"]]))

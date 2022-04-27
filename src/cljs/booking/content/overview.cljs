@@ -182,7 +182,7 @@
 (defn- panel []
   [sc/col-space-4
    [sc/row-sc-g2-w
-    [hoc.toggles/switch :booking/editing "Rediger"]
-    [hoc.toggles/switch :booking/show-archived "Vis arkiverte"]
-    [hoc.toggles/switch :booking/show-description "Vis beskrivelse"]
-    [hoc.toggles/switch :booking/private-only "Bare vis mine"]]])
+    [hoc.toggles/ls-sm :booking/editing "Rediger"]
+    [hoc.toggles/ls-sm :booking/show-archived "Vis arkiverte"]
+    [hoc.toggles/ls-sm :booking/show-description "Vis beskrivelse"]
+    [hoc.toggles/ls-sm :booking/private-only "Bare vis mine"]]])

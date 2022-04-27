@@ -249,6 +249,7 @@
                     {:content-fn commandpalette-window}]]]})
 
 (rf/reg-event-fx :app/toggle-command-palette [rf/trim-v] commandpalette)
+(rf/reg-event-fx :app/toggle-toolbar-caption [rf/trim-v] {})
 
 (rf/reg-sub :lab/modal-selector-extra :-> (fn [db] (get db :lab/modal-selector-extra)))
 (rf/reg-sub :lab/modal-selector :-> (fn [db] (get db :lab/modal-selector false)))
