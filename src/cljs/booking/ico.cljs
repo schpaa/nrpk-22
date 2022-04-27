@@ -46,6 +46,7 @@
 (def more-if-you-scroll-down [:> solid/ChevronDoubleDownIcon])
 (def nextImage [:> solid/ChevronRightIcon])
 (def prevImage [:> solid/ChevronLeftIcon])
+(def switchHoriz [:> outline/SwitchHorizontalIcon])
 (def panelOpen [:> outline/ChevronLeftIcon])
 (def panelClosed [:> outline/ChevronRightIcon])
 (def commandPaletteOpen [:> solid/SearchIcon])

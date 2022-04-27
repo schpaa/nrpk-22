@@ -41,10 +41,10 @@
                  :shorttitle "Tilstede"
                  :header     [:r.forsiden "Tilstede"]
                  :access     [[:member] #{:admin}]}]
-   ["/brukere" {:name       :r.users
-                :shorttitle "Brukere"
-                :header     [:r.forsiden "Brukere"]
-                :access     [[:member] #{:admin}]}]
+   ["/admin" {:name       :r.users
+              :shorttitle "Admin"
+              :header     [:r.oversikt "Administrasjon"]
+              :access     [[:member] #{:admin}]}]
 
    ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
    ["/not-found" {:name :r.page-not-found :header [:r.oversikt "Finner ikke siden"]}]
@@ -53,7 +53,7 @@
    ["/vaktkalender" {:name   :r.nokkelvakt :shorttitle "Vaktkalender"
                      :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
                      :header [:r.mine-vakter "Vaktkalender"]}]
-   ["/admin" {:name :r.admin :header [:r.oversikt "Admin"] :access [[:member] #{:admin}]}]
+   ;["/admin" {:name :r.admin :header [:r.oversikt "Admin"] :access [[:member] #{:admin}]}]
    ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
    ["/terms" {:name :r.terms :header "Betingelser"}]
    ["/filer" {:name       :r.fileman-temporary
@@ -98,7 +98,7 @@
     {:name       :r.reports
      :shorttitle "Rapporter"
      :access     [[:member] #{:admin}]
-     :header     [:r.oversikt "Rapporter"]}]
+     :header     [:r.users "Rapporter"]}]
 
    ["/batliste/noklevann"
     {:name   :r.båtliste.nøklevann

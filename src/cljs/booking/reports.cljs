@@ -7,13 +7,20 @@
             [schpaa.debug :as l]
             [re-frame.core :as rf]
             [booking.ico :as ico]
-            [schpaa.style.button :as scb]))
+            [schpaa.style.button :as scb]
+            [schpaa.style.input :as sci]))
 
 (o/defstyled table-controller-report :div
-  :overflow-x-auto
-  {:width "calc(100vw - 4rem)"}
+  [:& :overflow-x-auto
+   {:width "calc(100vw - 14rem)"}
+   [:&.narrow-toolbar {:width "calc(100vw - 4rem)"}]]
   [:at-media {:max-width "511px"}
-   {:width "calc(100vw)"}])
+   {:width "calc(100vw)"}
+   [:&.narrow-toolbar {:width "calc(100vw)"}]])
+
+(defn table-controller-report' [& c]
+  (let [narrow-toolbar (not @(schpaa.state/listen :app/toolbar-with-caption))]
+    [table-controller-report {:class [(when narrow-toolbar :narrow-toolbar)]} c]))
 
 (o/defstyled table-report :table
   [:&
@@ -25,7 +32,11 @@
     [:tr
      {:text-align :left}
      [:th sc/small0
-      {:padding "var(--size-1)"}]]]
+      {:padding-inline "4px"
+       :padding-block  "var(--size-1)"}
+      [:&.narrow {:min-width "5rem"
+                  :xoutline  "1px solid red"}]]]]
+
    [:tbody
     ["tr:nth-child(odd)"
      {:background "var(--floating)"}]
@@ -38,18 +49,19 @@
      [:td :whitespace-nowrap
       {:height         "var(--size-8)"
        :padding-block  "var(--size-1)"
-       :vertical-align :top
-       :padding-inline "4px"}
+       :vertical-align :middle
+       :padding-inline "8px"}
+      [:&.narrow {:min-width "13rem"
+                  :width     "13rem"}]
       [:&.message-col
        :whitespace-normal
        {:width "100%"}]
       [:&.hcenter {:padding-inline "1rem"}]
-      [:&.vcenter {:vertical-align :middle}]]
-     #_["td:nth-child(2)"
-        {:text-align :left}]
-     #_["td:nth-child(4)"
-        sc/text0
-        #_{:max-width "10rem"}]]]])
+
+      [:&.vcenter {
+                   :vertical-align :middle}]]]]])
+
+
 
 (o/defstyled phonenumber :td
   :tabular-nums
@@ -66,7 +78,7 @@
                                           k])) [])
                          (sort-by first >))]
     [:div
-     [table-controller-report
+     [table-controller-report'
       [table-report
        [:<>
         [:thead
@@ -89,7 +101,7 @@
   (let [data @(db/on-value-reaction {:path ["users"]})
         data (filter (fn [[k v]] (:request-booking v)) data)
         data (map (fn [[k v]] (select-keys v [:navn :våttkortnr :telefon :booking-expert :dato-godkjent-booking])) data)]
-    [table-controller-report
+    [table-controller-report'
      [table-report
       [:<>
        [:thead
@@ -113,7 +125,7 @@
   (r/with-let [data (db/on-snapshot-docs-reaction {:path ["tilbakemeldinger"]})]
     (let [data (map :data @data)]
       [:<>
-       [table-controller-report
+       [table-controller-report'
         [table-report
          [:<>
           [:thead
@@ -139,9 +151,10 @@
   (r/with-let [act (r/atom nil)
                focus-field-id (r/atom nil)]
     (let [data (db/on-value-reaction {:path ["users"]})
+
           data (filter (fn [[k v]] (and (:godkjent v) (not (:utmeldt v)))) @data)]
       [:<>
-       [table-controller-report
+       [table-controller-report'
         [table-report
          [:<>
           [:thead
@@ -236,6 +249,104 @@
                    [:td.vcenter [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id (name uid)}])} navn]]]))]]]])))
 
 
+(defn oppmøte []
+  (r/with-let [focused (r/atom nil)
+               search (r/atom "")]
+    (let [data (db/on-value-reaction {:path ["users"]})
+          data (filter (fn [[k v]]
+                         (and (:godkjent v)
+                              (not (:utmeldt v))
+                              (let [p (try
+                                        (re-pattern (str "(?i)" @search))
+                                        (catch js/Error _ nil))]
+                                (when p
+                                  (or
+                                    (some? (re-find p (:navn v)))
+                                    (some? (re-find p (str (:telefon v))))))))) @data)]
+      [:<>
+       [:div.sticky.top-0.z-10
+        [:div.h-auto.p-4
+         {:style {
+                  :background "var(--content)"}}
+         [:div.relative
+          [sci/input {:placeholder   "Søk"
+                      :errors        []
+                      :autoFocus     1
+                      :on-focus      #(reset! focused true)
+                      :on-blur       #(reset! focused false)
+                      :values        {:search @search}
+                      :on-key-down   #(case (.-keyCode %)
+                                        27 (reset! search "")
+                                        13 (when (= 1 (count data))
+                                             (let [[uid d] (first data)
+                                                   uid (name uid)]
+                                               (tap> uid)
+                                               (tap> d)
+                                               (db/database-update {:path  ["users" uid]
+                                                                    :value {:attended (not (:attended d))}})))
+
+
+                                        (tap> (.-keyCode %)))
+                      :handle-change #(reset! search (.. % -target -value))}
+           :search
+           {:class [:relative]
+            :style {
+                    :background "var(--field)"
+                    :box-shadow "var(--shadow-2)"
+                    :color      "var(--fieldcopy)"}}
+
+           nil
+           :search]
+          [:div.absolute.top-0.pointer-events-none
+           {:style {:top       "50%"
+                    :right     (if (seq @search) "32px" "8px")
+                    :transform "translateY(-50%)"}}
+           (when @focused
+             [sc/row-sc-g2
+              (when (= 1 (count data)) [sc/as-shortcut "ENTER => oppmøtt"])
+              (when (some? @search) [sc/as-shortcut "esc => nytt søk"])])]]]]
+       (if-not (pos? (count data))
+         [sc/row-center {:style {:height "var(--size-10)"}}
+          [sc/title2 (str "Ingen passet med ") [:span {:style {:color "var(--text1)"}} @search]]]
+         [table-controller-report'
+          [table-report
+           [:<>
+            [:thead
+             [:tr
+              [:th.narrow]
+              [:th.narrow "Oppmøte"]
+              [:th.narrow "Saldo '22"]
+
+              [:th "Navn"]]]
+            (into [:tbody]
+                  (for [[idx [k {:keys [uid nøkkelnummer navn saldo timekrav attended] :as v}]] (map-indexed vector (sort-by (comp :navn val) < data))
+                        :let [e idx]]
+                    [:tr
+                     [:td.vcenter.hcenter
+                      [scb/round-normal-listitem
+                       [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
+                                 :style    {:color "var(--text2)"}} ico/pencil]]]
+                     [:td.vcenter [schpaa.style.hoc.toggles/small-switch-base
+                                   {:clear-bg true
+                                    :duration "1110ms"}
+                                   (if attended "deltar" "—")
+                                   #(-> attended)
+                                   #(db/database-update {:path  ["users" uid]
+                                                         :value {:attended %}})]]
+                     #_[:td.vcenter (or nøkkelnummer "—")]
+
+                     [:td.w-64.vcenter (let [eykts (count (->> @(db/on-value-reaction {:path ["calendar" (name uid)]})
+                                                               (mapcat val)
+                                                               (mapcat val)))
+                                             saldo (js/parseInt (or saldo 0))
+                                             timekrav (js/parseInt (or timekrav 0))
+                                             saldo' (- (+ saldo (* 3 eykts)) timekrav)]
+                                         [sc/text1-cl {:class [:tabular-nums :tracking-tight]
+                                                       :style {:color (if (or (pos? saldo') (zero? saldo')) "var(--green-5)" "var(--red-5)")}}
+                                          (if (zero? saldo') 0 (str saldo' "t"))])]
+                     [:td.vcenter.w-full [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id (name uid)}])} navn]]]))]]])])))
+
+
 (def report-list
   [{:name    "Rapport: saldo for nøkkelvakter"
     :caption "Nøkkelvakt-saldo"
@@ -264,13 +375,20 @@
     :access  [:admin]
     :icon    ico/nokkelvakt
     :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "tilbakemeldinger"}]])
-    :f       tilbakemeldinger}])
+    :f       tilbakemeldinger}
+   {:name    "Rapport: oppmøte"
+    :caption "Oppmøte"
+    :id      "oppmøte"
+    :access  [:admin]
+    :icon    ico/nokkelvakt
+    :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "oppmøte"}]])
+    :f       oppmøte}])
 
 (defn page [r]
   (let [{report-id :id} (-> r :path-params)
         result (filter #(= (:id %) report-id) report-list)]
     (if-let [result (first result)]
-      {:always-panel     (fn [] [:div.w-full [sc/title1 (:name result)]])
+      {:always-panel     (fn [] [:div.w-full [sc/hero-p (:name result)]])
        :render-fullwidth (fn []
                            [sc/col {:class [:w-full]}
                             ((:f result))])}

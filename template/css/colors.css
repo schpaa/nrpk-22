@@ -138,6 +138,7 @@ outline: 2px solid #a0a8;
     --gray-10: #121010;
 
 */
+    --gray-00: #F9FAFA;
     --gray-0: #F0F1F1;
     --gray-1: #E5E6E6;
     --gray-2: #CDD0D0;
@@ -209,8 +210,8 @@ outline: 2px solid #a0a8;
     --dim-danger-bright: var(--red-6);
     --dim-dangercopy: white;
 
-    --light-field: var(--gray-2);
-    --light-field-focus: var(--gray-0);
+    --light-field: var(--gray-00);
+    --light-field-focus: var(--gray-1);
     --light-fieldcopy: var(--gray-7);
     --dim-field: var(--gray-9);
     --dim-field-focus: var(--gray-8);

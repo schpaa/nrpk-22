@@ -83,8 +83,8 @@
 (defonce settings (r/atom {}))
 
 (defn presence [r data]
-  [table-controller
-   [table-def
+  [booking.reports/table-controller-report'
+   [booking.reports/table-report
     [:<>
      header
      (into [:tbody]

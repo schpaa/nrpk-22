@@ -516,11 +516,11 @@
         (when-not @at-least-registered?
           [please-login-and-register])
 
-        (when goog.DEBUG
-          [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+        #_(when goog.DEBUG
+            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
 
-        (when goog.DEBUG
-          [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
+        #_(when goog.DEBUG
+            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
 
         #_(when goog.DEBUG
             [sc/fp-summary-detail :frontpage/status

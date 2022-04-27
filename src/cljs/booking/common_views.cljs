@@ -196,23 +196,25 @@
                                               :color            "var(--gray-9)"}}
                               :value (let [c (count (:online @presence))]
                                        (when (pos? c) c))})
-        :default-page :r.users
+        :default-page :r.presence
         :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
         :tall-height  true
         :class        #(if (= % :r.users) :selected :oversikt)
         :page-name    #(some #{%} [:r.users :r.presence])})
      {:tall-height true
-
+      ;:default-page :r.forsiden
+      ;:page-name :r.forsiden
+      :caption     "Hva kan jeg gjøre?"
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                             (sc/icon-large
-                              (if @st ico/commandPaletteOpen ico/commandPaletteClosed))))
+                              (if @st ico/commandPaletteClosed ico/commandPaletteOpen))))
       :on-click    #(rf/dispatch [:app/toggle-command-palette])}
      {:tall-height true
 
       :icon-fn     (fn [] (let [with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
                                 st (rf/subscribe [:lab/modal-selector])]
                             (sc/icon-large
-                              (if with-caption? ico/prevImage ico/nextImage))))
+                              ico/switchHoriz)))
       ;with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
       :on-click    #(schpaa.state/toggle :app/toolbar-with-caption)}]))
 
@@ -271,19 +273,20 @@
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.xw-16.items-start
               {:style (conj
                         {:padding-top "var(--size-0)"})}]
-             (map #(let [caption (when with-caption?
-                                   (let [p (:page-name %)]
-                                     (if-some [caption (some->
+             (map #(let [cap (when with-caption?
+                               (let [p (:page-name %)]
+                                 (if-some [caption (or (some->
                                                          (if (fn? p) (p current-page) p)
                                                          lookup-page-ref-from-name
-                                                         :text)]
-                                       caption
-                                       (when-let [dp (:default-page %)]
-                                         (:text (lookup-page-ref-from-name dp))))))]
+                                                         :text)
+                                                       (:caption %))]
+                                   caption
+                                   (when-let [dp (:default-page %)]
+                                     (:text (lookup-page-ref-from-name dp))))))]
                      (if (keyword? %)
                        [:div.grow]
                        [vertical-button (assoc % :right-side (not left-side?)
-                                                 :caption caption)]))
+                                                 :caption cap)]))
 
                   (remove nil? (vertical-toolbar-definitions))))])))
 
@@ -720,12 +723,12 @@
                         [always-panel modify?]])
 
                      (if render-fullwidth
-                       [container                           ;:div.duration-200.grow
+                       [container
                         {:style {:margin-right "unset"
-                                 :margin-left  (if (and render-fullwidth @numberinput @left-aligned)
-                                                 ;; force view to align to the left
-                                                 0
-                                                 "unset")
+                                 :margin-left  "unset" #_(if (and @numberinput @left-aligned)
+                                                           ;; force view to align to the left
+                                                           0
+                                                           "unset")
                                  :width        "100%"
                                  :max-width    (if render-fullwidth "" "inherit")}}
                         [render-fullwidth r]]

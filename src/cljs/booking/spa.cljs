@@ -669,8 +669,10 @@
        (let [data (transduce (comp
                                (map val)
                                (map (fn [{:keys [timekrav] :as v}]
-                                      (let [p (js/parseInt timekrav)]
-                                        (assoc v :timekrav (if (js/isNaN p) 0 p)))))
+                                      (if timekrav
+                                        (let [p (js/parseInt timekrav)]
+                                          (assoc v :timekrav (if (js/isNaN p) 0 p)))
+                                        v)))
                                (filter (fn [v] (and
                                                  (if @(r/cursor x [:admin])
                                                    (:admin v)
@@ -693,7 +695,7 @@
                              conj [] @(db/on-value-reaction {:path ["users"]}))
              fields (remove nil? [(when @(r/cursor x [:sorter-sist-sett]) :timestamp-lastvisit-userpage)
                                   (when @(r/cursor x [:sist-endret]) :timestamp)
-                                  (when @(r/cursor x [:timekrav]) :timekrav)])
+                                  #_(when @(r/cursor x [:timekrav]) :timekrav)])
              fields (if (empty? fields) [:navn] fields)
              data (sort-by (apply juxt fields) data)
              users (if @(r/cursor x [:reverse]) (reverse data) data)]
@@ -707,18 +709,19 @@
                               [widgets/auto-link [:r.reports {:id "saldo-setter"}] booking.reports/report-list]
                               [widgets/auto-link [:r.reports {:id "siste-nye-vakter"}] booking.reports/report-list]
                               [widgets/auto-link [:r.reports {:id "brukere-av-booking"}] booking.reports/report-list]
-                              [widgets/auto-link [:r.reports {:id "tilbakemeldinger"}] booking.reports/report-list]])
+                              [widgets/auto-link [:r.reports {:id "tilbakemeldinger"}] booking.reports/report-list]
+                              [widgets/auto-link [:r.reports {:id "oppmøte"}] booking.reports/report-list]])
 
              :panel        (fn []
-                             [sc/col-space-8
-                              [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
-                               [sc/text0 "vis"]
+                             [sc/col-space-4
+                              [sc/row-sc-g2-w
+                               [sc/text0 "visning"]
                                [hoc.toggles/switch-local (r/cursor x [:nøkkelnummer]) "nøkkelnummer"]
-                               [hoc.toggles/switch-local (r/cursor x [:last-seen]) "sist sett"]
-                               [hoc.toggles/switch-local (r/cursor x [:as-table]) "som tabell"]]
+                               [hoc.toggles/switch-local (r/cursor x [:last-seen]) "sist sett"]]
+
 
                               [sc/col-space-1
-                               [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
+                               [sc/row-sc-g2-w
                                 [sc/text0 "filter"]
                                 [hoc.toggles/switch-local (r/cursor x [:sluttet]) "utmeldt"]
                                 [hoc.toggles/switch-local (r/cursor x [:kald-periode]) "kald-periode"]
@@ -727,133 +730,76 @@
                                 [hoc.toggles/switch-local (r/cursor x [:booking]) "booking"]
                                 [hoc.toggles/switch-local (r/cursor x [:admin]) "administratorer"]]]
 
-                              [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
+                              [sc/row-sc-g2-w
                                [sc/text0 "sortering"]
                                [hoc.toggles/switch-local (r/cursor x [:sist-endret]) "sist endret"]
                                [hoc.toggles/switch-local (r/cursor x [:sorter-sist-sett]) "sist sett"]
                                [hoc.toggles/switch-local (r/cursor x [:timekrav]) "timekrav"]
                                [hoc.toggles/switch-local (r/cursor x [:reverse]) "omvendt"]]])}
-            (if @(r/cursor x [:as-table])
-              {:render-fullwidth
-               (fn []
-                 (o/defstyled table-controller :div
+            {:render-fullwidth
+             (fn []
+               #_(o/defstyled table-controller :div
                    :overflow-x-auto
                    {:width "calc(100vw - 4rem)"}
                    [:at-media {:max-width "511px"}
                     {:width "calc(100vw)"}])
-                 (o/defstyled table-def :table
-                   :truncate
-                   [:& {:width           "100%"
-                        :border-collapse :collapse}
+               (o/defstyled table-def :table
+                 :truncate
+                 [:& {:width           "100%"
+                      :border-collapse :collapse}
+                  [:thead
+                   {:height "3rem"}
+                   [:tr
+                    {:text-align :left
+                     :color      "var(--text2)"}
+                    [:th sc/small0
+                     {:padding "2px"}]
+                    ["th:nth-child(1)" {:min-width "2rem"}]
+
+                    ["th:nth-child(2)" {}]]]
+
+                  [:tbody
+                   ["tr:nth-child(even)"
+                    {:background "var(--floating)"}]
+                   [:tr
+                    {:height     "var(--size-6)"
+                     :background "var(--content)"}
+                    [:td sc/text2 :truncate
+                     {:padding-inline "4px"}]
+                    ["td:nth-child(2)"
+                     {:text-align :right}]
+                    ["td:nth-child(4)"
+                     sc/text0
+                     {:max-width "10rem"}]]]])
+               (let [f (fn [dt] [booking.flextime/flex-datetime
+                                 (some-> dt t/instant t/date-time)
+                                 (fn [type content]
+                                   (cond
+                                     (= :date type) (ta/time-format content)
+                                     :else content))])]
+                 [booking.reports/table-controller-report'
+                  [booking.reports/table-report
+                   [:<>
                     [:thead
-                     {:height "3rem"}
                      [:tr
-                      {:text-align :left
-                       :color      "var(--text2)"}
-                      [:th sc/small0
-                       {:padding "2px"}]
-                      ["th:nth-child(1)" {:min-width "2rem"}]
-
-                      ["th:nth-child(2)" {}]]]
-
-                    [:tbody
-                     ["tr:nth-child(even)"
-                      {:background "var(--floating)"}]
-                     [:tr
-                      {:height     "var(--size-6)"
-                       :background "var(--content)"}
-                      [:td sc/text2 :truncate
-                       {:padding-inline "4px"}]
-                      ["td:nth-child(2)"
-                       {:text-align :right}]
-                      ["td:nth-child(4)"
-                       sc/text0
-                       {:max-width "10rem"}]]]])
-                 (let [f (fn [dt] [booking.flextime/flex-datetime
-                                   (some-> dt t/instant t/date-time)
-                                   (fn [type content]
-                                     (cond
-                                       (= :date type) (ta/time-format content)
-                                       :else content))])]
-                   [table-controller
-                    [table-def
-                     [:<>
-                      [:thead
-                       [:tr
-                        [:th ""]
-                        [:th "timer"]
-                        [:th "nøkkelnummer"]
-                        [:th "navn"]
-                        [:th "sist besøkt"]
-                        [:th "sist endret"]]]
-                      (into [:tbody]
-                            (for [{:keys [navn timekrav timestamp
-                                          nøkkelnummer timestamp-lastvisit-userpage] :as v} users]
-                              [:tr
-                               [:td [scb/round-normal-listitem
-                                     [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
-                                               :style    {:color "var(--text2)"}} ico/pencil]]]
-                               [:td (if (pos? timekrav) (str timekrav "t") "—")]
-                               [:td nøkkelnummer]
-                               [:td navn]
-                               [:td (f timestamp-lastvisit-userpage)]
-                               [:td (f timestamp)]]))]]]))}
-
-              {:render (fn []
-                         (let [c (count users)]
-                           [sc/col-space-4
-                            ;[l/ppre-x fields]
-                            [sc/header-title (str c " person" (if (< 1 c) "er"))]
-                            [sc/col-space-4
-                             (into [:ol]
-
-                                   (for [v users]
-                                     [:div.-debug2 {:style {:display               :grid
-
-                                                            :padding-block         "var(--size-2)"
-                                                            :column-gap            "4px"
-                                                            :grid-template-columns "min-content 1fr"}}
-                                      [scb/round-normal-listitem
-                                       [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
-                                                 :style    {:color "var(--text2)"}} ico/pencil]]
-
-                                      [:li {:style {:text-indent  "-2rem"
-                                                    :padding-left "2rem"
-                                                    :list-style   [:outside :none :disc]} #_{:display      :inline-flex
-                                                                                             :list-style   [:outside :none :disc]
-                                                                                             :padding-left "1rem"
-                                                                                             :text-indent  "-1rem"
-                                                                                             :align-items  :center
-                                                                                             ;:flex-wrap    :wrap
-                                                                                             :gap          "var(--size-2)"
-                                                                                             :white-space  :normal}}
-                                       (interpose [:span.mr-2 #_", "]
-                                                  [;[:div.inline-block]
-
-
-                                                   (when @(r/cursor x [:nøkkelnummer])
-                                                     [sc/text-inline {:style {:white-space :nowrap
-                                                                              :width       "4rem"}} (:nøkkelnummer v)])
-                                                   (when @(r/cursor x [:last-seen])
-                                                     [booking.flextime/flex-datetime
-                                                      (some-> (:timestamp-lastvisit-userpage v) t/instant t/date-time)
-                                                      (fn [type content]
-                                                        [sc/text-inline {:style {:white-space :nowrap}}
-                                                         (cond
-                                                           (= :date type) (ta/time-format content)
-                                                           :else content)])])
-                                                   (when @(r/cursor x [:sist-endret])
-                                                     [booking.flextime/flex-datetime
-                                                      (some-> (:timestamp v) t/instant t/date-time)
-                                                      (fn [type content]
-                                                        [sc/text-inline {:style {:white-space :nowrap}}
-                                                         (cond
-                                                           (= :date type) (ta/time-format content)
-                                                           :else content)])])
-
-                                                   [sc/text-inline {:style {:xwidth "1rem"}} (or (:timekrav v) "—") (when (:timekrav v) "t")]
-                                                   [sc/text-inline {:style {:white-space :normal}} "Her er en linje til"]
-                                                   [sc/text-inline #_{:style {:white-space :normal}} (:navn v)]])]]))]]))}))])))
+                      [:th ""]
+                      [:th "timer"]
+                      [:th "nøkkelnummer"]
+                      [:th "navn"]
+                      [:th "sist besøkt"]
+                      [:th "sist endret"]]]
+                    (into [:tbody]
+                          (for [{:keys [navn timekrav timestamp
+                                        nøkkelnummer timestamp-lastvisit-userpage] :as v} users]
+                            [:tr
+                             [:td [scb/round-normal-listitem
+                                   [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
+                                             :style    {:color "var(--text2)"}} ico/pencil]]]
+                             [:td (if (pos? timekrav) (str timekrav "t") "—")]
+                             [:td nøkkelnummer]
+                             [:td navn]
+                             [:td (f timestamp-lastvisit-userpage)]
+                             [:td (f timestamp)]]))]]]))})])))
 
    :r.utlan
    (fn [r]
@@ -891,6 +837,9 @@
                         [sc/text1 "E-post " [sc/link {:href (str "mailto:" (:epost user))} (:epost user)]]
 
                         (when admin?
+                          [sc/text1 "Identitet " uid])
+
+                        (when admin?
                           [booking.mine-dine-vakter/header
                            {:saldo    saldo
                             :timekrav timekrav
@@ -912,13 +861,43 @@
                                       [sc/col
                                        [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
                                        [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))]])]
-                        #_(when admin?
-                            (when (some? z)
-                              [sc/surface-a {:style {:flex "1 0 auto"}}
-                               [sc/col-space-2
-                                [sc/title2 "Overføres til neste år"]
-                                [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
-                                           :class [:text-right]} (str z " timer")]]]))])
+                        (when admin?
+                          (r/with-let [data (db/on-snapshot-docs-reaction {:path ["users" uid "endringslogg"]})]
+                            (for [{:keys [data id]} @data
+                                  :let [rec (some-> data)]]
+                              (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
+                                [:<>
+                                 ;[l/ppre-x data]
+                                 (when-let [ts (get rec "timestamp")]
+                                   [sc/text1 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))])
+                                 [sc/text1 beskrivelse]]
+                                [:<>
+                                 ;[l/ppre-x data (some-> (get-in data ["after"]))]
+                                 (when-let [ts (get rec "timestamp")]
+                                   [sc/text1 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))])
+                                 [l/ppre-x (some-> (get-in data ["after"]))]]))
+                            #_(when (some? z)
+                                [sc/surface-a {:style {:flex "1 0 auto"}}
+                                 [sc/col-space-2
+                                  [sc/title2 "Overføres til neste år"]
+                                  [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
+                                             :class [:text-right]} (str z " timer")]]])))
+
+                        (when admin?
+                          (r/with-let [data (db/on-snapshot-docs-reaction {:path ["tilbakemeldinger" uid "sendt"]})]
+                            [l/ppre-x @data
+                             ["tilbakemeldinger" (name uid) "sendt"]]
+                            #_(for [{:keys [data id] :as m} @data]
+                                (let [beskrivelse (some-> (get-in data ["after" "endringsbeskrivelse"]))]
+                                  [:<>
+                                   [l/ppre-x m]]))
+
+                            #_(when (some? z)
+                                [sc/surface-a {:style {:flex "1 0 auto"}}
+                                 [sc/col-space-2
+                                  [sc/title2 "Overføres til neste år"]
+                                  [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
+                                             :class [:text-right]} (str z " timer")]]])))])
 
                      [sc/title1 "Ingen definerte vakter"])
                    [booking.common-views/no-access-view r]))}])
