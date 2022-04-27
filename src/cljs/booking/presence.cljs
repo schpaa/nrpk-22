@@ -89,6 +89,7 @@
      header
      (into [:tbody]
            (concat
+             ;todo wtf ugh?
              (for [v (sort-by (comp :ugh last) > (:online @data))]
                [tableline-online {:class [:online]} v])
              (when @(r/cursor settings [:show-offline])
