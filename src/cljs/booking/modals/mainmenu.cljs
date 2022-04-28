@@ -117,11 +117,18 @@
                      :action    #(rf/dispatch [:app/toggle-command-palette])}]
              (when @at-least-registered?
                [:hr])
+
              (when @at-least-registered?
                [:item {:label    "Logg ut"
                        :disabled false
                        :icon     (sc/icon ico/logout)
                        :action   #(rf/dispatch [:app/sign-out])}])
+
+             (when-not @at-least-registered?
+               [:item {:label    "Logg inn"
+                       :disabled false
+                       :icon     (sc/icon ico/login)
+                       :action   #(rf/dispatch [:app/login])}])
              [:space]
              [:div [:div.-m-1x
                     {:style {:background "var(--toolbar-)"}}

@@ -317,8 +317,6 @@
 
 ;endregion
 
-
-
 (defn compute-pagetitles [r]
   (let [path-fn (some-> r :data :path-fn)
         page-title (-> r :data :header)]
