@@ -5,7 +5,8 @@
   {:style
    {:box-shadow "var(--shadow-1)"
     :background "var(--floating)"
-    :flex       "1 0 0"}})
+    :flex       "1 0 0"
+    :color      "var(--text1)"}})
 
 (def saldo-yourfavour-style
   (let [[fg bg] ["var(--green-1)" "var(--green-8)"]]
@@ -29,7 +30,7 @@
     [sc/col-space-2 {:style {:height          "100%"
                              :justify-content :space-between}}
      [sc/small2 header]
-     [sc/title1 {:style {;:color      "unset"
+     [sc/title1 {:style {:color      "unset"
                          :text-align :right}}
       (if (some? content)
         (str content " timer")
@@ -43,13 +44,13 @@
                  :gap             "var(--size-2)"}}
    [panel "Overført '21" saldo]
    [panel "Vaktkrav '22" timekrav]
-   (let [saldo-style (if (neg? z) saldo-ourfavour-style saldo-yourfavour-style)]
+   (let [saldo-style #(if (neg? %) saldo-ourfavour-style saldo-yourfavour-style)]
      [panel
-      saldo-style
+      (saldo-style z)
       [sc/col
-       [sc/small2 saldo-style "Saldo"]
-       [sc/small2 {:style (conj {:color          "unset"
+       [sc/small2 (saldo-style z) "Saldo"]
+       [sc/small2 {:style (conj {;:color          "white"
                                  :text-transform "uppercase"}
-                                (:style saldo-style))}
+                                (:style (saldo-style z)))}
         (if (neg? z) "I vår favør" "I din favør")]]
       z])])

@@ -574,9 +574,9 @@
                               ["/img/personas/noun-persona-410775.png" :m "Adrian A. Mitchell" "Styremedlem" ["Kasserer"]]
                               ["/img/personas/noun-persona-622293.png" :m "Chris P. Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
                               ["/img/personas/noun-persona-4144954.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
-                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Styremedlem" []]
+                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Vara" []]
                               ["/img/personas/noun-persona-497844.png" :f "Ylva Eide" "Styremedlem" []]
-                              ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Vara" []]
+                              ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Styremedlem" []]
                               ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" ["Anleggs\u00ADansvarlig Nøklevann"]]]]
                     (o/defstyled card :div.relative
                       :p-4
