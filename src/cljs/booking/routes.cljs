@@ -107,7 +107,10 @@
      :header [:r.utlan "Båtliste"]}]
    ["/batliste/sjobasen"
     {:name   :r.båtliste.sjøbasen
-     :header [:r.booking "Båtliste"]}]])
+     :header [:r.booking "Båtliste"]}]
+   ["/vaktrapport"
+    {:name   :r.mine-vakter-ipad
+     :header [:r.båtliste.nøklevann "Vaktrapport"]}]])
 
 
 (defn shortcut-link [route-name]

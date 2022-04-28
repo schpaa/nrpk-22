@@ -123,13 +123,16 @@
 ;region toolbars
 
 (defn vertical-toolbar-definitions []
-  (let [presence (rf/subscribe [::db/presence-status])
+  (let [uid @(rf/subscribe [:lab/uid])
+        presence (rf/subscribe [::db/presence-status])
         admin? (rf/subscribe [:lab/admin-access])
         member? (rf/subscribe [:lab/member])
+        ipad? (= uid @(db/on-value-reaction {:path ["system" "active"]}))
         booking? (rf/subscribe [:lab/booking])
         left-side? (schpaa.state/listen :lab/menu-position-right)
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
+    ;(tap> [ipad?])
     [{:icon-fn      #(sc/icon-large ico/new-home)
       :default-page :r.forsiden
 
@@ -137,13 +140,23 @@
       :class        #(if (= % :r.oversikt) :oversikt :selected)
       :page-name    #(some #{%} [:r.forsiden :r.oversikt])}
 
-     {:icon-fn      (fn [] (sc/icon-large ico/user))
-      :caption      "Mine opplysninger"
-      :default-page :r.mine-vakter
-      :class        #(if (= % :r.user) :oversikt :selected)
-      :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.mine-vakter) :r.user :r.mine-vakter)]])
-      #_#(rf/dispatch [:app/navigate-to [:r.mine-vakter]])
-      :page-name    #(some #{%} [:r.mine-vakter :r.user])}
+     (when ipad?
+       {:icon-fn      (fn [] (sc/icon-large ico/vaktrapport))
+        :caption      "Vaktrapport"
+        :default-page :r.mine-vakter-ipad
+        :class        #(if (= % :r.user) :oversikt :selected)
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad #_(if (= % :r.mine-vakter) :r.user :r.mine-vakter)]])
+        #_#(rf/dispatch [:app/navigate-to [:r.mine-vakter]])
+        :page-name    :r.mine-vakter-ipad #_#(some #{%} [:r.mine-vakter :r.user])})
+
+     (when-not ipad?
+       {:icon-fn      (fn [] (sc/icon-large ico/user))
+        :caption      "Mine opplysninger"
+        :default-page :r.mine-vakter
+        :class        #(if (= % :r.user) :oversikt :selected)
+        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.mine-vakter) :r.user :r.mine-vakter)]])
+        #_#(rf/dispatch [:app/navigate-to [:r.mine-vakter]])
+        :page-name    #(some #{%} [:r.mine-vakter :r.user])})
 
      #_(when (or @admin? @booking?)
          {:icon-fn      (fn [] (sc/icon-large ico/booking))
@@ -152,7 +165,7 @@
           :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
           :page-name    :r.booking})
 
-     (when (or @admin? @nokkelvakt)
+     (when (or @admin? @nokkelvakt ipad?)
        {:icon         ico/mystery1
         #_#_:badge (fn [] {:value 2
                            :attr  {:style {:background-color "var(--floating)"
@@ -166,7 +179,7 @@
         :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])
         #_#_:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])})
 
-     (when (or @admin? @nokkelvakt)
+     (when (or @admin? @nokkelvakt #_(not ipad?))
        {:icon-fn      (fn [] (sc/icon-large ico/nokkelvakt))
         :on-click     #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
         :default-page :r.nokkelvakt
@@ -457,7 +470,9 @@
                   (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
 
 (defn after-content []
-  (let [route @(rf/subscribe [:kee-frame/route])]
+  (let [route @(rf/subscribe [:kee-frame/route])
+        user-uid (rf/subscribe [:lab/uid])
+        ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
     [:div.z-1 {:style {:background "var(--gray-10)"}}
      [:div.mx-auto.max-w-xl.py-8
       [:div.mx-4
@@ -482,6 +497,15 @@
          [sc/col
           [sc/small1 (or booking.data/VERSION "version")]
           [sc/small1 (or booking.data/DATE "date")]]
+
+         (when-not ipad?
+           [hoc.buttons/reg-pill
+            {:on-click #(do
+                          (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
+                          (db/database-update {:path  ["system"]
+                                               :value {"active" @user-uid}}))}
+            "Bli til Båtlogg"])
+
          (when @(rf/subscribe [:lab/admin-access])
            [hoc.buttons/danger-pill
             {:on-click #(db/database-update {:path  ["system"]

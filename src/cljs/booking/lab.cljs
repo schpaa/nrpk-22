@@ -374,12 +374,7 @@
             :<- [:lab/master-state-emulation]
             :<- [::db/user-auth]
             :<- [:lab/sim?]
-            #_(fn [_]
-                (let [uid (:uid @(db.auth/user-info))]
-                  (tap> {"uid" uid})
-                  (db/on-value-reaction {:path ["users" uid]})))
             (fn [[master-switch ua {:keys [status access] :as m}] _]
-              ;(tap> {:user u})
               (if master-switch
                 (and (= status :member)
                      (some? (some #{:nøkkelvakt} (or access []))))
