@@ -123,28 +123,25 @@
                 [:td (some-> dato-godkjent-booking t/date times.api/date-format)]]))]]]))
 
 (defn tilbakemeldinger []
-  (r/with-let [data (db/on-snapshot-docs-reaction {:path ["tilbakemeldinger"]})]
-    (let [data (map :data @data)]
+  (r/with-let [data' (db/on-value-reaction {:path ["cache-tilbakemeldinger"]})]
+    (let [data (map :data @data')]
       [:<>
+       ;[l/pre @data']
        [table-controller-report'
         [table-report
          [:<>
           [:thead
            [:tr
-            [:th "Telefon/Navn"]
-            [:th "Dato"]
-            [:th "Kilde/Tekst"]]]
+            [:th "Navn"]
+            [:th "Dato/Kilde/Tilbakemelding"]]]
           (into [:tbody]
-                (for [{:strs [uid kilde text timestamp]} data]
+                (for [[_ {:keys [uid kilde text timestamp] :as m}] @data'
+                      :let [{:keys [telefon navn]} (user.database/lookup-userinfo uid)]]
                   [:tr
-                   [:td [sc/col-space-2
-                         [sc/link {:href (str "tel:" (:telefon (user.database/lookup-userinfo uid)))}
-                          (:telefon (user.database/lookup-userinfo uid))]
-                         [sc/text1 (user.database/lookup-username uid)]]]
-
-                   [:td (times.api/timestamp->local-datetime-str timestamp)]
+                   [:td {:style {:vertical-align "top"}} (widgets/user-link uid)]
                    [:td {:class [:message-col]}
                     [sc/col-space-2
+                     [sc/small2 (when timestamp (times.api/date-format (t/instant timestamp)))]
                      [sc/text2 kilde]
                      [sc/text1 text]]]]))]]]])))
 

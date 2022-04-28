@@ -6,7 +6,7 @@
             [booking.common-widgets :as widgets]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
-            [booking.dine-vakter :refer [beskjeder vakter]]
+            [booking.dine-vakter :refer [beskjeder vakter endringslogg]]
             [tick.core :as t]))
 
 (defn render [r]
@@ -28,6 +28,7 @@
                  :timekrav timekrav
                  :z        z}]
                [vakter loggedin-uid data]
+               [endringslogg ["beskjeder" loggedin-uid "endringslogg"]]
                [beskjeder loggedin-uid @datum]])
 
             [sc/title1 "Ingen definerte vakter"]))))

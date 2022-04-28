@@ -5,7 +5,8 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.ornament :as sc]
             [schpaa.style.input :as sci]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [tick.core :as t]))
 
 (def max-comment-length 160)
 
@@ -80,6 +81,13 @@
 (defn feedback-map [_ [{:keys [navn caption source comment-length]}]]
   (let [uid (:uid @(rf/subscribe [::db/user-auth]))]
     (letfn [(write-to-db [{:keys [carry]}]
+              (db/database-push
+                {:path  ["cache-tilbakemeldinger"]
+                 :value (conj {:til-navn  navn
+                               :timestamp (str (t/now))
+                               :kilde     source
+                               :uid       uid}
+                              carry)})
               (db/firestore-add
                 {:path  ["tilbakemeldinger" uid "feedback"]
                  :value (conj {:til-navn navn

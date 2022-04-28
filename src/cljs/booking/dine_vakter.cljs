@@ -27,24 +27,25 @@
 
 (defn date-header [rec]
   (when-let [ts (get rec "timestamp")]
-    [sc/text2 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))]))
+    [sc/small1 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))]))
 
 (defn endringslogg [path]
-  (r/with-let [data @(db/on-snapshot-docs-reaction {:path path})]
-    (if (empty? data)
+  (r/with-let [data (db/on-snapshot-docs-reaction {:path path})]
+    (if (empty? @data)
       [sc/title2 "Ingen endringer"]
-      [sc/col
+      [sc/col-space-8
        [sc/title1 "Endringslogg"]
-       (into [:<>]
-             (for [{:keys [data id]} data
-                   :let [rec (some-> data)]]
-               (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
-                 [:<>
-                  (date-header rec)
-                  [sc/text1 beskrivelse]]
-                 [:<>
-                  (date-header rec)
-                  [l/pre (some-> (get-in data ["after"]))]])))])))
+       [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
+        (into [:<>]
+              (for [{:keys [data id]} @data
+                    :let [rec (some-> data)]]
+                (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
+                  [sc/col-space-2
+                   (date-header rec)
+                   [sc/text1 beskrivelse]]
+                  [sc/col-space-2
+                   (date-header rec)
+                   [l/pre (some-> (get-in data ["after"]))]])))]])))
 
 (defn vakter [loggedin-uid data]
   (if (empty? data)
