@@ -218,9 +218,10 @@
               :padding-inline "var(--size-4)"
               :padding-top    "var(--size-10)"
               :margin-inline  "auto"}}
-     [:div.absolute.inset-0.opacity-50.pointer-events-none
-      {:style {:background-color "var(--red-9)"}}]
-     [sc/col-space-4
+     [:div.absolute.inset-0.pointer-events-none
+      {:style {:opacity          0.3
+               :background-color "var(--brand1)"}}]
+     [sc/col-space-8
       [sc/hero {:style {:white-space :nowrap
                         :text-align  :center
                         :color       "var(--text2)"}} "Ingen tilgang"]
@@ -233,21 +234,18 @@
                         (-> r :data :access)
                         @(rf/subscribe [:lab/all-access-tokens])])
 
-      [sc/title2 "For at vi skal kunne vise deg denne siden må du"]
-      [sc/text1
+      [sc/text2 "For å se dette må du"]
+      [sc/title1x
        (cond
-         (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunnleggende informasjon om deg selv."
-         (some #{:waitinglist} (first required-access)) "Være påmeldt innmeldingskurs."
+         (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunn\u00adleggende infor\u00ADmasjon om deg selv."
+         (some #{:waitinglist} (first required-access)) "Være påmeldt inn\u00ADmeldingskurs."
          :else #_(some #{:member} (first required-access)) "Være medlem i NRPK.")]
-      [sc/text1
+      [sc/title1x
        (cond
-         (some #{:nøkkelvakt} (last required-access)) "Være godkjent som nøkkelvakt med den kontoen du har logget inn med."
-         (some #{:admin} (last required-access)) "Ha administrators rettigheter.")]
+         (some #{:nøkkelvakt} (last required-access)) "Være godkjent nøkkelvakt (ifølge aktiv konto)."
+         (some #{:admin} (last required-access)) "Være administrator.")]
 
-      #_(case (first required-access)
-          :registered "innlogget og ha registrert grunnleggende informasjon om deg selv."
-          :member "medlem i NRPK."
-          :waitinglist "påmeldt innmeldingskurset til NRPK."
-          (str "?" (first required-access)))
-
-      #_[sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))
+      [sc/row-sc-g4-w
+       [sc/text2 "Gå til"]
+       [auto-link :r.forsiden]
+       [auto-link :r.oversikt]]]]))

@@ -9,7 +9,9 @@
             [booking.ico :as ico]
             [schpaa.style.button :as scb]
             [schpaa.style.input :as sci]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [booking.dine-vakter]))
 
 (o/defstyled table-controller-report :div
   [:& :overflow-x-auto
@@ -123,7 +125,8 @@
                 [:td (some-> dato-godkjent-booking t/date times.api/date-format)]]))]]]))
 
 (defn tilbakemeldinger []
-  (r/with-let [data' (db/on-value-reaction {:path ["cache-tilbakemeldinger"]})]
+  (r/with-let [loggedin-uid @(rf/subscribe [:lab/uid])
+               data' (db/on-value-reaction {:path ["cache-tilbakemeldinger"]})]
     (let [data (map :data @data')]
       [:<>
        ;[l/pre @data']
@@ -132,12 +135,15 @@
          [:<>
           [:thead
            [:tr
+            [:th]
             [:th "Navn"]
+
             [:th "Dato/Kilde/Tilbakemelding"]]]
           (into [:tbody]
-                (for [[_ {:keys [uid kilde text timestamp] :as m}] @data'
+                (for [[_ {:keys [uid kilde text timestamp] :as m}] (sort-by (comp :timestamp val) > @data')
                       :let [{:keys [telefon navn]} (user.database/lookup-userinfo uid)]]
                   [:tr
+                   [:td [hoc.buttons/round-cta-pill {:on-click #(booking.dine-vakter/reply-to-msg loggedin-uid uid nil #_msg-id)} [sc/icon ico/tilbakemelding]]]
                    [:td {:style {:vertical-align "top"}} (widgets/user-link uid)]
                    [:td {:class [:message-col]}
                     [sc/col-space-2
@@ -367,7 +373,7 @@
     :icon    ico/nokkelvakt
     :action  #(rf/dispatch [:app/navigate-to [:r.reports {:id "brukere-av-booking"}]])
     :f       brukere-av-booking}
-   {:name    "Rapport: tilbakemeldinger"
+   {:name    "Inboks for tilbakemelding"
     :caption "Tilbakemeldinger"
     :id      "tilbakemeldinger"
     :access  [:admin]

@@ -7,11 +7,16 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
             [tick.core :as t]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [booking.mine-dine-vakter]))
 
 (defn send-msg [loggedin-uid]
   ;(js/alert "!")
   (rf/dispatch [:app/open-send-message loggedin-uid]))
+
+(defn reply-to-msg [loggedin-uid uid msg-id]
+  ;(js/alert "!")
+  (rf/dispatch [:app/open-send-reply loggedin-uid uid msg-id]))
 
 (defn personal [loggedin-uid {:keys [telefon epost uid] :as user}]
   [sc/row-sc-g2-w
@@ -66,30 +71,76 @@
                 [sc/small1 "Registrert " (some-> (get kv loggedin-uid) t/date-time times.api/arrival-date)]]]))]]))
 
 (defn beskjeder [loggedin-uid datum]
-  (let [path (fn [id] (when id (vector "beskjeder" loggedin-uid "inbox" id)))
-        delete-message (fn [uid value] (db/firestore-set {:path (path uid) :value value}))
+  (let [admin? @(rf/subscribe [:lab/admin-access])
+        path (fn [id] (when id (vector "beskjeder" id "inbox")))
+        storage-path (sc/as-shortcut {:style {:text-transform "unset"}} (apply str (interpose "/" (path loggedin-uid))))
+        delete-message (fn [msg-id value] (db/firestore-set {:path (conj (path loggedin-uid) msg-id) :value value}))
         data (remove (fn [{:keys [id data]}] (get data "deleted" false)) datum)]
     (if (empty? data)
-      [sc/title2 "Ingen beskjeder"]
+      [sc/col-space-4
+       [sc/title2 "Ingen beskjeder"]
+       (when admin?
+         [sc/text storage-path])]
       [sc/col-space-4
        [sc/title1 "Beskjeder"]
+       (when admin?
+         [sc/text storage-path])
        (into [sc/col-space-4]
              (for [{msg-id :id msg-data :data} (sort-by #(get-in % [:data "timestamp"]) > data)]
-               (let [{:strs [deleted timestamp uid text]} msg-data]
-                 ^{:key (str msg-id)} [sc/row-sc-g4-w {:class [:px-4]}
-                                       ;[l/pre deleted]
-                                       [widgets/trashcan
-                                        (fn [id] (delete-message id {:deleted (not deleted)}))
-                                        {:deleted deleted :id msg-id}]
-                                       [hoc.buttons/round-cta-pill {:on-click #(js/alert "!")} [sc/icon ico/tilbakemelding]]
-                                       [sc/col-space-2
-                                        [sc/col-space-1
-                                         [sc/text2 (if (= uid loggedin-uid)
-                                                     "Fra deg selv"
-                                                     [:div [:span "Fra "] [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])} (user.database/lookup-username uid)]])]
-                                         (when timestamp
-                                           [sc/small2 (booking.flextime/relative-time (times.api/timestamp->local-datetime-str' timestamp))])]
-                                        [sc/text1 text]]])))])))
+               (let [{:keys [deleted timestamp uid text]} (clojure.walk/keywordize-keys msg-data)]
+                 ^{:key (str msg-id)}
+                 [sc/row-sc-g4-w {:class [:px-4]}
+                  [widgets/trashcan
+                   (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
+                   {:deleted deleted :id msg-id}]
+                  [hoc.buttons/round-cta-pill {:on-click #(reply-to-msg loggedin-uid uid msg-id)} [sc/icon ico/tilbakemelding]]
+                  [sc/col-space-2
+                   [sc/col-space-1
+                    [sc/text2 (if (= uid loggedin-uid)
+                                "Fra deg selv"
+                                [:div [:span "Fra "] [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])} (user.database/lookup-username uid)]])]
+                    (when timestamp
+                      [sc/small2 (booking.flextime/relative-time (times.api/timestamp->local-datetime-str' timestamp))])]
+                   [sc/text1 text]]])))])))
+
+(defn tilbakemeldinger [loggedin-uid datum]
+  (let [admin? @(rf/subscribe [:lab/admin-access])
+        path (fn [id] (when id (vector "tilbakemeldinger" id "feedback")))
+        storage-path (sc/as-shortcut {:style {:text-transform "unset"}} (apply str (interpose "/" (path loggedin-uid))))
+        delete-message (fn [msg-id value]
+                         (db/database-update {:path  ["cache-tilbakemeldinger" (name msg-id)]
+                                              :value value})
+                         #_(db/firestore-set {:path (conj (path loggedin-uid) msg-id) :value value}))
+        data datum #_(remove (fn [[_k {:keys [deleted]}]] deleted) datum)]
+    (if (empty? data)
+      [sc/col-space-4
+       [sc/title2 "Ingen tilbakemeldinger"]
+       (when admin?
+         [sc/small2 storage-path])]
+
+      [sc/col-space-4
+       [sc/title1 "Tilbakemeldinger"]
+
+       (when admin?
+         [sc/small2 storage-path])
+
+       (into [sc/col-space-4]
+             (for [[id {:keys [timestamp deleted text]}] (sort-by (comp :timestamp val) < data)]
+               (let [#_#_{:keys [deleted timestamp uid text]} (clojure.walk/keywordize-keys msg-data)]
+                 ^{:key (str id)}
+                 [sc/row-sc-g4-w {:class [:px-4]}
+                  [widgets/trashcan
+                   (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
+                   {:deleted deleted :id id}]
+                  #_[hoc.buttons/round-cta-pill {:on-click #(reply-to-msg loggedin-uid uid msg-id)} [sc/icon ico/tilbakemelding]]
+                  [sc/col-space-2
+                   [sc/col-space-1
+                    #_[sc/text2 (if (= uid loggedin-uid)
+                                  "Fra deg selv"
+                                  [:div [:span "Fra "] [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])} (user.database/lookup-username uid)]])]
+                    (when timestamp
+                      [sc/small2 (booking.flextime/relative-time (t/instant timestamp))])]
+                   [sc/text1 text]]])))])))
 
 (defn render [r]
   (let [admin? @(rf/subscribe [:lab/admin-access])]
@@ -126,6 +177,7 @@
                  [endringslogg ["users" loggedin-uid "endringslogg"]])
 
                [beskjeder loggedin-uid @datum]])
+
 
             [sc/title1 "Ingen definerte vakter"])))
       [widgets/no-access-view r])))

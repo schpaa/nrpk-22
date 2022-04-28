@@ -29,7 +29,7 @@
     [sc/col-space-2 {:style {:height          "100%"
                              :justify-content :space-between}}
      [sc/small2 header]
-     [sc/title1 {:style {:color      "unset"
+     [sc/title1 {:style {;:color      "unset"
                          :text-align :right}}
       (if (some? content)
         (str content " timer")

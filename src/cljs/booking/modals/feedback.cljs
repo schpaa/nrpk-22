@@ -10,7 +10,7 @@
 
 (def max-comment-length 160)
 
-(defn feedback-window [{:keys [title on-close on-save persona caption navn comment-length] :as ctx}]
+(defn feedback-window [{:keys [reply? title on-close on-save caption comment-length] :as ctx}]
   (let [uid (rf/subscribe [:lab/uid])
         max-comment-length (or comment-length max-comment-length)]
     [:div
@@ -34,6 +34,7 @@
                      (if state on-icon off-icon)]))]
           [sc/col-space-4
            (when title [sc/dialog-title title])
+           (if reply? [:div "Svar til"])
            [:div.flex.justify-between {:class [:w-full]}
             [sc/col-space-4 #_{:style {:width "100%"}}
              (when caption
@@ -127,4 +128,26 @@
                        :content-fn     #(feedback-window %)
                        :action         #(write-to-db uid %)}]]]}))
 
+(defn send-reply [_ [loggedin-uid uid msg-id]]
+  ;(js/alert uid)
+  (letfn [(write-to-db [reci-uid {:keys [carry]}]
+            (let [active-uid (:uid @(rf/subscribe [:db.core/user-auth]))
+                  post (conj {:to  reci-uid
+                              :uid active-uid}
+                             carry)]
+              (db.core/firestore-add
+                {:path  ["beskjeder" active-uid "sent" reci-uid "posts"]
+                 :value post})
+              (db.core/firestore-add
+                {:path  ["beskjeder" reci-uid "inbox"]
+                 :value post})))]
+    {:fx [[:dispatch [:lab/modaldialog-visible
+                      true
+                      {:comment-length 1000
+                       :title          (str "Svar til " (user.database/lookup-username uid))
+                       ;:caption        (str "Til " (user.database/lookup-username uid))
+                       :content-fn     #(feedback-window %)
+                       :action         #(write-to-db uid %)}]]]}))
+
 (rf/reg-event-fx :app/open-send-message [rf/trim-v] send-message)
+(rf/reg-event-fx :app/open-send-reply [rf/trim-v] send-reply)

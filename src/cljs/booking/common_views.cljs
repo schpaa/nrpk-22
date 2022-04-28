@@ -139,16 +139,18 @@
 
      {:icon-fn      (fn [] (sc/icon-large ico/user))
       :caption      "Mine opplysninger"
-      :default-page :r.user
-      :on-click     #(rf/dispatch [:app/navigate-to [:r.user]])
-      :page-name    :r.user}
+      :default-page :r.mine-vakter
+      :class        #(if (= % :r.user) :oversikt :selected)
+      :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.mine-vakter) :r.user :r.mine-vakter)]])
+      #_#(rf/dispatch [:app/navigate-to [:r.mine-vakter]])
+      :page-name    #(some #{%} [:r.mine-vakter :r.user])}
 
-     (when (or @admin? @booking?)
-       {:icon-fn      (fn [] (sc/icon-large ico/booking))
-        :caption      "Booking Sjøbasen"
-        :default-page :r.booking
-        :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
-        :page-name    :r.booking})
+     #_(when (or @admin? @booking?)
+         {:icon-fn      (fn [] (sc/icon-large ico/booking))
+          :caption      "Booking Sjøbasen"
+          :default-page :r.booking
+          :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
+          :page-name    :r.booking})
 
      (when (or @admin? @nokkelvakt)
        {:icon         ico/mystery1
