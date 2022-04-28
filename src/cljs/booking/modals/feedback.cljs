@@ -78,22 +78,23 @@
                                            (reset! content {}))} "Send"]]]))]]))
 
 (defn feedback-map [_ [{:keys [navn caption source comment-length]}]]
-  (letfn [(write-to-db [{:keys [carry]}]
-            (db/firestore-add
-              {:path  ["tilbakemeldinger"]
-               :value (conj {:til-navn navn
-                             :kilde    source
-                             :uid      (:uid @(rf/subscribe [::db/user-auth]))}
-                            carry)}))]
-    {:fx [[:dispatch [:lab/modaldialog-visible
-                      true
-                      {:navn           navn
-                       :comment-length comment-length
-                       :source         source
-                       :caption        (or caption
-                                           "Har du sett noe som bør korrigeres, eller er det noe du ikke har fått svar på?")
-                       :content-fn     #(feedback-window %)
-                       :action         write-to-db}]]]}))
+  (let [uid (:uid @(rf/subscribe [::db/user-auth]))]
+    (letfn [(write-to-db [{:keys [carry]}]
+              (db/firestore-add
+                {:path  ["tilbakemeldinger" uid "feedback"]
+                 :value (conj {:til-navn navn
+                               :kilde    source
+                               :uid      uid}
+                              carry)}))]
+      {:fx [[:dispatch [:lab/modaldialog-visible
+                        true
+                        {:navn           navn
+                         :comment-length comment-length
+                         :source         source
+                         :caption        (or caption
+                                             "Har du sett noe som bør korrigeres, eller er det noe du ikke har fått svar på?")
+                         :content-fn     #(feedback-window %)
+                         :action         write-to-db}]]]})))
 
 (rf/reg-event-fx :app/give-feedback [rf/trim-v] feedback-map)
 

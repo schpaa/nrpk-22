@@ -24,7 +24,7 @@
       [sc/dialog-title' "NRPK"]
 
       [sc/col-space-2
-       [sc/text1 (str "Velkommen " (str/trim (or (:navn user) "")) " — du er logget inn, hvem enn du er.")]
+       [sc/text1 (str "Velkommen " (str/trim (or (:navn user) "")) " — du er logget inn!")]
        (when (:nøkkelvakt user) [sc/text1 "Din nøkkelvaktstatus er " [sc/strong (if (:godkjent user) "Godkjent" "Ikke registrert")]])]
 
       (when-not (:godkjent user)

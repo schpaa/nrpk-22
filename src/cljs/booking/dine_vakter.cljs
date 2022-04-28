@@ -14,7 +14,7 @@
   (rf/dispatch [:app/open-send-message loggedin-uid]))
 
 (defn personal [loggedin-uid {:keys [telefon epost uid] :as user}]
-  [:<>
+  [sc/row-sc-g2-w
    [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
     [sc/text1 "Telefon"] telefon
     [sc/link {:href (str "tel:" telefon)} "Ring"]
@@ -106,8 +106,10 @@
               [sc/col-space-8
                [personal loggedin-uid user]
 
-               #_(when admin?
-                   [sc/text1 "Identitet " loggedin-uid])
+               (when admin?
+                 [sc/row-sc-g2
+                  [sc/text1 "Identitet"]
+                  (sc/as-shortcut loggedin-uid)])
 
                (when admin?
                  (when nøkkelvakt?
