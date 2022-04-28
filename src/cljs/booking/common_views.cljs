@@ -2,6 +2,7 @@
   (:require [booking.content.blog-support :refer [err-boundary]]
             [reitit.core :as reitit]
             [reagent.ratom]
+
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [booking.content.booking-blog]
@@ -21,7 +22,7 @@
             [booking.access]
             [clojure.set :as set]
             [schpaa.style.input :as sci]
-            [booking.common-widgets :refer [vertical-button horizontal-button]]
+            [booking.common-widgets :refer [vertical-button horizontal-button no-access-view]]
             [booking.modals.boatinput]
             [booking.modals.feedback]
             [booking.modals.commandpalette]
@@ -421,7 +422,7 @@
                          content])]
            [:div.relative
             [sc/col-space-4
-             [l/ppre-x @(rf/subscribe [:lab/all-access-tokens])]
+             [l/pre @(rf/subscribe [:lab/all-access-tokens])]
              [sci/input {:values    {:label @(rf/subscribe [:lab/uid]) #_@sim-uid}
                          :on-change #(rf/dispatch [:lab/set-sim :uid (-> % .-target .-value)]
                                                   #_(reset! sim-uid (-> % .-target .-value)))} :text [] "UID" :label]
@@ -488,15 +489,7 @@
             "Aktiver versjon"])]]]]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
-  (let [switch? (schpaa.state/listen :lab/menu-position-right)
-        numberinput2? (rf/subscribe [:lab/number-input2])
-        user-auth (rf/subscribe [::db/user-auth])
-        user-state (rf/subscribe [:lab/user-state])
-        mobile? (= :mobile @(rf/subscribe [:breaking-point.core/screen]))
-        numberinput? (rf/subscribe [:lab/number-input])
-        has-chrome? (rf/subscribe [:lab/has-chrome])
-        left-aligned (schpaa.state/listen :activitylist/left-aligned)
-        a (r/atom nil)]
+  (let [switch? (schpaa.state/listen :lab/menu-position-right)]
     (r/create-class
       {:display-name        "page-boundary"
 
@@ -519,31 +512,12 @@
                            [header-line r false])
                          [:div.flex.flex-col.xoverflow-y-auto.h-full
                           {:class (when-not frontpage [:overflow-y-auto])}
-                          (if false #_(and
-                                        @(rf/subscribe [:lab/is-search-running?])
-                                        @(rf/subscribe [:lab/in-search-mode?]))
-                            [:div
-                             {:style {:flex "1 0 auto"}}
-                             [:div
-                              {:style {:background "var(--toolbar)"}}
-                              [search-result]]
-                             [sc/row-center {:class [:py-4]}
-                              [hoc.buttons/regular {:on-click #(rf/dispatch [:lab/quit-search])} "Lukk"]]
-                             [:div.absolute.bottom-8.sm:bottom-7.right-4
-                              [sc/row-end {:class [:pt-4]}
-                               (bottom-menu)]]]
-                            [:<>
-                             [:div
-                              {:style {:background-color "var(--content)"
-                                       :flex             "1 1 auto"}}
-                              contents]
-                             (when-not frontpage [after-content])])]
-
-                         #_(when @numberinput2?
-                             [:div.xs:hidden.flex.w-screen.bg-white
-                              [boatinput-menu {:position :mobile}]])
-
-
+                          [:<>
+                           [:div
+                            {:style {:background-color "var(--content)"
+                                     :flex             "1 1 auto"}}
+                            contents]
+                           (when-not frontpage [after-content])]]
                          [bottom-toolbar]]]
             [:div.fixed.inset-0.flex
              (if @switch?
@@ -561,44 +535,6 @@
   (can-modify? {:data {:modify [:member #{:admin}]}} [nil #{:admin}])
   #_(some? (seq (set/intersection #{:as} #{:a}))))
 
-(defn no-access-view [r]
-  (let [required-access (-> r :data :access)]
-    [:div.max-w-lg.mx-4
-     {:style {:padding-inline "var(--size-4)"
-              :padding-top    "var(--size-10)"
-              :margin-inline  "auto"}}
-     [sc/col-space-4
-      [sc/hero {:style {:white-space :nowrap
-                        :text-align  :center
-                        :color       "var(--text2)"}} "Ingen tilgang"]
-      [sc/row-center [sc/icon {:style {:text-align :center
-                                       :color      "var(--text2)"}} ico/stengt]]
-      ;[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
-      ;[sc/small1 {:style {:white-space :nowrap}} "Du trenger --> " (str required-access)]
-      (if goog.DEBUG [l/ppre-x
-                      (matches-access r @(rf/subscribe [:lab/all-access-tokens]))
-                      (-> r :data :access)
-                      @(rf/subscribe [:lab/all-access-tokens])])
-
-      [sc/title2 "For at vi skal kunne vise deg denne siden må du"]
-      [sc/text1
-       (cond
-         (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunnleggende informasjon om deg selv."
-         (some #{:waitinglist} (first required-access)) "Være påmeldt innmeldingskurs."
-         :else #_(some #{:member} (first required-access)) "Være medlem i NRPK.")]
-      [sc/text1
-       (cond
-         (some #{:nøkkelvakt} (last required-access)) "Være godkjent som nøkkelvakt med den kontoen du har logget inn med."
-         (some #{:admin} (last required-access)) "Ha administrators rettigheter.")]
-
-      #_(case (first required-access)
-          :registered "innlogget og ha registrert grunnleggende informasjon om deg selv."
-          :member "medlem i NRPK."
-          :waitinglist "påmeldt innmeldingskurset til NRPK."
-          (str "?" (first required-access)))
-
-      #_[sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))
-
 (rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
 
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
@@ -613,6 +549,7 @@
 
 (o/defstyled container :div
   {:width         "min(calc(100% - 2rem),56ch)"
+   :margin-bottom "3rem"
    :margin-inline :auto})
 
 (defn +page-builder [r m]
@@ -677,7 +614,7 @@
                                                 [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
                                                 [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
                                             ;[sc/small1 db-timestamp]
-                                            #_[l/ppre-x
+                                            #_[l/pre
                                                {:db-timestamp  (times.api/arrival-date db-timestamp)
                                                 :app-timestamp (times.api/arrival-date app-timestamp)
                                                 :need-reload?  (t/< app-timestamp db-timestamp)}]

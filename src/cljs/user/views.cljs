@@ -169,12 +169,12 @@
       [sc/small1 uid]
       #_(when goog.DEBUG
           [:<>
-           [l/ppre-x
+           [l/pre
             (when-let [u (db/on-value-reaction {:path ["users" uid]})]
               [(select-keys @u [:admin :godkjent :medlem :booking-godkjent :waitinglist :navn])
                (booking.access/compute-access-tokens' @u)])]
-           [l/ppre-x @(rf/subscribe [:user-data uid])]
-           [l/ppre-x uid @(rf/subscribe [:lab/nokkelvakt uid])]])]]))
+           [l/pre @(rf/subscribe [:user-data uid])]
+           [l/pre uid @(rf/subscribe [:lab/nokkelvakt uid])]])]]))
 
 ;duplicated
 

@@ -9,7 +9,7 @@
 
 (def saldo-yourfavour-style
   (let [[fg bg] ["var(--green-1)" "var(--green-8)"]]
-    {:style {:transform  "rotate(-3deg)"
+    {:style {;:transform  "rotate(-3deg)"
              :flex       "1 0 0"
              :background bg
              :color      fg}}))
@@ -17,7 +17,7 @@
 (def saldo-ourfavour-style
   (let [[fg bg] ["var(--orange-1)" "var(--orange-8)"]]
     {:style {:flex       "1 0 0"
-             :transform  "rotate(3deg)"
+             ;:transform  "rotate(3deg)"
              :background bg
              :color      fg}}))
 
@@ -25,10 +25,10 @@
   ([header content]
    (panel regular-style header content))
   ([attr header content]
-   [sc/surface-a attr
+   [sc/surface-a (merge-with into {:style {:padding "var(--size-2)"}} attr)
     [sc/col-space-2 {:style {:height          "100%"
                              :justify-content :space-between}}
-     [sc/text2 header]
+     [sc/small2 header]
      [sc/title1 {:style {:color      "unset"
                          :text-align :right}}
       (if (some? content)
@@ -37,7 +37,7 @@
 
 (defn header [{:keys [saldo timekrav z]}]
   [:div {:style {:display         :flex
-                 :height          "var(--size-11)"
+                 :height          "var(--size-10)"
                  :justify-content :space-between
                  :width           "100%"
                  :gap             "var(--size-2)"}}
@@ -47,9 +47,9 @@
      [panel
       saldo-style
       [sc/col
-       [sc/text2 saldo-style "Saldo"]
-       [sc/text2 {:style (conj {:color          "unset"
-                                :text-transform "uppercase"}
-                               (:style saldo-style))}
+       [sc/small2 saldo-style "Saldo"]
+       [sc/small2 {:style (conj {:color          "unset"
+                                 :text-transform "uppercase"}
+                                (:style saldo-style))}
         (if (neg? z) "I vår favør" "I din favør")]]
       z])])

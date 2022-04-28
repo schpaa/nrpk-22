@@ -28,7 +28,9 @@
    ["/debug" {:name :r.debug :header [:r.booking "Booking av båt"]}]
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
 
-   ["/om-meg" {:name :r.user :shorttitle "Meg" :header [:r.oversikt "Mine opplysninger"]}]
+   ["/om-meg" {:name   :r.user :shorttitle "Meg"
+               :access [[:waitinglist :member :registered] #{}]
+               :header [:r.oversikt "Mine opplysninger"]}]
    ["/dine-vakter/:id" {:name       :r.dine-vakter
                         :shorttitle "Dine vakter"
                         :access     [[:member] #{:admin :nøkkelvakt}]

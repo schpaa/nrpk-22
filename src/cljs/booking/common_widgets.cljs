@@ -5,7 +5,8 @@
             [booking.ico :as ico]
             [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
-            [booking.routes]))
+            [booking.routes]
+            [schpaa.debug :as l]))
 
 (defn horizontal-button [{:keys [right-side
                                  centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
@@ -135,7 +136,7 @@
 
 ;region
 
-(defn trashcan [on-click {:keys [deleted id] :as v}]
+(defn trashcan [on-click {:keys [deleted id]}]
   [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
    {:on-click #(on-click id)}
    [sc/icon-small
@@ -162,6 +163,11 @@
                       :data
                       :header)
              "wtf?")})
+
+(defn user-link [uid]
+  [sc/link
+   {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
+   (or (user.database/lookup-username uid) uid)])
 
 (defn auto-link
   ([link]
@@ -204,3 +210,44 @@
 
 (comment
   (dimensions-and-material {:width 1 :length 2 :weight "" :material 2}))
+
+(defn no-access-view [r]
+  (let [required-access (-> r :data :access)]
+    [:div.max-w-lg.mx-4
+     {:style {
+              :padding-inline "var(--size-4)"
+              :padding-top    "var(--size-10)"
+              :margin-inline  "auto"}}
+     [:div.absolute.inset-0.opacity-50.pointer-events-none
+      {:style {:background-color "var(--red-9)"}}]
+     [sc/col-space-4
+      [sc/hero {:style {:white-space :nowrap
+                        :text-align  :center
+                        :color       "var(--text2)"}} "Ingen tilgang"]
+      [sc/row-center [sc/icon {:style {:text-align :center
+                                       :color      "var(--text2)"}} ico/stengt]]
+      ;[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
+      ;[sc/small1 {:style {:white-space :nowrap}} "Du trenger --> " (str required-access)]
+      #_(if goog.DEBUG [l/pre
+                        (matches-access r @(rf/subscribe [:lab/all-access-tokens]))
+                        (-> r :data :access)
+                        @(rf/subscribe [:lab/all-access-tokens])])
+
+      [sc/title2 "For at vi skal kunne vise deg denne siden må du"]
+      [sc/text1
+       (cond
+         (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunnleggende informasjon om deg selv."
+         (some #{:waitinglist} (first required-access)) "Være påmeldt innmeldingskurs."
+         :else #_(some #{:member} (first required-access)) "Være medlem i NRPK.")]
+      [sc/text1
+       (cond
+         (some #{:nøkkelvakt} (last required-access)) "Være godkjent som nøkkelvakt med den kontoen du har logget inn med."
+         (some #{:admin} (last required-access)) "Ha administrators rettigheter.")]
+
+      #_(case (first required-access)
+          :registered "innlogget og ha registrert grunnleggende informasjon om deg selv."
+          :member "medlem i NRPK."
+          :waitinglist "påmeldt innmeldingskurset til NRPK."
+          (str "?" (first required-access)))
+
+      #_[sc/text "Er det noe som er uklart må du gjerne sende oss en tilbakemelding; helt nederst på alle sider er det en knapp du kan bruke."]]]))

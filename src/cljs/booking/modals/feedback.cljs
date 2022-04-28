@@ -13,8 +13,8 @@
   (let [uid (rf/subscribe [:lab/uid])
         max-comment-length (or comment-length max-comment-length)]
     [:div
-     {:style {;:background-color "var(--toolbar)"
-              :background-color "var(--content)"
+     {:style {:background-color "var(--toolbar)"
+              ;:background-color "var(--content)"
               :display          :grid
               :overflow-y       :auto
               :place-content    :center}}
@@ -22,17 +22,7 @@
       {:style {:width      "24rem"
                :min-width  "24rem"
                :max-height "90vh"}}
-      #_[sc/centered-dialog
-         {:style {:display          :grid
-                  :place-content    :center
-                  :background-color "var(--content)"
-                  :z-index          10
-                  :width            "100%"
-                  :max-height       "80vh"
-                  :xmin-width       "24rem"
-                  :xwidth           "24rem"}
-          :class [:min-w-smx]}
-         [:div.w-full]]
+
       (r/with-let [content (r/atom {})]
 
         (let [f (fn [tag [on-color off-color] [on-icon off-icon]]
@@ -41,11 +31,12 @@
                               :style    {:cursor :pointer
                                          :color  (if state on-color off-color)}}
                      (if state on-icon off-icon)]))]
-          [sc/col-space-8
-           [sc/dialog-title (or title (str "Tilbakemelding" (when navn (str " til " navn))))]
+          [sc/col-space-4
+           (when title [sc/dialog-title title])
            [:div.flex.justify-between {:class [:w-full]}
             [sc/col-space-4 #_{:style {:width "100%"}}
-             [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption]
+             (when caption
+               [sc/text1 {:style {:line-height "var(--font-lineheight-4)"}} caption])
              (when-not @uid
                [sci/input {:type          :email
                            :handle-change #(swap! content assoc :email (-> % .-target .-value))
@@ -53,16 +44,16 @@
                 :email {:class [:min-w-full :relative]} "E-post (hvis du vil ha svar)" :email])
              [sc/col-space-4
               [:div.relative
-               [sci/textarea {:rows          4
+               [sci/textarea {:rows          5
                               :values        {:tilbakemelding (:text @content)}
-                              ;:placeholder   (str "Skriv her (max " max-comment-length " tegn)")
                               :handle-change #(swap! content assoc :text (-> % .-target .-value))}
-                :text {:class [:min-w-full :relative]} "Hva det gjelder" :tilbakemelding]
+                :text {:class [:min-w-full :relative]} "Skriv her" :tilbakemelding]
                [:div.absolute.-top-1.right-1
                 [sc/label (if (zero? (count (:text @content)))
-                            (str "Maks " max-comment-length " tegn")
+                            ;todo
+                            (str "Helst under " 165 #_(Math/round (/ max-comment-length 6)) " ord")
                             (if (< max-comment-length (count (:text @content)))
-                              "Prøv å forkorte litt"
+                              "For langt"
                               (str (- max-comment-length (count (:text @content))) " tegn igjen")))]]]
 
               (let [off-color "var(--text2)"
@@ -75,10 +66,12 @@
                  (f :frowny ["var(--orange-6)" off-color] [ico/fill-frownyface ico/frownyface])])]]]
 
            [sc/row-ec
-            [hoc.buttons/regular {:on-click #(do
+            [hoc.buttons/regular {:class    [:small]
+                                  :on-click #(do
                                                (on-close)
                                                (reset! content {}))} "Avbryt"]
-            [hoc.buttons/cta {:disabled (and (empty? (:text @content))
+            [hoc.buttons/cta {:class    [:small]
+                              :disabled (and (empty? (:text @content))
                                              (every? #(false? (get @content % false)) [:heart :thumbsup :thumbsdown :smiley :frowny]))
                               :on-click #(do
                                            (on-save @content)
@@ -105,20 +98,24 @@
 (rf/reg-event-fx :app/give-feedback [rf/trim-v] feedback-map)
 
 (defn send-message [_ [uid]]
-  (letfn [(write-to-db [uid {:keys [carry]}]
-            (db.core/firestore-add
-              {:path  ["users" uid "inbox"]
-               :value (conj {:til-navn "navn"
-                             :kilde    "source"
-                             :uid      (:uid @(rf/subscribe [:db.core/user-auth]))}
-                            carry)}))]
+  ;(js/alert uid)
+  (letfn [(write-to-db [reci-uid {:keys [carry]}]
+            (let [active-uid (:uid @(rf/subscribe [:db.core/user-auth]))
+                  post (conj {:to  reci-uid
+                              :uid active-uid}
+                             carry)]
+              (db.core/firestore-add
+                {:path  ["users" active-uid "sent" reci-uid "posts"]
+                 :value post})
+              (db.core/firestore-add
+                {:path  ["users" reci-uid "inbox"]
+                 :value post})))]
     {:fx [[:dispatch [:lab/modaldialog-visible
                       true
                       {:comment-length 1000
-                       :title          "Send en melding"
-                       :caption        "caption"
+                       ;:title          (str "Til " (user.database/lookup-username uid))
+                       ;:caption        (str "Til " (user.database/lookup-username uid))
                        :content-fn     #(feedback-window %)
-                       :action         #_#(js/alert %)
-                       #(write-to-db uid %)}]]]}))
+                       :action         #(write-to-db uid %)}]]]}))
 
 (rf/reg-event-fx :app/open-send-message [rf/trim-v] send-message)

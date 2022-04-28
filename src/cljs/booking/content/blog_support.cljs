@@ -13,4 +13,4 @@
                               (if (nil? @err-state)
                                 (into [:<>] children)
                                 (let [[_ info] @err-state]
-                                  [l/ppre-x info])))})))
+                                  [l/pre info])))})))

@@ -48,7 +48,9 @@
             [booking.modals.boatinput]
             [booking.booking]
             [booking.mine-dine-vakter]
-            [booking.boatlist]))
+            [booking.boatlist]
+            [booking.dine-vakter]
+            [booking.mine-vakter]))
 
 ;region related to flex-date and how to display relative time
 
@@ -198,7 +200,8 @@
                       [4 :r.oversikt "Oversikt"]]]
             [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
 
-
+(defn page [r c]
+  [+page-builder r c])
 
 (def routing-table
   {:r.welcome
@@ -457,7 +460,7 @@
                                            {:time-class [:text-xs]}
                                            (t/date-time (t/instant date))
                                            (fn [current-time] (t/format "dd. MMMM 'kl' hh.mm.ss" (t/date-time current-time)))]])))
-                             #_[l/ppre-x receipts']]))))}])
+                             #_[l/pre receipts']]))))}])
    :r.calendar
    (fn [r]
      [+page-builder r
@@ -539,7 +542,7 @@
                          (if-let [uid (:uid @user)]
                            [sc/col-space-4
                             [eykt.calendar.core/render r]]
-                           [l/ppre-x @user]))}]))
+                           [l/pre @user]))}]))
 
 
    :r.admin
@@ -547,7 +550,7 @@
      [+page-builder r
       {:render (fn []
                  [:div
-                  (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                  (l/pre (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
                   [:div "admin"]])}])
 
    :r.signedout
@@ -555,7 +558,7 @@
      [+page-builder r
       {:render (fn []
                  [:div
-                  (l/ppre-x (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                  (l/pre (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
                   [:div "Du har altså logget ut"]])}])
 
 
@@ -792,7 +795,7 @@
                       [:th "sist besøkt"]
                       [:th "sist endret"]]]
                     (into [:tbody]
-                          (for [{:keys [navn timekrav timestamp
+                          (for [{:keys [navn timekrav timestamp uid
                                         nøkkelnummer timestamp-lastvisit-userpage] :as v} users]
                             [:tr
                              [:td [scb/round-normal-listitem
@@ -800,7 +803,7 @@
                                              :style    {:color "var(--text2)"}} ico/pencil]]]
                              [:td (if (pos? timekrav) (str timekrav "t") "—")]
                              [:td nøkkelnummer]
-                             [:td navn]
+                             [:td (widgets/user-link uid)]
                              [:td (f timestamp-lastvisit-userpage)]
                              [:td (f timestamp)]]))]]]))})])))
 
@@ -812,170 +815,19 @@
          :always-panel booking.utlan/commands
          :render       #(booking.utlan/render uid)}]))
 
-   :r.dine-vakter
-   ;todo Fordi når man skal bytte
-   (fn [r]
-     [+page-builder
-      r
-      {:render (fn []
-                 (if-some [uid (-> r :path-params :id)]
-                   (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
-                     (let [user (user.database/lookup-userinfo uid)
-                           admin? @(rf/subscribe [:lab/admin-access])
-                           data (clojure.walk/stringify-keys @data)
-                           data (mapcat val data)
-                           saldo (:saldo user)
-                           timekrav (:timekrav user)
-                           z (when (some? saldo)
-                               (- saldo timekrav (- (* 3 (count (seq data))))))]
-                       [sc/col-space-8
-                        [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
-                         [sc/text1 "Telefon"]
-                         (:telefon user)
-
-                         [sc/link {:href (str "tel:" (:telefon user))} "Ring"]
-                         [:span "/"]
-                         [sc/link {:href (str "sms:" (:telefon user))} "SMS"]]
-
-                        [sc/text1 "E-post " [sc/link {:href (str "mailto:" (:epost user))} (:epost user)]]
-
-                        (when admin?
-                          [sc/text1 "Identitet " uid])
-
-                        (when admin?
-                          [booking.mine-dine-vakter/header
-                           {:saldo    saldo
-                            :timekrav timekrav
-                            :z        z}])
-
-                        [sc/title1 "Vakter i '22"]
-                        [sc/col {:style {:margin-inline "var(--size-3)"}}
-                         (if (seq data)
-                           [sc/col-space-8
-                            [sc/col-space-4
-                             (into [:<>]
-                                   ;[[l/ppre-x data]]
-                                   (for [[slot kv] data]
-                                     [sc/row-sc-g4-w
-                                      [schpaa.style.hoc.buttons/reg-pill
-                                       {:class    [:narrow]
-                                        :disabled true}
-                                       "Ta over"]
-                                      [sc/col
-                                       [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                                       [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))]])]
-                        (when admin?
-                          (r/with-let [data (db/on-snapshot-docs-reaction {:path ["users" uid "endringslogg"]})]
-                            (for [{:keys [data id]} @data
-                                  :let [rec (some-> data)]]
-                              (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
-                                [:<>
-                                 ;[l/ppre-x data]
-                                 (when-let [ts (get rec "timestamp")]
-                                   [sc/text1 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))])
-                                 [sc/text1 beskrivelse]]
-                                [:<>
-                                 ;[l/ppre-x data (some-> (get-in data ["after"]))]
-                                 (when-let [ts (get rec "timestamp")]
-                                   [sc/text1 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))])
-                                 [l/ppre-x (some-> (get-in data ["after"]))]]))
-                            #_(when (some? z)
-                                [sc/surface-a {:style {:flex "1 0 auto"}}
-                                 [sc/col-space-2
-                                  [sc/title2 "Overføres til neste år"]
-                                  [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
-                                             :class [:text-right]} (str z " timer")]]])))
-
-                        (when admin?
-                          (r/with-let [data (db/on-snapshot-docs-reaction {:path ["tilbakemeldinger" uid "sendt"]})]
-                            [l/ppre-x @data
-                             ["tilbakemeldinger" (name uid) "sendt"]]
-                            #_(for [{:keys [data id] :as m} @data]
-                                (let [beskrivelse (some-> (get-in data ["after" "endringsbeskrivelse"]))]
-                                  [:<>
-                                   [l/ppre-x m]]))
-
-                            #_(when (some? z)
-                                [sc/surface-a {:style {:flex "1 0 auto"}}
-                                 [sc/col-space-2
-                                  [sc/title2 "Overføres til neste år"]
-                                  [sc/text1 {:style {:font-weight "var(--font-weight-7)"}
-                                             :class [:text-right]} (str z " timer")]]])))])
-
-                     [sc/title1 "Ingen definerte vakter"])
-                   [booking.common-views/no-access-view r]))}])
-   :r.mine-vakter
-   (fn [r]
-     [+page-builder
-      r
-      {; :panel-title "rediger"
-       :render (fn []
-                 (if-let [uid @(rf/subscribe [:lab/uid])]
-                   (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
-                     (let [user (user.database/lookup-userinfo uid)
-                           data (clojure.walk/stringify-keys @data)
-                           data (mapcat val data)
-                           saldo (:saldo user)
-                           timekrav (:timekrav user)
-                           z (when (some? saldo)
-                               (- saldo timekrav (- (* 3 (count (seq data))))))]
-                       [sc/col-space-8
-                        [booking.mine-dine-vakter/header
-                         {:saldo    saldo
-                          :timekrav timekrav
-                          :z        z}]
-
-                        [sc/col {:style {:margin-inline "var(--size-3)"}}
-                         (if (seq data)
-                           [sc/col-space-8
-                            [sc/col-space-4
-                             (into [:<>]
-                                   ;[[l/ppre-x data]]
-                                   (for [[slot kv] data]
-                                     [sc/row-sc-g4-w
-                                      [schpaa.style.hoc.buttons/round-danger-pill
-                                       {:class    [:round :shrink-0]
-                                        :disabled true
-                                        :type     :button}
-                                       [sc/icon ico/trash]]
-                                      [schpaa.style.hoc.buttons/reg-pill
-                                       {:class    [:narrow]
-                                        :disabled true}
-                                       "Bytt"]
-                                      [sc/col
-                                       [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                                       [sc/small1 "Registrert " (some-> (get kv uid) t/date-time times.api/arrival-date)]]]))]
-                            [sc/row-sc-g4-w
-                             [sc/text1 "For å velge flere vakter eller fjerne vakter, se " (widgets/auto-link :r.nokkelvakt)]]]
-
-                           [sc/row-sc-g4-w
-                            [sc/text1 "Du har ikke valgt noen vakter. Se " (widgets/auto-link :r.nokkelvakt)]])]
-
-                        (when (some? z)
-                          [sc/surface-a {:style {:flex       "1 0 auto"
-                                                 :background "var(--floating)"
-                                                 :box-shadow "var(--shadow-1)"}}
-                           [sc/col-space-2
-                            [sc/text2 "Overføres til neste år"]
-                            [sc/title1 {:style {:xfont-weight "var(--font-weight-7)"}
-                                        :class [:text-right]} (str z " timer")]]])])
-
-                     [sc/title1 "Ingen definerte vakter"])
-                   [booking.common-views/no-access-view r]))}])
-
-   :r.reports            (fn [r] [+page-builder r (booking.reports/page r)])
-   :r.båtliste.nøklevann (fn [r] [+page-builder r (booking.boatlist/page r)])
-
-   :r.båtliste.sjøbasen  (fn [r] [+page-builder r {:render (fn [] [sc/col
-                                                                   (for [e (range 30)]
-                                                                     [sc/text1 {:class [:tabular-nums]}
-                                                                      (let [n (.toString e 2)
-                                                                            c (- 8 (count n))]
-                                                                        (apply str n (take c (repeatedly (constantly " 0 ")))))])])}])
-   :r.booking            (fn [r] [+page-builder r (booking.booking/page r)])
-   :r.page-not-found     (fn [r] [+page-builder r {:render (fn [] [error-page r])}])})
-
-
+   ;todo Fordi når man skal bytte er det greit å ha et sted hvor dette skjer
+   :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
+   :r.mine-vakter        (fn [r] (page r {:render booking.mine-vakter/render}))
+   :r.reports            (fn [r] (page r (booking.reports/page r)))
+   :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
+   :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn [] [sc/col
+                                                          (for [e (range 30)]
+                                                            [sc/text1 {:class [:tabular-nums]}
+                                                             (let [n (.toString e 2)
+                                                                   c (- 8 (count n))]
+                                                               (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
+   :r.booking            (fn [r] (page r (booking.booking/page r)))
+   :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment
   (sort-by (juxt (comp js/parseInt :b) :a) <

@@ -3,7 +3,8 @@
             [reagent.core :as r]
             [headlessui-reagent.core :as ui]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.dialog]))
+            [schpaa.style.dialog]
+            [schpaa.debug :as l]))
 
 (rf/reg-sub :modal.slideout/visible? :-> (fn [db] (get db :modal.slideout/toggle false)))
 
@@ -19,8 +20,11 @@
                  (fn [db _] (assoc db :modal.slideout/toggle false)))
 
 (rf/reg-event-db :modal.slideout/clear
-                 (fn [db _] (assoc db :modal.slideout/extra nil)))
+                 (fn [db _]
+                   (tap> :modal.slideout/clear)
+                   (assoc db :modal.slideout/extra nil)))
 
+;todo core
 (defn render []
   (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.slideout/extra])
                                      :vis     (rf/subscribe [:modal.slideout/visible?])
@@ -39,32 +43,28 @@
                            (do
                              (js/clearInterval @tm)
                              (close-fn))))
-                 open #(if auto-dismiss
-                         (do (tap> "opening3")
-                             (js/clearInterval @tm)
-                             (reset! counter 0)
-                             (reset! tm (js/setInterval each auto-dismiss))
-                             (reset! vis true)))]
+                 open #(do (tap> "opening3")
+                           (js/clearInterval @tm)
+                           (reset! counter 0)
+                           (reset! tm (js/setInterval each auto-dismiss))
+                           (reset! vis true))]
       (let [open? @vis]
         [:<>
          [ui/transition
           {:appear      true
            :after-enter #(do
-                           (tap> "after-enter")
+                           (tap> ["after-enter" auto-dismiss open?])
                            (when auto-dismiss (open)))
-
            :show        open?}
           [ui/dialog
            {:unmount  true
             ;:static true
-            :on-close #(if click-overlay-to-dismiss (do
-                                                      ;(when on-close (on-close))
-                                                      (close)))} ;must press cancel to dismiss
+            :on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
            [:div.fixed.inset-x-1
             [:div.text-center
              [schpaa.style.dialog/standard-overlay]
              ;; trick browser into centering modal contents
-             [:span.inline-block.xh-screen.align-middlex
+             [:span.inline-block                            ;.h-screen.align-middle
               (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
              [ui/transition-child
               {:class       (conj ["inline-block align-middlex text-left "]
@@ -79,9 +79,8 @@
                :leave-from  "opacity-100 translate-y-0"
                :leave-to    "opacity-0 -translate-y-full"
                :after-leave #(do
-                               #_(tap> {"after-leave -1-" @write-success})
+                               (tap> :after-leave)
                                (when @write-success
-                                 #_(tap> "after-leave -2-")
                                  (when on-primary-action
                                    (on-primary-action context))
                                  ;REMEMBER TO RESET STATE!!!
@@ -116,4 +115,4 @@
                                            ;todo remove comment to allow closing
                                            (close-fn))
                                :action action))
-                 [:div "Forgot content-fn?"])]]]]]]]))))
+                 [:div.text-alt.inset-0.fixed [l/pre "Forgot content-fn?" content-fn close context vis]])]]]]]]]))))

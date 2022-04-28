@@ -30,11 +30,11 @@
        (let [instant (t/instant (js/Date. (:lastOnline v)))
              date (ta/date-format instant)
              time (ta/time-format instant)]
-         [l/ppre-x (get-username (name k)) date time]))
+         [l/pre (get-username (name k)) date time]))
 
      [:div (ta/format "%d online" (count (:online presence-state)))]
-     [l/ppre-x (:online presence-state)]
+     [l/pre (:online presence-state)]
 
      (for [[k v] (:online presence-state)]
-       [l/ppre-x k (get-username (name k)) (:connections v)])]))
+       [l/pre k (get-username (name k)) (:connections v)])]))
 

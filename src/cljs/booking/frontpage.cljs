@@ -16,6 +16,7 @@
             [booking.flextime :refer [flex-datetime]]
             [booking.yearwheel]
             [booking.openhours]
+            [booking.account]
             [booking.common-widgets :as widgets]))
 
 ;region
@@ -516,11 +517,17 @@
         (when-not @at-least-registered?
           [please-login-and-register])
 
-        #_(when goog.DEBUG
-            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+        [sc/row-sc-g2-w
+         (when goog.DEBUG
+           [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
 
-        #_(when goog.DEBUG
-            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
+         (when goog.DEBUG
+           [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
+
+         (when goog.DEBUG
+           [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])]
+
+
 
         #_(when goog.DEBUG
             [sc/fp-summary-detail :frontpage/status

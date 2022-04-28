@@ -305,7 +305,7 @@
      [:details {:open 1}
       [:summary "Details"]
       [:<>
-       [l/ppre-x
+       [l/pre
         lookup-duration
         '---
         corrected]
@@ -313,7 +313,7 @@
        ;[l/ppre-x base]
        ;[l/ppre-x root]
        ;[l/ppre-x filtered]
-       #_[l/ppre-x corrected]]]
+       #_[l/pre corrected]]]
      (into [:div.grid.grid-cols-3]
            (-> (fn [[k vs]]
                  [:<>

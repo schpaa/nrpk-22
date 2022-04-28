@@ -447,7 +447,7 @@
               (if-let [boat (lookup (:item @st))]
                 (do
                   (swap! st assoc-in [:item-data] boat)
-                  [l/ppre-x boat])
+                  [l/pre boat])
                 (do
                   (swap! st assoc-in [:item-data] nil)
                   [sc/text1 "Finner ikke " (:item @st)]))

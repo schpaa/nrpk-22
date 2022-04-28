@@ -60,6 +60,13 @@
     @(db/on-value-reaction {:path ["users" uid]})
     nil))
 
+(defn +memo-lookup-username [uid]
+  ;(tap> ["U"])
+  (if-some [_ @(rf/subscribe [::db/user-auth])]
+    (:navn @(db/on-value-reaction {:path ["users" uid]}))
+    nil))
+
+#_(def lookup-username (memoize +memo-lookup-username))
 (defn lookup-username [uid]
   ;(tap> ["U"])
   (if-some [_ @(rf/subscribe [::db/user-auth])]

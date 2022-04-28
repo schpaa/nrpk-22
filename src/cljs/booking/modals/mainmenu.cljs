@@ -101,9 +101,10 @@
 
              [:hr]
 
-             [:item {:label     "Flytt verktøylinjen hit"
-                     :action    #(schpaa.state/toggle :lab/menu-position-right)
-                     :stay-open true}]
+             (when @at-least-registered?
+               [:item {:label     "Flytt verktøylinjen hit"
+                       :action    #(schpaa.state/toggle :lab/menu-position-right)
+                       :stay-open true}])
 
              [:item {:icons  (sc/icon ico/commandPaletteClosed)
                      :label  "Vis alle meldinger igjen"

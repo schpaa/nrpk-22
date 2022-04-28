@@ -9,7 +9,8 @@
             [booking.modals.feedback]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [reagent.core :as r]
-            [db.core :as db]))
+            [db.core :as db]
+            [booking.common-widgets :as widgets]))
 
 (defn f [dt] [booking.flextime/flex-datetime
               (some-> dt t/instant t/date-time)
@@ -55,21 +56,19 @@
       sc/text0
       {:max-width "10rem"}]]]])
 
-
-
 (defn tableline-online [attr [k {:keys [connections ugh] :as v}]]
   (let [uid (name k)]
     [:tr attr
-     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message uid])} ico/melding)]
-     [:td (or (user.database/lookup-username uid) "—")]
+     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message uid])} ico/tilbakemelding)]
+     [:td (widgets/user-link uid)]
      [:td (f ugh)]
      [:td connections]]))
 
 (defn tableline-offline [attr [k {:keys [lastOnline] :as v}]]
   (let [last-online-ms (cljs-time.coerce/to-long lastOnline)]
     [:tr attr
-     [:td]
-     [:td (or (user.database/lookup-username (name k)) "—")]
+     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message (name k)])} ico/tilbakemelding)]
+     [:td (or (user.database/lookup-username (name k)) [sc/small2 k])]
      [:td (f last-online-ms)]
      [:td]]))
 
@@ -89,7 +88,7 @@
      header
      (into [:tbody]
            (concat
-             ;todo wtf ugh?
+             ;todo wtf ugh? (see db.core)
              (for [v (sort-by (comp :ugh last) > (:online @data))]
                [tableline-online {:class [:online]} v])
              (when @(r/cursor settings [:show-offline])

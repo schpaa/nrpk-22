@@ -22,4 +22,4 @@
            (map item eykt.calendar.core/short-rules))
      [:div.space-y-1
       (for [e eykt.calendar.core/short-rules]
-        [l/ppre-x e])]]))
+        [l/pre e])]]))

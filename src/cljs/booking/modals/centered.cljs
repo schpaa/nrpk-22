@@ -23,15 +23,13 @@
   {:display          :grid
    :place-content    :end
    :background-color "var(--toolbar-)"
-   :border-radius    "var(--radius-2)"
+   :border-radius    "var(--radius-0)"
    :width            "100%"
    :height           "100%"}
   [:at-media {:max-width "511px"}
    {:width  "100vw"
     :height "100vh"}]
   [:at-media {:min-width "512px"}])
-
-
 
 (defn render
   "centered dialog used by boatinput and feedback"
@@ -68,10 +66,9 @@
              :show   open?}
             [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))}
              [:div.fixed.inset-0
-              [:div.text-centerx
+              [:div
                [schpaa.style.dialog/standard-overlay]
-               [:span.xinline-block.xh-screen.xalign-middle
-                (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
+               [:span (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
                [ui/transition-child
                 {:style       {}
                  :class       [:inline-block :align-middle :text-left :transform
@@ -85,11 +82,8 @@
                  :after-leave #(when @write-success
                                  (when on-primary-action
                                    (on-primary-action context)))}
-                [experimental {:class [:w-screenx :sm:w-96
-                                       :m-auto
-                                       ;:overflow-y-auto
-                                       :xmax-h-screen
-                                       :xmin-w-xs]}
+                [experimental {:class [:sm:w-96 :m-auto]}
+
                  (when content-fn
                    (content-fn (assoc context
                                  :on-close close

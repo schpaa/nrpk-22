@@ -314,7 +314,7 @@ Helt til slutt, en kinaputt"
 
               [:s.empty]
               [sc/col
-               [l/ppre-x @list-of-posts]
+               [l/pre @list-of-posts]
                [:div "EMPTY"]]
 
               [:s.initial]

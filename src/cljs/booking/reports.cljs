@@ -8,7 +8,8 @@
             [re-frame.core :as rf]
             [booking.ico :as ico]
             [schpaa.style.button :as scb]
-            [schpaa.style.input :as sci]))
+            [schpaa.style.input :as sci]
+            [booking.common-widgets :as widgets]))
 
 (o/defstyled table-controller-report :div
   [:& :overflow-x-auto
@@ -92,7 +93,7 @@
               (for [[time user-id slot] ordered-log]
                 [:tr {}
                  [:td.tabular-nums (times.api/very-compressed-date (t/date-time time))]
-                 [:td.truncate (user.database/lookup-username (name user-id))]
+                 [:td.truncate (widgets/user-link (name user-id))]
                  [:td.tabular-nums (times.api/date-format-sans-year (t/date-time (name slot)))]
                  [:td.tabular-nums (times.api/day-name (t/date-time (name slot)) :length 3)]
                  [:td.tabular-nums (times.api/time-format-hour (t/date-time (name slot)))]]))]]]]))
@@ -100,7 +101,7 @@
 (defn brukere-av-booking []
   (let [data @(db/on-value-reaction {:path ["users"]})
         data (filter (fn [[k v]] (:request-booking v)) data)
-        data (map (fn [[k v]] (select-keys v [:navn :våttkortnr :telefon :booking-expert :dato-godkjent-booking])) data)]
+        data (map (fn [[k v]] (select-keys v [:uid :navn :våttkortnr :telefon :booking-expert :dato-godkjent-booking])) data)]
     [table-controller-report'
      [table-report
       [:<>
@@ -112,10 +113,10 @@
          [:th "Ekspert"]
          [:th "Dato godkjent"]]]
        (into [:tbody]
-             (for [{:keys [navn våttkortnr telefon booking-expert dato-godkjent-booking]} data
+             (for [{:keys [navn uid våttkortnr telefon booking-expert dato-godkjent-booking]} data
                    :let [dato-godkjent-booking (if (empty? dato-godkjent-booking) nil dato-godkjent-booking)]]
                [:tr
-                [:td navn]
+                [:td (widgets/user-link uid)]
                 [:td.tabular-nums våttkortnr]
                 [phonenumber telefon]
                 [:td (if booking-expert "Ekspert")]
