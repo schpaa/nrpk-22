@@ -111,7 +111,7 @@
 ;todo find a suitable namespace
 (defn save-edit-changes [uid by-uid before-values after-values endringsbeskrivelse]
   (db/firestore-add
-    {:path  ["users" uid "endringslogg"]
+    {:path  ["beskjeder" uid "endringslogg"]
      :value {:timestamp (str (t/now))
              :reason    endringsbeskrivelse
              :by-uid    by-uid
@@ -126,7 +126,7 @@
 (defn changelog-panel [uid {:keys [state initial-values values] :as props}]
   (let [show-changelog (r/atom false)
         toggle #(swap! show-changelog not)
-        path ["users" uid "endringslogg"]]
+        path ["beskjeder" uid "endringslogg"]]
     [togglepanel :a/a4 "Endringslogg"
      (fn []
        (when uid                                            ;(:uid values)

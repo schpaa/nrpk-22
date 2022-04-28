@@ -105,10 +105,10 @@
                               :uid active-uid}
                              carry)]
               (db.core/firestore-add
-                {:path  ["users" active-uid "sent" reci-uid "posts"]
+                {:path  ["beskjeder" active-uid "sent" reci-uid "posts"]
                  :value post})
               (db.core/firestore-add
-                {:path  ["users" reci-uid "inbox"]
+                {:path  ["beskjeder" reci-uid "inbox"]
                  :value post})))]
     {:fx [[:dispatch [:lab/modaldialog-visible
                       true

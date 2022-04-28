@@ -22,7 +22,8 @@
     [sc/link {:href (str "sms:" telefon)} "SMS"]
     [:span "/"]
     (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
-   [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]]])
+   (when (seq epost)
+     [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])])
 
 (defn date-header [rec]
   (when-let [ts (get rec "timestamp")]
@@ -45,7 +46,6 @@
                   (date-header rec)
                   [l/pre (some-> (get-in data ["after"]))]])))])))
 
-
 (defn vakter [loggedin-uid data]
   (if (empty? data)
     [sc/title2 "Ingen vakter"]
@@ -65,7 +65,7 @@
                 [sc/small1 "Registrert " (some-> (get kv loggedin-uid) t/date-time times.api/arrival-date)]]]))]]))
 
 (defn beskjeder [loggedin-uid datum]
-  (let [path (fn [id] (when id (vector "users" loggedin-uid "inbox" id)))
+  (let [path (fn [id] (when id (vector "beskjeder" loggedin-uid "inbox" id)))
         delete-message (fn [uid value] (db/firestore-set {:path (path uid) :value value}))
         data (remove (fn [{:keys [id data]}] (get data "deleted" false)) datum)]
     (if (empty? data)
@@ -93,10 +93,11 @@
 (defn render [r]
   (let [admin? @(rf/subscribe [:lab/admin-access])]
     (if-some [loggedin-uid (-> r :path-params :id)]
-      (r/with-let [datum (db/on-snapshot-docs-reaction {:path ["users" loggedin-uid "inbox"]})]
+      (r/with-let [datum (db/on-snapshot-docs-reaction {:path ["beskjeder" loggedin-uid "inbox"]})]
         (when @datum
           (if-let [data (db/on-value-reaction {:path ["calendar" loggedin-uid]})]
             (let [user (user.database/lookup-userinfo loggedin-uid)
+                  nøkkelvakt? (:nøkkelvakt user)
                   data (mapcat val (clojure.walk/stringify-keys @data))
                   saldo (:saldo user)
                   timekrav (:timekrav user)
@@ -105,22 +106,23 @@
               [sc/col-space-8
                [personal loggedin-uid user]
 
-               (when admin?
-                 [sc/text1 "Identitet " loggedin-uid])
+               #_(when admin?
+                   [sc/text1 "Identitet " loggedin-uid])
 
                (when admin?
-                 [booking.mine-dine-vakter/header
-                  {:saldo    saldo
-                   :timekrav timekrav
-                   :z        z}])
+                 (when nøkkelvakt?
+                   [booking.mine-dine-vakter/header
+                    {:saldo    saldo
+                     :timekrav timekrav
+                     :z        z}]))
 
-               [vakter loggedin-uid data]
+               (when nøkkelvakt?
+                 [vakter loggedin-uid data])
 
                (when admin?
                  [endringslogg ["users" loggedin-uid "endringslogg"]])
 
-               (when admin?
-                 [beskjeder loggedin-uid @datum])])
+               [beskjeder loggedin-uid @datum]])
 
             [sc/title1 "Ingen definerte vakter"])))
       [widgets/no-access-view r])))
