@@ -295,7 +295,7 @@
                                                   (or (:endringsbeskrivelse values)
                                                       (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state)))))))))
 
-                                              (db/database-update {:path  ["beskjeder" uid]
+                                              (db/database-update {:path  ["users" uid]
                                                                    :value (assoc values :timestamp (str (t/now)))})
                                               (rf/dispatch [:save-this-form-test x]))}
             (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
