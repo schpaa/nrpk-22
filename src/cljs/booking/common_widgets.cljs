@@ -7,7 +7,8 @@
             [schpaa.icon :as icon]
             [booking.routes]
             [schpaa.debug :as l]
-            [headlessui-reagent.core :as ui]))
+            [headlessui-reagent.core :as ui]
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (defn horizontal-button [{:keys [right-side
                                  centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
@@ -208,14 +209,12 @@
                               (and width (str width " bred"))
                               (and length (str length " lang"))]))]])
 
-
 (comment
   (dimensions-and-material {:width 1 :length 2 :weight "" :material 2}))
 
 (defn no-access-view [r]
   (let [required-access (-> r :data :access)]
-    ;fix:
-    [:div                                                   ;.max-w-lg.mx-4
+    [sc/container
      {:style {:min-height     "calc(100vh - 4rem)"
               :padding-inline "var(--size-4)"
               :padding-top    "var(--size-10)"
@@ -229,24 +228,18 @@
                         :color       "var(--text2)"}} "Ingen tilgang"]
       [sc/row-center [sc/icon {:style {:text-align :center
                                        :color      "var(--text2)"}} ico/stengt]]
-      ;[sc/small1 {:style {:white-space :nowrap}} "Du har --> " (str @(rf/subscribe [:lab/all-access-tokens]))]
-      ;[sc/small1 {:style {:white-space :nowrap}} "Du trenger --> " (str required-access)]
-      #_(if goog.DEBUG [l/pre
-                        (matches-access r @(rf/subscribe [:lab/all-access-tokens]))
-                        (-> r :data :access)
-                        @(rf/subscribe [:lab/all-access-tokens])])
-
       [sc/text2 "For å se dette må du"]
       [sc/title1x
        (cond
          (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunn\u00adleggende infor\u00ADmasjon om deg selv."
          (some #{:waitinglist} (first required-access)) "Være påmeldt inn\u00ADmeldingskurs."
-         :else #_(some #{:member} (first required-access)) "Være medlem i NRPK.")]
+         :else "Være medlem i NRPK.")]
       [sc/title1x
        (cond
          (some #{:nøkkelvakt} (last required-access)) "Være godkjent nøkkelvakt (ifølge aktiv konto)."
          (some #{:admin} (last required-access)) "Være administrator.")]
 
+      ;fix: routes and links
       [sc/row-sc-g4-w
        [sc/text2 "Gå til"]
        [auto-link :r.forsiden]
@@ -255,28 +248,54 @@
 (defn disclosure
   ([tag question answer]
    (disclosure {:style {:padding-block "var(--size-2)"
-                        :margin-left   "var(--size-5)"}} tag question answer "empty-message"))
+                        :margin-left   "var(--size-5)"}} tag question answer))
   ([tag question answer empty-message]
-   (disclosure {:style {:padding-block "var(--size-2)"
+   (disclosure {:style {:padding-block "var(--size-4x)"
                         :margin-left   "var(--size-5)"}} tag question answer empty-message))
   ([attr tag question answer empty-message]
    (let [open @(schpaa.state/listen tag)]
      [ui/disclosure {:as       :div
                      :on-click #(schpaa.state/toggle tag)}
       (fn [{:keys []}]
-        (let []
-          [:<>
-           [ui/disclosure-button
-            {:class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
-            (sc/icon-tiny {:style {:color "var(--brand1)"}
-                           :class (concat [:duration-100 :w-5 :h-5]
-                                          (when open
-                                            [:transform :rotate-90]))}
-                          ico/showdetails)
-            [:span [sc/fp-headersmaller {:class [:pointer-events-none]
-                                         :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
-           [ui/disclosure-panel
-            (merge {:static true} (dissoc attr :links))
-            (if (:links attr)
-              (if open [:div answer empty-message] empty-message)
-              (if open [sc/text (or answer empty-message)]))]]))])))
+        [sc/col
+
+         [ui/disclosure-button
+          {:class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
+          (sc/icon-tiny {:style {:color "var(--brand1)"}
+                         :class (concat [:duration-100 :w-5 :h-5]
+                                        (when open
+                                          [:transform :rotate-90]))}
+                        ico/showdetails)
+          [:span [sc/fp-headersmaller {:class [:pointer-events-none]
+                                       :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
+         [ui/disclosure-panel
+          (merge-with into
+                      {:static true}
+                      (dissoc attr :links)
+                      {:style (if open {:margin-block "1rem"})})
+
+          (if (:links attr)
+            (if open [:div answer empty-message] empty-message)
+            (if open [sc/text (or answer empty-message)]))]])])))
+
+(defn send-msg [loggedin-uid]
+  ;(js/alert "!")
+  (rf/dispatch [:app/open-send-message loggedin-uid]))
+
+(defn personal [loggedin-uid {:keys [telefon epost uid] :as user}]
+  (if user
+    [sc/row-sc-g2-w
+     [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
+      [sc/text1 "Telefon"] telefon
+      [sc/link {:href (str "tel:" telefon)} "Ring"]
+      [:span "/"]
+      [sc/link {:href (str "sms:" telefon)} "SMS"]
+      [:span "/"]
+      (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
+     (when (seq epost)
+       [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])]
+    (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])]
+      [sc/row-sc-g2-w
+       [sc/text1 @username-or-fakename]
+       [sc/as-identity loggedin-uid]]
+      #_[l/pre user @username-or-fakename])))

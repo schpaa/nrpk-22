@@ -32,12 +32,16 @@
             [sc/col-space-8
              (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)
                [header saldo timekrav antall-eykter])
+             [widgets/personal uid user]
              [beskjeder uid @datum]
              [tilbakemeldinger uid (cached-datasource uid)]
-             (when-not ipad? (widgets/disclosure :oversikt/vakter "Vakter i '22" [vakter uid data]))
-             (widgets/disclosure {} :oversikt/endringslogg "Endringslogg"
+             (when-not ipad?
+               (widgets/disclosure :oversikt/vakter "Vakter i '22"
+                                   (vakter uid data)
+                                   "Ingen vakter"))
+             (widgets/disclosure :oversikt/endringslogg "Endringslogg"
                                  (endringslogg ["beskjeder" uid "endringslogg"])
-                                 [:div "asdempty message"])
+                                 "Det er ikke gjort noen endringer.")
 
              (when admin?
                [sc/row-bl

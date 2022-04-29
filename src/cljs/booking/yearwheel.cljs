@@ -246,24 +246,22 @@
 
 (defn yearwheel-feed []
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
-    [:div.space-y-4
-     ;{:style {:padding-bottom "var(--size-10)"}}
-     #_[sc/row-bl [sc/fp-header "Plan"] (sc/link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se årshjulet)")]
-
-     [:ol
-      (for [[_id {:keys [date type tldr]}] data]
-        [line [:div (interpose [:span ", "]
-                               (remove nil? [(when date
-                                               [:span " "
-                                                [flex-datetime date
-                                                 (fn [type d]
-                                                   (if (= :date type)
-                                                     [sc/datetimelink {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
-                                                     [sc/datetimelink d]))]])
-                                             (when type
-                                               (strong [sc/text-inline (->> type (get sci/person-by-id) :name)]))
-                                             (when tldr
-                                               (weak tldr))]))]])]
+    [:<>
+     (when (seq data)
+       [:ol.mb-32
+        (for [[_id {:keys [date type tldr]}] data]
+          [line [:div (interpose [:span ", "]
+                                 (remove nil? [(when date
+                                                 [:span " "
+                                                  [flex-datetime date
+                                                   (fn [type d]
+                                                     (if (= :date type)
+                                                       [sc/datetimelink {:style {:text-decoration :none}} (ta/date-format-sans-year d)]
+                                                       [sc/datetimelink d]))]])
+                                               (when type
+                                                 (strong [sc/text-inline (->> type (get sci/person-by-id) :name)]))
+                                               (when tldr
+                                                 (weak tldr))]))]])])
      [sc/text1 "Se flere planlagte hendelser i " (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "årshjulet")]]))
 
 

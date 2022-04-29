@@ -10,25 +10,13 @@
             [schpaa.debug :as l]
             [booking.mine-dine-vakter]))
 
-(defn send-msg [loggedin-uid]
-  ;(js/alert "!")
-  (rf/dispatch [:app/open-send-message loggedin-uid]))
+
 
 (defn reply-to-msg [loggedin-uid uid msg-id]
   ;(js/alert "!")
   (rf/dispatch [:app/open-send-reply loggedin-uid uid msg-id]))
 
-(defn personal [loggedin-uid {:keys [telefon epost uid] :as user}]
-  [sc/row-sc-g2-w
-   [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
-    [sc/text1 "Telefon"] telefon
-    [sc/link {:href (str "tel:" telefon)} "Ring"]
-    [:span "/"]
-    [sc/link {:href (str "sms:" telefon)} "SMS"]
-    [:span "/"]
-    (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
-   (when (seq epost)
-     [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])])
+
 
 (defn date-header [rec]
   (when-let [ts (get rec "timestamp")]
@@ -52,10 +40,9 @@
                    [sc/text0 #_{:style {:color "var(--yellow-3)"}} (str (some-> (get-in data ["after"])))]])))]])))
 
 (defn vakter [loggedin-uid data]
-  (if (empty? data)
-    [sc/title2 "Ingen vakter"]
+  (when-not (empty? data)
     [sc/col-space-8 {:class []}
-     ;[sc/title1 "Vakter i '22"]
+
      [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
       (into [:<>]
             (for [[slot kv] data]
@@ -148,7 +135,7 @@
                   antall-eykter (when (some? saldo)
                                   (- saldo timekrav (- (* 3 (count (seq data))))))]
               [sc/col-space-8
-               [personal user-id user]
+               [widgets/personal user-id user]
                [beskjeder user-id @inbox-messages]
                (when nøkkelvakt?
                  [vakter user-id data])

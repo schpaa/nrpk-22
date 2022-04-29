@@ -253,14 +253,14 @@
                                       :src    e}]])) frontpage-images)}]]]))
 
 (defn header-with-logo []
-  [:div.block
-   [:div (sc/debug? {:class [:xduration-500]
-                     :style {:transform             "rotate(-6deg)"
-                             :position              :relative
-                             :transform-origin      "center center"
-                             :display               :grid
-                             :gap                   "var(--size-4)"
-                             :grid-template-columns "1fr min-content 1fr"}})
+  [:div.block.mx-4
+   [:div {:class [:xduration-500]
+          :style {:transform             "rotate(-6deg)"
+                  :position              :relative
+                  :transform-origin      "center center"
+                  :display               :grid
+                  :gap                   "var(--size-4)"
+                  :grid-template-columns "1fr min-content 1fr"}}
     [:div {:style {:justify-self :end
                    :margin-block "3em"
                    :align-self   :center}}
@@ -281,7 +281,6 @@
                    :justify-self :start}}
      (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
        [circular-logo-thing dark-mode?])]]])
-
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -415,6 +414,8 @@
          [:span "Bruk båtloggen for å registrere "
           [sc/link {:style {:display :inline-block}
                     :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])]]))
+
+;todo blog-system
 ;[listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
 ;[listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
 ;[listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
@@ -463,7 +464,7 @@
       [:div.mx-4.pb-8
        [sc/col-space-8 {:class [:mx-auto]
                         :style {:max-width booking.common-views/max-width}}
-        [sc/col-space-4
+        [sc/col-space-8
          (when-not @at-least-registered?
            [please-login-and-register])
          (when goog.DEBUG debug-panel)
