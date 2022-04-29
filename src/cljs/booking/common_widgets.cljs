@@ -267,8 +267,7 @@
         (let []
           [:<>
            [ui/disclosure-button
-            {
-             :class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
+            {:class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
             (sc/icon-tiny {:style {:color "var(--brand1)"}
                            :class (concat [:duration-100 :w-5 :h-5]
                                           (when open
@@ -276,4 +275,8 @@
                           ico/showdetails)
             [:span [sc/fp-headersmaller {:class [:pointer-events-none]
                                          :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
-           [ui/disclosure-panel (merge {:static true} attr) (if open [sc/text (or answer empty-message)])]]))])))
+           [ui/disclosure-panel
+            (merge {:static true} (dissoc attr :links))
+            (if (:links attr)
+              (if open [:div answer empty-message] empty-message)
+              (if open [sc/text (or answer empty-message)]))]]))])))
