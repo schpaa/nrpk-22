@@ -150,6 +150,7 @@
 (defn circular-logo-thing [dark-mode?]
   [:div {:style {:width        "6em"
                  :height       "6em"
+                 :transform    "rotate(6deg)"
                  :aspect-ratio "1/1"}}
    [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
     [:img {:src   "/img/logo-n.png"
@@ -178,7 +179,8 @@
                        :inset         0
                        :border-radius "var(--radius-round)"
                        :opacity       1}
-               :src   "/img/logo-n.png" #_(first (drop @c (cycle frontpage-images)))}]]
+               :src   "/img/logo-n.png"
+               #_(first (drop @c (cycle frontpage-images)))}]]
 
        (finally (js/clearInterval tm)))]]])
 
@@ -252,35 +254,60 @@
                                       :height "100%"
                                       :src    e}]])) frontpage-images)}]]]))
 
+(defn todays-numbers [c1 c2 a b]
+  [sc/row-sc-g4-w {:style {:transform        "translateY(1rem) rotate(6deg)"
+
+                           :transform-origin "bottom end"}}
+   [sc/col {:class [:gap-2]}
+    [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])
+                       :class    [:narrow :shadow :center :opacity-50]
+                       :style    {:background-color "var(--gray-9)"
+                                  :color            "var(--gray-1)"}} a]
+    [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]])
+                       :class    [:center :narrow :shadow :opacity-50]
+                       :style    {:color            "var(--blue-1)"
+                                  :background-color "var(--blue-9)"}} b]]
+   [sc/surface-a
+    {:style {:padding-inline "var(--size-3)"
+             :padding-block  "var(--size-2)"
+             :box-shadow     "var(--shadow-0),var(--shadow-2)"
+             :background     "rgba(0,0,0,0.05)"}}
+    [sc/col-space-2
+     {:style {:align-items :end
+              :cursor      :pointer}}
+     [sc/title2 {:style {:color "var(--gray-9)"}} c1 "ºC"]
+     [sc/title2 {:style {:color "var(--blue-9)"}} c2 "°C"]]]])
+
 (defn header-with-logo []
-  [:div.block.mx-4
-   [:div {:class [:xduration-500]
-          :style {:xtransform            "rotate(-6deg)"
-                  :position              :relative
-                  :transform-origin      "center center"
-                  :display               :grid
-                  :gap                   "var(--size-4)"
-                  :grid-template-columns "1fr min-content 1fr"}}
-    [:div {:style {:justify-self :end
-                   :margin-block "3em"
-                   :align-self   :center}}
-     [bs/logo-text {:style {
-                            :width        "auto"
-                            :justify-self :end}}
-      [sc/hero' {:style {:text-align  :right
-                         :color       "var(--text0)"
-                         :font-size   "1.92em"
-                         :font-weight "var(--font-weight-4)"}} "Nøklevann"]
-      [sc/ingress-cl {:style {:white-space :nowrap
-                              :font-size   "1.2em"
-                              :color       "var(--text1)"
-                              ;:font-style  :italic
-                              :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
-    [:div {:style {:transform    "rotate(6deg)"
-                   :align-self   :center
-                   :justify-self :start}}
-     (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-       [circular-logo-thing dark-mode?])]]])
+  (let [c (count (logg.database/boat-db))]
+    [:div.block.mx-4
+     [:div {:class [:xduration-500]
+            :style {:transform             "rotate(-6deg)"
+                    :position              :relative
+                    :transform-origin      "center center"
+                    :display               :grid
+                    :gap                   "var(--size-4)"
+                    :grid-template-columns "1fr min-content 1fr"}}
+      [:div {:style {:justify-self :end
+                     :margin-block "3em"
+                     :align-self   :center}}
+       [bs/logo-text {:style {
+                              :width        "auto"
+                              :justify-self :end}}
+        [sc/hero' {:style {:text-align  :right
+                           :color       "var(--text0)"
+                           :font-size   "1.92em"
+                           :font-weight "var(--font-weight-4)"}} "Nøklevann"]
+        [sc/ingress-cl {:style {:white-space :nowrap
+                                :font-size   "1.2em"
+                                :color       "var(--text1)"
+                                ;:font-style  :italic
+                                :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
+      [:div {:style {:align-self   :center
+                     :justify-self :start}}
+       (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
+         [circular-logo-thing dark-mode?])]
+      (todays-numbers "— " "— " c '—)]]))
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -449,8 +476,8 @@
           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
            booking.common-views/master-control-box]]])
 
-      [:div {:style {:font-size      "100%"
-                     :padding-bottom "var(--size-4)"}}
+      [:div {:style {:font-size     "100%"
+                     :padding-block "var(--size-8)"}}
        [header-with-logo]]
 
       (when @show-image-carousell?

@@ -248,7 +248,7 @@
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
     [:<>
      (when (seq data)
-       [:ol.mb-32
+       [:ol
         (for [[_id {:keys [date type tldr]}] data]
           [line [:div (interpose [:span ", "]
                                  (remove nil? [(when date

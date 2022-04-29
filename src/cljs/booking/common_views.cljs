@@ -681,7 +681,7 @@
                  (if-not have-access?
                    [no-access-view r]
                    [sc/basic-page
-                    [sc/col-space-8
+                    [sc/col-space-2
                      {:class [:pt-8]
                       :style {:flex             "1 1 auto"
                               :background-color "var(--content)"}}

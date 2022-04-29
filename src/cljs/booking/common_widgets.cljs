@@ -272,10 +272,10 @@
           (merge-with into
                       {:static true}
                       (dissoc attr :links)
-                      {:style (if open {:margin-block "1rem"})})
+                      {:style (if open {:margin-block "var(--size-0)"})})
 
           (if (:links attr)
-            (if open [:div answer empty-message] empty-message)
+            (if open [sc/col-space-4 answer empty-message] empty-message)
             (if open [sc/text (or answer empty-message)]))]])])))
 
 (defn send-msg [loggedin-uid]
