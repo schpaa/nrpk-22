@@ -36,8 +36,7 @@
 
 (defn endringslogg [path]
   (r/with-let [data (db/on-snapshot-docs-reaction {:path path})]
-    (if (empty? @data)
-      [sc/title2 "Ingen endringer"]
+    (when-not (empty? @data)
       [sc/col-space-8
        ;[sc/title1 "Endringslogg"]
        [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}

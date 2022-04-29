@@ -30,12 +30,14 @@
                 timekrav (:timekrav user)
                 antall-eykter (when (some? saldo) (- saldo timekrav (- (* 3 (count (seq data))))))]
             [sc/col-space-8
-             (when (or admin? (not ipad?))
+             (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)
                [header saldo timekrav antall-eykter])
              [beskjeder uid @datum]
              [tilbakemeldinger uid (cached-datasource uid)]
              (when-not ipad? (widgets/disclosure :oversikt/vakter "Vakter i '22" [vakter uid data]))
-             (widgets/disclosure :oversikt/endringslogg "Endringslogg" [endringslogg ["beskjeder" uid "endringslogg"]])
+             (widgets/disclosure {} :oversikt/endringslogg "Endringslogg"
+                                 (endringslogg ["beskjeder" uid "endringslogg"])
+                                 [:div "asdempty message"])
 
              (when admin?
                [sc/row-bl

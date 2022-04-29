@@ -588,10 +588,7 @@
 
 (def max-width "54ch")
 
-(o/defstyled container :div
-  {:width         "min(calc(100% - 2rem),56ch)"
-   :margin-bottom "3rem"
-   :margin-inline :auto})
+
 
 (defn +page-builder [r m]
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})
@@ -694,15 +691,15 @@
 
                      ;modification could happen here
                      (when (fn? panel)
-                       [container
+                       [sc/container
                         [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
 
                      (when always-panel
-                       [container
+                       [sc/container
                         [always-panel modify?]])
 
                      (if render-fullwidth
-                       [container
+                       [sc/container
                         {:style {:margin-right "unset"
                                  :margin-left  "unset" #_(if (and @numberinput @left-aligned)
                                                            ;; force view to align to the left
@@ -711,5 +708,5 @@
                                  :width        "100%"
                                  :max-width    (if render-fullwidth "" "inherit")}}
                         [render-fullwidth r]]
-                       [container
+                       [sc/container
                         [render r]])]]))]))])})))

@@ -214,8 +214,9 @@
 
 (defn no-access-view [r]
   (let [required-access (-> r :data :access)]
-    [:div.max-w-lg.mx-4
-     {:style {
+    ;fix:
+    [:div                                                   ;.max-w-lg.mx-4
+     {:style {:min-height     "calc(100vh - 4rem)"
               :padding-inline "var(--size-4)"
               :padding-top    "var(--size-10)"
               :margin-inline  "auto"}}
@@ -253,21 +254,26 @@
 
 (defn disclosure
   ([tag question answer]
-   [disclosure {} tag question answer])
-  ([attr tag question answer]
-   [ui/disclosure {:as :div}
-    (let [open @(schpaa.state/listen tag)]
-      (fn [{:keys [open]}]
-
-        [sc/col-space-4
-         [ui/disclosure-button
-          {:class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
-          (sc/icon-tiny {:style {:color "var(--brand1)"}
-                         :class (concat [:duration-100 :w-5 :h-5]
-                                        (when open
-                                          [:transform :rotate-90]))}
-                        ico/showdetails)
-          [:span [sc/fp-headersmaller {:class [:pointer-events-none]
-                                       :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
-
-         [ui/disclosure-panel attr (when open answer)]]))]))
+   (disclosure {:style {:padding-block "var(--size-2)"
+                        :margin-left   "var(--size-5)"}} tag question answer "empty-message"))
+  ([tag question answer empty-message]
+   (disclosure {:style {:padding-block "var(--size-2)"
+                        :margin-left   "var(--size-5)"}} tag question answer empty-message))
+  ([attr tag question answer empty-message]
+   (let [open @(schpaa.state/listen tag)]
+     [ui/disclosure {:as       :div
+                     :on-click #(schpaa.state/toggle tag)}
+      (fn [{:keys []}]
+        (let []
+          [:<>
+           [ui/disclosure-button
+            {
+             :class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
+            (sc/icon-tiny {:style {:color "var(--brand1)"}
+                           :class (concat [:duration-100 :w-5 :h-5]
+                                          (when open
+                                            [:transform :rotate-90]))}
+                          ico/showdetails)
+            [:span [sc/fp-headersmaller {:class [:pointer-events-none]
+                                         :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
+           [ui/disclosure-panel (merge {:static true} attr) (if open [sc/text (or answer empty-message)])]]))])))

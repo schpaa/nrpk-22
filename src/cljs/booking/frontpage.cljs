@@ -22,20 +22,17 @@
 ;region
 
 (o/defstyled antialiased :div
-  #_[:* {:x-webkit-font-smoothing  :auto
-         :x-moz-osx-font-smoothing :auto
-         :-webkit-font-smoothing   :antialiased
-         :-moz-osx-font-smoothing  :grayscale}])
+  [:* {:x-webkit-font-smoothing  :auto
+       :x-moz-osx-font-smoothing :auto
+       :-webkit-font-smoothing   :antialiased
+       :-moz-osx-font-smoothing  :grayscale}])
 
 (o/defstyled bg-light :div
   [:& {:position            :relative
        :height              "100vh"
        :background-position "center center"
        :background-repeat   "no-repeat"
-       :background-size     "cover"
-
-       ;:background-blend-mode "normal"
-       #_#_:background-image "var(--background-image-light)"}
+       :background-size     "cover"}
    [:&.light {:background-image ["var(--background-image-light)"]}]
    [:&.dark {:background-image ["var(--background-image-dark)"]}]
    [:at-media {:max-width "511px"}
@@ -88,12 +85,6 @@
    :top      "var(--size-2)"
    :right    "var(--size-2)"})
 
-(o/defstyled bottom-right-userfeedback :div
-  {:position :absolute
-   :bottom   "var(--size-2)"
-   :right    "var(--size-2)"
-   :color    "var(--text0)"})
-
 (o/defstyled image-caro-style :div
   [:&
    {:width "calc(100vw)"}
@@ -123,14 +114,9 @@
 
      [:div.justify-self-end [sc/ingress' {:style {:font-size "var(--font-size-fluid-1)"}} (str 4251)]]
      [sc/ingress' {:style {:font-size "var(--font-size-fluid-1)"}} "medlemmer"]
-
      [table-text (count (filter (comp :godkjent val) nv)) "nøkkelvakter"]
-     ;[f (count (filter (fn [[k {:keys [godkjent våttkort]}]] (and godkjent (< 0 våttkort))) nv)) "med våttkort"]
-     [table-text (str (count (filter (comp :instruktør val) nv))) "instruktører"]
+     [table-text (str (count (filter (comp :instruktør val) nv))) "instruktører"]]))
 
-     ;[:div.justify-self-end [sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}}(str (count (filter (fn [[k {:keys [request-booking]}]] (and request-booking)) nv)))]]
-     ;[sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} "havpadlere"]
-     #_[sc/text1 {:style {:color "var(--yellow-2)"}} (count online) ", " (count offline)]]))
 
 (defn- boats []
   (let [{:keys [online offline]} @(rf/subscribe [::db/presence-status])
@@ -149,15 +135,8 @@
      [table-text 11 "grønnlandskajakker"]
      [table-text 12 "kanoer"]
      [table-text 4 "skullere"]
-     [table-text 2 "robåter"]
+     [table-text 2 "robåter"]]))
 
-     ;[:div.justify-self-end [sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} (count (filter (fn [[k {:keys [godkjent våttkort]}]] (and godkjent (< 0 våttkort))) nv))]]
-     ;[sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} "med våttkort"]
-     ;[f (str (count (filter (comp :instruktør val) nv)))]
-     ;[sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} "instruktører"]
-     ;[:div.justify-self-end [sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}}(str (count (filter (fn [[k {:keys [request-booking]}]] (and request-booking)) nv)))]]
-     ;[sc/text0 {:style {:font-size "var(--font-size-fluid-0)"}} "havpadlere"]
-     #_[sc/text1 {:style {:color "var(--yellow-2)"}} (count online) ", " (count offline)]]))
 
 (def frontpage-images
   (map #(str "/img/caro/" %)
@@ -166,83 +145,42 @@
         "img-13.jpg"
         "img-16.jpg"
         "img-12.jpg"
-        ;"img-3.jpg";
-        "img-4.jpg"]
-       ;"img-2.jpg";
-       ;"img-5.jpg";
-       ;"img-6.jpg"
-
-       ;"img-8.jpg"]
-       ;"img-7.jpg"]
-
-       #_["brygge.jpeg"
-          ;"DSCF0075.JPG"
-          "DSCF0051.JPG"
-          "DSCF2668.jpeg"
-          "Bilde 28.03.2022 klokken 16.58.jpg"
-          "Bilde 28.03.2022 klokken 17.09.jpg"
-          "animal-muppet.png"
-          "Bilde 28.03.2022 klokken 16.59.jpg"
-          "Bilde 28.03.2022 klokken 16.49.jpg"
-          "Bilde 28.03.2022 klokken 16.45.jpg"]))
+        "img-4.jpg"]))
 
 (defn circular-logo-thing [dark-mode?]
-  [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
+  [:div {:style {:width        "6em"
+                 :height       "6em"
+                 :aspect-ratio "1/1"}}
+   [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
+    [:img {:src   "/img/logo-n.png"
+           :style {:position                  :absolute
+                   :inset                     0
+                   :object-fit                :contain
+                   :border-radius             "var(--radius-round)"
+                   :animation-name            "spin3"
+                   :animation-timing-function "var(--ease-4)"
+                   :animation-delay           "0s"
+                   :animation-duration        "1.3s"
+                   :animation-iteration-count 1
+                   :animation-direction       :forward
+                   :transform-origin          "center"}}]
+    [:div
+     {:style {:position  :absolute
+              :inset     0
+              :clip-path "circle(35% at 50% 50%)"}}
+     (r/with-let [c (r/atom 0)
+                  f (fn [] (swap! c inc))
+                  tm (js/setInterval f 3000)]
+       [:div {:style {:transition "opacity 1s"}}
+        [:img {:style {:position      "absolute"
+                       :width         "100%"
+                       :height        "100%"
+                       :inset         0
+                       :border-radius "var(--radius-round)"
+                       :opacity       1}
+               :src   "/img/logo-n.png" #_(first (drop @c (cycle frontpage-images)))}]]
 
-   [:img {:style {:position                  :absolute
-                  :inset                     0
-                  :object-fit                :contain
-                  :border-radius             "var(--radius-round)"
-                  :animation-name            "spin3"
-                  :animation-timing-function "var(--ease-4)"
-                  :animation-delay           "0s"
-                  :animation-duration        "5s"
-                  :animation-iteration-count 1
-                  :animation-direction       :forward
-                  :transform-origin          "center"}
-          :src   "/img/logo-n.png"}]
-   [:div
-    {:style {:position  :absolute
-             :inset     0
-             ;:inset            "auto auto 0px auto"
-             :clip-path "circle(35% at 50% 50%)"}}
-    [:div.bg-white.w-full.h-full]
-
-    (r/with-let [c (r/atom 0)
-                 f (fn [] (swap! c inc))
-                 tm 0 #_(js/setInterval f 3000)]
-      [:<>
-       [:img.bg-alt {:style {:position          :absolute
-                             :inset             "0px"
-                             ;:clip-path         "circle(36% at 50% 50%)"
-                             :object-fit        :contain
-                             :border-radius     "var(--radius-round)"
-                             #_#_:animation (if (odd? @c)
-                                              "var(--animation-slide-in-up) "
-                                              "var(--animation-slide-in-left) ")
-                             :transition        "opacity 500ms"
-                             :opacity           (if (odd? @c) 0 1)
-                             ;:transition-property "opacity"
-                             :-transform-origin "bottom left"
-                             :-transform        "rotate(0deg)"}
-                     :src   (first (drop @c (cycle ["/img/logo-n.png" "/img/logo-m.png"])))}]
-       #_[:img.bg-alt {:style {:position          :absolute
-                               :inset             "0px"
-                               :clip-path         "circle(36% at 50% 50%)"
-                               :object-fit        :contain
-                               :border-radius     "var(--radius-round)"
-                               #_#_:animation (if (odd? @c)
-                                                "var(--animation-slide-in-up) "
-                                                "var(--animation-slide-in-left) ")
-                               :-transition       "transform 500ms"
-                               :-transform-origin "bottom left"
-                               :-transform        (if (odd? @c) "rotate(90deg)" "rotate(-90deg)")}
-                       :src   (first (drop @c (cycle ["/img/logo-n.png" "/img/logo-m.png"
-                                                      "/img/frontpage/Bilde 28.03.2022 klokken 16.58.jpg"
-                                                      "/img/frontpage/Bilde 28.03.2022 klokken 16.45.jpg"
-                                                      "/img/frontpage/brygge.jpeg"
-                                                      "/img/frontpage/Bilde 28.03.2022 klokken 16.59.jpg"])))}]]
-      (finally (js/clearInterval tm)))]])
+       (finally (js/clearInterval tm)))]]])
 
 (defn scroll-up-animation []
   (let [know-how-to-scroll? (rf/subscribe [:lab/we-know-how-to-scroll?])]
@@ -315,36 +253,35 @@
                                       :src    e}]])) frontpage-images)}]]]))
 
 (defn header-with-logo []
-  (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-    (if true
-      [:div {:class [:pt-24 :pb-20 :duration-500]
-             :style {:transform             "rotate(-6deg)"
-                     :transform-origin      "center right"
-                     :display               :grid
-                     :gap                   "var(--size-4)"
-                     :grid-template-columns "1fr min-content 1fr"}}
-       [:div {:class [:--debug4]
-              :style {:justify-self :end
-                      :align-self   :center}}
-        [bs/logo-text {:class [:--debug3]
-                       :style {:width        "auto"
-                               :justify-self :end}}
-         [sc/hero' {:style {:text-align  :right
-                            :color       "var(--text1)"
-                            :font-weight "var(--font-weight-4)"}} "Nøklevann"]
-         [sc/ingress-cl {:style {:white-space :nowrap
-                                 :color       "var(--text1)"
-                                 :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
-       [:div.h-24.w-auto
-        {:style {:border-width "1px"
-                 :border-style "dashed"
-                 :border-color (if dark-mode? "var(--brand1)" "var(--brand1)")}}]
+  [:div.block
+   [:div (sc/debug? {:class [:xduration-500]
+                     :style {:transform             "rotate(-6deg)"
+                             :position              :relative
+                             :transform-origin      "center center"
+                             :display               :grid
+                             :gap                   "var(--size-4)"
+                             :grid-template-columns "1fr min-content 1fr"}})
+    [:div {:style {:justify-self :end
+                   :margin-block "3em"
+                   :align-self   :center}}
+     [bs/logo-text {:style {
+                            :width        "auto"
+                            :justify-self :end}}
+      [sc/hero' {:style {:text-align  :right
+                         :color       "var(--text0)"
+                         :font-size   "1.92em"
+                         :font-weight "var(--font-weight-4)"}} "Nøklevann"]
+      [sc/ingress-cl {:style {:white-space :nowrap
+                              :font-size   "1.2em"
+                              :color       "var(--text1)"
+                              :font-style  :italic
+                              :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
+    [:div {:style {:transform    "rotate(6deg)"
+                   :align-self   :center
+                   :justify-self :start}}
+     (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
+       [circular-logo-thing dark-mode?])]]])
 
-       [:div {:style {:transform    "rotate(6deg)"
-                      :align-self   :center
-                      :justify-self :start}}
-        [:div.h-24.w-24 [circular-logo-thing dark-mode?]]]]
-      #_[:div.pt-40.pb-24 [bs/centered [:div.h-28.w-28 [circular-logo-thing dark-mode?]]]])))
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -387,12 +324,13 @@
 (defn please-login-and-register []
   [sc/row-ec
    [:div.grow]
-   [hoc.buttons/cta
+   [hoc.buttons/attn
     {:on-click #(rf/dispatch [:app/login])}
     [sc/col {:style {:text-align :left}}
-     [sc/ingress' {:style {:font-weight "var(--font-weight-6)"
-                           :color       "var(--gray-0)"}} "Logg inn"]
-     [sc/text {:style {:color "var(--gray-0)"}} "& registrer deg"]]]])
+     [sc/ingress {:style {:line-height "1.2"
+                          :font-weight "var(--font-weight-2)"
+                          :xcolor      "var(--brand1)"}} "Logg inn"]
+     [:div {:style {:color "var(--gray-3)"}} "& registrer deg"]]]])
 
 (defn current-status []
   [:div.space-y-4
@@ -482,6 +420,18 @@
 ;[listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
 ;[listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]]))
 
+(defn debug-panel []
+  [sc/row-sc-g2-w
+   (when goog.DEBUG debug-panel)
+   (when goog.DEBUG
+     [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+
+   (when goog.DEBUG
+     [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
+
+   (when goog.DEBUG
+     [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])])
+
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
@@ -490,7 +440,7 @@
     [bg-light {:class [(if dark-mode? :dark :light)
                        (if @at-least-registered? :bottom-toolbar)]}
 
-     [:div.min-h-full.z-0.relative.mx-auto
+     [:div.min-h-full.z-0.relative.mx-auto.pt-16            ;<--------- pt-16 !!!!!!!
 
       (when (and goog.DEBUG @master-emulation)
         [:div.max-w-lgx.mx-auto
@@ -498,9 +448,9 @@
           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
            booking.common-views/master-control-box]]])
 
-      [:div.mx-4
-       [:div.max-w-lg.mx-auto
-        [header-with-logo]]]
+      [:div {:style {:font-size      "2.4vmin"
+                     :padding-bottom "var(--size-4)"}}
+       [header-with-logo]]
 
       (when @show-image-carousell?
         [image-carousell])
@@ -511,32 +461,13 @@
          [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
 
       [:div.mx-4.pb-8
-       [sc/col-space-8
-        {:style {:max-width booking.common-views/max-width}}
-        [sc/col-space-8
-         ;{:style {:max-width booking.common-views/max-width}}
-
+       [sc/col-space-8 {:class [:mx-auto]
+                        :style {:max-width booking.common-views/max-width}}
+        [sc/col-space-4
          (when-not @at-least-registered?
            [please-login-and-register])
-
-         [sc/row-sc-g2-w
-          (when goog.DEBUG
-            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
-
-          (when goog.DEBUG
-            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
-
-          (when goog.DEBUG
-            [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])]
-
-         (widgets/disclosure {:static true
-                              :class  [:px-6]} :frontpage/news "Hva skjer?" [news-feed])
-         (widgets/disclosure {:static true
-                              :class  [:px-6]} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
-         (widgets/disclosure {:static true
-                              :class  [:px-6]} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
-
-     #_[bs/attached-to-bottom
-        {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}
-        [scroll-up-animation]]
+         (when goog.DEBUG debug-panel)
+         (widgets/disclosure :frontpage/news "Hva skjer?" [news-feed] nil)
+         (widgets/disclosure :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed] nil)
+         (widgets/disclosure :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours] nil)]]]]
      [booking.common-views/after-content]]))
