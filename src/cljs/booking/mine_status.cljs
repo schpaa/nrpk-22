@@ -1,4 +1,4 @@
-(ns booking.mine-vakter
+(ns booking.mine-status
   (:require [db.core :as db]
             [headlessui-reagent.core :as ui]
             [reagent.core :as r]
@@ -30,9 +30,9 @@
                 timekrav (:timekrav user)
                 antall-eykter (when (some? saldo) (- saldo timekrav (- (* 3 (count (seq data))))))]
             [sc/col-space-8
+             [widgets/personal uid user]
              (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)
                [header saldo timekrav antall-eykter])
-             [widgets/personal uid user]
              [:div.ml-6 [beskjeder uid @datum]]
              [:div.ml-6 [tilbakemeldinger uid (cached-datasource uid)]]
              (when-not ipad?

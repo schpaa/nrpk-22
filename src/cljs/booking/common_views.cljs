@@ -373,9 +373,9 @@
                              (let [titles (compute-pagetitles r)]
                                (if (vector? titles)
                                  [sc/col-space-1 {:style {:justify-content :start}}
-                                  [sc/title (if (fn? (last titles))
-                                              ((last titles) (some-> r :path-params))
-                                              (last titles))]
+                                  [sc/title1 (if (fn? (last titles))
+                                               ((last titles) (some-> r :path-params))
+                                               (last titles))]
                                   (when (< 1 (count titles))
                                     (let [{:keys [text link]} (first titles)]
                                       [sc/small0 "Se også "

@@ -284,16 +284,17 @@
 
 (defn personal [loggedin-uid {:keys [telefon epost uid] :as user}]
   (if user
-    [sc/row-sc-g2-w
-     [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
-      [sc/text1 "Telefon"] telefon
-      [sc/link {:href (str "tel:" telefon)} "Ring"]
-      [:span "/"]
-      [sc/link {:href (str "sms:" telefon)} "SMS"]
-      [:span "/"]
-      (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
-     (when (seq epost)
-       [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])]
+    [sc/surface-a
+     [sc/row-sc-g2-w
+      [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
+       [sc/text1 "Telefon"] telefon
+       [sc/link {:href (str "tel:" telefon)} "Ring"]
+       [:span "/"]
+       [sc/link {:href (str "sms:" telefon)} "SMS"]
+       [:span "/"]
+       (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
+      (when (seq epost)
+        [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])]]
     (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
           epost @username-or-fakename]
       [sc/surface-a

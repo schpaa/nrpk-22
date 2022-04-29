@@ -50,7 +50,7 @@
             [booking.mine-dine-vakter]
             [booking.boatlist]
             [booking.dine-vakter]
-            [booking.mine-vakter]
+            [booking.mine-status]
             [booking.oversikt]))
 
 ;region related to flex-date and how to display relative time
@@ -719,8 +719,8 @@
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
    ;todo Fordi når man skal bytte er det greit å ha et sted hvor dette skjer
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
-   :r.mine-vakter        (fn [r] (page r {:render booking.mine-vakter/render}))
-   :r.mine-vakter-ipad   (fn [r] (page r {:render booking.mine-vakter/render}))
+   :r.mine-vakter        (fn [r] (page r {:render booking.mine-status/render}))
+   :r.mine-vakter-ipad   (fn [r] (page r {:render booking.mine-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
    :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
    :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn [] [sc/col

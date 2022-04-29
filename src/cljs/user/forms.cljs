@@ -110,6 +110,7 @@
 
 ;todo find a suitable namespace
 (defn save-edit-changes [uid by-uid before-values after-values endringsbeskrivelse]
+  ;(js/alert uid)
   (db/firestore-add
     {:path  ["beskjeder" uid "endringslogg"]
      :value {:timestamp (str (t/now))
