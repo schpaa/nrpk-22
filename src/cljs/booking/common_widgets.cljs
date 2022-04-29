@@ -294,8 +294,22 @@
       (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
      (when (seq epost)
        [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])]
-    (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])]
-      [sc/row-sc-g2-w
-       [sc/text1 @username-or-fakename]
-       [sc/as-identity loggedin-uid]]
+    (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
+          epost @username-or-fakename]
+      [sc/surface-a
+       [sc/row-sc-g2-w
+        [sc/text1 "Logget inn som " [sc/link {:href (str "mailto:" epost)} epost]]
+        #_[sc/text1 "Nøkkel " loggedin-uid]]]
       #_[l/pre user @username-or-fakename])))
+
+
+(defn dialog-template [header content footer]
+  [sc/dropdown-dialog
+   [sc/col-space-4
+    [sc/col-space-4
+     [sc/row {:style {:display     :flex
+                      :align-items :center
+                      :height      "3rem"}}
+      [sc/title1 header]]
+     content]
+    footer]])

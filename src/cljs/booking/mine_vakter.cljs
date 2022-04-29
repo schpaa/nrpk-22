@@ -33,8 +33,8 @@
              (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)
                [header saldo timekrav antall-eykter])
              [widgets/personal uid user]
-             [beskjeder uid @datum]
-             [tilbakemeldinger uid (cached-datasource uid)]
+             [:div.ml-6 [beskjeder uid @datum]]
+             [:div.ml-6 [tilbakemeldinger uid (cached-datasource uid)]]
              (when-not ipad?
                (widgets/disclosure :oversikt/vakter "Vakter i '22"
                                    (vakter uid data)

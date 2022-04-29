@@ -423,7 +423,7 @@
 
 (defn debug-panel []
   [sc/row-sc-g2-w
-   (when goog.DEBUG debug-panel)
+
    (when goog.DEBUG
      [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
 
@@ -467,7 +467,7 @@
         [sc/col-space-8
          (when-not @at-least-registered?
            [please-login-and-register])
-         (when goog.DEBUG debug-panel)
+         (when goog.DEBUG (debug-panel))
          (widgets/disclosure :frontpage/news "Hva skjer?" [news-feed] nil)
          (widgets/disclosure :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed] nil)
          (widgets/disclosure :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours] nil)]]]]

@@ -372,23 +372,20 @@
                              {:class [(when-not @switch? :text-right)]}
                              (let [titles (compute-pagetitles r)]
                                (if (vector? titles)
-                                 [sc/col {:style {:justify-content :start}}
-                                  [sc/title1 (if (fn? (last titles))
-                                               ;(l/ppre-x ((last titles) 12) #_(some-> r :path-params))
-                                               ((last titles) (some-> r :path-params))
-                                               (last titles))]
+                                 [sc/col-space-1 {:style {:justify-content :start}}
+                                  [sc/title (if (fn? (last titles))
+                                              ((last titles) (some-> r :path-params))
+                                              (last titles))]
                                   (when (< 1 (count titles))
                                     (let [{:keys [text link]} (first titles)]
-                                      [:div [sc/subtext-with-link
-                                             {:class [:opacity-50 :hover:opacity-100]
-                                              :href  (k/path-for [link])} text]]))]
+                                      [sc/small0 "Se også "
+                                       [sc/subtext-with-link
+                                        {:class [:small :opacity-50x :hover:opacity-100]
+                                         :href  (k/path-for [link])} text]]))]
                                  [sc/col
                                   [sc/title1 (if (fn? (last titles))
-                                               ;(l/ppre-x (some-> r :path-params))
                                                ((last titles) (some-> r :path-params))
-                                               (last titles)) #_(if (fn? (last titles))
-                                                                  '(apply (last titles) (some-> r :data))
-                                                                  (last titles))]]))])]
+                                               (last titles))]]))])]
         [(if frontpage header-top-frontpage header-top)
          (if @switch?
            [:<>

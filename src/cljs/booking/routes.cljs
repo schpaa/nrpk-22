@@ -29,7 +29,7 @@
    ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
 
    ["/om-meg" {:name   :r.user :shorttitle "Meg"
-               :access [[:waitinglist :member :registered] #{}]
+               ;:access [[:waitinglist :member :registered] #{}]
                :header [:r.oversikt "Mine opplysninger"]}]
    ["/dine-vakter/:id" {:name       :r.dine-vakter
                         :shorttitle "Dine vakter"
@@ -37,7 +37,7 @@
                         :header     [:r.nokkelvakt (fn [{:keys [id] :as m}]
                                                      (let [user (user.database/lookup-userinfo id)]
                                                        (or (:navn user) (str m))))]}]
-   ["/mine-vakter" {:name :r.mine-vakter :shorttitle "Mine vakter" :header [:r.user "Mine vakter"]}]
+   ["/mine-status" {:name :r.mine-vakter :shorttitle "Min status" :header [:r.user "Min status"]}]
 
    ["/tilstede" {:name       :r.presence
                  :shorttitle "Tilstede"

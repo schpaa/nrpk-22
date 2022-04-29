@@ -4,11 +4,15 @@
             [schpaa.debug :as l]
             [db.core :as db]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [lambdaisland.ornament :as o]
+            [booking.common-widgets :as widgets]))
+
+(o/defstyled corner-logo' :img
+  [:& :absolute :-top-20 :-right-12 :rotate-45 :opacity-20 :w-32])
 
 (defn corner-logo []
-  [:div.absolute.-top-8.-right-8.rotate-45.opacity-20
-   [:img.w-32.h-32 {:src "/img/logo-n.png"}]])
+  [corner-logo' {:src "/img/logo-n.png"}])
 
 (defn welcome-dlg [{:keys [on-close on-save context]}]
   (let [uid @(rf/subscribe [:lab/uid])
@@ -93,13 +97,15 @@
   [sc/centered-dialog
    {:style {:position   :relative
             :overflow   :hidden
-            :z-index    10
+            :z-index    0
             :max-height "80vh"}}
    (corner-logo)
-   [sc/col-space-8
+   [sc/col-space-4
     [sc/dialog-title' "NRPK"]
-    [sc/col-space-4
-     [sc/text1 "Du har logget ut!"]]]])
+    [sc/row-sc-g2
+     [sc/col-space-4
+      [sc/text1 "Du har logget ut!"]]
+     [hoc.buttons/cta {} "Logg inn"]]]])
 
 (rf/reg-event-fx :app/sign-out
                  (fn [_ _]
@@ -111,24 +117,44 @@
                                       :content-fn #(signed-out-message %)}]]
                          [:dispatch [:app/navigate-to [:r.forsiden]]]]}))
 
+
 (defn signin-content [{:keys [on-close on-save] :as context}]
   (let [user-auth (rf/subscribe [::db/user-auth])]
-    [sc/dropdown-dialog
-     [:div.pb-8
-      [sc/col-space-4
-       [sc/title1 "Hvordan vil du logge inn?"]]
-      [sc/col
-       [db.signin/login]]
+    [widgets/dialog-template
+     "Hvordan vil du logge inn?"
+     [:<>
+      [sc/surface-a [db.signin/login]]
       [sc/col-space-4
        [sc/text2 "Når du logger inn kan vi med større sikkerhet vite hvem som står bak en identitet og med bakgrunn i dette regulere tilganger."]
        [sc/text1 "Vi kan også tilby deg noe mer funksjonalitet når du er innlogget."]]]
      [sc/row-ec
       [hoc.buttons/regular {:type     "button"
-                            :on-click #(on-close)} "Lukk"]]]))
+                            :on-click #(on-close)} "Lukk"]]]
+
+    #_[sc/dropdown-dialog
+       [sc/col-space-4
+        [sc/title1 "Hvordan vil du logge inn?"]
+        [sc/surface-a [db.signin/login]]
+        [sc/col-space-4
+         [sc/text2 "Når du logger inn kan vi med større sikkerhet vite hvem som står bak en identitet og med bakgrunn i dette regulere tilganger."]
+         [sc/text1 "Vi kan også tilby deg noe mer funksjonalitet når du er innlogget."]]]
+       [sc/row-ec
+        [hoc.buttons/regular {:type     "button"
+                              :on-click #(on-close)} "Lukk"]]]
+
+    #_[sc/dropdown-dialog
+       [sc/col-space-4
+        [sc/title1 "Hvordan vil du logge inn?"]
+        [sc/surface-a [db.signin/login]]
+        [sc/col-space-4
+         [sc/text2 "Når du logger inn kan vi med større sikkerhet vite hvem som står bak en identitet og med bakgrunn i dette regulere tilganger."]
+         [sc/text1 "Vi kan også tilby deg noe mer funksjonalitet når du er innlogget."]]]
+       [sc/row-ec
+        [hoc.buttons/regular {:type     "button"
+                              :on-click #(on-close)} "Lukk"]]]))
 
 (defn open-dialog-signin []
-  (rf/dispatch [;:lab/modaldialog-visible
-                :modal.slideout/toggle
+  (rf/dispatch [:modal.slideout/toggle
                 true
                 {:click-overlay-to-dismiss false
                  :action                   (fn [{:keys [carry] :as m}] (js/alert m))
