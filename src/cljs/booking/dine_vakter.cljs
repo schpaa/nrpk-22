@@ -39,7 +39,7 @@
     (if (empty? @data)
       [sc/title2 "Ingen endringer"]
       [sc/col-space-8
-       [sc/title1 "Endringslogg"]
+       ;[sc/title1 "Endringslogg"]
        [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
         (into [:<>]
               (for [{:keys [data id]} @data
@@ -50,16 +50,15 @@
                    [sc/text1 beskrivelse]]
                   [sc/col-space-2
                    (date-header rec)
-                   [l/pre (some-> (get-in data ["after"]))]])))]])))
+                   [sc/text0 #_{:style {:color "var(--yellow-3)"}} (str (some-> (get-in data ["after"])))]])))]])))
 
 (defn vakter [loggedin-uid data]
   (if (empty? data)
     [sc/title2 "Ingen vakter"]
-    [sc/col-space-8
-     [sc/title1 "Vakter i '22"]
+    [sc/col-space-8 {:class []}
+     ;[sc/title1 "Vakter i '22"]
      [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
       (into [:<>]
-            ;[[l/ppre-x data]]
             (for [[slot kv] data]
               [sc/row-sc-g4-w
                [schpaa.style.hoc.buttons/reg-pill
@@ -71,7 +70,7 @@
                 [sc/small1 "Registrert " (some-> (get kv loggedin-uid) t/date-time times.api/arrival-date)]]]))]]))
 
 (defn beskjeder [loggedin-uid datum]
-  (let [admin? @(rf/subscribe [:lab/admin-access])
+  (let [admin? false
         path (fn [id] (when id (vector "beskjeder" id "inbox")))
         storage-path (sc/as-shortcut {:style {:text-transform "unset"}} (apply str (interpose "/" (path loggedin-uid))))
         delete-message (fn [msg-id value] (db/firestore-set {:path (conj (path loggedin-uid) msg-id) :value value}))
@@ -89,7 +88,7 @@
              (for [{msg-id :id msg-data :data} (sort-by #(get-in % [:data "timestamp"]) > data)]
                (let [{:keys [deleted timestamp uid text]} (clojure.walk/keywordize-keys msg-data)]
                  ^{:key (str msg-id)}
-                 [sc/row-sc-g4-w {:class [:px-4]}
+                 [sc/row-sc-g4-w {:class [:px-3]}
                   [widgets/trashcan
                    (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
                    {:deleted deleted :id msg-id}]
@@ -109,14 +108,13 @@
         storage-path (sc/as-shortcut {:style {:text-transform "unset"}} (apply str (interpose "/" (path loggedin-uid))))
         delete-message (fn [msg-id value]
                          (db/database-update {:path  ["cache-tilbakemeldinger" (name msg-id)]
-                                              :value value})
-                         #_(db/firestore-set {:path (conj (path loggedin-uid) msg-id) :value value}))
-        data datum #_(remove (fn [[_k {:keys [deleted]}]] deleted) datum)]
+                                              :value value}))
+        data datum]
     (if (empty? data)
       [sc/col-space-4
        [sc/title2 "Ingen tilbakemeldinger"]
-       (when admin?
-         [sc/small2 storage-path])]
+       #_(when admin?
+           [sc/small2 storage-path])]
 
       [sc/col-space-4
        [sc/title1 "Tilbakemeldinger"]
@@ -126,58 +124,43 @@
 
        (into [sc/col-space-4]
              (for [[id {:keys [timestamp deleted text]}] (sort-by (comp :timestamp val) < data)]
-               (let [#_#_{:keys [deleted timestamp uid text]} (clojure.walk/keywordize-keys msg-data)]
-                 ^{:key (str id)}
-                 [sc/row-sc-g4-w {:class [:px-4]}
-                  [widgets/trashcan
-                   (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
-                   {:deleted deleted :id id}]
-                  #_[hoc.buttons/round-cta-pill {:on-click #(reply-to-msg loggedin-uid uid msg-id)} [sc/icon ico/tilbakemelding]]
-                  [sc/col-space-2
-                   [sc/col-space-1
-                    #_[sc/text2 (if (= uid loggedin-uid)
-                                  "Fra deg selv"
-                                  [:div [:span "Fra "] [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])} (user.database/lookup-username uid)]])]
-                    (when timestamp
-                      [sc/small2 (booking.flextime/relative-time (t/instant timestamp))])]
-                   [sc/text1 text]]])))])))
+               ^{:key (str id)}
+               [sc/row-sc-g4-w {:class [:px-4]}
+                [widgets/trashcan
+                 (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
+                 {:deleted deleted :id id}]
+                [sc/col-space-2
+                 [sc/col-space-1
+                  (when timestamp
+                    [sc/small2 (booking.flextime/relative-time (t/instant timestamp))])]
+                 [sc/text1 text]]]))])))
 
 (defn render [r]
   (let [admin? @(rf/subscribe [:lab/admin-access])]
-    (if-some [loggedin-uid (-> r :path-params :id)]
-      (r/with-let [datum (db/on-snapshot-docs-reaction {:path ["beskjeder" loggedin-uid "inbox"]})]
-        (when @datum
-          (if-let [data (db/on-value-reaction {:path ["calendar" loggedin-uid]})]
-            (let [user (user.database/lookup-userinfo loggedin-uid)
+    (if-some [user-id (-> r :path-params :id)]
+      (r/with-let [inbox-messages (db/on-snapshot-docs-reaction {:path ["beskjeder" user-id "inbox"]})]
+        (when @inbox-messages
+          (if-let [data (db/on-value-reaction {:path ["calendar" user-id]})]
+            (let [user (user.database/lookup-userinfo user-id)
                   nøkkelvakt? (:nøkkelvakt user)
                   data (mapcat val (clojure.walk/stringify-keys @data))
                   saldo (:saldo user)
                   timekrav (:timekrav user)
-                  z (when (some? saldo)
-                      (- saldo timekrav (- (* 3 (count (seq data))))))]
+                  antall-eykter (when (some? saldo)
+                                  (- saldo timekrav (- (* 3 (count (seq data))))))]
               [sc/col-space-8
-               [personal loggedin-uid user]
-
-               (when admin?
-                 [sc/row-sc-g2
-                  [sc/text1 "Identitet"]
-                  (sc/as-shortcut loggedin-uid)])
-
-               (when admin?
-                 (when nøkkelvakt?
-                   [booking.mine-dine-vakter/header
-                    {:saldo    saldo
-                     :timekrav timekrav
-                     :z        z}]))
-
+               [personal user-id user]
+               [beskjeder user-id @inbox-messages]
                (when nøkkelvakt?
-                 [vakter loggedin-uid data])
-
+                 [vakter user-id data])
+               (when (and admin? nøkkelvakt?)
+                 [booking.mine-dine-vakter/header saldo timekrav antall-eykter])
                (when admin?
-                 [endringslogg ["users" loggedin-uid "endringslogg"]])
-
-               [beskjeder loggedin-uid @datum]])
-
+                 [endringslogg ["users" user-id "endringslogg"]])
+               (when admin?
+                 [sc/row-bl
+                  [sc/small1 "Identitet"]
+                  (sc/as-identity user-id)])])
 
             [sc/title1 "Ingen definerte vakter"])))
       [widgets/no-access-view r])))

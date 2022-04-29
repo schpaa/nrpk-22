@@ -7,20 +7,14 @@
             [schpaa.style.ornament :as sc]
             [schpaa.style.booking]
             [booking.data]
-            ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]
             [schpaa.style.menu]
             [fork.re-frame :as fork]
             [tick.core :as t]
             [schpaa.style.dialog :refer [open-dialog-confirmbooking]]
             [booking.views]
             [clojure.set :as set]
-            [schpaa.style.button2 :as scb2]
             [booking.qrcode]
-            [schpaa.style.hoc.buttons :as hoc.buttons]
-            [schpaa.debug :as l]
-            [schpaa.style.input :as sci]
-            [booking.ico :as ico]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 ;region temporary, perhaps for later
 
@@ -267,7 +261,7 @@
             (fn [[master-switch ua {:keys [status access uid] :as sim}] _]
               (if master-switch
                 uid
-                (:display-name ua))))
+                (:email ua))))
 
 
 (rf/reg-event-db :lab/set-sim-type (fn [db [_ arg]]
@@ -338,10 +332,8 @@
               (if master-switch
                 (some? (some #{:admin} (or access [])))
                 (let [u @(db/on-value-reaction {:path ["users" uid]})]
-                  (if-let [x (booking.access/compute-access-tokens' u)]
+                  (if-let [x (booking.access/build-access-tuple u)]
                     (let [[s a] x]
-                      #_(tap> {:s s
-                               :a a})
                       (and (= s :member)
                            (= :admin (some #{:admin} (or a [])))))
                     false)))))
@@ -355,7 +347,7 @@
                 (and (= status :member)
                      (some? (some #{:booking} (or access []))))
                 (let [u @(db/on-value-reaction {:path ["users" uid]})]
-                  (if-let [x (booking.access/compute-access-tokens' u)]
+                  (if-let [x (booking.access/build-access-tuple u)]
                     (let [[s a] x]
                       #_(tap> {:s s
                                :a a})
@@ -381,7 +373,7 @@
                 (let [uid (:uid ua)
                       u @(db/on-value-reaction {:path ["users" uid]})]
                   (tap> {:user u})
-                  (if-let [[s a _ :as x] (booking.access/compute-access-tokens' u)]
+                  (if-let [[s a _ :as x] (booking.access/build-access-tuple u)]
                     (do
                       (tap> {"X" x})
                       (and (= s :member)
@@ -396,7 +388,7 @@
               (if master-switch
                 [status access uid]
                 (let [u @(db/on-value-reaction {:path ["users" (:uid ua)]})]
-                  (booking.access/compute-access-tokens' u)))))
+                  (booking.access/build-access-tuple u)))))
 
 ;endregion
 

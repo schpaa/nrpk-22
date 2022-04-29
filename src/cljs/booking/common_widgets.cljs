@@ -6,7 +6,8 @@
             [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
             [booking.routes]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [headlessui-reagent.core :as ui]))
 
 (defn horizontal-button [{:keys [right-side
                                  centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
@@ -249,3 +250,24 @@
        [sc/text2 "Gå til"]
        [auto-link :r.forsiden]
        [auto-link :r.oversikt]]]]))
+
+(defn disclosure
+  ([tag question answer]
+   [disclosure {} tag question answer])
+  ([attr tag question answer]
+   [ui/disclosure {:as :div}
+    (let [open @(schpaa.state/listen tag)]
+      (fn [{:keys [open]}]
+
+        [sc/col-space-4
+         [ui/disclosure-button
+          {:class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
+          (sc/icon-tiny {:style {:color "var(--brand1)"}
+                         :class (concat [:duration-100 :w-5 :h-5]
+                                        (when open
+                                          [:transform :rotate-90]))}
+                        ico/showdetails)
+          [:span [sc/fp-headersmaller {:class [:pointer-events-none]
+                                       :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
+
+         [ui/disclosure-panel attr (when open answer)]]))]))

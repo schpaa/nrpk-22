@@ -9,7 +9,7 @@
     #_(some? (some route-access-requires (second users-access-tokens)
                    #_[l/ppre-x "undecided"]))))
 
-(defn compute-access-tokens'
+(defn build-access-tuple
   "looks up :uid and returns a tuple of [status access uid]"
   [{:keys [uid] :as user}]
   (if uid

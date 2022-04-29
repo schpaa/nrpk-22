@@ -2,7 +2,6 @@
   (:require [booking.content.blog-support :refer [err-boundary]]
             [reitit.core :as reitit]
             [reagent.ratom]
-
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [booking.content.booking-blog]
@@ -30,7 +29,8 @@
             [booking.modals.centered]
             [booking.modals.mainmenu :refer [main-menu]]
             [booking.account]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [clojure.string :as str]))
 
 ;region styles
 
@@ -513,7 +513,9 @@
             "Aktiver versjon"])]]]]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
-  (let [switch? (schpaa.state/listen :lab/menu-position-right)]
+  (let [switch? (schpaa.state/listen :lab/menu-position-right)
+        admin? (rf/subscribe [:lab/admin-access])
+        account-email (rf/subscribe [:lab/username-or-fakename])]
     (r/create-class
       {:display-name        "page-boundary"
 
@@ -529,6 +531,21 @@
           [booking.modals.centered/render]
           [booking.modals.boatinput/render-boatinput]
           [booking.modals.commandpalette/window-anchor]
+
+          (when @admin?
+            [:div.fixed.inset-x-0.text-white.z-100
+             {:style {:height    "auto"
+                      :bottom    "0"
+                      :width     "min-content"
+                      :left      "50%"
+                      :transform "translateX(-50%)"}}
+             [sc/small2 {:style {:color                   :white
+                                 :background              :black
+                                 :border-top-right-radius "var(--radius-1)"
+                                 :border-top-left-radius  "var(--radius-1)"
+                                 :padding-inline          "var(--size-2)"
+                                 :padding-block           "var(--size-1)"}}
+              (str/trim (str @account-email))]])
 
           (let [content [:div.flex.flex-col
                          {:style {:flex "1 1 auto"}}
@@ -645,6 +662,7 @@
                                             #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}]))))
             (catch js/Error _))
           (let [pagename (some-> r :data :name)
+                user-account-email @(rf/subscribe [:lab/username-or-fakename])
                 numberinput (rf/subscribe [:lab/number-input])
                 left-aligned (schpaa.state/listen :activitylist/left-aligned)]
             (if frontpage

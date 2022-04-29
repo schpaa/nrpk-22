@@ -511,44 +511,30 @@
          [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
 
       [:div.mx-4.pb-8
-       [:div.w-full.mx-auto.py-4
+       [sc/col-space-8
         {:style {:max-width booking.common-views/max-width}}
+        [sc/col-space-8
+         ;{:style {:max-width booking.common-views/max-width}}
 
-        (when-not @at-least-registered?
-          [please-login-and-register])
+         (when-not @at-least-registered?
+           [please-login-and-register])
 
-        [sc/row-sc-g2-w
-         (when goog.DEBUG
-           [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
+         [sc/row-sc-g2-w
+          (when goog.DEBUG
+            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
 
-         (when goog.DEBUG
-           [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
+          (when goog.DEBUG
+            [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
 
-         (when goog.DEBUG
-           [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])]
+          (when goog.DEBUG
+            [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])]
 
-
-
-        #_(when goog.DEBUG
-            [sc/fp-summary-detail :frontpage/status
-             [sc/row-bl [sc/fp-header "Status"]]
-             [current-status]])
-
-        [sc/fp-summary-detail :frontpage/news
-         [sc/row-bl
-          [sc/fp-header "Hva skjer?"]
-          #_(sc/header-accomp-link {:class [:disabled]
-                                    :href  (kee-frame.core/path-for [:r.news])} "(se flere)")]
-         [news-feed]]
-
-        [sc/fp-summary-detail :frontpage/yearwheel
-         [sc/row-bl
-          [sc/fp-header "Planlagt"]]
-         ;(sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "(se hele årshjulet)")]
-         [booking.yearwheel/yearwheel-feed]]
-
-        [sc/fp-summary-detail :frontpage/openinghours "Åpningstider"
-         [booking.openhours/opening-hours]]]]]
+         (widgets/disclosure {:static true
+                              :class  [:px-6]} :frontpage/news "Hva skjer?" [news-feed])
+         (widgets/disclosure {:static true
+                              :class  [:px-6]} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
+         (widgets/disclosure {:static true
+                              :class  [:px-6]} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
 
      #_[bs/attached-to-bottom
         {:class [(if @at-least-registered? :bottom-toolbar) :z-20]}

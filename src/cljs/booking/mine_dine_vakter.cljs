@@ -36,7 +36,7 @@
         (str content " timer")
         "Kommer snart")]]]))
 
-(defn header [{:keys [saldo timekrav z]}]
+(defn header [saldo timekrav z]
   [:div {:style {:display         :flex
                  :height          "var(--size-10)"
                  :justify-content :space-between

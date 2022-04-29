@@ -26,6 +26,7 @@
 (def nokkelvakt [:> solid/CalendarIcon])
 (def moon [:> solid/MoonIcon])
 (def showdetails [:> outline/ChevronRightIcon])
+
 (def logout [:> outline/LogoutIcon])
 (def login [:> outline/LoginIcon])
 (def closewindow [:> solid/XIcon])

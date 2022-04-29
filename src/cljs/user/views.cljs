@@ -172,7 +172,7 @@
            [l/pre
             (when-let [u (db/on-value-reaction {:path ["users" uid]})]
               [(select-keys @u [:admin :godkjent :medlem :booking-godkjent :waitinglist :navn])
-               (booking.access/compute-access-tokens' @u)])]
+               (booking.access/build-access-tuple @u)])]
            [l/pre @(rf/subscribe [:user-data uid])]
            [l/pre uid @(rf/subscribe [:lab/nokkelvakt uid])]])]]))
 
