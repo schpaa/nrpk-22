@@ -255,7 +255,7 @@
 (defn header-with-logo []
   [:div.block.mx-4
    [:div {:class [:xduration-500]
-          :style {:transform             "rotate(-6deg)"
+          :style {:xtransform            "rotate(-6deg)"
                   :position              :relative
                   :transform-origin      "center center"
                   :display               :grid
@@ -274,7 +274,7 @@
       [sc/ingress-cl {:style {:white-space :nowrap
                               :font-size   "1.2em"
                               :color       "var(--text1)"
-                              :font-style  :italic
+                              ;:font-style  :italic
                               :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
     [:div {:style {:transform    "rotate(6deg)"
                    :align-self   :center
@@ -449,7 +449,7 @@
           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
            booking.common-views/master-control-box]]])
 
-      [:div {:style {:font-size      "2.4vmin"
+      [:div {:style {:font-size      "100%"
                      :padding-bottom "var(--size-4)"}}
        [header-with-logo]]
 
@@ -467,7 +467,7 @@
         [sc/col-space-8
          (when-not @at-least-registered?
            [please-login-and-register])
-         (when goog.DEBUG (debug-panel))
+         #_(when goog.DEBUG (debug-panel))
          (widgets/disclosure :frontpage/news "Hva skjer?" [news-feed] nil)
          (widgets/disclosure :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed] nil)
          (widgets/disclosure :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours] nil)]]]]
