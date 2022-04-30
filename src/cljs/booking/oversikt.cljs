@@ -4,6 +4,7 @@
 
 (defn shortcut [tag header ingress links]
   (widgets/disclosure {:links 1
+                       :large 1
                        :style {:padding-block "var(--size-2)"
                                :margin-left   "var(--size-5)"}}
                       tag
@@ -35,12 +36,7 @@
 
        (shortcut :oversikt/nrpk
                  "Nøklevann ro– og padleklubb"
-                 [:div {:style {:color       "var(--text2)"
-                                :font-size   "var(--font-size-3)"
-                                :line-height "var(--font-lineheight-4)"
-                                :font-weight "var(--font-weight-3)"}}
-                  [:img.w-20.h-20.float-right.mx-4 {:src "/img/logo-n.png"}]
-                  [:span.clear-left "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunn\u00adkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
+                 "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunn\u00adkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."
                  [sc/row-sc-g4-w
                   (let [data [[3 :r.oversikt.organisasjon "Historie"]
                               [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]
@@ -48,39 +44,16 @@
 
                     (map (comp f rest) (sort-by first data)))])
 
-       #_[sc/fp-summary-detail-always-show-links
-          :oversikt/nrpk
-          ;todo: find a way to read the summary/details construct (without involving external state) and present [sc/icon ico/nextImage] instead
-          "Nøklevann ro– og padleklubb"
-          [:div
-           [:img.w-24.h-24.float-right.m-4.xmt-12 {:src "/img/logo-n.png"}]
-           [:span.clear-left "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
-          [sc/row-sc-g4-w
-           (let [data [[3 :r.oversikt.organisasjon "Historie"]
-                       [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]
-                       [4 :r.oversikt.styret "Styret"]]]
-
-             (map (comp f rest) (sort-by first data)))]]
-
        (shortcut :oversikt/bli-medlem
                  "Bli medlem"
-                 [:div {:style {:color       "var(--text2)"
-                                :font-size   "var(--font-size-3)"
-                                :line-height "var(--font-lineheight-4)"
-                                :font-weight "var(--font-weight-3)"}}
-                  [:span.clear-left "Forslag til ingress?"]]
+                 "Forslag til ingress?"
                  [sc/row-sc-g4-w
                   (let [data [;[1 :r.forsiden "Registrer deg her"]
+                              [1 :r.mine-vakter "Min status"]
                               [2 :r.user "Mine opplysninger"]
                               #_[3 :r.forsiden "Hva årskontigenten dekker"]]]
                     (map (comp f rest) (sort-by first data)))])
 
-       #_(shortcut :oversikt/nøklevann "Nøklevann" "Forslag til ingress?"
-                   [sc/row-sc-g4-w
-                    (let [data [;[1 :r.forsiden "Registrer deg her"]
-                                [2 :r.user "Mine opplysninger"]
-                                #_[3 :r.forsiden "Hva årskontigenten dekker"]]]
-                      (map (comp f rest) (sort-by first data)))])
 
        [shortcut
         :oversikt/nøklevann

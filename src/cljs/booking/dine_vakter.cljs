@@ -47,8 +47,7 @@
                     [sc/text0 (str (some-> (get-in rec ["after"])))]])]))]])))
 
 (defn vakter [loggedin-uid data]
-  (when data
-    ;[l/pre data]
+  (when (seq data)
     [sc/col-space-8 {:class []}
      [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
       (into [:<>]
@@ -150,7 +149,10 @@
                    (sc/as-identity uid)])]
                [beskjeder uid @inbox-messages]
                (when nøkkelvakt?
-                 [vakter uid data])
+                 (when (seq data)
+                   [sc/col-space-4
+                    [sc/title2 "Påmeldte vakter '22"]
+                    [vakter uid data]]))
                (when (and admin? nøkkelvakt?)
                  [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
                (when admin?

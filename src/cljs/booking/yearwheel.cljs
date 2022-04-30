@@ -157,7 +157,7 @@
    :padding-left "var(--thing)"
    :text-indent  "calc(var(--thing) * -1)"
    :color        "var(--text2)"
-   :line-height  "var(--font-lineheight-4)"})
+   :line-height  "var(--font-lineheight-5)"})
 
 (o/defstyled strong :span
   [:& {;:display :inline-block
@@ -246,7 +246,7 @@
 
 (defn yearwheel-feed []
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
-    [:<>
+    [sc/col-space-4
      (when (seq data)
        [:ol
         (for [[_id {:keys [date type tldr]}] data]

@@ -212,10 +212,10 @@
                                               :color            "var(--gray-9)"}}
                               :value (let [c (count (:online @presence))]
                                        (when (pos? c) c))})
-        :default-page :r.presence
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
+        :default-page :r.users
+        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.presence) :r.users :r.presence)]])
         :tall-height  true
-        :class        #(if (= % :r.users) :selected :oversikt)
+        :class        #(if (= % :r.presence) :selected :oversikt)
         :page-name    #(some #{%} [:r.users :r.presence])})
      {:tall-height true
       ;:default-page :r.forsiden

@@ -23,9 +23,11 @@
 (def booking [:> solid/ClockIcon])
 (def ticket [:> solid/TicketIcon])
 (def vaktrapport [:> solid/KeyIcon])
+(def harnøkkel [:> solid/KeyIcon])
 (def nokkelvakt [:> solid/CalendarIcon])
 (def moon [:> solid/MoonIcon])
-(def showdetails [:> outline/ChevronRightIcon])
+(def showdetails [:> solid/ChevronRightIcon])
+;(def showdetails [:> outline/ChevronDoubleRightIcon])
 
 (def logout [:> outline/LogoutIcon])
 (def login [:> outline/LoginIcon])

@@ -59,7 +59,7 @@
 (defn tableline-online [attr [k {:keys [connections ugh] :as v}]]
   (let [uid (name k)]
     [:tr attr
-     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message uid])} ico/tilbakemelding)]
+     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message uid])} ico/melding)]
      [:td (widgets/user-link uid)]
      [:td (f ugh)]
      [:td connections]]))
@@ -67,21 +67,23 @@
 (defn tableline-offline [attr [k {:keys [lastOnline] :as v}]]
   (let [last-online-ms (cljs-time.coerce/to-long lastOnline)]
     [:tr attr
-     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message (name k)])} ico/tilbakemelding)]
-     [:td (or (user.database/lookup-username (name k)) [sc/small2 k])]
+     [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message (name k)])} ico/melding)]
+     [:td (widgets/user-link (name k))]
+     #_[:td (or (user.database/lookup-username (name k)) [sc/small2 k])]
      [:td (f last-online-ms)]
      [:td]]))
 
-(def header [:thead
-             [:tr
-              [:th ""]
-              [:th "navn"]
-              [:th "sist sett"]
-              [:th "forbindelser"]]])
+(def header
+  [:thead
+   [:tr
+    [:th ""]
+    [:th "navn"]
+    [:th "sist sett"]
+    [:th "forbindelser"]]])
 
 (defonce settings (r/atom {}))
 
-(defn presence [r data]
+(defn render [r data]
   [booking.reports/table-controller-report'
    [booking.reports/table-report
     [:<>
@@ -95,10 +97,12 @@
                (for [v (sort-by (comp :lastOnline last) > (:offline @data))]
                  [tableline-offline {:class [:offline]} v]))))]]])
 
-(defn panel []
-  [sc/col-space-8
-   [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
-    [hoc.toggles/switch-local (r/cursor settings [:show-offline]) "vis offline"]]])
-
 (defn always []
-  [schpaa.style.hoc.buttons/reg-pill-icon {:on-click #(db.core/database-set {:path ["presence"] :value {}})} ico/trash "Slett historikk"])
+  [sc/row-sc-g4-w
+   [schpaa.style.hoc.buttons/reg-pill-icon {:on-click #(db.core/database-set {:path ["presence"] :value {}})} ico/trash "Slett logg"]
+   [hoc.toggles/switch-local (r/cursor settings [:show-offline]) "vis offline"]])
+
+#_(defn panel []
+    [sc/col
+     [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
+      [hoc.toggles/switch-local (r/cursor settings [:show-offline]) "vis offline"]]])

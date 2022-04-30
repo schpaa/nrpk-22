@@ -30,14 +30,14 @@
 
    ["/om-meg" {:name   :r.user :shorttitle "Meg"
                ;:access [[:waitinglist :member :registered] #{}]
-               :header [:r.oversikt "Mine opplysninger"]}]
+               :header [:r.mine-vakter "Mine opplysninger"]}]
    ["/dine-vakter/:id" {:name       :r.dine-vakter
                         :shorttitle "Dine vakter"
                         :access     [[:member] #{:admin :nøkkelvakt}]
                         :header     [:r.nokkelvakt (fn [{:keys [id] :as m}]
                                                      (let [user (user.database/lookup-userinfo id)]
                                                        (or (:navn user) (str m))))]}]
-   ["/mine-status" {:name :r.mine-vakter :shorttitle "Min status" :header [:r.user "Min status"]}]
+   ["/min-status" {:name :r.mine-vakter :shorttitle "Min status" :header [:r.user "Min status"]}]
 
    ["/tilstede" {:name       :r.presence
                  :shorttitle "Tilstede"

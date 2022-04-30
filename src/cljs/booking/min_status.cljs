@@ -23,7 +23,7 @@
   (if-let [uid @(rf/subscribe [:lab/uid])]
     (r/with-let [ipad? ((fn is-master-input? [uid] (= uid @(db/on-value-reaction {:path ["system" "active"]}))) uid)
                  datum (db/on-snapshot-docs-reaction {:path (path-beskjederinbox uid)})
-                 sent (db/on-snapshot-docs-reaction {:path (path-beskjedersent uid)})]
+                 #_#_sent (db/on-snapshot-docs-reaction {:path (path-beskjedersent uid)})]
       (when @datum
         (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
           (let [admin? @(rf/subscribe [:lab/admin-access])
@@ -35,18 +35,25 @@
             [sc/col-space-8
              [beskjeder uid @datum]
              ;[beskjeder uid @sent]
-             [l/pre (path-beskjedersent uid) @sent]
-             (for [{:keys [id data]} @sent]
-               [l/pre id])
+             ;[l/pre (path-beskjedersent uid) @sent]
+             #_(for [{:keys [id data]} @sent]
+                 [l/pre id])
              [tilbakemeldinger uid (cached-datasource uid)]
+             #_[l/pre
+                (seq (vakter uid data))
+                (seq [1 2])]
+
              (when-not ipad?
-               (widgets/disclosure :oversikt/vakter "Vakter i '22"
+               (widgets/disclosure {}
+                                   :oversikt/vakter
+                                   "Vakter i '22"
                                    (vakter uid data)
                                    "Ingen vakter"))
              [widgets/personal user]
              (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)
                [saldo-header saldo timekrav antall-eykter])
-             (widgets/disclosure :oversikt/endringslogg
+             (widgets/disclosure {}
+                                 :oversikt/endringslogg
                                  "Endringslogg"
                                  (endringslogg uid (path-endringslogg uid))
                                  "Det er ikke gjort noen endringer.")

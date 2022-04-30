@@ -255,9 +255,9 @@
                                       :src    e}]])) frontpage-images)}]]]))
 
 (defn todays-numbers [c1 c2 a b]
-  [sc/row-sc-g4-w {:style {:transform        "translateY(1rem) rotate(6deg)"
+  [sc/row-sc-g4-w {:style {:-transform       "translateY(1rem) rotate(6deg)"
                            :opacity          0.33
-                           :transform-origin "bottom end"}}
+                           :transform-origin "end bottom "}}
    [sc/col {:class [:gap-2]}
     [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])
                        :class    [:narrow :shadow :center]
@@ -282,34 +282,31 @@
 
 (defn header-with-logo []
   (let [c (count (logg.database/boat-db))]
-    [:div.block.mx-4
-     [:div {:class [:xduration-500]
-            :style {:transform             "rotate(-6deg)"
-                    :position              :relative
-                    :transform-origin      "center center"
-                    :display               :grid
-                    :gap                   "var(--size-4)"
-                    :grid-template-columns "1fr min-content 1fr"}}
-      [:div {:style {:justify-self :end
-                     :margin-block "3em"
-                     :align-self   :center}}
-       [bs/logo-text {:style {
-                              :width        "auto"
-                              :justify-self :end}}
-        [sc/hero' {:style {:text-align  :right
-                           :color       "var(--text0)"
-                           :font-size   "1.92em"
-                           :font-weight "var(--font-weight-4)"}} "Nøklevann"]
-        [sc/ingress-cl {:style {:white-space :nowrap
-                                :font-size   "1.2em"
-                                :color       "var(--text1)"
-                                ;:font-style  :italic
-                                :font-weight "var(--font-weight-3)"}} "ro– og padleklubb"]]]
-      [:div {:style {:align-self   :center
-                     :justify-self :start}}
-       (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-         [circular-logo-thing dark-mode?])]
-      (todays-numbers "— " "— " c '—)]]))
+
+    [:div.grid.gap-x-8.mx-4
+     {:style {:grid-template-columns "1fr min-content 1fr"}}
+     [:div {:class [:xduration-500 :flex :items-center :justify-end]
+            :style {:transform        "rotate(-6deg)"
+                    :position         :relative
+                    :transform-origin "center right"
+                    :gap              "var(--size-4)"}}
+
+      [bs/logo-text {:style {:width        "auto"
+                             :justify-self :end}}
+       [sc/hero' {:style {:text-align  :right
+                          :color       "var(--text0)"
+                          :font-size   "1.92em"
+                          :font-weight "var(--font-weight-5)"}} "Nøklevann"]
+       [sc/ingress-cl {:style {:white-space :nowrap
+                               :font-size   "1.2em"
+                               :color       "var(--text1)"
+                               ;:font-style  :italic
+                               :font-weight "var(--font-weight-4)"}} "ro– og padleklubb"]]]
+     [:div {:style {:align-self   :center
+                    :justify-self :start}}
+      (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
+        [circular-logo-thing dark-mode?])]
+     (todays-numbers "— " "— " c '—)]))
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -498,7 +495,7 @@
          (when-not @at-least-registered?
            [please-login-and-register])
          #_(when goog.DEBUG (debug-panel))
-         (widgets/disclosure :frontpage/news "Hva skjer?" [news-feed])
-         (widgets/disclosure :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed] nil)
-         (widgets/disclosure :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours] nil)]]]]
+         (widgets/disclosure {:large 1} :frontpage/news "Hva skjer?" [news-feed])
+         (widgets/disclosure {:large 1} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
+         (widgets/disclosure {:large 1} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
      [booking.common-views/after-content]]))

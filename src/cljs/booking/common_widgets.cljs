@@ -171,7 +171,7 @@
   (tap> {:uid uid})
   [sc/link
    {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
-   '(or (user.database/lookup-username uid) uid)])
+   (or (user.database/lookup-username uid) uid)])
 
 (defn auto-link
   ([link]
@@ -248,28 +248,33 @@
        [auto-link :r.oversikt]]]]))
 
 (defn disclosure
-  ([tag question answer]
-   (disclosure {:style {:padding-block "var(--size-2)"
-                        :margin-left   "var(--size-5)"}} tag question answer nil))
-  ([tag question answer empty-message]
-   (disclosure {:style {:padding-block "var(--size-2)"
-                        :margin-left   "var(--size-5)"}} tag question answer empty-message))
+  ([attr tag question answer]
+   (disclosure attr tag question answer nil))
   ([attr tag question answer empty-message]
-   (let [open @(schpaa.state/listen tag)]
-     [ui/disclosure {:as       :div
-                     :on-click #(schpaa.state/toggle tag)}
+   (let [attr (conj {:style {:padding-block "var(--size-2)"
+                             :margin-left   "var(--size-7)"}}
+                    attr)
+         open @(schpaa.state/listen tag)]
+     [ui/disclosure {:as    :div
+                     :style {:cursor :default}}
       (fn [{:keys []}]
         [sc/col
-
          [ui/disclosure-button
-          {:class "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
-          (sc/icon-tiny {:style {:color "var(--brand1)"}
-                         :class (concat [:duration-100 :w-5 :h-5]
-                                        (when open
-                                          [:transform :rotate-90]))}
-                        ico/showdetails)
-          [:span [sc/fp-headersmaller {:class [:pointer-events-none]
-                                       :style {:color (if open "var(--text0)" "var(--text2)")}} question]]]
+          {:on-click #(schpaa.state/toggle tag)
+           :style    {
+                      :cursor :default}
+           :class    "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
+
+          [sc/row-sc-g2
+           {:style    {:cursor :pointer}
+            :on-click #(schpaa.state/toggle tag)}
+           (sc/icon {:style {:color "var(--brand2)"}
+                     :class (concat [:duration-100 :w-12 :h-12]
+                                    (when open
+                                      [:transform :rotate-90]))}
+                    ico/showdetails)
+           [:span [sc/fp-headersmaller {:class [:pointer-events-none (when (:large attr) :large)]
+                                        :style {:color (if open "var(--text0)" "var(--text2)")}} question]]]]
          [ui/disclosure-panel
           (merge-with into
                       {:static true}
@@ -278,7 +283,11 @@
 
           (if (:links attr)
             (if open [sc/col-space-4 answer empty-message] empty-message)
-            (if open [sc/text (or answer empty-message)]))]])])))
+            (if open
+              (if answer
+                [sc/text2 answer]
+                [sc/text2 empty-message])
+              (when-not answer [sc/text2 empty-message])))]])])))
 
 (defn send-msg [uid-reciever]
   (rf/dispatch [:app/open-send-message uid-reciever]))

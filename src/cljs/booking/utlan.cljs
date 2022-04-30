@@ -379,7 +379,7 @@
                          :flex-wrap :nowrap}
                  :class [:h-12x :place-content-center]}
    (when sleepover [sc/icon-tiny-frame ico/moon])
-   (when havekey [sc/icon-tiny-frame ico/nokkelvakt])])
+   (when havekey [sc/icon-tiny-frame ico/harnøkkel])])
 
 (defn- edit [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
   [:div {:class [:h-12x :flex :items-center :gap-2]

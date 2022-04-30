@@ -46,7 +46,8 @@
             [booking.boatlist]
             [booking.dine-vakter]
             [booking.min-status]
-            [booking.oversikt]))
+            [booking.oversikt]
+            [eykt.calendar.core]))
 
 ;region related to flex-date and how to display relative time
 
@@ -549,9 +550,9 @@
    (fn [r]
      (let [data (rf/subscribe [::db/presence-status])]
        [+page-builder r
-        {:panel            booking.presence/panel
+        {;:panel            booking.presence/panel
          :always-panel     booking.presence/always
-         :render-fullwidth #(booking.presence/presence r data)}]))
+         :render-fullwidth #(booking.presence/render r data)}]))
 
    :r.users
    (fn [r]
