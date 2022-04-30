@@ -1,5 +1,6 @@
 (ns booking.common-widgets
   (:require [schpaa.style.ornament :as sc]
+            [reagent.core :as r]
             [reitit.core :as reitit]
             [re-frame.core :as rf]
             [booking.ico :as ico]
@@ -167,9 +168,10 @@
              "wtf?")})
 
 (defn user-link [uid]
+  (tap> {:uid uid})
   [sc/link
    {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
-   (or (user.database/lookup-username uid) uid)])
+   '(or (user.database/lookup-username uid) uid)])
 
 (defn auto-link
   ([link]
@@ -248,9 +250,9 @@
 (defn disclosure
   ([tag question answer]
    (disclosure {:style {:padding-block "var(--size-2)"
-                        :margin-left   "var(--size-5)"}} tag question answer))
+                        :margin-left   "var(--size-5)"}} tag question answer nil))
   ([tag question answer empty-message]
-   (disclosure {:style {:padding-block "var(--size-4x)"
+   (disclosure {:style {:padding-block "var(--size-2)"
                         :margin-left   "var(--size-5)"}} tag question answer empty-message))
   ([attr tag question answer empty-message]
    (let [open @(schpaa.state/listen tag)]
@@ -267,42 +269,50 @@
                                           [:transform :rotate-90]))}
                         ico/showdetails)
           [:span [sc/fp-headersmaller {:class [:pointer-events-none]
-                                       :style {:color (if open "var(--text2)" "var(--text0)")}} question]]]
+                                       :style {:color (if open "var(--text0)" "var(--text2)")}} question]]]
          [ui/disclosure-panel
           (merge-with into
                       {:static true}
                       (dissoc attr :links)
-                      {:style (if open {:margin-block "var(--size-0)"})})
+                      {:style (if open {:margin-block "var(--size-2)"})})
 
           (if (:links attr)
             (if open [sc/col-space-4 answer empty-message] empty-message)
             (if open [sc/text (or answer empty-message)]))]])])))
 
-(defn send-msg [loggedin-uid]
-  ;(js/alert "!")
-  (rf/dispatch [:app/open-send-message loggedin-uid]))
+(defn send-msg [uid-reciever]
+  (rf/dispatch [:app/open-send-message uid-reciever]))
 
-(defn personal [loggedin-uid {:keys [telefon epost uid] :as user}]
-  (if user
-    [sc/surface-a
-     [sc/row-sc-g2-w
-      [sc/row-sc-g1-w {:style {:color "var(--text1)"}}
-       [sc/text1 "Telefon"] telefon
-       [sc/link {:href (str "tel:" telefon)} "Ring"]
-       [:span "/"]
-       [sc/link {:href (str "sms:" telefon)} "SMS"]
-       [:span "/"]
-       (hoc.buttons/round-cta-pill {:on-click #(send-msg loggedin-uid)} (sc/icon ico/tilbakemelding))]
-      (when (seq epost)
-        [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])]]
-    (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
-          epost @username-or-fakename]
-      [sc/surface-a
+(defn message-pill [uid-reciever]
+  (hoc.buttons/pill
+    {:class    [:message :round]
+     :on-click #(send-msg uid-reciever)} (sc/icon ico/melding)))
+
+(defn personal [{:keys [telefon epost uid] :as user} & [extra]]
+  (r/with-let [triggered (r/atom false)]
+    (if user
+      [sc/surface-a {:on-click #(swap! triggered not)
+                     :style    {:padding "var(--size-2)"}}
        [sc/row-sc-g2-w
-        [sc/text1 "Logget inn som " [sc/link {:href (str "mailto:" epost)} epost]]
-        #_[sc/text1 "Nøkkel " loggedin-uid]]]
-      #_[l/pre user @username-or-fakename])))
-
+        {:style {:gap            "var(--size-2)"
+                 :color          "var(--text1)"
+                 :padding-inline "var(--size-2)"
+                 :padding-block  "var(--size-2)"}}
+        [sc/row-sc-g2-w
+         [sc/row-sc-g2
+          [sc/text1 "Telefon"]
+          [sc/link {:href (str "tel:" telefon)} telefon]
+          [:span "/"]
+          [sc/link {:href (str "sms:" telefon)} "SMS"]]
+         (message-pill uid)]
+        (when (seq epost)
+          [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])
+        (when @triggered extra)]]
+      (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
+            epost @username-or-fakename]
+        [sc/surface-a
+         [sc/row-sc-g2-w
+          [sc/text1 "Logget inn som " [sc/link {:href (str "mailto:" epost)} epost]]]]))))
 
 (defn dialog-template [header content footer]
   [sc/dropdown-dialog

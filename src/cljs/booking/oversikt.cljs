@@ -39,8 +39,8 @@
                                 :font-size   "var(--font-size-3)"
                                 :line-height "var(--font-lineheight-4)"
                                 :font-weight "var(--font-weight-3)"}}
-                  [:img.w-24.h-24.float-right.m-4.xmt-12 {:src "/img/logo-n.png"}]
-                  [:span.clear-left "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunnkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
+                  [:img.w-20.h-20.float-right.mx-4 {:src "/img/logo-n.png"}]
+                  [:span.clear-left "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunn\u00adkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."]]
                  [sc/row-sc-g4-w
                   (let [data [[3 :r.oversikt.organisasjon "Historie"]
                               [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]

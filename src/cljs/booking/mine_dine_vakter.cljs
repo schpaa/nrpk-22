@@ -1,6 +1,19 @@
 (ns booking.mine-dine-vakter
   (:require [schpaa.style.ornament :as sc]))
 
+;region
+
+(defn path-endringslogg [uid]
+  ["beskjeder" uid "endringslogg"])
+
+(defn path-beskjederinbox [uid]
+  ["beskjeder" uid "inbox"])
+
+(defn path-beskjedersent [uid]
+  ["beskjeder" uid "sent" uid "posts"])
+
+;endregion
+
 (def regular-style
   {:style
    {:box-shadow "var(--shadow-1)"
@@ -26,7 +39,8 @@
   ([header content]
    (panel regular-style header content))
   ([attr header content]
-   [sc/surface-a (merge-with into {:style {:padding "var(--size-2)"}} attr)
+   [sc/surface-a (merge-with into {:style {:padding-inline "var(--size-3)"
+                                           :padding-block  "var(--size-2)"}} attr)
     [sc/col-space-2 {:style {:height          "100%"
                              :justify-content :space-between}}
      [sc/small2 header]
@@ -36,9 +50,9 @@
         (str content " timer")
         "Kommer snart")]]]))
 
-(defn header [saldo timekrav z]
+(defn saldo-header [saldo timekrav z]
   [:div {:style {:display         :flex
-                 :height          "var(--size-10)"
+                 :height          "auto "                   ;var(--size-10)
                  :justify-content :space-between
                  :width           "100%"
                  :gap             "var(--size-2)"}}

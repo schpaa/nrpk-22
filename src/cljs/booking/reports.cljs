@@ -64,8 +64,6 @@
       [:&.vcenter {
                    :vertical-align :middle}]]]]])
 
-
-
 (o/defstyled phonenumber :td
   :tabular-nums
   {:letter-spacing "var(--font-letterspacing-0)"})
@@ -143,7 +141,9 @@
                 (for [[_ {:keys [uid kilde text timestamp] :as m}] (sort-by (comp :timestamp val) > @data')
                       :let [{:keys [telefon navn]} (user.database/lookup-userinfo uid)]]
                   [:tr
-                   [:td [hoc.buttons/round-cta-pill {:on-click #(booking.dine-vakter/reply-to-msg loggedin-uid uid nil #_msg-id)} [sc/icon ico/tilbakemelding]]]
+                   [:td [hoc.buttons/round-cta-pill
+                         {:on-click #(booking.dine-vakter/reply-to-msg loggedin-uid uid nil #_msg-id)}
+                         [sc/icon ico/tilbakemelding]]]
                    [:td {:style {:vertical-align "top"}} (widgets/user-link uid)]
                    [:td {:class [:message-col]}
                     [sc/col-space-2
@@ -252,7 +252,6 @@
                                    (if (zero? saldo') 0 (str saldo' "t"))])]
                    [:td.vcenter [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id (name uid)}])} navn]]]))]]]])))
 
-
 (defn oppmøte []
   (r/with-let [focused (r/atom nil)
                search (r/atom "")]
@@ -349,7 +348,6 @@
                                                        :style {:color (if (or (pos? saldo') (zero? saldo')) "var(--green-5)" "var(--red-5)")}}
                                           (if (zero? saldo') 0 (str saldo' "t"))])]
                      [:td.vcenter.w-full [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id (name uid)}])} navn]]]))]]])])))
-
 
 (def report-list
   [{:name    "Rapport: saldo for nøkkelvakter"

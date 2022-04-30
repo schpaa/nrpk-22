@@ -256,16 +256,18 @@
 
 (defn todays-numbers [c1 c2 a b]
   [sc/row-sc-g4-w {:style {:transform        "translateY(1rem) rotate(6deg)"
-
+                           :opacity          0.33
                            :transform-origin "bottom end"}}
    [sc/col {:class [:gap-2]}
     [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])
-                       :class    [:narrow :shadow :center :opacity-50]
-                       :style    {:background-color "var(--gray-9)"
+                       :class    [:narrow :shadow :center]
+                       :style    {:border-radius    "var(--radius-1)"
+                                  :background-color "var(--gray-9)"
                                   :color            "var(--gray-1)"}} a]
     [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]])
-                       :class    [:center :narrow :shadow :opacity-50]
-                       :style    {:color            "var(--blue-1)"
+                       :class    [:center :narrow :shadow]
+                       :style    {:border-radius    "var(--radius-1)"
+                                  :color            "var(--blue-1)"
                                   :background-color "var(--blue-9)"}} b]]
    [sc/surface-a
     {:style {:padding-inline "var(--size-3)"
@@ -477,7 +479,8 @@
            booking.common-views/master-control-box]]])
 
       [:div {:style {:font-size     "100%"
-                     :padding-block "var(--size-8)"}}
+                     :margin-top    "1.4rem"
+                     :padding-block "var(--size-10)"}}
        [header-with-logo]]
 
       (when @show-image-carousell?
@@ -495,7 +498,7 @@
          (when-not @at-least-registered?
            [please-login-and-register])
          #_(when goog.DEBUG (debug-panel))
-         (widgets/disclosure :frontpage/news "Hva skjer?" [news-feed] nil)
+         (widgets/disclosure :frontpage/news "Hva skjer?" [news-feed])
          (widgets/disclosure :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed] nil)
          (widgets/disclosure :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours] nil)]]]]
      [booking.common-views/after-content]]))

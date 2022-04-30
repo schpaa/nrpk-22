@@ -107,7 +107,7 @@
 
 (rf/reg-event-fx :app/give-feedback [rf/trim-v] feedback-map)
 
-(defn send-message [_ [uid]]
+(defn send-message [_ [uid-receiver]]
   ;(js/alert uid)
   (letfn [(write-to-db [reci-uid {:keys [carry]}]
             (let [active-uid (:uid @(rf/subscribe [:db.core/user-auth]))
@@ -126,7 +126,7 @@
                        ;:title          (str "Til " (user.database/lookup-username uid))
                        ;:caption        (str "Til " (user.database/lookup-username uid))
                        :content-fn     #(feedback-window %)
-                       :action         #(write-to-db uid %)}]]]}))
+                       :action         #(write-to-db uid-receiver %)}]]]}))
 
 (defn send-reply [_ [loggedin-uid uid msg-id]]
   ;(js/alert uid)

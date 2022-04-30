@@ -1,19 +1,8 @@
 (ns eykt.calendar.core
-  (:require [re-frame.core :as rf]
-            [db.core :as db]
+  (:require [db.core :as db]
             [tick.core :as t]
-            [times.api :as ta]
             [schpaa.time]
-            [schpaa.debug :as l]
-            [eykt.calendar.views :as views]
-            [eykt.calendar.widgets :as widgets]
-            [eykt.calendar.calculations :refer [calc]]
-            [schpaa.style :as s]))
-
-(rf/reg-event-db ::set-tab (fn [db [_ tab]]
-                             (assoc db ::tab tab)))
-
-(rf/reg-sub ::get-tab (fn [db] (get db ::tab :table)))
+            [eykt.calendar.views :as views]))
 
 (def all-week [t/MONDAY t/TUESDAY t/WEDNESDAY t/THURSDAY t/FRIDAY t/SATURDAY t/SUNDAY])
 
@@ -140,9 +129,6 @@
                    :endtime   #time/time "17:00"
                    :slots     3}]}])
 
-
-;region
-
 (defn expanded-times [r]
   (-> (fn [a {:keys [times] :as e}]
         (conj a (map #(merge (dissoc e :times) %) times)))
@@ -158,7 +144,6 @@
 (def expand (comp expanded-times expanded-days))
 
 (defn matches [dt {:keys [startdate enddate weekday] :as timerange}]
-  (tap> [:dt+ dt startdate enddate weekday])
   (and
     (= weekday (t/day-of-week dt))
     (if (not-any? some? [startdate enddate])
@@ -167,11 +152,9 @@
         (t/= startdate dt)
         (t/<= startdate dt enddate)))))
 
-(defn calculate [{:keys [utc-start utc-end rules] :as config} n]
+(defn calculate [{:keys [utc-start utc-end rules]} n]
   (let [dt (t/>> utc-start (t/new-period n :days))
         r (filter #(matches (t/date dt) %) rules)]
-    (tap> {:dt      dt
-           :utc-end utc-end})
     (if (and (t/<= dt utc-end) utc-end)
       (if (seq r)
         (mapv #(assoc (dissoc % :startdate :enddate :weekday) :dt dt) r)
@@ -183,30 +166,15 @@
     (when-let [c (calculate config n)]
       (cons c (iterate-dates config (inc n))))))
 
-(defn expand-date-range []
-  (let [config {:rules     (expand short-rules)
-                :utc-start (t/at (t/date "2022-05-07") (t/time "00:00"))
-                :utc-end   (t/at (t/date "2022-10-09") (t/time "00:00"))}]
-
-    #_(filter (fn [[e]] (< 0 (:slots e)))
-              (iterate-dates config 0))
-    (iterate-dates config 0)))
-
-(comment
-  (do
-    (expand-date-range)))
-
-#_(do
-
-    (expand-date-range))
-
-;endregion
+#_(defn expand-date-range [config]
+    (let [config {:rules     (expand short-rules)
+                  :utc-start (t/at (t/date "2022-05-07") (t/time "00:00"))
+                  :utc-end   (t/at (t/date "2022-10-09") (t/time "00:00"))}]
+      (iterate-dates config 0)))
 
 (defn routine
-  "
-  Takes input (from db) and dislocates the keys of the parent and the immediate child.
-  Unsure where and how to use this, (if at all useful?)
-  "
+  "Takes input (from db) and dislocates the keys of the parent and the immediate child.
+  Unsure where and how to use this, (if at all useful?)"
   [db-input]
   (loop [xs db-input
          r {}]
@@ -218,113 +186,13 @@
                           r vs)))
       r)))
 
-(comment
-  (do
-    (routine
-      {:z2 {:11:00 "202x"
-            :12:00 "202x"
-            :19:00 "202x"
-            :18:00 "2022"}
-       :z1 {:13:00 "202x"
-            :12:00 "202x"
-            :19:00 "202x"
-            :18:00 "2022"}})))
-
-(defn rooo [data]
-  (tap> ["rooo" data])
-  (let [source (routine data)
-        ;_ (tap> ["source" source])
-        ;_ (tap> ["keys source" (keys source)])
-        r (reduce (fn [a group-id]
-                    ;(tap> [">>" (get a group-id) (routine (get a group-id))])
-                    (update a group-id routine)) source (keys source))]
-    #_(tap> ["rooo2" source])
-    #_(tap> ["rooo3" r])
-    r))
-
-(comment
-  (do
-    (routine {:z1 "2022-02-04T14:15:06.952"})))
-
-(comment
-  (do
-    (rooo
-      {:z1 {"19:00" "2022-02-04T14:15:06.952"
-            "18:00" "2022-02-04T14:15:06.952"}})))
-
-(defn z
-  "?"
-  [data]
-  (reduce (fn [a e] (update a (str (:dt e)) update (:section e) (fnil conj []) e)) {} data))
-
-(comment
-  (do
-    (let [data [{:description "SIMPLE test",
-                 :starttime   #time/time"11:00",
-                 :endtime     #time/time"14:00",
-                 :ugh         "?",
-                 :slots       3,
-                 :dt          #time/date"2022-10-02"}
-                {:description "SIMPLE test",
-                 :starttime   #time/time"14:00",
-                 :endtime     #time/time"17:00",
-                 :slots       3,
-                 :dt          #time/date"2022-10-02"}
-                {:description "Party",
-                 :starttime   #time/time"11:00",
-                 :endtime     #time/time"14:00",
-                 :ugh         "?",
-                 :slots       2,
-                 :dt          #time/date"2022-10-02"}]]
-      (z data))))
-
-(defn massage [data]
-  (reduce (fn [a e-vecblock] (conj a (z e-vecblock))) {} data))
-
-(comment
-  (do
-    (->> (iterate-dates {:rules     (expand short-rules)
-                         :utc-start (t/date "2022-01-31")
-                         :utc-end   (t/date "2022-02-06")} 0)
-         (massage))))
-
-(defn grab-for-graph [date-bounds]
-  (->> (iterate-dates {:rules     (expand short-rules)
-                       :utc-start (t/date (t/beginning date-bounds)) ;(t/date "2022-09-30")
-                       :utc-end   (t/date (t/end date-bounds)) #_(t/date "2022-10-04")} 0)
-       (massage)))
-
-
-(comment
-  (do
-    (grab-for-graph
-      (tick.alpha.interval/new-interval
-        (t/date "2022-05-08")
-        (t/date "2022-06-12")))))
-
-(comment
-  (do
-    (expanded-days rules')))
-
-(comment
-  (do
-    (let [listener @(db/on-value-reaction {:path ["calendar"]})]
-      (routine listener))))
-
-(def render-tab-data
-  {:table    {:text "Tabell"}
-   :calendar {:text "Kalender"}
-   :summary  {:text "Summary"}
-   :week     {:text "Uke"}
-   :data-1   {:text "d1"}
-   :data-2   {:text "d2"}})
-
 (defn render [r]
-  (let [uid (rf/subscribe [::db/root-auth :uid])
-        current-tab (rf/subscribe [::get-tab])
-        listener (db/on-value-reaction {:path ["calendar"]})
-        color-map (s/color-map :main)]
+  (let [listener (db/on-value-reaction {:path ["calendar"]})]
     (fn [r]
       [views/table
        {:base (routine @listener)
-        :data (expand-date-range)}])))
+        :data (iterate-dates
+                {:rules     (expand short-rules)
+                 :utc-start (t/at (t/date "2022-05-07") (t/time "00:00"))
+                 :utc-end   (t/at (t/date "2022-10-09") (t/time "00:00"))}
+                0)}])))

@@ -8,7 +8,8 @@
             [booking.ico :as ico]
             [tick.core :as t]
             [schpaa.debug :as l]
-            [booking.mine-dine-vakter]))
+            [booking.mine-dine-vakter :refer [path-endringslogg
+                                              path-beskjederinbox]]))
 
 
 
@@ -22,27 +23,33 @@
   (when-let [ts (get rec "timestamp")]
     [sc/small1 (times.api/compressed-date (times.api/timestamp->local-datetime-str' ts))]))
 
-(defn endringslogg [path]
+(defn endringslogg [uid path]
   (r/with-let [data (db/on-snapshot-docs-reaction {:path path})]
-    (when-not (empty? @data)
+    (let [;fix forced first entry; uid assignment
+          data (cons {:id   "0"
+                      :data {"by-uid"    uid
+                             "reason"    {:a 1}
+                             "after"     {"endringsbeskrivelse" uid}
+                             "timestamp" nil}}
+                     @data)]
       [sc/col-space-8
-       ;[sc/title1 "Endringslogg"]
        [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
         (into [:<>]
-              (for [{:keys [data id]} @data
-                    :let [rec (some-> data)]]
-                (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
-                  [sc/col-space-2
-                   (date-header rec)
-                   [sc/text1 beskrivelse]]
-                  [sc/col-space-2
-                   (date-header rec)
-                   [sc/text0 #_{:style {:color "var(--yellow-3)"}} (str (some-> (get-in data ["after"])))]])))]])))
+              (for [{:keys [data _id]} data
+                    :let [rec data]]
+                [:div
+                 (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
+                   [sc/col-space-2
+                    (date-header rec)
+                    [sc/text1 beskrivelse]]
+                   [sc/col-space-2
+                    (date-header rec)
+                    [sc/text0 (str (some-> (get-in rec ["after"])))]])]))]])))
 
 (defn vakter [loggedin-uid data]
-  (when-not (empty? data)
+  (when data
+    ;[l/pre data]
     [sc/col-space-8 {:class []}
-
      [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
       (into [:<>]
             (for [[slot kv] data]
@@ -96,11 +103,11 @@
                          (db/database-update {:path  ["cache-tilbakemeldinger" (name msg-id)]
                                               :value value}))
         data datum]
-    (if (empty? data)
-      [sc/col-space-4
-       [sc/title2 "Ingen tilbakemeldinger"]
-       #_(when admin?
-           [sc/small2 storage-path])]
+    (if-not (empty? data)
+      #_[sc/col-space-4
+         [sc/title2 "Ingen tilbakemeldinger"]
+         #_(when admin?
+             [sc/small2 storage-path])]
 
       [sc/col-space-4
        [sc/title1 "Tilbakemeldinger"]
@@ -123,30 +130,31 @@
 
 (defn render [r]
   (let [admin? @(rf/subscribe [:lab/admin-access])]
-    (if-some [user-id (-> r :path-params :id)]
-      (r/with-let [inbox-messages (db/on-snapshot-docs-reaction {:path ["beskjeder" user-id "inbox"]})]
+    (if-let [uid (some-> r :path-params :id)]
+      (r/with-let [inbox-messages (db/on-snapshot-docs-reaction {:path (path-beskjederinbox uid)})]
         (when @inbox-messages
-          (if-let [data (db/on-value-reaction {:path ["calendar" user-id]})]
-            (let [user (user.database/lookup-userinfo user-id)
-                  nøkkelvakt? (:nøkkelvakt user)
+          (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
+            (let [user (user.database/lookup-userinfo uid)
+                  nøkkelvakt? (:godkjent user)
                   data (mapcat val (clojure.walk/stringify-keys @data))
                   saldo (:saldo user)
                   timekrav (:timekrav user)
                   antall-eykter (when (some? saldo)
                                   (- saldo timekrav (- (* 3 (count (seq data))))))]
               [sc/col-space-8
-               [widgets/personal user-id user]
-               [beskjeder user-id @inbox-messages]
+               ;[l/pre user]
+               [widgets/personal user
+                (when admin?
+                  [sc/row-bl
+                   [sc/text1 "Identitet"]
+                   (sc/as-identity uid)])]
+               [beskjeder uid @inbox-messages]
                (when nøkkelvakt?
-                 [vakter user-id data])
+                 [vakter uid data])
                (when (and admin? nøkkelvakt?)
-                 [booking.mine-dine-vakter/header saldo timekrav antall-eykter])
+                 [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
                (when admin?
-                 [endringslogg ["users" user-id "endringslogg"]])
-               (when admin?
-                 [sc/row-bl
-                  [sc/small1 "Identitet"]
-                  (sc/as-identity user-id)])])
+                 [endringslogg uid (path-endringslogg uid)])])
 
-            [sc/title1 "Ingen definerte vakter"])))
+            [sc/title1 "Ingen vakter"])))
       [widgets/no-access-view r])))

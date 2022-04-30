@@ -9,7 +9,6 @@
             [booking.views]
             [db.core :as db]
             [db.signin]
-            [eykt.content.pages]
             [eykt.content.rapport-side]
             [kee-frame.router]
             [nrpk.fsm-helpers :refer [send]]
@@ -18,12 +17,9 @@
             [schpaa.darkmode]
             [schpaa.debug :as l]
             [shadow.resource :refer [inline]]
-            ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]
             [schpaa.style :as st]
             [schpaa.style.menu]
             [schpaa.style.ornament :as sc]
-            [schpaa.time]
             [tick.core :as t]
             [user.views]
             [schpaa.style.dialog :refer [open-dialog-sampleautomessage]]
@@ -42,7 +38,6 @@
             [schpaa.style.button :as scb]
             [booking.modals.commandpalette]
             [booking.utlan]
-            [schpaa.style.dialog :as dlg]
             [booking.common-widgets :as widgets]
             [booking.reports]
             [booking.modals.boatinput]
@@ -50,7 +45,7 @@
             [booking.mine-dine-vakter]
             [booking.boatlist]
             [booking.dine-vakter]
-            [booking.mine-status]
+            [booking.min-status]
             [booking.oversikt]))
 
 ;region related to flex-date and how to display relative time
@@ -719,8 +714,8 @@
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
    ;todo Fordi når man skal bytte er det greit å ha et sted hvor dette skjer
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
-   :r.mine-vakter        (fn [r] (page r {:render booking.mine-status/render}))
-   :r.mine-vakter-ipad   (fn [r] (page r {:render booking.mine-status/render}))
+   :r.mine-vakter        (fn [r] (page r {:render booking.min-status/render}))
+   :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
    :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
    :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn [] [sc/col
