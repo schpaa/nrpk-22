@@ -13,25 +13,20 @@
 
 (defn horizontal-button [{:keys [right-side
                                  centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
-                          :or   {style {}}}]
-  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+                          :or   {style {}}
+                          :as   m}]
+  (let [{:keys [icon-disabled icon]} m
+        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (if (fn? page-name)
                   (page-name current-page)
                   (= current-page page-name))]
     [:div.w-16
-     {:style (if centered?                                  ;'vertically
-               {:pointer-events :none
-                :inset          0
-                :display        :grid
-                :place-content  :center
-                :position       :absolute}
-               {:display         :flex
-                :align-items     :center
-                :justify-content :center
-                :height          (if tall-height "var(--size-10)" "var(--size-9)")})}
+     {:style {:display         :flex
+              :align-items     :center
+              :justify-content :center
+              :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
      [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
       {:style    {:pointer-events :auto
-
                   :height         "var(--size-9)"}
        :on-click #(on-click current-page)}
 
@@ -51,7 +46,7 @@
        [sc/icon-large
         (if icon-fn
           (icon-fn current-page)
-          icon)]]]]))
+          (if disabled icon-disabled icon))]]]]))
 
 (defn vertical-button [{:keys [right-side caption
                                centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
@@ -164,7 +159,8 @@
    :text (or (some->> link
                       (reitit/match-by-name (reitit/router booking.routes/routes))
                       :data
-                      :header)
+                      :header
+                      second)
              "wtf?")})
 
 (defn user-link [uid]
@@ -215,46 +211,63 @@
   (dimensions-and-material {:width 1 :length 2 :weight "" :material 2}))
 
 (defn no-access-view [r]
-  (let [required-access (-> r :data :access)]
-    [sc/container
-     {:style {:min-height     "calc(100vh - 4rem)"
-              :padding-inline "var(--size-4)"
-              :padding-top    "var(--size-10)"
-              :margin-inline  "auto"}}
-     [:div.absolute.inset-0.pointer-events-none
-      {:style {:opacity          0.3
-               :background-color "var(--brand1)"}}]
-     [sc/col-space-8
-      [sc/hero {:style {:white-space :nowrap
-                        :text-align  :center
-                        :color       "var(--text2)"}} "Ingen tilgang"]
-      [sc/row-center [sc/icon {:style {:text-align :center
-                                       :color      "var(--text2)"}} ico/stengt]]
-      [sc/text2 "For å se dette må du"]
-      [sc/title1x
-       (cond
-         (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunn\u00adleggende infor\u00ADmasjon om deg selv."
-         (some #{:waitinglist} (first required-access)) "Være påmeldt inn\u00ADmeldingskurs."
-         :else "Være medlem i NRPK.")]
-      [sc/title1x
-       (cond
-         (some #{:nøkkelvakt} (last required-access)) "Være godkjent nøkkelvakt (ifølge aktiv konto)."
-         (some #{:admin} (last required-access)) "Være administrator.")]
+  ;todo start a timeout on mount and show no access after 2 seconds
+  (let [hide-spinner (r/atom false)]
+    (r/create-class
+      {:display-name        "no-access-view"
+       :component-did-mount (fn [_]
+                              (js/setTimeout #(reset! hide-spinner true) 2000))
+       :reagent-render      (fn [r]
+                              (if-not @hide-spinner
+                                [sc/container
+                                 {:style {:min-height     "calc(100vh -  4rem)"
+                                          :padding-inline "var(--size-4)"
+                                          :padding-top    "var(--size-10)"
+                                          :margin-inline  "auto"}}
+                                 [sc/title (icon/spinning :spinner)]]
+                                (let [required-access (-> r :data :access)]
+                                  [sc/container
+                                   {:style {:min-height     "calc(100vh - 4rem)"
+                                            :padding-inline "var(--size-4)"
+                                            :padding-top    "var(--size-10)"
+                                            :margin-inline  "auto"}}
+                                   [:div.absolute.inset-0.pointer-events-none
+                                    {:style {:opacity          0.3
+                                             :background-color "var(--brand1)"}}]
+                                   [sc/col-space-8
+                                    [sc/hero {:style {:white-space :nowrap
+                                                      :text-align  :center
+                                                      :color       "var(--text2)"}} "Ingen tilgang"]
+                                    [sc/row-center [sc/icon {:style {:text-align :center
+                                                                     :color      "var(--text2)"}} ico/stengt]]
+                                    [sc/text2 "For å se dette må du"]
+                                    [sc/title1x
+                                     (cond
+                                       (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunn\u00adleggende infor\u00ADmasjon om deg selv."
+                                       (some #{:waitinglist} (first required-access)) "Være påmeldt inn\u00ADmeldingskurs."
+                                       :else "Være medlem i NRPK.")]
+                                    [sc/title1x
+                                     (cond
+                                       (some #{:nøkkelvakt} (last required-access)) "Være godkjent nøkkelvakt (ifølge aktiv konto)."
+                                       (some #{:admin} (last required-access)) "Være administrator.")]
 
-      ;fix: routes and links
-      [sc/row-sc-g4-w
-       [sc/text2 "Gå til"]
-       [auto-link :r.forsiden]
-       [auto-link :r.oversikt]]]]))
+                                    ;fix: routes and links
+                                    [sc/row-sc-g4-w
+                                     [sc/text2 "Gå til"]
+                                     [auto-link :r.forsiden]
+                                     [auto-link :r.oversikt]]]])))})))
 
 (defn disclosure
+  ([m]
+   (apply disclosure m))
   ([attr tag question answer]
    (disclosure attr tag question answer nil))
   ([attr tag question answer empty-message]
-   (let [attr (conj {:style {:padding-block "var(--size-2)"
-                             :margin-left   "var(--size-7)"}}
-                    attr)
-         open @(schpaa.state/listen tag)]
+   (let [open @(schpaa.state/listen tag)
+         attr (conj {;:class [(when open :-debug)]
+                     :style {:padding-block "var(--size-2)"
+                             #_#_:margin-left "var(--size-2)"}}
+                    attr)]
      [ui/disclosure {:as    :div
                      :style {:cursor :default}}
       (fn [{:keys []}]
@@ -273,8 +286,10 @@
                                     (when open
                                       [:transform :rotate-90]))}
                     ico/showdetails)
-           [:span [sc/fp-headersmaller {:class [:pointer-events-none (when (:large attr) :large)]
-                                        :style {:color (if open "var(--text0)" "var(--text2)")}} question]]]]
+           [:span [sc/fp-headersmaller {:class [:text-left
+                                                :pointer-events-none (when (:large attr) :large)]
+                                        :style {:color (if open "var(--text0)" "var(--text2)")}}
+                   question]]]]
          [ui/disclosure-panel
           (merge-with into
                       {:static true}

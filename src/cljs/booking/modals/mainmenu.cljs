@@ -138,8 +138,8 @@
                         [sc/text1 c] t])]]]])))
 
 (defn main-menu [switch?]
-  (r/with-let [mainmenu-visible #_(r/atom false) (rf/subscribe [:lab/menu-open])]
-    [scm/mainmenu-example-with-args
+  (r/with-let [mainmenu-visible (rf/subscribe [:lab/menu-open])]
+    [scm/settings-floating
      {:data       (mainmenu-definitions)
       :dir        #{:down (if switch? :left :right)}
       :showing!   mainmenu-visible
@@ -148,7 +148,7 @@
                     [hoc.buttons/round'
                      {:style {:cursor :pointer}
                       :class [:h-12]}
-                     [sc/icon-large (if open ico/closewindow ico/menu)]])}]))
+                     [sc/icon-large (if open ico/cog-open ico/cog)]])}]))
 
 ;region extract!
 

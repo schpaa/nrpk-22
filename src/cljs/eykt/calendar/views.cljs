@@ -88,7 +88,7 @@
 
 (defn- occupied-slot [uid [this-uid]]
   (let [owner? (= this-uid uid)
-        path (if owner? [:r.mine-vakter] [:r.dine-vakter {:id this-uid}])]
+        path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
     [taken-user-slot
      {:class    [(when owner? :owner)]
       :on-click #(rf/dispatch [:app/navigate-to path])}

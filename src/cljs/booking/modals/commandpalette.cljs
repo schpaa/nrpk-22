@@ -25,7 +25,7 @@
                         {:name   "Mine vakter"
                          ;:icon   ico/nokkelvakt
                          :group  1
-                         :action #(rf/dispatch [:app/navigate-to [:r.mine-vakter]])}
+                         :action #(rf/dispatch [:app/navigate-to [:r.min-status]])}
                         {:name   "Utlån på Nøklevann"
                          :icon   ico/ticket
                          :action #(rf/dispatch [:lab/toggle-boatpanel])

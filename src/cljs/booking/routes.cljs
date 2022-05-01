@@ -7,111 +7,178 @@
             [schpaa.debug :as l]))
 
 (def routes
-  [["/" {:name       :r.forsiden
-         :header     [:r.oversikt "Forsiden"]
-         :shorttitle "Forsiden"}]
+  [["/"
+    {:name       :r.forsiden
+     :shorttitle [:r.oversikt "Forsiden"]
+     :header     [[:r.oversikt] "Forsiden"]}]
 
-   ["/signed-out" {:name   :r.signedout
-                   :header [:r.forsiden "Du har logget ut"]}]
+   ["/signed-out"
+    {:name   :r.signedout
+     :header [[:r.forsiden] "Du har logget ut"]}]
 
-   ["/oversikt" {:name       :r.oversikt
-                 :header     [:r.forsiden "Oversikt"]
-                 :shorttitle "Oversikt"}]
+   ["/oversikt"
+    {:name       :r.oversikt
+     :shorttitle "Oversikt"
+     :header     [[:r.forsiden] "Oversikt"]}]
 
-   ["/wix" {:name :r.forsiden-iframe :header "NRPK (wix)"}]
-   ["/nytt" {:name :r.booking-blog :header [:r.forsiden "Hva er nytt?"] :access [[:member] nil]}]
-   ["/nytt/:id" {:name     :r.booking-blog-doc
-                 :header   [:r.booking-blog "Eksempel"]
-                 :xpath-fn (fn [r] (some-> r :path-params :id))}]
-   ["/nytt-innlegg" {:name :r.booking-blog-new :header "Nytt innlegg"}]
-   ["/ny" {:name :r.new-booking :header "Ny booking" :subheader "Forsiden"}]
-   ["/debug" {:name :r.debug :header [:r.booking "Booking av båt"]}]
-   ["/turlogg" {:name :r.logg :header "Min logg" :subheader "Baksiden"}]
+   ["/wix"
+    {:name   :r.forsiden-iframe
+     :header [[:r.forsiden] "NRPK (wix)"]}]
 
-   ["/om-meg" {:name   :r.user :shorttitle "Meg"
-               ;:access [[:waitinglist :member :registered] #{}]
-               :header [:r.mine-vakter "Mine opplysninger"]}]
-   ["/dine-vakter/:id" {:name       :r.dine-vakter
-                        :shorttitle "Dine vakter"
-                        :access     [[:member] #{:admin :nøkkelvakt}]
-                        :header     [:r.nokkelvakt (fn [{:keys [id] :as m}]
-                                                     (let [user (user.database/lookup-userinfo id)]
-                                                       (or (:navn user) (str m))))]}]
-   ["/min-status" {:name :r.mine-vakter :shorttitle "Min status" :header [:r.user "Min status"]}]
+   ["/nytt"
+    {:name   :r.booking-blog
+     :access [[:member] nil]
+     :header [[:r.forsiden] "Hva er nytt?"]}]
 
-   ["/tilstede" {:name       :r.presence
-                 :shorttitle "Tilstede"
-                 :header     [:r.forsiden "Tilstede"]
-                 :access     [[:member] #{:admin}]}]
-   ["/admin" {:name       :r.users
-              :shorttitle "Admin"
-              :header     [:r.oversikt "Administrasjon"]
-              :access     [[:member] #{:admin}]}]
+   ["/nytt/:id"
+    {:name     :r.booking-blog-doc
+     :xpath-fn (fn [r] (some-> r :path-params :id))
+     :header   [[:r.booking-blog] "Eksempel"]}]
 
-   ["/velkommen" {:name :r.welcome :header "Om meg" :subheader "Baksiden"}]
-   ["/not-found" {:name :r.page-not-found :header [:r.oversikt "Finner ikke siden"]}]
-   ["/designsprak" {:name :r.designlanguage :header "Designspråk - mal"}]
+   ["/nytt-innlegg"
+    {:name   :r.booking-blog-new
+     :header [[:r.forsiden] "Nytt innlegg"]}]
 
-   ["/vaktkalender" {:name   :r.nokkelvakt :shorttitle "Vaktkalender"
-                     :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
-                     :header [:r.mine-vakter "Vaktkalender"]}]
-   ;["/admin" {:name :r.admin :header [:r.oversikt "Admin"] :access [[:member] #{:admin}]}]
-   ["/conditions" {:name :r.conditions :header [:r.nokkelvakt "Vilkår"]}]
-   ["/terms" {:name :r.terms :header "Betingelser"}]
-   ["/filer" {:name       :r.fileman-temporary
-              :shorttitle "Filer"
-              :header     [:r.booking-blog "Filer"]}]
-   ["/kalender" {:name :r.calendar :header "Kalender" :access [[:member] #{:nøkkelvakt}]}]
-   ["/aktivitetsliste" {:name   :r.aktivitetsliste
-                        :header [:r.oversikt "Aktivitetsliste"]
-                        :access [[:member] #{:nøkkelvakt}]}]
+   ["/ny"
+    {:name      :r.new-booking
+     :subheader "Forsiden"
+     :header    [[:r.forsiden] "Ny booking"]}]
 
-   ["/arshjul" {:name       :r.yearwheel
-                :header     [:r.forsiden "Årshjul"]
-                :shorttitle "Årshjul"
-                :modify     [nil #{:admin}]
-                :access     [[:registered :waitinglist :member] #{}]}]
+   ["/debug"
+    {:name   :r.debug
+     :header [[:r.booking] "Booking av båt"]}]
 
-   ;["/nokkelvakt" {:name :r.nøkkelvakt :header [:r.oversikt "Nøkkelvakt"]}]
+   ["/turlogg"
+    {:name   :r.logg
+     :header [[:r.forsiden] "Min logg"]}]
 
-   ["/utlan" {:name       :r.utlan
-              :shorttitle "Utlånslogg"
-              :access     [[:member] #{}]
-              :header     [:r.båtliste.nøklevann "Utlånslogg på Nøklevann"]}]
+   ["/mine-opplysninger"
+    {:name       :r.user
+     :shorttitle "Meg"
+     :header     [[:r.min-status] "Mine opplysninger"]}]
 
-   ["/booking" {:name       :r.booking
-                :shorttitle "Sjøbasen"
-                :icon       ico/booking
-                :access     [[:member] #{:admin}]
-                :header     [:r.båtliste.sjøbasen "Utlånslogg på sjøbasen"]}]
-   ["/booking/oversikt" {:name   :r.booking.oversikt
-                         :header [:r.booking "Oversikt"]}]
-   ["/booking/retningslinjer" {:name :r.booking.retningslinjer :header [:r.booking "Retningslinjer"]}]
-   ["/booking/faq" {:name :r.booking.faq :header [:r.booking "Ofte stilte spørsmål"]}]
+   ["/dine-vakter/:id"
+    {:name       :r.dine-vakter
+     :shorttitle "Dine vakter"
+     :access     [[:member] #{:admin :nøkkelvakt}]
+     :header     [[:r.nokkelvakt] (fn [{:keys [id] :as m}]
+                                    (:navn (user.database/lookup-userinfo id) "not found"))]}]
 
-   ["/oversikt/organisasjon" {:name :r.oversikt.organisasjon :header [:r.oversikt "Om NRPK"]}]
-   ["/oversikt/styret" {:name :r.oversikt.styret :header [:r.oversikt "Styret i NRPK"]}]
+   ["/min-status"
+    {:name   :r.min-status :shorttitle "Min status"
+     :header [[:r.user] "Min status"]}]
+
+   ["/tilstede"
+    {:name       :r.presence
+     :shorttitle "Tilstede"
+     :access     [[:member] #{:admin}]
+     :header     [[:r.forsiden] "Tilstede"]}]
+
+   ["/admin"
+    {:name       :r.users
+     :shorttitle "Admin"
+     :access     [[:member] #{:admin}]
+     :header     [[:r.oversikt] "Administrasjon"]}]
+
+   ["/velkommen"
+    {:name   :r.welcome
+     :header [[:r.forsiden] "Om meg"]}]
+
+   ["/vaktkalender"
+    {:name   :r.nokkelvakt :shorttitle "Vaktkalender"
+     :access [[:registered :waitinglist :member] #{:admin :nøkkelvakt}]
+     :header [[:r.min-status] "Vaktkalender"]}]
+
+   ["/conditions"
+    {:name   :r.conditions
+     :header [[:r.nokkelvakt] "Vilkår"]}]
+
+   ["/terms"
+    {:name   :r.terms
+     :header [[:r.forsiden] "Betingelser"]}]
+
+   ["/filer"
+    {:name       :r.fileman-temporary
+     :shorttitle "Filer"
+     :header     [[:r.booking-blog] "Filer"]}]
+
+   ["/kalender"
+    {:name   :r.calendar
+     :access [[:member2] #{:admin2}]
+     :header [[:r.forsiden] "Kalender"]}]
+
+   ["/aktivitetsliste"
+    {:name   :r.aktivitetsliste
+     :access [[:member] #{:nøkkelvakt}]
+     :header [[:r.oversikt] "Aktivitetsliste"]}]
+
+   ["/arshjul"
+    {:name       :r.yearwheel
+     :shorttitle "Årshjul"
+     :modify     [nil #{:admin}]
+     :access     [[:registered :waitinglist :member] #{}]
+     :header     [[:r.forsiden] "Årshjul"]}]
+
+   ["/utlan"
+    {:name       :r.utlan
+     :shorttitle "Utlånslogg"
+     :access     [[:member] #{}]
+     :header     [[:r.båtliste.nøklevann] "Utlånslogg på Nøklevann"]}]
+
+   ["/booking"
+    {:name       :r.booking
+     :shorttitle "Sjøbasen"
+     :icon       ico/booking
+     :access     [[:member] #{:admin}]
+     :header     [[:r.båtliste.sjøbasen] "Utlånslogg på sjøbasen"]}]
+
+   ["/booking/oversikt"
+    {:name   :r.booking.oversikt
+     :header [[:r.booking] "Oversikt"]}]
+
+   ["/booking/retningslinjer"
+    {:name   :r.booking.retningslinjer
+     :header [[:r.booking] "Retningslinjer"]}]
+
+   ["/booking/faq"
+    {:name   :r.booking.faq
+     :header [[:r.booking] "Ofte stilte spørsmål"]}]
+
+   ["/oversikt/organisasjon"
+    {:name   :r.oversikt.organisasjon
+     :header [[:r.oversikt] "Om NRPK"]}]
+
+   ["/oversikt/styret"
+    {:name   :r.oversikt.styret
+     :header [[:r.oversikt] "Styret i NRPK"]}]
+
    ["/dokumenter/:id"
     {:name       :r.dokumenter
      :shorttitle "Dokumenter"
      ;:access     [[] #{}]
-     :header     [:r.oversikt "Dokumenter"]}]
+     :header     [[:r.oversikt] "Dokumenter"]}]
+
    ["/rapporter/:id"
     {:name       :r.reports
      :shorttitle "Rapporter"
      :access     [[:member] #{:admin}]
-     :header     [:r.users "Rapporter"]}]
+     :header     [[:r.users] "Rapporter"]}]
 
    ["/batliste/noklevann"
     {:name   :r.båtliste.nøklevann
-     :header [:r.utlan "Båtliste"]}]
+     :header [[:r.utlan] "Båtliste"]}]
+
    ["/batliste/sjobasen"
     {:name   :r.båtliste.sjøbasen
-     :header [:r.booking "Båtliste"]}]
+     :header [[:r.booking] "Båtliste"]}]
+
    ["/vaktrapport"
     {:name   :r.mine-vakter-ipad
-     :header [:r.båtliste.nøklevann "Vaktrapport"]}]])
+     :header [[:r.båtliste.nøklevann] "Vaktrapport"]}]
 
+   ["/not-found"
+    {:name   :r.page-not-found
+     :header [[:r.oversikt] "Finner ikke siden"]}]])
 
 (defn shortcut-link [route-name]
   (let [{icon :icon caption :shorttitle} (some->> route-name
@@ -121,3 +188,7 @@
      {:on-click #(rf/dispatch [:app/navigate-to [:r.booking]])}
      icon
      caption]))
+
+(comment
+  (do
+    (map (comp :header second) routes)))

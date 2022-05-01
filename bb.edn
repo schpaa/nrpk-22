@@ -45,7 +45,7 @@
                            :dist          "dist"
                            :manifest-file "/js/manifest.edn"
                            :index-file    "index.html"
-                           :title         "EYKT-22-A"}))}
+                           :title         "Eykt"}))}
   dev          {:doc  "requires `booking` or `eykt`"
                 :task (run '-dev {:parallel true})}
   css          {:task (shell (str "npx tailwindcss -o " -css-output))}

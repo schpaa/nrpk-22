@@ -55,79 +55,6 @@
 
 (rf/reg-event-db :app/show-relative-time-toggle (fn [db] (update db :app/show-relative-time (fnil not false))))
 
-;region todo: extract these higher-order-components
-
-;endregion
-
-(defn logo-type []
-  [:div.text-center.inset-0
-   {:class [:drop-shadow-md
-            :leading-normal
-            :font-oswald
-            :font-normal
-            :text-3xl
-            :tracking-tight
-            :dark:text-alt
-            ;:bg-clip-text
-            ;:bg-gradient-to-r :from-rose-400 :via-sky-600 :to-alt
-            :xtext-transparent]}
-   [:span "booking."]
-   [:span.text-gray-500 "nrpk.no"]])
-
-(defn welcome []
-  (let [{:keys [bg bg+ bg- fg]} (st/fbg' :surface)]
-    [:<>
-     [:div.px-4.space-y-8.relative.xs:hidden
-      {:style {:min-height "calc(100vh - 3rem)"}
-       :class (concat fg bg)}
-
-      [:div.max-w-xs.mx-auto.opacity-75
-       [:div.group.transition.space-y-2.sticky.top-12.pt-16
-        {:class bg}
-        [:div.flex.flex-center
-         [:div.relative.w-24.h-24
-          [:div.absolute.rounded-full.-inset-1.blur
-           {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
-                    :sgroup-hover:-inset-1 :duration-500]}]
-          [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
-        (logo-type)]
-
-       [:div.max-w-xs.mx-auto
-        (-> "./content/frontpage.md"
-            inline
-            schpaa.markdown/md->html
-            st/prose-markdown-styles)]]]
-
-     [:div.px-4.space-y-8.relative.hidden.xs:block
-      {:style {:min-height "calc(100vh - 4rem)"}
-       :class (concat fg bg)}
-      [:div.max-w-xsx.mx-auto
-
-       [:div.grid.gap-x-10.max-w-md.mx-auto.space-y-8.pt-12
-        {:style {:grid-template-columns "min-content 1fr"}}
-
-        [:div.prose.col-span-2
-         (-> "./content/frontpage1.md"
-             inline
-             schpaa.markdown/md->html
-             st/prose-markdown-styles)]
-
-        [:div.group.transition.space-y-2.self-center
-         {:class bg}
-         [:div.flex.flex-center
-          [:div.relative.w-24.h-24
-           [:div.absolute.rounded-full.-inset-2.blur
-            {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
-                     :sgroup-hover:-inset-1 :duration-500]}]
-           [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
-         (logo-type)]
-
-        [:div.prose.mx-auto.col-span-1.self-center
-         (-> "./content/frontpage2.md"
-             inline
-             schpaa.markdown/md->html
-             st/prose-markdown-styles)]]]]]))
-
 ;region temp helpers
 
 (o/defstyled listitem :div
@@ -157,55 +84,13 @@
                                 (sort-by :name < booking.modals.commandpalette/commands)]
                             [:div [sc/subtext-with-link {:on-click action} name]]))])
 
-
-(defn opening-hours []
-  (let [f (fn [[a b]] [sc/subtext-with-link
-                       {:style {:margin-left "-2px"}
-                        :href  (kee-frame.core/path-for [a])}
-                       b])]
-    [sc/col-space-1
-     [sc/ingress {:style {:text-align :rights
-                          :font-size  "var(--font-size-fluid-1)"
-                          :xcolor     "white"}} "Åpningstider"]
-     ;[sc/ingress "Sesongen er inndelt i perioder."]
-     (let [data [["tirsdag" "18:00" "21:00"]
-                 ["onsdag" "18:00" "21:00"]
-                 ["torsdag" "18:00" "15:00"]
-                 ["lørdag" "11:00" "17:00"]
-                 ["søndag" "11:00" "17:00"]]]
-       [:<>
-        ;[sc/subtext "Sesongen åpner xx.xx og frem til xx vil dette være våre åpningstider"]
-        [:div {:style {:display               :grid
-                       :column-gap            "0.25rem"
-                       :row-gap               "0.25rem"
-                       :grid-template-columns "5rem min-content min-content min-content"
-                       :place-content         :end}}
-         (for [[day open close] data]
-           [:<>
-            [sc/subtext {:style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} day]
-            [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} open]
-            [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} "—"]
-            [sc/subtext {:class [:tabular-nums] :style {:font-size "var(--font-size-fluid-0)" :xcolor "white"}} close]])]
-        [:div {:style {:margin-top "12px"}}
-         [sc/subtext-with-link
-          {:href  ()
-           :style {:white-space :normal
-                   :margin-left "-3px"
-                   :font-size   "var(--font-size-fluid-0)" :xcolor "white"}}
-          "Om utvidet åpningstid i juni"]]
-        #_(let [data [[1 :r.forsiden "Utvidet åpningstid i sommer"]
-                      [4 :r.oversikt "Oversikt"]]]
-            [sc/row-sc-g2-w (map (comp f rest) (sort-by first data))])])]))
-
 (defn page [r c]
   [+page-builder r c])
 
 (def routing-table
   {:r.welcome
    (fn [r]
-     #_[page-boundary r
-        [db.signin/login]
-        [welcome]])
+     [l/pre r])
 
    :r.dokumenter
    (fn [r]
@@ -715,7 +600,7 @@
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
    ;todo Fordi når man skal bytte er det greit å ha et sted hvor dette skjer
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
-   :r.mine-vakter        (fn [r] (page r {:render booking.min-status/render}))
+   :r.min-status         (fn [r] (page r {:render booking.min-status/render}))
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
    :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))

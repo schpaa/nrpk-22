@@ -79,7 +79,7 @@
 (rf/reg-event-fx :app/successful-login
                  (fn [_ [_ args]]
                    (tap> {:app/successful-login args})
-                   {:fx [[:dispatch [:app/navigate-to [(if args :r.mine-vakter :r.forsiden)]]]
+                   {:fx [[:dispatch [:app/navigate-to [(if args :r.min-status :r.forsiden)]]]
                          [:dispatch [:modal.slideout/toggle
                                      true
                                      {:auto-dismiss             false

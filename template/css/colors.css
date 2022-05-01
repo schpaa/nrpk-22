@@ -112,32 +112,6 @@ outline: 2px solid #a0a8;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
 
-/* greenish
- --gray-0: #F5FEFE;
- --gray-1: #D7FCFA;
- --gray-2: #9AF6EC;
- --gray-3: #5DF1D6;
- --gray-4: #20ECB7;
- --gray-5: #10B981;
- --gray-6: #0C8F5A;
- --gray-7: #096538;
- --gray-8: #053A1D;
- --gray-9: #011007;
-
-
-    --gray-0: #fafaf9;
-    --gray-1: #f5f5f4;
-    --gray-2: #e7e5e4;
-    --gray-3: #d6d3d1;
-    --gray-4: #a8a29e;
-    --gray-5: #78716c;
-    --gray-6: #57534e;
-    --gray-7: #44403c;
-    --gray-8: #292524;
-    --gray-9: #171515;
-    --gray-10: #121010;
-
-*/
     --gray-00: #F9FAFA;
     --gray-0: #F0F1F1;
     --gray-1: #E5E6E6;
@@ -154,7 +128,7 @@ outline: 2px solid #a0a8;
     --light-toolbar: var(--gray-2);
     --light-toolbar-: var(--gray-3);
     --light-content: var(--gray-1);
-    --light-floating: var(--gray-0);
+    --light-floating: var(--gray-00);
 
     --dim-toolbar: var(--gray-9);
     --dim-toolbar-: var(--gray-10);

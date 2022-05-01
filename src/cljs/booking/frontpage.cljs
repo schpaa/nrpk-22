@@ -255,9 +255,9 @@
                                       :src    e}]])) frontpage-images)}]]]))
 
 (defn todays-numbers [c1 c2 a b]
-  [sc/row-sc-g4-w {:style {:-transform       "translateY(1rem) rotate(6deg)"
-                           :opacity          0.33
-                           :transform-origin "end bottom "}}
+  [sc/row-sc-g2 {:style {:-transform       "translateY(1rem) rotate(6deg)"
+                         :opacity          0.33
+                         :transform-origin "end bottom "}}
    [sc/col {:class [:gap-2]}
     [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])
                        :class    [:narrow :shadow :center]
@@ -280,33 +280,91 @@
      [sc/title2 {:style {:color "var(--gray-9)"}} c1 "ºC"]
      [sc/title2 {:style {:color "var(--blue-9)"}} c2 "°C"]]]])
 
+(o/defstyled small-grid :div
+  {:display               :grid
+   :font-size             "90%"
+   :grid-column-gap       "1rem"
+   :grid-row-gap          "1rem"
+   :grid-template-columns "1fr min-content"
+   :grid-template-areas   [["type" "graph"]
+                           ["." "status"]]})
+
+(o/defstyled large-grid :div
+  {:display               :grid
+   :padding               "4px"
+   :font-size             "90%"
+   :grid-column-gap       "1rem"
+   :grid-template-columns "1fr min-content 1fr"
+   :grid-template-areas   [["type" "graph" "status"]]})
+
+(o/defstyled fancy-front :div
+  [:&
+   small-grid
+   {:max-width         "calc(100% - 1rem)"
+    :height            "auto"
+    :padding           "4px"
+    :-background-color "hsla(0,50%,50%,20%)"}
+
+   [:at-media {:min-width "512px"}
+    large-grid
+    {:-background-color "blue"}]])
+
+(defn logo-graph []
+  [:div {:style {:align-self   :center
+                 :justify-self :start}}
+   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
+     [circular-logo-thing dark-mode?])])
+
+(def logo-type
+  [:div {:class [:flex :items-center :justify-end]
+         :style {:transform        "rotate(-6deg)"
+                 :position         :relative
+                 :transform-origin "center right"}}
+   [bs/logo-text {:style {:width        "auto"
+                          :justify-self :end}}
+    [sc/hero' {:style {:text-align  :right
+                       :color       "var(--text0)"
+                       :font-size   "1.92em"
+                       :font-weight "var(--font-weight-5)"}} "Nøklevann"]
+    [sc/ingress-cl {:style {:white-space :nowrap
+                            :font-size   "1.2em"
+                            :color       "var(--text1)"
+                            :font-weight "var(--font-weight-4)"}} "ro– og padleklubb"]]])
+
 (defn header-with-logo []
   (let [c (count (logg.database/boat-db))]
+    (fancy-front
+      [:div {:style {:align-self   :center
+                     :justify-self :center
+                     :grid-area    "graph"}} (logo-graph)]
+      [:div {:style {
+                     :align-self :center
+                     :grid-area  "type"}} logo-type]
+      [:div {:style {:align-self :center
+                     :grid-area  "status"}} (todays-numbers "— " "— " c '—)])
 
-    [:div.grid.gap-x-8.mx-4
-     {:style {:grid-template-columns "1fr min-content 1fr"}}
-     [:div {:class [:xduration-500 :flex :items-center :justify-end]
-            :style {:transform        "rotate(-6deg)"
-                    :position         :relative
-                    :transform-origin "center right"
-                    :gap              "var(--size-4)"}}
-
-      [bs/logo-text {:style {:width        "auto"
-                             :justify-self :end}}
-       [sc/hero' {:style {:text-align  :right
-                          :color       "var(--text0)"
-                          :font-size   "1.92em"
-                          :font-weight "var(--font-weight-5)"}} "Nøklevann"]
-       [sc/ingress-cl {:style {:white-space :nowrap
-                               :font-size   "1.2em"
-                               :color       "var(--text1)"
-                               ;:font-style  :italic
-                               :font-weight "var(--font-weight-4)"}} "ro– og padleklubb"]]]
-     [:div {:style {:align-self   :center
-                    :justify-self :start}}
-      (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-        [circular-logo-thing dark-mode?])]
-     (todays-numbers "— " "— " c '—)]))
+    #_[:div.grid.gap-x-4.mx-2.-debug
+       {:style {:grid-template-columns "1fr min-content"
+                :grid-template-rows    "1fr 1fr"}}
+       [:div {:class [:flex :items-center :justify-end]
+              :style {:transform        "rotate(-6deg)"
+                      :position         :relative
+                      :transform-origin "center right"}}
+        [bs/logo-text {:style {:width        "auto"
+                               :justify-self :end}}
+         [sc/hero' {:style {:text-align  :right
+                            :color       "var(--text0)"
+                            :font-size   "1.92em"
+                            :font-weight "var(--font-weight-5)"}} "Nøklevann"]
+         [sc/ingress-cl {:style {:white-space :nowrap
+                                 :font-size   "1.2em"
+                                 :color       "var(--text1)"
+                                 :font-weight "var(--font-weight-4)"}} "ro– og padleklubb"]]]
+       [:div {:style {:align-self   :center
+                      :justify-self :start}}
+        (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
+          [circular-logo-thing dark-mode?])]
+       (todays-numbers "— " "— " c '—)]))
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -403,9 +461,9 @@
         [:div "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
 
         [:div "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
-         [widgets/auto-link :r.mine-vakter]
+         [widgets/auto-link :r.min-status]
          #_[sc/link {:style {:display :inline-block}
-                     :href  (kee-frame.core/path-for [:r.mine-vakter])} "her!"]]]]
+                     :href  (kee-frame.core/path-for [:r.min-status])} "her!"]]]]
       [listitem' (t/at (t/date "2022-04-20") (t/time "10:00"))
        [sc/col-space-2
         [:div "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.
@@ -475,8 +533,9 @@
           [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
            booking.common-views/master-control-box]]])
 
-      [:div {:style {:font-size     "100%"
-                     :margin-top    "1.4rem"
+      [:div {:style {:min-font-size "80%"
+                     :font-size     "100%"
+                     ;:margin-top    "1.4rem"
                      :padding-block "var(--size-10)"}}
        [header-with-logo]]
 
@@ -495,7 +554,13 @@
          (when-not @at-least-registered?
            [please-login-and-register])
          #_(when goog.DEBUG (debug-panel))
-         (widgets/disclosure {:large 1} :frontpage/news "Hva skjer?" [news-feed])
-         (widgets/disclosure {:large 1} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
-         (widgets/disclosure {:large 1} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
+         (widgets/disclosure {:large 1
+                              :style {:padding-block "var(--size-2)"
+                                      :margin-left   "var(--size-7)"}} :frontpage/news "Hva skjer?" [news-feed])
+         (widgets/disclosure {:large 1
+                              :style {:padding-block "var(--size-2)"
+                                      :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
+         (widgets/disclosure {:large 1
+                              :style {:padding-block "var(--size-2)"
+                                      :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
      [booking.common-views/after-content]]))

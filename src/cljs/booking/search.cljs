@@ -32,7 +32,7 @@
                                                   :lab/run-search false
                                                   :lab/search-expr ""))))
 
-(rf/reg-sub :lab/is-search-running? :-> :lab/run-search)
+;(rf/reg-sub :lab/is-search-running? :-> :lab/run-search)
 
 (rf/reg-sub :lab/in-search-mode? :-> :lab/in-search-mode)
 
