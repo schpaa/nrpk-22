@@ -12,24 +12,41 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (defn horizontal-button [{:keys [right-side
-                                 centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
+                                 tall-height
+                                 special
+                                 icon-fn
+                                 class
+                                 style
+                                 on-click
+                                 page-name
+                                 badge
+                                 disabled]
                           :or   {style {}}
                           :as   m}]
   (let [{:keys [icon-disabled icon]} m
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+        ic [sc/icon-huge
+            (if icon-fn
+              (icon-fn current-page)
+              (if disabled icon-disabled icon))]
         active? (if (fn? page-name)
                   (page-name current-page)
                   (= current-page page-name))]
-    [:div.w-16
-     {:style {:display         :flex
-              :align-items     :center
-              :justify-content :center
-              :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
-     [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
-      {:style    {:pointer-events :auto
-                  :height         "var(--size-9)"}
-       :on-click #(on-click current-page)}
+    [sc/col
+     {:on-click #(on-click current-page)
+      :style    {:outline         "1px solid yellow"
+                 :margin-bottom   "1rem"
+                 :width           "100%"
+                 ;:heigth          "100%"
+                 :display         :flex
+                 :align-items     :center
+                 :justify-content :space-between}}
 
+     [:div.flex.items-center.justify-around.relative
+      {:style {;:width          "2rem"
+               ;:height         "2rem"
+               :aspect-ratio   "1/1"
+               :pointer-events :auto}}
       (when badge
         (let [{value :value attr :attr} (badge)]
           (if right-side
@@ -39,14 +56,15 @@
       [sc/toolbar-button
        {:disabled  disabled
         :tab-index (when active? "-1")
-        :style     style
-        :class     [(if right-side :right-side :left-side)
+        :class     [
+                    ;:self-center
+                    ;:w-full
+                    ;:-debug
                     (if active? (or (when class (class current-page)) :selected))
                     (if special :special)]}
-       [sc/icon-large
-        (if icon-fn
-          (icon-fn current-page)
-          (if disabled icon-disabled icon))]]]]))
+       ic]]
+
+     [sc/small "this is"]]))
 
 (defn vertical-button [{:keys [right-side caption
                                centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
@@ -70,18 +88,17 @@
                             :flex       "1 0 1"}} caption]
          [:div]))
 
-     [:div.w-16
+     [:div.w-full
       {:style {:display         :flex
                :align-items     :center
                :justify-content :center
+               :aspect-ratio    "1/1"
                :flex-shrink     0
                ;:flex "0 2 52px"
                :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
       [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
        {:style {:pointer-events :auto
-
                 :height         "var(--size-9)"}}
-
 
        (when badge
          (let [{value :value attr :attr} (badge)]
@@ -96,10 +113,11 @@
          :class     [(if right-side :right-side :left-side)
                      (if active? (or (when class (class current-page)) :selected))
                      (if special :special)]}
-        [sc/icon-large
-         (if icon-fn
-           (icon-fn current-page)
-           icon)]]]]
+        [:div {:style {:border "1px solid blue"}}
+         [sc/icon-large
+          (if icon-fn
+            (icon-fn current-page)
+            icon)]]]]]
      (when-not right-side
        (when caption [sc/text2 {:style {:color      "unset"
                                         :flex-grow  1
@@ -348,3 +366,10 @@
       [sc/title1 header]]
      content]
     footer]])
+
+(defn pre [& p]
+  (let [item (fn [e] [:div.bg-black.text-white.h-full.w-auto e])]
+    [:div.space-y-1
+     [l/pre p]
+     (into [:div.flex.justify-end.h-12.items-center.gap-1]
+           (mapv item ["a1" "b2" "b3"]))]))

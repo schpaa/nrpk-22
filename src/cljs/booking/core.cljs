@@ -13,13 +13,24 @@
     [nrpk.core]
     [nrpk.spa]
     [booking.routes]
-    [booking.keyboard]))
+    [booking.keyboard]
+    [booking.fiddle]))
 
 (defn kee-start []
   (k/start! {:routes         booking.routes/routes
              :initial-db     app-data/initial-db
              :screen         nrpk.core/screen-breakpoints
              :root-component [nrpk.spa/app-wrapper-clean booking.spa/routing-table]
+             :not-found      "/not-found"
+             :hash-routing?  false}))
+
+(defn kee-start' []
+  (k/start! {:routes         [["/"
+                               {:name   :r.default
+                                :header [[:r.default] "Forsiden"]}]]
+             :initial-db     app-data/initial-db
+             :screen         nrpk.core/screen-breakpoints
+             :root-component [nrpk.spa/app-wrapper-clean {:r.default booking.fiddle/render}]
              :not-found      "/not-found"
              :hash-routing?  false}))
 
@@ -32,5 +43,5 @@
 (defn init! []
   (db/init! {:config app-data/booking-firebaseconfig})
   (reload!)
-  (rf/dispatch [::rs/transition :main :e.restart])
+  #_(rf/dispatch [::rs/transition :main :e.restart])
   (booking.keyboard/define-shortcuts))

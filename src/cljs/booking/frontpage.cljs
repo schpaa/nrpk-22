@@ -27,7 +27,7 @@
        :-webkit-font-smoothing   :antialiased
        :-moz-osx-font-smoothing  :grayscale}])
 
-(o/defstyled bg-light :div
+(o/defstyled front-page :div
   [:& {:position            :relative
        :height              "100vh"
        :background-position "center center"
@@ -39,7 +39,7 @@
     [:&.bottom-toolbar
      {:height "calc(100vh - 5rem)"}]]]
   [:at-supports {:height :100dvh}
-   {:height "calc(100dvh)"}])
+   {:xheight "calc(100dvh)"}])
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -522,8 +522,8 @@
         show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
         at-least-registered? (rf/subscribe [:lab/at-least-registered])
         master-emulation (rf/subscribe [:lab/master-state-emulation])]
-    [bg-light {:class [(if dark-mode? :dark :light)
-                       (if @at-least-registered? :bottom-toolbar)]}
+    [front-page {:class [(if dark-mode? :dark :light)
+                         (if @at-least-registered? :bottom-toolbar)]}
 
      [:div.min-h-full.z-0.relative.mx-auto.pt-16            ;<--------- pt-16 !!!!!!!
 

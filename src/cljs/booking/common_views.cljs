@@ -31,7 +31,9 @@
             [booking.modals.mainmenu :refer [main-menu]]
             [booking.account]
             [tick.core :as t]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [booking.common-widgets :as widgets]
+            [booking.fiddle]))
 
 ;region styles
 
@@ -245,38 +247,43 @@
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
 
-    [{:icon-fn   #(sc/icon-large ico/new-home)
-      :on-click  #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      :class     #(if (= % :r.oversikt) :oversikt :active)
-      :page-name #(some #{%} [:r.forsiden :r.oversikt])}
+    [{:icon-fn       #(-> ico/new-home)
+      :short-caption "Hjem"
+      :on-click      #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
+      :class         #(if (= % :r.oversikt) :oversikt :active)
+      :page-name     #(some #{%} [:r.forsiden :r.oversikt])}
 
      (when booking?
        {:icon          ico/booking
+        :short-caption "Booking"
         :icon-disabled ico/booking-disabled
         :disabled      true})
 
-     {:icon-fn   (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
-                           (sc/icon-large (if st ico/commandPaletteOpen ico/commandPaletteClosed))))
-      :special   true
-      :on-click  #(rf/dispatch [:app/toggle-command-palette])
-      :page-name :r.debug}
+     {:icon-fn       (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
+                               (if st ico/commandPaletteOpen ico/commandPaletteClosed)))
+      :special       true
+      :short-caption "Søk"
+      :on-click      #(rf/dispatch [:app/toggle-command-palette])
+      :page-name     :r.debug}
 
 
      (when (or @admin? @nokkelvakt)
-       {:icon         ico/mystery1
-        :disabled     false
-        :caption      "Utlån Nøklevann"
-        :default-page :r.utlan
-        :page-name    #(some #{%} [:r.utlan :r.båtliste.nøklevann])
-        :class        #(if (= % :r.utlan) :selected :oversikt)
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])})
+       {:icon          ico/mystery1
+        :disabled      false
+        :caption       "Utlån Nøklevann"
+        :short-caption "Utlån"
+        :default-page  :r.utlan
+        :page-name     #(some #{%} [:r.utlan :r.båtliste.nøklevann])
+        :class         #(if (= % :r.utlan) :selected :oversikt)
+        :on-click      #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])})
 
-     {:icon-fn      (fn [] (sc/icon-large ico/user))
-      :caption      "Mine opplysninger"
-      :default-page :r.min-status
-      :class        #(if (= % :r.user) :oversikt :selected)
-      :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.min-status) :r.user :r.min-status)]])
-      :page-name    #(some #{%} [:r.min-status :r.user])}]))
+     {:icon-fn       #(-> ico/user)
+      :short-caption "Mine"
+      :caption       "Mine opplysninger"
+      :default-page  :r.min-status
+      :class         #(if (= % :r.user) :oversikt :selected)
+      :on-click      #(rf/dispatch [:app/navigate-to [(if (= % :r.min-status) :r.user :r.min-status)]])
+      :page-name     #(some #{%} [:r.min-status :r.user])}]))
 
 (comment
   (do
@@ -314,14 +321,16 @@
                   (remove nil? (vertical-toolbar-definitions))))])))
 
 (defn bottom-toolbar []
+
   (let [;_search (rf/subscribe [:lab/is-search-running?])
         ;_has-chrome? (rf/subscribe [:lab/has-chrome])
         switch? @(schpaa.state/listen :lab/menu-position-right)]
-    (when (and @(rf/subscribe [:lab/at-least-registered]))
-      (into [sc/bottom-toolbar-style]
-            (mapv horizontal-button
-                  ((if switch? identity reverse)
-                   (horizontal-toolbar-definitions)))))))
+    (booking.fiddle/render ((if switch? identity reverse) (horizontal-toolbar-definitions)))
+    #_(when (and @(rf/subscribe [:lab/at-least-registered]))
+        (into [sc/bottom-toolbar-style]
+              (mapv horizontal-button
+                    ((if switch? identity reverse)
+                     (horizontal-toolbar-definitions)))))))
 
 
 ;endregion
@@ -372,7 +381,7 @@
 (defn location-block [links caption switch?]
   (let [text caption
         link (first links)]
-    [:div.flex.flex-col.px-2.w-auto
+    [:div.flex.flex-col.px-2.w-full
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
       :style    {:z-index 9
                  :cursor  :pointer}
@@ -395,10 +404,15 @@
       (location-block r false))
   ;[l/pre r]
   (let [[links caption] (some-> r :data :header)
-        switch? (schpaa.state/listen :lab/menu-position-right)]
+        switch? (schpaa.state/listen :lab/menu-position-right)
+        location (location-block links caption @switch?)]
     [err-boundary
-     [:div.w-full.-debug.bg-alt "what"
-
+     [sc/row-fields {:class [:h-16 :items-center :w-full :-debug]
+                     :style {:opacity             (- 1 v)
+                             :background          (if frontpage "var(--toolbar)" "var(--content)")
+                             :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
+                             :border-bottom-style "solid"
+                             :border-bottom-width "1px"}}
       #_[:div.h-16.absolute.inset-x-0
          {:style {:opacity             (- 1 v)
                   :background          (if frontpage "var(--toolbar)" "var(--content)")
@@ -406,19 +420,21 @@
                   :border-bottom-style "solid"
                   :border-bottom-width "1px"}}]
 
-      (let [login (fn []
-                    (when-not @(rf/subscribe [:lab/at-least-registered])
-                      [:<>
-                       [:div.grow]
-                       [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
-                                                                 :width          "min-content"
-                                                                 :box-shadow     "var(--shadow-1)"}
-                                                      :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
-                                                      :on-click #(rf/dispatch [:app/login])}
-                        "Logg inn"]]))
-            location (location-block links caption @switch?)]
-        #_(apply (if frontpage header-top-frontpage header-top)
-                 ((if @switch? reverse identity) [location [:div.grow] [main-menu @switch?]])))]]))
+      #_(let [_login (fn []
+                       (when-not @(rf/subscribe [:lab/at-least-registered])
+                         [:<>
+                          [:div.grow]
+                          [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
+                                                                    :width          "min-content"
+                                                                    :box-shadow     "var(--shadow-1)"}
+                                                         :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
+                                                         :on-click #(rf/dispatch [:app/login])}
+                           "Logg inn"]]))
+              location (location-block links caption @switch?)]
+          (apply (if frontpage header-top-frontpage header-top)))
+      (if @switch?
+        ((if frontpage header-top-frontpage header-top) location [main-menu @switch?])
+        ((if frontpage header-top-frontpage header-top) [main-menu @switch?] location))]]))
 
 (defn search-result []
   (let [data (range 12)]
@@ -487,49 +503,70 @@
   (let [route @(rf/subscribe [:kee-frame/route])
         user-uid (rf/subscribe [:lab/uid])
         ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
-    [:div.z-1 {:style {:background "var(--gray-10)"}}
-     [:div.mx-auto.max-w-xl.py-8
-      [:div.mx-4
-       [sc/col-space-4
-        [sc/col-space-1
-         [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
+    [:div.px-2.pt-2 {:style {:background-color "var(--toolbar-)"}}
+     [:div.z-1.rounded-top
+      {:style {:border-top-left-radius  "var(--radius-2)"
+               :border-top-right-radius "var(--radius-2)"
+               :background              "var(--gray-9)"}}
+      [:div.mx-auto.max-w-xl.pt-8.pb-16
+       [:div.mx-4
+        [sc/col-space-4
          [sc/col-space-1
-          {:style {:user-select :contain
-                   :color       "var(--gray-5)"}}
-          [sc/text1-cl "Nøklevann ro- og padleklubb"]
-          [sc/text1-cl "Postboks 37, 0621 Bogerud"]
-          [:div.flex.justify-start.flex-wrap.gap-4
-           [sc/subtext-with-link {:class [:dark]
-                                  :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
-           [sc/subtext-with-link {:class [:dark]
-                                  :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
-        [sc/row-ec
-         [hoc.buttons/reg-pill-icon
-          {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-          ico/tilbakemelding "Tilbakemelding"]]
-        [sc/row-sc-g4-w
-         [sc/col
-          [sc/small1 (or booking.data/VERSION "version")]
-          [sc/small1 (or booking.data/DATE "date")]]
+          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
+          [sc/col-space-1
+           {:style {:user-select :contain
+                    :color       "var(--gray-5)"}}
+           [sc/text1-cl "Nøklevann ro- og padleklubb"]
+           [sc/text1-cl "Postboks 37, 0621 Bogerud"]
+           [:div.flex.justify-start.flex-wrap.gap-4
+            [sc/subtext-with-link {:class [:dark]
+                                   :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
+            [sc/subtext-with-link {:class [:dark]
+                                   :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
+         [sc/row-ec
+          [hoc.buttons/reg-pill-icon
+           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+           ico/tilbakemelding "Tilbakemelding"]]
+         [sc/row-sc-g4-w
+          [sc/col
+           [sc/small1 (or booking.data/VERSION "version")]
+           [sc/small1 (or booking.data/DATE "date")]]
 
-         (when-not ipad?
-           [hoc.buttons/reg-pill
-            {:on-click #(do
-                          (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
-                          (db/database-update {:path  ["system"]
-                                               :value {"active" @user-uid}}))}
-            "Bli til Båtlogg"])
+          (when-not ipad?
+            [hoc.buttons/reg-pill
+             {:on-click #(do
+                           (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
+                           (db/database-update {:path  ["system"]
+                                                :value {"active" @user-uid}}))}
+             "Bli til Båtlogg"])
 
-         (when @(rf/subscribe [:lab/admin-access])
-           [hoc.buttons/danger-pill
-            {:on-click #(db/database-update {:path  ["system"]
-                                             :value {"timestamp" booking.data/DATE}})}
-            "Aktiver versjon"])]]]]]))
+          (when @(rf/subscribe [:lab/admin-access])
+            [hoc.buttons/danger-pill
+             {:on-click #(db/database-update {:path  ["system"]
+                                              :value {"timestamp" booking.data/DATE}})}
+             "Aktiver versjon"])]]]]]]))
+
+(defn- name-badge []
+  (let [account-email (rf/subscribe [:lab/username-or-fakename])]
+    [:div.fixed.inset-x-0.text-white.z-20
+     {:style {:height    "auto"
+              :bottom    "0"
+              :width     "min-content"
+              :left      "50%"
+              :transform "translateX(-50%)"}}
+     [sc/small2 {:style {:color                   "var(--toolbar)"
+                         :background              "var(--text1)"
+                         :border-top-right-radius "var(--radius-0)"
+                         :border-top-left-radius  "var(--radius-0)"
+                         :padding-inline          "var(--size-2)"
+                         :padding-block-start     "var(--size-1)"
+                         :padding-block-end       "var(--size-2)"}}
+      (str/trim (str @account-email))]]))
 
 (defn page-boundary [r {:keys [frontpage] :as options} & contents]
   (let [switch? (schpaa.state/listen :lab/menu-position-right)
-        admin? (rf/subscribe [:lab/admin-access])
-        account-email (rf/subscribe [:lab/username-or-fakename])]
+        admin? (rf/subscribe [:lab/admin-access])]
+
     (r/create-class
       {:display-name        "page-boundary"
 
@@ -547,23 +584,6 @@
           [booking.modals.boatinput/render-boatinput]
           [booking.modals.commandpalette/window-anchor]
 
-          ;bottom name when admin (for debugging)
-          (when @admin?
-            [:div.fixed.inset-x-0.text-white.z-100
-             {:style {:height    "auto"
-                      :bottom    "0"
-                      :width     "min-content"
-                      :left      "50%"
-                      :transform "translateX(-50%)"}}
-             [sc/small2 {:style {:color                   :white
-                                 :background              :black
-                                 :border-top-right-radius "var(--radius-1)"
-                                 :border-top-left-radius  "var(--radius-1)"
-                                 :padding-inline          "var(--size-2)"
-                                 :padding-block-start     "var(--size-1)"
-                                 :padding-block-end       "var(--size-3)"}}
-              (str/trim (str @account-email))]])
-
           (let [content [:div.flex.flex-col
                          {:style {:flex "1 1 auto"}}
                          (when-not frontpage [header-line r false nil])
@@ -575,10 +595,16 @@
                            [:div
                             {:style {:background-color "var(--content)"
                                      :flex             "1 1 auto"}}
-                            contents]
-                           (when-not frontpage [after-content])]
+                            contents]]
 
-                          [:div.sticky.bottom-0 [bottom-toolbar]]]]]
+
+
+                          [:div.sticky.bottom-0 {:style {:border-top  "1px solid var(--toolbar-)"
+                                                         :xbox-shadow "var(--shadow-1)"}} [bottom-toolbar]]
+                          (when-not frontpage [after-content])]
+                         (when (or goog.DEBUG @admin?)
+                           ;bottom name when admin (for debugging)
+                           [:div.sticky.bottom-0 [name-badge]])]]
             [:div.fixed.inset-0.flex
              (if @switch?
                [:<> [vertical-toolbar true] content]
@@ -683,7 +709,7 @@
               [page-boundary r
                {:frontpage true}
                ;intent: removed overflow!
-               (into [:div.overflow-y-auto.h-full
+               (into [:div.overflow-y-autox.h-full
                       {:key "key-one"
                        :ref (set-ref a scroll-fn)}]
                      [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
