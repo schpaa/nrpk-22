@@ -230,19 +230,13 @@
 
 (defn no-access-view [r]
   ;todo start a timeout on mount and show no access after 2 seconds
-  (let [hide-spinner (r/atom false)]
+  (let [show-error (r/atom false)]
     (r/create-class
       {:display-name        "no-access-view"
        :component-did-mount (fn [_]
-                              (js/setTimeout #(reset! hide-spinner true) 2000))
+                              (js/setTimeout #(reset! show-error true) 2000))
        :reagent-render      (fn [r]
-                              (if-not @hide-spinner
-                                [sc/container
-                                 {:style {:min-height     "calc(100vh -  4rem)"
-                                          :padding-inline "var(--size-4)"
-                                          :padding-top    "var(--size-10)"
-                                          :margin-inline  "auto"}}
-                                 [sc/title (icon/spinning :spinner)]]
+                              (if @show-error
                                 (let [required-access (-> r :data :access)]
                                   [sc/container
                                    {:style {:min-height     "calc(100vh - 4rem)"
@@ -273,7 +267,18 @@
                                     [sc/row-sc-g4-w
                                      [sc/text2 "Gå til"]
                                      [auto-link :r.forsiden]
-                                     [auto-link :r.oversikt]]]])))})))
+                                     [auto-link :r.oversikt]]]])
+                                [:div.mt-24
+                                 [:div
+                                  {:style {
+                                           ;:width          "100%"
+                                           ;:ouline         "1px solid red"
+                                           :min-height     "calc(100vh -  4rem)"
+                                           ;:padding-inline "var(--size-4)"
+                                           ;:padding-top    "var(--size-10)"
+                                           :xmargin-inline "auto"}}
+                                  [:div.flex.justify-center.items-center.h-full.w-full
+                                   [sc/title (icon/spinning :spinner)]]]]))})))
 
 (defn disclosure
   ([m]

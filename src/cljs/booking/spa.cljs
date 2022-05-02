@@ -123,7 +123,6 @@
    (fn forsiden [r]
      [+page-builder r
       {:frontpage true
-       ; :panel     (fn [] [:div "panel"])
        :render    booking.frontpage/frontpage}])
 
 

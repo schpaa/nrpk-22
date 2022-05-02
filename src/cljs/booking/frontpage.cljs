@@ -28,18 +28,19 @@
        :-moz-osx-font-smoothing  :grayscale}])
 
 (o/defstyled front-page :div
-  [:& {:position            :relative
-       :height              "100vh"
-       :background-position "center center"
-       :background-repeat   "no-repeat"
-       :background-size     "cover"}
+  [:&
+   {:position            :relative
+    :height              "100vh"
+    :background-position "center center"
+    :background-repeat   "no-repeat"
+    :background-size     "cover"}
    [:&.light {:background-image ["var(--background-image-light)"]}]
    [:&.dark {:background-image ["var(--background-image-dark)"]}]
    [:at-media {:max-width "511px"}
     [:&.bottom-toolbar
-     {:height "calc(100vh - 5rem)"}]]]
-  [:at-supports {:height :100dvh}
-   {:xheight "calc(100dvh)"}])
+     {:height "calc(100vh - 8rem)"}]]]
+  #_[:at-supports {:height :100dvh}
+     {:xheight "calc(100dvh)"}])
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -520,12 +521,12 @@
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
-        at-least-registered? (rf/subscribe [:lab/at-least-registered])
+        reg? (rf/subscribe [:lab/at-least-registered])
         master-emulation (rf/subscribe [:lab/master-state-emulation])]
     [front-page {:class [(if dark-mode? :dark :light)
-                         (if @at-least-registered? :bottom-toolbar)]}
+                         (if @reg? :bottom-toolbar)]}
 
-     [:div.min-h-full.z-0.relative.mx-auto.pt-16            ;<--------- pt-16 !!!!!!!
+     [:div.-debug.m-12.xmin-h-full.z-0.relative.mx-auto.pt-16 ;<--------- pt-16 !!!!!!!
 
       (when (and goog.DEBUG @master-emulation)
         [:div.max-w-lgx.mx-auto
@@ -543,7 +544,7 @@
         [image-carousell])
 
       (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
-                 (not @at-least-registered?))
+                 (not @reg?))
         [:div.mx-4.pb-12
          [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
 
@@ -551,7 +552,7 @@
        [sc/col-space-8 {:class [:mx-auto]
                         :style {:max-width booking.common-views/max-width}}
         [sc/col-space-8
-         (when-not @at-least-registered?
+         (when-not @reg?
            [please-login-and-register])
          #_(when goog.DEBUG (debug-panel))
          (widgets/disclosure {:large 1
@@ -563,4 +564,4 @@
          (widgets/disclosure {:large 1
                               :style {:padding-block "var(--size-2)"
                                       :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
-     [booking.common-views/after-content]]))
+     #_[booking.common-views/after-content]]))

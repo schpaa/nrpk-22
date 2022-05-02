@@ -322,24 +322,11 @@
                   (remove nil? (vertical-toolbar-definitions))))])))
 
 (defn bottom-toolbar []
-
-  (let [;_search (rf/subscribe [:lab/is-search-running?])
-        ;_has-chrome? (rf/subscribe [:lab/has-chrome])
-        switch? @(schpaa.state/listen :lab/menu-position-right)]
-    (booking.fiddle/render ((if switch? identity reverse) (horizontal-toolbar-definitions)))
-    #_(when (and @(rf/subscribe [:lab/at-least-registered]))
-        (into [sc/bottom-toolbar-style]
-              (mapv horizontal-button
-                    ((if switch? identity reverse)
-                     (horizontal-toolbar-definitions)))))))
-
+  (let [switch? @(schpaa.state/listen :lab/menu-position-right)
+        data ((if switch? reverse identity) (horizontal-toolbar-definitions))]
+    [booking.fiddle/render data]))
 
 ;endregion
-
-;region this takes forever
-
-#_(defn compute-pagetitles [r]
-    {:link [:r.forsiden] :text "YAhoo"})
 
 (defn compute-pagetitles [r]
   (let [path-fn (some-> r :data :path-fn)
@@ -362,6 +349,7 @@
                                                                               :text))}))
 
 (comment
+  ;todo what about this?
   (do
     (compute-pagetitles {:data {:path-fn (fn [{:keys [id] :as m}]
                                            (:navn (user.database/lookup-userinfo id) "not found"))
@@ -373,7 +361,7 @@
 (defn see-also
   [{:keys [text link]}]
   (when link
-    [sc/small0 "Se også "
+    [sc/small0 {:style {:white-space :nowrap}} "Se også "
      [sc/subtext-with-link
       {:class [:small :hover:opacity-100]
        :href  (k/path-for [link])}
@@ -409,8 +397,10 @@
         switch? (schpaa.state/listen :lab/menu-position-right)
         location (location-block links caption @switch?)]
     [err-boundary
-     [sc/row-fields {:class [:h-16 :items-center :w-full]
-                     :style {:opacity             (- 1 (or v 0))
+     [sc/row-fields {:class [:h-16 :items-center :w-full :z-100 :-debug2x]
+                     :style {:position            :sticky
+                             :top                 0
+                             :opacity             (- 1 (or v 0))
                              :background          (if frontpage "var(--toolbar)" "var(--content)")
                              :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
                              :border-bottom-style "solid"
@@ -429,13 +419,14 @@
               location (location-block links caption @switch?)]
           (apply (if frontpage header-top-frontpage header-top)))
 
-      (if @switch?
-        (if frontpage
-          [header-top-frontpage location [main-menu r]]
-          [header-top location [main-menu r]])
-        (if frontpage
-          [header-top-frontpage [main-menu r] location]
-          [header-top [sc/row-fields [main-menu r] location]]))]]))
+      (let [items [location [:div.flex-grow.w-full] [main-menu r]]]
+        (if @switch?
+          (if frontpage
+            [apply header-top-frontpage items]
+            [apply header-top items])
+          (if frontpage
+            [header-top-frontpage [main-menu r] [:div.flex-grow.w-full] location]
+            [header-top [sc/row-fields [main-menu r] [:div.flex-grow.w-full] location]])))]]))
 
 (defn search-result []
   (let [data (range 12)]
@@ -549,7 +540,7 @@
 
 (defn- name-badge []
   (let [account-email (rf/subscribe [:lab/username-or-fakename])]
-    [:div.fixed.inset-x-0.text-white.z-20
+    [:div.absolute.text-white.z-20
      {:style {:height    "auto"
               :bottom    "0"
               :width     "min-content"
@@ -569,43 +560,61 @@
         admin? (rf/subscribe [:lab/admin-access])]
 
     (r/create-class
-      {:display-name        "page-boundary"
+      {:display-name "page-boundary"
 
-       :component-did-mount (fn [_]
-                              ;fix: existence of #inner-document
-                              (when-let [el (.getElementById js/document "inner-document")]
-                                (.focus el)))
+       :component-did-mount
+       (fn [_]
+         ;fix: existence of #inner-document
+         (when-let [el (.getElementById js/document "inner-document")]
+           (.focus el)))
 
        :reagent-render
        (fn [r {:keys [frontpage] :as options} & contents]
          [err-boundary
-
+          ;popups
           [booking.modals.slideout/render]
           [booking.modals.centered/render]
           [booking.modals.boatinput/render-boatinput]
           [booking.modals.commandpalette/window-anchor]
+          ;content
 
-          (let [content [:div.flex.flex-col
-                         {:style {:flex "1 1 auto"}}
-                         (when-not frontpage [header-line r false nil])
+          (let [content (if frontpage
 
-                         [:div.flex.flex-col.h-full
-                          {:style {:height "100%"}
-                           :class [:overflow-y-auto]}
-                          [:<>
-                           [:div
-                            {:style {:background-color "var(--content)"
-                                     :flex             "1 1 auto"}}
-                            contents]]
+                          contents
+                          #_[:div.w-full
+                             [:div.overflow-y-auto {:style {:background-color "var(--content)"}} contents]
+                             [:div.sticky.bottom-0.h-20 [bottom-toolbar]]]
+                          #_[:div.overflow-y-auto.w-full
+                             {:style {:display "flex-column"
+                                      :flex    "1 1 auto"}}
+                             [:div contents]
+                             [bottom-toolbar]]
 
+                          contents
 
+                          #_[:div.flex.flex-col
+                             {:style {:flex "1 1 auto"}}
 
-                          [:div.sticky.bottom-0 {:style {:border-top  "1px solid var(--toolbar-)"
-                                                         :xbox-shadow "var(--shadow-1)"}} [bottom-toolbar]]
-                          (when-not frontpage [after-content])]
-                         (when (or goog.DEBUG @admin?)
-                           ;bottom name when admin (for debugging)
-                           [:div.sticky.bottom-0 [name-badge]])]]
+                             ;(when-not frontpage [header-line r false nil])
+
+                             [:div.flex.flex-col.h-fullx
+                              {:style {:height "100%"}
+                               :class [:overflow-y-auto]}
+
+                              [:div
+                               {:style {:background-color "var(--content)"
+                                        :flex             "1 1 auto"}}
+                               contents]]
+
+                             #_[:div [:div.sticky.bottom-0
+                                      {:style {:border-top  "1px solid var(--toolbar-)"
+                                               :xbox-shadow "var(--shadow-1)"}}
+                                      [bottom-toolbar]
+                                      [:div [after-content]]]]
+
+                             (when (or goog.DEBUG @admin?)
+                               ;bottom name when admin (for debugging)
+                               [:div.sticky.bottom-0 [name-badge]])])]
             [:div.fixed.inset-0.flex
              (if @switch?
                [:<> [vertical-toolbar true] content]
@@ -634,8 +643,54 @@
 
 (def max-width "54ch")
 
+(defn check-latest-version []
+  (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})]
+    (try
+      (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
+        (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
+          (when (t/< app-timestamp db-timestamp)
+            (rf/dispatch [:modal.slideout/toggle
+                          true
+                          {:content-fn
+                           (fn [_] [sc/centered-dialog
+                                    {:style {:position   :relative
+                                             :overflow   :auto
+                                             :z-index    10
+                                             :max-height "80vh"}}
+                                    [sc/col-space-8
+                                     [sc/dialog-title' "Oppfrisk nettsiden"]
+                                     [sc/col-space-4
+                                      [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
+
+                                      (let [link @(rf/subscribe [:kee-frame/route])
+                                            addr (or (some-> link :path) "")
+                                            path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
+                                        [:<>
+                                         ;[l/ppre-x link]
+                                         [sc/text1 path]]
+                                        [sc/row-ec
+                                         [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
+
+                                      [schpaa.style.hoc.page-controlpanel/togglepanel-local
+                                       "Mer informasjon"
+                                       (fn [_]
+                                         [sc/col-space-4
+                                          [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
+                                          [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
+                                          [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
+                                      ;[sc/small1 db-timestamp]
+                                      #_[l/pre
+                                         {:db-timestamp  (times.api/arrival-date db-timestamp)
+                                          :app-timestamp (times.api/arrival-date app-timestamp)
+                                          :need-reload?  (t/< app-timestamp db-timestamp)}]
+                                      #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}]))))
+      (catch js/Error _))))
+
+(declare render-normal)
+
 (defn +page-builder [r m]
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})
+        admin? (rf/subscribe [:lab/admin-access])
         scrollpos (r/atom 0)
         scroll-fn (fn [e]
                     (let [v (-> e .-target .-scrollTop)]
@@ -660,97 +715,79 @@
          (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render
-       (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title]}]
-         [err-boundary
-          (try
-            (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
-              (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
-                (when (t/< app-timestamp db-timestamp)
-                  (rf/dispatch [:modal.slideout/toggle
-                                true
-                                {:content-fn
-                                 (fn [_] [sc/centered-dialog
-                                          {:style {:position   :relative
-                                                   :overflow   :auto
-                                                   :z-index    10
-                                                   :max-height "80vh"}}
-                                          [sc/col-space-8
-                                           [sc/dialog-title' "Oppfrisk nettsiden"]
-                                           [sc/col-space-4
-                                            [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
-
-                                            (let [link @(rf/subscribe [:kee-frame/route])
-                                                  addr (or (some-> link :path) "")
-                                                  path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
-                                              [:<>
-                                               ;[l/ppre-x link]
-                                               [sc/text1 path]]
-                                              [sc/row-ec
-                                               [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
-
-                                            [schpaa.style.hoc.page-controlpanel/togglepanel-local
-                                             "Mer informasjon"
-                                             (fn [_]
-                                               [sc/col-space-4
-                                                [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
-                                                [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
-                                                [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
-                                            ;[sc/small1 db-timestamp]
-                                            #_[l/pre
-                                               {:db-timestamp  (times.api/arrival-date db-timestamp)
-                                                :app-timestamp (times.api/arrival-date app-timestamp)
-                                                :need-reload?  (t/< app-timestamp db-timestamp)}]
-                                            #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}]))))
-            (catch js/Error _))
-          (let [pagename (some-> r :data :name)
-                _user-account-email @(rf/subscribe [:lab/username-or-fakename])
-                _numberinput (rf/subscribe [:lab/number-input])
-                _left-aligned (schpaa.state/listen :activitylist/left-aligned)]
+       (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
+         (let [pagename (some-> r :data :name)]
+           [err-boundary
+            (check-latest-version)
             (if frontpage
-              [page-boundary r
-               {:frontpage true}
-               ;intent: removed overflow!
-               (into [:div.overflow-y-autox.h-full
-                      {:key "key-one"
-                       :ref (set-ref a scroll-fn)}]
-                     [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-                        [:div.sticky.top-0.z-10.relative
-                         ;{:style {:opacity v}}
-                         [booking.common-views/header-line r true v]])
-                      [:div.-mt-16 {:style {:height "calc(100% - 4rem)"}}
-                       [render r]]])]
+              [page-boundary r {:frontpage true}
+               [sc/col
+                [booking.common-views/header-line r true 0]
+                [sc/basic-page {:class [:-mt-16]
+                                :style {:overflow-y :auto
+                                        :xflex      "1 1 auto"}}
+                 [render r]]
+                [:div.sticky.bottom-0 [bottom-toolbar]]]
 
-              [page-boundary r
-               {:frontpage false}
-               (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
-                     have-access? (booking.common-views/matches-access r users-access-tokens)
-                     modify? (booking.access/can-modify? r users-access-tokens)]
-                 (if-not have-access?
-                   [no-access-view r]
-                   [sc/basic-page
-                    [sc/col-space-2
-                     {:class [:pt-8]
-                      :style {:flex             "1 1 auto"
-                              :background-color "var(--content)"}}
+               #_(into [:div.-debug                         ;.overflow-y-autox.h-full
+                        {:key "key-one"
+                         :ref (set-ref a scroll-fn)}]
+                       [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
+                          [:div.-debug                      ;.xsticky.top-0.z-10.absolute.inset-x-0
+                           {:xstyle {:opacity v}}
+                           [booking.common-views/header-line r true v]])
+                        [:div.-mt-16 {:style {:height "calc(100% - 4rem)"}}
+                         [render r]]])]
 
-                     ;modification could happen here
-                     (when (fn? panel)
-                       [sc/container
-                        [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
+              ;--------------------------------------------------------------------------
 
-                     (when always-panel
-                       [sc/container
-                        [always-panel modify?]])
+              [page-boundary r {:frontpage false}
+               [sc/col
+                [booking.common-views/header-line r false 0]
+                [render-normal r m]
+                [:div.sticky.bottom-0 [bottom-toolbar]]
+                (when (or goog.DEBUG @admin?)
+                  ;bottom name when admin (for debugging)
+                  [name-badge])]])]))})))
 
-                     (if render-fullwidth
-                       [sc/container
-                        {:style {:margin-right "unset"
-                                 :margin-left  "unset" #_(if (and @numberinput @left-aligned)
-                                                           ;; force view to align to the left
-                                                           0
-                                                           "unset")
-                                 :width        "100%"
-                                 :max-width    (if render-fullwidth "" "inherit")}}
-                        [render-fullwidth r]]
-                       [sc/container
-                        [render r]])]]))]))])})))
+(defn- render-frontpage [r m])
+
+(defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
+  (let [pagename (some-> r :data :name)
+        users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
+        have-access? (booking.common-views/matches-access r users-access-tokens)
+        modify? (booking.access/can-modify? r users-access-tokens)]
+    (if-not have-access?
+      [no-access-view r]
+      [sc/basic-page
+       {:style {:overflow-y :auto
+                :flex       "1 1 auto"}}
+
+       [sc/container {:class [:py-8]
+                      :style {}}
+        (when (fn? panel)
+          [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+        (when always-panel
+          [always-panel modify?])
+        [render r]]
+       #_[:div.flex-col.flex
+          [:div
+           ;modification could happen here
+           (when (fn? panel)
+             [sc/container
+              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
+
+           (when always-panel
+             [sc/container
+              [always-panel modify?]])
+
+           (if render-fullwidth
+             [:div
+              [sc/container
+               {:style {:margin-inline "unset"
+                        :width         "100%"
+                        :max-width     (if render-fullwidth "" "inherit")}}
+               [render-fullwidth r]]
+              [bottom-toolbar]]
+             [:div.overflow-y-auto [sc/container [render r]]])]]])))
+

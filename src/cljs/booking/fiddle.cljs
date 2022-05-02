@@ -9,8 +9,12 @@
 (defstyled toolbar :div
   {:display :none}
   [:at-media {:max-width "511px"}
-   [:& :h-auto :grid :gap-2 :w-full :px-4
-    {:background-color      "var(--toolbar-)"
+   [:& :grid :gap-2 :w-full :px-4
+    {:height                "8rem"
+     :width                 :100vw
+     ;:position :sticky
+     ;:bottom 0
+     :background-color      "var(--toolbar-)"
      :grid-template-rows    "4.5rem 3rem"
      :grid-template-columns "repeat(5,1fr)"}]])
 
@@ -18,7 +22,7 @@
   {:border-radius "var(--radius-round)"})
 
 (defstyled outer-button :div
-  [:& :h-30 :flex :justify-center :relative])
+  [:& :h-34 :flex :justify-center :relative])
 
 (defstyled button :button
   [:& :flex-center :p-3 :outline-none :focus:outline-none
@@ -70,5 +74,5 @@
      [icontext {:class [class]} (:short-caption d)]]))
 
 (defn render [d]
-  (into [toolbar]
-        (map-indexed button-fn d)))
+  [toolbar (into [:<>]
+                 (map-indexed button-fn d))])
