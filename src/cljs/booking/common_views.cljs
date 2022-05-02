@@ -400,9 +400,10 @@
      [sc/row-fields {:class [:h-16 :items-center :w-full :z-100]
                      :style {:position             :sticky
                              :top                  0
-                             :opacity              v
+                             :opacity              (if frontpage v 1)
                              ;:background-color "red"
-                             :xbackground          (if frontpage "var(--toolbar)" "var(--content)")
+                             :color                :white
+                             :background           (when-not frontpage (if frontpage "var(--toolbar)" "var(--content)"))
                              :xborder-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
                              :xborder-bottom-style "solid"
                              :xborder-bottom-width "1px"}}

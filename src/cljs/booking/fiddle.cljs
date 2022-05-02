@@ -9,13 +9,13 @@
 (defstyled toolbar :div
   {:display :none}
   [:at-media {:max-width "511px"}
-   [:& :grid :gap-0 :w-full :px-8
-    {:height                "8rem"                          ;fix <--- hardcoded!
+   [:& :grid :gap-0 :w-full :px-4
+    {:height                "6rem"                          ;fix <--- hardcoded!
      :width                 :100vw
      ;:position :sticky
      ;:bottom 0
      :background-color      "var(--toolbar-)"
-     :grid-template-rows    "auto"
+     :grid-template-rows    "auto 0rem "
      :grid-template-columns "repeat(5,1fr)"}
     [:&.admin
      {:grid-template-columns "repeat(7,1fr)"}]]])
@@ -73,7 +73,7 @@
          :style {}}
         (let [f (or (:icon d) (:icon-fn d))]
           (if (fn? f) (f page-name) f))]]]
-     [icontext {:class [class]} (:short-caption d)]]))
+     #_[icontext {:class [class]} (:short-caption d)]]))
 
 (defn render [d]
   [toolbar (into [:<>]
