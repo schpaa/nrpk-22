@@ -66,3 +66,7 @@
 (def checkCircle [:> solid/CheckCircleIcon])
 (def stjerne [:> solid/StarIcon])
 (def ikkeStjerne [:> outline/StarIcon])
+(def arrowRight [:> solid/ArrowCircleRightIcon])
+(def arrowLeft [:> solid/ArrowCircleLeftIcon])
+(def arrowRight' [:> solid/ArrowNarrowRightIcon])
+(def arrowLeft' [:> solid/ArrowNarrowLeftIcon])

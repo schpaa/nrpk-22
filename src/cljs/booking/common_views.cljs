@@ -135,7 +135,8 @@
         member? (rf/subscribe [:lab/member])
         ipad? (= uid @(db/on-value-reaction {:path ["system" "active"]}))
         booking? (rf/subscribe [:lab/booking])
-        left-side? (schpaa.state/listen :lab/menu-position-right)
+        right-side? (schpaa.state/listen :lab/menu-position-right)
+        with-caption? (schpaa.state/listen :app/toolbar-with-caption)
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
@@ -231,14 +232,23 @@
                             (sc/icon-large
                               (if @st ico/commandPaletteClosed ico/commandPaletteOpen))))
       :on-click    #(rf/dispatch [:app/toggle-command-palette])}
-     {:tall-height true
+     {:tall-height       true
+      :opposite-icon-fn  (fn [] (let [st @right-side?]
+                                  (sc/icon-large
+                                    {:style {:color "var(--brand2)"}}
+                                    (if st ico/arrowLeft ico/arrowRight))))
+      :opposite-on-click (fn [] (schpaa.state/toggle :lab/menu-position-right))
+      :icon-fn           (fn [] (let [with-caption? @(schpaa.state/listen :app/toolbar-with-caption)]
+                                  (sc/icon-large
+                                    (if with-caption?
+                                      (if right-side?
+                                        ico/panelOpen
+                                        ico/panelClosed)
+                                      (if right-side?
+                                        ico/panelClosed
+                                        ico/panelOpen)))))
 
-      :icon-fn     (fn [] (let [with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
-                                st (rf/subscribe [:lab/modal-selector])]
-                            (sc/icon-large
-                              ico/switchHoriz)))
-      ;with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
-      :on-click    #(schpaa.state/toggle :app/toolbar-with-caption)}]))
+      :on-click          #(schpaa.state/toggle :app/toolbar-with-caption)}]))
 
 (defn horizontal-toolbar-definitions []
   (let [;uid (rf/subscribe [:lab/uid])
@@ -303,20 +313,22 @@
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.items-start
               {:style {:padding-top "var(--size-0)"}}]
-             (map #(let [cap (when with-caption?
-                               (let [p (:page-name %)]
-                                 (if-some [caption (or (some->
-                                                         (if (fn? p) (p current-page) p)
-                                                         lookup-page-ref-from-name
-                                                         :text)
-                                                       (:caption %))]
-                                   caption
-                                   (when-let [dp (:default-page %)]
-                                     (:text (lookup-page-ref-from-name dp))))))]
-                     (if (keyword? %)
-                       [:div.grow]
-                       [vertical-button (assoc % :right-side (not left-side?)
-                                                 :caption cap)]))
+             (map (fn [{:keys [opposite-icon-fn] :as e}]
+                    (let [cap (when with-caption?
+                                (let [p (:page-name e)]
+                                  (if-some [caption (or (some->
+                                                          (if (fn? p) (p current-page) p)
+                                                          lookup-page-ref-from-name
+                                                          :text)
+                                                        (:caption e))]
+                                    caption
+                                    (when-let [dp (:default-page e)]
+                                      (:text (lookup-page-ref-from-name dp))))))]
+                      (if (keyword? e)
+                        [:div.grow]
+                        [vertical-button (assoc e :right-side (not left-side?)
+                                                  :with-caption? with-caption?
+                                                  :caption cap)])))
                   (remove nil? (vertical-toolbar-definitions))))])))
 
 (defn bottom-toolbar []
@@ -698,7 +710,7 @@
         [:div.sticky.top-0.z-100 [booking.common-views/header-line r false 0]]
         [:div {:style {:overflow-y :auto
                        :flex       "1 1 auto"
-                       :height     "calc(100vh - 10rem)"}}
+                       :height     "calc(100vh - 4rem)"}}
          (if render
            [:div {:class [:space-y-8]
                   :style {:margin-inline "auto"

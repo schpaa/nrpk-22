@@ -67,8 +67,12 @@
      [sc/small "this is"]]))
 
 (defn vertical-button [{:keys [right-side caption
+                               opposite-on-click
+                               with-caption?
+                               opposite-icon-fn
                                tall-height special
-                               icon icon-fn class style on-click page-name badge disabled]
+                               icon icon-fn class style on-click
+                               page-name badge disabled]
                         :or   {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (if (fn? page-name)
@@ -86,6 +90,13 @@
                             :color     "unset"
                             :flex-grow 1
                             :flex      "1 0 auto"}} caption]))
+
+     (when right-side
+       (when with-caption?
+         (when opposite-icon-fn
+           [:div.w-16.h-20.flex.justify-center.items-center
+            {:on-click opposite-on-click}
+            [sc/icon (opposite-icon-fn)]])))
 
      [:div.w-16
       {:style {:display         :flex
@@ -117,15 +128,19 @@
             icon)]]]]]
 
      (when-not right-side
+       (when with-caption?
+         (when opposite-icon-fn
+           [:div.w-16.h-20.flex.justify-center.items-center
+            {:on-click opposite-on-click}
+            [sc/icon (opposite-icon-fn)]])))
+
+     (when-not right-side
        (when caption
          [sc/text2 {:style {:text-align :right
                             :flex-grow  1
                             :color      "unset"
-                            :flex       "1 0 1"}} caption]
-         #_[sc/text2 {:style {:color      "unset"
-                              :flex-grow  1
-                              :text-align :left
-                              :flex       "1 0 100%"}} caption]))]))
+                            :flex       "1 0 1"}} caption]))]))
+
 
 (defn stability-expert [{:keys [stability expert]}]
   [:div.w-8.flex.justify-center.items-center
@@ -133,9 +148,9 @@
     [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 :green 1 :orange 2 :pink 3 :black} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
-(defn stability-name-category [{:keys [boat-type star-count location slot material
-                                       stability expert number navn kind description
-                                       last-update weight length width aquired-year aquired-price] :as m}]
+(defn stability-name-category [{:keys                                                                  [boat-type star-count location slot material
+                                                                                                        stability expert number navn kind description
+                                                                                                        last-update weight length width aquired-year aquired-price] :as m}]
 
   [:<>
    [stability-expert m]
