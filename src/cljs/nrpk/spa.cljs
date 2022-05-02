@@ -20,7 +20,7 @@
     (.setAttribute body "style" "background-color:var(--toolbar)")
     (if-let [page (get route-table @route-name)]
       (make-route-component page @route)
-      [:div "no can do"])))
+      [:div.bg-alt.fixed.inset-0.flex.items-center.justify-center "Chris Schreiner"])))
 
 
 

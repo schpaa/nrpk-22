@@ -125,9 +125,6 @@
       {:frontpage true
        :render    booking.frontpage/frontpage}])
 
-
-
-
    :r.booking.oversikt
    (fn forsiden [r]
      (let [user-auth (rf/subscribe [::db/user-auth])]

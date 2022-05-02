@@ -6,19 +6,7 @@
 (defstyled debug :div
   {:outline "1px solid yellow"})
 
-(defstyled toolbar :div
-  {:display :none}
-  [:at-media {:max-width "511px"}
-   [:& :grid :gap-0 :w-full :px-4
-    {:height                "6rem"                          ;fix <--- hardcoded!
-     :width                 :100vw
-     ;:position :sticky
-     ;:bottom 0
-     :background-color      "var(--toolbar-)"
-     :grid-template-rows    "auto 0rem "
-     :grid-template-columns "repeat(5,1fr)"}
-    [:&.admin
-     {:grid-template-columns "repeat(7,1fr)"}]]])
+
 
 (defstyled outer-button :div
   [:& :flex-center :relative])
@@ -75,6 +63,19 @@
           (if (fn? f) (f page-name) f))]]]
      #_[icontext {:class [class]} (:short-caption d)]]))
 
+(defstyled toolbar :div
+  {:display :none}
+  [:at-media {:max-width "511px"}
+   [:& :grid :gap-0 :w-full :px-4
+    {:height                "6rem"                          ;fix <--- hardcoded!
+     :width                 :100vw
+     :bottom                0
+     :background-color      "var(--toolbar-)"
+     :grid-template-rows    "auto 0rem "
+     :grid-template-columns "repeat(5,1fr)"}
+    [:&.admin
+     {:grid-template-columns "repeat(7,1fr)"}]]])
+
 (defn render [d]
-  [toolbar (into [:<>]
-                 (map-indexed button-fn d))])
+  (into [toolbar]
+        (map-indexed button-fn d)))

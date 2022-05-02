@@ -67,7 +67,8 @@
      [sc/small "this is"]]))
 
 (defn vertical-button [{:keys [right-side caption
-                               centered? tall-height special icon icon-fn class style on-click page-name badge disabled]
+                               tall-height special
+                               icon icon-fn class style on-click page-name badge disabled]
                         :or   {style {}}}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         active? (if (fn? page-name)
@@ -109,11 +110,11 @@
        [sc/toolbar-button
         {:disabled  disabled
          :tab-index (when active? "-1")
-         :style     style
+         :style     {:aspect-ratio "1/1"}
          :class     [(if right-side :right-side :left-side)
                      (if active? (or (when class (class current-page)) :selected))
                      (if special :special)]}
-        [:div {:style {:border "1px solid blue"}}
+        [:div #_{:style {:border "1px solid blue"}}
          [sc/icon-large
           (if icon-fn
             (icon-fn current-page)

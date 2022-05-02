@@ -27,9 +27,11 @@
        :-webkit-font-smoothing   :antialiased
        :-moz-osx-font-smoothing  :grayscale}])
 
+;warning: Not a page-template
 (o/defstyled front-page :div
   [:&
    {:position            :relative
+    ;:width "100vw"
     :height              "100vh"
     :background-position "center center"
     :background-repeat   "no-repeat"
@@ -38,7 +40,9 @@
    [:&.dark {:background-image ["var(--background-image-dark)"]}]
    [:at-media {:max-width "511px"}
     [:&.bottom-toolbar
-     {:height "calc(100vh - 8rem)"}]]]
+     {:height "calc(100vh - 8rem)"}]]
+   [:at-media {:min-width "768px"}
+    {:width "768px"}]]
   #_[:at-supports {:height :100dvh}
      {:xheight "calc(100dvh)"}])
 

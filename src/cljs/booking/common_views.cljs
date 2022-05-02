@@ -298,8 +298,8 @@
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.shrink-0.h-full.sm:flex.hidden.relative.select-none
        {:class [(if with-caption? :w-56 :w-16)]
-        :style {:box-shadow  (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
-                :backgrounds "var(--gray-9)"}}
+        :style {:box-shadow (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
+                :background "var(--toolbar)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.xw-16.items-start
               {:style (conj
@@ -370,12 +370,12 @@
 (defn location-block [links caption switch?]
   (let [text caption
         link (first links)]
-    [:div.flex.flex-col.px-2.w-full
+    [:div.flex.flex-col.px-2.w-auto
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
       :style    {:z-index 9
                  :flex    "1 1 1"
                  :cursor  :pointer}
-      :class    [(when-not switch? :text-right)]}
+      :class    [(if @switch? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
       [sc/title1 (or (if (fn? text)
@@ -390,45 +390,27 @@
               (catch js/Error e {:CRASH/see-also z})))]]]))
 
 (defn header-line [r frontpage v]
-  #_(let [data [(-> r :data :header)]]
-      (location-block r false))
-  ;[l/pre r]
   (let [[links caption] (some-> r :data :header)
         switch? (schpaa.state/listen :lab/menu-position-right)
-        location (location-block links caption @switch?)]
-    [err-boundary
-     [sc/row-fields {:class [:h-16 :items-center :w-full :z-100]
-                     :style {:position             :sticky
-                             :top                  0
-                             :opacity              (if frontpage v 1)
-                             ;:background-color "red"
-                             :color                :white
-                             :background           (when-not frontpage (if frontpage "var(--toolbar)" "var(--content)"))
-                             :xborder-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
-                             :xborder-bottom-style "solid"
-                             :xborder-bottom-width "1px"}}
-
-      #_(let [_login (fn []
-                       (when-not @(rf/subscribe [:lab/at-least-registered])
-                         [:<>
-                          [:div.grow]
-                          [schpaa.style.hoc.buttons/cta {:style    {:padding-inline "var(--size-4)"
-                                                                    :width          "min-content"
-                                                                    :box-shadow     "var(--shadow-1)"}
-                                                         :class    [:flex :xflex-wrap :items-center :gap-x-1 :h-10 :xspace-y-0 :xshrink-0]
-                                                         :on-click #(rf/dispatch [:app/login])}
-                           "Logg inn"]]))
-              location (location-block links caption @switch?)]
-          (apply (if frontpage header-top-frontpage header-top)))
-
-      (let [items [location [:div.flex-grow.w-full] [main-menu r]]]
-        (if @switch?
-          (if frontpage
-            [apply header-top-frontpage items]
-            [apply header-top items])
-          (if frontpage
-            [header-top-frontpage [main-menu r] [:div.flex-grow.w-full] location]
-            [header-top [sc/row-fields [main-menu r] [:div.flex-grow.w-full] location]])))]]))
+        location [location-block links caption switch?]]
+    [:div.w-full.flex.justify-between
+     {:class  [:h-16 :items-center :z-100]
+      :xstyle {:position             :sticky
+               :top                  0
+               :opacity              (if frontpage v 1)
+               ;:background-color "red"
+               :color                :white
+               :background           (when-not frontpage (if frontpage "var(--toolbar)" "var(--content)"))
+               :xborder-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
+               :xborder-bottom-style "solid"
+               :xborder-bottom-width "1px"}}
+     (let [items [location
+                  [:div.flex-grow.w-full]
+                  [main-menu r]]
+           items (if @switch? (reverse items) items)]
+       (if frontpage
+         [apply header-top-frontpage items]
+         [apply header-top items]))]))
 
 (defn search-result []
   (let [data (range 12)]
@@ -557,70 +539,40 @@
                          :padding-block-end       "var(--size-2)"}}
       (str/trim (str @account-email))]]))
 
-(defn page-boundary [r {:keys [frontpage] :as options} & contents]
-  (let [switch? (schpaa.state/listen :lab/menu-position-right)
+(defn page-boundary [r _ & contents]
+  (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
         admin? (rf/subscribe [:lab/admin-access])]
-
     (r/create-class
-      {:display-name "page-boundary"
-
-       :component-did-mount
-       (fn [_]
-         ;fix: existence of #inner-document
-         (when-let [el (.getElementById js/document "inner-document")]
-           (.focus el)))
-
+      {:display-name        "page-boundary"
+       :component-did-mount (fn [_]
+                              ;fix: existence of #inner-document
+                              (when-let [el (.getElementById js/document "inner-document")]
+                                (.focus el)))
        :reagent-render
-       (fn [r {:keys [frontpage] :as options} & contents]
-         [err-boundary
+       (fn [r _ & contents]
+         [:div
           ;popups
           [booking.modals.slideout/render]
           [booking.modals.centered/render]
           [booking.modals.boatinput/render-boatinput]
           [booking.modals.commandpalette/window-anchor]
+
           ;content
-
-          (let [content (if frontpage
-
-                          contents
-                          #_[:div.w-full
-                             [:div.overflow-y-auto {:style {:background-color "var(--content)"}} contents]
-                             [:div.sticky.bottom-0.h-20 [bottom-toolbar]]]
-                          #_[:div.overflow-y-auto.w-full
-                             {:style {:display "flex-column"
-                                      :flex    "1 1 auto"}}
-                             [:div contents]
-                             [bottom-toolbar]]
-
-                          contents
-
-                          #_[:div.flex.flex-col
-                             {:style {:flex "1 1 auto"}}
-
-                             ;(when-not frontpage [header-line r false nil])
-
-                             [:div.flex.flex-col.h-fullx
-                              {:style {:height "100%"}
-                               :class [:overflow-y-auto]}
-
-                              [:div
-                               {:style {:background-color "var(--content)"
-                                        :flex             "1 1 auto"}}
-                               contents]]
-
-                             #_[:div [:div.sticky.bottom-0
-                                      {:style {:border-top  "1px solid var(--toolbar-)"
-                                               :xbox-shadow "var(--shadow-1)"}}
-                                      [bottom-toolbar]
-                                      [:div [after-content]]]]
-
-                             (when (or goog.DEBUG @admin?)
-                               ;bottom name when admin (for debugging)
-                               [:div.sticky.bottom-0 [name-badge]])])]
-            [:div.fixed.inset-0.flex
-             (if @switch?
-               [:<> [vertical-toolbar true] content]
-               [:<> content [vertical-toolbar false]])])])})))
+          (let [marg (if @menu-right? :sm:mr-16 :sm:ml-16)]
+            (if @menu-right?
+              [:<>
+               [:div {:class [marg :min-h-full]} contents]
+               [:div.fixed.w-16.top-0.bottom-0.bg-alt.hidden.sm:block
+                {:style {:z-index 1000
+                         :height  "100vh"
+                         :right   "0"}}
+                [vertical-toolbar true]]]
+              [:div
+               {:style {:width "calc(100% - 4rem)"}}
+               [:div {:class [:ml-16 :min-h-full]} contents]
+               [:div.fixed.w-16.top-0.bottom-0.bg-alt.left-0.hidden.sm:block
+                {:style {:left 0}}
+                [vertical-toolbar false]]]))])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -688,7 +640,7 @@
                                       #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}]))))
       (catch js/Error _))))
 
-(declare render-normal)
+(declare render-normal render-frontpage)
 
 (defn +page-builder [r m]
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})
@@ -704,83 +656,71 @@
                       (tap> ["scroll" (-> e .-target .-scrollTop)])))
         a (r/atom nil)]
     (r/create-class
-      {:display-name
-       "+page-builder"
+      {:display-name "+page-builder"
 
        :component-will-unmount
-       (fn [_]
-         (when @a
-           (.removeEventListener @a "scroll" scroll-fn)))
+       (fn [_] (when @a
+                 (.removeEventListener @a "scroll" scroll-fn)))
 
        :component-did-mount
-       (fn [_]
-         (rf/dispatch [:lab/we-know-how-to-scroll false]))
+       (fn [_] (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render
        (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
          (let [pagename (some-> r :data :name)
                v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-           [err-boundary
+           [:<>
             (check-latest-version)
+            ;[:div {:style {:width "100%"}}
             (if frontpage
-              [page-boundary r {:frontpage true}
-               [sc/col {:class [:-mt-16]}
-                [booking.common-views/header-line r true v]
+              [render-frontpage r m scroll-fn a v]
+              ; all pages
+              [render-normal r m admin?])]))})))
 
-                [sc/front-page {:ref   (set-ref a scroll-fn)
-                                :class []
-                                :style {:overflow-y :auto
-                                        :xflex      "1 1 auto"}}
-                 [render r]]
-                [:div.sticky.bottom-0 [bottom-toolbar]]]]
+(defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
+  [page-boundary r {:frontpage true}
+   [sc/col {:class [:-mt-16]}
+    [booking.common-views/header-line r true v]
+    [sc/front-page
+     {:ref   (set-ref a scroll-fn)
+      ;:class [:w-full :bg-alt]
+      :style {:overflow-y :auto
+              :xflex      "1 1 auto"}}
+     [render r]]
+    [:div.sticky.bottom-0 [bottom-toolbar]]]])
 
-              [page-boundary r {:frontpage false}
-               [sc/col
-                [booking.common-views/header-line r false 0]
-                [render-normal r m]
-                [:div.sticky.bottom-0 [bottom-toolbar]]
-                (when (or goog.DEBUG @admin?)
-                  ;bottom name when admin (for debugging)
-                  [name-badge])]])]))})))
-
-(defn- render-frontpage [r m])
-
-(defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
+(defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         have-access? (booking.common-views/matches-access r users-access-tokens)
         modify? (booking.access/can-modify? r users-access-tokens)]
     (if-not have-access?
       [no-access-view r]
-      [sc/basic-page
-       {:style {:overflow-y :auto
-                :flex       "1 1 auto"}}
+      #_[sc/basic-page
+         {:style {:position   :relative
+                  :overflow-y :auto
+                  :flex       "1 1 auto"}}]
 
-       [sc/container {:class [:py-8]
-                      :style {}}
-        (when (fn? panel)
-          [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
-        (when always-panel
-          [always-panel modify?])
-        [render r]]
-       #_[:div.flex-col.flex
-          [:div
-           ;modification could happen here
-           (when (fn? panel)
-             [sc/container
-              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
+      [page-boundary r {:frontpage false}
 
-           (when always-panel
-             [sc/container
-              [always-panel modify?]])
+       #_[:div (when (fn? panel)
+                 [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])]
 
-           (if render-fullwidth
-             [:div
-              [sc/container
-               {:style {:margin-inline "unset"
-                        :width         "100%"
-                        :max-width     (if render-fullwidth "" "inherit")}}
-               [render-fullwidth r]]
-              [bottom-toolbar]]
-             [:div.overflow-y-auto [sc/container [render r]]])]]])))
+       #_[:div (when always-panel
+                 [always-panel modify?])]
+
+       [:div
+        {:style {:xheight          "calc(100vh)"
+                 :background-color "var(--content)"}}
+        [:div.sticky.top-0.z-100 [booking.common-views/header-line r false 0]]
+        [sc/container
+         #_(for [e (range 30)] [:div e])
+         [:div {:style {:min-height "calc(100vh - 14rem)"}}
+          [render r m]]]
+        [:div.fixedx.sticky.bottom-0
+         [bottom-toolbar]]]
+
+       #_[:div (when (or goog.DEBUG @admin?)
+                 ;bottom name when admin (for debugging)
+                 [name-badge])]])))
 
