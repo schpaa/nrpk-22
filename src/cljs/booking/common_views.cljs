@@ -79,7 +79,8 @@
 
 (o/defstyled header-top :div
   :flex :items-center :w-full :px-2 :gap-2
-  {:background "var(--content)"
+  {;:outline "1px solid red"
+   :background "var(--content)"
    :height     "var(--size-9)"}
   [:at-media {:min-width "511px"}
    {:border-top-right-radius "var(--radius-3)"
@@ -384,6 +385,7 @@
     [:div.flex.flex-col.px-2.w-full
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
       :style    {:z-index 9
+                 :flex    "1 1 1"
                  :cursor  :pointer}
       :class    [(when-not switch? :text-right)]}
      [sc/col-space-1
@@ -407,18 +409,12 @@
         switch? (schpaa.state/listen :lab/menu-position-right)
         location (location-block links caption @switch?)]
     [err-boundary
-     [sc/row-fields {:class [:h-16 :items-center :w-full :-debug]
-                     :style {:opacity             (- 1 v)
+     [sc/row-fields {:class [:h-16 :items-center :w-full]
+                     :style {:opacity             (- 1 (or v 0))
                              :background          (if frontpage "var(--toolbar)" "var(--content)")
                              :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
                              :border-bottom-style "solid"
                              :border-bottom-width "1px"}}
-      #_[:div.h-16.absolute.inset-x-0
-         {:style {:opacity             (- 1 v)
-                  :background          (if frontpage "var(--toolbar)" "var(--content)")
-                  :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
-                  :border-bottom-style "solid"
-                  :border-bottom-width "1px"}}]
 
       #_(let [_login (fn []
                        (when-not @(rf/subscribe [:lab/at-least-registered])
@@ -432,9 +428,14 @@
                            "Logg inn"]]))
               location (location-block links caption @switch?)]
           (apply (if frontpage header-top-frontpage header-top)))
+
       (if @switch?
-        ((if frontpage header-top-frontpage header-top) location [main-menu @switch?])
-        ((if frontpage header-top-frontpage header-top) [main-menu @switch?] location))]]))
+        (if frontpage
+          [header-top-frontpage location [main-menu r]]
+          [header-top location [main-menu r]])
+        (if frontpage
+          [header-top-frontpage [main-menu r] location]
+          [header-top [sc/row-fields [main-menu r] location]]))]]))
 
 (defn search-result []
   (let [data (range 12)]
