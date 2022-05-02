@@ -83,8 +83,8 @@
    :background "var(--content)"
    :height     "var(--size-9)"}
   [:at-media {:min-width "511px"}
-   {:border-top-right-radius "var(--radius-3)"
-    :xborder-right           "1px solid var(--toolbar-)"}])
+   {;:border-top-right-radius "var(--radius-3)"
+    :xborder-right "1px solid var(--toolbar-)"}])
 
 ;endregion
 
@@ -301,9 +301,8 @@
         :style {:box-shadow (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
                 :background "var(--toolbar)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
-       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.xw-16.items-start
-              {:style (conj
-                        {:padding-top "var(--size-0)"})}]
+       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.items-start
+              {:style {:padding-top "var(--size-0)"}}]
              (map #(let [cap (when with-caption?
                                (let [p (:page-name %)]
                                  (if-some [caption (or (some->
@@ -318,7 +317,6 @@
                        [:div.grow]
                        [vertical-button (assoc % :right-side (not left-side?)
                                                  :caption cap)]))
-
                   (remove nil? (vertical-toolbar-definitions))))])))
 
 (defn bottom-toolbar []
@@ -411,14 +409,6 @@
        (if frontpage
          [apply header-top-frontpage items]
          [apply header-top items]))]))
-
-(defn search-result []
-  (let [data (range 12)]
-    [:div.pt-px                                             ;.min-h-screen
-     (into [:div.gap-px.grid.w-full
-            {:style {:grid-template-columns "repeat(auto-fill,minmax(24rem,1fr))"}}]
-           (for [e data]
-             [result-item e]))]))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -541,6 +531,7 @@
 
 (defn page-boundary [r _ & contents]
   (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
+        with-caption? (schpaa.state/listen :app/toolbar-with-caption)
         admin? (rf/subscribe [:lab/admin-access])]
     (r/create-class
       {:display-name        "page-boundary"
@@ -558,20 +549,25 @@
           [booking.modals.commandpalette/window-anchor]
 
           ;content
-          (let [marg (if @menu-right? :sm:mr-16 :sm:ml-16)]
+          (let [marg (if @menu-right? (if @with-caption? :sm:mr-56 :sm:mr-16)
+                                      (if @with-caption? :sm:ml-56 :sm:ml-16))
+                w-id (if @with-caption? :sm:w-56 :sm:w-16)]
             (if @menu-right?
-              [:<>
+              [:div
+               {:style {:width "calc(100%)"}}
                [:div {:class [marg :min-h-full]} contents]
-               [:div.fixed.w-16.top-0.bottom-0.bg-alt.hidden.sm:block
-                {:style {:z-index 1000
+               [:div.fixed.top-0.bottom-0.bg-alt.hidden.sm:block
+                {:class [w-id]
+                 :style {:z-index 1000
                          :height  "100vh"
-                         :right   "0"}}
+                         :right   0}}
                 [vertical-toolbar true]]]
               [:div
-               {:style {:width "calc(100% - 4rem)"}}
-               [:div {:class [:ml-16 :min-h-full]} contents]
-               [:div.fixed.w-16.top-0.bottom-0.bg-alt.left-0.hidden.sm:block
-                {:style {:left 0}}
+               {:style {:width "calc(100%)"}}
+               [:div {:class [marg :min-h-full]} contents]
+               [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block
+                {:class [w-id]
+                 :style {:left 0}}
                 [vertical-toolbar false]]]))])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
@@ -680,12 +676,10 @@
 (defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
   [page-boundary r {:frontpage true}
    [sc/col {:class [:-mt-16]}
-    [booking.common-views/header-line r true v]
+    [:div.sticky.top-0.z-100 [booking.common-views/header-line r true v]]
     [sc/front-page
      {:ref   (set-ref a scroll-fn)
-      ;:class [:w-full :bg-alt]
-      :style {:overflow-y :auto
-              :xflex      "1 1 auto"}}
+      :style {:overflow-y :auto}}
      [render r]]
     [:div.sticky.bottom-0 [bottom-toolbar]]]])
 
@@ -696,31 +690,35 @@
         modify? (booking.access/can-modify? r users-access-tokens)]
     (if-not have-access?
       [no-access-view r]
-      #_[sc/basic-page
-         {:style {:position   :relative
-                  :overflow-y :auto
-                  :flex       "1 1 auto"}}]
-
       [page-boundary r {:frontpage false}
-
-       #_[:div (when (fn? panel)
-                 [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])]
-
-       #_[:div (when always-panel
-                 [always-panel modify?])]
-
-       [:div
-        {:style {:xheight          "calc(100vh)"
+       [sc/basic-page
+        {:style {:width            "100%"
+                 :overflow-y       :auto
                  :background-color "var(--content)"}}
         [:div.sticky.top-0.z-100 [booking.common-views/header-line r false 0]]
-        [sc/container
-         #_(for [e (range 30)] [:div e])
-         [:div {:style {:min-height "calc(100vh - 14rem)"}}
-          [render r m]]]
-        [:div.fixedx.sticky.bottom-0
-         [bottom-toolbar]]]
+        [:div {:style {:overflow-y :auto
+                       :flex       "1 1 auto"
+                       :height     "calc(100vh - 10rem)"}}
+         (if render
+           [:div {:class [:space-y-8]
+                  :style {:margin-inline "auto"
+                          :padding-block "2rem"
+                          :max-width     "min(calc(100% - 2rem), 56ch)"}}
+            (when (fn? panel)
+              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+            (when always-panel
+              [always-panel modify?])
+            [render r m]]
+           [render-fullwidth])]
 
-       #_[:div (when (or goog.DEBUG @admin?)
-                 ;bottom name when admin (for debugging)
-                 [name-badge])]])))
+        [:div.sticky.bottom-0
+         [bottom-toolbar]]
+
+        (when (or goog.DEBUG @admin?)
+          [:div.fixed.bottom-0
+           {:class [:xsm:ml-8]
+            :style {:z-index   10000
+                    :left      :50%
+                    :transform "translateX(-50%)"}}
+           [name-badge]])]])))
 

@@ -10,6 +10,7 @@ text-indent: 0;
 html {
     -webit-text-size-adjust: none;
     touch-action: pan-y;
+    height: 100%;
 }
 
 @media (max-width: 511px) {

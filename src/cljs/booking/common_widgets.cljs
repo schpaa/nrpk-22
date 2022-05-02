@@ -76,26 +76,22 @@
                   (= current-page page-name))]
     [sc/toolbar-button-with-caption
      {:style    {:justify-content :space-between
-                 :display         :flex
                  :align-items     :center}
-      :class    [:gap-0 :w-full]
+      :class    [:gap-2 :w-full :flex :flex-row-reverse :justify-center]
       :on-click #(on-click current-page)}
 
-     (when right-side
-       (if caption
-         [sc/text2 {:style {:text-align :right
-                            :flex-grow  1
-                            :color      "unset"
-                            :flex       "1 0 1"}} caption]
-         [:div]))
+     (when caption
+       (when right-side
+         [sc/text2 {:style {:width     "auto"
+                            :color     "unset"
+                            :flex-grow 1
+                            :flex      "1 0 auto"}} caption]))
 
-     [:div.w-full
+     [:div.w-16
       {:style {:display         :flex
                :align-items     :center
                :justify-content :center
-               :aspect-ratio    "1/1"
-               :flex-shrink     0
-               ;:flex "0 2 52px"
+               :flex-shrink     1
                :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
       [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
        {:style {:pointer-events :auto
@@ -110,7 +106,7 @@
        [sc/toolbar-button
         {:disabled  disabled
          :tab-index (when active? "-1")
-         :style     {:aspect-ratio "1/1"}
+         ;:style     {:aspect-ratio "1/1"}
          :class     [(if right-side :right-side :left-side)
                      (if active? (or (when class (class current-page)) :selected))
                      (if special :special)]}
@@ -119,11 +115,17 @@
           (if icon-fn
             (icon-fn current-page)
             icon)]]]]]
+
      (when-not right-side
-       (when caption [sc/text2 {:style {:color      "unset"
-                                        :flex-grow  1
-                                        :text-align :left
-                                        :flex       "1 0 1"}} caption]))]))
+       (when caption
+         [sc/text2 {:style {:text-align :right
+                            :flex-grow  1
+                            :color      "unset"
+                            :flex       "1 0 1"}} caption]
+         #_[sc/text2 {:style {:color      "unset"
+                              :flex-grow  1
+                              :text-align :left
+                              :flex       "1 0 100%"}} caption]))]))
 
 (defn stability-expert [{:keys [stability expert]}]
   [:div.w-8.flex.justify-center.items-center

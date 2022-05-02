@@ -411,75 +411,74 @@
           data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
-      [:div
-       (into [sc/col-space-1]
-             (for [[k {:keys [test uid adults children havekey juveniles sleepover timestamp list deleted nøkkel] :as m}]
-                   (if show-deleted?
-                     @data (remove (comp :deleted val) @data))
-                   :let [boats list
-                         date (t/date-time (t/instant timestamp))]]
-               [command-grid
-                {:class [(when test :test)]}
-                [:div.w-full.truncate
-                 {:class [:whitespace-nowrap :gap-1]
-                  :style {:color           "var(--text1) "
-                          :grid-area       " time "
-                          :display         :flex
-                          :justify-content :between}}]
-                [badges m]
-                (when show-details?
-                  [sc/row-sc-g4-w {:style {:grid-area "details"}
-                                   :class [:pt-1]}
-                   [sc/text2 {:style {:font-weight "var(--font-weight-5)"}
-                              :class [:tabular-nums]}
-                    (if (pos? adults) adults "–")
-                    "/"
-                    (if (pos? juveniles) juveniles "–")
-                    "/"
-                    (if (pos? children) children "–")]
-                   [sc/text2 {:class []} (user.database/lookup-alias uid)]])
-                [edit loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]
-                (into [listitem' {:class [(if deleted :deleted)
-                                          :w-full :py-2]
-                                  :style {:flex            "1 0 auto"
-                                          :justify-content :between
-                                          :align-items     :center
-                                          :opacity         (if deleted 0.2 1)
-                                          :grid-area       "content"}}]
-                      (let [arrived-datetime (first (sort < (vals boats)))]
-                        (concat
-                          [(if (and show-timegraph?
-                                    (or (t/= (t/today) (t/date date))
-                                        (and (seq arrived-datetime)
-                                             (t/= (t/today) (t/date (t/instant arrived-datetime))))
-                                        (and
-                                          (t/< (t/<< (t/today) (t/new-period 2 :days)) (t/date date))
-                                          (nil? arrived-datetime))))
-                             [:div.w-56 [timegraph date arrived-datetime boats (t/date-time)]]
-                             [sc/col {:class [:tabular-nums :w-44]}
-                              [sc/row-fields
-                               [sc/text1 {:class [:tracking-tight]} (times.api/logg-date-format date)]
-                               [:div.grow]
-                               [sc/text1 {:class [:tracking-tight]} "kl. " (times.api/time-format date)]]
-                              (when (seq arrived-datetime)
-                                (let [dt (t/instant arrived-datetime)]
-                                  [sc/row-fields
-                                   (when-not (t/= (t/date dt) (t/date date))
-                                     [sc/text1 {:class [:tracking-tight]
-                                                :style {:white-space :nowrap}} (times.api/logg-date-format dt)])
-                                   [:div.grow]
-                                   [sc/text1 {:class [:tracking-tight :w-full :h-auto :self-center :text-right]}
-                                    (if (seq arrived-datetime)
-                                      (str "kl. " (times.api/time-format (t/time dt)))
-                                      (str arrived-datetime))]]))])]
-                          [(map (fn [[id returned]]
-                                  (let [returned (not (empty? returned))
-                                        number (get lookup-id->number (keyword id) (str " ? " id))]
-                                    (sc/badge-2 {:class    [:big (if-not returned :in-use)]
-                                                 :on-click #(dlg/open-modal-boatinfo
-                                                              {:uid  loggedin-uid
-                                                               :data (get db (keyword id))})} number)))
-                                (remove nil? boats))])))]))])))
+      (into [sc/col-space-1]
+            (for [[k {:keys [test uid adults children havekey juveniles sleepover timestamp list deleted nøkkel] :as m}]
+                  (if show-deleted?
+                    @data (remove (comp :deleted val) @data))
+                  :let [boats list
+                        date (t/date-time (t/instant timestamp))]]
+              [command-grid
+               {:class [(when test :test)]}
+               [:div.w-full.truncate
+                {:class [:whitespace-nowrap :gap-1]
+                 :style {:color           "var(--text1) "
+                         :grid-area       " time "
+                         :display         :flex
+                         :justify-content :between}}]
+               [badges m]
+               (when show-details?
+                 [sc/row-sc-g4-w {:style {:grid-area "details"}
+                                  :class [:pt-1]}
+                  [sc/text2 {:style {:font-weight "var(--font-weight-5)"}
+                             :class [:tabular-nums]}
+                   (if (pos? adults) adults "–")
+                   "/"
+                   (if (pos? juveniles) juveniles "–")
+                   "/"
+                   (if (pos? children) children "–")]
+                  [sc/text2 {:class []} (user.database/lookup-alias uid)]])
+               [edit loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]
+               (into [listitem' {:class [(if deleted :deleted)
+                                         :w-full :py-2]
+                                 :style {:flex            "1 0 auto"
+                                         :justify-content :between
+                                         :align-items     :center
+                                         :opacity         (if deleted 0.2 1)
+                                         :grid-area       "content"}}]
+                     (let [arrived-datetime (first (sort < (vals boats)))]
+                       (concat
+                         [(if (and show-timegraph?
+                                   (or (t/= (t/today) (t/date date))
+                                       (and (seq arrived-datetime)
+                                            (t/= (t/today) (t/date (t/instant arrived-datetime))))
+                                       (and
+                                         (t/< (t/<< (t/today) (t/new-period 2 :days)) (t/date date))
+                                         (nil? arrived-datetime))))
+                            [:div.w-56 [timegraph date arrived-datetime boats (t/date-time)]]
+                            [sc/col {:class [:tabular-nums :w-44]}
+                             [sc/row-fields
+                              [sc/text1 {:class [:tracking-tight]} (times.api/logg-date-format date)]
+                              [:div.grow]
+                              [sc/text1 {:class [:tracking-tight]} "kl. " (times.api/time-format date)]]
+                             (when (seq arrived-datetime)
+                               (let [dt (t/instant arrived-datetime)]
+                                 [sc/row-fields
+                                  (when-not (t/= (t/date dt) (t/date date))
+                                    [sc/text1 {:class [:tracking-tight]
+                                               :style {:white-space :nowrap}} (times.api/logg-date-format dt)])
+                                  [:div.grow]
+                                  [sc/text1 {:class [:tracking-tight :w-full :h-auto :self-center :text-right]}
+                                   (if (seq arrived-datetime)
+                                     (str "kl. " (times.api/time-format (t/time dt)))
+                                     (str arrived-datetime))]]))])]
+                         [(map (fn [[id returned]]
+                                 (let [returned (not (empty? returned))
+                                       number (get lookup-id->number (keyword id) (str " ? " id))]
+                                   (sc/badge-2 {:class    [:big (if-not returned :in-use)]
+                                                :on-click #(dlg/open-modal-boatinfo
+                                                             {:uid  loggedin-uid
+                                                              :data (get db (keyword id))})} number)))
+                               (remove nil? boats))])))])))))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}

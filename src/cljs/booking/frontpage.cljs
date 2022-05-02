@@ -31,7 +31,7 @@
 (o/defstyled front-page :div
   [:&
    {:position            :relative
-    ;:width "100vw"
+    :width               "100vw"
     :height              "100vh"
     :background-position "center center"
     :background-repeat   "no-repeat"
@@ -42,7 +42,7 @@
     [:&.bottom-toolbar
      {:height "calc(100vh - 8rem)"}]]
    [:at-media {:min-width "768px"}
-    {:width "768px"}]]
+    {:xwidth "768px"}]]
   #_[:at-supports {:height :100dvh}
      {:xheight "calc(100dvh)"}])
 
