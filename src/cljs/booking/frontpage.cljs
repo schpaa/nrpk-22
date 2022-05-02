@@ -526,7 +526,7 @@
     [front-page {:class [(if dark-mode? :dark :light)
                          (if @reg? :bottom-toolbar)]}
 
-     [:div.-debug.m-12.xmin-h-full.z-0.relative.mx-auto.pt-16 ;<--------- pt-16 !!!!!!!
+     [:div.xmin-h-full.z-0.relative.mx-auto.pt-16           ;<--------- pt-16 !!!!!!!
 
       (when (and goog.DEBUG @master-emulation)
         [:div.max-w-lgx.mx-auto

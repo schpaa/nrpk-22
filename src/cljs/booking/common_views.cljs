@@ -397,14 +397,15 @@
         switch? (schpaa.state/listen :lab/menu-position-right)
         location (location-block links caption @switch?)]
     [err-boundary
-     [sc/row-fields {:class [:h-16 :items-center :w-full :z-100 :-debug2x]
-                     :style {:position            :sticky
-                             :top                 0
-                             :opacity             (- 1 (or v 0))
-                             :background          (if frontpage "var(--toolbar)" "var(--content)")
-                             :border-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
-                             :border-bottom-style "solid"
-                             :border-bottom-width "1px"}}
+     [sc/row-fields {:class [:h-16 :items-center :w-full :z-100]
+                     :style {:position             :sticky
+                             :top                  0
+                             :opacity              v
+                             ;:background-color "red"
+                             :xbackground          (if frontpage "var(--toolbar)" "var(--content)")
+                             :xborder-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
+                             :xborder-bottom-style "solid"
+                             :xborder-bottom-width "1px"}}
 
       #_(let [_login (fn []
                        (when-not @(rf/subscribe [:lab/at-least-registered])
@@ -716,30 +717,21 @@
 
        :reagent-render
        (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
-         (let [pagename (some-> r :data :name)]
+         (let [pagename (some-> r :data :name)
+               v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
            [err-boundary
             (check-latest-version)
             (if frontpage
               [page-boundary r {:frontpage true}
-               [sc/col
-                [booking.common-views/header-line r true 0]
-                [sc/basic-page {:class [:-mt-16]
+               [sc/col {:class [:-mt-16]}
+                [booking.common-views/header-line r true v]
+
+                [sc/front-page {:ref   (set-ref a scroll-fn)
+                                :class []
                                 :style {:overflow-y :auto
                                         :xflex      "1 1 auto"}}
                  [render r]]
-                [:div.sticky.bottom-0 [bottom-toolbar]]]
-
-               #_(into [:div.-debug                         ;.overflow-y-autox.h-full
-                        {:key "key-one"
-                         :ref (set-ref a scroll-fn)}]
-                       [(let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-                          [:div.-debug                      ;.xsticky.top-0.z-10.absolute.inset-x-0
-                           {:xstyle {:opacity v}}
-                           [booking.common-views/header-line r true v]])
-                        [:div.-mt-16 {:style {:height "calc(100% - 4rem)"}}
-                         [render r]]])]
-
-              ;--------------------------------------------------------------------------
+                [:div.sticky.bottom-0 [bottom-toolbar]]]]
 
               [page-boundary r {:frontpage false}
                [sc/col
