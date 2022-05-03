@@ -4,6 +4,7 @@
             [schpaa.style.ornament :as sc]
             ["@heroicons/react/solid" :as solid]
             ["@heroicons/react/outline" :as outline]
+            [schpaa.style.dialog]
             [schpaa.style.menu :as scm]
             [booking.modals.boatinput]
             [schpaa.style.hoc.buttons :as hoc.buttons]
@@ -160,83 +161,92 @@
                open #(reset! !open? true)
                close #(reset! !open? false)]
     (let [open? @!open?]
-      [:<>
+      [:div
        [:div.flex.items-center.justify-center
+        {:style {:z-index 1000}}
+        [hoc.buttons/round
+         {:on-click #(do
+                       (open)
+                       (.stopPropagation %))
+          :type     :button
+          :class    [:large]
+          :style    {:color "var(--text0)"}}
+         [sc/icon (if open? ico/closewindow ico/menu)]]]
 
-        [:button.px-4.py-2.text-sm.font-medium.text-white.bg-black.rounded-md.bg-opacity-20.hover:bg-opacity-30.focus:outline-none.focus-visible:ring-2.focus-visible:ring-white.focus-visible:ring-opacity-75
-         {:type     "button"
-          :on-click open}
-         "Open dialog"]]
-
-       [ui/transition
-        {;; :appear true ;; appear is irrelevant for us because open? defaults to false, unlike on headlessui.dev
-         :show open?}
-        [ui/dialog {:on-close close}
-         [:div.fixed.inset-0.z-10.overflow-y-auto
-          [:div.min-h-screen.px-4.text-center
-           ;; NOTE: the structure of this HTML is delicate and has subtle
-           ;; interactions to keep the modal centered. The structure we use is
-           ;; slightly different from the headlessui.dev example. There, the
-           ;; Transition.Child elements are rendered as fragments. Here, since
-           ;; we don't support fragments, we move some of the structural styles
-           ;; to the transition-child elements, which seems to have the same
-           ;; effect.
-           [ui/transition-child
-            {:enter      "ease-out duration-300"
-             :enter-from "opacity-0"
-             :enter-to   "opacity-100"
-             :leave      "ease-in duration-200"
-             :leave-from "opacity-100"
-             :leave-to   "opacity-0"}
-            [ui/dialog-overlay {:class "fixed inset-0 bg-gray-500 bg-opacity-75"}]]
-           ;; Trick browser into centering modal contents.
-           ;; This is the "ghost element" technique, described here
-           ;; https://css-tricks.com/centering-in-the-unknown/ as well as
-           ;; elsewhere.
-           [:span.inline-block.h-screen.align-middle
-            (assoc zero-width-space-props :aria-hidden true)]
-           [ui/transition-child
-            ;; .transform isn't needed for the animiation since Tailwind CSS
-            ;; 3.0. But, it has the side-effect of creating a stacking context,
-            ;; which is necessary. .isolate would be more correct, but we're
-            ;; leaving .transform to stay close to headlessui.dev.
-            {:class      "inline-block align-middle text-left transform"
-             :enter      "ease-out duration-300"
-             :enter-from "opacity-0 scale-95"
-             :enter-to   "opacity-100 scale-100"
-             :leave      "ease-in duration-200"
-             :leave-from "opacity-100 scale-100"
-             :leave-to   "opacity-0 scale-95"}
-            ;; NOTE: if your dialog is long and you need to support scrolling
-            ;; while the mouse is over the background, wrap this with
-            ;; `ui/dialog-panel` and replace `ui/dialog-overlay` with
-            ;; `ui/dialog-backdrop`.
-            inner
-            #_[:div.max-w-md.p-6.my-8.bg-white.shadow-xl.rounded-2xl
-               [ui/dialog-title {:as :div.text-lg.font-medium.leading-6.text-gray-900}
-                "Payment successful"]
-               [:div.mt-2
-                [:p.text-sm.text-gray-500 "Your payment has been successfully submitted. We’ve sent you an email with all of the details of your order."]]
-               [:div.mt-4
-                [:button.inline-flex.justify-center.px-4.py-2.text-sm.font-medium.text-blue-900.bg-blue-100.border.border-transparent.rounded-md.hover:bg-blue-200.focus:outline-none.focus-visible:ring-2.focus-visible:ring-offset-2.focus-visible:ring-blue-500
-                 {:type     "button"
-                  :on-click close}
-                 "Got it, thanks!"]]]]]]]]])))
+       [:div {:style {:z-index 100}}
+        [ui/transition
+         {;; :appear true ;; appear is irrelevant for us because open? defaults to false, unlike on headlessui.dev
+          :show open?}
+         [ui/dialog {:on-close close}
+          #_[:div.fixed.inset-0.pointer-events-auto {:on-click #(tap> "CLCIK")
+                                                     :class    "bg-black/30" :aria-hidden "true"}]
+          [:div.fixed.inset-0.z-0.overflow-y-auto
+           [:div.min-h-screen.px-4.text-center
+            ;; NOTE: the structure of this HTML is delicate and has subtle
+            ;; interactions to keep the modal centered. The structure we use is
+            ;; slightly different from the headlessui.dev example. There, the
+            ;; Transition.Child elements are rendered as fragments. Here, since
+            ;; we don't support fragments, we move some of the structural styles
+            ;; to the transition-child elements, which seems to have the same
+            ;; effect.
+            (schpaa.style.dialog/standard-overlay)
+            #_[ui/transition-child
+               {:enter      "ease-out duration-300"
+                :enter-from "opacity-0"
+                :enter-to   "opacity-100"
+                :leave      "ease-in duration-200"
+                :leave-from "opacity-100"
+                :leave-to   "opacity-0"}
+               [ui/dialog-overlay {:class "fixed inset-0 bg-gray-500 bg-opacity-75 "}]]
+            ;; Trick browser into centering modal contents.
+            ;; This is the "ghost element" technique, described here
+            ;; https://css-tricks.com/centering-in-the-unknown/ as well as
+            ;; elsewhere.
+            [:span.inline-block.h-screen.align-middle
+             (assoc zero-width-space-props :aria-hidden true)]
+            [ui/transition-child
+             ;; .transform isn't needed for the animiation since Tailwind CSS
+             ;; 3.0. But, it has the side-effect of creating a stacking context,
+             ;; which is necessary. .isolate would be more correct, but we're
+             ;; leaving .transform to stay close to headlessui.dev.
+             {:class      "inline-block align-middle text-left transform"
+              :enter      "ease-out duration-300"
+              :enter-from "opacity-0 scale-95"
+              :enter-to   "opacity-100 scale-100"
+              :leave      "ease-in duration-200"
+              :leave-from "opacity-100 scale-100"
+              :leave-to   "opacity-0 scale-95"}
+             ;; NOTE: if your dialog is long and you need to support scrolling
+             ;; while the mouse is over the background, wrap this with
+             ;; `ui/dialog-panel` and replace `ui/dialog-overlay` with
+             ;; `ui/dialog-backdrop`.
+             inner
+             #_[:div.max-w-md.p-6.my-8.bg-white.shadow-xl.rounded-2xl
+                [ui/dialog-title {:as :div.text-lg.font-medium.leading-6.text-gray-900}
+                 "Payment successful"]
+                [:div.mt-2
+                 [:p.text-sm.text-gray-500 "Your payment has been successfully submitted. We’ve sent you an email with all of the details of your order."]]
+                [:div.mt-4
+                 [:button.inline-flex.justify-center.px-4.py-2.text-sm.font-medium.text-blue-900.bg-blue-100.border.border-transparent.rounded-md.hover:bg-blue-200.focus:outline-none.focus-visible:ring-2.focus-visible:ring-offset-2.focus-visible:ring-blue-500
+                  {:type     "button"
+                   :on-click close}
+                  "Got it, thanks!"]]]]]]]]]])))
 
 (defn main-menu [r]
   (r/with-let [mainmenu-visible (rf/subscribe [:lab/menu-open])]
     ;this is just a button
 
-    [settings-dialog
-     [scm/settings-floating
-      {:data       (mainmenu-definitions r)
-       :showing!   mainmenu-visible
-       :close-menu #(rf/dispatch [:lab/close-menu])
-       :button     (fn [open]
-                     [hoc.buttons/round'
-                      {:style {:cursor :pointer}
-                       :class [:w-12]}
-                      [sc/icon (if open ico/cog-open ico/cog)]])}]]
+    [:div.z-100
+     [settings-dialog
+      [scm/settings-floating
+       {:data       (mainmenu-definitions r)
+        :showing!   mainmenu-visible
+        :close-menu #(rf/dispatch [:lab/close-menu])
+        :button     (fn [open]
+                      [hoc.buttons/round'
+                       {:style {:cursor :pointer}
+                        :class [:w-12]}
+                       [sc/icon (if open ico/cog-open ico/cog)]])}]]]
     #_[:div.fixed.inset-0
        [kee-frame.error/boundary
         (fn default-error-body [[err info]]

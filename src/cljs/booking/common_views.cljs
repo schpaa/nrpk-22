@@ -403,15 +403,18 @@
   (let [[links caption] (some-> r :data :header)
         switch? (schpaa.state/listen :lab/menu-position-right)
         location [location-block links caption switch?]]
-    [:div.w-full.flex.justify-between.-debug3
-     {:class [:h-16 :items-center :z-100]}
+    [:div.w-full.flex.justify-between
+     {:class [:h-16 :items-center]
+      :style {:z-index 1}}
      (let [items [location
                   [:div.flex-grow.w-full]
-                  [main-menu r]]                            ;:div.relative.-debug2.h-screen.w-screen
+                  [main-menu r]]
+           ;:div.relative.-debug2.h-screen.w-screen
            items (if @switch? (reverse items) items)]
        (if frontpage
          [apply header-top-frontpage items]
          [apply header-top items]))]))
+
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -698,15 +701,18 @@
         {:style {:width            "100%"
                  :overflow-y       :auto
                  :background-color "var(--content)"}}
-        [:div.sticky.top-0.z-100 [booking.common-views/header-line r false 0]]
+
+        [:div.sticky.top-0 [booking.common-views/header-line r false 0]]
         [:div {:style {:overflow-y :auto
                        :flex       "1 1 auto"
                        :height     "calc(100vh - 4rem)"}}
          (if render
-           [:div {:class [:space-y-8]
-                  :style {:margin-inline "auto"
-                          :padding-block "2rem"
-                          :max-width     "min(calc(100% - 2rem), 56ch)"}}
+           [:div.relative
+            {:class [:space-y-8]
+             :style {:margin-inline "auto"
+                     :padding-block "2rem"
+                     :max-width     "min(calc(100% - 2rem), 56ch)"}}
+
             (when (fn? panel)
               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
             (when always-panel
