@@ -143,18 +143,14 @@
 
 (o/defstyled panel :div
   [:& :w-72 :mx-auto
-   {;:outline               0
-    :border                :none
+   {:border                "0"
     :display               :grid
     :column-gap            "var(--size-2)"
     :row-gap               "var(--size-2)"
-    ;:max-width "16rem"
     :width                 "100%"
     :height                "100%"
     :grid-template-columns "repeat(4,1fr)"
-    :grid-auto-rows        "4rem"
-    ;:outline "1px solid red"
-    :xplace-content        :center}
+    :grid-auto-rows        "4rem"}
    [:&.mobile {:grid-template-areas [["child" "juvenile" "moon" "adult"]
                                      ["child " "juvenile" "key" "adult"]
                                      ["boat" "boat" "boat" "boat"]

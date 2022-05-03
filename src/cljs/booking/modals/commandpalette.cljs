@@ -287,18 +287,18 @@
           [:span.inline-block.h-screen.align-middle
            (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
           [ui/transition-child
-           {:class      (conj ["inline-block align-middle text-left transform overflow-hidden "
-                               :outline-none :focus:outline-none]
-                              (some-> (sc/inner-dlg) last :class first))
-            :style      {:border-radius "var(--radius-3)"
-                         :max-width     "90vw"}
-            :enter      "ease-out duration-100"
-            :enter-from "translate-y-32 opacity-0"
-            :enter-to   "translate-y-0 opacity-100"
-            :entered    "translate-y-0"
-            :leave      "ease-out duration-300"
-            :leave-from "opacity-100  translate-y-0"
-            :leave-to   "opacity-0  translate-y-16"
+           {:class       (conj ["inline-block align-middle text-left transform overflow-hidden "
+                                :outline-none :focus:outline-none]
+                               (some-> (sc/inner-dlg) last :class first))
+            :style       {:border-radius "var(--radius-3)"
+                          :max-width     "90vw"}
+            :enter       "ease-in-out duration-200"
+            :enter-from  "translate-y-16 opacity-0"
+            :enter-to    "translate-y-0 opacity-100"
+            :entered     "translate-y-0"
+            :leave       "ease-out duration-300"
+            :leave-from  "opacity-100  translate-y-0"
+            :leave-to    "opacity-0 translate-y-32"
             :after-leave #(rf/dispatch [:lab/modal-selector-clear])}
            [:div {:style {:overflow         :hidden
                           :background-color "var(--toolbar)"}

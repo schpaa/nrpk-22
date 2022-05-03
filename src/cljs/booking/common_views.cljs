@@ -547,11 +547,11 @@
                                 (.focus el)))
        :reagent-render
        (fn [r _ & contents]
-         [:div
+         [:<>
           ;popups
+          [booking.modals.boatinput/render-boatinput]
           [booking.modals.slideout/render]
           [booking.modals.centered/render]
-          [booking.modals.boatinput/render-boatinput]
           [booking.modals.commandpalette/window-anchor]
 
           ;content
@@ -560,20 +560,21 @@
                 w-id (if @with-caption? :sm:w-56 :sm:w-16)]
             (if @menu-right?
               [:div
-               {:style {:width "calc(100%)"}}
+               ;{:style {:width "100%"}}
                [:div {:class [marg :min-h-full]} contents]
                [:div.fixed.top-0.bottom-0.bg-alt.hidden.sm:block
                 {:class [w-id]
-                 :style {:z-index 1000
-                         :height  "100vh"
-                         :right   0}}
+                 :style {;:z-index 1
+                         ;:height  "100vh"
+                         :right 0}}
                 [vertical-toolbar true]]]
               [:div
-               {:style {:width "calc(100%)"}}
+               ;{:style {:width "calc(100%)"}}
                [:div {:class [marg :min-h-full]} contents]
                [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block
                 {:class [w-id]
-                 :style {:left 0}}
+                 :style {;:z-index 1
+                         :left 0}}
                 [vertical-toolbar false]]]))])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
@@ -703,6 +704,7 @@
                  :background-color "var(--content)"}}
 
         [:div.sticky.top-0 [booking.common-views/header-line r false 0]]
+
         [:div {:style {:overflow-y :auto
                        :flex       "1 1 auto"
                        :height     "calc(100vh - 4rem)"}}
@@ -719,6 +721,9 @@
               [always-panel modify?])
             [render r m]]
            [render-fullwidth])]
+
+        #_[:div.fixed.inset-0.bg-white.text-black.opacity-80.z-100
+           [:div.m-4 "YO"]]
 
         [:div.sticky.bottom-0
          [bottom-toolbar]]

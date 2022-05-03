@@ -391,7 +391,7 @@
           ;(tap> @st)
           [bis/panel
            {:class [:p-4
-                    (if mobile? :mobile (if left-side? :left-side :right-side))]}
+                    :mobile #_(if mobile? :mobile (if left-side? :left-side :right-side))]}
            [:div {:style {:grid-area "numpad"}} [numberinput st]]
            [:div {:style {:grid-area "child"}} [children st]]
            [:div {:style {:grid-area "juvenile"}} [juveniles st]]
@@ -534,7 +534,7 @@
 
 (defn open-boatpanel
   ""
-  [{db :db}]
+  [_]
   {:fx [[:dispatch
          [:modal.boatinput/show
           {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
@@ -581,21 +581,22 @@
   (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.boatinput/get-context])
                                      :vis     (rf/subscribe [:modal.boatinput/is-visible])
                                      :close   #(rf/dispatch [:modal.boatinput/close])}
-        {:keys [action on-primary-action click-overlay-to-dismiss content-fn auto-dismiss]
+        {:keys [action on-primary-action click-overlay-to-dismiss content-fn]
          :or   {click-overlay-to-dismiss true}} context]
     (r/with-let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
+                 right-side? (schpaa.state/listen :lab/menu-position-right)
                  write-success (r/atom false)]
       (let [open? @vis]
         [ui/transition
-         {:appear      true
-          :after-enter #(tap> "modaldialog-centered after-enter")
+         {:after-enter #(tap> "modaldialog-centered after-enter")
           :show        open?}
          [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
           [:div.fixed
-           {:class (cond
-                     @mobile? :inset-0
-                     (not @(schpaa.state/listen :lab/menu-position-right)) :right-8
-                     :else :left-8)}
+           {:class [:w-auto :top-0 :h-auto (cond
+                                             @mobile? :inset-0
+                                             (not @right-side?) :left-12
+                                             :else :right-12)]}
+
            [:div.text-center
             [schpaa.style.dialog/standard-overlay]
             [:span.inline-block.h-screen.align-middle
@@ -604,12 +605,18 @@
              {
               :class       [:inline-block :align-middle :text-left :transform
                             (some-> (sc/inner-dlg) last :class first)]
-              :enter       "ease-out duration-100"
-              :enter-from  "opacity-0  translate-y-16"
-              :enter-to    "opacity-100  translate-y-0"
-              :leave       "ease-in duration-200"
-              :leave-from  "opacity-100  translate-y-0"
-              :leave-to    "opacity-0  translate-y-32"
+              :enter       "ease-in-out duration-200"
+              :enter-from  (cond
+                             @mobile? "opacity-0  translate-y-16"
+                             @right-side? "opacity-0  translate-x-16"
+                             :else "opacity-0  -translate-x-32")
+              :enter-to    "opacity-100 translate-x-0 translate-y-0"
+              :leave       "ease-in-out duration-200"
+              :leave-from  "opacity-100 translate-x-0"
+              :leave-to    (cond
+                             @mobile? "opacity-0 translate-y-32"
+                             @right-side? "opacity-0  translate-x-32"
+                             :else "opacity-0  -translate-x-32")
               :after-leave #(when on-primary-action
                               (on-primary-action context))}
              (when content-fn

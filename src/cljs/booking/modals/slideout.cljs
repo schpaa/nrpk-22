@@ -51,28 +51,27 @@
       (let [open? @vis]
         [:<>
          [ui/transition
-          {:appear      true
-           :after-enter #(do
+          {:after-enter #(do
                            (tap> ["after-enter" auto-dismiss open?])
                            (when auto-dismiss (open)))
            :show        open?}
           [ui/dialog
-           {:unmount  true
-            ;:static true
+           {;:unmount  true
+            :static   true
             :on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
-           [:div.fixed.inset-x-1
+           [:div.xfixed.xinset-x-1
             [:div.text-center
              [schpaa.style.dialog/standard-overlay]
              ;; trick browser into centering modal contents
              [:span.inline-block                            ;.h-screen.align-middle
               (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
              [ui/transition-child
-              {:class       (conj ["inline-block align-middlex text-left "]
+              {:class       (conj ["inline-block align-middle text-left"]
                                   [:w-screen :xsm:w-96]
                                   (some-> (sc/inner-dlg) last :class first))
-               :style       {}
+               ;:style       {:transform-origin "0 0"}
                :enter       "ease-out transition-opacity transition-transform duration-200"
-               :entered     "drop-shadow-xl -translate-y-4"
+               :entered     "drop-shadow-xl -translate-y-12"
                :enter-from  "opacity-0 -translate-y-full"
                :enter-to    "opacity-100 -translate-y-4"
                :leave       "ease-in duration-300"
@@ -90,9 +89,7 @@
 
               [:div {:style {:width     "512px"
                              :max-width "90vw"}
-                     :class [:w-screenx
-                             :xmax-w-md
-                             :overflow-y-auto]}
+                     :class [:overflow-y-auto]}
 
                (when auto-dismiss
                  [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}
