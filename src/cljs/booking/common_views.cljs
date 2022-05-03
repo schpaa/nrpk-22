@@ -547,11 +547,11 @@
                                 (.focus el)))
        :reagent-render
        (fn [r _ & contents]
-         [:<>
+         [:div
           ;popups
           [booking.modals.boatinput/render-boatinput]
-          [booking.modals.slideout/render]
           [booking.modals.centered/render]
+          [booking.modals.slideout/render]
           [booking.modals.commandpalette/window-anchor]
 
           ;content
@@ -562,7 +562,7 @@
               [:div
                ;{:style {:width "100%"}}
                [:div {:class [marg :min-h-full]} contents]
-               [:div.fixed.top-0.bottom-0.bg-alt.hidden.sm:block
+               [:div.fixed.inset-0.top-0x.xbottom-0.bg-alt.hidden.sm:block
                 {:class [w-id]
                  :style {;:z-index 1
                          ;:height  "100vh"
