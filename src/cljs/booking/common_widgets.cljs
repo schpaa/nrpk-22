@@ -141,19 +141,19 @@
                             :color      "unset"
                             :flex       "1 0 1"}} caption]))]))
 
-
 (defn stability-expert [{:keys [stability expert]}]
   [:div.w-8.flex.justify-center.items-center
    [:svg.w-4.inline-block {:viewBox "-2 -2 5 5"}
     [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 :green 1 :orange 2 :pink 3 :black} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
-(defn stability-name-category [{:keys                                                                  [boat-type star-count location slot material
-                                                                                                        stability expert number navn kind description
-                                                                                                        last-update weight length width aquired-year aquired-price] :as m}]
+(defn stability-name-category [{:keys
+                                [boat-type star-count location slot material
+                                 stability expert number navn kind description
+                                 last-update weight length width aquired-year aquired-price] :as m}]
 
   [:<>
-   [stability-expert m]
+   (when (or stability expert) [stability-expert m])
    [sc/col
     [sc/small0 {:style {:font-size "0.85em"}} navn]
     [sc/text1 {:style {:font-size "1.2em"}} (schpaa.components.views/normalize-kind kind)]]])

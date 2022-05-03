@@ -521,16 +521,6 @@ outline: 2px solid #a0a8;
     outline: var(--brand1) 2px solid;
 }
 
-.blinking-cursor {
-  font-weight: 500;
-  font-size: unset;
-  -webkit-animation: 1.4s blinking step-end infinite;
-  -moz-animation: 1.4s blinking step-end infinite;
-  -ms-animation: 1.4s blinking step-end infinite;
-  -o-animation: 1.4s blinking step-end infinite;
-  animation: 1.4s blinking step-end infinite;
-}
-
 @keyframes "blinking" {
   from, to {
     color: transparent;
@@ -539,3 +529,17 @@ outline: 2px solid #a0a8;
     color: var(--text0);
   }
 }
+
+
+.blinking-cursor {
+  font-weight: 500;
+  font-size: unset;
+/*
+  -webkit-animation: 1.4s blinking step-end infinite;
+  -moz-animation: 1.4s blinking step-end infinite;
+  -ms-animation: 1.4s blinking step-end infinite;
+  -o-animation: 1.4s blinking step-end infinite;
+*/
+  animation: 1.4s blinking step-end infinite;
+}
+

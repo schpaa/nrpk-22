@@ -72,13 +72,13 @@
     {:name       :r.presence
      :shorttitle "Tilstede"
      :access     [[:member] #{:admin}]
-     :header     [[:r.forsiden] "Tilstede"]}]
+     :header     [[:r.users] "Tilstede"]}]
 
-   ["/admin"
+   ["/brukere"
     {:name       :r.users
-     :shorttitle "Admin"
+     :shorttitle "Brukere"
      :access     [[:member] #{:admin}]
-     :header     [[:r.oversikt] "Administrasjon"]}]
+     :header     [[:r.presence] "Brukere"]}]
 
    ["/velkommen"
     {:name   :r.welcome

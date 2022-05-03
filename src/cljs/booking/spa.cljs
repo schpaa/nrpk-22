@@ -485,8 +485,7 @@
              users (if @(r/cursor x [:reverse]) (reverse data) data)]
 
          (o/defstyled line :div)
-         [+page-builder
-          r
+         [+page-builder r
           (conj
             {:always-panel (fn []
                              [sc/row-sc-g4-w

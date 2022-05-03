@@ -14,7 +14,8 @@
             [booking.common-widgets :refer [vertical-button]]
             [booking.modals.boatinput.styles :as bis]
             [headlessui-reagent.core :as ui]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [booking.common-widgets :as widgets]))
 
 (defn- decrease-children [st]
   (let [n (r/cursor st [:children])]
@@ -265,7 +266,7 @@
             :-> #(into {} (->> (remove (comp empty? :number val) %)
                                (map (fn [[k v]]
                                       [(:number v)
-                                       (assoc (select-keys v [:number :navn :kind :star-count :stability :material]) :id k)])))))
+                                       (assoc (select-keys v [:number :navn :kind :star-count :stability :material :weigth :length :width]) :id k)])))))
 
 (rf/reg-sub :rent/list
             (fn [_ _]
@@ -343,7 +344,9 @@
 (defonce st (r/atom {}))
 
 (defn user-message [content]
-  [sc/title1 content])
+  (if (string? content)
+    [sc/title1 content]
+    content))
 
 (defn boatpanel-window [mobile? left-side?]
   (let [keydown-f (fn [event]
@@ -409,38 +412,49 @@
                      ;:grid-column    "2/span 2"
                      :padding-inline "var(--size-2)"
                      :border-radius  "var(--radius-1)"
-                     :background     "var(--field2)"
+                     :background     "var(--field1)"
+                     :color          "var(--gray-9)"
                      :box-shadow     "var(--inner-shadow-0)"}}
             [:div.flex.items-center.h-full
-             {:style {:font-family "Oswald"
-                      :font-weight 600
-                      :font-size   "var(--font-size-4)"}}
+             {:xstyle {;:font-family "Oswald"
+                       :font-weight 600
+                       :font-size   "var(--font-size-4)"}}
              (if (:phone @st)
                [:div
                 {:style {:display     "flex"
                          :align-items "center"
                          :font-size   "var(--font-size-5)"
-                         :color       "var(--text1)"}}
+                         :xcolor      "var(--text1)"}}
                 (when (empty? (:phonenumber @st))
-                  [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
+                  [:span.blinking-cursor.pb-1 "|"])
                 [bis/input-caption (if (empty? (:phonenumber @st))
-                                     [:span.opacity-30 "telefonnr"]
+                                     [:span.opacity-30 "tlf eller nøkkel"]
                                      (:phonenumber @st))]
                 (when-not (empty? (:phonenumber @st))
-                  [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])]
+                  [:div.blinking-cursor.pb-1.pl-2x "|"])]
                [:div
                 {:style {:display     "flex"
                          :align-items "center"
                          :font-size   "var(--font-size-5)"
-                         :color       "var(--text1)"}}
+                         :xcolor      "var(--text1)"}}
                 (when (empty? (:item @st))
-                  [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
-                [bis/input-caption (if (empty? (:item @st)) [:span.opacity-30 "båtnr"] (:item @st))]
+                  [:div.blinking-cursor.pb-1.pl-2x "|"])
+                [bis/input-caption
+                 (if (empty? (:item @st))
+                   [:div.text-center "båtnummer"]
+                   (:item @st))]
                 (when-not (empty? (:item @st))
                   ;[:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["]
                   (if (< 3 (count (:item @st)))
-                    [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]
-                    [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"]))])]]
+                    [:span.blinking-cursor.pb-1.pl-2x {:style {:font-size :100%}} "|"]
+                    [:span.blinking-cursor.pb-1.pl-2x {:style {:font-size :100%}} "|"]))])]]
+
+           (let [msg (cond
+                       (:phone @st) [sc/col [sc/text1 "Telefonnummer (8 siffer)"]
+                                     [sc/text1 "Nøkkelnummer (3 siffer)"]]
+                       :else [sc/text1 "Båtnummer (3 siffer)"])]
+             [sc/surface-a {:style {:grid-area "direction"}}
+              [sc/title {:class [:text-center :items-center :flex :justify-center :h-full]} msg]])
 
            [:div
             {:style {:grid-area      "boat"
@@ -448,32 +462,55 @@
                      :display        :flex
                      :align-items    :center}}
             (tap> @st)
-            (if (<= 3 (count (:item @st)))
+            (if (and (not (:phone @st))
+                     (<= 3 (count (:item @st))))
               #_(if (:phone @st)
                   [user-message
                    [sc/text2 "ELLER"]])
               (if-let [boat (lookup (:item @st))]
                 (do
                   (swap! st assoc-in [:item-data] boat)
-                  [user-message [sc/col-space-2
-                                 [sc/title1 (:navn boat)]
-                                 [sc/text1 (:kind boat)]]])
+                  [user-message
+                   [sc/col-space-2
+                    [sc/row [widgets/stability-name-category boat]]
+                    ;[sc/title1 (:navn boat)]
+                    ;[sc/text2 (:kind boat)]
+                    (when (= 8 (count (:phonenumber @st)))
+                      [sc/text1 "Telefon " (:phonenumber @st)])
+                    (when (= 3 (count (:phonenumber @st)))
+                      [sc/text1 "Nøkkelnummer " (subs (str (:phonenumber @st)) 0 3)])]])
                 (do
                   (swap! st assoc-in [:item-data] nil)
                   [user-message (str "Finner ikke " (:item @st))]
                   #_[sc/text1 "Finner ikke " (:item @st)]))
-              (if-not (:phone @st)
-                (do
-                  (swap! st assoc-in [:item-data] nil)
-                  [sc/col {:class [:space-y-px]}
-                   [user-message "Tast båtnummeret (3 siffer)"]])))
 
-            (if (:phone @st)
-              [user-message
-               [sc/col-space-2 {:class [:text-center]}
-                [sc/title1 "Telefonnummer (8 siffer)"]
-                [sc/text2 "ELLER"]
-                [sc/title1 "Nøkkelnummer E18-(3 siffer)"]]])]
+              #_(if-not (:phone @st)
+                  (do
+                    (swap! st assoc-in [:item-data] nil)
+                    [sc/col {:class [:space-y-px :justify-center :h-full :w-full]}
+
+                     [user-message [sc/titleb {:class [:text-center]} "Båtnummer (3 siffer)"]]])))]
+
+           (if (:phone @st)
+             [sc/surface-a {:style {:grid-area "boat"}
+                            :class [:w-full :h-full]}
+              [sc/col
+               (if-some [boat (lookup (:item @st))]
+                 [sc/col-space-2
+                  [sc/row
+                   [widgets/stability-name-category (dissoc boat :stability :expert)]]
+                  [sc/small1 [widgets/dimensions-and-material boat]]])
+               (when (= 8 (count (:phonenumber @st)))
+                 [sc/text1 "Telefon " (:phonenumber @st)])
+               (when (= 3 (count (:phonenumber @st)))
+                 [sc/text1 "Nøkkelnummer " (subs (str (:phonenumber @st)) 0 3)])]]
+
+             #_[user-message
+
+                [sc/col-space-2 {:class [:text-center]}
+                 [sc/title1 "Telefonnummer (8 siffer)"]
+                 [sc/text2 "ELLER"]
+                 [sc/title1 "Nøkkelnummer E18-(3 siffer)"]]])
 
 
 
@@ -481,50 +518,57 @@
            [:div.p-1
             {:style {:grid-area             "boats"
                      :border-radius         "var(--radius-1)"
-                     :background            "var(--field1)"
+                     :background            "rgba(0,0,0,0.5)"
+                     :box-shadow            "var(--shadow-1),var(--inner-shadow-2)"
                      :gap                   "var(--size-1)"
                      :display               :grid
-                     :grid-template-columns "1fr"
-                     :grid-template-rows    "repeat(3,1fr)"}}
-            (for [e (take 3 (sort (map :number (:list @st))))]
-              [sc/badge
-               {:selected (and (= e (:selected @st)))
-                :on-click (fn [] (if (= e (:selected @st))
-                                   (swap! st dissoc :selected
-                                          dissoc :item)
-                                   (swap! st #(-> %
-                                                  (assoc :selected e)
-                                                  (assoc :item e)
-                                                  (assoc :phone false)))))} e])]
+                     :grid-template-columns "repeat(4,1fr) "
+                     :grid-template-rows    "auto"}}
+            (if (-> (:list @st) count pos?)
+              (for [e (sort (map :number (:list @st)))]
+                [sc/badge
+                 {:class     [
+                              (if (= e (:selected @st)) :selected :normal)
+                              #_(when (not= e (:selected @st)) :selected)]
+                  :xselected (and (not= e (:selected @st)))
+                  :on-click  (fn [] (if (= e (:selected @st))
+                                      (swap! st dissoc :selected
+                                             dissoc :item)
+                                      (swap! st #(-> %
+                                                     (assoc :selected e)
+                                                     (assoc :item e)
+                                                     (assoc :phone false)))))} e])
+              [:div.col-span-4.h-12.flex.items-center.justify-center
+               [sc/text1 "Ingen båter er valgt"]])]
            [:div {:style {:grid-area "trash"}} [delete st]]
            [:div {:style {:grid-area "add"}} [add st]]
            [:div {:style {:grid-area "restart"}} [restart st]]
            [:div {:style {:grid-area "complete"}} [confirm st]]
 
            ;boats for all items above 3
-           (when (< 3 (count (:list @st)))
-             [:div.p-1 {:style {:grid-column           "1/span 4"
-                                :grid-row              "10/span 2"
-                                :border-radius         "var(--radius-1)"
-                                :background            "var(--surface00)"
-                                :gap                   "var(--size-1)"
-                                :display               :grid
-                                :grid-template-columns "repeat(4,1fr)"
-                                :grid-template-rows    "repeat(3,1fr)"}}
-              (concat
-                (for [e (take 11 (drop 3 (sort (map :number (:list @st)))))]
-                  [sc/badge
-                   {:selected (and (= e (:selected @st)))
-                    :on-click (fn []
-                                (if (= e (:selected @st))
-                                  (swap! st
-                                         dissoc :selected
-                                         dissoc :item)
-                                  (swap! st #(-> %
-                                                 (assoc :selected e)
-                                                 (assoc :item e)
-                                                 (assoc :phone false)))))} e])
-                (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))
+           #_(when (< 4 (count (:list @st)))
+               [:div.p-1 {:style {:grid-column           "1/span 4"
+                                  :grid-row              "10/span 2"
+                                  :border-radius         "var(--radius-1)"
+                                  :background            "var(--surface00)"
+                                  :gap                   "var(--size-1)"
+                                  :display               :grid
+                                  :grid-template-columns "repeat(4,1fr)"
+                                  :grid-template-rows    "repeat(3,1fr)"}}
+                (concat
+                  (for [e (take 11 (drop 3 (sort (map :number (:list @st)))))]
+                    [sc/badge
+                     {:selected (and (= e (:selected @st)))
+                      :on-click (fn []
+                                  (if (= e (:selected @st))
+                                    (swap! st
+                                           dissoc :selected
+                                           dissoc :item)
+                                    (swap! st #(-> %
+                                                   (assoc :selected e)
+                                                   (assoc :item e)
+                                                   (assoc :phone false)))))} e])
+                  (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))
 
 (defn window-content [{:keys [on-close]}]
   (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])

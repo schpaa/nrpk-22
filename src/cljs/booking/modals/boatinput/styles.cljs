@@ -2,9 +2,12 @@
   (:require [lambdaisland.ornament :as o]))
 
 (o/defstyled input-caption :div
-  {:font-family "Oswald"
-   :font-size   "var(--font-size-4)"
-   :font-weight "var(--font-weight-6)"})
+  {:font-familys   "Oswald"
+   :font-family    "Inter"
+   ;:padding-left "var(--size-2)"
+   :font-size      "var(--font-size-4)"
+   :letter-spacing "var(--font-letterspacing-0)"
+   :font-weight    "var(--font-weight-4)"})
 
 (o/defstyled button-caption :div
   {:font-family "Inter"
@@ -151,14 +154,17 @@
     :width                 "100%"
     :height                "100%"
     :grid-template-columns "repeat(4,1fr)"
-    :grid-auto-rows        "4rem"}
+    :grid-template-rows    "4rem 4rem auto 8rem 4rem repeat(5,4rem)"
+    :xgrid-auto-rows       "auto"}
    [:&.mobile {:grid-template-areas [["child" "juvenile" "moon" "adult"]
                                      ["child " "juvenile" "key" "adult"]
+                                     ["boats" "boats" "boats" "boats"]
+                                     ;["boats" "boats""boats""boats"]
                                      ["boat" "boat" "boat" "boat"]
-                                     ["boat" "boat" "boat" "boat"]
-                                     ["trash" "input" "input" "add"]
-                                     ["boats" "numpad" "numpad" "numpad"]
-                                     ["boats" "numpad" "numpad" "numpad"]
+                                     ["direction" "direction" "direction" "add"]
+                                     ["trash" "input" "input" "input"]
+                                     ["." "numpad" "numpad" "numpad"]
+                                     ["." "numpad" "numpad" "numpad"]
                                      ["restart" "numpad" "numpad" "numpad"]
                                      ["complete" "numpad" "numpad" "numpad"]]}]
    [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]
