@@ -562,7 +562,7 @@
               [:div
                ;{:style {:width "100%"}}
                [:div {:class [marg :min-h-full]} contents]
-               [:div.fixed.inset-0.top-0x.xbottom-0.bg-alt.hidden.sm:block
+               [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block
                 {:class [w-id]
                  :style {;:z-index 1
                          ;:height  "100vh"
@@ -722,15 +722,12 @@
             [render r m]]
            [render-fullwidth])]
 
-        #_[:div.fixed.inset-0.bg-white.text-black.opacity-80.z-100
-           [:div.m-4 "YO"]]
-
         [:div.sticky.bottom-0
          [bottom-toolbar]]
 
         (when (or goog.DEBUG @admin?)
           [:div.fixed.bottom-0
-           {:class [:xsm:ml-8]
+           {;:class [:sm:ml-8]
             :style {:z-index   10000
                     :left      :50%
                     :transform "translateX(-50%)"}}

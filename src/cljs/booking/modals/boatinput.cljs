@@ -117,7 +117,7 @@
                                       (swap! st #(-> %
                                                      (update :phonenumber (fn [s] (subs s 0 (dec (count s)))))))
                                       (backspace-clicked st)))
-                   :style    {:color (if (not (empty? (:item @st))) "var(--red-8)" "var(--text2)")}
+                   :style    {:color (if (not (empty? (:item @st))) "var(--orange-5)" "var(--text2)")}
                    :enabled  (if (:phone @st)
                                (not (empty? (:phonenumber @st)))
                                (not (empty? (:item @st))))}
@@ -342,6 +342,9 @@
 
 (defonce st (r/atom {}))
 
+(defn user-message [content]
+  [sc/title1 content])
+
 (defn boatpanel-window [mobile? left-side?]
   (let [keydown-f (fn [event]
                     ;(tap> event)
@@ -420,7 +423,9 @@
                          :color       "var(--text1)"}}
                 (when (empty? (:phonenumber @st))
                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])
-                [bis/input-caption (if (empty? (:phonenumber @st)) [:span.opacity-30 "telefonnr"] (:phonenumber @st))]
+                [bis/input-caption (if (empty? (:phonenumber @st))
+                                     [:span.opacity-30 "telefonnr"]
+                                     (:phonenumber @st))]
                 (when-not (empty? (:phonenumber @st))
                   [:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "|"])]
                [:div
@@ -444,20 +449,33 @@
                      :align-items    :center}}
             (tap> @st)
             (if (<= 3 (count (:item @st)))
+              #_(if (:phone @st)
+                  [user-message
+                   [sc/text2 "ELLER"]])
               (if-let [boat (lookup (:item @st))]
                 (do
                   (swap! st assoc-in [:item-data] boat)
-                  [l/pre boat])
+                  [user-message [sc/col-space-2
+                                 [sc/title1 (:navn boat)]
+                                 [sc/text1 (:kind boat)]]])
                 (do
                   (swap! st assoc-in [:item-data] nil)
-                  [sc/text1 "Finner ikke " (:item @st)]))
-              (do
-                (swap! st assoc-in [:item-data] nil)
-                [sc/col {:class [:space-y-px :opacity-50]}
+                  [user-message (str "Finner ikke " (:item @st))]
+                  #_[sc/text1 "Finner ikke " (:item @st)]))
+              (if-not (:phone @st)
+                (do
+                  (swap! st assoc-in [:item-data] nil)
+                  [sc/col {:class [:space-y-px]}
+                   [user-message "Tast båtnummeret (3 siffer)"]])))
 
-                 [sc/hero [sc/row-center (if (pos? (count (:list @st))) "Hvem skal låne" "Tast båtnummeret")
-                           #_[sc/icon [:> outline/PlusCircleIcon]]]]
-                 #_[sc/subtext "Bruk 4 siffer for testing"]]))]
+            (if (:phone @st)
+              [user-message
+               [sc/col-space-2 {:class [:text-center]}
+                [sc/title1 "Telefonnummer (8 siffer)"]
+                [sc/text2 "ELLER"]
+                [sc/title1 "Nøkkelnummer E18-(3 siffer)"]]])]
+
+
 
            ;boats
            [:div.p-1
@@ -476,11 +494,12 @@
                                           dissoc :item)
                                    (swap! st #(-> %
                                                   (assoc :selected e)
-                                                  (assoc :item e)))))} e])]
+                                                  (assoc :item e)
+                                                  (assoc :phone false)))))} e])]
            [:div {:style {:grid-area "trash"}} [delete st]]
            [:div {:style {:grid-area "add"}} [add st]]
-           [:div {:style {:grid-area "complete"}} [confirm st]]
            [:div {:style {:grid-area "restart"}} [restart st]]
+           [:div {:style {:grid-area "complete"}} [confirm st]]
 
            ;boats for all items above 3
            (when (< 3 (count (:list @st)))
@@ -496,24 +515,30 @@
                 (for [e (take 11 (drop 3 (sort (map :number (:list @st)))))]
                   [sc/badge
                    {:selected (and (= e (:selected @st)))
-                    :on-click (fn [] (if (= e (:selected @st))
-                                       (swap! st dissoc :selected
-                                              dissoc :item)
-                                       (swap! st #(-> %
-                                                      (assoc :selected e)
-                                                      (assoc :item e)))))} e])
+                    :on-click (fn []
+                                (if (= e (:selected @st))
+                                  (swap! st
+                                         dissoc :selected
+                                         dissoc :item)
+                                  (swap! st #(-> %
+                                                 (assoc :selected e)
+                                                 (assoc :item e)
+                                                 (assoc :phone false)))))} e])
                 (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))
 
 (defn window-content [{:keys [on-close]}]
   (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
         right? (schpaa.state/listen :lab/menu-position-right)] ;[sc/centered-dialog]
     [:div
-     {:style {:background-color "var(--toolbar)"
+     {:style {:background-color "var(--content)"
+              :border-radius    "var(--radius-2)"
+              :border-color     "var(--content)"
+              :border-width     "0px"
               :display          :grid
               :overflow-y       :auto
               :place-content    :center}}
      [:div
-      {:style {:width      "18rem"
+      {:style {:width      "20rem"
                :max-height "90vh"}}
       [boatpanel-window @mobile? @right?]]]))
 
@@ -578,9 +603,10 @@
 (defn render-boatinput
   "centered dialog used by this component"
   []
-  (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.boatinput/get-context])
-                                     :vis     (rf/subscribe [:modal.boatinput/is-visible])
-                                     :close   #(rf/dispatch [:modal.boatinput/close])}
+  (let [{:keys [context vis close]}
+        {:context @(rf/subscribe [:modal.boatinput/get-context])
+         :vis     (rf/subscribe [:modal.boatinput/is-visible])
+         :close   #(rf/dispatch [:modal.boatinput/close])}
         {:keys [action on-primary-action click-overlay-to-dismiss content-fn]
          :or   {click-overlay-to-dismiss true}} context]
     (r/with-let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
@@ -596,7 +622,6 @@
                                              @mobile? :inset-0
                                              (not @right-side?) :left-12
                                              :else :right-12)]}
-
            [:div.text-center
             [schpaa.style.dialog/standard-overlay]
             [:span.inline-block.h-screen.align-middle
@@ -611,6 +636,7 @@
                              @right-side? "opacity-0  translate-x-16"
                              :else "opacity-0  -translate-x-32")
               :enter-to    "opacity-100 translate-x-0 translate-y-0"
+              :entered     "drop-shadow-2xl"
               :leave       "ease-in-out duration-200"
               :leave-from  "opacity-100 translate-x-0"
               :leave-to    (cond

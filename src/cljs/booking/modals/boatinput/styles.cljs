@@ -8,8 +8,8 @@
 
 (o/defstyled button-caption :div
   {:font-family "Inter"
-   :font-size   "var(--font-size-4)"
-   :font-weight "var(--font-weight-8)"})
+   :font-size   "var(--font-size-5)"
+   :font-weight "var(--font-weight-5)"})
 
 (o/defstyled button :button
   :w-full :h-full
@@ -35,9 +35,7 @@
    :place-content :center
    :border-radius "var(--radius-1)"
    :background    "var(--red-9)"
-   :color         "var(--red-3)"}
-
-
+   :color         "var(--red-1)"}
   [:&:hover {:background "var(--red-8)"
              :color      "var(--red-2)"}]
   [:&:disabled {:color      "var(--text3)"
@@ -75,8 +73,8 @@
   :w-full :h-full :duration-100
   {:display       :grid
    :place-content :center
-   :border-radius "var(--radius-1)"
-   :background    "var(--content)"
+   :border-radius "var(--radius-0)"
+   :background    "var(--floating)"
    :color         "var(--text0)"}
   [:&:hover {:background "var(--floating)"
              :color      "var(--text0)"}]
@@ -96,20 +94,19 @@
    :box-shadow    "var(--inner-shadow-1)"
    :border-radius "var(--radius-1)"}
   [:.base
-   {:border-radius "var(--radius-1)"
-    ;:padding       "var(--size-2)"
-    :background    "var(--field2)"
-    :color         "var(--text1)"}]
+   {:border-radius "var(--radius-1)"}]
+
+
 
   [:.some {:opacity          1
            :xz-index         30
            :color            "black"
            :background-color "var(--yellow-5)"}]
   [:.zero {:opacity          1
-           :color            "var(--text2)"
-           :background-color "var(--content)"}]
+           :color            "var(--text1)"
+           :background-color "var(--floating)"}]
 
-  [:.item:active {:background-color "var(--surface2)"}]
+  [:&:active {:background-color "var(--content)"}]
   [:.overlay {:overflow :hidden}]
   ([{:keys [increase decrease value content]}]
    [:<> [:div.base
@@ -117,14 +114,18 @@
                   :flex-grow 1
                   :height    :100%
                   :overflow  :hidden}}
+
          [:div.overlay.absolute.top-0.inset-x-0.item.z-40x
           {:on-click decrease :style {:height "50%"}}]
+
          [:div.overlay.absolute.bottom-0.inset-x-0.item.z-40x
           {:on-click increase :style {:height "50%"}}]
+
          [:div.flex.items-end.justify-center.h-full.z-50x.pointer-events-none.base]
-         [:div.absolute.inset-0.z-2x0.pointer-events-none.pb-2
+
+         [:div.absolute.inset-0.pointer-events-none.pb-2.-debug.flex.items-end.justify-center
           {:class (if (pos? value) :some :zero)}
-          (content value)]]]))
+          [:div.text-black.font-normal (content value)]]]]))
 
 (o/defstyled toggle-button :div
   :w-full :h-full
