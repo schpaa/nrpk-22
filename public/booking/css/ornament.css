@@ -1061,3 +1061,4 @@ body {
 .booking_spa__card{padding:1rem;min-height:13ch;background-color:var(--floating);border-radius:var(--radius-1);box-shadow:var(--shadow-1)}
 .booking_spa__image_container{overflow:hidden;border-radius:var(--radius-round);aspect-ratio:1/1;height:var(--size-10);clip-path:circle(100%)}
 .booking_spa__image{aspect-ratio:1/1;height:var(--size-10);transform-origin:bottom left;padding:.5rem;box-shadow:var(--inner-shadow-1);overflow:hidden;border-radius:var(--radius-round);transition:750ms ease-in;background:var(--textmarker-background);color:var(--text3)}.booking_spa__image:hover{transform:rotate(-70deg)}
+.schpaa_style_menu__start{top:55rem;left:75rem}

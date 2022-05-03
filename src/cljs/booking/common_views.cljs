@@ -403,20 +403,11 @@
   (let [[links caption] (some-> r :data :header)
         switch? (schpaa.state/listen :lab/menu-position-right)
         location [location-block links caption switch?]]
-    [:div.w-full.flex.justify-between
-     {:class  [:h-16 :items-center :z-100]
-      :xstyle {:position             :sticky
-               :top                  0
-               :opacity              (if frontpage v 1)
-               ;:background-color "red"
-               :color                :white
-               :background           (when-not frontpage (if frontpage "var(--toolbar)" "var(--content)"))
-               :xborder-bottom-color (if frontpage "var(--toolbar-)" "var(--content)")
-               :xborder-bottom-style "solid"
-               :xborder-bottom-width "1px"}}
+    [:div.w-full.flex.justify-between.-debug3
+     {:class [:h-16 :items-center :z-100]}
      (let [items [location
                   [:div.flex-grow.w-full]
-                  [main-menu r]]
+                  [main-menu r]]                            ;:div.relative.-debug2.h-screen.w-screen
            items (if @switch? (reverse items) items)]
        (if frontpage
          [apply header-top-frontpage items]
