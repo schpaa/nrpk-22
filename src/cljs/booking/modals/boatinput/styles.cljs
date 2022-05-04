@@ -52,20 +52,20 @@
    [:<> [:div ch]]))
 
 (o/defstyled add-button :button
-  :w-full :h-full
-  {:display       :grid
-   :place-content :center
-   :border-radius "var(--radius-1)"
+  [:& :w-full :h-full
+   {:display       :grid
+    :place-content :center
+    :border-radius "var(--radius-1)"}
    ;:background    "var(--red-6)"
    ;:color         "var(--surface1)"
-   :background    "var(--green-6)"
-   :color         "var(--green-1)"}
-  [:&:hover {:background "var(--green-5)"
-             :color      "var(--green-1)"}]
-  [:&:disabled {:color      "var(--text3)"
-                :background "none" #_"var(--surface0)"}]
-  [:&:active:enabled {:background "var(--green-7)"
-                      :color      "var(--green-1)"}]
+   [:&.add {:background "var(--green-6)"
+            :color      "var(--green-1)"}]
+   [:&:hover {:background "var(--green-5)"
+              :color      "var(--green-1)"}]
+   [:&:disabled {:color      "var(--text3)"
+                 :background "none" #_"var(--surface0)"}]
+   [:&:active:enabled {:background "var(--green-7)"
+                       :color      "var(--green-1)"}]]
   ([{:keys [ref on-click disabled enabled style]} ch]
    ^{:ref      ref
      :on-click on-click
@@ -73,18 +73,19 @@
    [:<> [:div ch]]))
 
 (o/defstyled numberpad-button :button
-  :w-full :h-full :duration-100
-  {:display       :grid
-   :place-content :center
-   :border-radius "var(--radius-0)"
-   :background    "var(--floating)"
-   :color         "var(--text0)"}
-  [:&:hover {:background "var(--floating)"
-             :color      "var(--text0)"}]
-  [:&:disabled {:color      "var(--text3)"
-                :background "var(--toolbar)"}]
-  [:&:active:enabled {:background "var(--surface3)"
-                      :color      "var(--surface000)"}]
+  [:& :w-full :h-full :duration-100
+   {:display       :grid
+    :place-content :center
+    :border-radius "var(--radius-0)"
+
+    :color         "var(--text0)"}
+   [:&.button-pad {:background "var(--floating)"}
+    [:&:hover {:background "var(--floating)"
+               :color      "var(--text0)"}]
+    [:&:active:enabled {:background "var(--surface3)"
+                        :color      "red" #_"var(--surface000)"}]]
+   [:&:disabled {:color      "var(--text3)"
+                 :background "var(--toolbar)"}]]
   ([{:keys [ref on-click disabled enabled style]} ch]
    ^{:ref      ref
      :on-click on-click
@@ -94,11 +95,10 @@
 (o/defstyled up-down-button :div
   :h-full button-caption
   {:box-shadow    "var(--inner-shadow-1)"
-   :border-radius "var(--radius-1)"}
+   :border-radius "var(--radius-0)"}
   [:.base
-   {:border-radius "var(--radius-1)"}]
+   {:border-radius "var(--radius-0)"}]
   [:.some {:opacity          1
-           :xz-index         30
            :color            "black"
            :background-color "var(--yellow-5)"}]
   [:.zero {:opacity          1
@@ -148,19 +148,19 @@
     :row-gap               "var(--size-2)"
     :max-width             "20rem"
     :height                "100%"
-    :grid-template-columns "repeat(4,1fr)"
-    :grid-template-rows    "auto auto auto  auto auto repeat(5,4rem) "
+    :grid-template-columns "repeat(5,1fr)"
+    :grid-template-rows    "auto 4rem auto auto auto repeat(5,4rem) "
     :xgrid-auto-rows       "auto"}
-   [:&.mobile {:grid-template-areas [["welcome" "welcome" "welcome" "welcome"]
-                                     ["child" "juvenile" "moon" "adult"]
-                                     ["child " "juvenile" "key" "adult"]
-                                     ["aboutyou" "aboutyou" "aboutyou" "aboutyou"]
-                                     ["boats" "boats" "boats" "boats"]
-                                     ["trash" "input" "input" "add"]
-                                     ["restart" "numpad" "numpad" "numpad"]
-                                     ["." "numpad" "numpad" "numpad"]
-                                     ["." "numpad" "numpad" "numpad"]
-                                     ["complete" "numpad" "numpad" "numpad"]]}]
+   [:&.mobile {:grid-template-areas [[". welcome" "welcome" "welcome" "welcome"]
+                                     ["check-a child" "juvenile" "moon" "adult"]
+                                     ["check-a child " "juvenile" "key" "adult"]
+                                     ["check-b  aboutyou aboutyou aboutyou aboutyou"]
+                                     ["check-c    boats    boats    boats     boats"]
+                                     [". trash    input    input    add   "]
+                                     [". .        numpad   numpad   numpad"]
+                                     [". .        numpad   numpad   numpad"]
+                                     [". .        numpad   numpad   numpad"]
+                                     ["check-d complete numpad   numpad   numpad"]]}]
 
    [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]
                                          ["child " "juvenile" "key" "adult"]
@@ -187,4 +187,3 @@
     :aspect-ratio "1/1"}]
   ([{:keys []} ch]
    [:<> [:div {:style {:border-radius (str "var(--radius-blob-" (inc (rand-int 5)) ")")}} ch]]))
-

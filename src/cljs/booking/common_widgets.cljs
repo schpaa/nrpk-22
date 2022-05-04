@@ -142,9 +142,9 @@
                             :flex       "1 0 1"}} caption]))]))
 
 (defn stability-expert [{:keys [stability expert]}]
-  [:div.w-8.flex.justify-center.items-center
-   [:svg.w-4.inline-block {:viewBox "-2 -2 5 5"}
-    [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 :green 1 :orange 2 :pink 3 :black} (js/parseInt stability) :white)}]
+  [:div.px-px.flex.justify-center.items-center
+   [:svg.w-4.inline-block {:viewBox "-2 -2 4 4"}
+    [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 "var(--gray-1)" 1 "var(--brand1)" 2 :yellow 3 :red} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
 (defn stability-name-category [{:keys
@@ -152,11 +152,15 @@
                                  stability expert number navn kind description
                                  last-update weight length width aquired-year aquired-price] :as m}]
 
-  [:<>
-   (when (or stability expert) [stability-expert m])
-   [sc/col
-    [sc/small0 {:style {:font-size "0.85em"}} navn]
-    [sc/text1 {:style {:font-size "1.2em"}} (schpaa.components.views/normalize-kind kind)]]])
+  [sc/col-space-1 {:class [:truncate]}
+   [sc/row-sba
+    (when (or stability expert) [stability-expert m])
+    [sc/small0 {:style {:overflow      :hidden
+                        :text-overflow :ellipsis
+                        :white-space   :nowrap
+                        :color         "var(--text1)"
+                        :font-size     "small"}} navn]]
+   [sc/title1 #_{:style {:font-size "v"}} (schpaa.components.views/normalize-kind kind)]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]

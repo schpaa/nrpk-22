@@ -69,8 +69,8 @@
 (def ikkeStjerne [:> outline/StarIcon])
 (def arrowRight [:> solid/ArrowCircleRightIcon])
 (def arrowLeft [:> solid/ArrowCircleLeftIcon])
-(def arrowRight' [:> solid/ArrowNarrowRightIcon])
-(def arrowLeft' [:> solid/ArrowNarrowLeftIcon])
+(def arrowRight' [:> outline/ArrowRightIcon])
+(def arrowLeft' [:> outline/ArrowLeftIcon])
 
 (def backspace [:> solid/BackspaceIcon])
 (def tag [:> solid/TagIcon])
