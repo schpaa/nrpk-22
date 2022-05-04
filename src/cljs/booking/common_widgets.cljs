@@ -85,11 +85,11 @@
       :on-click #(on-click current-page)}
 
      (when caption
-       (when right-side
-         [sc/text2 {:style {:width     "auto"
-                            :color     "unset"
-                            :flex-grow 1
-                            :flex      "1 0 auto"}} caption]))
+       [sc/text2 {:style {:width       "auto"
+                          :white-space :normal
+                          :color       "unset"
+                          :flex-grow   1
+                          :flex        "1 1 auto"}} caption])
 
      (when right-side
        (when with-caption?
@@ -102,7 +102,7 @@
       {:style {:display         :flex
                :align-items     :center
                :justify-content :center
-               :flex-shrink     1
+               :flex-shrink     0
                :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
       [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
        {:style {:pointer-events :auto
@@ -121,7 +121,7 @@
          :class     [(if right-side :right-side :left-side)
                      (if active? (or (when class (class current-page)) :selected))
                      (if special :special)]}
-        [:div #_{:style {:border "1px solid blue"}}
+        [:div.shrink-0 #_{:style {:border "1px solid blue"}}
          [sc/icon-large
           (if icon-fn
             (icon-fn current-page)

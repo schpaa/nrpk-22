@@ -303,12 +303,11 @@
 (defn vertical-toolbar [left-side?]
   (let [has-chrome? (rf/subscribe [:lab/has-chrome])
         with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
-        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-        numberinput? (rf/subscribe [:lab/number-input])]
+        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.shrink-0.h-full.sm:flex.hidden.relative.select-none
        {:class [(if with-caption? :w-56 :w-16)]
-        :style {:box-shadow (if @numberinput? "var(--shadow-5)" "var(--inner-shadow-2)")
+        :style {:box-shadow "var(--inner-shadow-2)"
                 :background "var(--toolbar)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.items-start
@@ -720,7 +719,13 @@
             (when always-panel
               [always-panel modify?])
             [render r m]]
-           [render-fullwidth])]
+           [sc/col-space-8
+            [sc/col-space-8 {:class [:p-4]}
+             (when (fn? panel)
+               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+             (when always-panel
+               [always-panel modify?])]
+            [render-fullwidth]])]
 
         [:div.sticky.bottom-0
          [bottom-toolbar]]

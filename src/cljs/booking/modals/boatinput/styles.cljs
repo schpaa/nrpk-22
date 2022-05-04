@@ -4,7 +4,7 @@
 (o/defstyled input-caption :div
   {:font-familys   "Oswald"
    :font-family    "Inter"
-   ;:padding-left "var(--size-2)"
+
    :font-size      "var(--font-size-4)"
    :letter-spacing "var(--font-letterspacing-0)"
    :font-weight    "var(--font-weight-4)"})
@@ -93,14 +93,10 @@
 
 (o/defstyled up-down-button :div
   :h-full button-caption
-  {;:outline "1px solid red"
-   :box-shadow    "var(--inner-shadow-1)"
+  {:box-shadow    "var(--inner-shadow-1)"
    :border-radius "var(--radius-1)"}
   [:.base
    {:border-radius "var(--radius-1)"}]
-
-
-
   [:.some {:opacity          1
            :xz-index         30
            :color            "black"
@@ -108,7 +104,6 @@
   [:.zero {:opacity          1
            :color            "var(--text1)"
            :background-color "var(--floating)"}]
-
   [:&:active {:background-color "var(--content)"}]
   [:.overlay {:overflow :hidden}]
   ([{:keys [increase decrease value content]}]
@@ -146,27 +141,27 @@
          content]]))
 
 (o/defstyled panel :div
-  [:& :w-72 :mx-auto
+  [:& :mx-auto
    {:border                "0"
     :display               :grid
     :column-gap            "var(--size-2)"
     :row-gap               "var(--size-2)"
-    :width                 "100%"
+    :max-width             "20rem"
     :height                "100%"
     :grid-template-columns "repeat(4,1fr)"
-    :grid-template-rows    "4rem 4rem auto 8rem 4rem repeat(5,4rem)"
+    :grid-template-rows    "auto auto auto  auto auto repeat(5,4rem) "
     :xgrid-auto-rows       "auto"}
-   [:&.mobile {:grid-template-areas [["child" "juvenile" "moon" "adult"]
+   [:&.mobile {:grid-template-areas [["welcome" "welcome" "welcome" "welcome"]
+                                     ["child" "juvenile" "moon" "adult"]
                                      ["child " "juvenile" "key" "adult"]
+                                     ["aboutyou" "aboutyou" "aboutyou" "aboutyou"]
                                      ["boats" "boats" "boats" "boats"]
-                                     ;["boats" "boats""boats""boats"]
-                                     ["boat" "boat" "boat" "boat"]
-                                     ["direction" "direction" "direction" "add"]
-                                     ["trash" "input" "input" "input"]
-                                     ["." "numpad" "numpad" "numpad"]
-                                     ["." "numpad" "numpad" "numpad"]
+                                     ["trash" "input" "input" "add"]
                                      ["restart" "numpad" "numpad" "numpad"]
+                                     ["." "numpad" "numpad" "numpad"]
+                                     ["." "numpad" "numpad" "numpad"]
                                      ["complete" "numpad" "numpad" "numpad"]]}]
+
    [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]
                                          ["child " "juvenile" "key" "adult"]
                                          ["boat" "boat" "boat" "boat"]

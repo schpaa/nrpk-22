@@ -94,7 +94,7 @@
              (for [v (sort-by (comp :ugh last) > (:online @data))]
                [tableline-online {:class [:online]} v])
              (when @(r/cursor settings [:show-offline])
-               (for [v (sort-by (comp :lastOnline last) > (:offline @data))]
+               (for [v (sort-by (comp str :lastOnline last) > (:offline @data))]
                  [tableline-offline {:class [:offline]} v]))))]]])
 
 (defn always []

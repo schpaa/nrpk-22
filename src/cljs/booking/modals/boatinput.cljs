@@ -1,7 +1,5 @@
 (ns booking.modals.boatinput
   (:require [reagent.core :as r]
-            ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.icon :as icon]
@@ -15,198 +13,160 @@
             [booking.modals.boatinput.styles :as bis]
             [headlessui-reagent.core :as ui]
             [schpaa.debug :as l]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [booking.modals.boatinput.commands :as cmd]
+            [booking.modals.boatinput.actions :as actions]))
 
-(defn- decrease-children [st]
-  (let [n (r/cursor st [:children])]
-    (swap! n (fn [n] (if (pos? n) (dec n) 1)))))
+(declare boatpanel-window)
 
-(defn- increase-children [st]
-  (let [n (r/cursor st [:children])]
-    (swap! n inc)))
+(defn window-content [{:keys [on-close]}]
+  (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
+        right? (schpaa.state/listen :lab/menu-position-right)]
+    [:div
+     {:style {:background-color "var(--content)"
+              :border-radius    "var(--radius-2)"
+              :border-color     "var(--content)"
+              :border-width     "0px"
+              :display          :grid
+              :overflow-y       :auto
+              :place-content    :center}}
+     [:div
+      {:style {:padding-block "0rem"
+               :width         "auto"
+               :max-height    "90vh"}}
+      [boatpanel-window @mobile? @right?]]]))
 
-(defn children [st]
-  (r/with-let [n (r/cursor st [:children])
-               #_#_increase #(swap! n inc)
-               #_#_decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
-    [bis/up-down-button {:content  (fn [value]
-                                     [:div.flex.flex-col.justify-end.items-center.h-full
-                                      [:img.h-12.object-fit.-ml-px {:src "/img/human.png"}]
-                                      (str value)])
-                         :value    (or @n 0)
-                         :increase #(increase-children st)
-                         :decrease #(decrease-children st)}]))
+(rf/reg-event-fx :lab/toggle-boatpanel
+                 (fn [_ _]
+                   {:fx [[:dispatch
+                          [:modal.boatinput/show
+                           {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
+                            :content-fn        #(window-content %)}]]]}))
 
-(defn- decrease-juveniles [st]
-  (let [n (r/cursor st [:juveniles])]
-    (swap! n (fn [n] (if (pos? n) (dec n) 1)))))
+;region state
 
-(defn- increase-juveniles [st]
-  (let [n (r/cursor st [:juveniles])]
-    (swap! n inc)))
+(defonce st (r/atom {:focus :phone}))
 
-(defn juveniles [st]
-  (r/with-let [n (r/cursor st [:juveniles])
-               #_#_increase #(swap! n inc)
-               #_#_decrease #(swap! n (fn [n] (if (pos? n) (dec n) 1)))]
-    [bis/up-down-button {:content  (fn [value]
-                                     [:div.flex.flex-col.justify-end.items-center.h-full
-                                      [:img.h-16.object-fit.-ml-px {:src "/img/teen.png"}]
-                                      (str value)])
-                         :value    (or @n 0)
-                         :increase #(increase-juveniles st)
-                         :decrease #(decrease-juveniles st)}]))
+(def c-children (r/cursor st [:children]))
+(def c-juveniles (r/cursor st [:juveniles]))
+(def c-adults (r/cursor st [:adults]))
+(def c-moon (r/cursor st [:moon]))
+(def c-litteral-key (r/cursor st [:litteral-key]))
+(def c-lookup-result (r/cursor st [:item-data]))
+(def c-textinput (r/cursor st [:item]))
 
-(defn- decrease-adults [st]
-  (let [n (r/cursor st [:adults])]
-    (swap! n (fn [n] (if (pos? n) (dec n) 1)))))
+;endregion
 
-(defn- increase-adults [st]
-  (let [n (r/cursor st [:adults])]
-    (swap! n inc)))
+;region input-areas/buttons
 
-(defn adults [st]
-  (r/with-let [n (r/cursor st [:adults])]
-    [bis/up-down-button {:content  (fn [value]
-                                     [:div.flex.flex-col.justify-end.items-center.h-full
-                                      [:img.h-20.object-fit {:src "/img/human.png"}]
-                                      (str value)])
-                         :value    (or @n 0)
-                         :increase #(increase-adults st)
-                         :decrease #(decrease-adults st)}]))
-
+(defn children [c]
+  ;todo refactor
+  [bis/up-down-button
+   {:content  (fn [value]
+                [:div.flex.flex-col.justify-end.items-center.h-full
+                 [:img.h-12.object-fit.-ml-px {:src "/img/human.png"}]
+                 (str value)])
+    :value    (or @c 0)
+    :increase #(cmd/increase-children c)
+    :decrease #(cmd/decrease-children c)}])
+(defn juveniles [c]
+  [bis/up-down-button {:content  (fn [value]
+                                   [:div.flex.flex-col.justify-end.items-center.h-full
+                                    [:img.h-16.object-fit.-ml-px {:src "/img/teen.png"}]
+                                    (str value)])
+                       :value    (or @c 0)
+                       :increase #(cmd/increase-juveniles c)
+                       :decrease #(cmd/decrease-juveniles c)}])
+(defn adults [c]
+  [bis/up-down-button {:content  (fn [value]
+                                   [:div.flex.flex-col.justify-end.items-center.h-full
+                                    [:img.h-20.object-fit {:src "/img/human.png"}]
+                                    (str value)])
+                       :value    (or @c 0)
+                       :increase #(cmd/increase-adults c)
+                       :decrease #(cmd/decrease-adults c)}])
 (defn- key-clicked [st e]
-  (when (<= (count (:item @st)) 3)
-    (swap! st #(-> %
-                   (update :item str e)
-                   ((fn [z]
-                      ;(tap> [z (some #{(:item z)} (:list z))])
-                      (if (some #{(:item z)} (map :number (:list z)))
-                        (assoc z :selected (:item z))
-                        z)))))))
-
-(defn- backspace-clicked [st]
   (swap! st #(-> %
-                 (update :item (fn [s] (subs s 0 (dec (count s)))))
-                 (dissoc :selected))))
-
-(defn numberinput [st]
+                 (update :item str e)
+                 ((fn [st]
+                    (if (some #{(:item st)} (map :number (:list st)))
+                      (assoc st :selected (:item st))
+                      st))))))
+(defn number-pad [st]
   [:div.h-full
-   [:div.xp-3.h-full
-    {:style {:display               :grid
-             :border-radius         "var(--radius-0)"
-             ;:box-shadow            "var(--inner-shadow-2)"
-             ;:background            "var(--floating)"
-             :gap                   "var(--size-1)"
-             :grid-template-columns "repeat(3,1fr)"
-             :grid-auto-rows        "1fr"}}
-    (doall (for [e '[7 8 9 4 5 6 1 2 3 :toggle 0 :del]]
-             (if (number? e)
-               [bis/numberpad-button {:on-click
-                                      (fn [] (if (:phone @st)
-                                               (swap! st #(-> %
-                                                              (update :phonenumber str e)))
-                                               (key-clicked st e)))
-                                      :enabled (if (:phone @st)
+   {:style {:display               :grid
+            :border-radius         "var(--radius-0)"
+            :gap                   "var(--size-1)"
+            :grid-template-columns "repeat(3,1fr)"
+            :grid-auto-rows        "1fr"}}
+   (doall (for [e '[7 8 9 4 5 6 1 2 3 :toggle 0 :del]]
+            (if (number? e)
+              [bis/numberpad-button {:on-click #(key-clicked st e)
+                                     :enabled  (if (:phone @st)
                                                  (< (count (:phonenumber @st)) 8)
                                                  (< (count (:item @st)) 4))}
-                [bis/button-caption e]]
-               (cond
-                 (= :del e)
-                 [bis/numberpad-button
-                  {:on-click (fn [] (if (:phone @st)
-                                      (swap! st #(-> %
-                                                     (update :phonenumber (fn [s] (subs s 0 (dec (count s)))))))
-                                      (backspace-clicked st)))
-                   :style    {:color (if (not (empty? (:item @st))) "var(--orange-5)" "var(--text2)")}
-                   :enabled  (if (:phone @st)
-                               (not (empty? (:phonenumber @st)))
-                               (not (empty? (:item @st))))}
-                  [sc/icon-huge [:> solid/BackspaceIcon]]]
-                 (= :toggle e)
-                 [bis/numberpad-button
-                  {:on-click #(swap! st update :phone (fnil not false))
-                   ;:value     (:phone @st)
-                   #_#_:off-style {:color      "var(--surface2)"
-                                   :background "none"}
-                   :xstyle   (if (:phone @st) {:color       "var(--yellow-1)"
-                                               :xbackground :#124})}
-                  (if (:phone @st)
-                    [sc/icon-large [:> solid/TagIcon]]
-                    [sc/icon-large [:> solid/PhoneIcon]])]
+               [bis/button-caption e]]
+              (cond
+                (= :del e)
+                [bis/numberpad-button
+                 {:on-click (fn [] (if (:phone @st)
+                                     (swap! st #(-> %
+                                                    (update :phonenumber (fn [s] (subs s 0 (dec (count s)))))))
+                                     (cmd/backspace-clicked st)))
+                  :style    {:color (if (not (empty? (:item @st))) "var(--orange-5)" "var(--text2)")}
+                  :enabled  (if (:phone @st)
+                              (not (empty? (:phonenumber @st)))
+                              (not (empty? (:item @st))))}
+                 [sc/icon-huge ico/backspace]]
+                (= :toggle e)
+                [bis/numberpad-button
+                 {:on-click #(swap! st update :phone (fnil not false))}
+                 (if (:phone @st)
+                   [sc/icon-large ico/tag]
+                   [sc/icon-large ico/phone])]
 
-                 :else [:div]))))]])
-
-(defn- key-command [st]
-  (swap! st update :key (fnil not false)))
-
-(defn havekey [st]
+                :else [:div]))))])
+(defn havekey-button [c]
   [bis/toggle-button
-   {:on-click  #(key-command st)
-    :value     (:key @st)
+   {:on-click  #(cmd/key-command c)
+    :value     @c
     :off-style {:color      "var(--surface2)"
                 :background "none"}
-    :style     (if (:key @st) {:box-shadow "var(--shadow-1)"
-                               :color      "var(--gray-10)"
-                               :background "var(--yellow-5)"}
-                              {:background "var(--content)"})
-    :content   [sc/icon-large [:> (if (:key @st) solid/KeyIcon outline/KeyIcon)]]}])
-
-(defn- moon-command [st]
-  (swap! st update :moon (fnil not false)))
-
-(defn moon [st]
+    :style     (if @c {:box-shadow "var(--shadow-1)"
+                       :color      "var(--gray-10)"
+                       :background "var(--yellow-5)"}
+                      {:background "var(--content)"})
+    :content   [sc/icon-large (if @c ico/key-filled ico/key-outline)]}])
+(defn moon [c]
   [bis/toggle-button
-   {:on-click  #(moon-command st)
-    :value     (:moon @st)
-    :off-style {:color      "var(--surface2)"
-                :background "none"}
-    :style     (if (:moon @st) {:box-shadow "var(--shadow-1)"
-                                :color      "var(--gray-10)"
-                                :background "var(--yellow-5)"}
-                               {:background "var(--content)"})
-    :content   [sc/icon-large [:> (if (:moon @st) solid/MoonIcon outline/MoonIcon)]]}])
-
-(defn- add-command [st]
-  (if (<= 3 (count (:item @st)))
-    (swap! st #(-> %
-                   ;(assoc :selected (:item %))
-                   (update :list (fnil conj #{}) (:item-data %))
-                   ;;clear the item
-                   ((fn [e] (if true (dissoc e :item) identity)))))))
-
-(defn add [st]
+   {:on-click  #(cmd/moon-command c)
+    :value     @c
+    :off-style {:color "var(--surface2)"}
+    :style     (if @c {:box-shadow "var(--shadow-1)"
+                       :color      "var(--gray-10)"
+                       :background "var(--yellow-5)"}
+                      {:background "var(--content)"})
+    :content   [sc/icon-large (if @c ico/moon-filled ico/moon-outline)]}])
+(defn add-button [st textinput-c lookup-result-c]
   [bis/add-button
-   {:on-click #(add-command st)
+   {:on-click #(cmd/add-command st)
     :value    true
-    :enabled  (and (some? (:item-data @st))
-                   (not= (:item @st) (:selected @st))
-                   (not (some #{(:item @st)} (mapv :number (:list @st))))
-                   ;(not (some #{(:item @st)} (:list @st)))
-                   ;(not (some? (:selected @st)))
-                   (<= 3 (count (:item @st))))
+    :enabled  (and (some? @lookup-result-c)                 ;(:item-data @st)
+                   (not= @textinput-c (:selected @st))
+                   (not (some #{@textinput-c} (mapv :number (:list @st))))
+                   (<= 3 (count @textinput-c)))
     :on-style {:color      "var(--blue-5)"
-               :background "var(--surface1)"}}
+               :background "var(--content)"}}
    (sc/icon-huge ico/plusCircle)])
-
-(defn- delete-clicked [st]
-  (swap! st #(-> %
-                 (dissoc :item :selected)
-                 (update :list set/difference #{(first (filter (fn [m] (= (:number m) (:selected %))) (:list @st)))}))))
-
-(defn delete [st]
+(defn delete-button [st]
   [bis/delete-button
-   {:on-click #(delete-clicked st)
+   {:on-click #(cmd/delete-clicked st)
     :value    true
     :on-style {:background "var(--toolbar)"}
     :enabled  (and (or (not (empty? (:selected @st)))
                        (not (empty? (:item @st)))))}
    (sc/icon-huge ico/trash)])
-
-(defn- restart-command [st]
-  (reset! st nil))
-
-(defn restart [st]
+(defn reset-button [st]
   (r/with-let [form-dirty? #(or (pos? (+ (:adults @st)
                                          (:juveniles @st)
                                          (:children @st)))
@@ -220,7 +180,7 @@
                            ;(tap> "reset!")
                            (when @timer
                              (reset! timer nil)
-                             (restart-command st)))
+                             (cmd/reset-command st)))
                mousedown (fn [e]
                            ;(tap> "md")
                            (when (form-dirty?)
@@ -259,7 +219,20 @@
              (.removeEventListener @a "mouseup" mouseup)
              (.removeEventListener @a "touchend" mouseup))))
 
-;region core
+;endregion
+
+(rf/reg-sub :rent/list
+            #(sort-by (comp :timestamp val) >
+                      (transduce
+                        (comp
+                          (map identity)
+                          (filter (fn [[k v]]
+                                    (when (:timestamp v)
+                                      (t/<= (t/<< (t/today) (t/new-period 3 :days))
+                                            (t/date (t/instant (:timestamp v))))))))
+                        conj
+                        []
+                        @(db.core/on-value-reaction {:path ["activity-22"]}))))
 
 (rf/reg-sub :rent/lookup
             :<- [:db/boat-db]
@@ -268,66 +241,108 @@
                                       [(:number v)
                                        (assoc (select-keys v [:number :navn :kind :star-count :stability :material :weigth :length :width]) :id k)])))))
 
-(rf/reg-sub :rent/list
-            (fn [_ _]
-              (sort-by (comp :timestamp val) >
-                       (transduce
-                         (comp
-                           (map identity)
-                           (filter (fn [[k v]]
-                                     (when (:timestamp v)
-                                       (t/<= (t/<< (t/today) (t/new-period 3 :days))
-                                             (t/date (t/instant (:timestamp v))))))))
-                         conj
-                         []
-                         @(db.core/on-value-reaction {:path ["activity-22"]})))))
-
-(rf/reg-fx :rent/write (fn [data]
-                         (let [list (into {}
-                                          (map (fn [{:keys [id]}] [id ""])
-                                               (:list data)))]
-                           (tap> {:list list
-                                  :data data})
-                           (db.core/database-push
-                             {:path  ["activity-22"]
-                              :value {:timestamp (str (t/now))
-                                      :sleepover (:moon data)
-                                      :adults    (:adults data)
-                                      :havekey   (:key data)
-                                      :children  (:children data)
-                                      :juveniles (:juveniles data)
-                                      :uid       (:uid data)
-                                      :list      list}}))))
-
-(rf/reg-event-fx :rent/store
-                 (fn [_ [_ data]]
-                   {:fx [[:rent/write data]]}))
-
-(defn- confirm-command [st]
-  (let [loggedin-uid @(rf/subscribe [:lab/uid])
-        ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
-                 (pos? (count (:list @st)))
-                 (or (and (pos? (count (:item @st)))
-                          (some #{(:item @st)} (map :number (:list @st))))
-                     (empty? (:item @st))))]
-    ;(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
-    (when ok?
-      ;todo add to db here
-      (rf/dispatch [:rent/store (assoc @st :uid loggedin-uid)])
-      ;todo add counter increment update here?
-      (rf/dispatch [:app/navigate-to [:r.utlan]])
-      (rf/dispatch [:modal.boatinput/close])
-
-      #_(booking.aktivitetsliste/add-command (assoc @st :start (t/instant (t/now))))
-      (restart-command st))))
-
 (defn lookup [id]
+  ;todo define as defonce
   (let [data @(rf/subscribe [:rent/lookup])]
     (get data id)))
 
-;endregion
+(def focus-fields [[:phone "TLF"]
+                   [:boat "BÅTNR"]
+                   [:keyid "NØKKEL"]])
 
-(defn confirm [st]
+;region components
+
+(defn velkomsttekst []
+  [sc/co {:class [:px-2 :py-4]
+          :style {:grid-area "welcome"}}
+   [sc/co
+    [:div.flex.justify-start.items-center.gap-2
+     [schpaa.style.hoc.buttons/round' [sc/icon ico/closewindow]]
+     [sc/title1 "User-welcome"]]
+    [sc/text1 "Brief explanation of the user-interface, order of flow and so on"]]])
+(defn hvem-er-du []
+  [sc/surface-ab
+   {:class [:h-full]}
+   [sc/co {:class [:px-1]}
+    [:div.col-span-4.h-10.flex.items-center.justify-start.-debugx
+     [sc/title1 "Hvem er du?"]]
+    [:div.col-span-4.h-10.flex.items-center.justify-start.-debugx
+     [sc/text1 (cond
+                 (= 3 (count (:phonenumber @st)))
+                 (str "Nøkkelnummer " (subs (str (:phonenumber @st)) 0 3))
+                 (= 8 (count (:phonenumber @st)))
+                 (str "Telefon " (:phonenumber @st))
+                 :else "Skriv telefon– eller nøkkelnummer")]]]])
+(defn input-area [st c-textinput]
+  (let [focus-c (r/cursor st [:focus])
+        field (fn [v]
+                [:div.inline-flex.items-center.justify-center.h-full.pt-4
+                 [bis/input-caption v [:span.blinking-cursor.pb-1 "|"]]])
+        next-field (fn [_] (swap! focus-c
+                                  (fn [n] (mod ((fnil inc 0) n)
+                                               (count focus-fields)))))]
+    [:div.relative
+     {:on-click next-field
+      :style    {:padding-inline "var(--size-2)"
+                 :border-radius  "var(--radius-1)"
+                 :background     "var(--field1)"
+                 :color          "var(--gray-9)"
+                 :box-shadow     "var(--inner-shadow-1)"}}
+     (field @c-textinput)]))
+(defn selected-boats []
+  (let [have-any? (-> (:list @st) count)
+        search (seq (:item @st))
+        kan-ikke-finne "Finnes ikke"
+        venter "3 siffer "
+        velg-båter "Skriv et båtnummer"]
+    [sc/col
+
+     [sc/surface-ab
+      {:style {:border-radius         "var(--radius-1)"
+               :box-shadow            "var(--shadow-1),var(--inner-shadow-2)"
+               :column-gap            "var(--size-2)"
+               :row-gap               "var(--size-2)"
+               :display               :grid
+               :grid-template-columns "repeat(4,1fr) "
+               :grid-template-rows    "auto"}}
+
+      (if (pos? have-any?)
+        (for [e (sort (map :number (:list @st)))]
+          [sc/badge
+           {:class     [
+                        (if (= e (:selected @st)) :selected :normal)
+                        #_(when (not= e (:selected @st)) :selected)]
+            :xselected (and (not= e (:selected @st)))
+            :on-click  (fn [] (if (= e (:selected @st))
+                                (swap! st dissoc :selected
+                                       dissoc :item)
+                                (swap! st #(-> %
+                                               (assoc :selected e)
+                                               (assoc :item e)
+                                               (assoc :phone false)))))} e])
+
+        [:div.col-span-4.h-12.flex.items-center.justify-start
+         [sc/title1 "Du har ingen båter"]])
+
+      [:div.col-span-4
+       (if search
+         (if (and (not (:phone @st))
+                  (<= 3 (count (:item @st))))
+           (if-let [boat (lookup (:item @st))]
+             (do
+               (swap! st assoc-in [:item-data] boat)
+               [sc/row-sc-g2 {:class [:w-full :h-12]}
+                [widgets/stability-name-category boat]])
+
+             (do
+               (swap! st assoc-in [:item-data] nil)
+               [sc/row-center {:class [:w-full :h-12]} [sc/title kan-ikke-finne]]))
+           [sc/row-center {:class [:w-full :h-12]} [sc/title venter (:item @st)]])
+
+         [sc/row-center
+          {:class [:w-full :h-12]}
+          [sc/title1 (if (pos? have-any?) have-any? velg-båter)]])]]]))
+(defn complete [st]
   (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
                  (pos? (count (:list @st)))
                  (or (and (pos? (count (:item @st)))
@@ -335,18 +350,14 @@
                      (empty? (:item @st))))]
 
     [bis/add-button
-     {:on-click #(confirm-command st)
+     {:on-click (when (actions/confirm-command st)
+                  (cmd/reset-command st))
       :enabled  ok?
       :styles   (when ok? {:color      "var(--green-1)"
                            :background "var(--green-6)"})}
-     (sc/icon-huge [:> outline/CheckCircleIcon])]))
+     (sc/icon-huge ico/checkCircle)]))
 
-(defonce st (r/atom {}))
-
-(defn user-message [content]
-  (if (string? content)
-    [sc/title1 content]
-    content))
+;endregion
 
 (defn boatpanel-window [mobile? left-side?]
   (let [keydown-f (fn [event]
@@ -355,238 +366,63 @@
                     (let [kc (.-keyCode event)]
                       ;(tap> kc)
                       (cond
-                        (= kc keycodes/S) (confirm-command st)
-                        (= kc keycodes/R) (restart-command st)
-                        (= kc keycodes/N) (key-command st)
-                        (= kc keycodes/O) (moon-command st)
-                        (= kc keycodes/F) (decrease-adults st)
-                        (= kc keycodes/V) (increase-adults st)
-                        (= kc keycodes/G) (decrease-children st)
-                        (= kc keycodes/B) (increase-children st)
-                        (= kc keycodes/ENTER) (add-command st)
-                        (= kc keycodes/DELETE) (delete-clicked st)
-                        (= kc keycodes/BACKSPACE) (backspace-clicked st)
+                        (= kc keycodes/S) (actions/confirm-command st)
+                        (= kc keycodes/R) (cmd/reset-command st)
+                        (= kc keycodes/N) (cmd/key-command c-litteral-key)
+                        (= kc keycodes/O) (cmd/moon-command c-moon)
+                        (= kc keycodes/F) (cmd/decrease-adults c-adults)
+                        (= kc keycodes/V) (cmd/increase-adults c-adults)
+                        (= kc keycodes/G) (cmd/decrease-children c-children)
+                        (= kc keycodes/B) (cmd/increase-children c-children)
+                        (= kc keycodes/ENTER) (cmd/add-command st)
+                        (= kc keycodes/DELETE) (cmd/delete-clicked st)
+                        (= kc keycodes/BACKSPACE) (cmd/backspace-clicked st)
                         (some #{kc} (range 48 58)) (key-clicked st (- kc 48)))))
-        ref (r/atom nil)
-        toggle-numberinput #(rf/dispatch [:lab/close-number-input])]
+        ref (r/atom nil)]
+
     (r/create-class
       {:reagent-render
        (fn [_]
-         [:div
-          {:tab-index 0
-           :class     (if mobile?
-                        [:outline-none
-                         :h-full :flex :flex-col :justify-end]
-                        [:outline-none
-                         :focus:outline-none])
-           :style     (if mobile? {}                        ;:padding-block "1rem"
-                                  ;:position :absolute
-                                  ;:top 0 :left 0 :right 0 :bottom 0
-                                  ;:overflow-y :auto
-                                  ;:max-height     "calc(100vh - 5rem)"
+         [sc/row
+          (when goog.DEBUG
+            [:div.bg-black
+             {:style {:width "15rem"}}
+             [l/pre @st]])
+          [:div
+           {:tab-index 0
+            :class     (if mobile?
+                         [:outline-none
+                          :h-full :flex :flex-col :justify-end]
+                         [:outline-none
+                          :focus:outline-none])
+            :ref       (fn [e]
+                         (when-not @ref
+                           (.addEventListener e "keydown" keydown-f)
+                           (.focus e)
+                           (reset! ref e)))}
+           [bis/panel
+            {:class [:p-4 :mobile]}
+            (concat [[velkomsttekst]]
+                    (let [f (fn [[gridarea component]]
+                              [:div {:style {:grid-area gridarea}} component])]
+                      (mapv f [["numpad" [number-pad st]]
+                               ["child" [children c-children]]
+                               ["juvenile" [juveniles c-juveniles]]
+                               ["adult" [adults c-adults]]
+                               ["moon" [moon c-moon]]
+                               ["key" [havekey-button c-litteral-key]]
+                               ["aboutyou" [hvem-er-du]]
+                               ["input" [input-area st c-textinput]]
+                               ["boats" [selected-boats]]
+                               ["trash" [delete-button st]]
+                               ["add" [add-button st c-textinput c-lookup-result]]
+                               ["restart" [reset-button st]]
+                               ["complete" [complete st]]])))]]])})))
 
-                                  {:padding        "var(--size-1)"
-                                   :pointer-events :auto})
-           :ref       (fn [e]
-                        (when-not @ref
-                          ;(tap> ["adding for " e])
-                          (.addEventListener e "keydown" keydown-f)
-                          (.focus e)
-                          (reset! ref e)))}
-
-          ;(tap> @st)
-          [bis/panel
-           {:class [:p-4
-                    :mobile #_(if mobile? :mobile (if left-side? :left-side :right-side))]}
-           [:div {:style {:grid-area "numpad"}} [numberinput st]]
-           [:div {:style {:grid-area "child"}} [children st]]
-           [:div {:style {:grid-area "juvenile"}} [juveniles st]]
-           [:div {:style {:grid-area "adult"}} [adults st]]
-           [:div {:style {:grid-area "moon"}} [moon st]]
-           [:div {:style {:grid-area "key"}} [havekey st]]
-
-           ;input
-           [:div
-            {:style {:grid-area      "input"
-                     ;:grid-row       "5"
-                     ;:grid-column    "2/span 2"
-                     :padding-inline "var(--size-2)"
-                     :border-radius  "var(--radius-1)"
-                     :background     "var(--field1)"
-                     :color          "var(--gray-9)"
-                     :box-shadow     "var(--inner-shadow-0)"}}
-            [:div.flex.items-center.h-full
-             {:xstyle {;:font-family "Oswald"
-                       :font-weight 600
-                       :font-size   "var(--font-size-4)"}}
-             (if (:phone @st)
-               [:div
-                {:style {:display     "flex"
-                         :align-items "center"
-                         :font-size   "var(--font-size-5)"
-                         :xcolor      "var(--text1)"}}
-                (when (empty? (:phonenumber @st))
-                  [:span.blinking-cursor.pb-1 "|"])
-                [bis/input-caption (if (empty? (:phonenumber @st))
-                                     [:span.opacity-30 "tlf eller nøkkel"]
-                                     (:phonenumber @st))]
-                (when-not (empty? (:phonenumber @st))
-                  [:div.blinking-cursor.pb-1.pl-2x "|"])]
-               [:div
-                {:style {:display     "flex"
-                         :align-items "center"
-                         :font-size   "var(--font-size-5)"
-                         :xcolor      "var(--text1)"}}
-                (when (empty? (:item @st))
-                  [:div.blinking-cursor.pb-1.pl-2x "|"])
-                [bis/input-caption
-                 (if (empty? (:item @st))
-                   [:div.text-center "båtnummer"]
-                   (:item @st))]
-                (when-not (empty? (:item @st))
-                  ;[:span.blinking-cursor.pb-2 {:style {:font-size :120%}} "["]
-                  (if (< 3 (count (:item @st)))
-                    [:span.blinking-cursor.pb-1.pl-2x {:style {:font-size :100%}} "|"]
-                    [:span.blinking-cursor.pb-1.pl-2x {:style {:font-size :100%}} "|"]))])]]
-
-           (let [msg (cond
-                       (:phone @st) [sc/col [sc/text1 "Telefonnummer (8 siffer)"]
-                                     [sc/text1 "Nøkkelnummer (3 siffer)"]]
-                       :else [sc/text1 "Båtnummer (3 siffer)"])]
-             [sc/surface-a {:style {:grid-area "direction"}}
-              [sc/title {:class [:text-center :items-center :flex :justify-center :h-full]} msg]])
-
-           [:div
-            {:style {:grid-area      "boat"
-                     :padding-inline "var(--size-2)"
-                     :display        :flex
-                     :align-items    :center}}
-            (tap> @st)
-            (if (and (not (:phone @st))
-                     (<= 3 (count (:item @st))))
-              #_(if (:phone @st)
-                  [user-message
-                   [sc/text2 "ELLER"]])
-              (if-let [boat (lookup (:item @st))]
-                (do
-                  (swap! st assoc-in [:item-data] boat)
-                  [user-message
-                   [sc/col-space-2
-                    [sc/row [widgets/stability-name-category boat]]
-                    ;[sc/title1 (:navn boat)]
-                    ;[sc/text2 (:kind boat)]
-                    (when (= 8 (count (:phonenumber @st)))
-                      [sc/text1 "Telefon " (:phonenumber @st)])
-                    (when (= 3 (count (:phonenumber @st)))
-                      [sc/text1 "Nøkkelnummer " (subs (str (:phonenumber @st)) 0 3)])]])
-                (do
-                  (swap! st assoc-in [:item-data] nil)
-                  [user-message (str "Finner ikke " (:item @st))]
-                  #_[sc/text1 "Finner ikke " (:item @st)]))
-
-              #_(if-not (:phone @st)
-                  (do
-                    (swap! st assoc-in [:item-data] nil)
-                    [sc/col {:class [:space-y-px :justify-center :h-full :w-full]}
-
-                     [user-message [sc/titleb {:class [:text-center]} "Båtnummer (3 siffer)"]]])))]
-
-           (if (:phone @st)
-             [sc/surface-a {:style {:grid-area "boat"}
-                            :class [:w-full :h-full]}
-              [sc/col
-               (if-some [boat (lookup (:item @st))]
-                 [sc/col-space-2
-                  [sc/row
-                   [widgets/stability-name-category (dissoc boat :stability :expert)]]
-                  [sc/small1 [widgets/dimensions-and-material boat]]])
-               (when (= 8 (count (:phonenumber @st)))
-                 [sc/text1 "Telefon " (:phonenumber @st)])
-               (when (= 3 (count (:phonenumber @st)))
-                 [sc/text1 "Nøkkelnummer " (subs (str (:phonenumber @st)) 0 3)])]]
-
-             #_[user-message
-
-                [sc/col-space-2 {:class [:text-center]}
-                 [sc/title1 "Telefonnummer (8 siffer)"]
-                 [sc/text2 "ELLER"]
-                 [sc/title1 "Nøkkelnummer E18-(3 siffer)"]]])
-
-
-
-           ;boats
-           [:div.p-1
-            {:style {:grid-area             "boats"
-                     :border-radius         "var(--radius-1)"
-                     :background            "rgba(0,0,0,0.5)"
-                     :box-shadow            "var(--shadow-1),var(--inner-shadow-2)"
-                     :gap                   "var(--size-1)"
-                     :display               :grid
-                     :grid-template-columns "repeat(4,1fr) "
-                     :grid-template-rows    "auto"}}
-            (if (-> (:list @st) count pos?)
-              (for [e (sort (map :number (:list @st)))]
-                [sc/badge
-                 {:class     [
-                              (if (= e (:selected @st)) :selected :normal)
-                              #_(when (not= e (:selected @st)) :selected)]
-                  :xselected (and (not= e (:selected @st)))
-                  :on-click  (fn [] (if (= e (:selected @st))
-                                      (swap! st dissoc :selected
-                                             dissoc :item)
-                                      (swap! st #(-> %
-                                                     (assoc :selected e)
-                                                     (assoc :item e)
-                                                     (assoc :phone false)))))} e])
-              [:div.col-span-4.h-12.flex.items-center.justify-center
-               [sc/text1 "Ingen båter er valgt"]])]
-           [:div {:style {:grid-area "trash"}} [delete st]]
-           [:div {:style {:grid-area "add"}} [add st]]
-           [:div {:style {:grid-area "restart"}} [restart st]]
-           [:div {:style {:grid-area "complete"}} [confirm st]]
-
-           ;boats for all items above 3
-           #_(when (< 4 (count (:list @st)))
-               [:div.p-1 {:style {:grid-column           "1/span 4"
-                                  :grid-row              "10/span 2"
-                                  :border-radius         "var(--radius-1)"
-                                  :background            "var(--surface00)"
-                                  :gap                   "var(--size-1)"
-                                  :display               :grid
-                                  :grid-template-columns "repeat(4,1fr)"
-                                  :grid-template-rows    "repeat(3,1fr)"}}
-                (concat
-                  (for [e (take 11 (drop 3 (sort (map :number (:list @st)))))]
-                    [sc/badge
-                     {:selected (and (= e (:selected @st)))
-                      :on-click (fn []
-                                  (if (= e (:selected @st))
-                                    (swap! st
-                                           dissoc :selected
-                                           dissoc :item)
-                                    (swap! st #(-> %
-                                                   (assoc :selected e)
-                                                   (assoc :item e)
-                                                   (assoc :phone false)))))} e])
-                  (if (< 16 (count (:list @st))) [[sc/badge {} "..."]]))])]])})))
-
-(defn window-content [{:keys [on-close]}]
-  (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
-        right? (schpaa.state/listen :lab/menu-position-right)] ;[sc/centered-dialog]
-    [:div
-     {:style {:background-color "var(--content)"
-              :border-radius    "var(--radius-2)"
-              :border-color     "var(--content)"
-              :border-width     "0px"
-              :display          :grid
-              :overflow-y       :auto
-              :place-content    :center}}
-     [:div
-      {:style {:width      "20rem"
-               :max-height "90vh"}}
-      [boatpanel-window @mobile? @right?]]]))
+;region dialog-related
 
 (rf/reg-sub :modal.boatinput/is-visible :-> #(get % :modal.boatinput/visible false))
+
 (rf/reg-sub :modal.boatinput/get-context :-> :modal.boatinput/context)
 
 (rf/reg-event-db :modal.boatinput/show (fn [db [_ context]]
@@ -608,41 +444,6 @@
          [:modal.boatinput/show
           {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
            :content-fn        #(window-content %)}]]]})
-
-(rf/reg-event-fx :lab/toggle-boatpanel [rf/trim-v] open-boatpanel)
-
-(rf/reg-sub :lab/number-input2 :-> :lab/number-input2)
-
-;region number-input
-
-;todo ultimately remove
-
-(rf/reg-event-db :lab/toggle-number-input (fn [db]
-                                            (update db :lab/number-input (fnil not false))))
-
-(rf/reg-event-db :lab/open-number-input (fn [db]
-                                          (assoc db :lab/number-input true)))
-
-(rf/reg-event-db :lab/close-number-input (fn [db]
-                                           (assoc db :lab/number-input false)))
-
-(rf/reg-sub :lab/number-input :-> :lab/number-input)
-
-;endregion
-
-;endregion
-
-(o/defstyled experimental :div
-  {:display          :grid
-   :place-content    :end
-   :background-color "var(--toolbar-)"
-   :border-radius    "var(--radius-2)"
-   :width            "18rem"
-   :height           "100%"}
-  [:at-media {:max-width "511px"}
-   {:width  "100vw"
-    :height "100vh"}]
-  [:at-media {:min-width "512px"}])
 
 (defn render-boatinput
   "centered dialog used by this component"
@@ -700,3 +501,5 @@
                                          ;todo remove comment to allow closing
                                          (close))
                              :action action)))]]]]]))))
+
+;endregion

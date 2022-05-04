@@ -26,7 +26,8 @@
 (def vaktrapport [:> solid/KeyIcon])
 (def harnøkkel [:> solid/KeyIcon])
 (def nokkelvakt [:> solid/CalendarIcon])
-(def moon [:> solid/MoonIcon])
+(def moon-filled [:> solid/MoonIcon])
+(def moon-outline [:> outline/MoonIcon])
 (def showdetails [:> solid/ChevronRightIcon])
 ;(def showdetails [:> outline/ChevronDoubleRightIcon])
 
@@ -70,3 +71,9 @@
 (def arrowLeft [:> solid/ArrowCircleLeftIcon])
 (def arrowRight' [:> solid/ArrowNarrowRightIcon])
 (def arrowLeft' [:> solid/ArrowNarrowLeftIcon])
+
+(def backspace [:> solid/BackspaceIcon])
+(def tag [:> solid/TagIcon])
+(def phone [:> solid/PhoneIcon])
+(def key-filled [:> solid/KeyIcon outline/KeyIcon])
+(def key-outline [:> outline/KeyIcon outline/KeyIcon])

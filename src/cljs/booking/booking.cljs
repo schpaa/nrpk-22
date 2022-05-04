@@ -81,7 +81,7 @@
   [sc/row-ec-g1 {:style {:grid-area "badges"
                          :flex-wrap :nowrap}
                  :class [:h-12x :place-content-center]}
-   (when sleepover [sc/icon-tiny-frame ico/moon])
+   (when sleepover [sc/icon-tiny-frame ico/moon-filled])
    (when havekey [sc/icon-tiny-frame ico/nokkelvakt])])
 
 ;region data-source
