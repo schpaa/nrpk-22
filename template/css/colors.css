@@ -101,6 +101,44 @@ outline: 2px solid #a0a8;
   }
 }
 
+
+.bg-unfocused-field {
+    background: var(--field1);
+    color: var(--text2);
+}
+
+.bg-focused-field {
+    background: var(--field2);
+    color: var(--text1);
+}
+
+.outline-focused-field:focus {
+    outline: var(--brand1) 2px solid;
+}
+
+@keyframes "blinking" {
+  from, to {
+    color: transparent;
+  }
+  20% {
+    color: var(--text0);
+  }
+}
+
+
+.blinking-cursor {
+  font-weight: 500;
+  font-size: unset;
+/*
+  -webkit-animation: 1.4s blinking step-end infinite;
+  -moz-animation: 1.4s blinking step-end infinite;
+  -ms-animation: 1.4s blinking step-end infinite;
+  -o-animation: 1.4s blinking step-end infinite;
+*/
+  animation: 1.4s blinking step-end infinite;
+}
+
+
 :root {
     --radius-0: 3px;
     --radius-1: 6px;
@@ -192,59 +230,6 @@ outline: 2px solid #a0a8;
     --dim-field-focus: var(--gray-8);
     --dim-fieldcopy: var(--gray-3);
 
-
-    /* ----------------------------- */
-
-   /* brand */
-
-
-/*
-   --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
-   --brand1-copy-light: white;
-
-   --brand1-hover-light: var(--red-3);
-   --brand2-light: hsl(var(--brand-hue), 39%, 30%);
-
-
-
-    --brand1-copy-dim: white; */
-/* when copy is placed on --brand1-dim *//*
-
-    --brand1-hover-dim: var(--orange-3);
-    --brand1-copy-light: white; */
-/* when copy is placed on --brand1-light *//*
-
-
-   --brand2-dim: var(--green-1);
-*/
-
-    /* button dark */
-
-/*
-   --buttoncta0-dim: hsl(100, 39%, 5%);
-   --buttoncta1-dim: hsl(100, 39%, 50%);
-   --buttoncta0-dim: var(--green-3);
-   --buttoncta1-dim: var(--green-7);
-   --buttoncta2-dim: var(--green-8);
-   --buttondanger0-dim: var(--red-3);
-   --buttondanger1-dim: var(--red-7);
-   --buttondanger2-dim: var(--red-8);
-   --button0-dim: var(--gray-1);
-   --button1-dim: var(--gray-8);
-   --button2-dim: var(--gray-9);
-*/
-
-    /* button light */
-
-/*
-    --buttoncta0-light: white;
-    --buttoncta1-light: var(--green-8);
-    --buttoncta2-light: var(--green-7);
-    --buttondanger0-light: var(--red-1);
-    --buttondanger1-light: var(--red-6);
-    --buttondanger2-light: var(--red-5);
-*/
-
     /* body copy */
 
     --text0-light: var(--gray-9);
@@ -265,66 +250,27 @@ outline: 2px solid #a0a8;
     --text3-dim: var(--gray-8);
     --label-dim: var(--green-5);
 
-   /* background surfaces*/
-
     --textmarker-background-light: var(--yellow-2);
-/*
-
-    --surface000-light: var(--gray-0);
-    --surface00-light: var(--gray-1);
-    --surface0-light: var(--gray-2);
-    --surface1-light: var(--gray-3); */
-/* surface-background of entities and elements *//*
-
-    --surface2-light: var(--gray-4); */
-/* content-background of slidein menu, a platform for content (on top of system-background) *//*
-
-    --surface3-light: var(--gray-5); */
-/* surface-background of slidein menu, toolbar, system-background etc *//*
-
-    --surface4-light: var(--gray-6);
-    --surface5-light: var(--gray-9);
-    --surface6-light: var(--gray-6);
-    --surface7-light: var(--gray-7);
-    --surface8-light: var(--gray-8);
-    --surface9-light: var(--gray-9);
-
-*/
     --textmarker-background-dim: var(--yellow-5);
 
-    --surface000-dim: var(--gray-9);
-    --surface00-dim: var(--gray-8);
-    --surface0-dim: var(--gray-7); /* var(--gray-7); */
-    --surface1-dim: var(--gray-6); /* surface-background of entities and elements */
-    --surface2-dim: var(--gray-5); /* content-background of slidein menu, can contain entities and elements */
-    --surface3-dim: var(--gray-4); /* surface-background of slidein menu, contains the content above */
-    --surface4-dim: var(--gray-3);
-    --surface5-dim: var(--gray-2);
+    --light-selected: var(--gray-1);
+    --light-selected-copy: var(--pink-5);
+    --dim-selected: var(--gray-1);
+    --dim-selected-copy: var(--pink-5);
 
-    /* unused? */
+    --dim-vener-hl: rgba(255,255,255,0.3);
+    --light-vener-hl: rgba(0,0,0,0.3);
 
-    /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
+    --dim-vener: rgba(255,255,255,0.05);
+    --light-vener: rgba(0,0,0,0.05);
 
-    --button00-light: var(--gray-0);
-    --button0-light: var(--gray-9);
-    --button1-light: var(--gray-4);
-    --button2-light: var(--gray-3);
-
-    --buttonbase-disabled-light: var(--gray-1);
-    --buttonbase-light: var(--gray-3);
-    --buttontext-light: var(--gray-7);
-    --buttonbase-hover-light: var(--gray-2);
-    --buttonbase-active-light: var(--gray-5);
-
-
+    --text-light: var(--gray-6);
+    --text-dim: var(--gray-4);
 }
 
 
 /*@media (prefers-color-scheme: light) {*/
 :root {
-
-    
-
     --brand1: var(--brand1-light);
     --brand1-copy: var(--brand1-copy-light);
     --brand1-hover: var(--brand1-hover-light);
@@ -390,43 +336,43 @@ outline: 2px solid #a0a8;
        --logg-ut: var(--red-5);
 */
 
-        --toolbar: var(--light-toolbar);
-        --toolbar-: var(--light-toolbar-);
-        --content: var(--light-content);
-        --floating: var(--light-floating);
-        --switchon: var(--light-switchon);
-        --switchoff: var(--light-switchoff);
-        --brand1: var(--light-brand1);
-        --brand1-weak: var(--light-brand1-weak);
-        --brand1-bright: var(--light-brand1-bright);
-        --brand1-copy: var(--light-brand1-copy);
-        --brand2: var(--light-brand2);
-        --brand2-weak: var(--light-brand2-weak);
-        --brand2-bright: var(--light-brand2-bright);
-        --button: var(--light-button);
-        --button-bright: var(--light-button-bright);
-        --buttoncopy: var(--light-buttoncopy);
-        --danger: var(--light-danger);
-        --danger-bright: var(--light-danger-bright);
-        --dangercopy: var(--light-dangercopy);
-        --field: var(--light-field);
-        --field-focus: var(--light-field-focus);
-        --fieldcopy: var(--light-fieldcopy);
+    --toolbar: var(--light-toolbar);
+    --toolbar-: var(--light-toolbar-);
+    --content: var(--light-content);
+    --floating: var(--light-floating);
+    --switchon: var(--light-switchon);
+    --switchoff: var(--light-switchoff);
+    --brand1: var(--light-brand1);
+    --brand1-weak: var(--light-brand1-weak);
+    --brand1-bright: var(--light-brand1-bright);
+    --brand1-copy: var(--light-brand1-copy);
+    --brand2: var(--light-brand2);
+    --brand2-weak: var(--light-brand2-weak);
+    --brand2-bright: var(--light-brand2-bright);
+    --button: var(--light-button);
+    --button-bright: var(--light-button-bright);
+    --buttoncopy: var(--light-buttoncopy);
+    --danger: var(--light-danger);
+    --danger-bright: var(--light-danger-bright);
+    --dangercopy: var(--light-dangercopy);
+    --field: var(--light-field);
+    --field-focus: var(--light-field-focus);
+    --fieldcopy: var(--light-fieldcopy);
+    --selected: var(--light-selected);
+    --selected-copy: var(--light-selected-copy);
+    --vener: var(--light-vener);
+    --vener-hl: var(--light-vener-hl);
+    --text: var(--text-light);
+
 }
 
 
 .dark {
+    --brand1: var(--brand1-dim);
 
-    
-/*
-    --brand1: var(--dim-brand1);
-    --brand2: var(--dim-brand2);
-    --brand3: var(--dim-brand3);
-    --brand4: var(--dim-brand4);
-    --brand5: var(--dim-brand5);
-    --brand1-copy: var(--brand1-copy-dim);
-    --brand1-hover: var(--brand1-hover-dim);
-*/
+    --selected: var(--dim-selected);
+    --selected-copy: var(--dim-selected-copy);
+
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
@@ -437,12 +383,6 @@ outline: 2px solid #a0a8;
     --text2: var(--text2-dim);
     --text3: var(--text3-dim);
 
-/*
-    --font-weight-1: var(--font-weight-1);
-    --font-weight-2: var(--font-weight-2);
-    --font-weight-3: var(--font-weight-3);
-*/
-
     --field1: var(--gray-4); /* focused field */
     --field2: var(--gray-7); /* unfocused/passive field */
 
@@ -450,18 +390,8 @@ outline: 2px solid #a0a8;
    --brand000: var(--brand000-dim);
    --brand00: var(--brand00-dim);
    --brand0: var(--brand0-dim);
-   
 
       --label: var(--label-dim);
-
-      --surface000: var(--surface000-dim);
-      --surface00: var(--surface00-dim);
-      --surface0: var(--surface0-dim);
-      --surface1: var(--surface1-dim);
-      --surface2: var(--surface2-dim);
-      --surface3: var(--surface3-dim);
-      --surface4: var(--surface4-dim);
-      --surface5: var(--surface5-dim);
 
     /* buttons */
     --buttonbase: var(--gray-6);
@@ -503,43 +433,10 @@ outline: 2px solid #a0a8;
         --field: var(--dim-field);
         --field-focus: var(--dim-field-focus);
         --fieldcopy: var(--dim-fieldcopy);
-    
+
+    --vener: var(--dim-vener);
+    --vener-hl: var(--dim-vener-hl);
+    --text: var(--text-dim);
 }
 
-
-.bg-unfocused-field {
-    background: var(--field1);
-    color: var(--text2);
-}
-
-.bg-focused-field {
-    background: var(--field2);
-    color: var(--text1);
-}
-
-.outline-focused-field:focus {
-    outline: var(--brand1) 2px solid;
-}
-
-@keyframes "blinking" {
-  from, to {
-    color: transparent;
-  }
-  20% {
-    color: var(--text0);
-  }
-}
-
-
-.blinking-cursor {
-  font-weight: 500;
-  font-size: unset;
-/*
-  -webkit-animation: 1.4s blinking step-end infinite;
-  -moz-animation: 1.4s blinking step-end infinite;
-  -ms-animation: 1.4s blinking step-end infinite;
-  -o-animation: 1.4s blinking step-end infinite;
-*/
-  animation: 1.4s blinking step-end infinite;
-}
 

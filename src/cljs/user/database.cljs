@@ -47,9 +47,18 @@
 
 #_(def lookup-username (memoize +memo-lookup-username))
 (defn lookup-username [uid]
-  ;(tap> ["U"])
   (when-some [_ @(rf/subscribe [::db/user-auth])]
     (:navn @(db/on-value-reaction {:path ["users" uid]}))))
+
+(defn lookup-by-litteralkeyid [id]
+  (when-some [_ @(rf/subscribe [::db/user-auth])]
+    (get (into {}
+               (map (fn [[a b c]] [a [b c]])
+                    (map (comp (juxt (comp #(subs % 4 7) str :nøkkelnummer)
+                                     :navn
+                                     :telefon) val)
+                         (filter (fn [[k v]] (and (:godkjent v) (seq (:nøkkelnummer v)) #_(:nøkkelvakt v)))
+                                 @(db/on-value-reaction {:path ["users"]}))))) id)))
 
 (defn lookup-alias [uid]
   ;(tap> ["U"])

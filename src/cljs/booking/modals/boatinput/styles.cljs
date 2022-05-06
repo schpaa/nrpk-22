@@ -1,18 +1,18 @@
 (ns booking.modals.boatinput.styles
-  (:require [lambdaisland.ornament :as o]))
+  (:require [lambdaisland.ornament :as o]
+            [schpaa.style.ornament :as sc]
+            [booking.ico :as ico]))
 
 (o/defstyled input-caption :div
-  {:font-familys   "Oswald"
-   :font-family    "Inter"
-
-   :font-size      "var(--font-size-4)"
+  {:font-family    "Inter"
+   :font-size      "var(--font-size-5)"
    :letter-spacing "var(--font-letterspacing-0)"
-   :font-weight    "var(--font-weight-4)"})
+   :font-weight    "var(--font-weight-5)"})
 
 (o/defstyled button-caption :div
   {:font-family "Inter"
    :font-size   "var(--font-size-5)"
-   :font-weight "var(--font-weight-5)"})
+   :font-weight "var(--font-weight-6)"})
 
 (o/defstyled button :button
   :w-full :h-full
@@ -36,9 +36,9 @@
   :w-full :h-full
   {:display       :grid
    :place-content :center
-   :border-radius "var(--radius-1)"
-   :background    "var(--red-9)"
-   :color         "var(--red-1)"}
+   :border-radius "var(--radius-0)"
+   ;:background    "var(--red-9)"
+   :color         "var(--red-5)"}
   [:&:hover {:background "var(--red-8)"
              :color      "var(--red-2)"}]
   [:&:disabled {:color      "var(--text3)"
@@ -55,81 +55,95 @@
   [:& :w-full :h-full
    {:display       :grid
     :place-content :center
-    :border-radius "var(--radius-1)"}
-   ;:background    "var(--red-6)"
+    :border-radius "var(--radius-0)"}
+   ;:background    "var(--brand1)"}
    ;:color         "var(--surface1)"
-   [:&.add {:background "var(--green-6)"
-            :color      "var(--green-1)"}]
-   [:&:hover {:background "var(--green-5)"
-              :color      "var(--green-1)"}]
-   [:&:disabled {:color      "var(--text3)"
-                 :background "none" #_"var(--surface0)"}]
+   [:&.add {;:background "var(--green-6)"
+            :color "var(--green-1)"}]
+   #_[:&:hover {:background "var(--green-5)"
+                :color      "var(--green-1)"}]
+   [:&:disabled {:opacity    0.2
+                 :color      "var(--text1)"
+                 :background "var(--toolbar)" #_"var(--surface0)"}]
    [:&:active:enabled {:background "var(--green-7)"
                        :color      "var(--green-1)"}]]
-  ([{:keys [ref on-click disabled enabled style]} ch]
-   ^{:ref      ref
-     :on-click on-click
-     :disabled (if (some? enabled) (not enabled) disabled)}
-   [:<> [:div ch]]))
+  #_([{:keys [ref on-click disabled enabled style]} ch]
+     ^{:ref      ref
+       :on-click on-click
+       :disabled (if (some? enabled) (not enabled) disabled)}
+     [:<> [:div ch]]))
 
 (o/defstyled numberpad-button :button
   [:& :w-full :h-full :duration-100
-   {:display       :grid
-    :place-content :center
-    :border-radius "var(--radius-0)"
-
-    :color         "var(--text0)"}
-   [:&.button-pad {:background "var(--floating)"}
+   {:display          :grid
+    :background-color "var(--floating)"
+    :place-content    :center
+    :border-radius    "var(--radius-0)"
+    :color            "var(--text1)"}
+   [:&                                                      ;.button-pad {:background "var(--floating)"}
     [:&:hover {:background "var(--floating)"
                :color      "var(--text0)"}]
     [:&:active:enabled {:background "var(--surface3)"
                         :color      "red" #_"var(--surface000)"}]]
-   [:&:disabled {:color      "var(--text3)"
-                 :background "var(--toolbar)"}]]
-  ([{:keys [ref on-click disabled enabled style]} ch]
-   ^{:ref      ref
-     :on-click on-click
-     :disabled (if (some? enabled) (not enabled) disabled)}
-   [:<> [:div ch]]))
+   [:&:disabled {:color      "var(--text)"
+                 :opacity    0.2
+                 :background "var(--toolbar-)"}]]
+  #_([{:keys [ref on-click disabled enabled style]} ch]
+     ^{:ref      ref
+       :on-click on-click
+       :disabled (if (some? enabled) (not enabled) disabled)}
+     [:<> [:div ch]]))
 
-(o/defstyled up-down-button :div
-  :h-full button-caption
-  {:box-shadow    "var(--inner-shadow-1)"
-   :border-radius "var(--radius-0)"}
-  [:.base
-   {:border-radius "var(--radius-0)"}]
-  [:.some {:opacity          1
-           :color            "black"
-           :background-color "var(--yellow-5)"}]
-  [:.zero {:opacity          1
-           :color            "var(--text1)"
-           :background-color "var(--floating)"}]
-  [:&:active {:background-color "var(--content)"}]
-  [:.overlay {:overflow :hidden}]
-  ([{:keys [increase decrease value content]}]
-   [:<> [:div.base
-         {:style {:position  :relative
-                  :flex-grow 1
-                  :height    :100%
-                  :overflow  :hidden}}
+(o/defstyled up-down-button' :div
+  [:& :flex :flex-col :justify-around :items-center :select-none
+   {:position         :relative
+    :box-shadow       "var(--inner-shadow-1)"
+    :background-color "var(--floating)"
+    :border-radius    "var(--radius-1)"}
 
-         [:div.overlay.absolute.top-0.inset-x-0.item.z-40x
-          {:on-click decrease :style {:height "50%"}}]
+   #_[:div {;:margin "8px"
+            :background-color "red"}]
+   [:.some {:opacity    1
+            :color      "var(--selected-copy)"
+            :background "var(--selected)"}]
+   [:.zero {:opacity          1
+            :color            "var(--text1)"
+            :background-color "var(--floating)"}]
+   [:&:active {:background-color "var(--content)"}]
+   [:.overlay {:overflow :hidden}]])
 
-         [:div.overlay.absolute.bottom-0.inset-x-0.item.z-40x
-          {:on-click increase :style {:height "50%"}}]
+(o/defstyled center :div
+  :shrink-0 :w-full :flex-center
+  {:height :50%})
 
-         [:div.flex.items-end.justify-center.h-full.z-50x.pointer-events-none.base]
-
-         [:div.absolute.inset-0.pointer-events-none.pb-2.-debug.flex.items-end.justify-center
-          {:class (if (pos? value) :some :zero)}
-          [:div.text-black.font-normal (content value)]]]]))
+(defn up-down-button [{:keys [increase decrease value content]}]
+  (let [value (js/parseInt value)]
+    [up-down-button'
+     {:style {:position  :relative
+              :display   :flex
+              :flex-grow 1
+              :height    :100%
+              :overflow  :hidden}}
+     [:div {:class [:flex :opacity-50 :h-20 :items-end]} content]
+     [:div.inset-0.absolute.flex.flex-col.justify-between
+      {:style {:color "var(--text2)"}}
+      [center
+       {:class    [:absolute :top-0 :pb-10]
+        :on-click decrease}
+       (when (pos? value)
+         [sc/icon-small ico/minus])]
+      [center
+       {:class    [:absolute :bottom-0 :pt-10]
+        :on-click increase}
+       (if (zero? value)
+         [sc/icon-small ico/plus]
+         [sc/text1 value])]]]))
 
 (o/defstyled toggle-button :div
   :w-full :h-full
   {:display       :grid
    :place-content :center
-   :aspect-ratio  "1/1"
+   :xaspect-ratio "1/1"
    :border-radius "var(--radius-1)"}
   ([{:keys [on-click value on-style off-style content]}]
    ^{:on-click on-click}
@@ -142,25 +156,23 @@
 
 (o/defstyled panel :div
   [:& :mx-auto
-   {:border                "0"
-    :display               :grid
+   {:display               :grid
     :column-gap            "var(--size-2)"
-    :row-gap               "var(--size-2)"
+    :row-gap               "var(--size-3)"
+    :min-width             "20rem"
     :max-width             "20rem"
     :height                "100%"
     :grid-template-columns "repeat(5,1fr)"
-    :grid-template-rows    "auto 4rem auto auto auto repeat(5,4rem) "
-    :xgrid-auto-rows       "auto"}
-   [:&.mobile {:grid-template-areas [[". welcome" "welcome" "welcome" "welcome"]
-                                     ["check-a child" "juvenile" "moon" "adult"]
-                                     ["check-a child " "juvenile" "key" "adult"]
-                                     ["check-b  aboutyou aboutyou aboutyou aboutyou"]
+    :grid-template-rows    "4rem 4rem auto auto repeat(4,4rem)"}
+   [:&.mobile {:grid-template-areas [#_[". welcome" "welcome" "welcome" "welcome"]
+                                     ["check-a  child    juvenile moon        adult"]
+                                     ["check-a  child    juvenile key         adult"]
+                                     ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
                                      ["check-c    boats    boats    boats     boats"]
-                                     [". trash    input    input    add   "]
-                                     [". .        numpad   numpad   numpad"]
-                                     [". .        numpad   numpad   numpad"]
-                                     [". .        numpad   numpad   numpad"]
-                                     ["check-d complete numpad   numpad   numpad"]]}]
+                                     [". .          numpad   numpad   numpad"]
+                                     ["prev   next  numpad   numpad   numpad"]
+                                     [".      .     numpad   numpad   numpad"]
+                                     ["complete .   numpad   numpad   numpad"]]}]
 
    [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]
                                          ["child " "juvenile" "key" "adult"]

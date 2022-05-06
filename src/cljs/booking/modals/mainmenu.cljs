@@ -162,8 +162,7 @@
                close #(reset! !open? false)]
     (let [open? @!open?]
       [:<>
-       [:div.flex.items-center.justify-center
-        ;{:style {:z-index 1000}}
+       [:div.flex.items-center.justify-center.w-12
         [hoc.buttons/round
          {:on-click #(do
                        (open)
@@ -241,12 +240,7 @@
      [scm/settings-floating
       {:data       (mainmenu-definitions r)
        :showing!   mainmenu-visible
-       :close-menu #(rf/dispatch [:lab/close-menu])
-       :button     (fn [open]
-                     [hoc.buttons/round'
-                      {:style {:cursor :pointer}
-                       :class [:w-12]}
-                      [sc/icon (if open ico/cog-open ico/cog)]])}]]
+       :close-menu #(rf/dispatch [:lab/close-menu])}]]
     #_[:div.fixed.inset-0
        [kee-frame.error/boundary
         (fn default-error-body [[err info]]

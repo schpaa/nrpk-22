@@ -3,9 +3,10 @@
             ["@heroicons/react/outline" :as outline]))
 
 (def plus [:> solid/PlusIcon])
+(def minus [:> solid/MinusIcon])
 (def plusplus [:> solid/PlusCircleIcon])
 (def trash [:> outline/TrashIcon])
-(def check [:> outline/CheckIcon])
+(def check [:> solid/CheckIcon])
 (def eye [:> outline/EyeIcon])
 (def pencil [:> outline/PencilIcon])
 (def qrcode [:> outline/QrcodeIcon])
@@ -69,7 +70,7 @@
 (def ikkeStjerne [:> outline/StarIcon])
 (def arrowRight [:> solid/ArrowCircleRightIcon])
 (def arrowLeft [:> solid/ArrowCircleLeftIcon])
-(def arrowRight' [:> outline/ArrowRightIcon])
+(def arrowRight' [:> solid/ArrowNarrowRightIcon])
 (def arrowLeft' [:> outline/ArrowLeftIcon])
 
 (def backspace [:> solid/BackspaceIcon])

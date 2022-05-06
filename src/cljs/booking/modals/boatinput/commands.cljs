@@ -37,7 +37,7 @@
     (swap! st dissoc :selected)))
 
 (defn reset-command [st]
-  (reset! st nil))
+  (reset! st {:focus :phone}))
 
 (defn backspace-clicked [st c-textinput]
   (swap! c-textinput (fn [s] (subs (str s) 0 (dec (count s)))))

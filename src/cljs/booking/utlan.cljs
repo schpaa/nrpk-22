@@ -491,7 +491,7 @@
 
    [sc/row-sc-g2-w
     [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
-    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
+
     [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
 
    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
@@ -501,7 +501,8 @@
    [sc/row-sc-g2-w
     [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
     [hoc.buttons/danger-pill {:disabled true
-                              :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]])
+                              :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]
+    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]]])
 
 
 

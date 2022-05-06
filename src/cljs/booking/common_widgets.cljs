@@ -84,12 +84,13 @@
       :class    [:gap-2 :w-full :flex :flex-row-reverse :justify-center]
       :on-click #(on-click current-page)}
 
-     (when caption
-       [sc/text2 {:style {:width       "auto"
-                          :white-space :normal
-                          :color       "unset"
-                          :flex-grow   1
-                          :flex        "1 1 auto"}} caption])
+     (when right-side
+       (when caption
+         [sc/text2 {:style {:width       "auto"
+                            :white-space :normal
+                            :color       "unset"
+                            :flex-grow   1
+                            :flex        "1 1 auto"}} caption]))
 
      (when right-side
        (when with-caption?

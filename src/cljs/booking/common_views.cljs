@@ -74,17 +74,12 @@
   :flex :items-center :w-full :px-2 :gap-2
   {:height "var(--size-9)"}
   [:at-media {:min-width "511px"}
-   {:border-top-right-radius "var(--radius-3)"
-    :xborder-right           "1px solid var(--toolbar-)"}])
+   {:border-top-right-radius "var(--radius-3)"}])
 
 (o/defstyled header-top :div
   :flex :items-center :w-full :px-2 :gap-2
-  {;:outline "1px solid red"
-   :background "var(--content)"
-   :height     "var(--size-9)"}
-  [:at-media {:min-width "511px"}
-   {;:border-top-right-radius "var(--radius-3)"
-    :xborder-right "1px solid var(--toolbar-)"}])
+  {:background "var(--content)"
+   :height     "var(--size-9)"})
 
 ;endregion
 
@@ -407,7 +402,7 @@
       :style {:z-index 1}}
      (let [items [location
                   [:div.flex-grow.w-full]
-                  [main-menu r]]
+                  [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
            items (if @switch? (reverse items) items)]
        (if frontpage

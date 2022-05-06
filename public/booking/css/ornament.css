@@ -101,6 +101,44 @@ outline: 2px solid #a0a8;
   }
 }
 
+
+.bg-unfocused-field {
+    background: var(--field1);
+    color: var(--text2);
+}
+
+.bg-focused-field {
+    background: var(--field2);
+    color: var(--text1);
+}
+
+.outline-focused-field:focus {
+    outline: var(--brand1) 2px solid;
+}
+
+@keyframes "blinking" {
+  from, to {
+    color: transparent;
+  }
+  20% {
+    color: var(--text0);
+  }
+}
+
+
+.blinking-cursor {
+  font-weight: 500;
+  font-size: unset;
+/*
+  -webkit-animation: 1.4s blinking step-end infinite;
+  -moz-animation: 1.4s blinking step-end infinite;
+  -ms-animation: 1.4s blinking step-end infinite;
+  -o-animation: 1.4s blinking step-end infinite;
+*/
+  animation: 1.4s blinking step-end infinite;
+}
+
+
 :root {
     --radius-0: 3px;
     --radius-1: 6px;
@@ -192,59 +230,6 @@ outline: 2px solid #a0a8;
     --dim-field-focus: var(--gray-8);
     --dim-fieldcopy: var(--gray-3);
 
-
-    /* ----------------------------- */
-
-   /* brand */
-
-
-/*
-   --brand1-light: hsl(var(--brand-hue), 69%, 40%); //#68A73D;
-   --brand1-copy-light: white;
-
-   --brand1-hover-light: var(--red-3);
-   --brand2-light: hsl(var(--brand-hue), 39%, 30%);
-
-
-
-    --brand1-copy-dim: white; */
-/* when copy is placed on --brand1-dim *//*
-
-    --brand1-hover-dim: var(--orange-3);
-    --brand1-copy-light: white; */
-/* when copy is placed on --brand1-light *//*
-
-
-   --brand2-dim: var(--green-1);
-*/
-
-    /* button dark */
-
-/*
-   --buttoncta0-dim: hsl(100, 39%, 5%);
-   --buttoncta1-dim: hsl(100, 39%, 50%);
-   --buttoncta0-dim: var(--green-3);
-   --buttoncta1-dim: var(--green-7);
-   --buttoncta2-dim: var(--green-8);
-   --buttondanger0-dim: var(--red-3);
-   --buttondanger1-dim: var(--red-7);
-   --buttondanger2-dim: var(--red-8);
-   --button0-dim: var(--gray-1);
-   --button1-dim: var(--gray-8);
-   --button2-dim: var(--gray-9);
-*/
-
-    /* button light */
-
-/*
-    --buttoncta0-light: white;
-    --buttoncta1-light: var(--green-8);
-    --buttoncta2-light: var(--green-7);
-    --buttondanger0-light: var(--red-1);
-    --buttondanger1-light: var(--red-6);
-    --buttondanger2-light: var(--red-5);
-*/
-
     /* body copy */
 
     --text0-light: var(--gray-9);
@@ -265,66 +250,27 @@ outline: 2px solid #a0a8;
     --text3-dim: var(--gray-8);
     --label-dim: var(--green-5);
 
-   /* background surfaces*/
-
     --textmarker-background-light: var(--yellow-2);
-/*
-
-    --surface000-light: var(--gray-0);
-    --surface00-light: var(--gray-1);
-    --surface0-light: var(--gray-2);
-    --surface1-light: var(--gray-3); */
-/* surface-background of entities and elements *//*
-
-    --surface2-light: var(--gray-4); */
-/* content-background of slidein menu, a platform for content (on top of system-background) *//*
-
-    --surface3-light: var(--gray-5); */
-/* surface-background of slidein menu, toolbar, system-background etc *//*
-
-    --surface4-light: var(--gray-6);
-    --surface5-light: var(--gray-9);
-    --surface6-light: var(--gray-6);
-    --surface7-light: var(--gray-7);
-    --surface8-light: var(--gray-8);
-    --surface9-light: var(--gray-9);
-
-*/
     --textmarker-background-dim: var(--yellow-5);
 
-    --surface000-dim: var(--gray-9);
-    --surface00-dim: var(--gray-8);
-    --surface0-dim: var(--gray-7); /* var(--gray-7); */
-    --surface1-dim: var(--gray-6); /* surface-background of entities and elements */
-    --surface2-dim: var(--gray-5); /* content-background of slidein menu, can contain entities and elements */
-    --surface3-dim: var(--gray-4); /* surface-background of slidein menu, contains the content above */
-    --surface4-dim: var(--gray-3);
-    --surface5-dim: var(--gray-2);
+    --light-selected: var(--gray-1);
+    --light-selected-copy: var(--pink-5);
+    --dim-selected: var(--gray-1);
+    --dim-selected-copy: var(--pink-5);
 
-    /* unused? */
+    --dim-vener-hl: rgba(255,255,255,0.3);
+    --light-vener-hl: rgba(0,0,0,0.3);
 
-    /* These should have a different tone of gray, perhaps a warm in contrast to a neutral gray (for the surfaces above) */
+    --dim-vener: rgba(255,255,255,0.05);
+    --light-vener: rgba(0,0,0,0.05);
 
-    --button00-light: var(--gray-0);
-    --button0-light: var(--gray-9);
-    --button1-light: var(--gray-4);
-    --button2-light: var(--gray-3);
-
-    --buttonbase-disabled-light: var(--gray-1);
-    --buttonbase-light: var(--gray-3);
-    --buttontext-light: var(--gray-7);
-    --buttonbase-hover-light: var(--gray-2);
-    --buttonbase-active-light: var(--gray-5);
-
-
+    --text-light: var(--gray-6);
+    --text-dim: var(--gray-4);
 }
 
 
 /*@media (prefers-color-scheme: light) {*/
 :root {
-
-    
-
     --brand1: var(--brand1-light);
     --brand1-copy: var(--brand1-copy-light);
     --brand1-hover: var(--brand1-hover-light);
@@ -390,43 +336,43 @@ outline: 2px solid #a0a8;
        --logg-ut: var(--red-5);
 */
 
-        --toolbar: var(--light-toolbar);
-        --toolbar-: var(--light-toolbar-);
-        --content: var(--light-content);
-        --floating: var(--light-floating);
-        --switchon: var(--light-switchon);
-        --switchoff: var(--light-switchoff);
-        --brand1: var(--light-brand1);
-        --brand1-weak: var(--light-brand1-weak);
-        --brand1-bright: var(--light-brand1-bright);
-        --brand1-copy: var(--light-brand1-copy);
-        --brand2: var(--light-brand2);
-        --brand2-weak: var(--light-brand2-weak);
-        --brand2-bright: var(--light-brand2-bright);
-        --button: var(--light-button);
-        --button-bright: var(--light-button-bright);
-        --buttoncopy: var(--light-buttoncopy);
-        --danger: var(--light-danger);
-        --danger-bright: var(--light-danger-bright);
-        --dangercopy: var(--light-dangercopy);
-        --field: var(--light-field);
-        --field-focus: var(--light-field-focus);
-        --fieldcopy: var(--light-fieldcopy);
+    --toolbar: var(--light-toolbar);
+    --toolbar-: var(--light-toolbar-);
+    --content: var(--light-content);
+    --floating: var(--light-floating);
+    --switchon: var(--light-switchon);
+    --switchoff: var(--light-switchoff);
+    --brand1: var(--light-brand1);
+    --brand1-weak: var(--light-brand1-weak);
+    --brand1-bright: var(--light-brand1-bright);
+    --brand1-copy: var(--light-brand1-copy);
+    --brand2: var(--light-brand2);
+    --brand2-weak: var(--light-brand2-weak);
+    --brand2-bright: var(--light-brand2-bright);
+    --button: var(--light-button);
+    --button-bright: var(--light-button-bright);
+    --buttoncopy: var(--light-buttoncopy);
+    --danger: var(--light-danger);
+    --danger-bright: var(--light-danger-bright);
+    --dangercopy: var(--light-dangercopy);
+    --field: var(--light-field);
+    --field-focus: var(--light-field-focus);
+    --fieldcopy: var(--light-fieldcopy);
+    --selected: var(--light-selected);
+    --selected-copy: var(--light-selected-copy);
+    --vener: var(--light-vener);
+    --vener-hl: var(--light-vener-hl);
+    --text: var(--text-light);
+
 }
 
 
 .dark {
+    --brand1: var(--brand1-dim);
 
-    
-/*
-    --brand1: var(--dim-brand1);
-    --brand2: var(--dim-brand2);
-    --brand3: var(--dim-brand3);
-    --brand4: var(--dim-brand4);
-    --brand5: var(--dim-brand5);
-    --brand1-copy: var(--brand1-copy-dim);
-    --brand1-hover: var(--brand1-hover-dim);
-*/
+    --selected: var(--dim-selected);
+    --selected-copy: var(--dim-selected-copy);
+
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
@@ -437,12 +383,6 @@ outline: 2px solid #a0a8;
     --text2: var(--text2-dim);
     --text3: var(--text3-dim);
 
-/*
-    --font-weight-1: var(--font-weight-1);
-    --font-weight-2: var(--font-weight-2);
-    --font-weight-3: var(--font-weight-3);
-*/
-
     --field1: var(--gray-4); /* focused field */
     --field2: var(--gray-7); /* unfocused/passive field */
 
@@ -450,18 +390,8 @@ outline: 2px solid #a0a8;
    --brand000: var(--brand000-dim);
    --brand00: var(--brand00-dim);
    --brand0: var(--brand0-dim);
-   
 
       --label: var(--label-dim);
-
-      --surface000: var(--surface000-dim);
-      --surface00: var(--surface00-dim);
-      --surface0: var(--surface0-dim);
-      --surface1: var(--surface1-dim);
-      --surface2: var(--surface2-dim);
-      --surface3: var(--surface3-dim);
-      --surface4: var(--surface4-dim);
-      --surface5: var(--surface5-dim);
 
     /* buttons */
     --buttonbase: var(--gray-6);
@@ -503,45 +433,12 @@ outline: 2px solid #a0a8;
         --field: var(--dim-field);
         --field-focus: var(--dim-field-focus);
         --fieldcopy: var(--dim-fieldcopy);
-    
+
+    --vener: var(--dim-vener);
+    --vener-hl: var(--dim-vener-hl);
+    --text: var(--text-dim);
 }
 
-
-.bg-unfocused-field {
-    background: var(--field1);
-    color: var(--text2);
-}
-
-.bg-focused-field {
-    background: var(--field2);
-    color: var(--text1);
-}
-
-.outline-focused-field:focus {
-    outline: var(--brand1) 2px solid;
-}
-
-@keyframes "blinking" {
-  from, to {
-    color: transparent;
-  }
-  20% {
-    color: var(--text0);
-  }
-}
-
-
-.blinking-cursor {
-  font-weight: 500;
-  font-size: unset;
-/*
-  -webkit-animation: 1.4s blinking step-end infinite;
-  -moz-animation: 1.4s blinking step-end infinite;
-  -ms-animation: 1.4s blinking step-end infinite;
-  -o-animation: 1.4s blinking step-end infinite;
-*/
-  animation: 1.4s blinking step-end infinite;
-}
 
 
 *, *::before, *::after {
@@ -784,7 +681,7 @@ body {
 .schpaa_style_button2__attn_regular{transition-duration:50ms;font-weight:var(--font-weight-6)}.schpaa_style_button2__attn_regular{background-color:var(--gray-1);font-weight:var(--font-weight-7);box-shadow:var(--shadow-2);color:var(--gray-8)}.schpaa_style_button2__attn_regular:disabled{opacity:.1;filter:saturate(0%)}.schpaa_style_button2__attn_regular:enabled:active{background-color:var(--brand1-bright)}.schpaa_style_button2__attn_regular{min-width:7rem;font-family:Inter;outline-offset:0;white-space:nowrap;padding-inline:var(--size-5);font-weight:var(--font-weight-4);font-size:var(--font-size-1);border-radius:var(--radius-1);padding-block:var(--size-3)}.schpaa_style_button2__attn_regular.small{min-width:5rem;height:2.5rem;padding-inline:var(--size-3);font-size:var(--font-size-0);border-radius:var(--radius-0);padding-block:var(--size-2)}.schpaa_style_button2__attn_regular:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_button2__attn_regular:enabled:active:hover,.schpaa_style_button2__attn_regular:enabled:focus-visible{box-shadow:0 0 0 2px var(--content),0 0 0 6px var(--brand2-weak)}
 .schpaa_style_button2__cta_outline{transition-duration:50ms}.schpaa_style_button2__cta_outline{border:2px solid var(--brand1);color:var(--text0)}.schpaa_style_button2__cta_outline:hover{background-color:var(--brand1);color:var(--brand1-copy)}.schpaa_style_button2__cta_outline:disabled{opacity:.3;filter:saturate(0%)}.schpaa_style_button2__cta_outline:enabled:active{background-color:var(--brand1-bright)}.schpaa_style_button2__cta_outline{min-width:7rem;font-family:Inter;outline-offset:0;white-space:nowrap;padding-inline:var(--size-5);font-weight:var(--font-weight-4);font-size:var(--font-size-1);border-radius:var(--radius-1);padding-block:var(--size-3)}.schpaa_style_button2__cta_outline.small{min-width:5rem;height:2.5rem;padding-inline:var(--size-3);font-size:var(--font-size-0);border-radius:var(--radius-0);padding-block:var(--size-2)}.schpaa_style_button2__cta_outline:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_button2__cta_outline:enabled:active:hover,.schpaa_style_button2__cta_outline:enabled:focus-visible{box-shadow:0 0 0 2px var(--content),0 0 0 6px var(--brand2-weak)}
 .schpaa_style_button2__danger_regular{transition-duration:50ms}.schpaa_style_button2__danger_regular{background-color:var(--danger-bright);color:var(--dangercopy)}.schpaa_style_button2__danger_regular:active{background-color:var(--danger-bright)}.schpaa_style_button2__danger_regular:disabled{filter:grayscale(100);opacity:.3}.schpaa_style_button2__danger_regular{min-width:7rem;font-family:Inter;outline-offset:0;white-space:nowrap;padding-inline:var(--size-5);font-weight:var(--font-weight-4);font-size:var(--font-size-1);border-radius:var(--radius-1);padding-block:var(--size-3)}.schpaa_style_button2__danger_regular.small{min-width:5rem;height:2.5rem;padding-inline:var(--size-3);font-size:var(--font-size-0);border-radius:var(--radius-0);padding-block:var(--size-2)}.schpaa_style_button2__danger_regular:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_button2__danger_regular:enabled:active:hover,.schpaa_style_button2__danger_regular:enabled:focus-visible{box-shadow:0 0 0 2px var(--content),0 0 0 6px var(--brand2-weak)}
-.schpaa_style_button2__round{transition-duration:50ms;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;border-radius:var(--radius-round);background-color:var(--content);color:var(--text2)}.schpaa_style_button2__round:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_button2__round:enabled:active:hover,.schpaa_style_button2__round:enabled:focus-visible{box-shadow:0 0 0 2px var(--content),0 0 0 6px var(--brand2-weak)}.schpaa_style_button2__round:hover{color:var(--text1)}.schpaa_style_button2__round.large{width:3rem}
+.schpaa_style_button2__round{transition-duration:50ms;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;border-radius:var(--radius-round);color:var(--text2)}.schpaa_style_button2__round:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_button2__round:enabled:active:hover,.schpaa_style_button2__round:enabled:focus-visible{box-shadow:0 0 0 2px var(--content),0 0 0 6px var(--brand2-weak)}.schpaa_style_button2__round:hover{color:var(--text1)}.schpaa_style_button2__round.large{min-width:3rem}
 .schpaa_style_button2__round_SINGLEQUOTE_{transition-duration:50ms;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;border-radius:var(--radius-round);background-color:none;color:var(--text2)}.schpaa_style_button2__round_SINGLEQUOTE_:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_button2__round_SINGLEQUOTE_:enabled:active:hover,.schpaa_style_button2__round_SINGLEQUOTE_:enabled:focus-visible{box-shadow:0 0 0 2px var(--content),0 0 0 6px var(--brand2-weak)}.schpaa_style_button2__round_SINGLEQUOTE_:active{color:var(--text2)}.schpaa_style_button2__round_SINGLEQUOTE_:hover{color:var(--text1)}
 .schpaa_style_button__base_button{--gi-shadow:0 1px 2px 0 rgba(0,0,0,0.05);justify-content:center;align-items:center;padding-inline:var(--size-2);min-height:3rem;font-weight:var(--font-weight-5);box-shadow:var(--gi-ring-offset-shadow,0 0 #0000),var(--gi-ring-shadow,0 0 #0000),var(--gi-shadow);font-size:var(--font-size-1);border-radius:var(--radius-2);display:flex;padding-block:var(--size-2)}.schpaa_style_button__base_button:disabled{opacity:.25}
 .schpaa_style_button__more_base_button{--gi-shadow:0 1px 2px 0 rgba(0,0,0,0.05);min-width:6rem;justify-content:center;align-items:center;font-weight:var(--font-weight-5);box-shadow:var(--gi-ring-offset-shadow,0 0 #0000),var(--gi-ring-shadow,0 0 #0000),var(--gi-shadow);font-size:var(--font-size-1);border-radius:var(--radius-2);display:flex}.schpaa_style_button__more_base_button:disabled{opacity:.25}
@@ -810,13 +707,13 @@ body {
 .schpaa_style_ornament__button_caption{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
 .schpaa_style_ornament__text{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
 .schpaa_style_ornament__text_inline{color:var(--text1);line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
-.schpaa_style_ornament__text0{color:var(--text0)}.schpaa_style_ornament__text0{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
-.schpaa_style_ornament__text1{color:var(--text1)}.schpaa_style_ornament__text1{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
-.schpaa_style_ornament__text1_with{display:inline-block;color:var(--text1)}.schpaa_style_ornament__text1_with{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
+.schpaa_style_ornament__text0{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);font-weight:var(--font-weight-6);color:var(--text1)}
+.schpaa_style_ornament__text1{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);color:var(--text1)}
+.schpaa_style_ornament__text1_with{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);display:inline-block;color:var(--text1)}
 .schpaa_style_ornament__text1_cl{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
 
 .schpaa_style_ornament__strong{font-weight:bold;color:var(--text1)}
-.schpaa_style_ornament__text2{color:var(--text2)}.schpaa_style_ornament__text2{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
+.schpaa_style_ornament__text2{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);color:var(--text2)}
 .schpaa_style_ornament__text3,.schpaa_style_ornament__text{color:var(--text3)}
 .schpaa_style_ornament__fp_header{color:var(--text1);font-family:Inter;letter-spacing:var(--font-letterspacing-0);font-size:var(--font-size-4);font-weight:var(--font-weight-3)}
 .schpaa_style_ornament__fp_text{color:var(--text0);line-height:var(--font-lineheight-3);font-size:var(--font-size-2);font-weight:var(--font-weight-4)}
@@ -921,7 +818,7 @@ body {
 .schpaa_style_ornament__small_rounded{border-radius:var(--radius-1)}
 .schpaa_style_ornament__selected_cell{background:var(--brand1)}
 .schpaa_style_ornament__normal_cell{background:var(--surface1)}
-.schpaa_style_ornament__badge{height:100%;width:100%;box-shadow:var(--shadow-2);display:inline-flex;color:var(--gray-9);justify-content:center;align-items:center;font-size:var(--font-size-5);font-weight:var(--font-weight-6);letter-spacing:var(--font-letterspacing-0);border-radius:var(--radius-0)}.schpaa_style_ornament__badge{font-family:oswald}.schpaa_style_ornament__badge.disabled{background:rgba(0,0,0,0.1)}.schpaa_style_ornament__badge.small{font-size:var(--font-size-3);max-width:4rem}.schpaa_style_ornament__badge.normal{color:var(--gray-7);background:var(--gray-0)}.schpaa_style_ornament__badge.selected{color:var(--brand1-copy);background:var(--brand1)}.schpaa_style_ornament__badge.highlighted{outline:2px solid var(--red-5);color:var(--pink-2);background:var(--pink-9)}
+.schpaa_style_ornament__badge{width:100%;justify-content:center;font-family:Oswald;height:var(--size-8);align-items:center;font-weight:var(--font-weight-5);box-shadow:var(--shadow-1);font-size:var(--font-size-4);letter-spacing:var(--font-letterspacing-1);border-radius:var(--radius-0);display:inline-flex;background:var(--gray-9);max-height:var(--size-8);color:var(--gray-1)}.schpaa_style_ornament__badge:focus{outline:2px solid transparent;outline-offset:2px}.schpaa_style_ornament__badge:hover{cursor:default}.schpaa_style_ornament__badge.disabled{background:rgba(0,0,0,0.1)}.schpaa_style_ornament__badge.small{font-size:var(--font-size-3);max-width:4rem}.schpaa_style_ornament__badge.selected{color:var(--brand1-copy);background:var(--brand1)}.schpaa_style_ornament__badge.highlighted{outline:2px solid var(--red-5);color:var(--pink-2);background:var(--pink-9)}
 .schpaa_style_ornament__badge_big{padding-inline:var(--size-2);font-weight:var(--font-weight-6);box-shadow:var(--inner-shadow-2);font-size:var(--font-size-5);letter-spacing:var(--font-letterspacing-1);border-radius:var(--radius-1);padding-block:var(--size-3);background:white;color:var(--surface4)}.schpaa_style_ornament__badge_big{height:2.5rem}.schpaa_style_ornament__badge_big{font-family:oswald}.schpaa_style_ornament__badge_big{display:flex;justify-content:center;align-items:center}
 .schpaa_style_ornament__badge_2{border-radius:var(--radius-1);place-content:center;text-indent:initial;padding-inline:var(--size-2);cursor:pointer;font-weight:var(--font-weight-5);font-size:var(--font-size-2);letter-spacing:var(--font-letterspacing-1);display:grid;padding-block:var(--size-1);background:var(--gray-9);color:var(--gray-1)}.schpaa_style_ornament__badge_2{font-family:oswald}.schpaa_style_ornament__badge_2.active{background:var(--yellow-7);color:var(--gray-9)}.schpaa_style_ornament__badge_2.in-use{background:var(--blue-7);color:var(--blue-1)}.schpaa_style_ornament__badge_2.big{min-width:var(--size-8);font-size:var(--font-size-3)}.schpaa_style_ornament__badge_2.small{border-radius:var(--radius-0);width:3em;min-width:2em;letter-spacing:var(--font-letterspacing-2);font-size:var(--font-size-0)}.schpaa_style_ornament__badge_2.out-of-order{background:var(--red-7);color:var(--red-1)}.schpaa_style_ornament__badge_2.invert{background:var(--teal-7);color:var(--teal-1)}
 .schpaa_style_ornament__pill{align-items:center;padding-inline:var(--size-2);font-weight:var(--font-weight-4);font-size:var(--font-size-0);letter-spacing:var(--font-letterspacing-2);display:flex;padding-block:var(--size-0);background:var(--surface1);color:var(--surface4)}.schpaa_style_ornament__pill{border-radius:var(--radius-4);display:inline-block;height:auto}
@@ -989,20 +886,20 @@ body {
 .booking_fileman__listitem{display:flex;align-items:center;padding-block:var(--size-1)}.booking_fileman__listitem .selected{width:100%;padding-inline:var(--size-2);border-radius:var(--radius-2);color:hsla(0,0%,0%,1);xbackground:hsla(0,0%,0%,0.09)}.booking_fileman__listitem .normal{width:100%;padding-inline:var(--size-2);color:var(--buttoncopy)}.booking_fileman__listitem:hover{border-radius:var(--radius-1);background:hsla(0,0%,0%,0.1)}
 .booking_aktivitetsliste__listitem{padding-top:.25rem;padding-bottom:.25rem}.booking_aktivitetsliste__listitem{display:flex;align-items:flex-end}.booking_aktivitetsliste__listitem .selected{width:100%;padding-inline:var(--size-2);border-radius:var(--radius-2);color:hsla(0,0%,0%,1);background:hsla(0,0%,0%,0.09)}.booking_aktivitetsliste__listitem .normal{width:100%;padding-inline:var(--size-2);color:hsla(0,0%,0%,0.5)}.booking_aktivitetsliste__listitem:hover{border-radius:var(--radius-1);background:hsla(0,0%,0%,0.035)}
 .booking_aktivitetsliste__mini_badge{box-shadow:var(--shadow-2)}.booking_aktivitetsliste__mini_badge div{height:100%;width:100%;display:inline-flex;justify-content:center;align-items:center;border-radius:var(--radius-0);font-size:var(--font-size-0);font-weight:var(--font-weight-5)}.booking_aktivitetsliste__mini_badge div{font-family:oswald}.booking_aktivitetsliste__mini_badge div.normal{color:var(--text1);letter-spacing:var(--font-letterspacing-2);background:var(--surface1)}.booking_aktivitetsliste__mini_badge div.selected{background:var(--yellow-5)}
-.booking_modals_boatinput_styles__input_caption{font-familys:Oswald;font-family:Inter;font-size:var(--font-size-4);letter-spacing:var(--font-letterspacing-0);font-weight:var(--font-weight-4)}
-.booking_modals_boatinput_styles__button_caption{font-family:Inter;font-size:var(--font-size-5);font-weight:var(--font-weight-5)}
+.booking_modals_boatinput_styles__input_caption{font-family:Inter;font-size:var(--font-size-5);letter-spacing:var(--font-letterspacing-0);font-weight:var(--font-weight-5)}
+.booking_modals_boatinput_styles__button_caption{font-family:Inter;font-size:var(--font-size-5);font-weight:var(--font-weight-6)}
 .booking_modals_boatinput_styles__button{width:100%;height:100%;display:grid;place-content:center;border-radius:var(--radius-1);background:var(--surface4);color:var(--surface1)}.booking_modals_boatinput_styles__button:hover{background:var(--surface5)}.booking_modals_boatinput_styles__button:disabled{color:var(--surface2);background:0}.booking_modals_boatinput_styles__button:active:enabled{background:var(--surface3);color:var(--surface2)}
-.booking_modals_boatinput_styles__delete_button{width:100%;height:100%;display:grid;place-content:center;border-radius:var(--radius-1);background:var(--red-9);color:var(--red-1)}.booking_modals_boatinput_styles__delete_button:hover{background:var(--red-8);color:var(--red-2)}.booking_modals_boatinput_styles__delete_button:disabled{color:var(--text3);background:0}.booking_modals_boatinput_styles__delete_button:active:enabled{background:var(--red-7);color:var(--red-1)}
-.booking_modals_boatinput_styles__add_button{width:100%;height:100%;display:grid;place-content:center;border-radius:var(--radius-1)}.booking_modals_boatinput_styles__add_button.add{background:var(--green-6);color:var(--green-1)}.booking_modals_boatinput_styles__add_button:hover{background:var(--green-5);color:var(--green-1)}.booking_modals_boatinput_styles__add_button:disabled{color:var(--text3);background:0}.booking_modals_boatinput_styles__add_button:active:enabled{background:var(--green-7);color:var(--green-1)}
-.booking_modals_boatinput_styles__numberpad_button{width:100%;height:100%;transition-duration:100ms;display:grid;place-content:center;border-radius:var(--radius-0);color:var(--text0)}.booking_modals_boatinput_styles__numberpad_button.button-pad{background:var(--floating)}.booking_modals_boatinput_styles__numberpad_button.button-pad:hover{background:var(--floating);color:var(--text0)}.booking_modals_boatinput_styles__numberpad_button.button-pad:active:enabled{background:var(--surface3);color:red}.booking_modals_boatinput_styles__numberpad_button:disabled{color:var(--text3);background:var(--toolbar)}
-.booking_modals_boatinput_styles__up_down_button{height:100%;font-family:Inter;font-size:var(--font-size-5);font-weight:var(--font-weight-5);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-0)}.booking_modals_boatinput_styles__up_down_button .base{border-radius:var(--radius-0)}.booking_modals_boatinput_styles__up_down_button .some{opacity:1;color:black;background-color:var(--yellow-5)}.booking_modals_boatinput_styles__up_down_button .zero{opacity:1;color:var(--text1);background-color:var(--floating)}.booking_modals_boatinput_styles__up_down_button:active{background-color:var(--content)}.booking_modals_boatinput_styles__up_down_button .overlay{overflow:hidden}
-.booking_modals_boatinput_styles__toggle_button{width:100%;height:100%;display:grid;place-content:center;aspect-ratio:1/1;border-radius:var(--radius-1)}
-.booking_modals_boatinput_styles__panel{margin-left:auto;margin-right:auto;max-width:20rem;column-gap:var(--size-2);height:100%;grid-template-rows:auto 4rem auto auto auto repeat(5,4rem);border:0;row-gap:var(--size-2);display:grid;grid-template-columns:repeat(5,1fr);xgrid-auto-rows:auto}.booking_modals_boatinput_styles__panel.mobile{grid-template-areas:". welcome welcome welcome welcome" "check-a child juvenile moon adult" "check-a child  juvenile key adult" "check-b  aboutyou aboutyou aboutyou aboutyou" "check-c    boats    boats    boats     boats" ". trash    input    input    add   " ". .        numpad   numpad   numpad" ". .        numpad   numpad   numpad" ". .        numpad   numpad   numpad" "check-d complete numpad   numpad   numpad"}.booking_modals_boatinput_styles__panel.right-side{grid-template-areas:"child juvenile moon adult" "child  juvenile key adult" "boat boat boat boat" "boat boat boat boat" "trash input input add" "boats numpad numpad numpad" "boats numpad numpad numpad" "restart numpad numpad numpad" "complete numpad numpad numpad"}.booking_modals_boatinput_styles__panel.left-side{grid-template-areas:"adult moon juvenile child" "adult key juvenile child" "boat boat boat boat" "boat boat boat boat" "add input input trash" "numpad numpad numpad boats" "numpad numpad numpad boats" "numpad numpad numpad restart" "numpad numpad numpad complete"}
+.booking_modals_boatinput_styles__delete_button{width:100%;height:100%;display:grid;place-content:center;border-radius:var(--radius-0);color:var(--red-5)}.booking_modals_boatinput_styles__delete_button:hover{background:var(--red-8);color:var(--red-2)}.booking_modals_boatinput_styles__delete_button:disabled{color:var(--text3);background:0}.booking_modals_boatinput_styles__delete_button:active:enabled{background:var(--red-7);color:var(--red-1)}
+.booking_modals_boatinput_styles__add_button{width:100%;height:100%;display:grid;place-content:center;border-radius:var(--radius-0)}.booking_modals_boatinput_styles__add_button.add{color:var(--green-1)}.booking_modals_boatinput_styles__add_button:disabled{opacity:.2;color:var(--text1);background:var(--toolbar)}.booking_modals_boatinput_styles__add_button:active:enabled{background:var(--green-7);color:var(--green-1)}
+.booking_modals_boatinput_styles__numberpad_button{width:100%;height:100%;transition-duration:100ms;display:grid;background-color:var(--floating);place-content:center;border-radius:var(--radius-0);color:var(--text1)}.booking_modals_boatinput_styles__numberpad_button:hover{background:var(--floating);color:var(--text0)}.booking_modals_boatinput_styles__numberpad_button:active:enabled{background:var(--surface3);color:red}.booking_modals_boatinput_styles__numberpad_button:disabled{color:var(--text);opacity:.2;background:var(--toolbar-)}
+.booking_modals_boatinput_styles__up_down_button{height:100%;font-family:Inter;font-size:var(--font-size-5);font-weight:var(--font-weight-5);box-shadow:var(--inner-shadow-1)}.booking_modals_boatinput_styles__up_down_button .base{border-radius:var(--radius-1)}.booking_modals_boatinput_styles__up_down_button .some{opacity:1;color:black;background-color:var(--yellow-5)}.booking_modals_boatinput_styles__up_down_button .zero{opacity:1;color:var(--text1);background-color:var(--floating)}.booking_modals_boatinput_styles__up_down_button:active{background-color:var(--content)}.booking_modals_boatinput_styles__up_down_button .overlay{overflow:hidden}
+.booking_modals_boatinput_styles__toggle_button{width:100%;height:100%;display:grid;place-content:center;xaspect-ratio:1/1;border-radius:var(--radius-1)}
+.booking_modals_boatinput_styles__panel{margin-left:auto;margin-right:auto;display:grid;column-gap:var(--size-2);row-gap:var(--size-3);min-width:20rem;max-width:20rem;height:100%;grid-template-columns:repeat(5,1fr);grid-template-rows:4rem 4rem auto auto repeat(4,4rem)}.booking_modals_boatinput_styles__panel.mobile{grid-template-areas:"check-a  child    juvenile moon        adult" "check-a  child    juvenile key         adult" "check-b  aboutyou aboutyou aboutyou    aboutyou" "check-c    boats    boats    boats     boats" ". .          numpad   numpad   numpad" "prev   next  numpad   numpad   numpad" ".      .     numpad   numpad   numpad" "complete .   numpad   numpad   numpad"}.booking_modals_boatinput_styles__panel.right-side{grid-template-areas:"child juvenile moon adult" "child  juvenile key adult" "boat boat boat boat" "boat boat boat boat" "trash input input add" "boats numpad numpad numpad" "boats numpad numpad numpad" "restart numpad numpad numpad" "complete numpad numpad numpad"}.booking_modals_boatinput_styles__panel.left-side{grid-template-areas:"adult moon juvenile child" "adult key juvenile child" "boat boat boat boat" "boat boat boat boat" "add input input trash" "numpad numpad numpad boats" "numpad numpad numpad boats" "numpad numpad numpad restart" "numpad numpad numpad complete"}
 .booking_modals_boatinput_styles__pad div{background:var(--surface0);aspect-ratio:1/1}.booking_modals_boatinput_styles__pad div{display:flex;justify-content:center;align-items:center}
 .booking_content_booking-blog__top_right_date{top:0;right:0;position:absolute}
 .booking_modals_centered__experimental{display:grid;place-content:end;background-color:var(--toolbar-);border-radius:var(--radius-0);width:100%;height:100%}@media(max-width:511px){.booking_modals_centered__experimental{width:100vw;height:100vh}}
 .booking_reports__table_controller_report{overflow-x:auto;width:calc(100vw - 14rem)}.booking_reports__table_controller_report.narrow-toolbar{width:calc(100vw - 4rem)}@media(max-width:511px){.booking_reports__table_controller_report{width:calc(100vw)}.booking_reports__table_controller_report.narrow-toolbar{width:calc(100vw)}}
-.booking_reports__table_report{width:100%;padding-inline:1rem;border-collapse:collapse}.booking_reports__table_report thead{height:3rem}.booking_reports__table_report thead tr{text-align:left}.booking_reports__table_report thead tr th{padding-inline:4px;padding-block:var(--size-1)}.booking_reports__table_report thead tr th{color:var(--text0)}.booking_reports__table_report thead tr th{font-size:var(--font-size-0);font-weight:var(--font-weight-3)}.booking_reports__table_report thead tr th.narrow{min-width:5rem;xoutline:1px solid red}.booking_reports__table_report tbody tr:nth-child(odd){background:var(--floating)}.booking_reports__table_report tbody tr{color:var(--text1);background:var(--content)}.booking_reports__table_report tbody tr.online{color:var(--text0)}.booking_reports__table_report tbody tr.online{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}.booking_reports__table_report tbody tr.offline{color:var(--text2)}.booking_reports__table_report tbody tr.offline{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}.booking_reports__table_report tbody tr td{white-space:nowrap;height:var(--size-8);padding-block:var(--size-1);vertical-align:middle;padding-inline:8px}.booking_reports__table_report tbody tr td.narrow{min-width:13rem;width:13rem}.booking_reports__table_report tbody tr td.message-col{white-space:normal;width:100%}.booking_reports__table_report tbody tr td.hcenter{padding-inline:1rem}.booking_reports__table_report tbody tr td.vcenter{vertical-align:middle}
+.booking_reports__table_report{width:100%;padding-inline:1rem;border-collapse:collapse}.booking_reports__table_report thead{height:3rem}.booking_reports__table_report thead tr{text-align:left}.booking_reports__table_report thead tr th{padding-inline:4px;padding-block:var(--size-1)}.booking_reports__table_report thead tr th{color:var(--text0)}.booking_reports__table_report thead tr th{font-size:var(--font-size-0);font-weight:var(--font-weight-3)}.booking_reports__table_report thead tr th.narrow{min-width:5rem;xoutline:1px solid red}.booking_reports__table_report tbody tr:nth-child(odd){background:var(--floating)}.booking_reports__table_report tbody tr{color:var(--text1);background:var(--content)}.booking_reports__table_report tbody tr.online{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);font-weight:var(--font-weight-6);color:var(--text1)}.booking_reports__table_report tbody tr.offline{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);color:var(--text2)}.booking_reports__table_report tbody tr td{white-space:nowrap;height:var(--size-8);padding-block:var(--size-1);vertical-align:middle;padding-inline:8px}.booking_reports__table_report tbody tr td.narrow{min-width:13rem;width:13rem}.booking_reports__table_report tbody tr td.message-col{white-space:normal;width:100%}.booking_reports__table_report tbody tr td.hcenter{padding-inline:1rem}.booking_reports__table_report tbody tr td.vcenter{vertical-align:middle}
 .booking_reports__phonenumber{font-variant-numeric:tabular-nums;letter-spacing:var(--font-letterspacing-0)}
 .booking_account__corner_logo_SINGLEQUOTE_{position:absolute;top:-5rem;right:-3rem;--gi-rotate:45deg;opacity:.2;width:8rem}
 .booking_fiddle__debug{outline:1px solid yellow}
@@ -1023,8 +920,8 @@ body {
 .booking_common-views__centered_thing{display:flex;justify-content:center;align-items:center}
 .booking_common-views__centered_thing_red{border-radius:var(--radius-round);padding:var(--size-2);color:white;background:var(--gray-4)}.booking_common-views__centered_thing_red{display:flex;justify-content:center;align-items:center}
 .booking_common-views__result_item{display:flex;align-items:center;min-width:12rem;padding-inline:var(--size-4);padding-block:var(--size-3);background:var(--content);color:var(--text1)}.booking_common-views__result_item:hover{background:var(--toolbar-)}
-.booking_common-views__header_top_frontpage{display:flex;align-items:center;width:100%;padding-left:.5rem;padding-right:.5rem;gap:.5rem;height:var(--size-9)}@media(min-width:511px){.booking_common-views__header_top_frontpage{border-top-right-radius:var(--radius-3);xborder-right:1px solid var(--toolbar-)}}
-.booking_common-views__header_top{display:flex;align-items:center;width:100%;padding-left:.5rem;padding-right:.5rem;gap:.5rem;background:var(--content);height:var(--size-9)}@media(min-width:511px){.booking_common-views__header_top{xborder-right:1px solid var(--toolbar-)}}
+.booking_common-views__header_top_frontpage{display:flex;align-items:center;width:100%;padding-left:.5rem;padding-right:.5rem;gap:.5rem;height:var(--size-9)}@media(min-width:511px){.booking_common-views__header_top_frontpage{border-top-right-radius:var(--radius-3)}}
+.booking_common-views__header_top{display:flex;align-items:center;width:100%;padding-left:.5rem;padding-right:.5rem;gap:.5rem;background:var(--content);height:var(--size-9)}
 .booking_qrcode__qr_code a{width:100%;padding-left:1rem;padding-right:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .booking_yearwheel__listitem{padding:.25rem;--thing:var(--size-4);text-indent:calc(var(--thing) * -1);min-height:var(--size-4)}.booking_yearwheel__listitem .deleted{color:var(--text0);text-decoration:line-through;opacity:.3}.booking_yearwheel__listitem:hover{background:var(--surface00);border-radius:var(--radius-1)}
 .booking_yearwheel__line{--thing:var(--size-4);list-style:outside,none,disc;padding-left:var(--thing);text-indent:calc(var(--thing) * -1);color:var(--text2);line-height:var(--font-lineheight-5)}
@@ -1040,7 +937,7 @@ body {
 .booking_openhours__openinghourgrid.wrapper{display:grid;grid-auto-column:1fr;grid-auto-rows:3rem;gap:var(--size-1) var(--size-2)}@media(max-width:499px){.booking_openhours__openinghourgrid.wrapper{grid-template-areas:"day0 period0" "day1 period1" "day2 period2" "day3 period3" "day4 wheels" "day5 wheels" "day6 wheels"}.booking_openhours__openinghourgrid.wrapper .timelane{display:none;visibility:hidden}}@media(min-width:500px){.booking_openhours__openinghourgrid.wrapper{grid-template-areas:"day0 graph0 period0" "day1 graph1 period1" "day2 graph2 period2" "day3 graph3 period3" "day4 graph4 wheels" "day5 graph5 wheels" "day6 graph6 wheels"}.booking_openhours__openinghourgrid.wrapper .timelane{display:block;visibility:visible}}
 .booking_openhours__period_name{display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;padding:var(--size-2);background:var(--toolbar);border-radius:var(--radius-0);cursor:pointer}.booking_openhours__period_name.active{background:var(--text2)}
 .booking_presence__table_controller{overflow-x:auto;width:calc(100vw - 4rem)}@media(max-width:511px){.booking_presence__table_controller{width:calc(100vw)}}
-.booking_presence__table_def{width:100%;padding-inline:1rem;border-collapse:collapse}.booking_presence__table_def thead{height:3rem}.booking_presence__table_def thead tr{text-align:left}.booking_presence__table_def thead tr th{padding:var(--size-1)}.booking_presence__table_def thead tr th{color:var(--text0)}.booking_presence__table_def thead tr th{font-size:var(--font-size-0);font-weight:var(--font-weight-3)}.booking_presence__table_def tbody tr:nth-child(odd){background:var(--floating)}.booking_presence__table_def tbody tr{color:green;height:var(--size-6);background:var(--content)}.booking_presence__table_def tbody tr.online{color:var(--text0)}.booking_presence__table_def tbody tr.online{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}.booking_presence__table_def tbody tr.offline{color:var(--text2)}.booking_presence__table_def tbody tr.offline{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}.booking_presence__table_def tbody tr td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-inline:4px}.booking_presence__table_def tbody tr td:nth-child(2){text-align:left}.booking_presence__table_def tbody tr td:nth-child(4){max-width:10rem}.booking_presence__table_def tbody tr td:nth-child(4){color:var(--text0)}.booking_presence__table_def tbody tr td:nth-child(4){line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
+.booking_presence__table_def{width:100%;padding-inline:1rem;border-collapse:collapse}.booking_presence__table_def thead{height:3rem}.booking_presence__table_def thead tr{text-align:left}.booking_presence__table_def thead tr th{padding:var(--size-1)}.booking_presence__table_def thead tr th{color:var(--text0)}.booking_presence__table_def thead tr th{font-size:var(--font-size-0);font-weight:var(--font-weight-3)}.booking_presence__table_def tbody tr:nth-child(odd){background:var(--floating)}.booking_presence__table_def tbody tr{color:green;height:var(--size-6);background:var(--content)}.booking_presence__table_def tbody tr.online{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);font-weight:var(--font-weight-6);color:var(--text1)}.booking_presence__table_def tbody tr.offline{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);color:var(--text2)}.booking_presence__table_def tbody tr td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-inline:4px}.booking_presence__table_def tbody tr td:nth-child(2){text-align:left}.booking_presence__table_def tbody tr td:nth-child(4){max-width:10rem}.booking_presence__table_def tbody tr td:nth-child(4){line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);font-weight:var(--font-weight-6);color:var(--text1)}
 .booking_frontpage__antialiased *{x-webkit-font-smoothing:auto;x-moz-osx-font-smoothing:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 .booking_frontpage__front_page{position:relative;width:100vw;height:100vh;background-position:center center;background-repeat:no-repeat;background-size:cover}.booking_frontpage__front_page.light{background-image:var(--background-image-light)}.booking_frontpage__front_page.dark{background-image:var(--background-image-dark)}@media(max-width:511px){.booking_frontpage__front_page.bottom-toolbar{height:calc(100vh - 8rem)}}@media(min-width:768px){.booking_frontpage__front_page{xwidth:768px}}
 .booking_frontpage__fp_right_aligned_link{text-align:right;white-space:nowrap;font-weight:400;color:var(--brand1)}.booking_frontpage__fp_right_aligned_link{color:var(--text0);font-size:var(--font-size-2);font-weight:var(--font-weight-4)}
@@ -1061,12 +958,16 @@ body {
 .eykt_calendar_views__time_slot{width:8rem;height:2.5rem;display:flex;align-items:flex-end}
 
 
-.booking_spa__table_def{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.booking_spa__table_def{width:100%;border-collapse:collapse}.booking_spa__table_def thead{height:3rem}.booking_spa__table_def thead tr{text-align:left;color:var(--text2)}.booking_spa__table_def thead tr th{padding:2px}.booking_spa__table_def thead tr th{color:var(--text0)}.booking_spa__table_def thead tr th{font-size:var(--font-size-0);font-weight:var(--font-weight-3)}.booking_spa__table_def thead tr th:nth-child(1){min-width:2rem}.booking_spa__table_def tbody tr:nth-child(even){background:var(--floating)}.booking_spa__table_def tbody tr{height:var(--size-6);background:var(--content)}.booking_spa__table_def tbody tr td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-inline:4px}.booking_spa__table_def tbody tr td{color:var(--text2)}.booking_spa__table_def tbody tr td{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}.booking_spa__table_def tbody tr td:nth-child(2){text-align:right}.booking_spa__table_def tbody tr td:nth-child(4){max-width:10rem}.booking_spa__table_def tbody tr td:nth-child(4){color:var(--text0)}.booking_spa__table_def tbody tr td:nth-child(4){line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4)}
+.booking_spa__table_def{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.booking_spa__table_def{width:100%;border-collapse:collapse}.booking_spa__table_def thead{height:3rem}.booking_spa__table_def thead tr{text-align:left;color:var(--text2)}.booking_spa__table_def thead tr th{padding:2px}.booking_spa__table_def thead tr th{color:var(--text0)}.booking_spa__table_def thead tr th{font-size:var(--font-size-0);font-weight:var(--font-weight-3)}.booking_spa__table_def thead tr th:nth-child(1){min-width:2rem}.booking_spa__table_def tbody tr:nth-child(even){background:var(--floating)}.booking_spa__table_def tbody tr{height:var(--size-6);background:var(--content)}.booking_spa__table_def tbody tr td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-inline:4px}.booking_spa__table_def tbody tr td{line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);color:var(--text2)}.booking_spa__table_def tbody tr td:nth-child(2){text-align:right}.booking_spa__table_def tbody tr td:nth-child(4){max-width:10rem}.booking_spa__table_def tbody tr td:nth-child(4){line-height:var(--font-lineheight-2);font-size:var(--font-size-1);font-weight:var(--font-weight-4);font-weight:var(--font-weight-6);color:var(--text1)}
 .booking_spa__card{padding:1rem;min-height:13ch;background-color:var(--floating);border-radius:var(--radius-1);box-shadow:var(--shadow-1)}
 .booking_spa__image_container{overflow:hidden;border-radius:var(--radius-round);aspect-ratio:1/1;height:var(--size-10);clip-path:circle(100%)}
 .booking_spa__image{aspect-ratio:1/1;height:var(--size-10);transform-origin:bottom left;padding:.5rem;box-shadow:var(--inner-shadow-1);overflow:hidden;border-radius:var(--radius-round);transition:750ms ease-in;background:var(--textmarker-background);color:var(--text3)}.booking_spa__image:hover{transform:rotate(-70deg)}
 .schpaa_style_menu__start{top:55rem;left:75rem}
 .schpaa_style_ornament__titleb{color:var(--text1);font-size:var(--font-size-3);font-weight:var(--font-weight-6)}.schpaa_style_ornament__titleb{font-size:var(--font-size-3);letter-spacing:var(--font-letterspacing-0);font-weight:var(--font-weight-4)}.schpaa_style_ornament__titleb.error{color:var(--red-8)}
 .schpaa_style_ornament__co{display:flex;flex-direction:column}.schpaa_style_ornament__co>*+*{margin-top:.5rem}
-.schpaa_style_ornament__surface_ab{padding:.5rem;user-select:none;background:rgba(0,0,0,0.1);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}.schpaa_style_ornament__surface_ab.focused{outline:2px solid var(--yellow-5)}.schpaa_style_ornament__surface_ab:hover:not(.focused){color:var(--gray-9);border-radius:var(--radius-1);background-color:var(--yellow-2);-outline:4px solid var(--yellow-5)}
-.schpaa_style_ornament__with_focus.focused{outline:2px solid var(--yellow-5)}.schpaa_style_ornament__with_focus:hover:not(.focused){color:var(--gray-9);border-radius:var(--radius-1);background-color:var(--yellow-2);-outline:4px solid var(--yellow-5)}
+.schpaa_style_ornament__surface_ab{margin-left:.75rem;margin-right:.75rem;padding:.5rem;user-select:none;background-color:var(--vener);box-shadow:var(--inner-shadow-1);border-radius:var(--radius-1)}.schpaa_style_ornament__surface_ab.focused{outline:3px solid var(--yellow-6)}.schpaa_style_ornament__surface_ab:hover:not(.focused){color:var(--gray-9);border-radius:var(--radius-1);background-color:var(--vener-hl);outline:3px solid var(--yellow-2)}
+.schpaa_style_ornament__with_focus.focused{outline:3px solid var(--yellow-6)}.schpaa_style_ornament__with_focus:hover:not(.focused){color:var(--gray-9);border-radius:var(--radius-1);background-color:var(--vener-hl);outline:3px solid var(--yellow-2)}
+.booking_modals_boatinput_styles__up_down_button_SINGLEQUOTE_{display:flex;flex-direction:column;justify-content:space-around;align-items:center;user-select:none;position:relative;box-shadow:var(--inner-shadow-1);background-color:var(--floating);border-radius:var(--radius-1)}.booking_modals_boatinput_styles__up_down_button_SINGLEQUOTE_ .some{opacity:1;color:var(--selected-copy);background:var(--selected)}.booking_modals_boatinput_styles__up_down_button_SINGLEQUOTE_ .zero{opacity:1;color:var(--text1);background-color:var(--floating)}.booking_modals_boatinput_styles__up_down_button_SINGLEQUOTE_:active{background-color:var(--content)}.booking_modals_boatinput_styles__up_down_button_SINGLEQUOTE_ .overlay{overflow:hidden}
+.booking_modals_boatinput_styles__center,shrink-0{width:100%;height:50%}.booking_modals_boatinput_styles__center,shrink-0{display:flex;justify-content:center;align-items:center}
+.schpaa_style_ornament__ptext{color:var(--text);line-height:var(--font-lineheight-1);font-size:var(--font-size-2);font-weight:var(--font-weight-4)}
+.schpaa_style_ornament__ptitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--font-size-3);color:var(--text2)}.schpaa_style_ornament__ptitle{font-size:var(--font-size-3);letter-spacing:var(--font-letterspacing-0);font-weight:var(--font-weight-4)}.schpaa_style_ornament__ptitle.error{color:var(--red-8)}
