@@ -32,46 +32,40 @@
      :disabled (if (some? enabled) (not enabled) disabled)}
    [:<> [:div ch]]))
 
+(o/defstyled debug-1 :div
+  {:outline "1px solid green"})
+
 (o/defstyled delete-button :button
-  :w-full :h-full
-  {:display       :grid
-   :place-content :center
-   :border-radius "var(--radius-0)"
-   ;:background    "var(--red-9)"
-   :color         "var(--red-5)"}
+  debug-1 center
+  {;:display       :grid
+   ;:place-content :center
+   :color "var(--red-1)"}
   [:&:hover {:background "var(--red-8)"
              :color      "var(--red-2)"}]
   [:&:disabled {:color      "var(--text3)"
                 :background "none" #_"var(--surface0)"}]
   [:&:active:enabled {:background "var(--red-7)"
-                      :color      "var(--red-1)"}]
-  ([{:keys [ref on-click disabled enabled style]} ch]
-   ^{:ref      ref
-     :on-click on-click
-     :disabled (if (some? enabled) (not enabled) disabled)}
-   [:<> [:div ch]]))
+                      :color      "var(--red-1)"}])
 
 (o/defstyled add-button :button
-  [:& :w-full :h-full
+  [:&
    {:display       :grid
-    :place-content :center
-    :border-radius "var(--radius-0)"}
-   ;:background    "var(--brand1)"}
-   ;:color         "var(--surface1)"
-   [:&.add {;:background "var(--green-6)"
-            :color "var(--green-1)"}]
-   #_[:&:hover {:background "var(--green-5)"
-                :color      "var(--green-1)"}]
+    :place-content "center center"
+    :border-radius "var(--radius-round)"}
+   [:&.remove {:color            "var(--red-1)"
+               :background-color "var(--red-7)"}
+    [:&:active:enabled {:color      "var(--red-1)"
+                        :background "var(--red-8)"}]]
+   [:&.add {:color            "var(--green-1)"
+            :background-color "var(--brand1)"}
+    [:&:active:enabled {:color      "var(--green-1)"
+                        :background "var(--brand1-lighter)"}]]
    [:&:disabled {:opacity    0.2
                  :color      "var(--text1)"
-                 :background "var(--toolbar)" #_"var(--surface0)"}]
+                 :background "var(--toolbar-)"}]
    [:&:active:enabled {:background "var(--green-7)"
-                       :color      "var(--green-1)"}]]
-  #_([{:keys [ref on-click disabled enabled style]} ch]
-     ^{:ref      ref
-       :on-click on-click
-       :disabled (if (some? enabled) (not enabled) disabled)}
-     [:<> [:div ch]]))
+                       :color      "var(--green-1)"}]])
+
 
 (o/defstyled numberpad-button :button
   [:& :w-full :h-full :duration-100
@@ -94,7 +88,7 @@
        :disabled (if (some? enabled) (not enabled) disabled)}
      [:<> [:div ch]]))
 
-(o/defstyled up-down-button' :div
+(o/defstyled up-down-button :div
   [:& :flex :flex-col :justify-around :items-center :select-none
    {:position         :relative
     :box-shadow       "var(--inner-shadow-1)"
@@ -116,43 +110,12 @@
   :shrink-0 :w-full :flex-center
   {:height :50%})
 
-(defn up-down-button [{:keys [increase decrease value content]}]
-  (let [value (js/parseInt value)]
-    [up-down-button'
-     {:style {:position  :relative
-              :display   :flex
-              :flex-grow 1
-              :height    :100%
-              :overflow  :hidden}}
-     [:div {:class [:flex :opacity-50 :h-20 :items-end]} content]
-     [:div.inset-0.absolute.flex.flex-col.justify-between
-      {:style {:color "var(--text2)"}}
-      [center
-       {:class    [:absolute :top-0 :pb-10]
-        :on-click decrease}
-       (when (pos? value)
-         [sc/icon-small ico/minus])]
-      [center
-       {:class    [:absolute :bottom-0 :pt-10]
-        :on-click increase}
-       (if (zero? value)
-         [sc/icon-small ico/plus]
-         [sc/text1 value])]]]))
-
 (o/defstyled toggle-button :div
   :w-full :h-full
   {:display       :grid
    :place-content :center
-   :xaspect-ratio "1/1"
-   :border-radius "var(--radius-1)"}
-  ([{:keys [on-click value on-style off-style content]}]
-   ^{:on-click on-click}
-   [:<> [:div (if value
-                {:style (when on-style on-style)
-                 :class (when-not on-style :on)}
-                {:style (when off-style off-style)
-                 :class [(when-not off-style :off)]})
-         content]]))
+   :border-radius "var(--radius-1)"})
+
 
 (o/defstyled panel :div
   [:& :mx-auto
@@ -169,8 +132,8 @@
                                      ["check-a  child    juvenile key         adult"]
                                      ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
                                      ["check-c    boats    boats    boats     boats"]
-                                     [". .          numpad   numpad   numpad"]
-                                     ["prev   next  numpad   numpad   numpad"]
+                                     ["next .          numpad   numpad   numpad"]
+                                     ["prev   .  numpad   numpad   numpad"]
                                      [".      .     numpad   numpad   numpad"]
                                      ["complete .   numpad   numpad   numpad"]]}]
 
