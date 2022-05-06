@@ -37,24 +37,25 @@
 
 (o/defstyled push-button :button
   [:& :w-full :h-full
-   {:display        :grid
+   {:display       :grid
     ;:height   "3rem"
     ;:width   "3rem"
     ;:max-height   "3rem"
     ;:max-width    "3rem"
-    :place-content  "center center"
-    :sborder-radius "var(--radius-round)"}
+    :border-radius "var(--radius-round)"
+    :place-content "center center"}
+
    [:&.remove {:color            "var(--red-1)"
                :background-color "var(--red-7)"}
     [:&:active:enabled {:color      "var(--red-1)"
                         :background "var(--red-8)"}]]
+   [:&:disabled {:opacity    0.2
+                 :color      "var(--text1)"
+                 :background "var(--toolbar-)"}]
    [:&.add {:color            "var(--green-1)"
             :background-color "var(--brand1)"}
     [:&:active:enabled {:color      "var(--green-1)"
                         :background "var(--brand1-lighter)"}]]
-   [:&:disabled {:opacity    0.2
-                 :color      "var(--text1)"
-                 :background "var(--toolbar-)"}]
    [:&:active:enabled {:background "var(--green-7)"
                        :color      "var(--green-1)"}]])
 
@@ -109,13 +110,13 @@
 (o/defstyled panel :div
   [:& :mx-auto
    {:display               :grid
-    :column-gap            "var(--size-2)"
-    :row-gap               "var(--size-3)"
+    :column-gap            "var(--size-1)"
+    :row-gap               "var(--size-2)"
     :min-width             "24rem"
     :max-width             "24rem"
     :height                "100%"
     :grid-template-columns "repeat(5,1fr)"
-    :grid-template-rows    "4rem 4rem auto auto repeat(4,4rem)"}
+    :grid-template-rows    "4rem 4rem auto auto repeat(4,3.5rem)"}
    [:&.mobile {:grid-template-areas [#_[". welcome" "welcome" "welcome" "welcome"]
                                      ["check-a  child    juvenile moon        adult"]
                                      ["check-a  child    juvenile key         adult"]
@@ -123,7 +124,7 @@
                                      ["check-c    boats    boats    boats     boats"]
                                      ["next .          numpad   numpad   numpad"]
                                      ["prev   .  numpad   numpad   numpad"]
-                                     [".      .     numpad   numpad   numpad"]
+                                     ["complete       .     numpad   numpad   numpad"]
                                      ["complete .   numpad   numpad   numpad"]]}]
 
    [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]

@@ -14,7 +14,7 @@
                               :value {:timestamp (str (t/now))
                                       :sleepover (:moon data)
                                       :adults    (:adults data)
-                                      :havekey   (:key data)
+                                      :havekey   (:litteral-key data)
                                       :children  (:children data)
                                       :juveniles (:juveniles data)
                                       :uid       (:uid data)
@@ -34,7 +34,8 @@
                          (empty? (:item @st))))]
     (when ok?
       ;todo add to db here
-      (rf/dispatch [:rent/store (assoc @st :uid loggedin-uid)])
+      (rf/dispatch [:rent/store (assoc @st :uid (or (get-in @st [:extra 2]) loggedin-uid))])
+
       ;todo add counter increment update here?
       (rf/dispatch [:app/navigate-to [:r.utlan]])
       (rf/dispatch [:modal.boatinput/close])

@@ -220,53 +220,17 @@
             ;; while the mouse is over the background, wrap this with
             ;; `ui/dialog-panel` and replace `ui/dialog-overlay` with
             ;; `ui/dialog-backdrop`.
-            inner
-            #_[:div.max-w-md.p-6.my-8.bg-white.shadow-xl.rounded-2xl
-               [ui/dialog-title {:as :div.text-lg.font-medium.leading-6.text-gray-900}
-                "Payment successful"]
-               [:div.mt-2
-                [:p.text-sm.text-gray-500 "Your payment has been successfully submitted. We’ve sent you an email with all of the details of your order."]]
-               [:div.mt-4
-                [:button.inline-flex.justify-center.px-4.py-2.text-sm.font-medium.text-blue-900.bg-blue-100.border.border-transparent.rounded-md.hover:bg-blue-200.focus:outline-none.focus-visible:ring-2.focus-visible:ring-offset-2.focus-visible:ring-blue-500
-                 {:type     "button"
-                  :on-click close}
-                 "Got it, thanks!"]]]]]]]]])))
+            inner]]]]]])))
+
 
 (defn main-menu [r]
   (r/with-let [mainmenu-visible (rf/subscribe [:lab/menu-open])]
     ;this is just a button
-
     [settings-dialog
      [scm/settings-floating
       {:data       (mainmenu-definitions r)
        :showing!   mainmenu-visible
-       :close-menu #(rf/dispatch [:lab/close-menu])}]]
-    #_[:div.fixed.inset-0
-       [kee-frame.error/boundary
-        (fn default-error-body [[err info]]
-          (js/console.log "An error occurred: " err)
-          [:div {:style {:color :red}} [:code {:style {:font-size "smaller"}} (pr-str info)]])
-        [:div
-         [ui/transition
-          {:show true}
-          [ui/dialog
-           {:xon-close #()
-            :xas       "div"
-            :xopen     true}]
-          [ui/transition-child
-           {}
-           [ui/dialog-backdrop {:class "fixed inset-0 bg-gray-500 bg-opacity-75"}]]]]
+       :close-menu #(rf/dispatch [:lab/close-menu])}]]))
 
-
-
-        [scm/settings-floating
-         {:data       (mainmenu-definitions r)
-          :showing!   mainmenu-visible
-          :close-menu #(rf/dispatch [:lab/close-menu])
-          :button     (fn [open]
-                        [hoc.buttons/round'
-                         {:style {:cursor :pointer}
-                          :class [:w-12]}
-                         [sc/icon (if open ico/cog-open ico/cog)]])}]]]))
 
 ;region extract!

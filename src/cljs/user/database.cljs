@@ -53,18 +53,19 @@
 (defn lookup-by-litteralkeyid [id]
   (when-some [_ @(rf/subscribe [::db/user-auth])]
     (get (into {}
-               (map (fn [[a b c]] [a [b c]])
+               (map (fn [[a b c d]] [a [b c d]])
                     (map (comp (juxt (comp #(subs % 4 7) str :nøkkelnummer)
                                      :navn
-                                     :telefon) val)
+                                     :telefon
+                                     :uid) val)
                          (filter (fn [[k v]] (and (:godkjent v) (seq (:nøkkelnummer v)) #_(:nøkkelvakt v)))
                                  @(db/on-value-reaction {:path ["users"]}))))) id)))
 
 (defn lookup-alias [uid]
-  ;(tap> ["U"])
-  (if-some [_ @(rf/subscribe [::db/user-auth])]
-    (:alias @(db/on-value-reaction {:path ["users" uid]}))
-    nil))
+  (when-some [_ @(rf/subscribe [::db/user-auth])]
+    (let [u @(db/on-value-reaction {:path ["users" uid]})]
+      (or (:alias u) (:navn u)))))
+
 
 ;region
 

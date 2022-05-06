@@ -289,14 +289,14 @@
               (and @(schpaa.state/listen :r.utlan)
                    #_@(r/cursor settings [:rent/edit]))))
 
-(defn user-alias [this-uid]
-  (let [alias (user.database/lookup-alias (name this-uid))]
-    (if (empty? alias)
-      (let [name (user.database/lookup-username (name this-uid))]
-        (if (empty? name)
-          this-uid
-          name))
-      alias #_" uten alias ")))
+;(defn user-alias [this-uid]
+;  (let [alias (user.database/lookup-alias (name this-uid))]
+;    (if (empty? alias)
+;      (let [name (user.database/lookup-username (name this-uid))]
+;        (if (empty? name)
+;          this-uid
+;          name))
+;      alias #_" uten alias ")))
 
 (defn timegraph [from arrived-datetime to now]
   (let [session-start (* 4 18)
@@ -323,8 +323,8 @@
     [:div.h-8 {:on-click #(swap!
                             settings update :rent/graph-view-mode (fn [e] (mod (inc e) 2)))
                :style    {:overflow         :clip
-                          :box-shadow       "var(--shadow-3),var(--shadow-2)"
-                          :border-radius    "var(--radius-0)"
+                          :box-shadow       "var(--shadow-1)"
+                          :border-radius    "var(--radius-1)"
                           :cursor           :pointer
                           :background-color field-color}}
      (let [v-start (case @(r/cursor settings [:rent/graph-view-mode])
@@ -429,14 +429,15 @@
                (when show-details?
                  [sc/row-sc-g4-w {:style {:grid-area "details"}
                                   :class [:pt-1]}
-                  [sc/text2 {:style {:font-weight "var(--font-weight-5)"}
+                  [sc/text1 {:style {:font-weight "var(--font-weight-5)"}
                              :class [:tabular-nums]}
                    (if (pos? adults) adults "–")
                    "/"
                    (if (pos? juveniles) juveniles "–")
                    "/"
                    (if (pos? children) children "–")]
-                  [sc/text2 {:class []} (user.database/lookup-alias uid)]])
+                  [widgets/user-link uid]
+                  #_[sc/text2 {:class []} (user.database/lookup-alias uid)]])
                [edit loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]
                (into [listitem' {:class [(if deleted :deleted)
                                          :w-full :py-2]

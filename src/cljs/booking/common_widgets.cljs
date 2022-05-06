@@ -145,7 +145,10 @@
 (defn stability-expert [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center
    [:svg.w-4.inline-block {:viewBox "-2 -2 4 4"}
-    [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 "var(--gray-1)" 1 "var(--brand1)" 2 :yellow 3 :red} (js/parseInt stability) :white)}]
+    [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 "var(--brand1)"
+                                           1 "var(--blue-7)"
+                                           2 "var(--brand2)"
+                                           3 "var(--red-7)"} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
 (defn stability-name-category [{:keys
@@ -207,10 +210,9 @@
              "wtf?")})
 
 (defn user-link [uid]
-  (tap> {:uid uid})
   [sc/link
    {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
-   (or (user.database/lookup-username uid) uid)])
+   (or (user.database/lookup-alias uid) uid)])
 
 (defn auto-link
   ([link]

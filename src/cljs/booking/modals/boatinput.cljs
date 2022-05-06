@@ -27,7 +27,7 @@
                      :adults         1
                      :juveniles      0
                      :children       0
-                     :textfield      {:phone ""
+                     :textfield      {:phone "123"
                                       :boats ""}}))
 
 (def c-focus (r/cursor st [:focus]))
@@ -282,7 +282,7 @@
      [:div {:style {:grid-column "1/-1"}
             :class [:flex :w-full :items-end :p-1 :h-16]}
       (if (= 3 (count @field))
-        (if-let [[username phone :as m] (user.database/lookup-by-litteralkeyid @field)]
+        (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @field)]
           (do
             (reset! c-extra m)
             [sc/col-space-1 {:class [:truncate :h-full :justify-around]}
@@ -430,20 +430,23 @@
      (sc/icon-huge ico/nextImage)]))
 
 (defn complete [st]
-  (let [ok? true]                                           ;@(rf/subscribe [::completed])]
+  (let [ok? (rf/subscribe [::completed])]
     [bis/push-button
      {:on-click #(when (actions/confirm-command st @(rf/subscribe [::completed]))
                    (cmd/reset-command st))
-      :disabled (not ok?)
+      :disabled (not @ok?)
+      :class    [:add]
       :style    (conj {;:background "var(--selected)"
                        :border-radius "var(--radius-0)"
                        :width         "100%"
                        :height        "100%"}
 
-                      (when ok?
-                        {:color      "var(--selected-copy)"
-                         :background "var(--buttoncta1)"}))}
-     (sc/icon-huge ico/checkCircle)]))
+                      #_(when @ok?
+                          {:color      "var(--selected-copy)"
+                           :background "var(--green-6)"}))}
+     [sc/row-sc-g2
+      (sc/icon-huge ico/check)]]))
+
 
 ;endregion
 
@@ -517,7 +520,7 @@
                           (some? @c-extra))))
 
 (rf/reg-sub ::completed-boats
-            :-> #(seq? @c-boat-list))
+            :-> #(seq @c-boat-list))
 
 (rf/reg-sub ::completed (fn [_]
                           (and @(rf/subscribe [::completed-contact])
@@ -529,8 +532,7 @@
 (defn boatpanel-window [mobile? left-side?]
   (let [ref (r/atom nil)
         user-uid (rf/subscribe [:lab/uid])
-        nøkkelnummer (subs (str (:nøkkelnummer (user.database/lookup-userinfo @user-uid)))
-                           4 7)
+        nøkkelnummer "123" _# (subs (str (:nøkkelnummer (user.database/lookup-userinfo @user-uid))) 4 7)
         ipad? (= @user-uid
                  @(db/on-value-reaction {:path ["system" "active"]}))]
     (r/create-class
@@ -543,10 +545,10 @@
        (fn [_]
          [sc/row
 
-          #_(when goog.DEBUG
-              [:div.bg-black
-               {:style {:width "20rem"}}
-               [l/pre @st]])
+          (when goog.DEBUG
+            [:div.bg-black
+             {:style {:width "20rem"}}
+             [l/pre @st]])
 
           [:div
            {:tab-index 0
@@ -563,29 +565,29 @@
            [bis/panel
             {:style {:padding "var(--size-2)"}
              :class [:mobile]}
-            (concat
-              (let [f (fn [[area-name component]]
-                        [:div {:style {:grid-area area-name}} component])
-                    pointer (fn [complete?]
-                              [:div.flex.items-center.justify-center
-                               {:class [:h-full]}
-                               [sc/icon-large
-                                {:style {:color "var(--text1)"}}
-                                (if complete? ico/check ico/arrowRight')]])]
-                (mapv f [["child" [children-slider c-children]]
-                         ["juvenile" [juveniles-slider c-juveniles]]
-                         ["moon" [moon-toggle c-moon]]
-                         ["key" [litteralkey-toggle c-litteral-key]]
-                         ["adult" [adults-slider c-adults]]
-                         ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
-                         ["boats" [selected-boats st c-focus c-textinput-boat]]
-                         ["numpad" [number-pad st]]
-                         ["check-a" (pointer @(rf/subscribe [::completed-users]))]
-                         ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
-                         ["check-c" (pointer (pos? (count @c-boat-list)))]
-                         ["complete" [complete st]]
-                         ["prev" [move-to-prev st]]
-                         ["next" [move-to-next st]]])))]]])})))
+            (doall (concat
+                     (let [f (fn [[area-name component]]
+                               [:div {:style {:grid-area area-name}} component])
+                           pointer (fn [complete?]
+                                     [:div.flex.items-center.justify-center
+                                      {:class [:h-full]}
+                                      [sc/icon-large
+                                       {:style {:color "var(--text1)"}}
+                                       (if complete? ico/check ico/arrowRight')]])]
+                       (mapv f [["child" [children-slider c-children]]
+                                ["juvenile" [juveniles-slider c-juveniles]]
+                                ["moon" [moon-toggle c-moon]]
+                                ["key" [litteralkey-toggle c-litteral-key]]
+                                ["adult" [adults-slider c-adults]]
+                                ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
+                                ["boats" [selected-boats st c-focus c-textinput-boat]]
+                                ["numpad" [number-pad st]]
+                                ["check-a" (pointer @(rf/subscribe [::completed-users]))]
+                                ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
+                                ["check-c" (pointer (pos? (count @c-boat-list)))]
+                                ["complete" [complete st]]
+                                #_["prev" [move-to-prev st]]
+                                #_["next" [move-to-next st]]]))))]]])})))
 
 (defn window-content [{:keys [on-close]}]
   (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])

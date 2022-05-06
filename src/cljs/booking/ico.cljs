@@ -77,5 +77,6 @@
 (def backspace [:> solid/BackspaceIcon])
 (def tag [:> solid/TagIcon])
 (def phone [:> solid/PhoneIcon])
-(def key-filled [:> solid/KeyIcon outline/KeyIcon])
-(def key-outline [:> outline/KeyIcon outline/KeyIcon])
+(def key-filled [:> solid/KeyIcon])
+(def key-outline [:> outline/KeyIcon])
+(def chevronDoubleDown [:> solid/ChevronDoubleLeftIcon])
