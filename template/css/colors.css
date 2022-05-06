@@ -223,12 +223,12 @@ outline: 2px solid #a0a8;
     --dim-danger-bright: var(--red-6);
     --dim-dangercopy: white;
 
-    --light-field: var(--gray-00);
-    --light-field-focus: var(--gray-1);
+    --light-field: var(--gray-1);
+    --light-field-focus: var(--gray-00);
     --light-fieldcopy: var(--gray-7);
-    --dim-field: var(--gray-9);
-    --dim-field-focus: var(--gray-8);
-    --dim-fieldcopy: var(--gray-3);
+    --dim-field: var(--gray-8);
+    --dim-field-focus: var(--gray-9);
+    --dim-fieldcopy: var(--gray-1);
 
     /* body copy */
 
@@ -262,7 +262,7 @@ outline: 2px solid #a0a8;
     --light-vener-hl: rgba(0,0,0,0.1);
 
     --dim-vener: rgba(255,255,255,0.05);
-    --light-vener: rgba(0,0,0,0.04);
+    --light-vener: rgba(0,0,0,0.06);
 
     --text-light: var(--gray-6);
     --text-dim: var(--gray-4);

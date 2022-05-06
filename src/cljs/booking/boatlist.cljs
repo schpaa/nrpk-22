@@ -3,11 +3,14 @@
             [schpaa.style.hoc.toggles :as toggle]
             [re-frame.core :as rf]
             [booking.common-widgets :as widgets]
-            [schpaa.style.dialog :as dlg]))
+            [schpaa.style.dialog :as dlg]
+            [schpaa.debug :as l]))
 
 (defn card [group {:keys [description] :as m}]
   (let [horisontal? @(schpaa.state/listen ::beskrivelse)]
+
     [sc/zebra
+     ;[l/pre group]
      [sc/col-space-8
 
       (if-not horisontal?
@@ -27,7 +30,6 @@
             (into [sc/row-sc-g1-w' {:style {:align-items     :start
                                             :justify-content :start
                                             :flex-wrap       :wrap}}]
-
                   (for [[k v] (sort-by (comp :number val) < group)]
                     [sc/badge-2 {:class    [:small (when (pos? (:location v)) :invert)]
                                  :style    {:font-size "unset"
@@ -35,7 +37,8 @@
                                  :on-click #(dlg/open-modal-boatinfo
                                               (let [loggedin-uid @(rf/subscribe [:lab/uid])]
                                                 {:uid  loggedin-uid
-                                                 :data (get @(rf/subscribe [:db/boat-db]) (keyword k))}))} (:number v)])))]]
+                                                 :data (get @(rf/subscribe [:db/boat-db]) (keyword k))}))}
+                     (:number v)])))]]
         [:div.flex.justify-between.gap-4
 
          [sc/col-space-8
@@ -72,13 +75,18 @@
                                      :grid-template-columns "repeat(auto-fit,minmax(20em,1fr))"}}]
            (for [[[boat-type-id xxx] group]
                  (sort-by (comp second first) <
-                          (group-by (juxt (comp :boat-type val)
-                                          (comp :kind val))
-                                    (remove (comp nil? :boat-type val)
-                                            @(rf/subscribe [:db/boat-db]))))
+                          (group-by (comp (juxt :boat-type :kind) val)
+                                    ;(remove (comp nil? :boat-type val))
+                                    @(rf/subscribe [:db/boat-db])))
                  :let [m (get-in @(rf/subscribe [:db/boat-type])
-                                 [(keyword boat-type-id)])]]
-             (card group m)))]))
+                                 [(keyword boat-type-id)]
+                                 ;the null-object
+                                 {:empty       true
+                                  :number      "999"
+                                  :navn        "ukjent merke"
+                                  :kind        "ukjent type"
+                                  :description "Nyregistrert"})]]
+             [card group m]))]))
 
 (defn page [r]
   {:always-panel     (fn []

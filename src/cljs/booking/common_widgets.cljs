@@ -156,6 +156,7 @@
   [sc/col-space-1 {:class [:truncate]}
    [sc/row-sba
     (when (or stability expert) [stability-expert m])
+    ;[l/pre boat-type]
     [sc/small {:style {:overflow      :hidden
                        :text-overflow :ellipsis
                        :white-space   :nowrap
@@ -165,13 +166,14 @@
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
-  [:<>
+  [sc/row {:style {:column-gap  "var(--size-2)"
+                   :align-items :center}}
    (when (pos? @bt-data)
      [sc/text1 @bt-data])
    [sc/icon-large
     {:on-click #(on-star-click boat-type (not @ex-data))
-     :style    {:color (if @ex-data "var(--yellow-6)" "var(--text2)")}}
-    (if @ex-data ico/stjerne ico/ikkeStjerne)]])
+     :style    {:color (if @ex-data "var(--yellow-6)" "rgba(0,0,0,0.5)")}}
+    (if @ex-data ico/stjerne ico/stjerne)]])
 
 ;region
 

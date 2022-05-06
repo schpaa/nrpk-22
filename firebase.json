@@ -17,33 +17,6 @@
           "destination": "/index.html"
         }
       ]
-    },
-    {
-      "site": "eyktv-22",
-      "public": "dist/eykt",
-      "cleanUrls": true,
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    },
-    {
-      "site": "zenit-sample",
-      "public": "public/torv/dist",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "cleanUrls": true,
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
     }
   ],
   "storage": {

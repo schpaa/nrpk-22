@@ -21,14 +21,14 @@
 
 ;region state
 
-(def st (r/atom {:litteral-key   false
-                 :lookup-results nil
-                 :list           nil
-                 :adults         1
-                 :juveniles      0
-                 :children       0
-                 :textfield      {:phone ""
-                                  :boats ""}}))
+(defonce st (r/atom {:litteral-key   false
+                     :lookup-results nil
+                     :list           nil
+                     :adults         1
+                     :juveniles      0
+                     :children       0
+                     :textfield      {:phone ""
+                                      :boats ""}}))
 
 (def c-focus (r/cursor st [:focus]))
 (def c-extra (r/cursor st [:extra]))
@@ -55,7 +55,7 @@
             :-> #(into {} (->> (remove (comp empty? :number val) %)
                                (map (fn [[k v]]
                                       [(:number v)
-                                       (assoc (select-keys v [:number :navn :kind :star-count :stability :material :weigth :length :width]) :id k)])))))
+                                       (assoc (select-keys v [:boat-type :number :navn :kind :star-count :stability :material :weigth :length :width]) :id k)])))))
 
 (defn lookup [id]
   ;todo define as defonce
@@ -280,14 +280,14 @@
                  :grid-template-columns "repeat(4,1fr)"
                  :grid-auto-rows        "4rem"}}
      [:div {:style {:grid-column "1/-1"}
-            :class [:flex :w-full :items-end :h-12]}
+            :class [:flex :w-full :items-end :p-1 :h-16]}
       (if (= 3 (count @field))
         (if-let [[username phone :as m] (user.database/lookup-by-litteralkeyid @field)]
           (do
             (reset! c-extra m)
-            [sc/col {:class [:truncate]}
-             [sc/ptext {:class [:truncate]} username]
-             [sc/ptitle phone]])
+            [sc/col-space-1 {:class [:truncate :h-full :justify-around]}
+             [sc/ptitle1 phone]
+             [sc/ptext {:class [:truncate]} username]])
 
           (do
             (reset! c-extra nil)
@@ -301,11 +301,12 @@
           (if @c-litteral-key
             [sc/ptext "Bruk de siste 3 siffer av nøkkelnr. F.eks E18-"
              [:span.font-bold {:style {:color "var(--brand2)"}} "987"]]
-            [sc/ptext "Telefonnr eller siste 3 siffer av nøkkelnr"])))]
+            [sc/ptitle1 {:style {:white-space :normal}
+                         :class [:no-truncate]} "Telefonnr eller siste 3 siffer av nøkkelnr"])))]
 
      [:div {:style {:grid-column "1/4"
                     :overflow    :hidden}}
-      [input-area 8 "TELEFONNR eller NØKKELNR" :phone]]
+      [input-area 8 "Telefon– eller nøkkelnummer" :phone]]
 
      [:div
       {:style {:grid-column "4"
@@ -336,7 +337,8 @@
                                          (swap! st #(-> %
                                                         (assoc :selected e)
                                                         (assoc :phone false))))))} e])
-       [(when true                                          ;(or (empty? (:list @st))) (< m 4)
+       [(when (or (< m 4)
+                  #_(not= 0 (mod m 4)))
           (repeat (- 4 m) [sc/badge {:class [:disabled]}]))]))])
 
 (defn selected-boats [st c-focus c-textinput-boats]
@@ -359,9 +361,23 @@
        (if boat
          (do
            (reset! c-lookup-result boat)
-           [widgets/stability-name-category boat])
+           [:div.flex.justify-between.items-center.w-full
+            [widgets/stability-name-category boat]
+            (let [boat-type (:boat-type boat)
+                  uid (rf/subscribe [:lab/uid])
+                  bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+                  ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
+              [widgets/favourites-star
+               {:bt-data       bt-data
+                :ex-data       ex-data
+                :on-star-click (fn [boat-type value]
+                                 (rf/dispatch [:star/write-star-change
+                                               {:boat-type boat-type
+                                                :value     value
+                                                :uid       @uid}]))}])])
+
          [:div {:class [:flex :w-full :items-end :h-16]}
-          [sc/ptitle
+          [sc/ptitle1
            (if (= 3 (count @c-textinput-boats))
              (do
                (reset! c-lookup-result nil)
@@ -375,7 +391,7 @@
          [add-button st c-textinput-boats c-lookup-result]
          [question-button st c-textinput-boats])
        [:div {:style {:grid-column "2/4"}}
-        [input-area 3 "BÅTNR" :boats]]
+        [input-area 3 "Båtnummer" :boats]]
        [:div.flex.items-center.justify-center
         {:style {:grid-column "4"}}
         [delete-button st c-textinput-boats]]]
@@ -443,11 +459,11 @@
        {:on-click #()
         :style    {:padding-inline   "var(--size-2)"
                    :border-radius    "var(--radius-0)"
-                   :background-color (if has-focus? "var(--floating)" "var(--field-focus)")
+                   :background-color (if has-focus? "var(--field-focus)" "var(--field)")
                    :color            (if has-focus? "var(--fieldcopy)" "var(--text1)")
                    :box-shadow       (if has-focus? "var(--inner-shadow-1)")}}
        [:div.absolute.top-1.left-2
-        [sc/small caption]]
+        [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
        (textinput (subs (str @c-field) 0 length))])))
 
 (rf/reg-sub :rent/list
@@ -511,14 +527,17 @@
 ;endregion
 
 (defn boatpanel-window [mobile? left-side?]
-
   (let [ref (r/atom nil)
         user-uid (rf/subscribe [:lab/uid])
+        nøkkelnummer (subs (str (:nøkkelnummer (user.database/lookup-userinfo @user-uid)))
+                           4 7)
         ipad? (= @user-uid
                  @(db/on-value-reaction {:path ["system" "active"]}))]
     (r/create-class
       {:component-did-mount
        (fn [_]
+         (tap> nøkkelnummer)
+         (reset! c-textinput-phone nøkkelnummer)
          (reset! c-focus (if ipad? :phone :boats)))
        :reagent-render
        (fn [_]
@@ -542,7 +561,7 @@
                            (.focus e)
                            (reset! ref e)))}
            [bis/panel
-            {:style {:padding "var(--size-1)"}
+            {:style {:padding "var(--size-2)"}
              :class [:mobile]}
             (concat
               (let [f (fn [[area-name component]]
@@ -558,14 +577,11 @@
                          ["moon" [moon-toggle c-moon]]
                          ["key" [litteralkey-toggle c-litteral-key]]
                          ["adult" [adults-slider c-adults]]
-                         (when ipad?
-                           ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]])
+                         ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
                          ["boats" [selected-boats st c-focus c-textinput-boat]]
                          ["numpad" [number-pad st]]
                          ["check-a" (pointer @(rf/subscribe [::completed-users]))]
-                         (when (= @user-uid
-                                  @(db/on-value-reaction {:path ["system" "active"]}))
-                           ["check-b" (pointer @(rf/subscribe [::completed-contact]))])
+                         ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
                          ["check-c" (pointer (pos? (count @c-boat-list)))]
                          ["complete" [complete st]]
                          ["prev" [move-to-prev st]]
