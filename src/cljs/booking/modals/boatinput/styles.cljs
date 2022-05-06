@@ -35,23 +35,15 @@
 (o/defstyled debug-1 :div
   {:outline "1px solid green"})
 
-(o/defstyled delete-button :button
-  debug-1 center
-  {;:display       :grid
-   ;:place-content :center
-   :color "var(--red-1)"}
-  [:&:hover {:background "var(--red-8)"
-             :color      "var(--red-2)"}]
-  [:&:disabled {:color      "var(--text3)"
-                :background "none" #_"var(--surface0)"}]
-  [:&:active:enabled {:background "var(--red-7)"
-                      :color      "var(--red-1)"}])
-
-(o/defstyled add-button :button
-  [:&
-   {:display       :grid
-    :place-content "center center"
-    :border-radius "var(--radius-round)"}
+(o/defstyled push-button :button
+  [:& :w-full :h-full
+   {:display        :grid
+    ;:height   "3rem"
+    ;:width   "3rem"
+    ;:max-height   "3rem"
+    ;:max-width    "3rem"
+    :place-content  "center center"
+    :sborder-radius "var(--radius-round)"}
    [:&.remove {:color            "var(--red-1)"
                :background-color "var(--red-7)"}
     [:&:active:enabled {:color      "var(--red-1)"
@@ -65,7 +57,6 @@
                  :background "var(--toolbar-)"}]
    [:&:active:enabled {:background "var(--green-7)"
                        :color      "var(--green-1)"}]])
-
 
 (o/defstyled numberpad-button :button
   [:& :w-full :h-full :duration-100
@@ -91,18 +82,16 @@
 (o/defstyled up-down-button :div
   [:& :flex :flex-col :justify-around :items-center :select-none
    {:position         :relative
-    :box-shadow       "var(--inner-shadow-1)"
-    :background-color "var(--floating)"
+    :sbox-shadow      "var(--inner-shadow-1)"
+    :background-color "var(--vener)"
     :border-radius    "var(--radius-1)"}
 
-   #_[:div {;:margin "8px"
-            :background-color "red"}]
-   [:.some {:opacity    1
-            :color      "var(--selected-copy)"
-            :background "var(--selected)"}]
-   [:.zero {:opacity          1
-            :color            "var(--text1)"
-            :background-color "var(--floating)"}]
+   [:&.some {:opacity          1
+             :color            "var(--selected-copy)"
+             :background-color "var(--selected)"}]
+   [:&.zero {:opacity           1
+             :color             "var(--text1)"
+             :abackground-color "var(--floating)"}]
    [:&:active {:background-color "var(--content)"}]
    [:.overlay {:overflow :hidden}]])
 
@@ -122,8 +111,8 @@
    {:display               :grid
     :column-gap            "var(--size-2)"
     :row-gap               "var(--size-3)"
-    :min-width             "20rem"
-    :max-width             "20rem"
+    :min-width             "24rem"
+    :max-width             "24rem"
     :height                "100%"
     :grid-template-columns "repeat(5,1fr)"
     :grid-template-rows    "4rem 4rem auto auto repeat(4,4rem)"}
@@ -162,3 +151,7 @@
     :aspect-ratio "1/1"}]
   ([{:keys []} ch]
    [:<> [:div {:style {:border-radius (str "var(--radius-blob-" (inc (rand-int 5)) ")")}} ch]]))
+
+(o/defstyled clear-field-button :button
+  :flex-center :w-full :h-full
+  [:&:disabled {:opacity 0.2}])

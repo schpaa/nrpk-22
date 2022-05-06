@@ -253,10 +253,10 @@ outline: 2px solid #a0a8;
     --textmarker-background-light: var(--yellow-2);
     --textmarker-background-dim: var(--yellow-5);
 
-    --light-selected: var(--light-brand1);
-    --light-selected-copy: var(--gray-0);
-    --dim-selected: var(--dim-brand1);
-    --dim-selected-copy: var(--gray-9);
+    --light-selected: var(--yellow-5);
+    --light-selected-copy: var(--gray-9);
+    --dim-selected: var(--gray-9);
+    --dim-selected-copy: var(--gray-0);
 
     --dim-vener-hl: rgba(255,255,255,0.3);
     --light-vener-hl: rgba(0,0,0,0.1);

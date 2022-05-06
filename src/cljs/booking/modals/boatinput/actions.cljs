@@ -25,14 +25,13 @@
                    {:fx [[:rent/write data]]}))
 
 
-(defn- confirm-command [st]
+(defn- confirm-command [st ok?]
   (let [loggedin-uid @(rf/subscribe [:lab/uid])
-        ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
-                 (pos? (count (:list @st)))
-                 (or (and (pos? (count (:item @st)))
-                          (some #{(:item @st)} (map :number (:list @st))))
-                     (empty? (:item @st))))]
-    ;(js/alert "Dialogen blir værende men du blir flyttet (hvis du ikke allerede er der) til den siden som viser en liste over alle dine aktiviteter. Denne siste registreringen vil ligge øverst i listen.")
+        #_#_ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
+                     (pos? (count (:list @st)))
+                     (or (and (pos? (count (:item @st)))
+                              (some #{(:item @st)} (map :number (:list @st))))
+                         (empty? (:item @st))))]
     (when ok?
       ;todo add to db here
       (rf/dispatch [:rent/store (assoc @st :uid loggedin-uid)])

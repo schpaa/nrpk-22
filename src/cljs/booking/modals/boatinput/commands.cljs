@@ -21,13 +21,11 @@
 (defn increase-adults [c]
   (swap! c inc))
 
-(defn add-command [st c-textinput]
-  (reset! c-textinput nil)
-  (swap! st update :list (fnil conj #{}) (:item-data @st))
-  #_(swap! st (fn [st'] (-> st'
-                            (update :list (fnil conj #{}) (:item-data st'))
-                            ;;clear the item
-                            ((fn [e] (if true (dissoc e :item) identity)))))))
+(defn add-boat [st c-textinput]
+  (when-let [item (:lookup-results @st)]
+    (reset! c-textinput nil)
+    (swap! st update :list (fnil conj []) item)
+    (swap! st assoc :selected (-> item :number))))
 
 (defn delete-clicked [st c-textinput]
   (let [f (set (first (filter (fn [m] (= (:number m) (:selected st))) (:list st))))]

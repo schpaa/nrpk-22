@@ -156,12 +156,12 @@
   [sc/col-space-1 {:class [:truncate]}
    [sc/row-sba
     (when (or stability expert) [stability-expert m])
-    [sc/small0 {:style {:overflow      :hidden
-                        :text-overflow :ellipsis
-                        :white-space   :nowrap
-                        :color         "var(--text1)"
-                        :font-size     "small"}} navn]]
-   [sc/title1 #_{:style {:font-size "v"}} (schpaa.components.views/normalize-kind kind)]])
+    [sc/small {:style {:overflow      :hidden
+                       :text-overflow :ellipsis
+                       :white-space   :nowrap
+                       ;:color         "var(--text1)"
+                       :font-size     "small"}} navn]]
+   [sc/title (schpaa.components.views/normalize-kind kind)]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
