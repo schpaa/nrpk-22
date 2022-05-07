@@ -1,6 +1,5 @@
 (ns booking.utlan
   (:require [tick.core :as t]
-            [shadow.resource :refer [inline]]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.debug :as l]
@@ -8,124 +7,50 @@
             [re-frame.core :as rf]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.database]
-            [booking.routes :refer [shortcut-link]]
             [booking.ico :as ico]
             [logg.database]
             [reagent.core :as r]
             [db.core :as db]
-            [reitit.core :as reitit]
-            [clojure.set :as set]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
             [booking.common-widgets :as widgets]))
 
-;region
-;(logg.database/boat-db)
-
-(defonce data (r/atom {:utlån []}))
-
-(defn- util:prep [{:keys [boats] :as m}]
-  (assoc m :boats (mapv booking.database/fetch-id-from-number- boats)))
-
-(defn prepare []
-  (swap! data update :utlån (comp vec concat)
-         (mapv util:prep [{:id    (str (random-uuid))
-                           :date  (t/at (t/today) (t/time "03:45"))
-                           :boats [484 481 195 601 702 140 146 155 433 707]}
-                          {:id    (str (random-uuid))
-                           :date  (t/at (t/today) (t/time "03:45"))
-                           :boats [484 481]}
-                          {:id    (str (random-uuid))
-                           :date  (t/at (t/today) (t/time "03:45"))
-                           :boats [477]}])))
-
-(comment
-  (do
-    (reset! data {:utlån []})
-
-    (swap! data update :utlån (comp vec concat)
-           (mapv util:prep [{:id    (str (random-uuid))
-                             :date  (t/at (t/today) (t/time "03:45"))
-                             :boats [484 481 195 601 702 140 146 155 433 707]}
-                            {:id    (str (random-uuid))
-                             :date  (t/at (t/today) (t/time "03:45"))
-                             :boats [484 481]}]))))
-
-#_(defonce data
-           (r/atom {:utlån   (map (fn [{:keys [boats] :as m}]
-                                    (assoc m :boats (mapv booking.database/fetch-id-from-number- boats)))
-                                  [{:id          (str (random-uuid))
-                                    :date        (t/at (t/today) (t/time "03:45"))
-                                    :in-progress true
-                                    :boats       [484 481 195 601 702 140 146 155 433 707]}
-                                   {:id          (str (random-uuid))
-                                    :date        (t/at (t/date "2022-04-03") (t/noon))
-                                    :in-progress true
-                                    :boats       [495 491 428]}
-                                   {:id    (str (random-uuid))
-                                    :date  (t/at (t/date "2022-04-04") (t/noon))
-                                    :boats [496 492]}])
-                    :booking [{:id          (str (random-uuid))
-                               :date-out    (t/at (t/date "2022-04-02") (t/noon))
-                               :date-in     (t/at (t/date "2022-04-03") (t/noon))
-                               :in-progress true
-                               :boats       [123]}
-                              {:id          (str (random-uuid))
-                               :date-out    (t/at (t/date "2022-05-03") (t/noon))
-                               :date-in     (t/at (t/date "2022-05-04") (t/noon))
-                               :in-progress true
-                               :boats       [123 124]}]}))
-
-;endregion
-
-(comment
-  (softlistwrapper
-    {:data  (:utlån data)
-     :items (fn [{:keys [date]}]
-              [[sc/link {:on-click #(tap> "inn")} "Innlever"]
-               (into [:<>]
-                     (->> (remove nil? boats)
-                          (mapv (fn [id]
-                                  (let [data (booking.database/fetch-boatdata-for id)
-                                        number (:number data)]
-                                    (sc/badge-2 {:on-click #(schpaa.style.dialog/open-modal-boatinfo data)} number))))))
-               [:div.inline-block date]])}))
-
 ;region innlevering
 
+(defn view-fn [{:keys [navn number kind] :as m} [[k v] st original] timestamp t]
+  (let [innlevert (into #{} (keys original))]
+    [:div {:style {:gap             "var(--size-2)"
+                   :display         :flex
+                   :align-items     :center
+                   :justify-content :between
+                   :width           "100%"}}
+     t
+     [sc/badge-2 {:class [:big (when-not v :in-use)]} number]
+     [sc/col {:style {:flex "1"}}
+      [sc/text2 navn]
+      [sc/title1 (schpaa.components.views/normalize-kind kind)]
+      (if @(r/cursor st [k])
+        (if (some #{k} innlevert)
+          (if-let [time (some->> k (get original) (t/instant) (t/date-time))]
+            [sc/text1 "Innlevert " (booking.flextime/relative-time time times.api/arrival-date)])
+          [sc/text1 "Innleveres nå"])
+        (when-let [time (some->> timestamp (t/instant) (t/date-time))]
+          [sc/text1 "Tatt ut " (booking.flextime/relative-time time times.api/arrival-date)]))]]))
+
 (defn disp [{:keys [data on-close on-save]}]
-  (let [{:keys [initial original plain timestamp]} data
-        innlevert (into #{} (keys original))
-        db (rf/subscribe [:db/boat-db])
-        _id->number #(->> % (get @db) :number)]
-    (r/with-let [st2 (r/atom initial)
-                 st (r/atom initial)]
+  (let [{:keys [initial original timestamp]} data
+        db (rf/subscribe [:db/boat-db])]
+    (r/with-let [st (r/atom initial)]
       [sc/dropdown-dialog'
        [sc/col-space-8
         [sc/col-space-4
-         (let [f (fn [[k v] st original]
-                   (let [{:keys [number kind navn]} (get @db k)]
+         (let [f (fn [[k v]]
+                   (let [m (get @db k)
+                         args [[k v] st original]]
                      (schpaa.style.hoc.toggles/largeswitch-local
                        {:atoma   (r/cursor st [k])
-                        :view-fn (fn [t c] [:div {:style {:gap             "var(--size-2)"
-                                                          :display         :flex
-                                                          :align-items     :center
-                                                          :justify-content :between
-                                                          :width           "100%"}}
-                                            t
-                                            [sc/badge-2 {:class [:big (when-not v :in-use)]} number]
-                                            [sc/col {:style {:flex "1"}}
-                                             [sc/text2 navn]
-                                             [sc/title1 (schpaa.components.views/normalize-kind kind)]
-                                             (if @(r/cursor st [k])
-                                               (if (some #{k} innlevert)
-                                                 (if-let [time (some->> k (get original) (t/instant) (t/date-time))]
-                                                   [sc/text1 "Innlevert " (booking.flextime/relative-time time times.api/arrival-date)])
-                                                 [sc/text1 "Innleveres nå"])
-                                               (when-let [time (some->> timestamp (t/instant) (t/date-time))]
-                                                 [sc/text1 "Tatt ut " (booking.flextime/relative-time time times.api/arrival-date)]))]])})))]
-           (map #(f % st original) @st))]
+                        :view-fn (fn [t c] (view-fn m args timestamp t))})))]
+           (map f @st))]
         [sc/row-ec {:class [:pb-6]}
          [:div.grow]
          [hoc.buttons/regular {:on-click on-close} "Avbryt"]
@@ -474,7 +399,7 @@
                                      (str arrived-datetime))]]))])]
                          [(map (fn [[id returned]]
                                  (let [returned (not (empty? returned))
-                                       number (get lookup-id->number (keyword id) (str " ? " id))]
+                                       number (get lookup-id->number (keyword id) (some-> id name))]
                                    (sc/badge-2 {:class    [:big (if-not returned :in-use)]
                                                 :on-click #(dlg/open-modal-boatinfo
                                                              {:uid  loggedin-uid

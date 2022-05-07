@@ -37,13 +37,17 @@
 
 (o/defstyled push-button :button
   [:& :w-full :h-full
-   {:display       :grid
-    ;:height   "3rem"
-    ;:width   "3rem"
-    ;:max-height   "3rem"
-    ;:max-width    "3rem"
-    :border-radius "var(--radius-round)"
-    :place-content "center center"}
+   {:display       "grid"
+    :border-radius "var(--radius-0)"
+    :place-items   "center"}
+   [:&.add {:color            "var(--content)"
+            :background-color "var(--text1)"}
+    [:&:active:enabled {:color            "var(--green-1)"
+                        :background-color "var(--brand1-lighter)"}]]
+
+   [:&.new {:color            "var(--brand1-copy)"
+            :background-color "var(--brand1)"}
+    [:&:active:enabled {:background-color "var(--orange-8)"}]]
 
    [:&.remove {:color            "var(--red-1)"
                :background-color "var(--red-7)"}
@@ -52,10 +56,7 @@
    [:&:disabled {:opacity    0.2
                  :color      "var(--text1)"
                  :background "var(--toolbar-)"}]
-   [:&.add {:color            "var(--green-1)"
-            :background-color "var(--brand1)"}
-    [:&:active:enabled {:color      "var(--green-1)"
-                        :background "var(--brand1-lighter)"}]]
+
    [:&:active:enabled {:background "var(--green-7)"
                        :color      "var(--green-1)"}]])
 

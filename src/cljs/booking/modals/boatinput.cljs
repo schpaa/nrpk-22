@@ -17,21 +17,35 @@
             [lambdaisland.ornament :as o]
             [db.core :as db]))
 
-(def debug nil)
+(defn- equals-to [a b]
+  (= a (str b)))
+
+(defn- number-not-in-list [x xs]
+  (empty? (filter
+            (comp (partial equals-to x)
+                  :number)
+            xs)))
+
+(def debug 1)
 
 (declare input-area)
 
 ;region state
 
-(defonce st (r/atom (if debug {:litteral-key   false
-                               :lookup-results nil
-                               :list           nil
-                               :adults         1
-                               :juveniles      0
-                               :children       0
-                               :textfield      {:phone "123"
-                                                :boats ""}}
-                              {})))
+(def test-state
+  {:litteral-key   false
+   :lookup-results nil
+   :adults         1
+   :juveniles      0
+   :children       0
+   :selected       "999"
+   :list           [{:new true :number "999"}
+                    {:new true :number "991"}
+                    {:new false :number "444"}]
+   :textfield      {:phone "123"
+                    :boats ""}})
+
+(defonce st (r/atom (if debug test-state {})))
 
 (def c-focus (r/cursor st [:focus]))
 (def c-extra (r/cursor st [:extra]))
@@ -72,7 +86,8 @@
          #((fn [st']
              (if (some #{st'} (map :number (:list st)))
                (assoc st' :selected @c-textinput)
-               st')) (str % value))))
+               st'))
+           (str % value))))
 
 ;region input-areas/buttons
 
@@ -149,45 +164,57 @@
                       :background-color "var(--content)"})}
    [sc/icon-large (if @c ico/moon-filled ico/moon-outline)]])
 
-(defn question-button [st c-textinput]
+(defn question-button [st source]
   [bis/push-button
-   {:class    []
-    :on-click #(cmd/add-boat st c-textinput)
+   {:class    [:new]
+    :on-click #(cmd/new-boat c-boat-list c-selected source)
     :value    true
-    :disabled (not (= 3 (count @c-textinput)))
-    :style    {:align-self   :center
-               :justify-self :center}}
+    :disabled (and (not (number-not-in-list @source @c-boat-list))
+                   (= 3 (count @source)))}
    (sc/icon-huge ico/plusplus)])
 
-(defn add-button [st c-textinput lookup-result-c]
+(comment
+  (do
+    (number-not-in-list @c-textinput-boat @c-boat-list)))
+
+(defn add-button [st c-textinput lookup-result]
   [bis/push-button
-   {:class    []
-    :on-click #(cmd/add-boat st c-textinput)
+   {:class    [:add]
+    :on-click #(cmd/add-boat st c-textinput lookup-result)
     :value    true
-    :disabled (not (and (some? @lookup-result-c)
-                        ;(not= @c-textinput (:selected @st))
-                        ;(not (some #{@c-textinput} (mapv :number (:list @st))))
-                        (= 3 (count @c-textinput))))
-    :style    {:color        "var(--text1)"
-               :align-self   :center
-               :justify-self :center
-               :max-height   "3rem"
-               :max-width    "3rem"}}
-   (sc/rounded (sc/icon-large ico/plus))])
+    :disabled (or (< (count @c-textinput) 3)
+                  (some? (first (filter (comp (partial equals-to @c-textinput) :number) @c-boat-list))))}
+   (sc/icon-large ico/plus)])
 
 (defn delete-button [st c-textinput]
-  (let [disabled (not (or (not (empty? @c-textinput)) (not (empty? @c-selected))))]
+  (let [nothing-selected (and (empty? @c-textinput)
+                              (empty? @c-selected))]
     [bis/clear-field-button
-     {:on-click #(if @c-selected (reset! c-selected nil) (reset! c-textinput nil))
-      :disabled disabled
+     {:on-click (fn [_]
+                  (if (some? @c-selected)
+                    (do
+                      (swap! c-boat-list
+                             #(remove (comp (partial equals-to @c-selected) :number) %))
+                      (reset! c-selected nil))
+                    (do
+                      (reset! c-textinput nil)
+                      (reset! c-selected nil))))
+      :disabled nothing-selected
       :style    {:color "var(--text)"}}
      (sc/icon-large ico/closewindow)]))
+
+(comment
+  (do
+    (let [a (r/atom [{:a 1} {:b 2}])]
+      (swap! a #(map (fn [kv] (update kv :aa inc)) %)))))
 
 (defn reset-button [st]
   (r/with-let [form-dirty? #(or (pos? (+ (:adults @st)
                                          (:juveniles @st)
                                          (:children @st)))
                                 (pos? (count (:list @st)))
+                                @c-textinput-phone
+                                @c-textinput-boat
                                 (:moon @st)
                                 (:key @st)
                                 (not (empty? (:item @st))))
@@ -208,7 +235,7 @@
                            (js/clearTimeout @timer))
                          (reset! timer nil))]
     (let [dirty? (form-dirty?)]
-      [bis/button
+      [bis/push-button
        {:ref     (fn [e]
                    (when-not @a
                      (.addEventListener e "touchstart" mousedown)
@@ -246,14 +273,14 @@
               :grid-auto-rows        "1fr"}}
      (doall (for [e '[7 8 9 4 5 6 1 2 3 :reset 0 :del]]
               (if (number? e)
-                [bis/numberpad-button
+                [bis/push-button
                  {:class    [:button-pad]
                   :on-click #(key-clicked active-field e)
                   :disabled (not (< (count @active-field) (if (= :boats @c-focus) 3 8)))}
                  [bis/button-caption e]]
                 (cond
                   (= :del e)
-                  [bis/numberpad-button
+                  [bis/push-button
                    {:on-click #(cmd/backspace-clicked st active-field)
                     :style    {:color (if (not (empty? @active-field)) "var(--orange-5)" "var(--text2)")}
                     :enabled  (not (empty? @active-field))}
@@ -263,7 +290,7 @@
                   [reset-button st]
 
                   (= :toggle e)
-                  [bis/numberpad-button
+                  [bis/push-button
                    {:on-click #(swap! st update :phone (fnil not false))}
                    (if (:phone @st)
                      [sc/icon-large ico/tag]
@@ -320,7 +347,7 @@
 
 ;region components
 
-(defn- list-of-selected [active-field]
+(defn- list-of-selected []
   [sc/col
    {:style {:border-radius         "var(--radius-0)"
             :column-gap            "var(--size-1)"
@@ -328,22 +355,85 @@
             :display               :grid
             :grid-template-columns "repeat(4,1fr) "
             :grid-template-rows    "auto"}}
-   (let [data (sort (map :number (:list @st)))
+   (let [data (map :number @c-boat-list)
          m (or (mod (count data) 4) 0)]
-     (concat
-       (for [e (map :number (:list @st))]
-         [sc/badge {:class    [(if (= e (:selected @st)) :selected :normal)]
-                    :on-click (fn [] (if (= e (:selected @st))
-                                       (do
-                                         ;(reset! active-field nil)
-                                         (swap! st dissoc :selected :item))
-                                       (do
-                                         ;(reset! active-field e)
-                                         (swap! st #(-> %
-                                                        (assoc :selected e)
-                                                        (assoc :phone false))))))} e])
-       [(when (or (< m 4))
-          (repeat (- 4 m) [sc/badge {:class [:disabled]}]))]))])
+     (doall (concat
+              (for [{:keys [new number]} @c-boat-list]
+                [sc/badge {:class    [(when new :new)
+                                      (when (equals-to @c-selected number) :selected)]
+                           :on-click (fn []
+                                       (if (= number @c-selected)
+                                         (swap! st dissoc :selected)
+                                         (reset! c-selected number)))} number])
+              [(when (or (zero? (count data)) (not (= m 0)))
+                 (repeat (- 4 m) [sc/badge {:class [:disabled]}]))])))])
+
+(defn- info-panel [has-focus? {:keys [new number navn] :as boat}]
+  (let [f (fn [a & b]
+            [sc/col
+             [sc/ptext a]
+             [sc/ptitle1 b]])]
+    [:div.-mx-2.-mt-2.p-2
+     {:style (when (and has-focus? boat)
+               {:background-color "var(--selected)"
+                :color            "var(--selected-copy)"})
+      :class [:flex :items-end :h-16]}
+     (cond
+       (some #{@c-textinput-boat} (map str (keep :number (filter :new @c-boat-list))))
+       [f "allerende" "i listen"]
+
+       (and (nil? boat) @c-textinput-boat (= 3 (count @c-textinput-boat)))
+       [f (str @c-textinput-boat " finnes ikke") "Lage den nå?"]
+
+       (nil? boat)
+       [f "Båtnummer (3 siffer)" ""]
+
+       new
+       [f number navn]
+
+       :else
+       [sc/row-sc-g2 {:style {:width           "100%"
+                              :justify-content :space-around}}
+        [widgets/stability-name-category boat]
+        (r/with-let [boat-type (:boat-type boat)
+                     uid (rf/subscribe [:lab/uid])
+                     bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+                     ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
+          [widgets/favourites-star
+           {:bt-data       bt-data
+            :ex-data       ex-data
+            :on-star-click (fn [boat-type value]
+                             (rf/dispatch [:star/write-star-change
+                                           {:boat-type boat-type
+                                            :value     value
+                                            :uid       @uid}]))}])]
+       #_(if (or (:selected @st) boat)
+           (do
+             (if (:selected @st)
+               (reset! c-lookup-result (lookup (:selected @st)))
+               (reset! c-lookup-result boat))
+             [:div.flex.justify-between.items-center.w-full
+              [widgets/stability-name-category boat]
+              (let [boat-type (:boat-type boat)
+                    uid (rf/subscribe [:lab/uid])
+                    bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+                    ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
+                [widgets/favourites-star
+                 {:bt-data       bt-data
+                  :ex-data       ex-data
+                  :on-star-click (fn [boat-type value]
+                                   (rf/dispatch [:star/write-star-change
+                                                 {:boat-type boat-type
+                                                  :value     value
+                                                  :uid       @uid}]))}])])
+
+           [:div {:class [:flex :w-full :items-end :h-16]}
+            [sc/ptitle1
+             (if (= 3 (count @c-textinput-boat))
+               (do
+                 (reset! c-lookup-result nil)
+                 (str @c-textinput-boat " er ikke registrert"))
+               "Båtnummer (3 siffer)")]]))]))
 
 (defn selected-boats [st c-focus c-textinput-boats]
   (let [has-focus? (= :boats @c-focus)
@@ -358,50 +448,28 @@
              :style {:grid-column "1/-1"
                      :grid-row    "1/2"}}
 
-      [:div.-mx-2.-mt-2.p-2
-       {:style {:background-color (when (and has-focus? boat) "var(--selected)")
-                :color            (when (and has-focus? boat) "var(--selected-copy)")}
-        :class [:flex :items-end :h-16]}
-       (if (or (:selected @st) boat)
-         (do
-           (if (:selected @st)
-             (reset! c-lookup-result (lookup (:selected @st)))
-             (reset! c-lookup-result boat))
-           [:div.flex.justify-between.items-center.w-full
-            [widgets/stability-name-category boat]
-            (let [boat-type (:boat-type boat)
-                  uid (rf/subscribe [:lab/uid])
-                  bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
-                  ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
-              [widgets/favourites-star
-               {:bt-data       bt-data
-                :ex-data       ex-data
-                :on-star-click (fn [boat-type value]
-                                 (rf/dispatch [:star/write-star-change
-                                               {:boat-type boat-type
-                                                :value     value
-                                                :uid       @uid}]))}])])
 
-         [:div {:class [:flex :w-full :items-end :h-16]}
-          [sc/ptitle1
-           (if (= 3 (count @c-textinput-boats))
-             (do
-               (reset! c-lookup-result nil)
-               (str @c-textinput-boats " er ikke registrert"))
-             "Båtnummer (3 siffer)")]])]
+      [info-panel has-focus? (or boat
+                                 (if @c-selected
+                                   {:new    true
+                                    :number @c-selected
+                                    :navn   "Ny båt"}
+                                   nil))]
 
       [:div {:style {:width      :100%
                      :column-gap "var(--size-1)"
                      :display    :grid :grid-template-columns "repeat(4,1fr)"}}
-       (if boat
-         [add-button st c-textinput-boats c-lookup-result]
-         [question-button st c-textinput-boats])
+       (if (and boat (= 3 (count @c-textinput-boats)))
+         [add-button st c-textinput-boats boat]
+         (if (= 3 (count @c-textinput-boats))
+           [question-button st c-textinput-boats]
+           [add-button st c-textinput-boats c-lookup-result]))
        [:div {:style {:grid-column "2/4"}}
         [input-area 3 "Båtnummer" :boats]]
        [:div.flex.items-center.justify-center
         {:style {:grid-column "4"}}
         [delete-button st c-textinput-boats]]]
-      [list-of-selected c-textinput-boats]]]))
+      [list-of-selected]]]))
 
 (defn move-to-prev [st]
   (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
@@ -470,9 +538,12 @@
                         []
                         @(db.core/on-value-reaction {:path ["activity-22"]}))))
 
+
+
 (defn keydown-f [event]
   (let [kc (.-keyCode event)
         active (focused-field c-focus)]
+    (tap> kc)
     (cond
       (= kc keycodes/S) (when @(rf/subscribe [::completed])
                           (actions/confirm-command st))
@@ -483,7 +554,12 @@
       (= kc keycodes/V) (cmd/increase-adults c-adults)
       (= kc keycodes/G) (cmd/decrease-children c-children)
       (= kc keycodes/B) (cmd/increase-children c-children)
-      (= kc keycodes/ENTER) (cmd/add-boat st active)
+      (= kc keycodes/ENTER) (if (and (= 3 (count @active))
+                                     (number-not-in-list @active @c-boat-list))
+                              (let [l (lookup @active)]
+                                (if (some? l)
+                                  (cmd/add-boat st active l)
+                                  (cmd/new-boat c-boat-list c-selected active))))
       (= kc keycodes/DELETE) (cmd/delete-clicked st active) ;only from keyboard
       (= kc keycodes/BACKSPACE) (cmd/backspace-clicked st active)
       (some #{kc} (range 48 58)) (key-clicked active (- kc 48)))))
@@ -537,8 +613,12 @@
           (when debug
             [sc/col-space-1
              {:style {:width "20rem"}}
-             [l/pre @st]
-             [l/pre (actions/prepare-data @user-uid (t/now) @st)]])
+             [l/pre @c-boat-list]
+             [l/pre (remove (comp not :new) @c-boat-list)]
+             [l/pre @c-selected]
+             [l/pre @st]])
+          ;[l/pre @st]
+          ;[l/pre (actions/prepare-data @user-uid (t/now) @st)]])
 
           [:div
            {:tab-index 0

@@ -21,11 +21,16 @@
 (defn increase-adults [c]
   (swap! c inc))
 
-(defn add-boat [st c-textinput]
-  (when-let [item (:lookup-results @st)]
-    (reset! c-textinput nil)
+(defn new-boat [c-boat-list c-selected c-textinput]
+  (swap! c-boat-list (fnil conj []) {:new true :number @c-textinput})
+  (reset! c-selected @c-textinput)
+  (reset! c-textinput nil))
+
+(defn add-boat [st to-add lookup-result]
+  (when-let [item lookup-result]
+    (reset! to-add nil)
     (swap! st update :list (fnil conj []) item)
-    #_(swap! st assoc :selected (-> item :number))))
+    (swap! st assoc :selected (-> item :number str))))
 
 (defn delete-clicked [st c-textinput]
   (let [f (set (first (filter (fn [m] (= (:number m) (:selected st))) (:list st))))]

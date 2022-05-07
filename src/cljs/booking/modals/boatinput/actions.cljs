@@ -16,7 +16,10 @@
    :ref-uid   (get-in data [:extra 2])
    :uid       loggedin-uid
    :list      (into {}
-                    (map (fn [{:keys [id]}] [id ""])
+                    (map (fn [{:keys [new id number]}]
+                           (if (or new (nil? id))
+                             [(str number " (ny)") ""]
+                             [id ""]))
                          (:list data)))})
 
 (rf/reg-fx :rent/write (fn [data]
