@@ -1,45 +1,91 @@
 (ns booking.modals.boatinput.actions
-  (:require [re-frame.core :as rf]
+  (:require [re-frame.core :as rf :refer [reg-fx reg-event-fx]]
             [db.core]
             [tick.core :as t]))
 
-(defn prepare-data [loggedin-uid td data]
-  {:timestamp (str td)
-   :sleepover (:moon data)
-   :adults    (:adults data)
-   :havekey   (:litteral-key data)
-   :phone     (or
-                (some-> data :extra second)
-                (some-> data :textfield :phone))
-   :children  (:children data)
-   :juveniles (:juveniles data)
-   :ref-uid   (get-in data [:extra 2])
-   :uid       loggedin-uid
-   :list      (into {}
-                    (map (fn [{:keys [new id number]}]
-                           (if (or new (nil? id))
-                             [(str number " (ny)") ""]
-                             [id ""]))
-                         (:list data)))})
+(defn prepare-data [{:keys [uid timestamp state]}]
+  (let [{:keys [litteral-key moon adults children juveniles]} state]
+    {:uid       uid
+     :ref-uid   (get-in state [:extra 2])
+     :timestamp timestamp
+     :adults    adults
+     :juveniles juveniles
+     :children  children
+     :sleepover moon
+     :havekey   litteral-key
+     :phone     (or
+                  (some-> state :extra second)
+                  (some-> state :textfield :phone))
+     :list      (into {}
+                      (map (fn [{:keys [new id number]}]
+                             (if (or new (nil? id))
+                               [(str number) ""]
+                               [id ""]))
+                           (:list state)))}))
 
-(rf/reg-fx :rent/write (fn [data]
-                         (let [now (t/now)]
-                           (db.core/database-push
-                             {:path  ["activity-22"]
-                              :value data}))))
+(defn upgrade-boat-numbers [data new-data]
+  (let [list-data (into {} (map (fn [[k v]] [(or (get new-data k) k) v]) (:list data)))]
+    (tap> [:upgrade-boat-numbers list-data])
+    (assoc-in data [:list]
+              (into {} (map (fn [[k v]] [(or (get new-data k) k) v]) list-data)))))
 
-(rf/reg-event-fx :rent/store
-                 (fn [_ [_ data]]
-                   {:fx [[:rent/write data]]}))
+(reg-event-fx :rent/store
+              (fn [_ [_ data new-boat-map]]
+                {:fx [[:rent/write [data new-boat-map]]]}))
+
+(defn- create-boat! [number]
+  (let [k (db.core/database-push
+            {:path  ["boad-item"]
+             :value {:number number}})]
+    [number (.-key k)]))
+
+(rf/reg-event-fx :create-boats
+                 (fn [{db :db} [_ boat-numbers]]
+                   (let [new-data (into {} (map create-boat! boat-numbers))]
+                     {:db (assoc db :boatnumber-to-uuid new-data)})))
 
 (defn- confirm-command [st]
-  (let [loggedin-uid @(rf/subscribe [:lab/uid])]
-    ;todo add to db here
-    (rf/dispatch [:rent/store (prepare-data loggedin-uid (t/now) @st)])
-
+  (let [uid @(rf/subscribe [:lab/uid])
+        prep (prepare-data {:uid       uid
+                            :timestamp (str (t/now))
+                            :state     @st})
+        list-of-keys (-> prep :list keys)]
+    (rf/dispatch [:create-boats list-of-keys])
+    (when-let [new-data (rf/subscribe [:wait-for-the-things])]
+      (rf/dispatch [:rent/store prep @new-data]))
     ;todo add counter increment update here?
     (rf/dispatch [:app/navigate-to [:r.utlan]])
     (rf/dispatch [:modal.boatinput/close])
-
-    #_(booking.aktivitetsliste/add-command (assoc @st :start (t/instant (t/now))))
     true))
+
+(rf/reg-sub :wait-for-the-things
+            :-> :boatnumber-to-uuid)
+
+(reg-fx :rent/write
+        (fn [[data new-boat-map]]
+          (let [data (upgrade-boat-numbers data new-boat-map)]
+            (tap> [:rent/write data new-boat-map])
+            (db.core/database-push
+              {:path  ["activity-22"]
+               :value data}))))
+
+(comment
+  (do
+    (let [d (prepare-data {:uid       "uid"
+                           :timestamp (str (t/now))
+                           :state     {:adults 1
+                                       :list   [{:number "yyyyyyyyy"}
+                                                {:number "xxxxxxxxxxxxx"}
+                                                {:new true :number "123"}
+                                                {:new true :number "124"}]}})]
+      (rf/dispatch [:create-boats (-> d :list keys)])
+      (when-let [x (rf/subscribe [:wait-for-the-things])]
+        (tap> {:boatnumber-to-uuid @x})
+        (rf/dispatch [:rent/store d @x])))))
+
+(comment
+  (do
+    (let [new-data {"1" "zzz" "2" "xxx"}
+          data {:list {"1" nil "2" nil "3" nil}}]
+      (tap> (into {} (map (fn [[k v]] [(or (get new-data k) k) v])
+                          (:list data)))))))

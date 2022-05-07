@@ -397,14 +397,28 @@
                                    (if (seq arrived-datetime)
                                      (str "kl. " (times.api/time-format (t/time dt)))
                                      (str arrived-datetime))]]))])]
-                         [(map (fn [[id returned]]
-                                 (let [returned (not (empty? returned))
-                                       number (get lookup-id->number (keyword id) (some-> id name))]
-                                   (sc/badge-2 {:class    [:big (if-not returned :in-use)]
+
+                         ;boatnumbers
+                         (let [f (fn [id returned number]
+                                   (sc/badge-2 {:class    [:big (when-not returned :in-use)]
                                                 :on-click #(dlg/open-modal-boatinfo
                                                              {:uid  loggedin-uid
-                                                              :data (get db (keyword id))})} number)))
-                               (remove nil? boats))])))])))))
+                                                              :data (get db (keyword id))})}
+                                               number))]
+                           [(map (fn [[id returned]]
+                                   (let [nm (some-> id keyword)
+                                         g (get-in lookup-id->number [nm] nm)]
+                                     [f id (not (empty? (str returned))) g])
+                                   #_(let [returned (not (empty? returned))
+                                           number nil #_(when (keyword? id)
+                                                          (get lookup-id->number (keyword id)
+                                                               (some-> id name)))]
+                                       [:div id]
+                                       #_(sc/badge-2 {:class    [:big (if-not returned :in-use)]
+                                                      :on-click #(dlg/open-modal-boatinfo
+                                                                   {:uid  loggedin-uid
+                                                                    :data (get db (keyword id))})} 'number)))
+                                 (remove nil? boats))]))))])))))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}

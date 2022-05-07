@@ -26,7 +26,7 @@
                   :number)
             xs)))
 
-(def debug 1)
+(def debug nil)
 
 (declare input-area)
 
