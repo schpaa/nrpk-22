@@ -17,12 +17,14 @@
         [sc/col
          [sc/col-space-2
           [sc/row-sc-g2-w
-           [sc/row [widgets/stability-name-category m]]]
+           [sc/row {:style {:color "red"}}
+            [widgets/stability-name-category m]]]
 
           (when @(schpaa.state/listen ::beskrivelse)
             [sc/col-space-2
              {:class [:-debug]
               :style {:flex "1 0 auto"}}
+
              [widgets/dimensions-and-material m]
              [sc/text1 {:style {:font-size "unset"}} description]])
 
@@ -31,13 +33,13 @@
                                             :justify-content :start
                                             :flex-wrap       :wrap}}]
                   (for [[k v] (sort-by (comp :number val) < group)]
-                    [sc/badge-2 {:class    [:small (when (pos? (:location v)) :invert)]
-                                 :style    {:font-size "unset"
-                                            :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-                                 :on-click #(dlg/open-modal-boatinfo
-                                              (let [loggedin-uid @(rf/subscribe [:lab/uid])]
-                                                {:uid  loggedin-uid
-                                                 :data (get @(rf/subscribe [:db/boat-db]) (keyword k))}))}
+                    [sc/badge {:class    [:small (when (pos? (:location v)) :invert)]
+                               :style    {:xfont-size "unset"
+                                          :xtransform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
+                               :on-click #(dlg/open-modal-boatinfo
+                                            (let [loggedin-uid @(rf/subscribe [:lab/uid])]
+                                              {:uid  loggedin-uid
+                                               :data (get @(rf/subscribe [:db/boat-db]) (keyword k))}))}
                      (:number v)])))]]
         [:div.flex.justify-between.gap-4
 

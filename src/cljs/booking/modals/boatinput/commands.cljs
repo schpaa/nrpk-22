@@ -25,7 +25,7 @@
   (when-let [item (:lookup-results @st)]
     (reset! c-textinput nil)
     (swap! st update :list (fnil conj []) item)
-    (swap! st assoc :selected (-> item :number))))
+    #_(swap! st assoc :selected (-> item :number))))
 
 (defn delete-clicked [st c-textinput]
   (let [f (set (first (filter (fn [m] (= (:number m) (:selected st))) (:list st))))]

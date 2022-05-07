@@ -17,18 +17,21 @@
             [lambdaisland.ornament :as o]
             [db.core :as db]))
 
+(def debug nil)
+
 (declare input-area)
 
 ;region state
 
-(defonce st (r/atom {:litteral-key   false
-                     :lookup-results nil
-                     :list           nil
-                     :adults         1
-                     :juveniles      0
-                     :children       0
-                     :textfield      {:phone "123"
-                                      :boats ""}}))
+(defonce st (r/atom (if debug {:litteral-key   false
+                               :lookup-results nil
+                               :list           nil
+                               :adults         1
+                               :juveniles      0
+                               :children       0
+                               :textfield      {:phone "123"
+                                                :boats ""}}
+                              {})))
 
 (def c-focus (r/cursor st [:focus]))
 (def c-extra (r/cursor st [:extra]))
@@ -41,7 +44,7 @@
 (def c-boat-list (r/cursor st [:list]))
 (def c-textinput-phone (r/cursor st [:textfield :phone]))
 (def c-textinput-boat (r/cursor st [:textfield :boats]))
-
+(def c-selected (r/cursor st [:selected]))
 (defn focused-field [c-focus]
   (cond
     (= :boats @c-focus) c-textinput-boat
@@ -64,6 +67,7 @@
 
 (defn key-clicked [c-textinput value]
   ;if some in the list matches this number, make it selected
+  (swap! st assoc :selected nil)
   (swap! c-textinput
          #((fn [st']
              (if (some #{st'} (map :number (:list st)))
@@ -172,11 +176,12 @@
    (sc/rounded (sc/icon-large ico/plus))])
 
 (defn delete-button [st c-textinput]
-  [bis/clear-field-button
-   {:on-click #(reset! c-textinput nil)
-    :disabled (not (seq @c-textinput))
-    :style    {:color "var(--text)"}}
-   (sc/icon-large ico/closewindow)])
+  (let [disabled (not (or (not (empty? @c-textinput)) (not (empty? @c-selected))))]
+    [bis/clear-field-button
+     {:on-click #(if @c-selected (reset! c-selected nil) (reset! c-textinput nil))
+      :disabled disabled
+      :style    {:color "var(--text)"}}
+     (sc/icon-large ico/closewindow)]))
 
 (defn reset-button [st]
   (r/with-let [form-dirty? #(or (pos? (+ (:adults @st)
@@ -330,20 +335,19 @@
          [sc/badge {:class    [(if (= e (:selected @st)) :selected :normal)]
                     :on-click (fn [] (if (= e (:selected @st))
                                        (do
-                                         (reset! active-field nil)
+                                         ;(reset! active-field nil)
                                          (swap! st dissoc :selected :item))
                                        (do
-                                         (reset! active-field e)
+                                         ;(reset! active-field e)
                                          (swap! st #(-> %
                                                         (assoc :selected e)
                                                         (assoc :phone false))))))} e])
-       [(when (or (< m 4)
-                  #_(not= 0 (mod m 4)))
+       [(when (or (< m 4))
           (repeat (- 4 m) [sc/badge {:class [:disabled]}]))]))])
 
 (defn selected-boats [st c-focus c-textinput-boats]
   (let [has-focus? (= :boats @c-focus)
-        boat (lookup @c-textinput-boats)]
+        boat (lookup (or (:selected @st) @c-textinput-boats))]
     [sc/surface-ab
      {:on-click #(reset! c-focus :boats)
       :class    [:h-full (when has-focus? :focused) :overflow-clip]
@@ -358,9 +362,11 @@
        {:style {:background-color (when (and has-focus? boat) "var(--selected)")
                 :color            (when (and has-focus? boat) "var(--selected-copy)")}
         :class [:flex :items-end :h-16]}
-       (if boat
+       (if (or (:selected @st) boat)
          (do
-           (reset! c-lookup-result boat)
+           (if (:selected @st)
+             (reset! c-lookup-result (lookup (:selected @st)))
+             (reset! c-lookup-result boat))
            [:div.flex.justify-between.items-center.w-full
             [widgets/stability-name-category boat]
             (let [boat-type (:boat-type boat)
@@ -432,7 +438,8 @@
 (defn complete [st]
   (let [ok? (rf/subscribe [::completed])]
     [bis/push-button
-     {:on-click #(when (actions/confirm-command st @(rf/subscribe [::completed]))
+     {:on-click #(when @(rf/subscribe [::completed])
+                   (actions/confirm-command st)
                    (cmd/reset-command st))
       :disabled (not @ok?)
       :class    [:add]
@@ -449,25 +456,6 @@
 
 
 ;endregion
-
-(defn input-area [length caption fieldname]
-  ;cap size of input to length
-  (let [c-field (r/cursor st [:textfield fieldname])]
-    (reset! c-field (subs (str @c-field) 0 length))
-    (let [has-focus? (= @c-focus fieldname)
-          textinput (fn [v]
-                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1
-                       [bis/input-caption v (when has-focus? [:span.blinking-cursor.pb-1 "|"])]])]
-      [:div.relative.h-16.shrink-0
-       {:on-click #()
-        :style    {:padding-inline   "var(--size-2)"
-                   :border-radius    "var(--radius-0)"
-                   :background-color (if has-focus? "var(--field-focus)" "var(--field)")
-                   :color            (if has-focus? "var(--fieldcopy)" "var(--text1)")
-                   :box-shadow       (if has-focus? "var(--inner-shadow-1)")}}
-       [:div.absolute.top-1.left-2
-        [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
-       (textinput (subs (str @c-field) 0 length))])))
 
 (rf/reg-sub :rent/list
             #(sort-by (comp :timestamp val) >
@@ -486,7 +474,8 @@
   (let [kc (.-keyCode event)
         active (focused-field c-focus)]
     (cond
-      (= kc keycodes/S) (actions/confirm-command st @(rf/subscribe [::completed]))
+      (= kc keycodes/S) (when @(rf/subscribe [::completed])
+                          (actions/confirm-command st))
       (= kc keycodes/R) (cmd/reset-command st)
       (= kc keycodes/N) (cmd/litteral-key-command c-litteral-key)
       (= kc keycodes/O) (cmd/moon-command c-moon)
@@ -532,7 +521,7 @@
 (defn boatpanel-window [mobile? left-side?]
   (let [ref (r/atom nil)
         user-uid (rf/subscribe [:lab/uid])
-        nøkkelnummer "123" _# (subs (str (:nøkkelnummer (user.database/lookup-userinfo @user-uid))) 4 7)
+        nøkkelnummer (subs (str (:nøkkelnummer (user.database/lookup-userinfo @user-uid))) 4 7)
         ipad? (= @user-uid
                  @(db/on-value-reaction {:path ["system" "active"]}))]
     (r/create-class
@@ -545,10 +534,11 @@
        (fn [_]
          [sc/row
 
-          (when goog.DEBUG
-            [:div.bg-black
+          (when debug
+            [sc/col-space-1
              {:style {:width "20rem"}}
-             [l/pre @st]])
+             [l/pre @st]
+             [l/pre (actions/prepare-data @user-uid (t/now) @st)]])
 
           [:div
            {:tab-index 0
@@ -666,7 +656,7 @@
             [ui/transition-child
              {
               :class       [:inline-block :align-middle :text-left :transform
-                            (some-> (sc/inner-dlg) last :class first)]
+                            (o/classname sc/inner-dlg)]
               :enter       "ease-in-out duration-200"
               :enter-from  (cond
                              @mobile? "opacity-0  translate-y-16"
@@ -695,3 +685,22 @@
                              :action action)))]]]]]))))
 
 ;endregion
+
+(defn input-area [length caption fieldname]
+  ;cap size of input to length
+  (let [c-field (r/cursor st [:textfield fieldname])]
+    (reset! c-field (subs (str @c-field) 0 length))
+    (let [has-focus? (= @c-focus fieldname)
+          textinput (fn [v]
+                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1
+                       [bis/input-caption v (when has-focus? [:span.blinking-cursor.pb-1 "|"])]])]
+      [:div.relative.h-16.shrink-0
+       {:on-click #()
+        :style    {:padding-inline   "var(--size-2)"
+                   :border-radius    "var(--radius-0)"
+                   :background-color (if has-focus? "var(--field-focus)" "var(--field)")
+                   :color            (if has-focus? "var(--fieldcopy)" "var(--text1)")
+                   :box-shadow       (if has-focus? "var(--inner-shadow-1)")}}
+       [:div.absolute.top-1.left-2
+        [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
+       (textinput (subs (str @c-field) 0 length))])))

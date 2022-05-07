@@ -102,7 +102,7 @@
 
 (defn item=reset-messages []
   [:item {:icons  (sc/icon ico/commandPaletteClosed)
-          :label  "Vis alle meldinger igjen"
+          :label  "Gjennopprett meldinger"
           :action #(schpaa.state/change :lab/skip-easy-login false)}])
 
 (defn item=logout []
@@ -126,7 +126,7 @@
              [sc/text1 c] t])]]])
 
 (defn item=switch-position []
-  [:item {:label     "Flytt verktøylinjen hit"
+  [:item {:label     "Plasser sidelinjen på den andre siden av skjermen"
           :action    #(schpaa.state/toggle :lab/menu-position-right)
           :stay-open true}])
 
@@ -136,7 +136,9 @@
   {:pre [(map? r)]}
   (let [reg? @(rf/subscribe [:lab/at-least-registered])]
     (remove nil?
-            [(item=forsiden-oversikt r)
+            [(item=dark-light-mode-selector)
+             [:space]
+             (item=forsiden-oversikt r)
              (when reg? (item=mine-opplysninger r))
              (item=search)
              [:hr]
@@ -150,8 +152,8 @@
              (when reg? [:hr])
              (when reg? (item=logout))
              (when-not reg? (item=login))
-             [:space]
-             (item=dark-light-mode-selector)])))
+             #_[:space]
+             #_(item=dark-light-mode-selector)])))
 
 (def zero-width-space-props
   {:dangerouslySetInnerHTML {:__html "&#8203;"}})
@@ -173,35 +175,12 @@
          [sc/icon (if open? ico/closewindow ico/menu)]]]
 
        [ui/transition
-        {;; :appear true ;; appear is irrelevant for us because open? defaults to false, unlike on headlessui.dev
-         :show open?}
-
+        {:show open?}
         [ui/dialog {:on-close close
                     :class    "z-100"}
-         #_[:div.fixed.inset-0.pointer-events-auto {:on-click #(tap> "CLCIK")
-                                                    :class    "bg-black/30" :aria-hidden "true"}]
          [:div.fixed.inset-0.z-0.overflow-y-auto
           [:div.min-h-screen.px-4.text-center
-           ;; NOTE: the structure of this HTML is delicate and has subtle
-           ;; interactions to keep the modal centered. The structure we use is
-           ;; slightly different from the headlessui.dev example. There, the
-           ;; Transition.Child elements are rendered as fragments. Here, since
-           ;; we don't support fragments, we move some of the structural styles
-           ;; to the transition-child elements, which seems to have the same
-           ;; effect.
            (schpaa.style.dialog/standard-overlay)
-           #_[ui/transition-child
-              {:enter      "ease-out duration-300"
-               :enter-from "opacity-0"
-               :enter-to   "opacity-100"
-               :leave      "ease-in duration-200"
-               :leave-from "opacity-100"
-               :leave-to   "opacity-0"}
-              [ui/dialog-overlay {:class "fixed inset-0 bg-gray-500 bg-opacity-75 "}]]
-           ;; Trick browser into centering modal contents.
-           ;; This is the "ghost element" technique, described here
-           ;; https://css-tricks.com/centering-in-the-unknown/ as well as
-           ;; elsewhere.
            [:span.inline-block.h-screen.align-middle
             (assoc zero-width-space-props :aria-hidden true)]
            [ui/transition-child

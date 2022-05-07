@@ -172,11 +172,12 @@
     (let [selected @!selected
           filtered-commands @!filtered-commands
           quops @!query]
-      [:div
+      [:div.m-1.overflow-hidden
        {:class [:truncate]
-        :style {:max-width "25rem"
-                :overflow  "hidden"
-                :height    :100%}}
+        :style {:border-radius "var(--radius-2)"
+                :max-width     "25rem"
+                :overflow      "hidden"
+                :height        :100%}}
        [ui/combobox {:value     (:id selected)
                      :disabled  false
                      :on-change #(let [action (:on-click context)]
@@ -185,15 +186,10 @@
                                    (tap> "ACTION")
                                    (when action
                                      (action (get (command-by-id) %))))}
-        (fn [{:keys [activeOption]}]
+        (fn [{:keys []}]
           [:div.relative.w-full
            [:div.relative.w-full
-
-            #_[:div.absolute.right-0.inset-y-0
-               [sc/row'
-                {:style {:padding-inline "var(--size-2)"}}
-                [sc/subtext [sc/dim (str activeOption)]]]]
-            [:div.flex.items-center.justify-between.w-full
+            [:div.flex.items-center.justify-between.w-full.overflow-hiddenx
              [placeholder
               [ui/combobox-input
                {:style         {:width            "25rem"
@@ -203,7 +199,7 @@
                                 :background-color "var(--field)"}
                 :class         [:outline-none :focus:outline-none]
                 :placeholder   "Søk"
-                :display-value (fn [id] "" #_(:name (get command-by-id id)))
+                :display-value (fn [_id] "")
                 :on-change     #(let [v (-> % .-target .-value)]
                                   (reset! !query (string->query v)))}]
               [:div.absolute.inset-0
@@ -213,21 +209,16 @@
                         :padding-top    "3px"
                         :transform      "translate(0,-50%)"}}
                [sc/icon ico/commandPaletteClosed]]]]]
-
            [ui/combobox-options
             {:static true
-             ;:hold   true
              :style  {:scroll-behavior :smooth
                       :overflow-y      :auto
                       :height          "21rem"
                       :max-height      "21rem"
-                      ;:height "auto"
                       :max-width       "28rem"}
              :class  [:snap-y :truncate]}
-
             [:<> (if (seq filtered-commands)
                    (for [command filtered-commands]
-                     ;^{:key (:id command)}
                      [ui/combobox-option
                       {:disabled (:disabled command)
                        :value    (:id command)
@@ -238,7 +229,6 @@
                             :group (:group command)
                             :icon (command :icon))
                           (:name command)))])
-
                    (listitem
                      {:notfound true :icon [sc/icon {:style {:color "var(--red-8)"}} ico/fill-heart]}
                      [:div "Finner ikke " [:span {:style {:font-weight "var(--font-weight-6)"}} quops]]))]]])]])))
@@ -300,7 +290,8 @@
             :leave-from  "opacity-100  translate-y-0"
             :leave-to    "opacity-0 translate-y-32"
             :after-leave #(rf/dispatch [:lab/modal-selector-clear])}
-           [:div {:style {:overflow         :hidden
+           [:div {:style {
+                          :overflow         :hidden
                           :background-color "var(--toolbar)"}
                   :class [:max-h-screen :outline-none :focus:outline-none]}
             (if content-fn
@@ -308,5 +299,4 @@
                                                      (do
                                                        (when action
                                                          (action))
-                                                       (close)))))
-              #_[:div "Forgot content-fn?"])]]]]]])))
+                                                       (close))))))]]]]]])))

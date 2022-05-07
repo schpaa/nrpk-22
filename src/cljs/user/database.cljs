@@ -58,7 +58,7 @@
                                      :navn
                                      :telefon
                                      :uid) val)
-                         (filter (fn [[k v]] (and (:godkjent v) (seq (:nøkkelnummer v)) #_(:nøkkelvakt v)))
+                         (filter (fn [[k v]] (and (:godkjent v) (not (:utmeldt v)) (seq (:nøkkelnummer v)) #_(:nøkkelvakt v)))
                                  @(db/on-value-reaction {:path ["users"]}))))) id)))
 
 (defn lookup-alias [uid]

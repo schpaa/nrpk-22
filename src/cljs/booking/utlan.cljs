@@ -412,7 +412,7 @@
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
       (into [sc/col-space-1]
-            (for [[k {:keys [test uid adults children havekey juveniles sleepover timestamp list deleted nøkkel] :as m}]
+            (for [[k {:keys [test ref-uid adults children havekey juveniles sleepover timestamp list deleted nøkkel] :as m}]
                   (if show-deleted?
                     @data (remove (comp :deleted val) @data))
                   :let [boats list
@@ -436,7 +436,7 @@
                    (if (pos? juveniles) juveniles "–")
                    "/"
                    (if (pos? children) children "–")]
-                  [widgets/user-link uid]
+                  [widgets/user-link ref-uid]
                   #_[sc/text2 {:class []} (user.database/lookup-alias uid)]])
                [edit loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]
                (into [listitem' {:class [(if deleted :deleted)

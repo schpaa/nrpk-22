@@ -147,7 +147,7 @@
    [:svg.w-4.inline-block {:viewBox "-2 -2 4 4"}
     [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 "var(--brand1)"
                                            1 "var(--blue-7)"
-                                           2 "var(--brand2)"
+                                           2 "var(--orange-6)"
                                            3 "var(--red-7)"} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
@@ -160,12 +160,12 @@
    [sc/row-sba
     (when (or stability expert) [stability-expert m])
     ;[l/pre boat-type]
-    [sc/small {:style {:overflow      :hidden
+    [sc/ptext {:style {:overflow      :hidden
                        :text-overflow :ellipsis
                        :white-space   :nowrap
-                       ;:color         "var(--text1)"
+                       ;:color         "unset"
                        :font-size     "small"}} navn]]
-   [sc/title (schpaa.components.views/normalize-kind kind)]])
+   [sc/ptitle1 (schpaa.components.views/normalize-kind kind)]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
