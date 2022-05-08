@@ -405,3 +405,6 @@
      [l/pre p]
      (into [:div.flex.justify-end.h-12.items-center.gap-1]
            (mapv item ["a1" "b2" "b3"]))]))
+
+(defn location [l]
+  (if (= "0" (str l)) "Nøklevann" "Sjøbasen"))

@@ -116,6 +116,8 @@
 
 ;endregion
 
+;; machinery
+
 (defonce settings
          (r/atom {:rent/show-details    false
                   :rent/show-timegraph  false
@@ -195,6 +197,8 @@
                 :text-decoration :line-through
                 :opacity         0.3}]])
 
+;; ui toggles
+
 (rf/reg-sub :rent/common-show-deleted
             (fn [_]
               (and @(schpaa.state/listen :r.utlan)
@@ -215,14 +219,7 @@
               (and @(schpaa.state/listen :r.utlan)
                    #_@(r/cursor settings [:rent/edit]))))
 
-;(defn user-alias [this-uid]
-;  (let [alias (user.database/lookup-alias (name this-uid))]
-;    (if (empty? alias)
-;      (let [name (user.database/lookup-username (name this-uid))]
-;        (if (empty? name)
-;          this-uid
-;          name))
-;      alias #_" uten alias ")))
+;; components
 
 (defn timegraph [from arrived-datetime to now]
   (let [session-start (* 4 18)
@@ -316,7 +313,8 @@
                                  {:path  ["activity-22" (name k)]
                                   :value {:deleted (not deleted)}})) m])
    (if edit-mode?
-     [widgets/edit {:disabled false} #(rf/dispatch [:lab/toggle-boatpanel]) m])
+     [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel]) m])
+
    (if (= uid loggedin-uid)
      [hoc.buttons/cta-pill {:class    [:narrow]
                             :on-click #(innlevering {:k         k

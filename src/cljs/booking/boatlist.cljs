@@ -13,7 +13,6 @@
     [sc/zebra
      ;[l/pre group]
      [sc/col-space-8
-
       (if-not horisontal?
         [sc/col
          [sc/col-space-2
@@ -30,16 +29,17 @@
              [sc/text1 {:style {:font-size "unset"}} description]])
 
           (when @(schpaa.state/listen ::båtnummer)
-            (into [sc/row-sc-g1-w' {:style {:align-items     :start
-                                            :justify-content :start
-                                            :flex-wrap       :wrap}}]
-                  (for [[k v] (sort-by (comp :number val) < group)]
-                    [sc/badge {:class    [:small (when (pos? (:location v)) :invert)]
-                               :style    {:font-size "unset"
-                                          :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-                               :on-click #(open-modal-boatinfo
-                                            {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})}
-                     (:number v)])))]]
+            [sc/row-sc-g1-w' {:style {:align-items     :start
+                                      :justify-content :start
+                                      :flex-wrap       :wrap}}
+             (into [:<>]
+                   (for [[k v] (sort-by (comp :number val) < group)]
+                     [sc/badge-2 {:class    [:big (when (pos? (:location v)) :invert)]
+                                  :style    {:font-size "unset"
+                                             :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
+                                  :on-click #(open-modal-boatinfo
+                                               {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})}
+                      (:number v)]))])]]
         [:div.flex.justify-between.gap-4
 
          [sc/col-space-8

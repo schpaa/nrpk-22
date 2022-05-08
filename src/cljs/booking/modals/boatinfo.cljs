@@ -12,23 +12,7 @@
             [schpaa.debug :as l]
             [tick.core :as t]))
 
-;; storage
-
-(defn prep-for-submit [[v st]]
-  (let [;todo check timestamp-format for reading this
-        timestamp (str (t/now))]
-    (assoc v :timestamp timestamp
-             :state st)))
-
-
-(comment
-  (do
-    (prep-for-submit [{:b 1} {:a 2}])))
-
-(defn write-to-disk [id data]
-  (-> (db/database-push {:path  ["boad-item" id "work-log"]
-                         :value data})
-      (.then #(tap> {:write-to-disk [id data]}))))
+(def debug 1)                                               ;; <- change me!
 
 ;; constants
 
@@ -46,6 +30,32 @@
                    "Kjøl"
                    "Cockpit"
                    "Sete"])
+
+;; storage
+
+(def -debug (#(if goog.DEBUG % false) debug))               ;; <- not me!
+
+(defn write-to-disk [id data]
+  (let [path ["boad-item" id "work-log"]
+        datum {:path  path
+               :value data}]
+    (.then (db/database-push datum)
+           #(tap> {:write-to-disk
+                   {:result-of-push (.-key %)
+                    :id             id
+                    :path           path
+                    :value          data}}))))
+
+(defn prep-for-submit [[v st]]
+  (let [;todo check timestamp-format for reading this
+        timestamp (str (t/now))]
+    (assoc v :timestamp timestamp
+             :state st)))
+
+(defn on-submit [id st {:keys [values]}]
+  (write-to-disk
+    (some-> id name)
+    (prep-for-submit [values st])))
 
 ;; components
 
@@ -81,7 +91,7 @@
      [sci/textarea props :text [] "Sample Label" :description]]))
 
 (defn header [{:keys [bt-data ex-data]}
-              {:keys [description number on-star-click] :as data}]
+              {:keys [id boat-type slot location description number on-star-click] :as data}]
   [sc/col-space-4
    [sc/row-sc-g2
     [sc/badge-2 {:class [:big]} number]
@@ -91,14 +101,22 @@
      {:bt-data       bt-data
       :ex-data       ex-data
       :on-star-click on-star-click} data]]
-   [sc/col-space-2
+   [sc/col-space-1
     [widgets/dimensions-and-material data]
-    [sc/text0 description]]])
+    [sc/col-space-4
+     [sc/text0 description]
+     [sc/col-space-1
+      [sc/surface-ab
+       [sc/row-sc-g2 [sc/small {:style {:user-select :all}} boat-type] [sc/small "(type)"]]
+       [sc/row-sc-g2 [sc/small {:style {:user-select :all}} id] [sc/small "(id)"]]]]
 
-(defn on-submit [id st {:keys [values]}]
-  (write-to-disk
-    (some-> id name)
-    (prep-for-submit [values st])))
+     [sc/text1 "Plassert på " (widgets/location location) ", stativ " slot]]
+
+    (when -debug [l/pre data])]])
+
+
+
+;; react dialog (styling starts here)
 
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid] :as input}]
   (let [{:keys [boat-type]} data
@@ -123,7 +141,7 @@
           [:form {:id        form-id
                   :on-submit handle-submit}
            [sc/col-space-8 {:style {:padding-top "2rem"}}
-            [l/pre input boat-type @st]
+            (when -debug [l/pre input boat-type @st])
             ;i want something in editor to execute when the close button is pressed
             [togglepanel :boats/editor "Endringer" #(editor props)]
             [togglepanel :boats/damage "Trenger nærmere ettersyn" #(insert-damage st)]
