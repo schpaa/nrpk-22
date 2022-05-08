@@ -11,9 +11,10 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.debug :as l]
             [tick.core :as t]
-            [lambdaisland.ornament :as o]))
+            [lambdaisland.ornament :as o]
+            [booking.ico :as ico]))
 
-(def debug nil)                                             ;; <- change me!
+(def debug nil)
 
 ;; constants
 
@@ -37,7 +38,7 @@
 ;; storage
 
 (def -debug
-  (#(if goog.DEBUG % false) debug))                         ;; <- not me!
+  (#(if goog.DEBUG % false) debug))
 
 (defn write-to-disk [id data]
   (let [path ["boad-item" id "work-log"]
@@ -50,6 +51,17 @@
                     :path           path
                     :value          data}}))))
 
+(defn delete-worklog-entry [id]
+  (let [path ["boad-item" id "work-log"]
+        datum {:path  path
+               :value {:deleted true}}]
+    ;(tap> datum)
+    (db/database-update datum)
+    #(tap> {:delete-worklog-entry
+            {:id   id
+             :path path}})))
+
+
 (defn prep-for-submit [[v st]]
   (let [;todo check timestamp-format for reading this
         timestamp (str (t/now))]
@@ -57,36 +69,14 @@
              :state st)))
 
 (defn on-submit [id st {:keys [values]}]
+  (tap> "on-submit")
   (write-to-disk
     (some-> id name)
     (prep-for-submit [values st])))
 
 ;; input
 
-
-
 ;; components
-
-(defn insert-worklog [work-log]
-  (let [data (->> work-log
-                  (filter (fn [[k v]] (tap> k) (or (some? (:description v))
-                                                   (some? (:state v)))))
-                  reverse
-                  (take 5))]
-
-    [sc/col-space-4
-     (when -debug [l/pre data])
-     (into [:<>]
-           (for [e data
-                 :let [[k {:keys [timestamp state description]}] e]]
-             [sc/zebra {:style {:border-radius "var(--radius-1)"}}
-              [sc/col-space-2 {:style {:align-items :start}}
-               [sc/small (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
-               [sc/text1 description]
-               [sc/text1 {:style {:text-transform :lowercase}}
-                (apply str (interpose ", " (map (comp name key) state)))]]
-              (when -debug [l/pre e])]))
-     [sc/small "Vi har mer men viser det ikke her"]]))
 
 (o/defstyled checkbox-matrix :div
   [:& :gap-4
@@ -94,6 +84,50 @@
     :align-items           "center"
     :grid-auto-rows        "min-content"
     :grid-template-columns "repeat(auto-fit,minmax(12ch,1fr))"}])
+
+;; worklog
+
+(defn insert-worklog [work-log]
+  (let [data (->> work-log
+                  (filter (fn [[k v]] (tap> k) (or (some? (:description v))
+                                                   (some? (:state v)))))
+                  reverse
+                  (take 5))]
+    [sc/col-space-4
+     [l/pre data]
+     (into [:<>]
+           (for [e data
+                 :let [[k {:keys [deleted uid timestamp state description]}] e]]
+             [sc/zebra {:style {:border-radius "var(--radius-1)"}}
+              [sc/col-space-2 {:style {:align-items :start}}
+
+               ;header
+               [:button {:type "button" :on-click #(tap> "clack")} "clack"]
+
+               [sc/row-sc-g2 {:style {:width "100%"}}
+                (hoc.buttons/round-danger-pill
+                  {;:type     "button"
+                   :on-click #(do (delete-worklog-entry (some-> k name))
+                                  (.stopPropagation %))}
+                  [sc/icon ico/trash])
+                [sc/small
+                 {:class [:flex-grow]}
+                 (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
+                (hoc.buttons/round-cta-pill
+                  {:type     "button"
+                   :on-click #(tap> "CLICK OK")
+                   :class    []} [sc/icon ico/check])]
+
+               ;content
+               [sc/text1 description]
+               [l/pre uid e deleted]
+
+               ;signature
+               [sc/text1 {:style {:text-transform :lowercase}}
+                (apply str (interpose ", " (map (comp name key) state)))]
+               [sc/small (or uid "Nøkkelvakt")]]
+              (when -debug [l/pre e])]))
+     [sc/small "Vi har mer men viser det ikke her"]]))
 
 (defn insert-damage [{:keys [values set-values] :as props}]
   [sc/col-space-4
@@ -183,34 +217,35 @@
           :ex-data ex-data}
          data]]
        [fork/form {:prevent-default?  true
-                   :form-id           "damage-form"
-                   :initial-values    {:test        false
-                                       :description "test"}
+                   :form-id           "damage-form2"
+                   :initial-values    {:description ""}
                    :clean-on-unmount? true
                    ;:component-did-mount (fn [_])
                    :keywordize-keys   true
-                   :on-submit         (partial on-submit id @st)}
+                   :xon-submit        #(on-submit id @st %)}
         (fn [{:keys [dirty handle-submit form-id] :as props}]
-          [:form {:id        form-id
-                  :on-submit handle-submit}
+          [:form {:id         form-id
+                  :osn-submit handle-submit}
            [sc/col-space-8 {:style {:padding-top "2rem"}}
             (when -debug [l/pre input boat-type @st])
             ;i want something in editor to execute when the close button is pressed
             [togglepanel {:open     0
                           :disabled true} :boats/editor "Endringer" #(editor props) false]
             ;[l/pre (:values props)]
-            [togglepanel :boats/damage "Trenger nærmere ettersyn" (fn [] [insert-damage props])]
-            [togglepanel :boats/worklog "Arbeidsliste" #(insert-worklog (:work-log data))]
+            ;[togglepanel  :boats/damage "Trenger nærmere ettersyn" (fn [] [insert-damage props])]
+            [togglepanel :boats/worklog "Arbeidsliste" (fn [] [insert-worklog (:work-log data)])]
             [just-panel
              [hoc.buttons/attn
-              {:type     :submit
+              {:type     "submit"
                :disabled (not dirty)
-               :on-click on-close} "Lagre"]
+               :on-click on-close}
+              "Lagre"]
              [hoc.buttons/regular
-              {:type     :submit
+              {:type     "submit"
                :style    {:background-color "var(--toolbar)"
                           :color            "var(--buttoncopy)"}
-               :on-click on-close} "Lukk"]]]])]]
+               :on-click on-close}
+              "Lukk"]]]])]]
 
       (finally))))
 
