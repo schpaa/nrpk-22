@@ -1,11 +1,12 @@
 (ns booking.ico
   (:require ["@heroicons/react/solid" :as solid]
-            ["@heroicons/react/outline" :as outline]))
+            ["@heroicons/react/outline" :as outline]
+            [schpaa.icon]))
 
 (def plus [:> solid/PlusIcon])
 (def minus [:> solid/MinusIcon])
 (def plusplus [:> solid/PlusCircleIcon])
-(def trash [:> solid/XIcon])
+(def trash [:> outline/TrashIcon])
 (def check [:> solid/CheckIcon])
 (def eye [:> outline/EyeIcon])
 (def pencil [:> outline/PencilIcon])
@@ -72,7 +73,7 @@
 (def arrowRight [:> solid/ArrowCircleRightIcon])
 (def arrowLeft [:> solid/ArrowCircleLeftIcon])
 (def arrowRight' [:> solid/ArrowNarrowRightIcon])
-(def arrowLeft' [:> outline/ArrowLeftIcon])
+(def arrowLeft' [:> solid/ArrowNarrowLeftIcon])
 
 (def backspace [:> solid/BackspaceIcon])
 (def tag [:> solid/TagIcon])
@@ -80,3 +81,5 @@
 (def key-filled [:> solid/KeyIcon])
 (def key-outline [:> outline/KeyIcon])
 (def chevronDoubleDown [:> solid/ChevronDoubleLeftIcon])
+
+(def rotate-left [:div.m-1 [schpaa.icon/adapt :rotate-left]])

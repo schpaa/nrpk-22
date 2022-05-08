@@ -100,12 +100,16 @@
    (let [owner? (get-in base [section uid starttime-key])
          path {:uid uid :section section :timeslot starttime-key}]
      (if (or owner? (pos? slots-free))
-       [(if owner? schpaa.style.hoc.buttons/round-danger-pill
-                   hoc.buttons/round-cta-pill)
-        {:class    [:round :shrink-0]
-         :type     :button
-         :on-click #((if owner? actions/delete actions/add) path)}
-        (sc/icon (if owner? ico/trash ico/plus))]
+       (if owner?
+         [hoc.buttons/round-danger-pill
+          {:class    [:round :shrink-0]
+           :on-click #(actions/delete path)}
+          (sc/icon ico/trash)]
+         [hoc.buttons/round-cta-pill
+          {:class    [:round :shrink-0]
+           :type     :button
+           :on-click #(actions/add path)}
+          (sc/icon ico/plus)])
        [:div.w-8]))])
 
 (defn table [{:keys [base data]}]

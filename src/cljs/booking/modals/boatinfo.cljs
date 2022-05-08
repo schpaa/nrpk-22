@@ -14,9 +14,18 @@
             [lambdaisland.ornament :as o]
             [booking.ico :as ico]))
 
-(def debug nil)
+;; styles
+
+(o/defstyled checkbox-matrix :div
+  [:& :gap-4
+   {:display               "grid"
+    :align-items           "center"
+    :grid-auto-rows        "min-content"
+    :grid-template-columns "repeat(auto-fit,minmax(12ch,1fr))"}])
 
 ;; constants
+
+(def debug nil)
 
 (def damage-words ["Mangler"
                    "Løs"
@@ -51,83 +60,131 @@
                     :path           path
                     :value          data}}))))
 
-(defn delete-worklog-entry [id]
-  (let [path ["boad-item" id "work-log"]
+(defn delete-worklog-entry [boat-item-id id delete]
+  (let [path ["boad-item" boat-item-id "work-log" id]
         datum {:path  path
-               :value {:deleted true}}]
-    ;(tap> datum)
+               :value {:deleted delete}}]
+    (tap> datum)
     (db/database-update datum)
     #(tap> {:delete-worklog-entry
             {:id   id
              :path path}})))
 
+(defn complete-worklog-entry [boat-item-id id complete]
+  (let [path ["boad-item" boat-item-id "work-log" id]
+        datum {:path  path
+               :value {:complete complete}}]
+    (tap> datum)
+    (db/database-update datum)
+    #(tap> {:delete-worklog-entry
+            {:id   id
+             :path path}})))
 
-(defn prep-for-submit [[v st]]
+(defn prep-for-submit [v]
   (let [;todo check timestamp-format for reading this
         timestamp (str (t/now))]
-    (assoc v :timestamp timestamp
-             :state st)))
+    (assoc v :timestamp timestamp)))
 
-(defn on-submit [id st {:keys [values]}]
+(defn on-submit [id {:keys [values]}]
+  ;(js/alert "!")
   (tap> "on-submit")
   (write-to-disk
     (some-> id name)
-    (prep-for-submit [values st])))
-
-;; input
-
-;; components
-
-(o/defstyled checkbox-matrix :div
-  [:& :gap-4
-   {:display               "grid"
-    :align-items           "center"
-    :grid-auto-rows        "min-content"
-    :grid-template-columns "repeat(auto-fit,minmax(12ch,1fr))"}])
+    (prep-for-submit values)))
 
 ;; worklog
 
-(defn insert-worklog [work-log]
-  (let [data (->> work-log
-                  (filter (fn [[k v]] (tap> k) (or (some? (:description v))
-                                                   (some? (:state v)))))
+(defn q-button [boat-item-id worklog-entry-id attr icon action]
+  (hoc.buttons/round-pill
+    (merge-with into
+                {
+                 :on-click #(action boat-item-id worklog-entry-id)}
+                attr)
+
+    [sc/icon icon]))
+
+(defn worklog-card [{:keys [class]} {:keys [deleted complete timestamp description uid] :as worklog-entry}
+                    boat-item-id worklog-entry-id]
+  (let [q-button (partial q-button boat-item-id worklog-entry-id)]
+    [sc/zebra
+     {;:class [:divider]
+      :style {;:margin-inline "4rem"
+              :margin-before "4rem"
+              :border-bottom "1px dashed var(--text2)"}}
+     [sc/co
+      [sc/row-sc-g4-w {:style {:width "100%"}}
+       (if deleted
+         (q-button
+           {:class [:outline2]}
+           ico/rotate-left
+           (fn [a b] (delete-worklog-entry a (some-> b name) false)))
+         (q-button
+           {:class [:danger]}
+           ico/trash
+           (fn [a b] (delete-worklog-entry a (some-> b name) true))))
+
+       [sc/col-space-1 {:style {:flex "1"}}
+        [sc/small
+         (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
+        [sc/small0 (or uid "Nøkkelvakt")]]
+
+       ;todo compress!
+       (if complete
+         (hoc.buttons/round-pill
+           {:on-click #(do (complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
+                           #_(.stopPropagation %))
+            :class    [:outline2 :inverse]} [sc/icon ico/check])
+         (hoc.buttons/round-pill
+           {:on-click #(do (complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
+                           #_(.stopPropagation %))
+            :class    [:outline2]} [sc/icon ico/check]))]
+
+      [:div {:class class}
+       [sc/text1 {:style {:text-transform       :lowercase
+                          :text-decoration-line (when complete "line-through")}}
+        (apply str (interpose ", " (map (comp name key) (dissoc worklog-entry :description :timestamp :complete :deleted))))]
+       [sc/text1 {:style {:text-decoration-line (when complete "line-through")}} description]]]]))
+
+
+(defn insert-worklog [boat-item-id work-log]
+  (let [all-data (->> @work-log
+                      (filter (fn [[k v]] (:deleted v)))
+                      #_(filter (fn [[k v]]
+                                  (or
+                                    (some? (:description v))
+                                    (some? (:state v)))))
+
+                      #_(take 5))
+        data (->> @work-log
+                  (remove (fn [[k v]] (:deleted v)))
+                  (filter (fn [[k v]]
+                            (or
+                              (some? (:description v))
+                              (some? (:state v)))))
                   reverse
                   (take 5))]
     [sc/col-space-4
-     [l/pre data]
      (into [:<>]
            (for [e data
-                 :let [[k {:keys [deleted uid timestamp state description]}] e]]
-             [sc/zebra {:style {:border-radius "var(--radius-1)"}}
-              [sc/col-space-2 {:style {:align-items :start}}
-
-               ;header
-               [:button {:type "button" :on-click #(tap> "clack")} "clack"]
-
-               [sc/row-sc-g2 {:style {:width "100%"}}
-                (hoc.buttons/round-danger-pill
-                  {;:type     "button"
-                   :on-click #(do (delete-worklog-entry (some-> k name))
-                                  (.stopPropagation %))}
-                  [sc/icon ico/trash])
-                [sc/small
-                 {:class [:flex-grow]}
-                 (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
-                (hoc.buttons/round-cta-pill
-                  {:type     "button"
-                   :on-click #(tap> "CLICK OK")
-                   :class    []} [sc/icon ico/check])]
-
-               ;content
-               [sc/text1 description]
-               [l/pre uid e deleted]
-
-               ;signature
-               [sc/text1 {:style {:text-transform :lowercase}}
-                (apply str (interpose ", " (map (comp name key) state)))]
-               [sc/small (or uid "Nøkkelvakt")]]
+                 :let [[worklog-entry-id {:keys [complete deleted uid timestamp state description] :as m}] e]]
+             [sc/co
+              [worklog-card {:class [:opacity-100]} m boat-item-id worklog-entry-id]
               (when -debug [l/pre e])]))
-     [sc/small "Vi har mer men viser det ikke her"]]))
+
+     (r/with-let [more? (r/atom false)]
+       [sc/co
+        (when-not @more?
+          [hoc.buttons/regular
+           {:type     "button"
+            :on-click #(reset! more? true)}
+           [sc/co
+            [sc/small "Du har kommet til slutten av listen"]
+            [sc/text1 "Vis tidligere"]]])
+        (when @more?
+          (for [[worklog-entry-id m] all-data]
+            [worklog-card {:class [:opacity-50]} m boat-item-id worklog-entry-id]))])]))
+
+;; components
 
 (defn insert-damage [{:keys [values set-values] :as props}]
   [sc/col-space-4
@@ -143,8 +200,6 @@
                :caption e}]]))]
 
    [sci/textarea props
-    #_{:handle-change (fn [e] (swap! (r/cursor st [:description]) #(.. e -target -value)))
-       :values        {:description @(r/cursor st [:description])}}
     nil {:class [:-mx-2]} "Annen beskrivelse" :description]])
 
 (defn editor [props]
@@ -185,7 +240,7 @@
 
     (when -debug [l/pre data])]])
 
-(defn just-panel [& content]
+(defn bottom-button-panel [& content]
   [:div
    {:style {:box-shadow       "var(--shadow-1)"
             :background-color "var(--toolbar)"}
@@ -197,10 +252,10 @@
 
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid] :as input}]
   (let [{:keys [boat-type]} data
-        id (:id data)]
+        boat-item-id (some-> (:id data) name)]
     (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
-                 ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})
-                 st (r/atom {})]
+                 ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
+
       ;(tap> {:modal-boatinfo-windowcontent data})
       [sc/dropdown-dialog'
        [:div.sticky.top-0
@@ -217,31 +272,52 @@
           :ex-data ex-data}
          data]]
        [fork/form {:prevent-default?  true
+                   :clean-on-unmount? true
+                   :keywordize-keys   true
+                   :path              :form-damange
                    :form-id           "damage-form2"
                    :initial-values    {:description ""}
-                   :clean-on-unmount? true
-                   ;:component-did-mount (fn [_])
-                   :keywordize-keys   true
-                   :xon-submit        #(on-submit id @st %)}
+                   :on-submit         #(on-submit boat-item-id %)}
         (fn [{:keys [dirty handle-submit form-id] :as props}]
-          [:form {:id         form-id
-                  :osn-submit handle-submit}
+          [:form {:id        form-id
+                  :on-submit handle-submit}
            [sc/col-space-8 {:style {:padding-top "2rem"}}
-            (when -debug [l/pre input boat-type @st])
+            (when -debug [l/pre input boat-type])
             ;i want something in editor to execute when the close button is pressed
             [togglepanel {:open     0
-                          :disabled true} :boats/editor "Endringer" #(editor props) false]
-            ;[l/pre (:values props)]
-            ;[togglepanel  :boats/damage "Trenger nærmere ettersyn" (fn [] [insert-damage props])]
-            [togglepanel :boats/worklog "Arbeidsliste" (fn [] [insert-worklog (:work-log data)])]
-            [just-panel
+                          :disabled true} :boats/editor "Endringer"
+             #(editor props) false]
+            [togglepanel :boats/damage "Trenger nærmere ettersyn"
+             (fn [] [insert-damage props])]
+            [togglepanel :boats/worklog "Arbeidsliste"
+             (fn [] [insert-worklog
+                     boat-item-id
+                     (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])]
+            [bottom-button-panel
+
+
+             [sc/row-sc-g4-w
+              [hoc.buttons/round'
+               {:type     :button
+                :on-click #()
+                :disabled (not dirty)}
+               [sc/icon ico/arrowLeft']]
+
+              [hoc.buttons/round
+               {:type     :button
+                :on-click #()
+                :disabled (not dirty)}
+               [sc/icon ico/arrowRight']]]
+
+             [:div {:style {:flex "1"}}]
+
              [hoc.buttons/attn
-              {:type     "submit"
-               :disabled (not dirty)
-               :on-click on-close}
+              {:type     :submit
+               :disabled (not dirty)}
               "Lagre"]
+
              [hoc.buttons/regular
-              {:type     "submit"
+              {:type     :button
                :style    {:background-color "var(--toolbar)"
                           :color            "var(--buttoncopy)"}
                :on-click on-close}
