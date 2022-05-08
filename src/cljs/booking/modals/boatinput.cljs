@@ -538,6 +538,18 @@
                         []
                         @(db.core/on-value-reaction {:path ["activity-22"]}))))
 
+(comment
+  (do
+    (transduce
+      (comp
+        (map identity)
+        (filter (fn [[k v]]
+                  (when (:timestamp v)
+                    (t/<= (t/<< (t/today) (t/new-period 3 :days))
+                          (t/date (t/instant (:timestamp v))))))))
+      conj
+      []
+      @(db.core/on-value-reaction {:path ["activity-22"]}))))
 
 
 (defn keydown-f [event]
