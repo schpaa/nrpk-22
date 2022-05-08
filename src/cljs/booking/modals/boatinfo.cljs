@@ -10,7 +10,8 @@
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.debug :as l]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [lambdaisland.ornament :as o]))
 
 (def debug nil)                                             ;; <- change me!
 
@@ -19,17 +20,19 @@
 (def damage-words ["Mangler"
                    "Løs"
                    "Liten sprekk"
-                   "Stor sprek"
+                   "Stor sprekk"
                    "Skrog"
                    "Strikk"
                    "Lokk"
-                   "Liste"
+                   "Lister"
                    "Ror"
                    "Styre\u00adpinne"
                    "Styre\u00ADwire"
                    "Kjøl"
                    "Cockpit"
-                   "Sete"])
+                   "Sete"
+                   "Merking"
+                   "Skilt"])
 
 ;; storage
 
@@ -85,17 +88,25 @@
               (when -debug [l/pre e])]))
      [sc/small "Vi har mer men viser det ikke her"]]))
 
-(defn insert-damage [props st]
-  [:fieldgroup.space-y-8
-   [:div.gap-4
-    {:style {:display               :grid
-             :grid-template-columns "repeat(auto-fit,minmax(12ch,1fr))"}}
-    (into [:<>] (for [e damage-words]
-                  [hoc.toggles/largeswitch-local'
-                   {:atoma   (r/cursor st [e])
-                    :view-fn (fn [t c v] [sc/row-sc-g2 t
-                                          [(if v sc/text1 sc/text2) c]])
-                    :caption e}]))]
+(o/defstyled checkbox-matrix :div
+  [:& :gap-4
+   {:display               "grid"
+    :align-items           "center"
+    :grid-auto-rows        "min-content"
+    :grid-template-columns "repeat(auto-fit,minmax(12ch,1fr))"}])
+
+(defn insert-damage [{:keys [values set-values] :as props}]
+  [sc/col-space-4
+   [checkbox-matrix
+    (into [:<>]
+          (for [e damage-words]
+            [sc/co
+             [hoc.toggles/largeswitch-local'
+              {:get     #(values (keyword e))
+               :set     #(set-values {(keyword e) %})
+               :view-fn (fn [t c v] [sc/row-sc-g2 t
+                                     [(if v sc/text1 sc/text2) c]])
+               :caption e}]]))]
 
    [sci/textarea props
     #_{:handle-change (fn [e] (swap! (r/cursor st [:description]) #(.. e -target -value)))
@@ -143,7 +154,7 @@
 (defn just-panel [& content]
   [:div
    {:style {:box-shadow       "var(--shadow-1)"
-            :background-color "var(--toolbar-)"}
+            :background-color "var(--toolbar)"}
     :class [:pt-4 :pb-6 :sticky :bottom-0 :-mx-8]}
    [sc/row-ec {:class [:px-8]}
     content]])
@@ -158,26 +169,27 @@
                  st (r/atom {})]
       ;(tap> {:modal-boatinfo-windowcontent data})
       [sc/dropdown-dialog'
-       [:div.sticky.-top-8
+       [:div.sticky.top-0
         {:style {
                  ;:position         :sticky
                  ;:top "-4rem"
                  ;:margin-top       "132px"
                  :margin-inline    -24
-                 :padding          16
+                 :padding          24
                  :z-index          10
-                 :background-color "var(--toolbar-)"}}
+                 :background-color "var(--toolbar)"}}
         [header
          {:bt-data bt-data
           :ex-data ex-data}
          data]]
-       [fork/form {:prevent-default?    true
-                   :form-id             "damage-form"
-                   :initial-values      {}
-                   :clean-on-unmount?   true
-                   :component-did-mount (fn [_])
-                   :keywordize-keys     true
-                   :on-submit           (partial on-submit id @st)}
+       [fork/form {:prevent-default?  true
+                   :form-id           "damage-form"
+                   :initial-values    {:test        false
+                                       :description "test"}
+                   :clean-on-unmount? true
+                   ;:component-did-mount (fn [_])
+                   :keywordize-keys   true
+                   :on-submit         (partial on-submit id @st)}
         (fn [{:keys [dirty handle-submit form-id] :as props}]
           [:form {:id        form-id
                   :on-submit handle-submit}
@@ -186,11 +198,13 @@
             ;i want something in editor to execute when the close button is pressed
             [togglepanel {:open     0
                           :disabled true} :boats/editor "Endringer" #(editor props) false]
-            [togglepanel :boats/damage "Trenger nærmere ettersyn" #(insert-damage props st)]
+            ;[l/pre (:values props)]
+            [togglepanel :boats/damage "Trenger nærmere ettersyn" (fn [] [insert-damage props])]
             [togglepanel :boats/worklog "Arbeidsliste" #(insert-worklog (:work-log data))]
             [just-panel
              [hoc.buttons/attn
               {:type     :submit
+               :disabled (not dirty)
                :on-click on-close} "Lagre"]
              [hoc.buttons/regular
               {:type     :submit
