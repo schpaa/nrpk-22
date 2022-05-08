@@ -5,7 +5,7 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.common-widgets :as widgets]
             [tick.core :as t]
-            [schpaa.style.dialog :as dlg]
+            [booking.modals.boatinfo :refer [open-modal-boatinfo]]
             [db.core :as db]
             [booking.ico :as ico]
             [schpaa.style.hoc.toggles :as hoc.toggles]
@@ -201,7 +201,7 @@
                                    (let [returned (not (empty? returned))
                                          number (get lookup-id->number (keyword id) (str " ? " id))]
                                      (sc/badge-2 {:class    [:big #_(if-not returned :in-use)]
-                                                  :on-click #(dlg/open-modal-boatinfo
+                                                  :on-click #(open-modal-boatinfo
                                                                {:uid  loggedin-uid
                                                                 :data (get db (keyword id))})} number)))
                                  (remove nil? boats))]))]))]))}))

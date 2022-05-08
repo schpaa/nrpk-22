@@ -5,7 +5,8 @@
             [re-frame.core :as rf]
             [schpaa.debug :as l]
             [schpaa.style.button :as scb]
-            [schpaa.style.dialog :refer [open-modal-boatinfo
+            [booking.modals.boatinfo :refer [open-modal-boatinfo]]
+            [schpaa.style.dialog :refer [
                                          open-modal-bookingdetails
                                          open-modal-confirmdeletebooking]]
             [schpaa.style.ornament :as sc]

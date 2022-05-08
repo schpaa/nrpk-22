@@ -3,7 +3,8 @@
             [schpaa.style.hoc.toggles :as toggle]
             [re-frame.core :as rf]
             [booking.common-widgets :as widgets]
-            [schpaa.style.dialog :as dlg]
+            [booking.modals.boatinfo :refer [open-modal-boatinfo]]
+
             [schpaa.debug :as l]))
 
 (defn card [group {:keys [description] :as m}]
@@ -34,12 +35,10 @@
                                             :flex-wrap       :wrap}}]
                   (for [[k v] (sort-by (comp :number val) < group)]
                     [sc/badge {:class    [:small (when (pos? (:location v)) :invert)]
-                               :style    {:xfont-size "unset"
-                                          :xtransform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-                               :on-click #(dlg/open-modal-boatinfo
-                                            (let [loggedin-uid @(rf/subscribe [:lab/uid])]
-                                              {:uid  loggedin-uid
-                                               :data (get @(rf/subscribe [:db/boat-db]) (keyword k))}))}
+                               :style    {:font-size "unset"
+                                          :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
+                               :on-click #(open-modal-boatinfo
+                                            {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})}
                      (:number v)])))]]
         [:div.flex.justify-between.gap-4
 
@@ -60,12 +59,10 @@
                                            :flex            "1 1 4rem"}}]
                  (for [[k v] (sort-by (comp :number val) < group)]
                    [sc/badge-2 {:class    [:small (when (pos? (:location v)) :invert)]
-                                :style    {:font-size "unset"
+                                :style    {;:font-size "unset"
                                            :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-                                :on-click #(dlg/open-modal-boatinfo
-                                             (let [loggedin-uid @(rf/subscribe [:lab/uid])]
-                                               {:uid  loggedin-uid
-                                                :data (get @(rf/subscribe [:db/boat-db]) (keyword k))}))} (:number v)])))])]]))
+                                :on-click #(open-modal-boatinfo
+                                             {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})} (:number v)])))])]]))
 
 (rf/reg-sub ::fontsize :-> #(:boatlist/fontsize % "90%"))
 

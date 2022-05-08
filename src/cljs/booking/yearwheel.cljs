@@ -73,7 +73,8 @@
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
            [sc/row-sc-g2-w {:class []}
-            [sci/combobox props :kind? [:w-56] "Kategori" :type]
+            [sci/combobox (conj props {:people       sci/people
+                                       :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
             [sci/input props :date [:w-40] "Dato" :date]
             [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
             [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]

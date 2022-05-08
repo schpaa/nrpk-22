@@ -45,7 +45,7 @@
    :textfield      {:phone "123"
                     :boats ""}})
 
-(defonce st (r/atom (if debug test-state {})))
+(defonce st (r/atom (if goog.DEBUG test-state {})))
 
 (def c-focus (r/cursor st [:focus]))
 (def c-extra (r/cursor st [:extra]))

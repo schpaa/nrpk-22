@@ -3,7 +3,8 @@
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.debug :as l]
-            [schpaa.style.dialog :as dlg :refer [open-modal-boatinfo]]
+            [schpaa.style.dialog :as dlg :refer []]
+            [booking.modals.boatinfo :refer [open-modal-boatinfo]]
             [re-frame.core :as rf]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.database]
@@ -326,18 +327,30 @@
                                                      :timestamp timestamp
                                                      :boats     list})} "Inn"])])
 
+(defn details [{:keys [test ref-uid adults children havekey phone juveniles sleepover timestamp list deleted nøkkel] :as m}]
+
+  [sc/row-sc-g4-w {:style {:grid-area "details"}
+                   :class [:pt-1]}
+   [sc/text1 {:style {:font-weight "var(--font-weight-5)"}
+              :class [:tabular-nums]}
+    (if (pos? adults) adults "–")
+    "/"
+    (if (pos? juveniles) juveniles "–")
+    "/"
+    (if (pos? children) children "–")]
+   (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+   #_[sc/text2 {:class []} (user.database/lookup-alias uid)]])
+
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
-    (let [admin? (rf/subscribe [:lab/admin-access])
-          show-deleted? @(rf/subscribe [:rent/common-show-deleted])
+    (let [show-deleted? @(rf/subscribe [:rent/common-show-deleted])
           show-timegraph? @(rf/subscribe [:rent/common-show-timegraph])
           show-details? @(rf/subscribe [:rent/common-show-details])
-          edit-mode? @(rf/subscribe [:rent/common-edit-mode])
           data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
       (into [sc/col-space-1]
-            (for [[k {:keys [test ref-uid adults children havekey juveniles sleepover timestamp list deleted nøkkel] :as m}]
+            (for [[k {:keys [test timestamp list deleted] :as m}]
                   (if show-deleted?
                     @data (remove (comp :deleted val) @data))
                   :let [boats list
@@ -351,18 +364,7 @@
                          :display         :flex
                          :justify-content :between}}]
                [badges m]
-               (when show-details?
-                 [sc/row-sc-g4-w {:style {:grid-area "details"}
-                                  :class [:pt-1]}
-                  [sc/text1 {:style {:font-weight "var(--font-weight-5)"}
-                             :class [:tabular-nums]}
-                   (if (pos? adults) adults "–")
-                   "/"
-                   (if (pos? juveniles) juveniles "–")
-                   "/"
-                   (if (pos? children) children "–")]
-                  [widgets/user-link ref-uid]
-                  #_[sc/text2 {:class []} (user.database/lookup-alias uid)]])
+               (when show-details? [details m])
                [edit loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]
                (into [listitem' {:class [(if deleted :deleted)
                                          :w-full :py-2]
@@ -401,24 +403,18 @@
                          ;boatnumbers
                          (let [f (fn [id returned number]
                                    (sc/badge-2 {:class    [:big (when-not returned :in-use)]
-                                                :on-click #(dlg/open-modal-boatinfo
-                                                             {:uid  loggedin-uid
-                                                              :data (get db (keyword id))})}
+                                                :on-click #(open-modal-boatinfo
+                                                             {:data (assoc (get db (keyword id))
+                                                                      :id '?
+                                                                      :number (some-> id name))})}
+
                                                number))]
                            [(map (fn [[id returned]]
                                    (let [nm (some-> id keyword)
                                          g (get-in lookup-id->number [nm] nm)]
-                                     [f id (not (empty? (str returned))) g])
-                                   #_(let [returned (not (empty? returned))
-                                           number nil #_(when (keyword? id)
-                                                          (get lookup-id->number (keyword id)
-                                                               (some-> id name)))]
-                                       [:div id]
-                                       #_(sc/badge-2 {:class    [:big (if-not returned :in-use)]
-                                                      :on-click #(dlg/open-modal-boatinfo
-                                                                   {:uid  loggedin-uid
-                                                                    :data (get db (keyword id))})} 'number)))
-                                 (remove nil? boats))]))))])))))
+                                     [f id (not (empty? (str returned))) g]))
+                                 (remove nil? boats))])
+                         #_[[l/pre (remove nil? boats)]])))])))))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
@@ -439,10 +435,29 @@
 (defn commands []
   [sc/col-space-4
    [sc/row-sc-g2-w
-    [hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Nytt utlån"]
-    [hoc.buttons/danger-pill {:disabled true
-                              :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]
-    [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]]])
 
+    [hoc.buttons/cta-pill-icon
+     {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
+     ico/plus "Nytt utlån"]
 
+    [hoc.buttons/danger-pill
+     {:disabled true
+      :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+     "HMS Hendelse"]
 
+    [hoc.toggles/switch-local
+     {:disabled false}
+     (r/cursor settings [:rent/show-details]) "Detaljer"]
+
+    (when goog.DEBUG
+      [hoc.buttons/cta-pill-icon
+       {:on-click #(rf/dispatch [:lab/remove-boatlogg-database])}
+       ico/plus "Ny database"])]])
+
+(rf/reg-event-fx :lab/remove-boatlogg-database
+                 (fn [_ _]
+                   (db/database-set {:path  ["activity-22"]
+                                     :value {}})
+                   (db/database-set {:path  ["boad-item"]
+                                     :value {}})
+                   {}))

@@ -102,19 +102,6 @@ outline: 2px solid #a0a8;
 }
 
 
-.bg-unfocused-field {
-    background: var(--field1);
-    color: var(--text2);
-}
-
-.bg-focused-field {
-    background: var(--field2);
-    color: var(--text1);
-}
-
-.outline-focused-field:focus {
-    outline: var(--brand1) 2px solid;
-}
 
 @keyframes "blinking" {
   from, to {
@@ -440,3 +427,16 @@ outline: 2px solid #a0a8;
 }
 
 
+.bg-unfocused-field {
+    background: var(--field);
+    color: var(--text2);
+}
+
+.bg-focused-field {
+    background: var(--brand1);
+    color: var(--brand1-copy);
+}
+
+.outline-focused-field:focus {
+    outline: var(--brand1) 2px solid;
+}
