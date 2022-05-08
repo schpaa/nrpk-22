@@ -22,80 +22,80 @@
                            :display :inline-flex}} header]
      content]))
 
-(defn color-table []
-  [:<>
-   [sc/surface-a
-    (togglepanel :debug/color-table.surface000 "surface000"
-                 (fn [] [sc/col-space-4
-                         [sc/text1 "surface000 - brukes som primær-bakgrunn for all informasjon"]
-                         [sc/text2 "normal tekst, men litt svakere (--text2) som standard subtext"]
-                         [sc/text3 "normal tekst, men litt svakere (--text3) som standard small"]
-                         [sc/subtext "subtext: sekundær informasjon med litt svakere trykk, nok til at den er klart synlig, teksten er også litt mindre enn primærteksten."]
-                         [sc/small1 "small: knapt synlig, kun for kontrollere og som vedheng med ekstra stor avstand mellom bokstavene. Gjerne i kapitaler."]
-                         [sc/small1 {:style {:text-transform :uppercase}} "small: knapt synlig, kun for kontrollere og som vedheng med ekstra stor avstand mellom bokstavene. Gjerne i kapitaler."]
-                         [sc/small1 {:style {:text-transform :uppercase :color "var(--text2)"}}
-                          "small: fremdeles small, men litt sterkere (--text2)"]
-                         [sc/small1 {:style {:text-transform :lowercase :color "var(--text2)"}}
-                          "her går det faktisk an å kutte ut kapitalene"]
-                         [sc/small1 {:style {:text-transform :lowercase :color "var(--text1)"}}
-                          "hvordan ser det ut med (--text1) ??"]]))]
-   [sc/surface-b
-    (togglepanel :debug/color-table.surface00 "surface00"
-                 (fn [] [sc/col-space-4
-                         [sc/text1 "surface00 - brukes i toolbars og andre ikke-primære flater"]
-                         [sc/text1 {:style {:color "var(--text1)"}} "Her er det kun to toner som gjelder, dette er (--text1) og brukes på aktive elementer"]
-                         [sc/text1 {:style {:color "var(--text3)"}} "standardtonene er litt svakere (--text3) og brukes blant annet på ikonene til høyre"]
-                         [sc/row-sc-g2-w [sc/icon {:style {:color "var(--text3)"}} ico/new-home] [sc/text1 {:style {:color "var(--text3)"}} "Brukes som standard"]]
-                         [sc/row-sc-g2-w [sc/icon {:style {:color "var(--text2)"}} ico/new-home] [sc/text1 {:style {:color "var(--text2)"}} "Brukes ikke, eller alternativt i interaksjon som :hover"]]
-                         [sc/row-sc-g2-w [sc/icon {:style {:color "var(--text1)"}} ico/new-home] [sc/text1 {:style {:color "var(--text1)"}} "Brukes når noe er aktivt"]]
-                         [sc/subtext "subtext: har ikke vurdert om denne skal brukes, eller..."]
-                         [sc/small1 "small: ...om denne passer bedre (gjerne som ledetekst etc)"]
-                         [sc/small1 {:style {:color "var(--text1)"}} "small: ...om denne passer bedre (gjerne som ledetekst etc)"]
-                         [sc/small1 {:style {:color "var(--text3)"}} "small: ...om denne passer bedre (gjerne som ledetekst etc)"]]))]
-   [sc/surface-c
-    (togglepanel :debug/color-table.surface0 "surface0"
-                 (fn [] [sc/col-space-4
-                         [sc/text1 "surface0 - brukes i dialoger og andre modeless popups (menyer etc) der bakgrunnen ikke blir mørkere"]
-                         [sc/text2 "her skal jeg undersøke hvordan knapper i ulike fasonger finner plass"]
+#_(defn color-table []
+    [:<>
+     [sc/surface-a
+      (togglepanel {} :debug/color-table.surface000 "surface000"
+                   (fn [] [sc/col-space-4
+                           [sc/text1 "surface000 - brukes som primær-bakgrunn for all informasjon"]
+                           [sc/text2 "normal tekst, men litt svakere (--text2) som standard subtext"]
+                           [sc/text3 "normal tekst, men litt svakere (--text3) som standard small"]
+                           [sc/subtext "subtext: sekundær informasjon med litt svakere trykk, nok til at den er klart synlig, teksten er også litt mindre enn primærteksten."]
+                           [sc/small1 "small: knapt synlig, kun for kontrollere og som vedheng med ekstra stor avstand mellom bokstavene. Gjerne i kapitaler."]
+                           [sc/small1 {:style {:text-transform :uppercase}} "small: knapt synlig, kun for kontrollere og som vedheng med ekstra stor avstand mellom bokstavene. Gjerne i kapitaler."]
+                           [sc/small1 {:style {:text-transform :uppercase :color "var(--text2)"}}
+                            "small: fremdeles small, men litt sterkere (--text2)"]
+                           [sc/small1 {:style {:text-transform :lowercase :color "var(--text2)"}}
+                            "her går det faktisk an å kutte ut kapitalene"]
+                           [sc/small1 {:style {:text-transform :lowercase :color "var(--text1)"}}
+                            "hvordan ser det ut med (--text1) ??"]]))]
+     [sc/surface-b
+      (togglepanel :debug/color-table.surface00 "surface00"
+                   (fn [] [sc/col-space-4
+                           [sc/text1 "surface00 - brukes i toolbars og andre ikke-primære flater"]
+                           [sc/text1 {:style {:color "var(--text1)"}} "Her er det kun to toner som gjelder, dette er (--text1) og brukes på aktive elementer"]
+                           [sc/text1 {:style {:color "var(--text3)"}} "standardtonene er litt svakere (--text3) og brukes blant annet på ikonene til høyre"]
+                           [sc/row-sc-g2-w [sc/icon {:style {:color "var(--text3)"}} ico/new-home] [sc/text1 {:style {:color "var(--text3)"}} "Brukes som standard"]]
+                           [sc/row-sc-g2-w [sc/icon {:style {:color "var(--text2)"}} ico/new-home] [sc/text1 {:style {:color "var(--text2)"}} "Brukes ikke, eller alternativt i interaksjon som :hover"]]
+                           [sc/row-sc-g2-w [sc/icon {:style {:color "var(--text1)"}} ico/new-home] [sc/text1 {:style {:color "var(--text1)"}} "Brukes når noe er aktivt"]]
+                           [sc/subtext "subtext: har ikke vurdert om denne skal brukes, eller..."]
+                           [sc/small1 "small: ...om denne passer bedre (gjerne som ledetekst etc)"]
+                           [sc/small1 {:style {:color "var(--text1)"}} "small: ...om denne passer bedre (gjerne som ledetekst etc)"]
+                           [sc/small1 {:style {:color "var(--text3)"}} "small: ...om denne passer bedre (gjerne som ledetekst etc)"]]))]
+     [sc/surface-c
+      (togglepanel :debug/color-table.surface0 "surface0"
+                   (fn [] [sc/col-space-4
+                           [sc/text1 "surface0 - brukes i dialoger og andre modeless popups (menyer etc) der bakgrunnen ikke blir mørkere"]
+                           [sc/text2 "her skal jeg undersøke hvordan knapper i ulike fasonger finner plass"]
 
-                         [sc/row-sc-g2-w
-                          [hoc.buttons/regular "scb2/normal"]]
+                           [sc/row-sc-g2-w
+                            [hoc.buttons/regular "scb2/normal"]]
 
-                         [sc/row-sc-g2-w
-                          [hoc.buttons/cta "scb2/cta"]]
+                           [sc/row-sc-g2-w
+                            [hoc.buttons/cta "scb2/cta"]]
 
-                         [sc/row-sc-g2-w
-                          [hoc.buttons/danger "scb2/danger"]]
+                           [sc/row-sc-g2-w
+                            [hoc.buttons/danger "scb2/danger"]]
 
-                         [sc/text3 "fremdeles på surface0, men nå med (--text3)"]
-                         [sc/title1 "Titler er alltids nyttige i en popup"]
-                         [sc/text3 "Disse kommer i to varianter, en sc/title1 og en sc/title2, følger vanlig skjema, 1 er primær, 2 er sekundær"]
-                         [sc/small1 "Disse kommer i to varianter, en sc/title1 og en sc/title2, følger vanlig skjema, 1 er primær, 2 er sekundær"]
-                         [sc/row-sc-g2-w
-                          [sc/title1 "Tittel 1"]
-                          [sc/text "og"]
-                          [sc/title2 "Tittel 2"]]
-                         [sc/subtext "Over ser vi at standard-tekst alltid er primær (se og)"]
-                         [sc/small1 "Titler skal aldri være i (--text1) siden de allerede tar mye plass visuelt"]]))]
-   [sc/surface-a
-    (togglepanel :debug/color-table.brand "brand - surface000"
-                 (fn [] (do
-                          (o/defstyled testx :div
-                            :p-4)
-                          [sc/col-space-4
-                           [sc/text1 "Brand-color"]
-                           [testx {:style {:background "var(--brand1)"}} "brand1"]
-                           [testx {:style {:background "var(--brand1)"
-                                           :color      "var(--brand1-copy)"}} "brand1 on brand-copy"]
-                           [testx {:style {:background "var(--brand1-copy)"
-                                           :color      "var(--brand1)"}} "brand-copy as background, never used"]])))]
+                           [sc/text3 "fremdeles på surface0, men nå med (--text3)"]
+                           [sc/title1 "Titler er alltids nyttige i en popup"]
+                           [sc/text3 "Disse kommer i to varianter, en sc/title1 og en sc/title2, følger vanlig skjema, 1 er primær, 2 er sekundær"]
+                           [sc/small1 "Disse kommer i to varianter, en sc/title1 og en sc/title2, følger vanlig skjema, 1 er primær, 2 er sekundær"]
+                           [sc/row-sc-g2-w
+                            [sc/title1 "Tittel 1"]
+                            [sc/text "og"]
+                            [sc/title2 "Tittel 2"]]
+                           [sc/subtext "Over ser vi at standard-tekst alltid er primær (se og)"]
+                           [sc/small1 "Titler skal aldri være i (--text1) siden de allerede tar mye plass visuelt"]]))]
+     [sc/surface-a
+      (togglepanel :debug/color-table.brand "brand - surface000"
+                   (fn [] (do
+                            (o/defstyled testx :div
+                              :p-4)
+                            [sc/col-space-4
+                             [sc/text1 "Brand-color"]
+                             [testx {:style {:background "var(--brand1)"}} "brand1"]
+                             [testx {:style {:background "var(--brand1)"
+                                             :color      "var(--brand1-copy)"}} "brand1 on brand-copy"]
+                             [testx {:style {:background "var(--brand1-copy)"
+                                             :color      "var(--brand1)"}} "brand-copy as background, never used"]])))]
 
-   ;[sc/text1 {:style {:color "var(--text1)"}} "normal tekst"]
-   ;[sc/text1 {:style {:color "var(--text2)"}} "normal tekst med sterk"]
-   ;[sc/subtext "subtext er litt mindre men ikke mye"]
-   ;[sc/small "small on surface-a"]]))]
-   [:div 'panel]
-   [:div 'panel]])
+     ;[sc/text1 {:style {:color "var(--text1)"}} "normal tekst"]
+     ;[sc/text1 {:style {:color "var(--text2)"}} "normal tekst med sterk"]
+     ;[sc/subtext "subtext er litt mindre men ikke mye"]
+     ;[sc/small "small on surface-a"]]))]
+     [:div 'panel]
+     [:div 'panel]])
 
 (defn time-and-dates []
   [sc/col-space-8
@@ -142,7 +142,7 @@
 (defn render []
   [:div
    (interpose [:div.py-6]
-              [[togglepanel :debug/color-table "farger" color-table]
+              [;[togglepanel :debug/color-table "farger" color-table]
                [togglepanel :debug/dates "Tid og Dato" time-and-dates]
                [details-summary
                 :color-palette

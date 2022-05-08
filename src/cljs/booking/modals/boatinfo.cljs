@@ -12,7 +12,7 @@
             [schpaa.debug :as l]
             [tick.core :as t]))
 
-(def debug 1)                                               ;; <- change me!
+(def debug nil)                                             ;; <- change me!
 
 ;; constants
 
@@ -33,7 +33,8 @@
 
 ;; storage
 
-(def -debug (#(if goog.DEBUG % false) debug))               ;; <- not me!
+(def -debug
+  (#(if goog.DEBUG % false) debug))                         ;; <- not me!
 
 (defn write-to-disk [id data]
   (let [path ["boad-item" id "work-log"]
@@ -57,9 +58,34 @@
     (some-> id name)
     (prep-for-submit [values st])))
 
+;; input
+
+
+
 ;; components
 
-(defn insert-damage [st]
+(defn insert-worklog [work-log]
+  (let [data (->> work-log
+                  (filter (fn [[k v]] (tap> k) (or (some? (:description v))
+                                                   (some? (:state v)))))
+                  reverse
+                  (take 5))]
+
+    [sc/col-space-4
+     (when -debug [l/pre data])
+     (into [:<>]
+           (for [e data
+                 :let [[k {:keys [timestamp state description]}] e]]
+             [sc/zebra {:style {:border-radius "var(--radius-1)"}}
+              [sc/col-space-2 {:style {:align-items :start}}
+               [sc/small (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
+               [sc/text1 description]
+               [sc/text1 {:style {:text-transform :lowercase}}
+                (apply str (interpose ", " (map (comp name key) state)))]]
+              (when -debug [l/pre e])]))
+     [sc/small "Vi har mer men viser det ikke her"]]))
+
+(defn insert-damage [props st]
   [:fieldgroup.space-y-8
    [:div.gap-4
     {:style {:display               :grid
@@ -71,9 +97,9 @@
                                           [(if v sc/text1 sc/text2) c]])
                     :caption e}]))]
 
-   [sci/textarea
-    {:handle-change (fn [e] (swap! (r/cursor st [:description]) #(.. e -target -value)))
-     :values        {:description @(r/cursor st [:description])}}
+   [sci/textarea props
+    #_{:handle-change (fn [e] (swap! (r/cursor st [:description]) #(.. e -target -value)))
+       :values        {:description @(r/cursor st [:description])}}
     nil {:class [:-mx-2]} "Annen beskrivelse" :description]])
 
 (defn editor [props]
@@ -114,7 +140,13 @@
 
     (when -debug [l/pre data])]])
 
-
+(defn just-panel [& content]
+  [:div
+   {:style {:box-shadow       "var(--shadow-1)"
+            :background-color "var(--toolbar-)"}
+    :class [:pt-4 :pb-6 :sticky :bottom-0 :-mx-8]}
+   [sc/row-ec {:class [:px-8]}
+    content]])
 
 ;; react dialog (styling starts here)
 
@@ -124,12 +156,21 @@
     (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
                  ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})
                  st (r/atom {})]
-      (tap> {:modal-boatinfo-windowcontent data})
+      ;(tap> {:modal-boatinfo-windowcontent data})
       [sc/dropdown-dialog'
-       [header
-        {:bt-data bt-data
-         :ex-data ex-data}
-        data]
+       [:div.sticky.-top-8
+        {:style {
+                 ;:position         :sticky
+                 ;:top "-4rem"
+                 ;:margin-top       "132px"
+                 :margin-inline    -24
+                 :padding          16
+                 :z-index          10
+                 :background-color "var(--toolbar-)"}}
+        [header
+         {:bt-data bt-data
+          :ex-data ex-data}
+         data]]
        [fork/form {:prevent-default?    true
                    :form-id             "damage-form"
                    :initial-values      {}
@@ -143,11 +184,20 @@
            [sc/col-space-8 {:style {:padding-top "2rem"}}
             (when -debug [l/pre input boat-type @st])
             ;i want something in editor to execute when the close button is pressed
-            [togglepanel :boats/editor "Endringer" #(editor props)]
-            [togglepanel :boats/damage "Trenger nærmere ettersyn" #(insert-damage st)]
-            [sc/row-ec {:class [:pb-6]}
-             [hoc.buttons/regular {:type     :submit
-                                   :on-click on-close} "Lukk"]]]])]]
+            [togglepanel {:open     0
+                          :disabled true} :boats/editor "Endringer" #(editor props) false]
+            [togglepanel :boats/damage "Trenger nærmere ettersyn" #(insert-damage props st)]
+            [togglepanel :boats/worklog "Arbeidsliste" #(insert-worklog (:work-log data))]
+            [just-panel
+             [hoc.buttons/attn
+              {:type     :submit
+               :on-click on-close} "Lagre"]
+             [hoc.buttons/regular
+              {:type     :submit
+               :style    {:background-color "var(--toolbar)"
+                          :color            "var(--buttoncopy)"}
+               :on-click on-close} "Lukk"]]]])]]
+
       (finally))))
 
 ;; main accessor
