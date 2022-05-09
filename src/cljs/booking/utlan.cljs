@@ -350,19 +350,16 @@
           show-timegraph? (= :b @selector) #_(rf/subscribe [:rent/common-show-timegraph])
           show-details? (= :b @selector) #_@(rf/subscribe [:rent/common-show-details])
           data (rf/subscribe [:rent/list])
-          lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
+          data (if show-deleted? @data (remove (comp :deleted val) @data))
+          lookup-id->number (into {} (->> db
+                                          (remove (comp empty? :number val))
                                           (map (juxt key (comp :number val)))))]
       [sc/col-space-1
        (into [:<>]
-             (for [[k {:keys [test timestamp list deleted] :as m}]
-                   (if show-deleted?
-                     @data
-                     (remove (comp :deleted val) @data))
-                   :let [boats list
+             (for [[k {:keys [timestamp list deleted] :as m}] data
+                   :let [boats list                         ;(sort-by (comp :number val) < list)
                          date (some-> timestamp t/instant t/date-time)]]
-
                [command-grid
-                {:class [(when test :test)]}
                 [:div.w-full.truncate
                  {:class [:whitespace-nowrap :gap-1]
                   :style {:color           "var(--text1) "
@@ -406,18 +403,18 @@
                                       (str "kl. " (times.api/time-format (t/time dt)))
                                       (str arrived-datetime))]]))])]
 
+                          [[l/pre boats]]
                           ;boatnumbers
-                          (let [f (fn [id returned number]
-                                    [widgets/badge {:on-click #(open-modal-boatinfo
-                                                                 {:data (get db (keyword id))})
-                                                    :class    [:big (when-not returned :in-use)]}
-                                     number])]
-
+                          (let [f (fn [id returned]
+                                    (let [datum (get db (keyword id))]
+                                      [widgets/badge
+                                       {:on-click #(open-modal-boatinfo {:data datum})
+                                        :class    [:big (when-not returned :in-use)]}
+                                       (or (:number datum) (str (some-> id name) "/ny"))]))]
                             [(map (fn [[id returned]]
-                                    (let [nm (some-> id keyword)
-                                          g (get-in lookup-id->number [nm] nm)]
-                                      [f id (not (empty? (str returned))) g]))
-                                  (remove nil? boats))])
+                                    (when-let [nm (some-> id keyword)]
+                                      [f id (not (empty? (str returned)))]))
+                                  (sort (remove nil? boats)))])
                           #_[[l/pre (remove nil? boats)]])))]))])))
 
 (defn panel [{:keys []}]
@@ -439,13 +436,28 @@
 
 (defn always-panel []
   [:<>
+
+
    [:div {:class [:sticky :top-0]
           :style {:z-index 0}}
-    [sc/row-center {:class [:py-8]}
+
+    [sc/row-center {:class [:py-4]
+                    :style {:z-index          10
+                            :background-color "var(--content)"}}
+     [hoc.buttons/cta-pill-icon
+      {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
+      ico/plus "Nytt utlån"]
+     [hoc.buttons/danger-pill
+      {:disabled true
+       :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+      "HMS Hendelse"]]
+
+    [sc/row-center {:class [:py-4]}
      [widgets/pillbar
       selector
       [[:a "Kompakt"]
        [:b "Detaljert"]]]]]
+
 
    #_[sc/col-space-4
       [sc/row-sc-g2-w

@@ -266,13 +266,16 @@
                                      :vis     (rf/subscribe [:lab/modal-selector])
                                      :close   #(rf/dispatch [:lab/modal-selector false])}
         {:keys [click-overlay-to-dismiss content-fn] :or {click-overlay-to-dismiss true}} context]
-    (let [open? @vis]
+    (let [;figure: if it's better to have this as a global function
+          right-side? (schpaa.state/listen :lab/menu-position-right)
+          open? @vis]
       [ui/transition
        {:appear true
         :show   open?}
        [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))}
         [:div.fixed.inset-0
          [:div.text-center
+          {:class [(if @right-side? :mr-16 :ml-16)]}
           [schpaa.style.dialog/standard-overlay]
           [:span.inline-block.h-screen.align-middle
            (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]

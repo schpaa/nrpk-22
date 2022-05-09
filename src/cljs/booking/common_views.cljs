@@ -699,10 +699,10 @@
 
         [:div {:style {:overflow-y :auto
                        :flex       "1 1 auto"
-                       :height     "calc(100vh - 4rem)"}}
+                       :height     "calc(100vh - 8rem)"}}
          (if render
 
-           [:div.relative
+           [:div.relative.z-1.m-12
             {:class [:space-y-8]
              :style {:margin-inline "auto"
                      :padding-block "2rem"
