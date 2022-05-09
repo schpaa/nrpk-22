@@ -1,43 +1,30 @@
 (ns user.views
   (:require [clojure.string :as str]
-            [clojure.walk :as walk]
             [reagent.core :as r]
             [re-frame.core :as rf]
-            [lambdaisland.ornament :as o]
             [fork.re-frame :as fork]
             [tick.core :as t]
             [shadow.resource :refer [inline]]
-
             [times.api :as ta]
             [arco.react]
             [user.database]
             [nrpk.fsm-helpers :refer [send]]
             [eykt.content.rapport-side :refer [top-bottom-view map-difference]]
-
             [booking.views.picker]
             [booking.views]
             [booking.bookinglist]
             [booking.ico :as ico]
-
             [db.core :as db]
-            [db.auth :refer [user-info]]
-
             [schpaa.modal.readymade :as readymade]
-    ;[schpaa.state]
             [schpaa.markdown :refer [md->html]]
-            [schpaa.components.fields :as fields]
             [schpaa.debug :as l]
             [schpaa.components.views :refer [rounded-view]]
             [schpaa.modal :as modal]
             [schpaa.style :as st]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.input :as sci :refer [input]]
-            [schpaa.style.button2 :as scb2]
-            [schpaa.style.hoc.page-controlpanel :refer [togglepanel]]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.dialog]
-            [eykt.content.rapport-side :refer [map-difference]]
-            [booking.common-widgets :as widgets]))
+            [eykt.content.rapport-side :refer [map-difference]]))
 
 (defn confirm-registry []
   #_(apply send

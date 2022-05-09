@@ -9,6 +9,7 @@
             [booking.routes]
             [schpaa.debug :as l]
             [headlessui-reagent.core :as ui]
+            #_[booking.modals.boatinfo :refer [open-modal-boatinfo]]
             [schpaa.style.hoc.buttons :as hoc.buttons]))
 
 (defn horizontal-button [{:keys [right-side
@@ -408,3 +409,12 @@
 
 (defn location [l]
   (if (= "0" (str l)) "Nøklevann" "Sjøbasen"))
+
+(defn badge [{:keys [class on-click] :as attr} n]
+  (let [v 1]
+    [sc/badge-2 attr
+     #_{:class    class #_[:big (when (pos? (:location v)) :invert)]
+        :style    {:font-size  "unset"
+                   :xtransform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
+        :on-click on-click}
+     n]))

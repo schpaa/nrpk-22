@@ -103,15 +103,16 @@
 
     [sc/icon icon]))
 
-(defn worklog-card [{:keys [class]} {:keys [deleted complete timestamp description uid] :as worklog-entry}
-                    boat-item-id worklog-entry-id]
+(defn worklog-card
+  [{:keys [class]} {:keys [deleted complete timestamp description uid] :as worklog-entry}
+   boat-item-id worklog-entry-id]
   (let [q-button (partial q-button boat-item-id worklog-entry-id)]
     [sc/zebra
      {;:class [:divider]
-      :style {;:margin-inline "4rem"
-              :margin-before "4rem"
-              :border-bottom "1px dashed var(--text2)"}}
-     [sc/co
+      :sstyle {;:margin-inline "4rem"
+               :margin-before "4rem"
+               :border-bottom "1px dashed var(--text2)"}}
+     [sc/col-space-4
       [sc/row-sc-g4-w {:style {:width "100%"}}
        (if deleted
          (q-button
@@ -123,12 +124,6 @@
            ico/trash
            (fn [a b] (delete-worklog-entry a (some-> b name) true))))
 
-       [sc/col-space-1 {:style {:flex "1"}}
-        [sc/small
-         (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
-        [sc/small0 (or uid "Nøkkelvakt")]]
-
-       ;todo compress!
        (if complete
          (hoc.buttons/round-pill
            {:on-click #(do (complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
@@ -137,13 +132,21 @@
          (hoc.buttons/round-pill
            {:on-click #(do (complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
                            #_(.stopPropagation %))
-            :class    [:outline2]} [sc/icon ico/check]))]
+            :class    [:outline2]} [sc/icon ico/check]))
 
-      [:div {:class class}
-       [sc/text1 {:style {:text-transform       :lowercase
-                          :text-decoration-line (when complete "line-through")}}
-        (apply str (interpose ", " (map (comp name key) (dissoc worklog-entry :description :timestamp :complete :deleted))))]
-       [sc/text1 {:style {:text-decoration-line (when complete "line-through")}} description]]]]))
+       ;todo compress!
+       [sc/col-space-1 {:style {:flex "1"}}
+        [sc/small
+         (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
+        [sc/small0 (or uid "Nøkkelvakt")]]]
+
+      [sc/col-space-4 {:class class}
+       [sc/row-sc-g1-w
+        (->> (dissoc worklog-entry :description :timestamp :complete :deleted)
+             (map (comp name key))
+             (map sc/pill2))]
+
+       [sc/text0 {:style {:text-decoration-line (when complete "line-through")}} description]]]]))
 
 
 (defn insert-worklog [boat-item-id work-log]
@@ -242,9 +245,18 @@
 
 (defn bottom-button-panel [& content]
   [:div
-   {:style {:box-shadow       "var(--shadow-1)"
-            :background-color "var(--toolbar)"}
-    :class [:pt-4 :pb-6 :sticky :bottom-0 :-mx-8]}
+   {:style {
+            ;:position         :sticky
+            ;:top "-4rem"
+            ;:margin-top       "132px"
+            :margin-inline    -24
+            :margin-bottom    4
+            :padding          24
+            :z-index          10
+            :background-color "var(--toolbar)"}}
+   #_{:style {:box-shadow       "var(--shadow-1)"
+              :background-color "var(--toolbar)"}
+      :class [:pt-4 :pb-6 :sticky :bottom-0 :-mx-8]}
    [sc/row-ec {:class [:px-8]}
     content]])
 
@@ -293,8 +305,8 @@
              (fn [] [insert-worklog
                      boat-item-id
                      (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])]
-            [bottom-button-panel
 
+            [bottom-button-panel
 
              [sc/row-sc-g4-w
               [hoc.buttons/round'

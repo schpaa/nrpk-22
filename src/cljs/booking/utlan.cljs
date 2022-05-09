@@ -404,13 +404,11 @@
 
                           ;boatnumbers
                           (let [f (fn [id returned number]
-                                    (sc/badge-2 {:class    [:big (when-not returned :in-use)]
-                                                 :on-click #(open-modal-boatinfo
-                                                              {:data (assoc (get db (keyword id))
-                                                                       :id '?
-                                                                       :number (some-> id name))})}
+                                    [widgets/badge {:on-click #(open-modal-boatinfo
+                                                                 {:data (get db (keyword id))})
+                                                    :class    [:big (when-not returned :in-use)]}
+                                     number])]
 
-                                                number))]
                             [(map (fn [[id returned]]
                                     (let [nm (some-> id keyword)
                                           g (get-in lookup-id->number [nm] nm)]
