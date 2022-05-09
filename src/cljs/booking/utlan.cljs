@@ -16,6 +16,11 @@
             [schpaa.icon :as icon]
             [booking.common-widgets :as widgets]))
 
+;; store
+
+(def store (r/atom {:selector :a}))
+(def selector (r/cursor store [:selector]))
+
 ;region innlevering
 
 (defn view-fn [{:keys [navn number kind] :as m} [[k v] st original] timestamp t]
@@ -342,12 +347,11 @@
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [show-deleted? @(rf/subscribe [:rent/common-show-deleted])
-          show-timegraph? @(rf/subscribe [:rent/common-show-timegraph])
-          show-details? @(rf/subscribe [:rent/common-show-details])
+          show-timegraph? (= :b @selector) #_(rf/subscribe [:rent/common-show-timegraph])
+          show-details? (= :b @selector) #_@(rf/subscribe [:rent/common-show-details])
           data (rf/subscribe [:rent/list])
           lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
                                           (map (juxt key (comp :number val)))))]
-
       [sc/col-space-1
        (into [:<>]
              (for [[k {:keys [test timestamp list deleted] :as m}]
@@ -432,27 +436,37 @@
 
    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
 
-(defn commands []
-  [sc/col-space-4
-   [sc/row-sc-g2-w
 
-    [hoc.buttons/cta-pill-icon
-     {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
-     ico/plus "Nytt utlån"]
+(defn always-panel []
+  [:<>
+   [:div {:class [:sticky :top-0]
+          :style {:z-index 0}}
+    [sc/row-center {:class [:py-8]}
+     [widgets/pillbar
+      selector
+      [[:a "Kompakt"]
+       [:b "Detaljert"]]]]]
 
-    [hoc.buttons/danger-pill
-     {:disabled true
-      :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
-     "HMS Hendelse"]
+   #_[sc/col-space-4
+      [sc/row-sc-g2-w
 
-    [hoc.toggles/switch-local
-     {:disabled false}
-     (r/cursor settings [:rent/show-details]) "Detaljer"]
+       [hoc.buttons/cta-pill-icon
+        {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
+        ico/plus "Nytt utlån"]
 
-    (when goog.DEBUG
-      [hoc.buttons/cta-pill-icon
-       {:on-click #(rf/dispatch [:lab/remove-boatlogg-database])}
-       ico/plus "Ny database"])]])
+       [hoc.buttons/danger-pill
+        {:disabled true
+         :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+        "HMS Hendelse"]
+
+       [hoc.toggles/switch-local
+        {:disabled false}
+        (r/cursor settings [:rent/show-details]) "Detaljer"]
+
+       (when goog.DEBUG
+         [hoc.buttons/cta-pill-icon
+          {:on-click #(rf/dispatch [:lab/remove-boatlogg-database])}
+          ico/plus "Ny database"])]]])
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]

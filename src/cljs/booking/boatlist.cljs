@@ -17,36 +17,7 @@
 
 (rf/reg-sub ::fontsize :-> #(:boatlist/fontsize % "100%"))
 
-(o/defstyled pill-thing :div
-  [:& toggle/tiny-button-reg
-   {:cursor      :default
-    :box-shadow  "var(--shadow-1)"
-    :user-select :none}
-   ["&:not(.inverse)"
-    {:background "var(--text0-copy)"}]
-   [:&.normals
-    {:width                      "12ch"
-     :min-height                 "3rem"
-     :font-size                  "var(--font-size-2)"
-     :justify-content            "center"
-     :border-bottom-right-radius 0
-     :border-top-right-radius    0
-     :border-bottom-left-radius  0
-     :border-top-left-radius     0
-     :border-color               "var(--text0)"
-     :border-right               "none"}
-    ["&:first-child"
-     {:border-bottom-left-radius  "1rem"
-      :border-top-left-radius     "1rem"
-      :border-bottom-right-radius 0
-      :border-top-right-radius    0
-      :border-right               "none"}]
-    ["&:last-child"
-     {:border-bottom-right-radius "1rem"
-      :border-top-right-radius    "1rem"
-      :border-bottom-left-radius  0
-      :border-top-left-radius     0
-      :border-right               "2px solid var(--text0)"}]]])
+
 
 (o/defstyled small-grid :div
   :grid
@@ -181,13 +152,7 @@
                                   :on-click #(open-modal-boatinfo
                                                {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})} (:number v)]))]])])]]))
 
-(defn pilled
-  ([c vs]
-   (pilled {} c vs))
-  ([_attr c vs]
-   (let [f (fn [[k v]] [pill-thing {:on-click #(reset! c k)
-                                    :class    [:narrow :outline2 :normals (if (= k @c) :inverse)]} v])]
-     [sc/row (into [:<>] (map f vs))])))
+
 
 (defn toggle [c caption]
   [button {:on-click #(swap! c not)
@@ -204,9 +169,9 @@
      [:div {:class [:sticky :top-0]
             :style {:z-index 0}}
       [sc/row-center {:class [:py-8]}
-       [pilled selector [[:a "Nye"]
-                         [:b "Alle båter"]
-                         [:c "Arbeidsliste"]]]]]
+       [widgets/pillbar selector [[:a "Nye"]
+                                  [:b "Alle båter"]
+                                  [:c "Arbeidsliste"]]]]]
 
      #_[sc/row {:class [:w-full]}
         [sc/row-g3

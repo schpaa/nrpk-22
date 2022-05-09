@@ -20,8 +20,9 @@
                  (fn [db _] (assoc db :lab/modaldialog-visible false)))
 
 (o/defstyled experimental :div
-  {:display          :grid
-   :place-content    :end
+  {
+   ;:display          :grid
+   ;:place-content    :center
    :background-color "var(--toolbar-)"
    :border-radius    "var(--radius-0)"
    :width            "100%"

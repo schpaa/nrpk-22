@@ -591,7 +591,7 @@
      (let [uid @(rf/subscribe [:lab/uid])]
        [+page-builder r
         {:panel        booking.utlan/panel
-         :always-panel booking.utlan/commands
+         :always-panel booking.utlan/always-panel
          :render       #(booking.utlan/render uid)}]))
 
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))

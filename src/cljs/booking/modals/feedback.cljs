@@ -13,13 +13,13 @@
 (defn feedback-window [{:keys [reply? title on-close on-save caption comment-length] :as ctx}]
   (let [uid (rf/subscribe [:lab/uid])
         max-comment-length (or comment-length max-comment-length)]
-    [:div
+    [sc/centered-dialog
      {:style {:background-color "var(--toolbar)"
               ;:background-color "var(--content)"
               :display          :grid
               :overflow-y       :auto
-              :place-content    :center}}
-     [:div.p-4
+              :xplace-content   :center}}
+     [:div.p-4x
       {:style {:width      "24rem"
                :min-width  "24rem"
                :max-height "90vh"}}
@@ -108,7 +108,6 @@
 (rf/reg-event-fx :app/give-feedback [rf/trim-v] feedback-map)
 
 (defn send-message [_ [uid-receiver]]
-  ;(js/alert uid)
   (letfn [(write-to-db [reci-uid {:keys [carry]}]
             (let [active-uid (:uid @(rf/subscribe [:db.core/user-auth]))
                   post (conj {:to  reci-uid

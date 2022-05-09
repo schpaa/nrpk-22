@@ -371,9 +371,8 @@
        :href  (k/path-for [link])}
       (:text (lookup-page-ref-from-name link))]]))
 
-(defn location-block [links caption switch?]
-  (let [text caption
-        link (first links)]
+(defn location-block [r links caption switch?]
+  (let [link (first links)]
     [:div.flex.flex-col.px-2.w-auto
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
       :style    {:z-index 9
@@ -382,21 +381,21 @@
       :class    [(if @switch? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
-      [sc/title1 (or (if (fn? text)
-                       '(text nil #_(some-> r :path-params))
-                       (if (map? text) (:text text)))
-                     text)]
+      [sc/title1 (or (if (fn? caption)
+                       (caption (some-> r :path-params))
+                       (if (map? caption) (:text caption) caption))
+                     caption)]
       [:div
        {:style {:font-size "smaller"}}
        (let [z {:link link #_(some-> r :data :header ffirst)
-                :text text #_(some-> r :data :header ffirst lookup-page-ref-from-name :text)}]
+                :text caption #_(some-> r :data :header ffirst lookup-page-ref-from-name :text)}]
          (try (see-also z)
               (catch js/Error e {:CRASH/see-also z})))]]]))
 
 (defn header-line [r frontpage v]
   (let [[links caption] (some-> r :data :header)
         switch? (schpaa.state/listen :lab/menu-position-right)
-        location [location-block links caption switch?]]
+        location [location-block r links caption switch?]]
     [:div.w-full.flex.justify-between
      {:class [:h-16 :items-center]
       :style {:z-index 1}}
@@ -408,7 +407,6 @@
        (if frontpage
          [apply header-top-frontpage items]
          [apply header-top items]))]))
-
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -703,6 +701,7 @@
                        :flex       "1 1 auto"
                        :height     "calc(100vh - 4rem)"}}
          (if render
+
            [:div.relative
             {:class [:space-y-8]
              :style {:margin-inline "auto"
@@ -713,6 +712,7 @@
             (when always-panel
               [always-panel modify?])
             [render r m]]
+
            [sc/col-space-8 {:class [:p-4]}
             (when (fn? panel)
               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])

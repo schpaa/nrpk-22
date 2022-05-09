@@ -9,8 +9,9 @@
             [booking.routes]
             [schpaa.debug :as l]
             [headlessui-reagent.core :as ui]
-            #_[booking.modals.boatinfo :refer [open-modal-boatinfo]]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.style.hoc.toggles :as hoc.toggles]))
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -359,7 +360,7 @@
   (rf/dispatch [:app/open-send-message uid-reciever]))
 
 (defn message-pill [uid-reciever]
-  (hoc.buttons/pill
+  (schpaa.style.hoc.buttons/pill
     {:class    [:message :round]
      :on-click #(send-msg uid-reciever)} (sc/icon ico/melding)))
 
@@ -418,3 +419,13 @@
                    :xtransform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
         :on-click on-click}
      n]))
+
+(defn pillbar
+  ([c vs]
+   (pillbar {} c vs))
+  ([_attr c vs]
+   (let [f (fn [[k v]]
+             [schpaa.style.hoc.toggles/pillbar
+              {:on-click #(reset! c k)
+               :class    [:narrow :outline2 :normals (if (= k @c) :inverse)]} v])]
+     [sc/row (into [:<>] (map f vs))])))
