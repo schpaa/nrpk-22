@@ -13,6 +13,8 @@
             [booking.ico :as ico]
             [schpaa.style.ornament :as sc]))
 
+;; styles
+
 (o/defstyled user-cell :div
   [:&
    :flex
@@ -24,7 +26,6 @@
    :p-2
    {:user-select   :none
     :border-radius "var(--radius-0)"}])
-
 
 (o/defstyled avail-user-slot :div
   [:&
@@ -54,6 +55,8 @@
   :w-32
   :h-10
   :flex :items-end)
+
+;;
 
 (defn invert [data]
   (->> (vals data)
@@ -146,9 +149,6 @@
                                           (map #(occupied-slot uid %) (last slots-on-this-eykt))
                                           (map #(avail-user-slot "Ledig") (range slots-free))))]]]))))))
 
-
-
-
 (defn hoc3
   "lookup startdatetime->enddatetime,slots,duration-in-minutes"
   [data]
@@ -234,6 +234,7 @@
                                               :duration-minutes))) 0 vs)
                            60)]])
                (map corrected)))]))
+
 ;todo Which of them is overflowed?
 
 (comment
