@@ -48,7 +48,7 @@
         db (rf/subscribe [:db/boat-db])]
     (r/with-let [st (r/atom initial)]
       [sc/dropdown-dialog'
-       [sc/col-space-8
+       [sc/col-space-8 {:class [:pt-8]}
         [sc/col-space-4
          (let [f (fn [[k v]]
                    (let [m (get @db k)
@@ -436,8 +436,6 @@
 
 (defn always-panel []
   [:<>
-
-
    [:div {:class [:sticky :top-0]
           :style {:z-index 0}}
 

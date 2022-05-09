@@ -73,10 +73,8 @@
 
               :enter       "ease-out transition-opacity transition-transform transform duration-200 "
               :enter-from  "opacity-0 -translate-y-32"
-              :enter-to    "opacity-100 -translate-y-4"
-              :entered     "-translate-y-4"
-
-
+              :enter-to    "opacity-100 translate-y-0"
+              :entered     "translate-y-0"
               :leave       "ease-in duration-300"
               :leave-from  "opacity-100 translate-y-0"
               :leave-to    "opacity-0 -translate-y-full"

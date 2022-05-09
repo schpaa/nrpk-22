@@ -133,7 +133,9 @@
                                          starttime' (str (t/at dt (t/time starttime)))
                                          slots-on-this-eykt (first (filter (fn [[k _v]] (= (name k) starttime')) alle-regs-i-denne-periodegruppen))
                                          slots-free (- slots (count (second slots-on-this-eykt)))]
-                                   :when (if show-only-available? (or (pos? slots-free) (get-in base [section uid starttime-key])) true)]
+                                   :when (if show-only-available?
+                                           (or (pos? slots-free) (get-in base [section uid starttime-key]))
+                                           true)]
                                [:div.ml-4
                                 [sc/col-space-2
                                  [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap

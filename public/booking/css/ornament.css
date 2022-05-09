@@ -828,7 +828,7 @@ body {
 .schpaa_style_ornament__dlg{color:var(--text1);background-color:var(--content);border-radius:var(--radius-2)}
 .schpaa_style_ornament__centered_dialog{color:var(--text1);background-color:var(--content);border-radius:var(--radius-2)}.schpaa_style_ornament__centered_dialog{padding:var(--size-5);overflow-y:auto}
 .schpaa_style_ornament__dropdown_dialog{color:var(--text1);background-color:var(--content);border-radius:var(--radius-2)}.schpaa_style_ornament__dropdown_dialog{width:100%;overflow-y:auto;max-height:95vh;padding-inline:var(--size-6);padding-block:var(--size-4)}
-.schpaa_style_ornament__dropdown_dialog_SINGLEQUOTE_{color:var(--text1);background-color:var(--content);border-radius:var(--radius-2)}.schpaa_style_ornament__dropdown_dialog_SINGLEQUOTE_{width:100%;z-index:500;overflow-y:auto;max-height:95vh;padding-inline:var(--size-6)}
+.schpaa_style_ornament__dropdown_dialog_SINGLEQUOTE_{color:var(--text1);background-color:var(--content);border-radius:var(--radius-2)}.schpaa_style_ornament__dropdown_dialog_SINGLEQUOTE_{width:100%;border-top-left-radius:0;border-top-right-radius:0;z-index:500;overflow-y:auto;max-height:95vh;padding-inline:var(--size-6)}
 .schpaa_style_ornament__dialog_selector_SINGLEQUOTE_{text-align:center;-border:4px solid var(--toolbar-);-border-radius:var(--radius-2);xbox-shadow:0 0 0 4px rgba(255,255,0,1),0 0 0 8px rgba(0,0,0,1);color:var(--text1);-background-color:red}
 .schpaa_style_ornament__dialog_title{color:var(--text2);font-family:Inter;font-weight:var(--font-weight-5);font-size:var(--font-size-3)}
 .schpaa_style_ornament__dialog_title_SINGLEQUOTE_{color:var(--text1);font-family:Inter;font-weight:var(--font-weight-3);font-size:var(--font-size-3)}
