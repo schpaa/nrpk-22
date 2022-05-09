@@ -213,7 +213,7 @@ outline: 2px solid #a0a8;
     --light-field: var(--gray-1);
     --light-field-focus: var(--gray-00);
     --light-fieldcopy: var(--gray-7);
-    --dim-field: var(--gray-8);
+    --dim-field: var(--gray-7);
     --dim-field-focus: var(--gray-9);
     --dim-fieldcopy: var(--gray-1);
 

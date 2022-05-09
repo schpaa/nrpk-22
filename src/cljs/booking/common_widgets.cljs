@@ -157,7 +157,7 @@
                                  stability expert number navn kind description
                                  last-update weight length width aquired-year aquired-price] :as m}]
 
-  [sc/col-space-1 {:class [:truncate]}
+  [sc/col {:class [:truncate]}
    [sc/row-sba
     (when (or stability expert) [stability-expert m])
     ;[l/pre boat-type]

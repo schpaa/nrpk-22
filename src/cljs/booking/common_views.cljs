@@ -708,18 +708,16 @@
              :style {:margin-inline "auto"
                      :padding-block "2rem"
                      :max-width     "min(calc(100% - 2rem), 56ch)"}}
-
             (when (fn? panel)
               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
             (when always-panel
               [always-panel modify?])
             [render r m]]
-           [sc/col-space-8
-            [sc/col-space-8 {:class [:p-4]}
-             (when (fn? panel)
-               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
-             (when always-panel
-               [always-panel modify?])]
+           [sc/col-space-8 {:class [:p-4]}
+            (when (fn? panel)
+              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+            (when always-panel
+              [always-panel modify?])
             [render-fullwidth]])]
 
         [:div.sticky.bottom-0

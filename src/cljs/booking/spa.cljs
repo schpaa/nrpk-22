@@ -49,6 +49,11 @@
             [booking.oversikt]
             [eykt.calendar.core]))
 
+;; shortcuts
+
+(defn page [r c]
+  [+page-builder r c])
+
 ;region related to flex-date and how to display relative time
 
 (rf/reg-sub :app/show-relative-time :-> :app/show-relative-time)
@@ -83,9 +88,6 @@
    (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
                                 (sort-by :name < booking.modals.commandpalette/commands)]
                             [:div [sc/subtext-with-link {:on-click action} name]]))])
-
-(defn page [r c]
-  [+page-builder r c])
 
 (def routing-table
   {:r.welcome

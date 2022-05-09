@@ -96,11 +96,7 @@
 
 (defn q-button [boat-item-id worklog-entry-id attr icon action]
   (hoc.buttons/round-pill
-    (merge-with into
-                {
-                 :on-click #(action boat-item-id worklog-entry-id)}
-                attr)
-
+    (merge-with into {:on-click #(action boat-item-id worklog-entry-id)} attr)
     [sc/icon icon]))
 
 (defn worklog-card
@@ -140,13 +136,14 @@
          (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
         [sc/small0 (or uid "Nøkkelvakt")]]]
 
-      [sc/col-space-4 {:class class}
-       [sc/row-sc-g1-w
-        (->> (dissoc worklog-entry :description :timestamp :complete :deleted)
-             (map (comp name key))
-             (map sc/pill2))]
+      (when-not complete
+        [sc/col-space-2 {:class class}
+         [sc/row-sc-g1-w
+          (->> (dissoc worklog-entry :description :timestamp :complete :deleted)
+               (map (comp name key))
+               (map sc/pill2))]
 
-       [sc/text0 {:style {:text-decoration-line (when complete "line-through")}} description]]]]))
+         [sc/text1 {:style {:text-decoration-line (when complete "line-through")}} description]])]]))
 
 
 (defn insert-worklog [boat-item-id work-log]
@@ -168,11 +165,8 @@
                   (take 5))]
     [sc/col-space-4
      (into [:<>]
-           (for [e data
-                 :let [[worklog-entry-id {:keys [complete deleted uid timestamp state description] :as m}] e]]
-             [sc/co
-              [worklog-card {:class [:opacity-100]} m boat-item-id worklog-entry-id]
-              (when -debug [l/pre e])]))
+           (for [[worklog-entry-id m] data]
+             [worklog-card {:class [:opacity-100]} m boat-item-id worklog-entry-id]))
 
      (r/with-let [more? (r/atom false)]
        [sc/co
