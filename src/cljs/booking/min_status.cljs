@@ -16,8 +16,6 @@
                            (not (:deleted v))))
           @(db/on-value-reaction {:path ["cache-tilbakemeldinger"]})))
 
-
-
 ;idiom: unwrapped lines are candidates for new constructs
 (defn render [r]
   (if-let [uid @(rf/subscribe [:lab/uid])]

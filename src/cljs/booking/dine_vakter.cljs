@@ -69,11 +69,11 @@
         data (remove (fn [{:keys [id data]}] (get data "deleted" false)) datum)]
     (if (empty? data)
       [sc/col-space-4
-       [sc/title2 "Ingen beskjeder"]
+       [sc/title1 "Ingen beskjeder"]
        (when admin?
          [sc/text storage-path])]
       [sc/col-space-4
-       [sc/title1 "Beskjeder"]
+       [sc/title "Beskjeder"]
        (when admin?
          [sc/text storage-path])
        (into [sc/col-space-4]
@@ -148,13 +148,16 @@
                    [sc/text1 "Identitet"]
                    (sc/as-identity uid)])]
                [beskjeder uid @inbox-messages]
+
                (when nøkkelvakt?
                  (when (seq data)
                    [sc/col-space-4
-                    [sc/title2 "Påmeldte vakter '22"]
+                    [sc/title1 "Påmeldte vakter '22"]
                     [vakter uid data]]))
+
                (when (and admin? nøkkelvakt?)
                  [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
+
                (when admin?
                  [endringslogg uid (path-endringslogg uid)])])
 
