@@ -134,52 +134,87 @@
         uid (keyword uid)
         data (filter (fn [[{:keys [slots kald-periode]}]] (and (pos? slots)
                                                                (if kald-periode kald-periode? true))) data)
-        f (first data)]
-    (into [:div.space-y-4]
-          (for [[idx each] (map-indexed vector data)
-                ;todo superslow
-                [{:keys [description dt slots section]} group] (group-by #(select-keys % [:dt :description :section :slots :kald-periode]) each)
-                :let [dt (t/date dt)
-                      alle-regs-i-denne-periodegruppen (invert (get base section) #_(clojure.walk/keywordize-keys (get base section)))]]
-            ^{:key dt}
-            [:<>
-             (into [:div.w-full.space-y-2
-                    [week-component dt description]]
-                   (for [{:keys [starttime endtime]} (sort-by :starttime < group)
-                         :let [starttime-key (-> (t/at dt starttime) str keyword)
-                               starttime' (str (t/at dt (t/time starttime)))
-                               [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
-                                                                     alle-regs-i-denne-periodegruppen))
-                               slots-free (- slots (count slots-on-this-eykt))]
-                         :when (if (and (not (= idx 1))
-                                        show-only-available?)
-                                 (or (pos? slots-free) (get-in base [section uid starttime-key]))
-                                 true)]
-                     [:div.ml-4
-                      [sc/col-space-2
-                       [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap
-                                                :align-items "start"}}
-                        [sc/col-space-1 {:class [:justify-center :h-10]
-                                         :style {:white-space :nowrap
-                                                 :width       "3.5rem"}}
-                         [sc/text2 "kl. " (t/hour starttime) "–" (t/hour endtime)]]
-                        [command uid base section slots-free starttime-key]
-                        ; for every line
-                        (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
-                              (concat
-                                (map #(occupied-slot uid %) slots-on-this-eykt)
-                                (map #(avail-user-slot "Ledig") (range slots-free))))]]
-                      (when (= 1 idx)
-                        (let [data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
-                              s (str "sms:/open?addresses="
-                                     (apply str (interpose "," (map :telefon data)))
-                                     "?&body="
-                                     (js/encodeURI "Husk at du skal ha nøkkelvakt!"))]
-                          [sc/row-sc-g2
-                           {:style {:align-items :center
-                                    :height      "3rem"}}
-                           [sc/link {:href s} "Send påminnelse om nøkkelvakt"]])
-                        #_[:div.mt-1 [reminder (last slots-on-this-eykt)]])]))]))))
+        f (second data)]
+    [:<>
+     (let [data nil #_(map (comp user.database/lookup-userinfo name first) f)
+           [{:keys [description dt slots section starttime]} group]
+           (first (group-by #(select-keys % [:dt :description :section :slots :kald-periode :starttime]) f))
+
+           ;{:keys [starttime]} group
+
+           starttime' (str (t/at (t/date (t/date-time dt)) (t/time starttime)))
+
+           alle-regs-i-denne-periodegruppen (invert (get base section))
+           [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
+                                                 alle-regs-i-denne-periodegruppen))
+           data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
+           s (str "sms:/open?addresses="
+                  (apply str (interpose "," (map :telefon data)))
+                  "?&body="
+                  (js/encodeURI "Husk at du skal ha nøkkelvakt!"))]
+
+       #_[:div
+          [sc/row-sc-g2
+           {:style {:align-items :center
+                    :height      "3rem"}}
+           [sc/link {:href s} "Send påminnelse om nøkkelvakt " (times.api/short-date-format (t/date-time starttime'))]]
+          ;(= (name dt) (str (t/at dt (t/time starttime))))
+          [l/pre slots-on-this-eykt]
+          ;[l/pre alle-regs-i-denne-periodegruppen]
+          [:hr]
+          [l/pre f]]
+       [sc/row-sc-g2
+        {:style {:align-items :center
+                 :height      "3rem"}}
+        [sc/link {:href s} "Send påminnelse om nøkkelvakt " (times.api/short-date-format (t/date-time starttime'))]])
+
+     (into [:div.space-y-4]
+           (for [[idx each] (map-indexed vector data)
+                 ;todo superslow
+                 [{:keys [description dt slots section]} group]
+                 (group-by #(select-keys % [:dt :description :section :slots :kald-periode]) each)
+                 :let [dt (t/date dt)
+                       alle-regs-i-denne-periodegruppen (invert (get base section))]]
+             ^{:key dt}
+             [:<>
+              (into [:div.w-full.space-y-2
+                     [week-component dt description]]
+                    (for [{:keys [starttime endtime]} (sort-by :starttime < group)
+                          :let [starttime-key (-> (t/at dt starttime) str keyword)
+                                starttime' (str (t/at dt (t/time starttime)))
+                                [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
+                                                                      alle-regs-i-denne-periodegruppen))
+                                slots-free (- slots (count slots-on-this-eykt))]
+                          :when (if (and (not (= idx 1))
+                                         show-only-available?)
+                                  (or (pos? slots-free) (get-in base [section uid starttime-key]))
+                                  true)]
+                      [:div.ml-4
+                       [sc/col-space-2
+                        [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap
+                                                 :align-items "start"}}
+                         [sc/col-space-1 {:class [:justify-center :h-10]
+                                          :style {:white-space :nowrap
+                                                  :width       "3.5rem"}}
+                          [sc/text2 "kl. " (t/hour starttime) "–" (t/hour endtime)]]
+                         [command uid base section slots-free starttime-key]
+                         ; for every line
+                         (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
+                               (concat
+                                 (map #(occupied-slot uid %) slots-on-this-eykt)
+                                 (map #(avail-user-slot "Ledig") (range slots-free))))]]
+                       #_(when (= 1 idx)
+                           (let [data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
+                                 s (str "sms:/open?addresses="
+                                        (apply str (interpose "," (map :telefon data)))
+                                        "?&body="
+                                        (js/encodeURI "Husk at du skal ha nøkkelvakt!"))]
+                             [sc/row-sc-g2
+                              {:style {:align-items :center
+                                       :height      "3rem"}}
+                              #_[l/pre slots-on-this-eykt]
+                              [sc/link {:href s} "Send påminnelse om nøkkelvakt"]])
+                           #_[:div.mt-1 [reminder (last slots-on-this-eykt)]])]))]))]))
 
 
 
