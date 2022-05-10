@@ -49,6 +49,7 @@
     (r/with-let [st (r/atom initial)]
       [sc/dropdown-dialog'
        [sc/col-space-8 {:class [:pt-8]}
+        [l/pre data]
         [sc/col-space-4
          (let [f (fn [[k v]]
                    (let [m (get @db k)
@@ -65,18 +66,16 @@
                               :on-click #(on-save @st)} "Bekreft"]]]]
       (finally))))
 
-(rf/reg-fx :rent/innlever-fx (fn [data]
-                               ;(js/alert data)
-                               #_{:original {:-MeAT-V3h7pZiV0_18_R "2022-04-16T19:23:28.171Z"},
-                                  :boats    {:-MeAExJR02ZiHQ8T1ZU- true, :-MeAHLYBCltT8Epkv8TC true, :-MeAT-V3h7pZiV0_18_R true},
-                                  :k        :-N-np7VVTe1e2RHR6P8d}
-                               (let [k (:k data)
-                                     boats (:boats data)
-                                     value (reduce (fn [a [k v]] (assoc a k (if (true? v) (str (t/now)) ""))) {} boats)]
-                                 #_(js/alert value)
-                                 (db.core/database-update
-                                   {:path  ["activity-22" (name k) "list"]
-                                    :value value}))))
+(rf/reg-fx :rent/innlever-fx
+           (fn [data]
+             (let [k (:k data)
+                   boats (:boats data)
+                   path ["activity-22" (name k) "list"]
+                   value (reduce (fn [a [k v]] (assoc a k (if (true? v) (str (t/now)) "")))
+                                 {} boats)]
+               (db.core/database-update
+                 {:path  path
+                  :value value}))))
 
 (comment
   (do
@@ -93,23 +92,22 @@
   "presents a window with a list of all entries, all selected by default and
   a confirmation or cancel to click. Each entry can be deselected to avoid ..."
   [data]
-  (rf/dispatch [:modal.slideout/toggle
-                true
-                {:data       {:k         (:k data)
-                              :timestamp (:timestamp data)
-                              :plain     (:boats data)
-                              :initial   (reduce-kv (fn [a k v] (assoc a k (if (empty? v) false true))) {} (:boats data))
-                              :original  (into {} (remove (comp empty? val) (:boats data)))}
-                 :action     #(rf/dispatch [:rent/innlever {:original (into {} (remove (comp empty? val) (:boats data)))
-                                                            :boats    (:carry %)
-                                                            :k        (:k data)}]) #_#(tap> {"action (carry)" (:carry %)
-                                                                                             "k"              (:k data)})
-                 ;called after the dialog has closed and after `action` is called (if defined)
-                 ;todo Rename to `after-close`, action above is the primary
-                 ;:on-primary-action #(tap> {"on-primary-action" %})
-                 ;:on-close   #(tap> "on-close")
-                 ;placed in function to allow displaying changes when hot-reloaded
-                 :content-fn #(disp %)}]))
+  (rf/dispatch
+    [:modal.slideout/toggle
+     true
+     {:data       {:k         (:k data)
+                   :timestamp (:timestamp data)
+                   :all       data
+                   :plain     (:boats data)
+                   :initial   (reduce-kv (fn [a k v] (assoc a k (if (empty? v) false true))) {} (:boats data))
+                   :original  (into {} (remove (comp empty? val) (:boats data)))}
+      :action     #(rf/dispatch [:rent/innlever
+                                 {:original (into {}
+                                                  (remove (comp empty? val) (:boats data)))
+                                  :boats    (:carry %)
+                                  :k        (:k data)}])
+      ;placed in function to allow displaying changes when hot-reloaded
+      :content-fn #(disp %)}]))
 
 (comment
   (do
@@ -176,31 +174,40 @@
     :xmargin-right  "0.5rem"
     :xmargin-bottom "0.5rem"}])
 
-(o/defstyled command-grid :div
+(o/defstyled logg-listitem-grid :div
   [:&
    {:display               :grid
     :border-radius         "var(--radius-1)"
-    :padding-inline        "var(--size-2)"
-    :margin-inline         "calc(-1 * var(--size-2))"
+    ;:padding-inline        "var(--size-2)"
+    ;:margin-inline         "calc(-1 * var(--size-2))"
     :column-gap            "var(--size-3)"
-    :row-gap               "0"
-    :grid-template-columns "min-content 48px 1fr"
-    :grid-template-areas   [[". . details"]
-                            ["edit badges content"]]}
+    :row-gap               "var(--size-1)"
+    :grid-template-columns "min-content 1fr 1fr  min-content"
+    ;:grid-template-rows    "2rem"
+    :grid-auto-rows        "auto"
+    :grid-template-areas   [["start-time start-date . end-time end-date"]
+                            ["edit content content content content"]
+                            [". graph graph graph graph"]
+                            [". badges agegroups details details"]]
+
+    #_[["start-date" "." "agegroups" "." "." "details"]
+       ["start-date" "edit" "." "." "end-date" "content"]
+       ["badges" "edit" "." "start-time" "end-time" "content"]]}
    #_[:&.test {:background-color "rgba(242, 121, 53, 0.4)"}]
 
    [:&:hover
     {:background "rgba(0,0,0,0.05)"}]])
 
-(o/defstyled listitem' :div
+(o/defstyled logg-listitem :div
   [:& :gap-2
    {:display     :flex
+    :height      "auto"
     :flex-wrap   :wrap
     :align-items :start
     :color       "var(--text1) "}
    [:&.deleted {:color           "var(--text0) "
                 :text-decoration :line-through
-                :opacity         0.3}]])
+                :opacity         0.1}]])
 
 ;; ui toggles
 
@@ -226,20 +233,18 @@
 
 ;; components
 
-(defn timegraph [from arrived-datetime to now]
+(defn timegraph [start end to now]
   (let [session-start (* 4 18)
         session-end (* 4 21)
-        now (+ (* 4 (t/hour now)) (quot (t/minute now) 15))
-        start (if (and
-                    (seq arrived-datetime)
-                    (t/< (t/date from) (t/date (t/instant arrived-datetime))))
+        now (+ (* 4 (t/hour now))
+               (quot (t/minute now) 15))
+        start (if (and end
+                       (t/< (t/date start) (t/date end)))
                 0
-                (+ (* 4 (t/hour from)) (quot (t/minute from) 15)))
-        end (if-let [to' arrived-datetime #_(first (vals to))]
-              (if-not (empty? to')
-                (if-let [x (some-> to' t/instant t/date-time)]
-                  (+ (* 4 (t/hour x)) (quot (t/minute x) 15)))
-                nil)
+                (+ (* 4 (t/hour start)) (quot (t/minute start) 15)))
+        end (if-let [to' end]
+              (if-let [x (some-> to' t/instant t/date-time)]
+                (+ (* 4 (t/hour x)) (quot (t/minute x) 15)))
               nil)
         end (if (< now end) 10 end)
         field-color "var(--floating)"
@@ -286,11 +291,12 @@
                   :stroke-width   (if (< 1 (count to)) 2 1)
                   :stroke-linecap :round
                   :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}])
-        [:path
-         {:stroke  "none"
-          :opacity 0.5
-          :fill    time-color
-          :d       (l/strp "M" 0 0 "L" (- now 1) 0 "l" 3 "8" "H" 0 "z")}]
+        (when false
+          [:path
+           {:stroke  "none"
+            :opacity 0.5
+            :fill    time-color
+            :d       (l/strp "M" 0 0 "L" (- now 1) 0 "l" 3 "8" "H" 0 "z")}])
 
         [:line {:x2                96
                 :x1                0
@@ -302,17 +308,15 @@
                 :stroke-width      1
                 :stroke            timeline-color}]])]))
 
-(defn- badges [{:keys [sleepover havekey] :as m}]
-  [sc/row-ec-g1 {:style {:grid-area "badges"
-                         :flex-wrap :nowrap}
-                 :class [:h-12x :place-content-center]}
-   (when sleepover [sc/icon-tiny-frame ico/moon-filled])
-   (when havekey [sc/icon-tiny-frame ico/harnøkkel])])
+(defn- badges [deleted-item {:keys [deleted sleepover havekey] :as m}]
+  ;note: Deleted-item is a partially applied sc/deleted-item
+  [deleted-item
+   [sc/row-sc-g2 {:style {:flex-wrap :nowrap}}
+    (when havekey [sc/icon-tiny-frame ico/harnøkkel])
+    (when sleepover [sc/icon-tiny-frame ico/moon-filled])]])
 
-(defn- edit [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
-  [:div {:class [:h-12x :flex :items-center :gap-2]
-         :style {:grid-area "edit"
-                 :display   :flex}}
+(defn- edit-bar [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
+  [sc/row-sc-g4
    (when edit-mode?
      [widgets/trashcan (fn [_] (db/database-update
                                  {:path  ["activity-22" (name k)]
@@ -320,29 +324,74 @@
    (if edit-mode?
      [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel]) m])
 
-   (if (= uid loggedin-uid)
-     [hoc.buttons/cta-pill {:class    [:narrow]
-                            :on-click #(innlevering {:k         k
-                                                     :timestamp timestamp
-                                                     :boats     list})} "Inn"]
-     [hoc.buttons/reg-pill {:class    [:narrow]
-                            :on-click #(innlevering {:k         k
-                                                     :timestamp timestamp
-                                                     :boats     list})} "Inn"])])
+   [hoc.buttons/pill {:class    [(if (= uid loggedin-uid) :cta :regular) :narrow]
+                      :on-click #(innlevering {:k         k
+                                               :timestamp timestamp
+                                               :boats     list})} "Inn"]])
 
-(defn details [{:keys [test ref-uid adults children havekey phone juveniles sleepover timestamp list deleted nøkkel] :as m}]
+(defn agegroups-detail [{:keys [adults children juveniles] :as m}]
+  [:div (:style {:grid-area "agegroups"})
+   [sc/row-sc-g4-w
+    [sc/text1 {:style {:font-weight "var(--font-weight-5)"
+                       :white-space :nowrap}
+               :class [:tabular-nums]}
+     (if (pos? adults) adults "–")
+     " "
+     (if (pos? juveniles) juveniles "–")
+     " "
+     (if (pos? children) children "–")]]])
 
-  [sc/row-sc-g4-w {:style {:grid-area "details"}
-                   :class [:pt-1]}
-   [sc/text1 {:style {:font-weight "var(--font-weight-5)"}
-              :class [:tabular-nums]}
-    (if (pos? adults) adults "–")
-    "/"
-    (if (pos? juveniles) juveniles "–")
-    "/"
-    (if (pos? children) children "–")]
-   (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
-   #_[sc/text2 {:class []} (user.database/lookup-alias uid)]])
+(comment
+  (let [dt "2022-05-10T09:32:24.084Z"
+        dt nil]
+    (some-> dt t/instant)))
+
+(defn- preformat-dates [start end]
+  (let [dt (some-> end t/instant)
+        a-date (when dt
+                 (when-not (t/= (t/date dt) (t/date start))
+                   (times.api/logg-date-format dt)))
+        a-time (when a-date
+                 (times.api/time-format
+                   (t/time dt)))]
+
+    {:start-date (times.api/logg-date-format start)
+     :start-time (str "kl " (times.api/time-format start))
+     :end-date   a-date
+     :end-time   (when a-time (str "kl " a-time))}))
+
+(defn passed-date-test?
+  "docstring"
+  [date arrived-datetime]
+  (or (t/= (t/today) (t/date date))
+      (and
+        (nil? arrived-datetime)
+        (t/< (t/<< (t/today) (t/new-period 2 :days)) (t/date date)))
+      (and arrived-datetime
+           (t/= (t/today) (t/date arrived-datetime)))))
+
+(defn- boat-badges [db deleted-item::style boats]
+  [:div {:class [:gap-2 :mb-1]
+         :style {:flex            "1 0 auto"
+                 :display         "flex"
+                 :flex-wrap       :wrap
+                 :justify-content "between"
+                 :align-items     "center"
+                 :grid-area       "content"}}
+   (let [f (fn [id returned]
+             (let [datum (get db (keyword id))]
+               [deleted-item::style
+                [widgets/badge
+                 {:on-click #(open-modal-boatinfo {:data datum})
+                  :class    [:big (when-not returned :in-use)]}
+                 (or (:number datum) (str (some-> id name) "/ny"))]]))]
+     (map (fn [[id returned]]
+            (when-let [nm (some-> id keyword)]
+              [f id (not (empty? (str returned)))]))
+          (sort (remove nil? boats))))])
+
+(defn g-area [grid-area content]
+  [:div {:style {:grid-area grid-area}} content])
 
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
@@ -354,68 +403,50 @@
           lookup-id->number (into {} (->> db
                                           (remove (comp empty? :number val))
                                           (map (juxt key (comp :number val)))))]
-      [sc/col-space-1
+      [sc/col-space-2
        (into [:<>]
-             (for [[k {:keys [timestamp list deleted] :as m}] data
+             (for [[k {:keys [timestamp list deleted ref-uid phone] :as m}] data
                    :let [boats list                         ;(sort-by (comp :number val) < list)
-                         date (some-> timestamp t/instant t/date-time)]]
-               [command-grid
-                [:div.w-full.truncate
-                 {:class [:whitespace-nowrap :gap-1]
-                  :style {:color           "var(--text1) "
-                          :grid-area       " time "
-                          :display         :flex
-                          :justify-content :between}}]
-                [badges m]
-                (when show-details? [details m])
-                [edit loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]
-                (into [listitem' {:class [(if deleted :deleted)
-                                          :w-full :py-2]
-                                  :style {:flex            "1 0 auto"
-                                          :justify-content :between
-                                          :align-items     :center
-                                          :opacity         (if deleted 0.2 1)
-                                          :grid-area       "content"}}]
-                      (let [arrived-datetime (first (sort < (vals boats)))]
-                        (concat
-                          [(if (and show-timegraph?
-                                    (or (t/= (t/today) (t/date date))
-                                        (and (seq arrived-datetime)
-                                             (t/= (t/today) (t/date (t/instant arrived-datetime))))
-                                        (and
-                                          (t/< (t/<< (t/today) (t/new-period 2 :days)) (t/date date))
-                                          (nil? arrived-datetime))))
-                             [:div.w-56 [timegraph date arrived-datetime boats (t/date-time)]]
-                             [sc/col {:class [:tabular-nums :w-44]}
-                              [sc/row-fields
-                               [sc/text1 {:class [:tracking-tight]} (times.api/logg-date-format date)]
-                               [:div.grow]
-                               [sc/text1 {:class [:tracking-tight]} "kl. " (times.api/time-format date)]]
-                              (when (seq arrived-datetime)
-                                (let [dt (t/instant arrived-datetime)]
-                                  [sc/row-fields
-                                   (when-not (t/= (t/date dt) (t/date date))
-                                     [sc/text1 {:class [:tracking-tight]
-                                                :style {:white-space :nowrap}} (times.api/logg-date-format dt)])
-                                   [:div.grow]
-                                   [sc/text1 {:class [:tracking-tight :w-full :h-auto :self-center :text-right]}
-                                    (if (seq arrived-datetime)
-                                      (str "kl. " (times.api/time-format (t/time dt)))
-                                      (str arrived-datetime))]]))])]
+                         date (some-> timestamp t/instant t/date-time)
+                         ;what is the least convoluted way to write this?
+                         end::time-instant (let [[dt _] (sort < (vals boats))]
+                                             (when-not (empty? dt)
+                                               (t/instant dt)))
+                         deleted-item::style (partial sc/deleted-item {:class [(when deleted :deleted)]})]]
+               [logg-listitem-grid
+                (when show-details?
+                  [g-area "badges" [badges deleted-item::style m]])
 
-                          [[l/pre boats]]
-                          ;boatnumbers
-                          (let [f (fn [id returned]
-                                    (let [datum (get db (keyword id))]
-                                      [widgets/badge
-                                       {:on-click #(open-modal-boatinfo {:data datum})
-                                        :class    [:big (when-not returned :in-use)]}
-                                       (or (:number datum) (str (some-> id name) "/ny"))]))]
-                            [(map (fn [[id returned]]
-                                    (when-let [nm (some-> id keyword)]
-                                      [f id (not (empty? (str returned)))]))
-                                  (sort (remove nil? boats)))])
-                          #_[[l/pre (remove nil? boats)]])))]))])))
+                [:div {:style {:display     "flex"
+                               :align-items "center"
+                               :grid-area   "edit"}}
+                 [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]]
+
+                (when show-details?
+                  [sc/row-sc-g2 {:style {:align-items "baseline"
+                                         :grid-area   "details"}}
+                   (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+                   [agegroups-detail m]])
+
+                ;graph
+                (if (and show-timegraph?
+                         (passed-date-test? date end::time-instant))
+                  [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]])
+
+                ;badges
+                [g-area "content" [boat-badges db deleted-item::style boats]]
+
+                ;time
+                (let [{:keys [start-date end-date start-time end-time]}
+                      (preformat-dates date end::time-instant)]
+                  (for [[areaname value style] [["start-date" start-date {}]
+                                                ["start-time" start-time]
+                                                ["end-date" end-date {:justify-content :end}]
+                                                ["end-time" end-time {:justify-content :end}]]]
+                    [:div {:style (merge {:align-items :center
+                                          :display     :flex
+                                          :grid-area   areaname} style)}
+                     [sc/title1 {:class [:tracking-tight]} value]]))]))])))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
@@ -423,7 +454,7 @@
    [sc/row-sc-g4-w
     ;[sc/text1 "Se også"]
     [widgets/auto-link :r.båtliste.nøklevann]
-    [sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
+    #_[sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
     [widgets/auto-link :r.booking]]
 
    [sc/row-sc-g2-w
@@ -432,7 +463,6 @@
     [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]
 
    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
-
 
 (defn always-panel []
   [:<>
@@ -454,29 +484,7 @@
      [widgets/pillbar
       selector
       [[:a "Kompakt"]
-       [:b "Detaljert"]]]]]
-
-
-   #_[sc/col-space-4
-      [sc/row-sc-g2-w
-
-       [hoc.buttons/cta-pill-icon
-        {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
-        ico/plus "Nytt utlån"]
-
-       [hoc.buttons/danger-pill
-        {:disabled true
-         :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
-        "HMS Hendelse"]
-
-       [hoc.toggles/switch-local
-        {:disabled false}
-        (r/cursor settings [:rent/show-details]) "Detaljer"]
-
-       (when goog.DEBUG
-         [hoc.buttons/cta-pill-icon
-          {:on-click #(rf/dispatch [:lab/remove-boatlogg-database])}
-          ico/plus "Ny database"])]]])
+       [:b "Detaljert"]]]]]])
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]

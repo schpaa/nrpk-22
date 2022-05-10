@@ -638,8 +638,7 @@
 (declare render-normal render-frontpage)
 
 (defn +page-builder [r m]
-  (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})
-        admin? (rf/subscribe [:lab/admin-access])
+  (let [admin? (rf/subscribe [:lab/admin-access])
         scrollpos (r/atom 0)
         scroll-fn (fn [e]
                     (let [v (-> e .-target .-scrollTop)]
@@ -702,8 +701,8 @@
                        :height     "calc(100vh - 8rem)"}}
          (if render
 
-           [:div.relative.z-1.m-12
-            {:class [:space-y-8]
+           [:div.relative                                   ;.z-1
+            {:class [:space-y-4]
              :style {:margin-inline "auto"
                      :padding-block "2rem"
                      :max-width     "min(calc(100% - 2rem), 56ch)"}}

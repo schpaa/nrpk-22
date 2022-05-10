@@ -413,12 +413,7 @@
 
 (defn badge [{:keys [class on-click] :as attr} n]
   (let [v 1]
-    [sc/badge-2 attr
-     #_{:class    class #_[:big (when (pos? (:location v)) :invert)]
-        :style    {:font-size  "unset"
-                   :xtransform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-        :on-click on-click}
-     n]))
+    [sc/badge-2 attr n]))
 
 (defn pillbar
   ([c vs]

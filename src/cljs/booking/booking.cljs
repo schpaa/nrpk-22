@@ -155,7 +155,7 @@
                             start (t/date-time start)
                             end (t/date-time end)]]
 
-                  [booking.utlan/command-grid
+                  [booking.utlan/logg-listitem-grid
                    {:class [(when test :test)]}
 
                    [badges m #_(assoc m :sleepover true)]
@@ -171,7 +171,7 @@
                    #_[sc/text1 {:class [:-debug]
                                 :style {:place-self :center
                                         :grid-area  "badges"}} "badges"]
-                   (into [booking.utlan/listitem'
+                   (into [booking.utlan/logg-listitem
                           {:class [(if deleted :deleted)
                                    :x-debug
                                    :w-full :py-2]
