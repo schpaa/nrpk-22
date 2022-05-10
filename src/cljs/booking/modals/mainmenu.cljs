@@ -142,16 +142,17 @@
              (when reg? (item=mine-opplysninger r))
              (item=search)
              [:hr]
-             (when reg? (item=more-buttons))
-             (item=show-pictures)
-             (when goog.DEBUG (item=state))
-             [:hr]
              ;note: replaced with button on the toolbar
              (when reg? (item=switch-position))
              (item=reset-messages)
              (when reg? [:hr])
              (when reg? (item=logout))
              (when-not reg? (item=login))
+             [:hr]
+             (when reg? (item=more-buttons))
+             (item=show-pictures)
+             (when goog.DEBUG (item=state))
+
              #_[:space]
              #_(item=dark-light-mode-selector)])))
 

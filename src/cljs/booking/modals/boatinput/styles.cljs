@@ -12,7 +12,7 @@
 (o/defstyled button-caption :div
   {:font-family "Inter"
    :font-size   "var(--font-size-5)"
-   :font-weight "var(--font-weight-6)"})
+   :font-weight "var(--font-weight-4)"})
 
 (o/defstyled button :button
   :w-full :h-full
@@ -39,6 +39,7 @@
   [:& :w-full :h-full
    {:display       "grid"
     :border-radius "var(--radius-0)"
+    :background    "var(--floating)"
     :place-items   "center"}
    [:&.add {:color            "var(--content)"
             :background-color "var(--text1)"}
@@ -85,7 +86,8 @@
   [:& :flex :flex-col :justify-around :items-center :select-none
    {:position         :relative
     :sbox-shadow      "var(--inner-shadow-1)"
-    :background-color "var(--vener)"
+    :background-color "var(--floating)"                     ;"var(--vener)"
+
     :border-radius    "var(--radius-1)"}
 
    [:&.some {:opacity          1
@@ -104,6 +106,7 @@
 (o/defstyled toggle-button :div
   :w-full :h-full
   {:display       :grid
+   :background    "var(--floating)"
    :place-content :center
    :border-radius "var(--radius-1)"})
 

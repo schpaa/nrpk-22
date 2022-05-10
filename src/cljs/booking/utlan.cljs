@@ -18,7 +18,7 @@
 
 ;; store
 
-(def store (r/atom {:selector :a}))
+(def store (r/atom {:selector :b}))
 (def selector (r/cursor store [:selector]))
 
 ;region innlevering
@@ -175,20 +175,20 @@
     :xmargin-bottom "0.5rem"}])
 
 (o/defstyled logg-listitem-grid :div
-  [:&
+  [:& :p-2
    {:display               :grid
     :border-radius         "var(--radius-1)"
     ;:padding-inline        "var(--size-2)"
     ;:margin-inline         "calc(-1 * var(--size-2))"
     :column-gap            "var(--size-3)"
     :row-gap               "var(--size-1)"
-    :grid-template-columns "min-content 1fr 1fr  min-content"
+    :grid-template-columns "min-content min-content min-content 1fr  min-content"
     ;:grid-template-rows    "2rem"
     :grid-auto-rows        "auto"
     :grid-template-areas   [["start-time start-date . end-time end-date"]
                             ["edit content content content content"]
                             [". graph graph graph graph"]
-                            [". badges agegroups details details"]]
+                            [". badges . details details"]]
 
     #_[["start-date" "." "agegroups" "." "." "details"]
        ["start-date" "edit" "." "." "end-date" "content"]
@@ -315,7 +315,8 @@
     (when havekey [sc/icon-tiny-frame ico/harnøkkel])
     (when sleepover [sc/icon-tiny-frame ico/moon-filled])]])
 
-(defn- edit-bar [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
+(defn- edit-bar [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}
+                 all-returned?]
   [sc/row-sc-g4
    (when edit-mode?
      [widgets/trashcan (fn [_] (db/database-update
@@ -324,10 +325,18 @@
    (if edit-mode?
      [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel]) m])
 
-   [hoc.buttons/pill {:class    [(if (= uid loggedin-uid) :cta :regular) :narrow]
+   [hoc.buttons/pill {:class    [:w-20
+                                 :narrow
+                                 (if all-returned?
+                                   :outline2
+                                   (if (= uid loggedin-uid)
+                                     :cta
+                                     :regular))]
+
                       :on-click #(innlevering {:k         k
                                                :timestamp timestamp
-                                               :boats     list})} "Inn"]])
+                                               :boats     list})}
+    (if all-returned? "Endre" "Inn")]])
 
 (defn agegroups-detail [{:keys [adults children juveniles] :as m}]
   [:div (:style {:grid-area "agegroups"})
@@ -356,7 +365,7 @@
                    (t/time dt)))]
 
     {:start-date (times.api/logg-date-format start)
-     :start-time (str "kl " (times.api/time-format start))
+     :start-time (str "" (times.api/time-format start))
      :end-date   a-date
      :end-time   (when a-time (str "kl " a-time))}))
 
@@ -399,20 +408,19 @@
           show-timegraph? (= :b @selector) #_(rf/subscribe [:rent/common-show-timegraph])
           show-details? (= :b @selector) #_@(rf/subscribe [:rent/common-show-details])
           data (rf/subscribe [:rent/list])
-          data (if show-deleted? @data (remove (comp :deleted val) @data))
-          lookup-id->number (into {} (->> db
-                                          (remove (comp empty? :number val))
-                                          (map (juxt key (comp :number val)))))]
+          data (if show-deleted? @data (remove (comp :deleted val) @data))]
       [sc/col-space-2
        (into [:<>]
              (for [[k {:keys [timestamp list deleted ref-uid phone] :as m}] data
                    :let [boats list                         ;(sort-by (comp :number val) < list)
                          date (some-> timestamp t/instant t/date-time)
+                         all-returned? (every? (comp not empty? val) boats)
                          ;what is the least convoluted way to write this?
                          end::time-instant (let [[dt _] (sort < (vals boats))]
                                              (when-not (empty? dt)
                                                (t/instant dt)))
-                         deleted-item::style (partial sc/deleted-item {:class [(when deleted :deleted)]})]]
+                         deleted-item::style (partial sc/deleted-item {:class [(when deleted :deleted)]})]
+                   :when (if show-details? true (not all-returned?))]
                [logg-listitem-grid
                 (when show-details?
                   [g-area "badges" [badges deleted-item::style m]])
@@ -420,7 +428,8 @@
                 [:div {:style {:display     "flex"
                                :align-items "center"
                                :grid-area   "edit"}}
-                 [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m]]
+                 ;(tap> {:boats boats})
+                 [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
 
                 (when show-details?
                   [sc/row-sc-g2 {:style {:align-items "baseline"
@@ -442,10 +451,11 @@
                   (for [[areaname value style] [["start-date" start-date {}]
                                                 ["start-time" start-time]
                                                 ["end-date" end-date {:justify-content :end}]
-                                                ["end-time" end-time {:justify-content :end}]]]
-                    [:div {:style (merge {:align-items :center
-                                          :display     :flex
-                                          :grid-area   areaname} style)}
+                                                ["end-time" end-time {:justify-content :end
+                                                                      :xoutline        "1px red solid"}]]]
+                    [:div.flex {:style (merge-with conj {:align-items :center
+                                                         :display     :flex
+                                                         :grid-area   areaname} style)}
                      [sc/title1 {:class [:tracking-tight]} value]]))]))])))
 
 (defn panel [{:keys []}]

@@ -29,7 +29,7 @@
     ;(js/alert (str last-write-dt))
     (if (zero? (t/days (t/duration since-last-write)))
       (database-set {:path path :value {}})
-      (js/alert "Vakten er låst, se instruksjoner om bytting på 'Min Status'."))))
+      (js/alert "Vakten er låst, se instruksjoner om bytting på siden; 'Min Status'."))))
 
 (comment
   @a)

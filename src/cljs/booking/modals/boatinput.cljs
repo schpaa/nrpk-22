@@ -150,7 +150,7 @@
                       :background-color "var(--selected)"
                       :box-shadow       "var(--shadow-1)"}
                      {:color            "var(--text2"
-                      :background-color "var(--content)"})}
+                      :background-color "var(--floating)"})}
    [sc/icon-large (if @c ico/key-outline ico/key-filled)]])
 
 (defn moon-toggle [c]
@@ -161,7 +161,7 @@
                       :box-shadow       "var(--shadow-1)"
                       :background-color "var(--selected)"}
                      {:color            "var(--text2)"
-                      :background-color "var(--content)"})}
+                      :background-color "var(--floating)"})}
    [sc/icon-large (if @c ico/moon-filled ico/moon-outline)]])
 
 (defn question-button [st source]
@@ -220,17 +220,14 @@
                                 (not (empty? (:item @st))))
                a (r/atom nil)
                timer (r/atom nil)
-               ontimeout (fn [e]
-                           ;(tap> "reset!")
+               ontimeout (fn [_e]
                            (when @timer
                              (reset! timer nil)
                              (cmd/reset-command st)))
-               mousedown (fn [e]
-                           ;(tap> "md")
+               mousedown (fn [_e]
                            (when (form-dirty?)
                              (reset! timer (js/setTimeout ontimeout 500))))
-               mouseup (fn [e]
-                         ;(tap> "up")
+               mouseup (fn [_e]
                          (when @timer
                            (js/clearTimeout @timer))
                          (reset! timer nil))]
@@ -249,9 +246,8 @@
                      {:transition-duration "2s"
                       :color               "var(--gray-0)"
                       :background          "var(--red-8)"}
-                     {;:transition-duration "2s"
-                      :color      "var(--text0)"
-                      :background "var(--content)"})
+                     {:color      "var(--text0)"
+                      :background "var(--floating)"})
                    {:transition-duration "0s"
                     :color               "var(--text3)"
                     :background          "none"})}
@@ -550,7 +546,6 @@
       conj
       []
       @(db.core/on-value-reaction {:path ["activity-22"]}))))
-
 
 (defn keydown-f [event]
   (let [kc (.-keyCode event)

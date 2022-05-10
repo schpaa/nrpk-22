@@ -3,16 +3,12 @@
             [lambdaisland.ornament :as o]
             [eykt.calendar.actions :as actions]
             [times.api :as ta]
-            [db.core :as db]
             [tick.core :as t]
             [re-frame.core :as rf]
             [times.api :refer [format]]
-            [schpaa.button :as bu]
-            [schpaa.style :as st]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
-            [schpaa.style.ornament :as sc]
-            [clojure.string :as str]))
+            [schpaa.style.ornament :as sc]))
 
 ;; styles
 
@@ -127,46 +123,41 @@
    [hoc.buttons/pill {:on-click #(open-reminder (prepare-data data))
                       :class    [:narrow :inverse]} [sc/icon ico/tilbakemelding] "Husk vakt!"]])
 
-(defn table [{:keys [base data]}]
+(defn- send-reminder-action [{:keys [base data]}]
+  (let [f (second data)
+        [{:keys [dt starttime section]} group] (first (group-by #(select-keys % [:dt :starttime :section]) f))
+        _ (tap> {:group group})
+        date (t/date (t/date-time dt))
+        alle-regs-i-denne-periodegruppen (invert (get base section))
+        _ (tap> {:alle-regs-i-denne-periodegruppen alle-regs-i-denne-periodegruppen})
+        starttime' (t/at date (t/time starttime))
+        _ (tap> {:starttime  starttime
+                 :starttime' starttime'})
+        [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) (str starttime')))
+                                              alle-regs-i-denne-periodegruppen))
+        data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
+        _ (tap> {:data data})
+
+        text-date (str (times.api/date-format-sans-year starttime') " kl. " (times.api/time-format starttime'))
+        sms-message (str "sms:/open?addresses="
+                         (apply str (interpose "," (map :telefon data)))
+                         "?&body="
+                         (js/encodeURI (str "En liten påminnelse om nøkkelvakt " text-date "...")))]
+
+    [sc/row-sc-g2
+     {:style {:align-items :center
+              :height      "3rem"}}
+     [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]]))
+
+(defn table [{:keys [base data] :as m}]
   (let [show-only-available? @(schpaa.state/listen :calendar/show-only-available)
         uid @(rf/subscribe [:lab/uid])
         kald-periode? (:kald-periode (user.database/lookup-userinfo uid))
         uid (keyword uid)
         data (filter (fn [[{:keys [slots kald-periode]}]] (and (pos? slots)
-                                                               (if kald-periode kald-periode? true))) data)
-        f (second data)]
+                                                               (if kald-periode kald-periode? true))) data)]
     [:<>
-     (let [data nil #_(map (comp user.database/lookup-userinfo name first) f)
-           [{:keys [description dt slots section starttime]} group]
-           (first (group-by #(select-keys % [:dt :description :section :slots :kald-periode :starttime]) f))
-
-           ;{:keys [starttime]} group
-
-           starttime' (str (t/at (t/date (t/date-time dt)) (t/time starttime)))
-
-           alle-regs-i-denne-periodegruppen (invert (get base section))
-           [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
-                                                 alle-regs-i-denne-periodegruppen))
-           data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
-           s (str "sms:/open?addresses="
-                  (apply str (interpose "," (map :telefon data)))
-                  "?&body="
-                  (js/encodeURI "Husk at du skal ha nøkkelvakt!"))]
-
-       #_[:div
-          [sc/row-sc-g2
-           {:style {:align-items :center
-                    :height      "3rem"}}
-           [sc/link {:href s} "Send påminnelse om nøkkelvakt " (times.api/short-date-format (t/date-time starttime'))]]
-          ;(= (name dt) (str (t/at dt (t/time starttime))))
-          [l/pre slots-on-this-eykt]
-          ;[l/pre alle-regs-i-denne-periodegruppen]
-          [:hr]
-          [l/pre f]]
-       [sc/row-sc-g2
-        {:style {:align-items :center
-                 :height      "3rem"}}
-        [sc/link {:href s} "Send påminnelse om nøkkelvakt " (times.api/short-date-format (t/date-time starttime'))]])
+     [send-reminder-action m]
 
      (into [:div.space-y-4]
            (for [[idx each] (map-indexed vector data)
@@ -195,28 +186,14 @@
                                                  :align-items "start"}}
                          [sc/col-space-1 {:class [:justify-center :h-10]
                                           :style {:white-space :nowrap
-                                                  :width       "3.5rem"}}
-                          [sc/text2 "kl. " (t/hour starttime) "–" (t/hour endtime)]]
+                                                  :width       "3rem"}}
+                          [sc/text1 "" (t/hour starttime) "–" (t/hour endtime)]]
                          [command uid base section slots-free starttime-key]
                          ; for every line
                          (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
                                (concat
                                  (map #(occupied-slot uid %) slots-on-this-eykt)
-                                 (map #(avail-user-slot "Ledig") (range slots-free))))]]
-                       #_(when (= 1 idx)
-                           (let [data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
-                                 s (str "sms:/open?addresses="
-                                        (apply str (interpose "," (map :telefon data)))
-                                        "?&body="
-                                        (js/encodeURI "Husk at du skal ha nøkkelvakt!"))]
-                             [sc/row-sc-g2
-                              {:style {:align-items :center
-                                       :height      "3rem"}}
-                              #_[l/pre slots-on-this-eykt]
-                              [sc/link {:href s} "Send påminnelse om nøkkelvakt"]])
-                           #_[:div.mt-1 [reminder (last slots-on-this-eykt)]])]))]))]))
-
-
+                                 (map #(avail-user-slot "Ledig") (range slots-free))))]]]))]))]))
 
 (defn hoc3
   "lookup startdatetime->enddatetime,slots,duration-in-minutes"
