@@ -468,9 +468,9 @@
         ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
     [:div.px-2.pt-2 {:style {:background-color "var(--toolbar-)"}}
      [:div.z-1.rounded-top
-      {:style {:border-top-left-radius  "var(--radius-2)"
-               :border-top-right-radius "var(--radius-2)"
-               :background              "var(--gray-9)"}}
+      {:style {:border-radius "var(--radius-1)"
+               ;:border-top-right-radius "var(--radius-2)"
+               :background    "var(--gray-9)"}}
       [:div.mx-auto.max-w-lg.pt-8.pb-16
        [:div.mx-4
         [sc/col-space-4
@@ -686,12 +686,16 @@
 
 (defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
   [page-boundary r {:frontpage true}
-   [sc/col {:class [:-mt-16]}
+   [sc/front-page
+    {:ref   (set-ref a scroll-fn)
+     :style {;:overflow-y :auto
+             :min-height "calc(100% - 0rem)"
+             :height     "100%"}}
     [:div.sticky.top-0.z-100 [booking.common-views/header-line r true v]]
-    [sc/front-page
-     {:ref   (set-ref a scroll-fn)
-      :style {:overflow-y :auto}}
-     [render r]]
+    #_[:div {:style {:min-height "100vh"
+                     :overflow-y :auto}}]
+    [render r]
+    ;[booking.common-views/after-content]]
     [:div.sticky.bottom-0 [bottom-toolbar]]]])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]

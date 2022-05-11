@@ -31,17 +31,18 @@
   [:&
    {:position            :relative
     :width               "100vw"
-    :height              "100vh"
+    ;:height "100vh"
+    ;:min-height              "100%"
     :background-position "center center"
     :background-repeat   "no-repeat"
     :background-size     "cover"}
    [:&.light {:background-image ["var(--background-image-light)"]}]
    [:&.dark {:background-image ["var(--background-image-dark)"]}]
    [:at-media {:max-width "511px"}
-    [:&.bottom-toolbar
-     {:height "calc(100vh - 8rem)"}]]
-   [:at-media {:min-width "768px"}
-    {:xwidth "768px"}]]
+    #_[:&.bottom-toolbar
+       {:height "calc(100vh - 0rem)"}]]
+   #_[:at-media {:min-width "768px"}
+      {:xwidth "768px"}]]
   #_[:at-supports {:height :100dvh}
      {:xheight "calc(100dvh)"}])
 
@@ -527,7 +528,7 @@
     [front-page {:class [(if dark-mode? :dark :light)
                          (if @reg? :bottom-toolbar)]}
 
-     [:div.xmin-h-full.z-0.relative.mx-auto.pt-16           ;<--------- pt-16 !!!!!!!
+     [:div.xmin-h-full.z-0.relative.mx-auto                 ;.pt-16           ;<--------- pt-16 !!!!!!!
 
       (when (and goog.DEBUG @master-emulation)
         [:div.max-w-lgx.mx-auto
