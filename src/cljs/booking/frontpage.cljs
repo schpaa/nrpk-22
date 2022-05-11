@@ -564,5 +564,5 @@
                                       :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
          (widgets/disclosure {:large 1
                               :style {:padding-block "var(--size-2)"
-                                      :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]
-     #_[booking.common-views/after-content]]))
+                                      :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]]))
+

@@ -397,8 +397,7 @@
         switch? (schpaa.state/listen :lab/menu-position-right)
         location [location-block r links caption switch?]]
     [:div.w-full.flex.justify-between
-     {:class [:h-16 :items-center]
-      :style {:z-index 1}}
+     {:class [:h-16 :items-center]}
      (let [items [location
                   [:div.flex-grow.w-full]
                   [:div.w-12 [main-menu r]]]
@@ -472,7 +471,7 @@
       {:style {:border-top-left-radius  "var(--radius-2)"
                :border-top-right-radius "var(--radius-2)"
                :background              "var(--gray-9)"}}
-      [:div.mx-auto.max-w-xl.pt-8.pb-16
+      [:div.mx-auto.max-w-lg.pt-8.pb-16
        [:div.mx-4
         [sc/col-space-4
          [sc/col-space-1
@@ -553,7 +552,7 @@
             (if @menu-right?
               [:div
                ;{:style {:width "100%"}}
-               [:div {:class [marg :min-h-full]} contents]
+               [:div {:class [marg :xmin-h-full]} contents]
                [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block
                 {:class [w-id]
                  :style {;:z-index 1
@@ -562,7 +561,7 @@
                 [vertical-toolbar true]]]
               [:div
                ;{:style {:width "calc(100%)"}}
-               [:div {:class [marg :min-h-full]} contents]
+               [:div {:class [marg :xmin-h-full]} contents]
                [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block
                 {:class [w-id]
                  :style {;:z-index 1
@@ -660,13 +659,30 @@
        (fn [_] (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render
-       (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
+       (fn [r {:keys [frontpage] :as m}]
          (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-           [:<>
-            (check-latest-version)
-            (if frontpage
-              [render-frontpage r m scroll-fn a v]
-              [render-normal r m admin?])]))})))
+           #_[:div.flex.flex-col                            ;.fixed.inset-0
+              {:style {:height     "calc(100% - 9rem)"
+                       :min-height "calc(100% - 9rem)"
+                       :overflow-y :auto
+                       :flex       "1 1 auto"}}]
+
+           (if frontpage
+             [render-frontpage r m scroll-fn a v]
+             [render-normal r m admin?])
+
+
+
+
+           #_[:<>
+              (check-latest-version)
+              [:div.sticky.top-0 [booking.common-views/header-line r false 0]]
+              (if frontpage
+                [render-frontpage r m scroll-fn a v]
+                [render-normal r m admin?])
+              [booking.common-views/after-content]
+              [:div.sticky.bottom-0
+               [bottom-toolbar]]]))})))
 
 (defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
   [page-boundary r {:frontpage true}
@@ -684,46 +700,52 @@
         have-access? (booking.common-views/matches-access r users-access-tokens)
         modify? (booking.access/can-modify? r users-access-tokens)]
     (if-not have-access?
+
       [no-access-view r]
+
       [page-boundary r {:frontpage false}
        [sc/basic-page
         {:style {:width            "100%"
                  :overflow-y       :auto
-                 :background-color "var(--content)"}}
+                 :background-color "var(--content)"
+                 ;:min-height "100vh"
+                 :height           "calc(100vh - 0rem)"}}
 
-        [:div.sticky.top-0 [booking.common-views/header-line r false 0]]
+        [:div.sticky.top-0.z-10
+         [booking.common-views/header-line r false 0]]
 
-        [:div {:style {:overflow-y :auto
-                       :flex       "1 1 auto"
-                       :height     "calc(100vh - 4rem)"}}
-         (cond
-           render
-           [sc/col-space-8
-            {:style {:position      "relative"
-                     :margin-inline "auto"
-                     :padding-block "2rem"
-                     :max-width     "min(calc(100% - 2rem), 56ch)"}}
-            (when (fn? panel)
-              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
-            (when always-panel
-              [always-panel modify?])
-            [render r m]]
+        #_[:div {:xstyle {:min-height "100%"
+                          #_#_:overflow-y :auto
+                          #_#_:flex "1 1 auto"}}]
 
-           render-fullwidth
-           [sc/col-space-8 {:class [:pt-4 :pb-16]}
-            (when (fn? panel)
-              [:div
-               {:style {:margin-inline "auto"
-                        :width         "100%"
-                        :height        "100%"
-                        :max-width     "min(calc(100% - 2rem), 56ch)"}}
-               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
-            (when always-panel
-              [always-panel modify?])
-            [render-fullwidth]])]
+        (cond
+          render
+          [sc/col-space-8
+           {:style {:position      "relative"
+                    :margin-inline "auto"
+                    :min-height    "100%"
+                    :padding-block "2rem"
+                    :max-width     "min(calc(100% - 2rem), 56ch)"}}
+           (when (fn? panel)
+             [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+           (when always-panel
+             [always-panel modify?])
+           [render r m]]
 
-        [:div.sticky.bottom-0
-         [bottom-toolbar]]
+          render-fullwidth
+          [sc/col-space-8 {:class [:pt-4 :pb-16]}
+           (when (fn? panel)
+             [:div
+              {:style {:margin-inline "auto"
+                       :width         "100%"
+                       :height        "100%"
+                       :max-width     "min(calc(100% - 2rem), 56ch)"}}
+              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
+           (when always-panel
+             [always-panel modify?])
+           [render-fullwidth]])
+
+        [booking.common-views/after-content]
 
         (when (or goog.DEBUG @admin?)
           [:div.fixed.bottom-0
@@ -731,5 +753,7 @@
             :style {:z-index   10000
                     :left      :50%
                     :transform "translateX(-50%)"}}
-           [name-badge]])]])))
+           [name-badge]])
+
+        [:div.sticky.bottom-0 [bottom-toolbar]]]])))
 
