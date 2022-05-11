@@ -214,7 +214,7 @@
 (defn user-link [uid]
   [sc/link
    {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
-   (or (user.database/lookup-alias uid) uid)])
+   (user.database/lookup-alias uid)])
 
 (defn auto-link
   ([link]
@@ -365,30 +365,32 @@
      :on-click #(send-msg uid-reciever)} (sc/icon ico/melding)))
 
 (defn personal [{:keys [telefon epost uid] :as user} & [extra]]
-  (r/with-let [triggered (r/atom false)]
-    (if user
-      [sc/surface-a {:on-click #(swap! triggered not)
-                     :style    {:padding "var(--size-2)"}}
-       [sc/row-sc-g2-w
-        {:style {:gap            "var(--size-2)"
-                 :color          "var(--text1)"
-                 :padding-inline "var(--size-2)"
-                 :padding-block  "var(--size-2)"}}
-        [sc/row-sc-g2-w
-         [sc/row-sc-g2
-          [sc/text1 "Telefon"]
-          [sc/link {:href (str "tel:" telefon)} telefon]
-          [:span "/"]
-          [sc/link {:href (str "sms:" telefon)} "SMS"]]
-         (message-pill uid)]
+  #_(r/with-let [triggered (r/atom false)])
+  (if user
+    [sc/surface-a {;:on-click #(swap! triggered not)
+                   :style {:padding "var(--size-2)"}}
+     [sc/row-sc-g2-w
+      {:style {:gap            "var(--size-2)"
+               :color          "var(--text1)"
+               :padding-inline "var(--size-2)"
+               :padding-block  "var(--size-2)"}}
+      [sc/row-sc-g4-w
+       [sc/row-sc-g4
+        ;[sc/text1 "Telefon"]
+        (message-pill uid)
+        [:div.w-1]
+        [sc/link {:href (str "tel:" telefon)} telefon]
+        [:span "/"]
+        [sc/link {:href (str "sms:" telefon)} "SMS"]
+        [:span "/"]
         (when (seq epost)
-          [sc/text1 "E-post " [sc/link {:href (str "mailto:" epost)} epost]])
-        (when @triggered extra)]]
-      (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
-            epost @username-or-fakename]
-        [sc/surface-a
-         [sc/row-sc-g2-w
-          [sc/text1 "Logget inn som " [sc/link {:href (str "mailto:" epost)} epost]]]]))))
+          [sc/link {:href (str "mailto:" epost)} epost])]]
+      #_(when @triggered extra)]]
+    (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
+          epost @username-or-fakename]
+      [sc/surface-a
+       [sc/row-sc-g2-w
+        [sc/text1 "Logget inn som " [sc/link {:href (str "mailto:" epost)} epost]]]])))
 
 (defn dialog-template [header content footer]
   [sc/dropdown-dialog

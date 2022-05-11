@@ -159,7 +159,9 @@
                  [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
 
                (when admin?
-                 [endringslogg uid (path-endringslogg uid)])])
+                 [:div {:style {:padding-block "var(--size-4)"
+                                :border-left   "4px solid var(--brand1)"}}
+                  [endringslogg uid (path-endringslogg uid)]])])
 
             [sc/title1 "Ingen vakter"])))
       [widgets/no-access-view r])))

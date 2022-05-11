@@ -47,6 +47,7 @@
             [booking.dine-vakter]
             [booking.min-status]
             [booking.oversikt]
+            [booking.users]
             [eykt.calendar.core]))
 
 ;; shortcuts
@@ -438,153 +439,13 @@
          :render-fullwidth #(booking.presence/render r data)}]))
 
    :r.users
-   (fn [r]
-     (r/with-let [x (r/atom {:kald-periode     false
-                             :nøkkelnummer     false
-                             :stjerne          false
-                             :sluttet          false
-                             :last-seen        true
-                             :sorter-sist-sett true
-                             :as-table         true
-                             :timekrav         false
-                             :sist-endret      true
-                             :nøkkelvakter     false
-                             :booking          false
-                             :admin            false
-                             :reverse          true})]
-       (let [data (transduce (comp
-                               (map val)
-                               (map (fn [{:keys [timekrav] :as v}]
-                                      (if timekrav
-                                        (let [p (js/parseInt timekrav)]
-                                          (assoc v :timekrav (if (js/isNaN p) 0 p)))
-                                        v)))
-                               (filter (fn [v] (and
-                                                 (if @(r/cursor x [:admin])
-                                                   (:admin v)
-                                                   true)
-                                                 (if @(r/cursor x [:booking])
-                                                   (:booking-godkjent v)
-                                                   true)
-                                                 (if @(r/cursor x [:nøkkelvakter])
-                                                   (:godkjent v)
-                                                   true)
-                                                 (if @(r/cursor x [:kald-periode])
-                                                   (:kald-periode v)
-                                                   true)
-                                                 (if @(r/cursor x [:sluttet])
-                                                   (:utmeldt v)
-                                                   (not (:utmeldt v)))
-                                                 (if @(r/cursor x [:stjerne])
-                                                   (:stjerne v)
-                                                   true)))))
-                             conj [] @(db/on-value-reaction {:path ["users"]}))
-             fields (remove nil? [(when @(r/cursor x [:sorter-sist-sett]) :timestamp-lastvisit-userpage)
-                                  (when @(r/cursor x [:sist-endret]) :timestamp)
-                                  #_(when @(r/cursor x [:timekrav]) :timekrav)])
-             fields (if (empty? fields) [:navn] fields)
-             data (sort-by (apply juxt fields) data)
-             users (if @(r/cursor x [:reverse]) (reverse data) data)]
-
-         (o/defstyled line :div)
-         [+page-builder r
-          (conj
-            {:always-panel (fn []
-                             [sc/row-sc-g4-w
-                              [widgets/auto-link [:r.reports {:id "saldo-setter"}] booking.reports/report-list]
-                              [widgets/auto-link [:r.reports {:id "siste-nye-vakter"}] booking.reports/report-list]
-                              [widgets/auto-link [:r.reports {:id "brukere-av-booking"}] booking.reports/report-list]
-                              [widgets/auto-link [:r.reports {:id "tilbakemeldinger"}] booking.reports/report-list]
-                              [widgets/auto-link [:r.reports {:id "oppmøte"}] booking.reports/report-list]])
-
-             :panel        (fn []
-                             [sc/col-space-4
-                              [sc/row-sc-g2-w
-                               [sc/text0 "visning"]
-                               [hoc.toggles/switch-local (r/cursor x [:nøkkelnummer]) "nøkkelnummer"]
-                               [hoc.toggles/switch-local (r/cursor x [:last-seen]) "sist sett"]]
-
-
-                              [sc/col-space-1
-                               [sc/row-sc-g2-w
-                                [sc/text0 "filter"]
-                                [hoc.toggles/switch-local (r/cursor x [:sluttet]) "utmeldt"]
-                                [hoc.toggles/switch-local (r/cursor x [:kald-periode]) "kald-periode"]
-                                [hoc.toggles/switch-local (r/cursor x [:stjerne]) "stjerne"]
-                                [hoc.toggles/switch-local (r/cursor x [:nøkkelvakter]) "nøkkelvakt"]
-                                [hoc.toggles/switch-local (r/cursor x [:booking]) "booking"]
-                                [hoc.toggles/switch-local (r/cursor x [:admin]) "administratorer"]]]
-
-                              [sc/row-sc-g2-w
-                               [sc/text0 "sortering"]
-                               [hoc.toggles/switch-local (r/cursor x [:sist-endret]) "sist endret"]
-                               [hoc.toggles/switch-local (r/cursor x [:sorter-sist-sett]) "sist sett"]
-                               [hoc.toggles/switch-local (r/cursor x [:timekrav]) "timekrav"]
-                               [hoc.toggles/switch-local (r/cursor x [:reverse]) "omvendt"]]])}
-            {:render-fullwidth
-             (fn []
-               #_(o/defstyled table-controller :div
-                   :overflow-x-auto
-                   {:width "calc(100vw - 4rem)"}
-                   [:at-media {:max-width "511px"}
-                    {:width "calc(100vw)"}])
-               (o/defstyled table-def :table
-                 :truncate
-                 [:& {:width           "100%"
-                      :border-collapse :collapse}
-                  [:thead
-                   {:height "3rem"}
-                   [:tr
-                    {:text-align :left
-                     :color      "var(--text2)"}
-                    [:th sc/small0
-                     {:padding "2px"}]
-                    ["th:nth-child(1)" {:min-width "2rem"}]
-
-                    ["th:nth-child(2)" {}]]]
-
-                  [:tbody
-                   ["tr:nth-child(even)"
-                    {:background "var(--floating)"}]
-                   [:tr
-                    {:height     "var(--size-6)"
-                     :background "var(--content)"}
-                    [:td sc/text2 :truncate
-                     {:padding-inline "4px"}]
-                    ["td:nth-child(2)"
-                     {:text-align :right}]
-                    ["td:nth-child(4)"
-                     sc/text0
-                     {:max-width "10rem"}]]]])
-               (let [f (fn [dt] [booking.flextime/flex-datetime
-                                 (some-> dt t/instant t/date-time)
-                                 (fn [type content]
-                                   (cond
-                                     (= :date type) (ta/time-format content)
-                                     :else content))])]
-                 [booking.reports/table-controller-report'
-                  [booking.reports/table-report
-                   [:<>
-                    [:thead
-                     [:tr
-                      [:th ""]
-                      [:th "timer"]
-                      [:th "nøkkelnummer"]
-                      [:th "navn"]
-                      [:th "sist besøkt"]
-                      [:th "sist endret"]]]
-                    (into [:tbody]
-                          (for [{:keys [navn timekrav timestamp uid
-                                        nøkkelnummer timestamp-lastvisit-userpage] :as v} users]
-                            [:tr
-                             [:td [scb/round-normal-listitem
-                                   [sc/icon {:on-click #(rf/dispatch [:lab/show-userinfo v])
-                                             :style    {:color "var(--text2)"}} ico/pencil]]]
-                             [:td (if (pos? timekrav) (str timekrav "t") "—")]
-                             [:td nøkkelnummer]
-                             [:td (widgets/user-link uid)]
-                             [:td (f timestamp-lastvisit-userpage)]
-                             [:td (f timestamp)]]))]]]))})])))
+   (fn [r] (page r {:render-fullwidth booking.users/render
+                    :always-panel     booking.users/always-panel
+                    :panel            booking.users/panel}))
+   #_(fn r []
+       [+page-builder r
+        {:aa               {}
+         :render-fullwidth #(booking.users/render r data)}])
 
    :r.utlan
    (fn [r]

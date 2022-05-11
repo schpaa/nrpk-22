@@ -661,14 +661,11 @@
 
        :reagent-render
        (fn [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m}]
-         (let [pagename (some-> r :data :name)
-               v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
+         (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
            [:<>
             (check-latest-version)
-            ;[:div {:style {:width "100%"}}
             (if frontpage
               [render-frontpage r m scroll-fn a v]
-              ; all pages
               [render-normal r m admin?])]))})))
 
 (defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
@@ -699,11 +696,11 @@
         [:div {:style {:overflow-y :auto
                        :flex       "1 1 auto"
                        :height     "calc(100vh - 8rem)"}}
-         (if render
-
-           [:div.relative                                   ;.z-1
-            {:class [:space-y-4]
-             :style {:margin-inline "auto"
+         (cond
+           render
+           [sc/col-space-8
+            {:style {:position      "relative"
+                     :margin-inline "auto"
                      :padding-block "2rem"
                      :max-width     "min(calc(100% - 2rem), 56ch)"}}
             (when (fn? panel)
@@ -712,11 +709,12 @@
               [always-panel modify?])
             [render r m]]
 
-           [sc/col-space-8 {:class [:p-4]}
+           render-fullwidth
+           [sc/col-space-8 {:class [:xp-4]}
             (when (fn? panel)
               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
             (when always-panel
-              [always-panel modify?])
+              [:div.px-4 [always-panel modify?]])
             [render-fullwidth]])]
 
         [:div.sticky.bottom-0

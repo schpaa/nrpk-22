@@ -291,7 +291,7 @@
                 :on-submit #(handle-submit %)}
                [sc/col-space-8
                 (into [:div]
-                      (interpose [:div.py-6]
+                      (interpose [:div.py-2]
                                  (remove nil? [[user.forms/generalinformation-panel props]
                                                [user.forms/booking-panel props]
                                                (when true #_(= "eykt" @(rf/subscribe [:app/name]))

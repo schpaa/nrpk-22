@@ -30,7 +30,7 @@
 
 (declare input-area)
 
-;region state
+;; store
 
 (def test-state
   {:litteral-key   false
@@ -42,10 +42,10 @@
    :list           [{:new true :number "999"}
                     {:new true :number "991"}
                     {:new false :number "444"}]
-   :textfield      {:phone "123"
-                    :boats ""}})
+   :textfield      {;:phone "123"
+                    :boats nil}})
 
-(defonce st (r/atom (if goog.DEBUG test-state {})))
+(defonce st (r/atom (if goog.DEBUG {} #_test-state {})))
 
 (def c-focus (r/cursor st [:focus]))
 (def c-extra (r/cursor st [:extra]))
@@ -296,6 +296,13 @@
 
 ;endregion
 
+(defn f [a & b]
+  [sc/co
+   [sc/ptitle1 a]
+   [sc/ptext b]])
+
+;; components
+
 (defn hvem-er-du [st c-focus c-textinput-phone]
   (let [field c-textinput-phone
         has-focus? (= :phone @c-focus)]
@@ -329,8 +336,9 @@
           (if @c-litteral-key
             [sc/ptext "Bruk de siste 3 siffer av nøkkelnr. F.eks E18-"
              [:span.font-bold {:style {:color "var(--brand2)"}} "987"]]
-            [sc/ptitle1 {:style {:white-space :normal}
-                         :class [:no-truncate]} "Telefonnr eller siste 3 siffer av nøkkelnr"])))]
+            (f "Telefonnr"
+               "eller de 3 siste siffer i nøkkelnr"
+               #_"eller de siste 3 siffer av nøkkelnummer"))))]
 
      [:div {:style {:grid-column "1/4"
                     :overflow    :hidden}}
@@ -340,8 +348,6 @@
       {:style {:grid-column "4"
                :grid-row    "2"}}
       [delete-button st field]]]))
-
-;region components
 
 (defn- list-of-selected []
   [sc/col
@@ -354,7 +360,7 @@
    (let [data (map :number @c-boat-list)
          m (or (mod (count data) 4) 0)]
      (doall (concat
-              (for [{:keys [new number]} @c-boat-list]
+              (for [{:keys [new number]} (reverse @c-boat-list)]
                 [sc/badge {:class    [(when new :new)
                                       (when (equals-to @c-selected number) :selected)]
                            :on-click (fn []
@@ -365,71 +371,67 @@
                  (repeat (- 4 m) [sc/badge {:class [:disabled]}]))])))])
 
 (defn- info-panel [has-focus? {:keys [new number navn] :as boat}]
-  (let [f (fn [a & b]
-            [sc/col
-             [sc/ptext a]
-             [sc/ptitle1 b]])]
-    [:div.-mx-2.-mt-2.p-2
-     {:style (when (and has-focus? boat)
-               {:background-color "var(--selected)"
-                :color            "var(--selected-copy)"})
-      :class [:flex :items-end :h-16]}
-     (cond
-       (some #{@c-textinput-boat} (map str (keep :number (filter :new @c-boat-list))))
-       [f "allerende" "i listen"]
+  [:div.-mx-2.-mt-2.p-2
+   {:style (when (and has-focus? boat)
+             {:background-color "var(--selected)"
+              :color            "var(--selected-copy)"})
+    :class [:flex :items-end :h-16]}
+   (cond
+     (some #{@c-textinput-boat} (map str (keep :number (filter :new @c-boat-list))))
+     [f "allerende" "i listen"]
 
-       (and (nil? boat) @c-textinput-boat (= 3 (count @c-textinput-boat)))
-       [f (str @c-textinput-boat " finnes ikke") "Lage den nå?"]
+     (and (nil? boat) @c-textinput-boat (= 3 (count @c-textinput-boat)))
+     [f (str @c-textinput-boat " finnes ikke") "Lage den nå?"]
 
-       (nil? boat)
-       [f "Båtnummer (3 siffer)" ""]
+     (nil? boat)
+     [f "" "Båtnummer (3 siffer)"]
 
-       new
-       [f number navn]
+     new
+     [f number navn]
 
-       :else
-       [sc/row-sc-g2 {:style {:width           "100%"
-                              :justify-content :space-around}}
-        [widgets/stability-name-category boat]
-        (r/with-let [boat-type (:boat-type boat)
-                     uid (rf/subscribe [:lab/uid])
-                     bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
-                     ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
-          [widgets/favourites-star
-           {:bt-data       bt-data
-            :ex-data       ex-data
-            :on-star-click (fn [boat-type value]
-                             (rf/dispatch [:star/write-star-change
-                                           {:boat-type boat-type
-                                            :value     value
-                                            :uid       @uid}]))}])]
-       #_(if (or (:selected @st) boat)
-           (do
-             (if (:selected @st)
-               (reset! c-lookup-result (lookup (:selected @st)))
-               (reset! c-lookup-result boat))
-             [:div.flex.justify-between.items-center.w-full
-              [widgets/stability-name-category boat]
-              (let [boat-type (:boat-type boat)
-                    uid (rf/subscribe [:lab/uid])
-                    bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
-                    ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
-                [widgets/favourites-star
-                 {:bt-data       bt-data
-                  :ex-data       ex-data
-                  :on-star-click (fn [boat-type value]
-                                   (rf/dispatch [:star/write-star-change
-                                                 {:boat-type boat-type
-                                                  :value     value
-                                                  :uid       @uid}]))}])])
+     :else
+     [sc/row-sc-g2 {:style {:width           "100%"
+                            :justify-content :space-around}}
+      [widgets/stability-name-category boat]
+      (r/with-let [boat-type (:boat-type boat)
+                   uid (rf/subscribe [:lab/uid])
+                   bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+                   ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
+        [widgets/favourites-star
+         {:bt-data       bt-data
+          :ex-data       ex-data
+          :on-star-click (fn [boat-type value]
+                           (rf/dispatch [:star/write-star-change
+                                         {:boat-type boat-type
+                                          :value     value
+                                          :uid       @uid}]))}])]
+     #_(if (or (:selected @st) boat)
+         (do
+           (if (:selected @st)
+             (reset! c-lookup-result (lookup (:selected @st)))
+             (reset! c-lookup-result boat))
+           [:div.flex.justify-between.items-center.w-full
+            [widgets/stability-name-category boat]
+            (let [boat-type (:boat-type boat)
+                  uid (rf/subscribe [:lab/uid])
+                  bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+                  ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
+              [widgets/favourites-star
+               {:bt-data       bt-data
+                :ex-data       ex-data
+                :on-star-click (fn [boat-type value]
+                                 (rf/dispatch [:star/write-star-change
+                                               {:boat-type boat-type
+                                                :value     value
+                                                :uid       @uid}]))}])])
 
-           [:div {:class [:flex :w-full :items-end :h-16]}
-            [sc/ptitle1
-             (if (= 3 (count @c-textinput-boat))
-               (do
-                 (reset! c-lookup-result nil)
-                 (str @c-textinput-boat " er ikke registrert"))
-               "Båtnummer (3 siffer)")]]))]))
+         [:div {:class [:flex :w-full :items-end :h-16]}
+          [sc/ptitle1
+           (if (= 3 (count @c-textinput-boat))
+             (do
+               (reset! c-lookup-result nil)
+               (str @c-textinput-boat " er ikke registrert"))
+             "Båtnummer (3 siffer)")]]))])
 
 (defn selected-boats [st c-focus c-textinput-boats]
   (let [has-focus? (= :boats @c-focus)
@@ -517,7 +519,6 @@
                            :background "var(--green-6)"}))}
      [sc/row-sc-g2
       (sc/icon-huge ico/check)]]))
-
 
 ;endregion
 

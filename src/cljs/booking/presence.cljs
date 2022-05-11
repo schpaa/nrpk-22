@@ -65,10 +65,11 @@
      [:td connections]]))
 
 (defn tableline-offline [attr [k {:keys [lastOnline] :as v}]]
-  (let [last-online-ms (cljs-time.coerce/to-long lastOnline)]
+  (let [last-online-ms (cljs-time.coerce/to-long lastOnline)
+        uid (name k)]
     [:tr attr
      [:td (sc/icon {:on-click #(rf/dispatch [:app/open-send-message (name k)])} ico/melding)]
-     [:td (widgets/user-link (name k))]
+     [:td (widgets/user-link uid)]
      #_[:td (or (user.database/lookup-username (name k)) [sc/small2 k])]
      [:td (f last-online-ms)]
      [:td]]))

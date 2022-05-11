@@ -63,8 +63,11 @@
 
 (defn lookup-alias [uid]
   (when-some [_ @(rf/subscribe [::db/user-auth])]
-    (let [u @(db/on-value-reaction {:path ["users" uid]})]
-      (or (:alias u) (:navn u)))))
+    (let [u @(db/on-value-reaction {:path ["users" uid]})
+          alias (if (empty? (:alias u)) nil (:alias u))
+          navn (if (empty? (:navn u)) nil (:navn u))]
+
+      (or alias navn uid (str "failed<lookup-alias>'" uid "'")))))
 
 
 ;region
