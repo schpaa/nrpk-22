@@ -387,16 +387,19 @@
                  :justify-content "between"
                  :align-items     "center"
                  :grid-area       "content"}}
-   (let [f (fn [id returned]
-             (let [datum (get db (keyword id))]
-               [deleted-item::style
-                [widgets/badge
-                 {:on-click #(open-modal-boatinfo {:data datum})
-                  :class    [:big (when-not returned :in-use)]}
-                 (or (:number datum) (str (some-> id name) "/ny"))]]))]
+   (let [badge-view-fn
+         (fn [id has-returned-value?]
+           (let [datum (get db id)]
+             [deleted-item::style
+              ;[l/pre datum]
+              [widgets/badge
+               {:on-click #(open-modal-boatinfo {:data (assoc datum :id id)})
+                :class    [:whitespace-nowrap
+                           :big (when-not has-returned-value? :in-use)]}
+               (or (:number datum) (str (some-> id name) " !"))]]))]
      (map (fn [[id returned]]
-            (when-let [nm (some-> id keyword)]
-              [f id (not (empty? (str returned)))]))
+            (when-let [id (some-> id keyword)]
+              [badge-view-fn id (not (empty? (str returned)))]))
           (sort (remove nil? boats))))])
 
 (defn g-area [grid-area content]
@@ -428,7 +431,7 @@
                 [:div {:style {:display     "flex"
                                :align-items "center"
                                :grid-area   "edit"}}
-                 ;(tap> {:boats boats})
+
                  [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
 
                 (when show-details?

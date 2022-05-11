@@ -695,7 +695,7 @@
 
         [:div {:style {:overflow-y :auto
                        :flex       "1 1 auto"
-                       :height     "calc(100vh - 8rem)"}}
+                       :height     "calc(100vh - 4rem)"}}
          (cond
            render
            [sc/col-space-8
@@ -710,11 +710,16 @@
             [render r m]]
 
            render-fullwidth
-           [sc/col-space-8 {:class [:xp-4]}
+           [sc/col-space-8 {:class [:pt-4 :pb-16]}
             (when (fn? panel)
-              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+              [:div
+               {:style {:margin-inline "auto"
+                        :width         "100%"
+                        :height        "100%"
+                        :max-width     "min(calc(100% - 2rem), 56ch)"}}
+               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
             (when always-panel
-              [:div.px-4 [always-panel modify?]])
+              [always-panel modify?])
             [render-fullwidth]])]
 
         [:div.sticky.bottom-0

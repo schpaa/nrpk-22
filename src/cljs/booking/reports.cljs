@@ -31,7 +31,8 @@
     :padding-inline  "1rem"
     :border-collapse :collapse}
    [:thead
-    {:height "3rem"}
+    {:height     "3rem"
+     :background "var(--toolbar-)"}
     [:tr
      {:text-align :left}
      [:th sc/small0

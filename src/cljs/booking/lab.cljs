@@ -64,7 +64,7 @@
                   :state             time-state
                   :clean-on-unmount? true
                   :keywordize-keys   true
-                  :on-submit         (fn [e] (tap> e))
+                  :on-submit         (fn [e] (tap> {:on-submit e}))
                   :validation        time-input-validation}
 
        (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
@@ -349,8 +349,6 @@
                 (let [u @(db/on-value-reaction {:path ["users" uid]})]
                   (if-let [x (booking.access/build-access-tuple u)]
                     (let [[s a] x]
-                      #_(tap> {:s s
-                               :a a})
                       (and (= s :member)
                            (= :booking (some #{:booking} (or a [])))))
                     false)))))

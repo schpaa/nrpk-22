@@ -40,7 +40,7 @@
     nil))
 
 (defn +memo-lookup-username [uid]
-  ;(tap> ["U"])
+
   (if-some [_ @(rf/subscribe [::db/user-auth])]
     (:navn @(db/on-value-reaction {:path ["users" uid]}))
     nil))

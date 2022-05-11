@@ -406,7 +406,7 @@
                                       (t/date)
                                       ((:fn (get (zipmap (map :id data) data) %)))
                                       str))]
-                      (tap> v)
+
                       (set-values {:end-date v})))
 
                  (try (some-> (values :start-date) t/date) (catch js/Error _ nil))

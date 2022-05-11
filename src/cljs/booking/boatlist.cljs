@@ -5,11 +5,11 @@
             [re-frame.core :as rf]
             [booking.common-widgets :as widgets]
             [booking.modals.boatinfo :refer [open-modal-boatinfo]]
-
             [lambdaisland.ornament :as o]
             [schpaa.style.input :as sci]
             [clojure.string :as str]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.debug :as l]))
 
 ;; redefinitions
 
@@ -32,7 +32,7 @@
            {:new-boats true
             :nøklevann true
             :sjøbasen  true
-            :selector  0}))
+            :selector  :a}))
 
 ;; helpers
 
@@ -169,9 +169,8 @@
      [:div {:class [:sticky :top-0]
             :style {:z-index 0}}
       [sc/row-center {:class [:py-8]}
-       [widgets/pillbar selector [[:a "Nye"]
-                                  [:b "Alle båter"]
-                                  [:c "Arbeidsliste"]]]]]
+       [widgets/pillbar selector [[:a "Båter"]
+                                  [:b "Arbeidsliste"]]]]]
 
      #_[sc/row {:class [:w-full]}
         [sc/row-g3
@@ -214,40 +213,34 @@
                  [widgets/badge
                   {:on-click #(open-modal-boatinfo {:data v})
                    :class    [:big]}
-                  (or number "ingen")]
+                  (or number boat-item-id "ingen")]
                  [widgets/stability-name-category v]]
-
                 [small-grid
-                 (for [[worklog-entry-id v] work-log]
-                   [sc/co {:style {:background "var(--floating)"}
-                           :class []}
-                    [booking.modals.boatinfo/worklog-card {} v boat-item-id worklog-entry-id]])]])
-
-        simplify (fn [[boat-item-id v]]
-                   (let [{:keys [number work-log boat-type]} v]
-                     [(some-> boat-item-id name) v]))
-        data @(rf/subscribe [:db/boat-db])]
-    (into [sc/co]
-          (->> data
-               (filter (comp some? :work-log val))
-               (map simplify)
-               (map card)))))
+                 (for [[worklog-entry-id {:keys [deleted complete] :as v}] work-log
+                       :when (not (or deleted complete))]
+                   [booking.modals.boatinfo/worklog-card
+                    {} v boat-item-id worklog-entry-id])]])
+        data (->> @(rf/subscribe [:db/boat-db])
+                  (filter (fn [[k v]]
+                            (if (map? v)
+                              (let [{:keys [work-log]} v]
+                                (and (some? work-log)))
+                              false))))]
+    [sc/col-space-4
+     (into [:<>] (map card data))]))
 
 (defn content []
-  (case (:selector @store)
-    :a [:div]
-    :c [arbeidsliste]
-    :b [canvas]
-    [sc/surface-ab
-     {:xstyle {:margin  "1rem"
-               :padding "1rem"}}
+  [:div.p-2
+   (case (:selector @store)
+     :a [canvas]
+     :b [arbeidsliste]
      [sc/co
       [completion-textfield
        {:label       "Alle registrerte nøkkelvakter"
         :placeholder "Søk"}]
       [sc/col
        (-> colors (color-map) (sc/row))
-       [sc/co [color-map-text colors sc/text1]]]]]))
+       [sc/co [color-map-text colors sc/text1]]]])])
 
 ;; machinery
 

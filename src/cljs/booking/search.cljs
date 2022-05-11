@@ -81,7 +81,7 @@
                                      (when @a (.focus @a)))
                                    (reset! a nil)))
        :component-will-unmount (fn [_]
-                                 ;(tap> ":component-will-unmount")
+
                                  (reset! a nil))
        :reagent-render
        (fn []

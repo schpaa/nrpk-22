@@ -105,7 +105,6 @@
                               ;called on primary button in dialog with some arguments
                               ;the arguments are placed in the :carry field in the map below
                               :on-save #(do
-                                          ;(tap> "on-save -1-")
                                           (reset! write-success true)
                                           (when action
                                             (action {:context context

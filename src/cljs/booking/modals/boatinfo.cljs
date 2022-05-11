@@ -54,7 +54,7 @@
         datum {:path  path
                :value data}]
     (.then (db/database-push datum)
-           #(tap> {:write-to-disk
+           #(tap> {:push-to-database
                    {:result-of-push (.-key %)
                     :id             id
                     :path           path
@@ -71,7 +71,7 @@
              :path path}})))
 
 (defn complete-worklog-entry [boat-item-id id complete]
-  (let [path ["boad-item" boat-item-id "work-log" id]
+  (let [path ["boad-item" (some-> boat-item-id name) "work-log" id]
         datum {:path  path
                :value {:complete complete}}]
     (tap> datum)
@@ -86,8 +86,7 @@
     (assoc v :timestamp timestamp)))
 
 (defn on-submit [id {:keys [values]}]
-  ;(js/alert "!")
-  (tap> "on-submit")
+  (tap> {"on-submit " id})
   (write-to-disk
     (some-> id name)
     (prep-for-submit values)))
@@ -240,7 +239,8 @@
 (defn bottom-button-panel [& content]
   [:div
    {:style {
-            ;:position         :sticky
+            :position         :sticky
+            :bottom           0
             ;:top "-4rem"
             ;:margin-top       "132px"
             :margin-inline    -24
@@ -261,7 +261,6 @@
         boat-item-id (some-> (:id data) name)]
     (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
                  ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
-
       ;(tap> {:modal-boatinfo-windowcontent data})
       [sc/dropdown-dialog'
        [:div.sticky.top-0
@@ -288,6 +287,7 @@
           [:form {:id        form-id
                   :on-submit handle-submit}
            [sc/col-space-8 {:style {:padding-top "2rem"}}
+            ;[l/pre boat-item-id]
             (when -debug [l/pre input boat-type])
             ;i want something in editor to execute when the close button is pressed
             [togglepanel {:open     0

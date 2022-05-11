@@ -21,7 +21,6 @@
                                (tap> ["toggle" @relative-time?])
                                (.stopPropagation %)
                                (toggle-relative-time))}]
-    ;(tap> {:date-is date})
     (when date
       (if @relative-time?
         (if (t/<= (t/date date) (t/date))
@@ -56,22 +55,7 @@
   (arco.core/time-to ["2019-12-28T11:00:20Z" "2019-12-27T11:00:20Z"]
                      {:stringify? false}))
 
-#_(defn flex-datetime' [date formatted]
-    (let [relative-time? (schpaa.state/listen :app/show-relative-time-toggle)
-          on-click {:on-click #(do
-                                 (tap> ["toggle" @relative-time?])
-                                 (.stopPropagation %)
-                                 (toggle-relative-time))}]
-      (when date
-        (if @relative-time?
-          [sc/link on-click (formatted (ta/date-format-sans-year date))]
-          [arco.react/time-to {:times  [(if (t/date-time? date)
-                                          (t/date-time date)
-                                          (t/at (t/date date) (t/midnight)))
-                                        (t/now)]
-                               :config booking.data/arco-datetime-config}
-           (fn [formatted-t]
-             [sc/link on-click (formatted formatted-t)])]))))
+
 
 (defn relative-time
   ([tm]

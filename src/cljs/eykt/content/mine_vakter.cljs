@@ -25,7 +25,6 @@
                                      (assoc a (str (:starttime e)) (f e)))) {} x))
           sum (reduce (fn [a [date rule-refs]]
                         (+ a (reduce (fn [a [group starttime clicked-time]]
-                                       (tap> (name starttime))
                                        (+ a (get (lookup (:times (first (get rules group))))
                                                  (name starttime)))) 0 rule-refs)))
                       0 prep-data)]

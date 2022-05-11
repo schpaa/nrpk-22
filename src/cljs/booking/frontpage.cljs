@@ -9,7 +9,6 @@
             [db.core :as db]
             [booking.common-views]
             [arco.react]
-            [schpaa.debug :as l]
             [times.api :as ta]
             [tick.core :as t]
             [booking.carousell]
@@ -122,7 +121,6 @@
      [table-text (count (filter (comp :godkjent val) nv)) "nøkkelvakter"]
      [table-text (str (count (filter (comp :instruktør val) nv))) "instruktører"]]))
 
-
 (defn- boats []
   (let [{:keys [online offline]} @(rf/subscribe [::db/presence-status])
         boats @(db/on-value-reaction {:path ["boad-item"]})]
@@ -141,7 +139,6 @@
      [table-text 12 "kanoer"]
      [table-text 4 "skullere"]
      [table-text 2 "robåter"]]))
-
 
 (def frontpage-images
   (map #(str "/img/caro/" %)

@@ -10,16 +10,17 @@
 
 (def start-db
   {:version  "3.0.24"
-   :app/name "booking"
-   :tab      :cloud
-   #_#_:lab/toggle-chrome true})
+   :app/name "booking"})
 
 (defn initialize
   [db ls-key]
-  (conj db
-        (into (sorted-map)
-              (some->> (.getItem js/localStorage ls-key)
-                       (read-string)))))
+  (tap> {:initialize-ls (.getItem js/localStorage ls-key)})
+  (try
+    (conj db
+          (into (sorted-map)
+                (some->> (.getItem js/localStorage ls-key)
+                         (read-string))))
+    (catch js/Error e {})))
 
 (def initial-db
   (initialize start-db schpaa.state/ls-key))

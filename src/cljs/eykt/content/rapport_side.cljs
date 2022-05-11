@@ -78,7 +78,6 @@
         (assoc-in st [:rapport :new-id] id))))
 
 (defn update-item [{:keys [data] :as event}]
-  (tap> event)
   (let [{:keys [id content source-path]} data]
     (db/database-update {:path (conj source-path (name id)) :value {:updated (str (t/now))
                                                                     :content content}})

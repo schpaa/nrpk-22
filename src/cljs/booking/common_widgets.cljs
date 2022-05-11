@@ -413,9 +413,8 @@
 (defn location [l]
   (if (= "0" (str l)) "Nøklevann" "Sjøbasen"))
 
-(defn badge [{:keys [class on-click] :as attr} n]
-  (let [v 1]
-    [sc/badge-2 attr n]))
+(defn badge [attr n]
+  [sc/badge-2 attr n])
 
 (defn pillbar
   ([c vs]

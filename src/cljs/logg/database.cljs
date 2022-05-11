@@ -95,12 +95,13 @@
             (fn [_]
               [(db/on-value-reaction {:path ["boat-brand"]})
                (db/on-value-reaction {:path ["boad-item"]})])
-            (fn [[type-db boat-db] _]
+            (fn [[brands items] _]
               (into {}
                     (comp
-                      (map (fn [[id {:keys [boat-type] :as v}]]
-                             [id (conj v (get type-db (keyword boat-type)))])))
-                    boat-db)))
+                      (map (fn [[id {:keys [boat-type] :as item}]]
+                             [id (conj (get brands (keyword boat-type))
+                                       item)])))
+                    items)))
 
 (rf/reg-sub :db/boat-type
             (fn [_]

@@ -149,7 +149,7 @@
                :prevent-default?  true
                :clean-on-unmount? true
                :keywordize-keys   true
-               :on-submit         #(tap> %)}
+               :on-submit         #(tap> {:on-submit2 %})}
     (fn [{:keys [state form-id handle-submit values errors] :as props}]
       [:form.space-y-1
        {:id        form-id

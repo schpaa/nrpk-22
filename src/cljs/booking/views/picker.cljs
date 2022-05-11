@@ -19,7 +19,7 @@
 
 (defn after-and-including [today {:keys [start]}]
   (let [p (relation today start)]
-    ;(tap> p)
+
     (some #{p} [:equals :starts :during :meets :precedes :contains])))
 
 (defn- available? [slot boat]
@@ -29,7 +29,6 @@
 
 ;fixme Only considers the first in the list, should consider all
 (defn has-selection [id x]
-  ;(tap> ["has-selection" id (first (:selected x))])
   (= id (first (:selected x))))
 
 (defn- convert [dt]
