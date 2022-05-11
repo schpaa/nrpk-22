@@ -11,6 +11,10 @@
 
 (rf/reg-sub :modal.slideout/extra :-> (fn [db] (get db :modal.slideout/extra)))
 
+(rf/reg-event-db :modal.slideout/show
+                 (fn [db [_ extra]] (assoc db :modal.slideout/toggle true
+                                              :modal.slideout/extra extra)))
+
 (rf/reg-event-db :modal.slideout/toggle
                  (fn [db [_ arg extra]] (if (some? arg)
                                           (assoc db :modal.slideout/toggle arg
@@ -90,7 +94,7 @@
 
              [:div {:style {:width     "512px"
                             :max-width "90vw"}
-                    :class [:overflow-y-auto]}
+                    :class [:overflow-y-auto :z-100]}
 
               (when auto-dismiss
                 [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}

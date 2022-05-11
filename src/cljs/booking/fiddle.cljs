@@ -66,8 +66,9 @@
 (defstyled toolbar :div
   {:display :none}
   [:at-media {:max-width "511px"}
-   [:& :grid :gap-0 :w-full :px-4
-    {:height                "6rem"                          ;fix <--- hardcoded!
+   [:& :grid :gap-0 :w-full :px-4 :pb-8
+    {;fix <--- hardcoded!
+     :height                "7rem"
      :width                 :100vw
      :bottom                0
      :background-color      "var(--toolbar-)"

@@ -166,7 +166,7 @@
                nøklevann (r/cursor store [:nøklevann])
                selector (r/cursor store [:selector])]
     [:<>
-     [:div {:class [:sticky :top-0]
+     [:div {:class [:sticky :top-16]
             :style {:z-index 0}}
       [sc/row-center {:class [:py-8]}
        [widgets/pillbar selector [[:a "Båter"]

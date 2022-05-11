@@ -78,8 +78,8 @@
 
 (o/defstyled header-top :div
   :flex :items-center :w-full :px-2 :gap-2
-  {:background "var(--content)"
-   :height     "var(--size-9)"})
+  {:background-color "blue" #_"var(--content)"
+   :height           "var(--size-9)"})
 
 ;endregion
 
@@ -526,6 +526,58 @@
                          :padding-block-end       "var(--size-2)"}}
       (str/trim (str @account-email))]]))
 
+(defn new-version-available::dialog [_]
+  [widgets/dialog-template
+   "header"
+   [sc/text1 "body"]
+   [sc/small :footer]
+   (sc/row-ec
+     [hoc.buttons/regular "Lukk"]
+     [hoc.buttons/attn "Lagre"]
+     [hoc.buttons/cta-outline "cta-outline"])]
+  #_[sc/dropdown-dialog'
+     {:style {:position   :relative
+              :overflow   :auto
+              :z-index    20
+              :max-height "80vh"}}
+     [sc/col-space-8
+      [sc/dialog-title' "Oppfrisk nettsiden"]
+      [sc/col-space-4
+       [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
+
+       (let [link @(rf/subscribe [:kee-frame/route])
+             addr (or (some-> link :path) "")
+             path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
+         [:<>
+          ;[l/ppre-x link]
+          [sc/text1 path]]
+         [sc/row-ec
+          [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
+
+       [schpaa.style.hoc.page-controlpanel/togglepanel-local
+        "Mer informasjon"
+        (fn [_]
+          [sc/col-space-4
+           [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
+           [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
+           [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
+       ;[sc/small1 db-timestamp]
+       #_[l/pre
+          {:db-timestamp  (times.api/arrival-date db-timestamp)
+           :app-timestamp (times.api/arrival-date app-timestamp)
+           :need-reload?  (t/< app-timestamp db-timestamp)}]
+       #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])
+
+(defn check-latest-version []
+  (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})]
+    (try
+      (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
+        (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
+          (when (t/< app-timestamp db-timestamp)
+            (widgets/open-slideout new-version-available::dialog)
+            (rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
+      (catch js/Error _))))
+
 (defn page-boundary [r _ & contents]
   (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
         with-caption? (schpaa.state/listen :app/toolbar-with-caption)
@@ -540,10 +592,12 @@
        (fn [r _ & contents]
          [:div
           ;popups
-          [booking.modals.boatinput/render-boatinput]
-          [booking.modals.centered/render]
-          [booking.modals.slideout/render]
-          [booking.modals.commandpalette/window-anchor]
+          [:div
+           (check-latest-version)
+           [booking.modals.boatinput/render-boatinput]
+           [booking.modals.centered/render]
+           [booking.modals.slideout/render]
+           [booking.modals.commandpalette/window-anchor]]
 
           ;content
           (let [marg (if @menu-right? (if @with-caption? :sm:mr-56 :sm:mr-16)
@@ -551,16 +605,14 @@
                 w-id (if @with-caption? :sm:w-56 :sm:w-16)]
             (if @menu-right?
               [:div
-               ;{:style {:width "100%"}}
+
                [:div {:class [marg :xmin-h-full]} contents]
                [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block
                 {:class [w-id]
                  :style {;:z-index 1
-                         ;:height  "100vh"
                          :right 0}}
                 [vertical-toolbar true]]]
               [:div
-               ;{:style {:width "calc(100%)"}}
                [:div {:class [marg :xmin-h-full]} contents]
                [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block
                 {:class [w-id]
@@ -591,112 +643,17 @@
 
 (def max-width "54ch")
 
-(defn check-latest-version []
-  (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})]
-    (try
-      (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
-        (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
-          (when (t/< app-timestamp db-timestamp)
-            (rf/dispatch [:modal.slideout/toggle
-                          true
-                          {:content-fn
-                           (fn [_] [sc/centered-dialog
-                                    {:style {:position   :relative
-                                             :overflow   :auto
-                                             :z-index    10
-                                             :max-height "80vh"}}
-                                    [sc/col-space-8
-                                     [sc/dialog-title' "Oppfrisk nettsiden"]
-                                     [sc/col-space-4
-                                      [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
-
-                                      (let [link @(rf/subscribe [:kee-frame/route])
-                                            addr (or (some-> link :path) "")
-                                            path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
-                                        [:<>
-                                         ;[l/ppre-x link]
-                                         [sc/text1 path]]
-                                        [sc/row-ec
-                                         [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
-
-                                      [schpaa.style.hoc.page-controlpanel/togglepanel-local
-                                       "Mer informasjon"
-                                       (fn [_]
-                                         [sc/col-space-4
-                                          [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
-                                          [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
-                                          [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
-                                      ;[sc/small1 db-timestamp]
-                                      #_[l/pre
-                                         {:db-timestamp  (times.api/arrival-date db-timestamp)
-                                          :app-timestamp (times.api/arrival-date app-timestamp)
-                                          :need-reload?  (t/< app-timestamp db-timestamp)}]
-                                      #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])}]))))
-      (catch js/Error _))))
-
-(declare render-normal render-frontpage)
-
-(defn +page-builder [r m]
-  (let [admin? (rf/subscribe [:lab/admin-access])
-        scrollpos (r/atom 0)
-        scroll-fn (fn [e]
-                    (let [v (-> e .-target .-scrollTop)]
-                      (if (< 50 v)
-                        (do
-                          (rf/dispatch [:lab/we-know-how-to-scroll true])
-                          (rf/dispatch [:lab/close-menu])))
-                      (reset! scrollpos v)
-                      (tap> ["scroll" (-> e .-target .-scrollTop)])))
-        a (r/atom nil)]
-    (r/create-class
-      {:display-name "+page-builder"
-
-       :component-will-unmount
-       (fn [_] (when @a
-                 (.removeEventListener @a "scroll" scroll-fn)))
-
-       :component-did-mount
-       (fn [_] (rf/dispatch [:lab/we-know-how-to-scroll false]))
-
-       :reagent-render
-       (fn [r {:keys [frontpage] :as m}]
-         (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-           #_[:div.flex.flex-col                            ;.fixed.inset-0
-              {:style {:height     "calc(100% - 9rem)"
-                       :min-height "calc(100% - 9rem)"
-                       :overflow-y :auto
-                       :flex       "1 1 auto"}}]
-
-           (if frontpage
-             [render-frontpage r m scroll-fn a v]
-             [render-normal r m admin?])
-
-
-
-
-           #_[:<>
-              (check-latest-version)
-              [:div.sticky.top-0 [booking.common-views/header-line r false 0]]
-              (if frontpage
-                [render-frontpage r m scroll-fn a v]
-                [render-normal r m admin?])
-              [booking.common-views/after-content]
-              [:div.sticky.bottom-0
-               [bottom-toolbar]]]))})))
-
 (defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
   [page-boundary r {:frontpage true}
    [sc/front-page
     {:ref   (set-ref a scroll-fn)
-     :style {;:overflow-y :auto
-             :min-height "calc(100% - 0rem)"
-             :height     "100%"}}
-    [:div.sticky.top-0.z-100 [booking.common-views/header-line r true v]]
-    #_[:div {:style {:min-height "100vh"
-                     :overflow-y :auto}}]
-    [render r]
-    ;[booking.common-views/after-content]]
-    [:div.sticky.bottom-0 [bottom-toolbar]]]])
+     :style {:min-height "calc(100%)"
+             :height     "calc(100vh - 7rem)"}}
+    [:div.sticky.top-0
+     {:style {:z-index 5}}
+     [booking.common-views/header-line r true v]]
+    [:div.-mt-16 [render r]]]
+   [:div.sticky.bottom-0 [bottom-toolbar]]])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
@@ -712,20 +669,17 @@
         {:style {:width            "100%"
                  :overflow-y       :auto
                  :background-color "var(--content)"
-                 ;:min-height "100vh"
                  :height           "calc(100vh - 0rem)"}}
 
-        [:div.sticky.top-0.z-10
+        [:div.sticky.top-0
+         {:style {:z-index 1}}
          [booking.common-views/header-line r false 0]]
-
-        #_[:div {:xstyle {:min-height "100%"
-                          #_#_:overflow-y :auto
-                          #_#_:flex "1 1 auto"}}]
 
         (cond
           render
           [sc/col-space-8
-           {:style {:position      "relative"
+           {:style {;:position      "relative"
+
                     :margin-inline "auto"
                     :min-height    "100%"
                     :padding-block "2rem"
@@ -753,11 +707,40 @@
 
         (when (or goog.DEBUG @admin?)
           [:div.fixed.bottom-0
-           {;:class [:sm:ml-8]
-            :style {:z-index   10000
+           {:style {:z-index   10000
                     :left      :50%
                     :transform "translateX(-50%)"}}
            [name-badge]])
 
         [:div.sticky.bottom-0 [bottom-toolbar]]]])))
 
+
+(defn +page-builder [r m]
+  (let [admin? (rf/subscribe [:lab/admin-access])
+        scrollpos (r/atom 0)
+        scroll-fn (fn [e]
+                    (let [v (-> e .-target .-scrollTop)]
+                      (if (< 50 v)
+                        (do
+                          (rf/dispatch [:lab/we-know-how-to-scroll true])
+                          (rf/dispatch [:lab/close-menu])))
+                      (reset! scrollpos v)
+                      (tap> ["scroll" (-> e .-target .-scrollTop)])))
+        a (r/atom nil)]
+    (r/create-class
+      {:display-name "+page-builder"
+
+       :component-will-unmount
+       (fn [_] (when @a
+                 (.removeEventListener @a "scroll" scroll-fn)))
+
+       :component-did-mount
+       (fn [_] (rf/dispatch [:lab/we-know-how-to-scroll false]))
+
+       :reagent-render
+       (fn [r {:keys [frontpage] :as m}]
+         (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
+           [:<>
+            (if frontpage
+              [render-frontpage r m scroll-fn a v]
+              [render-normal r m admin?])]))})))

@@ -384,24 +384,29 @@
         [sc/link {:href (str "sms:" telefon)} "SMS"]
         [:span "/"]
         (when (seq epost)
-          [sc/link {:href (str "mailto:" epost)} epost])]]
-      #_(when @triggered extra)]]
+          [sc/link {:href (str "mailto:" epost)} epost])]]]]
     (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
           epost @username-or-fakename]
       [sc/surface-a
        [sc/row-sc-g2-w
         [sc/text1 "Logget inn som " [sc/link {:href (str "mailto:" epost)} epost]]]])))
 
-(defn dialog-template [header content footer]
-  [sc/dropdown-dialog
-   [sc/col-space-4
+(defn dialog-template
+  ([header content footer]
+   (dialog-template header content footer nil))
+  ([header content footer buttons]
+   [sc/dropdown-dialog' {:style {:padding-bottom "1rem"}}
     [sc/col-space-4
-     [sc/row {:style {:display     :flex
-                      :align-items :center
-                      :height      "3rem"}}
-      [sc/title1 header]]
-     content]
-    footer]])
+     [sc/col-space-4
+      [sc/row {:class []
+               :style {:display     :flex
+                       :align-items :center
+                       :height      "3rem"}}
+       [sc/title {:class [:bold]} header]]
+      content]
+     footer
+     (when buttons
+       buttons)]]))
 
 (defn pre [& p]
   (let [item (fn [e] [:div.bg-black.text-white.h-full.w-auto e])]
@@ -425,3 +430,6 @@
               {:on-click #(reset! c k)
                :class    [:narrow :outline2 :normals (if (= k @c) :inverse)]} v])]
      [sc/row (into [:<>] (map f vs))])))
+
+(defn open-slideout [dialog-def]
+  (rf/dispatch [:modal.slideout/show {:content-fn dialog-def}]))
