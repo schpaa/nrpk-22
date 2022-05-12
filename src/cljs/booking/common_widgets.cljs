@@ -11,7 +11,8 @@
             [headlessui-reagent.core :as ui]
 
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [schpaa.style.hoc.toggles :as hoc.toggles]))
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [db.core :as db]))
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -316,18 +317,14 @@
    (disclosure attr tag question answer nil))
   ([attr tag question answer empty-message]
    (let [open @(schpaa.state/listen tag)
-         attr (conj {;:class [(when open :-debug)]
-                     :style {:padding-block "var(--size-2)"
-                             #_#_:margin-left "var(--size-2)"}}
-                    attr)]
+         attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
      [ui/disclosure {:as    :div
                      :style {:cursor :default}}
       (fn [{:keys []}]
         [sc/col
          [ui/disclosure-button
           {:on-click #(schpaa.state/toggle tag)
-           :style    {
-                      :cursor :default}
+           :style    {:cursor :default}
            :class    "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
 
           [sc/row-sc-g2
@@ -375,16 +372,13 @@
                :padding-inline "var(--size-2)"
                :padding-block  "var(--size-2)"}}
       [sc/row-sc-g4-w
-       [sc/row-sc-g4
-        ;[sc/text1 "Telefon"]
-        (message-pill uid)
-        [:div.w-1]
-        [sc/link {:href (str "tel:" telefon)} telefon]
-        [:span "/"]
-        [sc/link {:href (str "sms:" telefon)} "SMS"]
-        [:span "/"]
-        (when (seq epost)
-          [sc/link {:href (str "mailto:" epost)} epost])]]]]
+       (message-pill uid)
+       [sc/link {:href (str "tel:" telefon)} telefon]
+       [:span "/"]
+       [sc/link {:href (str "sms:" telefon)} "SMS"]
+       [:span "/"]
+       (when (seq epost)
+         [sc/link {:href (str "mailto:" epost)} epost])]]]
     (let [username-or-fakename (rf/subscribe [:lab/username-or-fakename])
           epost @username-or-fakename]
       [sc/surface-a
@@ -433,3 +427,50 @@
 
 (defn open-slideout [dialog-def]
   (rf/dispatch [:modal.slideout/show {:content-fn dialog-def}]))
+
+(defn after-content []
+  (let [route @(rf/subscribe [:kee-frame/route])
+        user-uid (rf/subscribe [:lab/uid])
+        ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
+    [:div.p-2 {:style {:background-color "var(--toolbar-)"}}
+     [:div.z-1.rounded-top
+      {:style {:border-radius "var(--radius-1)"
+               ;:border-top-right-radius "var(--radius-2)"
+               :background    "var(--gray-9)"}}
+      [:div.mx-auto.max-w-xl.pt-8.pb-16
+       [:div.mx-4
+        [sc/col-space-4
+         [sc/col-space-1
+          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
+          [sc/col-space-1
+           {:style {:user-select :contain
+                    :color       "var(--gray-5)"}}
+           [sc/text1-cl "Nøklevann ro- og padleklubb"]
+           [sc/text1-cl "Postboks 37, 0621 Bogerud"]
+           [:div.flex.justify-start.flex-wrap.gap-4
+            [sc/subtext-with-link {:class [:dark]
+                                   :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
+            [sc/subtext-with-link {:class [:dark]
+                                   :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
+         [sc/row-ec
+          [hoc.buttons/reg-pill-icon
+           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+           ico/tilbakemelding "Tilbakemelding"]]
+         [sc/row-sc-g4-w
+          [sc/col
+           [sc/small1 (or booking.data/VERSION "version")]
+           [sc/small1 (or booking.data/DATE "date")]]
+
+          (when-not ipad?
+            [hoc.buttons/reg-pill
+             {:on-click #(do
+                           (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
+                           (db/database-update {:path  ["system"]
+                                                :value {"active" @user-uid}}))}
+             "Bli til Båtlogg"])
+
+          (when @(rf/subscribe [:lab/admin-access])
+            [hoc.buttons/danger-pill
+             {:on-click #(db/database-update {:path  ["system"]
+                                              :value {"timestamp" booking.data/DATE}})}
+             "Aktiver versjon"])]]]]]]))

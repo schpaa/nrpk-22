@@ -29,9 +29,11 @@
 ;warning: Not a page-template
 (o/defstyled front-page :div
   [:&
-   {:position            :relative
-    :width               "100vw"
-    ;:height "100vh"
+   {
+    ;:position            :relative
+    ;:width               "100vw"
+
+    :max-height          "100vh"
     ;:min-height              "100%"
     :background-position "center center"
     :background-repeat   "no-repeat"
@@ -305,7 +307,7 @@
    small-grid
    {:max-width         "calc(100% - 1rem)"
     :height            "auto"
-    :padding           "4px"
+    :padding-inline    "4px"
     :-background-color "hsla(0,50%,50%,20%)"}
 
    [:at-media {:min-width "512px"}
@@ -335,39 +337,20 @@
                             :font-weight "var(--font-weight-4)"}} "ro– og padleklubb"]]])
 
 (defn header-with-logo []
-  (let [c (count (logg.database/boat-db))]
-    (fancy-front
-      [:div {:style {:align-self   :center
-                     :justify-self :center
-                     :grid-area    "graph"}} (logo-graph)]
-      [:div {:style {
-                     :align-self :center
-                     :grid-area  "type"}} logo-type]
-      [:div {:style {:align-self :center
-                     :grid-area  "status"}} (todays-numbers "— " "— " c '—)])
-
-    #_[:div.grid.gap-x-4.mx-2.-debug
-       {:style {:grid-template-columns "1fr min-content"
-                :grid-template-rows    "1fr 1fr"}}
-       [:div {:class [:flex :items-center :justify-end]
-              :style {:transform        "rotate(-6deg)"
-                      :position         :relative
-                      :transform-origin "center right"}}
-        [bs/logo-text {:style {:width        "auto"
-                               :justify-self :end}}
-         [sc/hero' {:style {:text-align  :right
-                            :color       "var(--text0)"
-                            :font-size   "1.92em"
-                            :font-weight "var(--font-weight-5)"}} "Nøklevann"]
-         [sc/ingress-cl {:style {:white-space :nowrap
-                                 :font-size   "1.2em"
-                                 :color       "var(--text1)"
-                                 :font-weight "var(--font-weight-4)"}} "ro– og padleklubb"]]]
+  [:div {:style {:min-font-size "80%"
+                 :font-size     "100%"
+                 :padding-block "var(--size-10)"}}
+   (let [c (count (logg.database/boat-db))]
+     (fancy-front
        [:div {:style {:align-self   :center
-                      :justify-self :start}}
-        (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-          [circular-logo-thing dark-mode?])]
-       (todays-numbers "— " "— " c '—)]))
+                      :justify-self :center
+                      :grid-area    "graph"}} (logo-graph)]
+       [:div {:style {
+                      :align-self :center
+                      :grid-area  "type"}} logo-type]
+       [:div {:style {:align-self :center
+                      :grid-area  "status"}} (todays-numbers "— " "— " c '—)]))])
+
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -520,50 +503,85 @@
    (when goog.DEBUG
      [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])])
 
+(defn set-ref [a scroll-fn]
+  (tap> {:set-ref a})
+  (fn [el]
+    (when-not @a
+      (.addEventListener el "scroll" #(do (tap> "SCRO")
+                                          (scroll-fn %)))
+      (reset! a el))))
+
 (defn frontpage []
-  (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
-        show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
-        reg? (rf/subscribe [:lab/at-least-registered])
-        master-emulation (rf/subscribe [:lab/master-state-emulation])]
-    [front-page {:class [(if dark-mode? :dark :light)
-                         (if @reg? :bottom-toolbar)]}
+  (let [a (r/atom nil)
+        scrollpos (r/atom 0)
+        scroll-fn (fn [e]
+                    (tap> "Scrols")
+                    (let [v (-> e .-target .-scrollTop)]
+                      (if (< 50 v)
+                        (do
+                          (rf/dispatch [:lab/we-know-how-to-scroll true])
+                          (rf/dispatch [:lab/close-menu])))
+                      (reset! scrollpos v)
+                      (tap> ["scroll" (-> e .-target .-scrollTop)])))]
 
-     [:div.xmin-h-full.z-0.relative.mx-auto                 ;.pt-16           ;<--------- pt-16 !!!!!!!
+    (r/create-class
+      {:component-will-unmount
+       (fn [_] (when @a
+                 (.removeEventListener @a "scroll" scroll-fn)))
 
-      (when (and goog.DEBUG @master-emulation)
-        [:div.max-w-lgx.mx-auto
-         [:div.mx-4.py-4.pt-24
-          [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-           booking.common-views/master-control-box]]])
+       :component-did-mount (fn [_]
+                              (reset! a nil))
 
-      [:div {:style {:min-font-size "80%"
-                     :font-size     "100%"
-                     ;:margin-top    "1.4rem"
-                     :padding-block "var(--size-10)"}}
-       [header-with-logo]]
+       :reagent-render
+       (fn []
+         (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
+               show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
+               reg? (rf/subscribe [:lab/at-least-registered])
+               master-emulation (rf/subscribe [:lab/master-state-emulation])]
+           [front-page
+            {:style {:ref        (fn [el] #(do
+                                             (tap> {"SET REF" el})
+                                             (reset! a nil)
+                                             ((set-ref a scroll-fn) el)))
+                     :min-height "100vh"
+                     :height     "100%"}
 
-      (when @show-image-carousell?
-        [image-carousell])
+             :class [(if dark-mode? :dark :light)
+                     (if @reg? :bottom-toolbar)]}
 
-      (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
-                 (not @reg?))
-        [:div.mx-4.pb-12
-         [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
+            [:div.min-h-full.z-0
+             {:style {:min-height "100vh"}}
+             ;debug
+             (when (and goog.DEBUG @master-emulation)
+               [:div.max-w-lg.mx-auto
+                [:div.mx-4.py-4.pt-24
+                 [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+                  booking.common-views/master-control-box]]])
 
-      [:div.mx-4.pb-8
-       [sc/col-space-8 {:class [:mx-auto]
-                        :style {:max-width booking.common-views/max-width}}
-        [sc/col-space-8
-         (when-not @reg?
-           [please-login-and-register])
-         #_(when goog.DEBUG (debug-panel))
-         (widgets/disclosure {:large 1
-                              :style {:padding-block "var(--size-2)"
-                                      :margin-left   "var(--size-7)"}} :frontpage/news "Hva skjer?" [news-feed])
-         (widgets/disclosure {:large 1
-                              :style {:padding-block "var(--size-2)"
-                                      :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
-         (widgets/disclosure {:large 1
-                              :style {:padding-block "var(--size-2)"
-                                      :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]]]))
+             [header-with-logo]
+
+             (when @show-image-carousell? [image-carousell])
+
+             (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
+                        (not @reg?))
+               [:div.mx-4.pb-12
+                [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
+
+             [sc/col-space-8
+              {:style {:max-width "min(calc(100% - 2rem), 56ch)"}
+               :class [:mx-auto :min-h-full :pb-8]}
+              [sc/col-space-8
+               (when-not @reg?
+                 [please-login-and-register])
+               (widgets/disclosure {:large 1
+                                    :style {:padding-block "var(--size-2)"
+                                            :margin-left   "var(--size-7)"}} :frontpage/news "Hva skjer?" [news-feed])
+               (widgets/disclosure {:large 1
+                                    :style {:padding-block "var(--size-2)"
+                                            :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
+               (widgets/disclosure {:large 1
+                                    :style {:padding-block "var(--size-2)"
+                                            :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]
+            [widgets/after-content]]))})))
+
 

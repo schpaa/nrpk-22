@@ -49,7 +49,7 @@
     (r/with-let [st (r/atom initial)]
       [sc/dropdown-dialog'
        [sc/col-space-8 {:class [:pt-8]}
-        [l/pre data]
+        ;[l/pre data]
         [sc/col-space-4
          (let [f (fn [[k v]]
                    (let [m (get @db k)
@@ -185,7 +185,7 @@
     :grid-template-columns "min-content min-content min-content 1fr  min-content"
     ;:grid-template-rows    "2rem"
     :grid-auto-rows        "auto"
-    :grid-template-areas   [["start-time start-date . end-time end-date"]
+    :grid-template-areas   [["start-time start-date . end-date end-time"]
                             ["edit content content content content"]
                             [". graph graph graph graph"]
                             [". badges . details details"]]
@@ -358,16 +358,25 @@
 (defn- preformat-dates [start end]
   (let [dt (some-> end t/instant)
         a-date (when dt
-                 (when-not (t/= (t/date dt) (t/date start))
+                 (if-not (t/= (t/date dt) (t/date start))
                    (times.api/logg-date-format dt)))
-        a-time (when a-date
+        a-time (when dt
                  (times.api/time-format
                    (t/time dt)))]
 
     {:start-date (times.api/logg-date-format start)
-     :start-time (str "" (times.api/time-format start))
-     :end-date   a-date
-     :end-time   (when a-time (str "kl " a-time))}))
+     :start-time (times.api/time-format start)
+     :end-date   (when dt
+                   (when-not (t/= (t/date dt) (t/date start))
+                     (times.api/logg-date-format dt)))
+     #_(when dt
+         (when-not (empty? a-date)
+           (times.api/logg-date-format a-date)))
+     #_nil #_(when (and a-date start)
+               (when-not (t/= a-date start)
+                 (times.api/logg-date-format a-date)))
+     :end-time   (when dt
+                   (when a-time (str "kl " a-time)))}))
 
 (defn passed-date-test?
   "docstring"
@@ -435,8 +444,9 @@
                  [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
 
                 (when show-details?
-                  [sc/row-sc-g2 {:style {:align-items "baseline"
-                                         :grid-area   "details"}}
+                  [sc/row-sc-g2 {:style {:align-items     "baseline"
+                                         :justify-content :end
+                                         :grid-area       "details"}}
                    (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
                    [agegroups-detail m]])
 
@@ -454,8 +464,7 @@
                   (for [[areaname value style] [["start-date" start-date {}]
                                                 ["start-time" start-time]
                                                 ["end-date" end-date {:justify-content :end}]
-                                                ["end-time" end-time {:justify-content :end
-                                                                      :xoutline        "1px red solid"}]]]
+                                                ["end-time" end-time {:justify-content :end}]]]
                     [:div.flex {:style (merge-with conj {:align-items :center
                                                          :display     :flex
                                                          :grid-area   areaname} style)}
@@ -479,11 +488,11 @@
 
 (defn always-panel []
   [:<>
-   [:div {:class [:sticky :top-0]
-          :style {:z-index 0}}
+   [:div {:class [:sticky :top-16]
+          :style {:z-index 10}}
 
     [sc/row-center {:class [:py-4]
-                    :style {:z-index          10
+                    :style {;:z-index          10
                             :background-color "var(--content)"}}
      [hoc.buttons/cta-pill-icon
       {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}

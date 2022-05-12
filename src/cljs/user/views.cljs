@@ -231,91 +231,89 @@
             (db/on-value-reaction {:path path})
             (atom {}))]
     (fn [r uid]
-      (let [initial-values (merge default-form-values
-                                  (select-keys
-                                    @s
-                                    [;generelt
-                                     :timestamp
-                                     ;:timestamp-lastvisit-userpage
-                                     :uid
-                                     :navn :telefon :alias :epost :våttkort
-                                     ;booking
-                                     :våttkortnr :request-booking :booking-expert
-                                     ;nøkkelvakt
-                                     :medlem-fra-år :fødselsår
-                                     :årstall-førstehjelpskurs :årstall-livredningskurs
-                                     :instruktør :helgevakt :vikar :kort-reisevei
-                                     ;status
-                                     :godkjent-booking :dato-godkjent-booking
-                                     :godkjent :dato-godkjent-nøkkelvakt
-                                     :nøkkelnummer :dato-mottatt-nøkkel
-                                     :dato-innlevert-nøkkel
-                                     :admin :kald-periode :stjerne :utmeldt
-                                     :timekrav])
+      (let [initial-values
+            (merge default-form-values
+                   (select-keys
+                     @s
+                     [;generelt
+                      :timestamp
+                      ;:timestamp-lastvisit-userpage
+                      :uid
+                      :navn :telefon :alias :epost :våttkort
+                      ;booking
+                      :våttkortnr :request-booking :booking-expert
+                      ;nøkkelvakt
+                      :medlem-fra-år :fødselsår
+                      :årstall-førstehjelpskurs :årstall-livredningskurs
+                      :instruktør :helgevakt :vikar :kort-reisevei
+                      ;status
+                      :godkjent-booking :dato-godkjent-booking
+                      :godkjent :dato-godkjent-nøkkelvakt
+                      :nøkkelnummer :dato-mottatt-nøkkel
+                      :dato-innlevert-nøkkel
+                      :admin :kald-periode :stjerne :utmeldt
+                      :timekrav])
 
-                                  {:uid uid})]
-        [:<>
-         ;(when goog.DEBUG [l/ppre-x path initial-values])
-         (if-let [removal-date (some-> s deref :removal-date t/date)]
-           [aux uid removal-date s]
-           [fork/form {:state               form-state
-                       :initial-values      initial-values
-                       :prevent-default?    true
-                       :clean-on-unmount?   true
-                       :keywordize-keys     true
-                       :component-did-mount (fn [{:keys [set-values disable values] :as p}]
-                                              (db/database-update {:path  ["beskjeder" uid]
-                                                                   :value {:timestamp-lastvisit-userpage (str (t/now))}})
-                                              (disable :booking-expert)
-                                              (tap> {:user-form/component-did-mount (:navn initial-values)})
-                                              (set-values initial-values))
+                   {:uid uid})]
+        (if-let [removal-date (some-> s deref :removal-date t/date)]
+          [aux uid removal-date s]
+          [fork/form {:state               form-state
+                      :initial-values      initial-values
+                      :prevent-default?    true
+                      :clean-on-unmount?   true
+                      :keywordize-keys     true
+                      :component-did-mount (fn [{:keys [set-values disable values] :as p}]
+                                             (db/database-update {:path  ["beskjeder" uid]
+                                                                  :value {:timestamp-lastvisit-userpage (str (t/now))}})
+                                             (disable :booking-expert)
+                                             (tap> {:user-form/component-did-mount (:navn initial-values)})
+                                             (set-values initial-values))
 
-                       :on-submit           (fn [{:keys [state values] :as x}]
-                                              (let [author (:uid @(rf/subscribe [::db/user-auth]))]
-                                                (user.forms/save-edit-changes
-                                                  uid
-                                                  author
-                                                  (select-keys
-                                                    (:initial-values @state)
-                                                    (keys (map-difference values (:initial-values @state))))
-                                                  (map-difference values (:initial-values @state))
-                                                  (or (:endringsbeskrivelse values)
-                                                      (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state)))))))))
+                      :on-submit           (fn [{:keys [state values] :as x}]
+                                             (let [author (:uid @(rf/subscribe [::db/user-auth]))]
+                                               (user.forms/save-edit-changes
+                                                 uid
+                                                 author
+                                                 (select-keys
+                                                   (:initial-values @state)
+                                                   (keys (map-difference values (:initial-values @state))))
+                                                 (map-difference values (:initial-values @state))
+                                                 (or (:endringsbeskrivelse values)
+                                                     (apply str (interpose ", " (map name (keys (map-difference values (:initial-values @state)))))))))
 
-                                              (db/database-update {:path  ["users" uid]
-                                                                   :value (assoc values :timestamp (str (t/now)))})
-                                              (rf/dispatch [:save-this-form-test x]))}
-            (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
-              [:form.select-none
-               {:id        form-id
-                :on-submit #(handle-submit %)}
-               [sc/col-space-8
-                (into [:div]
-                      (interpose [:div.py-2]
-                                 (remove nil? [[user.forms/generalinformation-panel props]
-                                               [user.forms/booking-panel props]
-                                               (when true #_(= "eykt" @(rf/subscribe [:app/name]))
-                                                 [user.forms/nokkelvakt-panel props])
-                                               (when @admin?
-                                                 [user.forms/status-panel props])
-                                               (when @admin?
-                                                 [user.forms/changelog-panel uid props])])))
-                [:div
-                 [sc/row-ec {:class [:py-4]}
-                  (when-not (empty? dirty)
-                    [hoc.buttons/regular {:type     :button
-                                          :on-click #(set-values initial-values)
-                                          :disabled (empty? dirty)} "Tilbakestill"])
-                  [hoc.buttons/cta {:type     :submit
-                                    :disabled (empty? dirty)} "Lagre"]]]
-                [sist-oppdatert uid values]]])])]))))
+                                             (db/database-update {:path  ["users" uid]
+                                                                  :value (assoc values :timestamp (str (t/now)))})
+                                             (rf/dispatch [:save-this-form-test x]))}
+           (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
+             [:form.select-none.-debug
+              {:id        form-id
+               :on-submit #(handle-submit %)}
+              [sc/col-space-8
+               (into [:div]
+                     (interpose [:div.py-2]
+                                (remove nil? [[user.forms/generalinformation-panel props]
+                                              [user.forms/booking-panel props]
+                                              (when true #_(= "eykt" @(rf/subscribe [:app/name]))
+                                                [user.forms/nokkelvakt-panel props])
+                                              (when @admin?
+                                                [user.forms/status-panel props])
+                                              (when @admin?
+                                                [user.forms/changelog-panel uid props])])))
+               [:div
+                [sc/row-ec {:class [:py-4]}
+                 (when-not (empty? dirty)
+                   [hoc.buttons/regular {:type     :button
+                                         :on-click #(set-values initial-values)
+                                         :disabled (empty? dirty)} "Tilbakestill"])
+                 [hoc.buttons/cta {:type     :submit
+                                   :disabled (empty? dirty)} "Lagre"]]]
+               [sist-oppdatert uid values]]])])))))
 
 (defn my-info [r]
   (let [uid (rf/subscribe [:lab/uid])]
     (fn [r]
       (if @uid
-        [:div
-         [user-form r @uid]]
+        [user-form r @uid]
         [:div "nope"]))))
 
 (defn always-panel []

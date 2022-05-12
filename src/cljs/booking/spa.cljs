@@ -353,7 +353,7 @@
                               ["/img/personas/noun-persona-622291.png" :m "Tormod Tørstad" "Nestleder" ["Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
                               ["/img/personas/noun-persona-633483.png" :m "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
                               ["/img/personas/noun-persona-410775.png" :m "Adrian A. Mitchell" "Styremedlem" ["Kasserer"]]
-                              ["/img/personas/noun-persona-622293.png" :m "Chris P. Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
+                              ["/img/personas/noun-persona-622293.png" :m "Chris Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
                               ["/img/personas/noun-persona-4144954.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
                               ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Vara" []]
                               ["/img/personas/noun-persona-497844.png" :f "Ylva Eide" "Styremedlem" []]
@@ -390,9 +390,9 @@
 
                         :transform "rotate(-70deg) "}])
 
-                    [:div {:style {:display               :grid
-                                   :gap                   "8px 8px"
-                                   :grid-template-columns "repeat(auto-fit,minmax(20ch,1fr))"}}
+                    [:ul {:style {:display               :grid
+                                  :gap                   "8px 8px"
+                                  :grid-template-columns "repeat(auto-fit,minmax(20ch,1fr))"}}
                      (for [[idx [url gender navn role ansvar]] (map-indexed vector data)]
                        [card
                         [:div                               ;.flex.items-start.justify-between.gap-4
@@ -409,7 +409,7 @@
                                           :object-fit :contain}
                                   :src   "/img/tidslinje_3.png"}]]]
                          [:div.clear-left.space-y-1.mr-3
-                          [sc/small2 {:style {:font-family "Merriweather"}} role]
+                          [:h3 {:style {:font-family "Merriweather"}} role]
                           [sc/text1 navn]
                           [sc/small1
                            (interpose ", "

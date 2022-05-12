@@ -71,15 +71,13 @@
   [:&:hover {:background "var(--toolbar-)"}])
 
 (o/defstyled header-top-frontpage :div
-  :flex :items-center :w-full :px-2 :gap-2
-  {:height "var(--size-9)"}
-  [:at-media {:min-width "511px"}
-   {:border-top-right-radius "var(--radius-3)"}])
+  [:& :flex :items-center :w-full :px-2 :gap-2
+   {:height "var(--size-9)"}])
 
 (o/defstyled header-top :div
-  :flex :items-center :w-full :px-2 :gap-2
-  {:background-color "blue" #_"var(--content)"
-   :height           "var(--size-9)"})
+  [:& :flex :items-center :w-full :px-2 :gap-2
+   {:height           "var(--size-9)"
+    :background-color "var(--content)"}])
 
 ;endregion
 
@@ -397,10 +395,13 @@
         switch? (schpaa.state/listen :lab/menu-position-right)
         location [location-block r links caption switch?]]
     [:div.w-full.flex.justify-between
-     {:class [:h-16 :items-center]}
+     {:class [:h-16 :items-center]
+      :style {:opacity    (- 2 v)
+              :background "var(--content)"}}
      (let [items [location
                   [:div.flex-grow.w-full]
-                  [:div.w-12 [main-menu r]]]
+                  [:div.w-12 [main-menu r]]
+                  #_(when v [l/pre v])]
            ;:div.relative.-debug2.h-screen.w-screen
            items (if @switch? (reverse items) items)]
        (if frontpage
@@ -461,53 +462,6 @@
                #(do
                   (swap! st update-in [:nøkkelvakt] (constantly %))
                   (rf/dispatch [:lab/set-sim :nøkkelvakt %]))]]]]))])))
-
-(defn after-content []
-  (let [route @(rf/subscribe [:kee-frame/route])
-        user-uid (rf/subscribe [:lab/uid])
-        ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
-    [:div.px-2.pt-2 {:style {:background-color "var(--toolbar-)"}}
-     [:div.z-1.rounded-top
-      {:style {:border-radius "var(--radius-1)"
-               ;:border-top-right-radius "var(--radius-2)"
-               :background    "var(--gray-9)"}}
-      [:div.mx-auto.max-w-lg.pt-8.pb-16
-       [:div.mx-4
-        [sc/col-space-4
-         [sc/col-space-1
-          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
-          [sc/col-space-1
-           {:style {:user-select :contain
-                    :color       "var(--gray-5)"}}
-           [sc/text1-cl "Nøklevann ro- og padleklubb"]
-           [sc/text1-cl "Postboks 37, 0621 Bogerud"]
-           [:div.flex.justify-start.flex-wrap.gap-4
-            [sc/subtext-with-link {:class [:dark]
-                                   :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
-            [sc/subtext-with-link {:class [:dark]
-                                   :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
-         [sc/row-ec
-          [hoc.buttons/reg-pill-icon
-           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-           ico/tilbakemelding "Tilbakemelding"]]
-         [sc/row-sc-g4-w
-          [sc/col
-           [sc/small1 (or booking.data/VERSION "version")]
-           [sc/small1 (or booking.data/DATE "date")]]
-
-          (when-not ipad?
-            [hoc.buttons/reg-pill
-             {:on-click #(do
-                           (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
-                           (db/database-update {:path  ["system"]
-                                                :value {"active" @user-uid}}))}
-             "Bli til Båtlogg"])
-
-          (when @(rf/subscribe [:lab/admin-access])
-            [hoc.buttons/danger-pill
-             {:on-click #(db/database-update {:path  ["system"]
-                                              :value {"timestamp" booking.data/DATE}})}
-             "Aktiver versjon"])]]]]]]))
 
 (defn- name-badge []
   (let [account-email (rf/subscribe [:lab/username-or-fakename])]
@@ -592,32 +546,30 @@
        (fn [r _ & contents]
          [:div
           ;popups
-          [:div
-           (check-latest-version)
-           [booking.modals.boatinput/render-boatinput]
-           [booking.modals.centered/render]
-           [booking.modals.slideout/render]
-           [booking.modals.commandpalette/window-anchor]]
+          (check-latest-version)
+          [booking.modals.boatinput/render-boatinput]
+          [booking.modals.centered/render]
+          [booking.modals.slideout/render]
+          [booking.modals.commandpalette/window-anchor]
 
           ;content
+          ;;todo
           (let [marg (if @menu-right? (if @with-caption? :sm:mr-56 :sm:mr-16)
                                       (if @with-caption? :sm:ml-56 :sm:ml-16))
-                w-id (if @with-caption? :sm:w-56 :sm:w-16)]
+                field-width (if @with-caption? :sm:w-56 :sm:w-16)]
             (if @menu-right?
               [:div
-
-               [:div {:class [marg :xmin-h-full]} contents]
+               [:div {:class [marg]} contents]
                [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block
-                {:class [w-id]
-                 :style {;:z-index 1
-                         :right 0}}
+                {:class [field-width]
+                 :style {:right 0}}
                 [vertical-toolbar true]]]
+
               [:div
-               [:div {:class [marg :xmin-h-full]} contents]
+               [:div {:class [marg]} contents]
                [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block
-                {:class [w-id]
-                 :style {;:z-index 1
-                         :left 0}}
+                {:class [field-width]
+                 :style {:left 0}}
                 [vertical-toolbar false]]]))])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
@@ -636,22 +588,44 @@
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
 (defn set-ref [a scroll-fn]
+  (tap> {:set-ref a})
   (fn [el]
     (when-not @a
-      (.addEventListener el "scroll" scroll-fn)
+      (.addEventListener el "scroll" #(do (tap> "SCRO")
+                                          (scroll-fn %)))
       (reset! a el))))
 
 (def max-width "54ch")
 
-(defn- render-frontpage [r {:keys [render] :as m} scroll-fn a v]
-  [page-boundary r {:frontpage true}
-   [sc/front-page
-    {:ref   (set-ref a scroll-fn)
-     :style {:min-height "calc(100%)"
-             :height     "calc(100vh - 7rem)"}}
+(def scrollpos (r/atom 0))
+
+(defn scroll-fn [e]
+  (tap> "???")
+  (let [v (-> e .-target .-scrollTop)]
+    (if (< 50 v)
+      (do))
+    ;(rf/dispatch [:lab/we-know-how-to-scroll true])
+    ;(rf/dispatch [:lab/close-menu])))
+    (reset! scrollpos v)
+    (tap> ["scroll" (-> e .-target .-scrollTop)])))
+
+(defn- height-calculation! []
+  (let [h @(rf/subscribe [:breaking-point.core/mobile?])]
+    (tap> {:h h})
+    (str "calc(100vh - " (if h 0 0) "rem)")))
+
+(defn- render-frontpage [r {:keys [render]} v]
+  (tap> {:v v})
+  [page-boundary r {}
+
+   [:div
+    {:style {:background-color "var(--content)"
+             :overflow-y       :auto
+             :min-height       "calc(100%)"
+             :height           (height-calculation!)}}
     [:div.sticky.top-0
      {:style {:z-index 5}}
-     [booking.common-views/header-line r true v]]
+     [header-line r true v]]
     [:div.-mt-16 [render r]]]
    [:div.sticky.bottom-0 [bottom-toolbar]]])
 
@@ -665,33 +639,29 @@
       [no-access-view r]
 
       [page-boundary r {:frontpage false}
-       [sc/basic-page
+       [:div
         {:style {:width            "100%"
                  :overflow-y       :auto
                  :background-color "var(--content)"
-                 :height           "calc(100vh - 0rem)"}}
-
+                 :height           "100vh"}}
         [:div.sticky.top-0
-         {:style {:z-index 1}}
-         [booking.common-views/header-line r false 0]]
-
+         [header-line r false nil]]
         (cond
           render
           [sc/col-space-8
-           {:style {;:position      "relative"
-
+           {:class []
+            :style {:z-index       0
                     :margin-inline "auto"
                     :min-height    "100%"
-                    :padding-block "2rem"
                     :max-width     "min(calc(100% - 2rem), 56ch)"}}
            (when (fn? panel)
-             [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+             [:div.z-0 [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
            (when always-panel
-             [always-panel modify?])
+             [:div.z-0 [always-panel modify?]])
            [render r m]]
 
           render-fullwidth
-          [sc/col-space-8 {:class [:pt-4 :pb-16]}
+          [sc/col-space-8 {:class [:pt-4]}
            (when (fn? panel)
              [:div
               {:style {:margin-inline "auto"
@@ -703,44 +673,44 @@
              [always-panel modify?])
            [render-fullwidth]])
 
-        [booking.common-views/after-content]
+        [widgets/after-content]
 
         (when (or goog.DEBUG @admin?)
           [:div.fixed.bottom-0
-           {:style {:z-index   10000
+           {:style {:z-index   10
                     :left      :50%
                     :transform "translateX(-50%)"}}
            [name-badge]])
 
         [:div.sticky.bottom-0 [bottom-toolbar]]]])))
 
-
 (defn +page-builder [r m]
   (let [admin? (rf/subscribe [:lab/admin-access])
         scrollpos (r/atom 0)
-        scroll-fn (fn [e]
-                    (let [v (-> e .-target .-scrollTop)]
-                      (if (< 50 v)
-                        (do
-                          (rf/dispatch [:lab/we-know-how-to-scroll true])
-                          (rf/dispatch [:lab/close-menu])))
-                      (reset! scrollpos v)
-                      (tap> ["scroll" (-> e .-target .-scrollTop)])))
-        a (r/atom nil)]
+        #_#_a (r/atom nil)
+        #_#_scroll-fn (fn [e]
+                        (let [v (-> e .-target .-scrollTop)]
+                          (if (< 50 v)
+                            (do
+                              (rf/dispatch [:lab/we-know-how-to-scroll true])
+                              (rf/dispatch [:lab/close-menu])))
+                          (reset! scrollpos v)
+                          (tap> ["scroll" (-> e .-target .-scrollTop)])))]
     (r/create-class
       {:display-name "+page-builder"
 
-       :component-will-unmount
-       (fn [_] (when @a
-                 (.removeEventListener @a "scroll" scroll-fn)))
+       #_#_:component-will-unmount
+               (fn [_] (when @a
+                         (.removeEventListener @a "scroll" scroll-fn)))
 
-       :component-did-mount
-       (fn [_] (rf/dispatch [:lab/we-know-how-to-scroll false]))
+       #_#_:component-did-mount
+               (fn [_]
+
+                 (rf/dispatch [:lab/we-know-how-to-scroll false]))
 
        :reagent-render
        (fn [r {:keys [frontpage] :as m}]
          (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-           [:<>
-            (if frontpage
-              [render-frontpage r m scroll-fn a v]
-              [render-normal r m admin?])]))})))
+           (if frontpage
+             [render-frontpage r m v]
+             [render-normal r m admin?])))})))

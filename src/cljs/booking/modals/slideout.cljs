@@ -94,7 +94,7 @@
 
              [:div {:style {:width     "512px"
                             :max-width "90vw"}
-                    :class [:overflow-y-auto :z-100]}
+                    :class [:overflow-y-auto]}
 
               (when auto-dismiss
                 [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}

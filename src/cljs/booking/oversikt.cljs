@@ -94,6 +94,12 @@
                               [4 :r.oversikt.styret "Styret"]]]
 
                     (map (comp f rest) (sort-by first data)))])
+       [sc/row-center
+        [:div {:class [:w-20 :h-20]}
+         [:img
+          {:style {:object-fit :contain}
+           :width "475px" :height "475px"
+           :src   "/img/logo-n.png"}]]]
 
        (shortcut :oversikt/bli-medlem
                  "Bli medlem"
