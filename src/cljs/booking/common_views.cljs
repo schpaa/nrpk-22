@@ -405,8 +405,8 @@
      {:class [:h-16 :items-center]}
      ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
      (let [items [location
-                  [sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
                   [:div.grow]
+                  [sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
            items (if right-menu? (reverse items) items)]
@@ -537,7 +537,7 @@
     (try
       (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
         (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
-          (when true                                        ;(t/< app-timestamp db-timestamp)
+          (when (t/< app-timestamp db-timestamp)
             (widgets/open-slideout new-version-available::dialog)
             #_(rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
       (catch js/Error _))))
