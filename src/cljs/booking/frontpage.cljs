@@ -33,7 +33,7 @@
     ;:position            :relative
     ;:width               "100vw"
 
-    :max-height          "100vh"
+    ;:max-height          "100vh"
     ;:min-height              "100%"
     :background-position "center center"
     :background-repeat   "no-repeat"
@@ -523,7 +523,6 @@
                           (rf/dispatch [:lab/close-menu])))
                       (reset! scrollpos v)
                       (tap> ["scroll" (-> e .-target .-scrollTop)])))]
-
     (r/create-class
       {:component-will-unmount
        (fn [_] (when @a

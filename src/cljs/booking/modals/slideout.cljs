@@ -72,9 +72,7 @@
              (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
             [ui/transition-child
              {:class       (conj ["inline-block align-middle text-left"]
-                                 []
                                  [(o/classname sc/inner-dlg)])
-
               :enter       "ease-out transition-opacity transition-transform transform duration-200 "
               :enter-from  "opacity-0 -translate-y-32"
               :enter-to    "opacity-100 translate-y-0"
@@ -90,8 +88,6 @@
                                 ;REMEMBER TO RESET STATE!!!
                                 (reset! write-success false))
                               (rf/dispatch [:modal.slideout/clear]))}
-
-
              [:div {:style {:width     "512px"
                             :max-width "90vw"}
                     :class [:overflow-y-auto]}
@@ -102,6 +98,9 @@
                   [:animate {:fill "freeze" :attributeName "y2" :from "50" :to "0" :dur (if auto-dismiss (str auto-dismiss "ms"))}]]])
 
               (if content-fn
+                #_[:div {:style {:background "red"
+                                 :z-index    -10}}]
+
                 (content-fn (assoc context
                               :on-close #(do
                                            (when on-close (on-close))

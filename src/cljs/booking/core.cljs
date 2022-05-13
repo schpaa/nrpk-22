@@ -2,9 +2,8 @@
   (:require
     [re-frame.core :as rf]
     [kee-frame.core :as k]
-    ;; passively registers the fsm
+    [kee-frame.scroll]
     [db.core :as db]
-    [re-statecharts.core :as rs]
     [booking.modals.feedback]
     [booking.spa]
     [booking.data :as app-data]
@@ -43,5 +42,4 @@
 (defn init! []
   (db/init! {:config app-data/booking-firebaseconfig})
   (reload!)
-  #_(rf/dispatch [::rs/transition :main :e.restart])
   (booking.keyboard/define-shortcuts))

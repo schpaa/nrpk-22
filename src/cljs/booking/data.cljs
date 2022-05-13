@@ -1,6 +1,5 @@
 (ns booking.data
-  (:require [re-frame.core :refer [reg-sub]]
-            [cljs.reader :refer [read-string]]
+  (:require [cljs.reader :refer [read-string]]
             [schpaa.state]))
 
 (goog-define VERSION "")
@@ -8,9 +7,7 @@
 
 ;region initial-state
 
-(def start-db
-  {:version  "3.0.24"
-   :app/name "booking"})
+(def start-db {})
 
 (defn initialize
   [db ls-key]

@@ -527,9 +527,9 @@
     (try
       (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
         (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
-          (when (t/< app-timestamp db-timestamp)
+          (when true                                        ;(t/< app-timestamp db-timestamp)
             (widgets/open-slideout new-version-available::dialog)
-            (rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
+            #_(rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
       (catch js/Error _))))
 
 (defn page-boundary [r _ & contents]
@@ -540,17 +540,17 @@
       {:display-name        "page-boundary"
        :component-did-mount (fn [_]
                               ;fix: existence of #inner-document
-                              (when-let [el (.getElementById js/document "inner-document")]
-                                (.focus el)))
+                              #_(when-let [el (.getElementById js/document "inner-document")]
+                                  (.focus el)))
        :reagent-render
        (fn [r _ & contents]
-         [:div
+         [:div {:style {:background-color "var(--content)"}}
           ;popups
-          (check-latest-version)
-          [booking.modals.boatinput/render-boatinput]
-          [booking.modals.centered/render]
-          [booking.modals.slideout/render]
-          [booking.modals.commandpalette/window-anchor]
+          [:div.noprint
+           [booking.modals.boatinput/render-boatinput]
+           [booking.modals.centered/render]
+           [booking.modals.slideout/render]
+           [booking.modals.commandpalette/window-anchor]]
 
           ;content
           ;;todo
@@ -560,17 +560,18 @@
             (if @menu-right?
               [:div
                [:div {:class [marg]} contents]
-               [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block
+               [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
                 {:class [field-width]
                  :style {:right 0}}
                 [vertical-toolbar true]]]
-
               [:div
                [:div {:class [marg]} contents]
-               [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block
-                {:class [field-width]
+               [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
+                {:class [field-width :print:hidden]
                  :style {:left 0}}
-                [vertical-toolbar false]]]))])})))
+                [vertical-toolbar false]]]))
+
+          #_(check-latest-version)])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -587,47 +588,48 @@
 
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
-(defn set-ref [a scroll-fn]
-  (tap> {:set-ref a})
-  (fn [el]
-    (when-not @a
-      (.addEventListener el "scroll" #(do (tap> "SCRO")
-                                          (scroll-fn %)))
-      (reset! a el))))
+(defonce a (r/atom nil))
+
+(defn set-ref [element a scroll-fn]
+  (when-not @a
+    (tap> {:set-ref-on @a})
+    (.addEventListener element "scroll" (fn [e]
+                                          (tap> (.-scrollY element) #_(.. e -target -scrollTop)  #_(-> e .-target .-scrollTop))
+                                          #_(scroll-fn (-> e .-target .-scrollTop))))
+    (reset! a element)
+    (tap> {:set-ref a})))
 
 (def max-width "54ch")
 
 (def scrollpos (r/atom 0))
 
 (defn scroll-fn [e]
-  (tap> "???")
   (let [v (-> e .-target .-scrollTop)]
-    (if (< 50 v)
-      (do))
+    #_(if (< 50 v)
+        (do))
     ;(rf/dispatch [:lab/we-know-how-to-scroll true])
     ;(rf/dispatch [:lab/close-menu])))
     (reset! scrollpos v)
-    (tap> ["scroll" (-> e .-target .-scrollTop)])))
+    (tap> ["scroll" @scrollpos #_(-> e .-target .-scrollTop)])))
 
 (defn- height-calculation! []
   (let [h @(rf/subscribe [:breaking-point.core/mobile?])]
     (tap> {:h h})
-    (str "calc(100vh - " (if h 0 0) "rem)")))
+    (str "calc(100vh - " (if h 11 4) "rem)")))
 
 (defn- render-frontpage [r {:keys [render]} v]
-  (tap> {:v v})
-  [page-boundary r {}
+  [:<>
+   [:div.sticky.top-0.noprint
+    {:style {;:z-index 0
+             :opacity v}}
+    [header-line r true v]]
 
    [:div
-    {:style {:background-color "var(--content)"
-             :overflow-y       :auto
-             :min-height       "calc(100%)"
-             :height           (height-calculation!)}}
-    [:div.sticky.top-0
-     {:style {:z-index 5}}
-     [header-line r true v]]
-    [:div.-mt-16 [render r]]]
-   [:div.sticky.bottom-0 [bottom-toolbar]]])
+    {:style {:background-color "var(--content)"}}
+    [:div.-mt-16.content [render r]]]
+
+   [:div.sticky.bottom-0.noprint
+    [bottom-toolbar]]])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
@@ -638,79 +640,76 @@
 
       [no-access-view r]
 
-      [page-boundary r {:frontpage false}
-       [:div
-        {:style {:width            "100%"
-                 :overflow-y       :auto
-                 :background-color "var(--content)"
-                 :height           "100vh"}}
-        [:div.sticky.top-0
-         [header-line r false nil]]
-        (cond
-          render
-          [sc/col-space-8
-           {:class []
-            :style {:z-index       0
-                    :margin-inline "auto"
-                    :min-height    "100%"
-                    :max-width     "min(calc(100% - 2rem), 56ch)"}}
+      [:div
+       #_{:style {:width            "100%"
+                  :overflow-y       :auto
+                  :background-color "var(--content)"
+                  :height           "100vh"}}
+       [:div.sticky.top-0.noprint
+        {:style {:z-index 1}}
+        [header-line r false nil]]
+       (cond
+         render
+         [sc/col-space-8
+          {:style {
+                   :z-index       0
+                   ;:padding-inline "1rem"
+                   :padding-top   "3rem"
+
+                   :margin-inline "auto"
+                   :min-height    "100vh"
+                   :max-width     "min(calc(100% - 2rem), 56ch)"}}
+          (when (fn? panel)
+            [:div.z-0 [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
+          (when always-panel
+            [:div.z-0 [always-panel modify?]])
+          [render r m]]
+
+         render-fullwidth
+         [sc/col-space-8
+          {:class [:pt-4]
+           :style {:xmargin-inline "auto"
+                   :width          "100%"
+                   :min-height     "100%"
+                   :max-width      "100%"}}
+
+          [:div.mx-auto
            (when (fn? panel)
-             [:div.z-0 [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
-           (when always-panel
-             [:div.z-0 [always-panel modify?]])
-           [render r m]]
+             [:div.-debug {:style {:margin-left "1rem"
+                                   :width       "50ch"
+                                   :max-width   "min(calc(100% - 2rem), 36ch)"}}
+              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])]
 
-          render-fullwidth
-          [sc/col-space-8 {:class [:pt-4]}
-           (when (fn? panel)
-             [:div
-              {:style {:margin-inline "auto"
-                       :width         "100%"
-                       :height        "100%"
-                       :max-width     "min(calc(100% - 2rem), 56ch)"}}
-              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
-           (when always-panel
-             [always-panel modify?])
-           [render-fullwidth]])
+          (when always-panel
+            [always-panel modify?])
+          [render-fullwidth]])
 
-        [widgets/after-content]
+       [widgets/after-content]
 
-        (when (or goog.DEBUG @admin?)
-          [:div.fixed.bottom-0
-           {:style {:z-index   10
-                    :left      :50%
-                    :transform "translateX(-50%)"}}
-           [name-badge]])
+       (when (or goog.DEBUG @admin?)
+         [:div.fixed.bottom-0.noprint
+          {:style {:z-index   10
+                   :left      :50%
+                   :transform "translateX(-50%)"}}
+          [name-badge]])
 
-        [:div.sticky.bottom-0 [bottom-toolbar]]]])))
+       [:div.sticky.bottom-0.noprint [bottom-toolbar]]])))
 
-(defn +page-builder [r m]
-  (let [admin? (rf/subscribe [:lab/admin-access])
-        scrollpos (r/atom 0)
-        #_#_a (r/atom nil)
-        #_#_scroll-fn (fn [e]
-                        (let [v (-> e .-target .-scrollTop)]
-                          (if (< 50 v)
-                            (do
-                              (rf/dispatch [:lab/we-know-how-to-scroll true])
-                              (rf/dispatch [:lab/close-menu])))
-                          (reset! scrollpos v)
-                          (tap> ["scroll" (-> e .-target .-scrollTop)])))]
-    (r/create-class
-      {:display-name "+page-builder"
+(defn +page-builder
+  "Takes a route and a map with a description of what goes into a page and gives
+  a hiccup description of said page.
 
-       #_#_:component-will-unmount
-               (fn [_] (when @a
-                         (.removeEventListener @a "scroll" scroll-fn)))
+  See `booking.spa/routing-table`
 
-       #_#_:component-did-mount
-               (fn [_]
-
-                 (rf/dispatch [:lab/we-know-how-to-scroll false]))
-
-       :reagent-render
-       (fn [r {:keys [frontpage] :as m}]
-         (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-           (if frontpage
-             [render-frontpage r m v]
-             [render-normal r m admin?])))})))
+  -> The map consists of these keys:
+  frontpage        --  is this the frontpage? Special case that gives special
+                       treatment to the header among other things.
+  render           --  fn that returns hiccup
+  render-fullwidth --  fn that returns hiccup that ignores margins"
+  [r {:keys [frontpage] :as m}]
+  (let [admin? (rf/subscribe [:lab/admin-access])]
+    (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
+      [page-boundary r {:frontpage frontpage}
+       (if frontpage
+         [render-frontpage r m v]
+         [render-normal r m admin?])])))

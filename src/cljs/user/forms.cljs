@@ -130,27 +130,29 @@
         path ["beskjeder" uid "endringslogg"]]
     [togglepanel :a/a4 "Endringslogg"
      (fn []
-       (when uid                                            ;(:uid values)
+       (when uid
          [sc/col-space-4
-          ;(when goog.DEBUG [l/ppre-x uid])
-          [sci/textarea props :text {:rows 2} "Endringsbeskrivelse (valgfritt)" :endringsbeskrivelse]
-          [sc/row-sc-g2-w [schpaa.style.hoc.toggles/small-switch-base {:type :button} "Vis tidligere endringer" show-changelog toggle]]
+          [sci/textarea props :text
+           {:rows 2} "Endringsbeskrivelse (valgfritt)" :endringsbeskrivelse]
+          [sc/row-sc-g2-w [schpaa.style.hoc.toggles/small-switch-base {:type :button}
+                           "Vis tidligere endringer" show-changelog toggle]]
           (when @show-changelog
             (r/with-let [changelog (db.core/on-snapshot-docs-reaction {:path path})]
               (when @changelog
-                (into [sc/col-space-1]
-                      ;todo
-                      (map (fn [e]
-                             (let [rt (some-> e :data (get "timestamp") .toDate t/date-time)
-                                   reason (some-> e :data (get "reason"))]
-                               [sc/row-sc-g2-w {:style {:display "inline-flex"}}
-                                [sc/text1 {:style {:line-height   "var(--font-lineheight-2)"
-                                                   :padding-block "var(--size-1)"}}
-                                 [:span {:style {:color "var(--text1)"}} (booking.flextime/relative-time rt times.api/tech-date-format)]
-                                 " "
-                                 [:span {:style {:color "var(--text2)"}} reason]]]))
+                [sc/col-space-1
+                 (into [:<>]
+                       ;todo
+                       (map (fn [e]
+                              (let [rt (some-> e :data (get "timestamp") .toDate t/date-time)
+                                    reason (some-> e :data (get "reason"))]
+                                [sc/row-sc-g2-w {:style {:display "inline-flex"}}
+                                 [sc/text1 {:style {:line-height   "var(--font-lineheight-2)"
+                                                    :padding-block "var(--size-1)"}}
+                                  [:span {:style {:color "var(--text1)"}} (booking.flextime/relative-time rt times.api/tech-date-format)]
+                                  " "
+                                  [:span {:style {:color "var(--text2)"}} reason]]]))
 
-                           @changelog)))))]))]))
+                            @changelog))])))]))]))
 
 ;endregion
 

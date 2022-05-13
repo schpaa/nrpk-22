@@ -1,3 +1,10 @@
+@media print {
+   .noprint {
+      visibility: hidden;
+   }
+
+}
+
 /** {
 text-indent: 0;
 }*/

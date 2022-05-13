@@ -387,7 +387,7 @@
 
 (defn dialog-template
   ([header content footer]
-   (dialog-template header content footer nil))
+   [dialog-template header content footer nil])
   ([header content footer buttons]
    [sc/dropdown-dialog' {:style {:padding-bottom "1rem"}}
     [sc/col-space-4
@@ -432,7 +432,7 @@
   (let [route @(rf/subscribe [:kee-frame/route])
         user-uid (rf/subscribe [:lab/uid])
         ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
-    [:div.p-2 {:style {:background-color "var(--toolbar-)"}}
+    [:div.p-2.noprint {:style {:background-color "var(--toolbar-)"}}
      [:div.z-1.rounded-top
       {:style {:border-radius "var(--radius-1)"
                ;:border-top-right-radius "var(--radius-2)"

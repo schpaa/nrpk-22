@@ -38,6 +38,7 @@
               (for [{:keys [data _id]} data
                     :let [rec data]]
                 [:div
+                 ;{:style {:break-inside :avoid-page}} 
                  (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
                    [sc/col-space-2
                     (date-header rec)
