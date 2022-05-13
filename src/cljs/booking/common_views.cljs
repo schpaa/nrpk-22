@@ -417,6 +417,23 @@
          [header-top-frontpage {:style {:background-color "yellow"}} (into [:<>] items)]
          [header-top (into [:<>] items)]))]))
 
+(defn header []
+  (let [route (rf/subscribe [:kee-frame/route])
+        {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
+
+        marg (when-not mobile? (if menu-caption? "14rem" "4rem"))]
+    (when-let [route @route]
+      [:div.fixed.top-0.noprint.inset-x-0.h-16
+       {:style {:margin-left  (when-not right-menu? marg)
+                :margin-right (when right-menu? marg)
+                :height       "6rem"
+                :background   "linear-gradient(180deg,var(--content-transp-top) 0%,
+                                                         var(--content-transp-bottom) 5rem,
+                                                         var(--content-transp) 100%)"
+                :xz-index     "1"}}
+
+       [booking.common-views/header-line route false 1 #_(.-y (dom/getDocumentScroll))]])))
+
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
         user-uid (rf/subscribe [:lab/uid])]
@@ -557,14 +574,12 @@
        (fn [r _ & contents]
          [:<>
           ;popups
-          [:div.noprint.z-2
+          [:div.noprint
            [booking.modals.boatinput/render-boatinput]
            [booking.modals.centered/render]
            [booking.modals.slideout/render]
            [booking.modals.commandpalette/window-anchor]]
 
-          ;content
-          ;;todo
           (let [marg (if @menu-right? (if @with-caption? :sm:mr-56 :sm:mr-16)
                                       (if @with-caption? :sm:ml-56 :sm:ml-16))
                 field-width (if @with-caption? :sm:w-56 :sm:w-16)]
@@ -581,6 +596,8 @@
                 {:class [field-width :print:hidden]
                  :style {:left 0}}
                 [vertical-toolbar false]]]))
+
+          [booking.common-views/header]
 
           #_(check-latest-version)])})))
 
