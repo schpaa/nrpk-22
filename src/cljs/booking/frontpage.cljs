@@ -29,24 +29,16 @@
 ;warning: Not a page-template
 (o/defstyled front-page :div
   [:&
-   {
-    ;:position            :relative
-    ;:width               "100vw"
-
-    ;:max-height          "100vh"
-    ;:min-height              "100%"
+   {:background-color    "red"
     :background-position "center center"
     :background-repeat   "no-repeat"
     :background-size     "cover"}
    [:&.light {:background-image ["var(--background-image-light)"]}]
    [:&.dark {:background-image ["var(--background-image-dark)"]}]
-   [:at-media {:max-width "511px"}
-    #_[:&.bottom-toolbar
-       {:height "calc(100vh - 0rem)"}]]
-   #_[:at-media {:min-width "768px"}
-      {:xwidth "768px"}]]
-  #_[:at-supports {:height :100dvh}
-     {:xheight "calc(100dvh)"}])
+   [:at-media {:max-width "511px"}]])
+
+
+
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -542,14 +534,17 @@
                                              (tap> {"SET REF" el})
                                              (reset! a nil)
                                              ((set-ref a scroll-fn) el)))
+
                      :min-height "100vh"
-                     :height     "100%"}
+                     :height     "100vh"}
 
              :class [(if dark-mode? :dark :light)
                      (if @reg? :bottom-toolbar)]}
 
             [:div.min-h-full.z-0
-             {:style {:min-height "100vh"}}
+             ;{:style {:background-color "red"}}
+             {:style {;:background-color "red"
+                      :min-height "100vh"}}
              ;debug
              (when (and goog.DEBUG @master-emulation)
                [:div.max-w-lg.mx-auto

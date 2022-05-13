@@ -532,7 +532,7 @@
             #_(rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
       (catch js/Error _))))
 
-(defn page-boundary [r _ & contents]
+(defn page-boundary [r {:keys [frontpage]} & contents]
   (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
         with-caption? (schpaa.state/listen :app/toolbar-with-caption)
         admin? (rf/subscribe [:lab/admin-access])]
@@ -544,7 +544,7 @@
                                   (.focus el)))
        :reagent-render
        (fn [r _ & contents]
-         [:div {:style {:background-color "var(--content)"}}
+         [:div
           ;popups
           [:div.noprint
            [booking.modals.boatinput/render-boatinput]
@@ -624,9 +624,7 @@
              :opacity v}}
     [header-line r true v]]
 
-   [:div
-    {:style {:background-color "var(--content)"}}
-    [:div.-mt-16.content [render r]]]
+   [:div.-mt-16 [render r]]
 
    [:div.sticky.bottom-0.noprint
     [bottom-toolbar]]])
@@ -646,7 +644,7 @@
                   :background-color "var(--content)"
                   :height           "100vh"}}
        [:div.sticky.top-0.noprint
-        {:style {:z-index 1}}
+        {:style {:z-index 0}}
         [header-line r false nil]]
        (cond
          render

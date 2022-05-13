@@ -275,7 +275,7 @@
        [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))}
         [:div.fixed.inset-0
          [:div.text-center
-          {:class [(if @right-side? :mr-16 :ml-16)]}
+          ;{:class [(if @right-side? :mr-16 :ml-16)]}
           [schpaa.style.dialog/standard-overlay]
           [:span.inline-block.h-screen.align-middle
            (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
