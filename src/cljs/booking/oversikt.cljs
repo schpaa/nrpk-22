@@ -66,7 +66,7 @@
                                :margin-left   "var(--size-7)"}}
                       tag
                       header
-                      [:div {:style {:color       "rgba(0,0,0,0.7)"
+                      [:div {:style {:color       "var(--text2)" ;"rgba(0,0,0,0.7)"   
                                      :font-size   "var(--font-size-2)"
                                      :line-height "var(--font-lineheight-4)"
                                      :font-weight "var(--font-weight-4)"}}

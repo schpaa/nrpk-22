@@ -118,12 +118,16 @@
           :action   #(rf/dispatch [:app/login])}])
 
 (defn item=dark-light-mode-selector []
-  [:div [:div.-m-1x
-         {:style {:background "var(--toolbar-)"}}
-         [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""
-          (fn [t c]
-            [:div.flex.justify-between.items-center.w-full.gap-2.ml-12.mr-4.h-16
-             [sc/text1 c] t])]]])
+  [:div
+   [:div.-m-1xx
+    {:style {:background "var(--brand1)"}}
+    [sc/row-std {:style {:width "100%"}}
+     [sc/title {:style {:margin-left "1rem"
+                        :color       "var(--text0-copy)"}} [:span.font-bold "Eykt"] " / NRPK"]
+     [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""
+      (fn [t c]
+        [:div.flex.justify-between.items-center.w-full.gap-2.ml-12.mr-4.h-16
+         [sc/text1 c] t])]]]])
 
 (defn item=switch-position []
   [:item {:label     "Plasser sidelinjen på den andre siden av skjermen"

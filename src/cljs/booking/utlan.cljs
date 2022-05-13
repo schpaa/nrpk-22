@@ -488,9 +488,7 @@
 
 (defn always-panel []
   [:<>
-   [:div {:class [:sticky :top-16]
-          :style {:z-index 10}}
-
+   [:div {:class [:sticky :top-16]}
     [sc/row-center {:class [:py-4]
                     :style {;:z-index          10
                             :background-color "var(--content)"}}

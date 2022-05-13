@@ -370,7 +370,9 @@
 (defn see-also
   [{:keys [text link]}]
   (when link
-    [sc/small0 {:style {:white-space :nowrap}} "Se også "
+    [sc/small0 {:style {:white-space :nowrap
+                        :font-size   "var(--font-size-0)"
+                        :font-weight "var(--font-weight-4)"}} "Se også "
      [sc/subtext-with-link
       {:class [:small :hover:opacity-100]
        :href  (k/path-for [link])}
@@ -378,24 +380,22 @@
 
 (defn location-block [r links caption right-menu?]
   (let [link (first links)]
-    [:div.flex.flex-col.px-2.w-auto
+    [:div.flex.flex-col.p-2.w-auto.hover:bg-white
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
       :style    {:z-index 9
                  :flex    "1 1 1"
                  :cursor  :pointer}
-      :class    [(if right-menu? :text-left :text-right)]}
+      :class    [(if right-menu? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
-      [sc/title1 (or (if (fn? caption)
-                       (caption (some-> r :path-params))
-                       (if (map? caption) (:text caption) caption))
-                     caption)]
-      [:div
-       {:style {:font-size "smaller"}}
-       (let [z {:link link
-                :text caption}]
-         (try (see-also z)
-              (catch js/Error e {:CRASH/see-also z})))]]]))
+      [sc/title1 {:style {:font-weight "var(--font-weight-4)"}} (or (if (fn? caption)
+                                                                      (caption (some-> r :path-params))
+                                                                      (if (map? caption) (:text caption) caption))
+                                                                    caption)]
+      (let [z {:link link
+               :text caption}]
+        (try (see-also z)
+             (catch js/Error e {:CRASH/see-also z})))]]))
 
 (defn header-line [r frontpage v]
   (let [[links caption] (some-> r :data :header)
@@ -407,9 +407,9 @@
                :background  "red" #_"var(--floating)"
                ;:z-index 1000
                :xbackground "blue" #_"var(--content)"}}
-     (let [items [[:div.grow]
-                  location
-                  ;(when v (times.api/format "%0.3f" v))
+     (let [items [location
+                  ;[sc/small {:style {:color "yellow"}} (when v (times.api/format "%0.3f" v))]
+                  [:div.grow]
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
            items (if right-menu? (reverse items) items)]
@@ -417,22 +417,20 @@
          [header-top-frontpage {:style {:background-color "yellow"}} (into [:<>] items)]
          [header-top (into [:<>] items)]))]))
 
-(defn header []
+(defn header [v]
   (let [route (rf/subscribe [:kee-frame/route])
+        scroll-pos (rf/subscribe [:scroll-pos])
         {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
-
         marg (when-not mobile? (if menu-caption? "14rem" "4rem"))]
     (when-let [route @route]
       [:div.fixed.top-0.noprint.inset-x-0.h-16
        {:style {:margin-left  (when-not right-menu? marg)
                 :margin-right (when right-menu? marg)
-                :height       "6rem"
+                :height       "8rem"
                 :background   "linear-gradient(180deg,var(--content-transp-top) 0%,
-                                                         var(--content-transp-bottom) 5rem,
-                                                         var(--content-transp) 100%)"
-                :xz-index     "1"}}
-
-       [booking.common-views/header-line route false 1 #_(.-y (dom/getDocumentScroll))]])))
+                                                      var(--content-transp-bottom) 4rem,
+                                                      var(--content-transp) 100%)"}}
+       [booking.common-views/header-line route false v]])))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -561,15 +559,18 @@
 (declare set-ref scroll-fn)
 (defonce a (r/atom nil))
 
+(def scrollpos (r/atom 0))
+
 (defn page-boundary [r {:keys [frontpage]} & contents]
   (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
         with-caption? (schpaa.state/listen :app/toolbar-with-caption)
         admin? (rf/subscribe [:lab/admin-access])]
-
     (r/create-class
       {:display-name        "page-boundary"
        :component-did-mount (fn [_]
-                              (set-ref (.getElementById js/document "inner-document") a scroll-fn))
+                              (set-ref
+                                js/document
+                                #_(.getElementById js/document "inner-document") a scroll-fn))
        :reagent-render
        (fn [r _ & contents]
          [:<>
@@ -597,7 +598,7 @@
                  :style {:left 0}}
                 [vertical-toolbar false]]]))
 
-          [booking.common-views/header]
+          [booking.common-views/header @scrollpos]
 
           #_(check-latest-version)])})))
 
@@ -616,27 +617,29 @@
 
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
+(defonce z (atom nil))
+
 (defn set-ref [element a scroll-fn]
   (when-not @a
-    (tap> {:set-ref-on @a})
-    (.addEventListener element "scroll" (fn [e]
-                                          (tap> e #_(.-scrollY element) #_(.. e -target -scrollTop)  #_(-> e .-target .-scrollTop))
-                                          #_(scroll-fn (-> e .-target .-scrollTop))))
+    ;(tap> {:set-ref-on @a})
+    (.addEventListener element "scroll"
+                       (fn [e]
+                         (reset! z e)
+                         (tap> {:azz (.. e -target)} #_(.-scrollY element) #_(.. e -target -scrollTop)  #_(-> e .-target .-scrollTop))
+                         (scroll-fn e)))
     (reset! a element)
     (tap> {:set-ref a})))
 
 (def max-width "54ch")
 
-(def scrollpos (r/atom 0))
-
 (defn scroll-fn [e]
-  (let [v (-> e .-target .-scrollTop)]
+  (let [v (.. js/window -scrollY)]
     #_(if (< 50 v)
         (do))
     ;(rf/dispatch [:lab/we-know-how-to-scroll true])
     ;(rf/dispatch [:lab/close-menu])))
     (reset! scrollpos v)
-    (tap> ["scroll" @scrollpos #_(-> e .-target .-scrollTop)])))
+    (tap> ["scroll-pos" v])))
 
 (defn- height-calculation! []
   (let [h @(rf/subscribe [:breaking-point.core/mobile?])]
@@ -673,7 +676,7 @@
           (when (fn? panel)
             [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
           (when always-panel
-            [:div {:style {:z-index -10}} [always-panel modify?]])
+            [:div {:style {:xz-index -10}} [always-panel modify?]])
           [render r m]]
 
          render-fullwidth
@@ -704,16 +707,22 @@
        [:div.sticky.bottom-0.noprint [bottom-toolbar]]])))
 
 (defn +page-builder
-  "Takes a route and a map with a description of what goes into a page and gives
-  a hiccup description of said page.
+  "
 
-  See `booking.spa/routing-table`
 
-  -> The map consists of these keys:
-  frontpage        --  is this the frontpage? Special case that gives special
-                       treatment to the header among other things.
-  render           --  fn that returns hiccup
-  render-fullwidth --  fn that returns hiccup that ignores margins"
+    Takes a route and a map with a description of what goes into a page and gives
+    a hiccup description of said page.
+
+    See `booking.spa/routing-table`
+
+    -> The map consists of these keys:
+    frontpage        --  is this the frontpage? Special case that gives special
+                         treatment to the header among other things.
+    render           --  fn that returns hiccup
+    render-fullwidth --  fn that returns hiccup that ignores margins
+
+
+  "
   [r {:keys [frontpage] :as m}]
   (let [admin? (rf/subscribe [:lab/admin-access])]
     (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]

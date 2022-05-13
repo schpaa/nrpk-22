@@ -285,7 +285,7 @@
                                                                   :value (assoc values :timestamp (str (t/now)))})
                                              (rf/dispatch [:save-this-form-test x]))}
            (fn [{:keys [form-id values set-values state handle-submit reset dirty] :as props}]
-             [:form.select-none.-debug
+             [:form.select-none
               {:id        form-id
                :on-submit #(handle-submit %)}
               [sc/col-space-8

@@ -199,9 +199,9 @@ outline: 2px solid #a0a8;
     --dim-brand1-copy: hsl(var(--brand-hue), 20%, 10%);
 
     --light-brand1:  hsl(var(--brand-hue), 36%, 26%); /* #135C3D; */
-    --light-brand2: hsl(calc(var(--brand-hue) - 120), 40%, 30%);
+    --light-brand2: hsl(calc(var(--brand-hue) - 60), 40%, 30%);
     --light-brand1-weak:  hsla(var(--brand-hue), 55%, 40%, var(--weak-factor)); /* #135C3D; */
-    --light-brand2-weak: hsla(calc(var(--brand-hue) - 120), 40%, 30%,var(--weak-factor));
+    --light-brand2-weak: hsla(calc(var(--brand-hue) - 60), 40%, 30%,var(--weak-factor));
     --light-brand1-bright: hsl(var(--brand-hue), 50%, 50%);
     --light-brand2-bright: hsl(calc(var(--brand-hue) - 120), 50%, 60%);
     --light-brand1-copy: hsl(var(--brand-hue), 50%, 90%);
@@ -236,7 +236,7 @@ outline: 2px solid #a0a8;
     --text0-copy-light: var(--gray-0);
     --text1-light: var(--gray-8);
     --text1-copy-light: var(--gray-1);
-    --text2-light: var(--gray-6);
+    --text2-light: var(--gray-7);
     --text3-light: var(--gray-4);
     --label-light: var(--gray-5);
 
@@ -246,7 +246,7 @@ outline: 2px solid #a0a8;
     --text0-copy-dim: var(--gray-9);
     --text1-dim: var(--gray-2);
     --text1-copy-dim: var(--gray-8);
-    --text2-dim: var(--gray-5);
+    --text2-dim: var(--gray-4);
     --text3-dim: var(--gray-8);
     --label-dim: var(--green-5);
 
