@@ -1,6 +1,10 @@
 (ns booking.common-views
   (:require [booking.content.blog-support :refer [err-boundary]]
             [reitit.core :as reitit]
+    ;[clerk.core]
+            [goog.dom :as dom]
+
+
             [kee-frame.error]
             [reagent.ratom]
             [lambdaisland.ornament :as o]
@@ -396,12 +400,12 @@
         location [location-block r links caption switch?]]
     [:div.w-full.flex.justify-between
      {:class [:h-16 :items-center]
-      :style {:opacity    (- 2 v)
+      :style {:opacity    1                                 ;(- 2 v)
               :background "var(--content)"}}
      (let [items [location
                   [:div.flex-grow.w-full]
-                  [:div.w-12 [main-menu r]]
-                  #_(when v [l/pre v])]
+                  (when v (times.api/format "%0.3f" v))
+                  [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
            items (if @switch? (reverse items) items)]
        (if frontpage
@@ -532,13 +536,18 @@
             #_(rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
       (catch js/Error _))))
 
+(declare set-ref scroll-fn)
+(defonce a (r/atom nil))
+
 (defn page-boundary [r {:keys [frontpage]} & contents]
   (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
         with-caption? (schpaa.state/listen :app/toolbar-with-caption)
         admin? (rf/subscribe [:lab/admin-access])]
+
     (r/create-class
       {:display-name        "page-boundary"
        :component-did-mount (fn [_]
+                              (set-ref (.getElementById js/document "inner-document") a scroll-fn)
                               ;fix: existence of #inner-document
                               #_(when-let [el (.getElementById js/document "inner-document")]
                                   (.focus el)))
@@ -559,13 +568,13 @@
                 field-width (if @with-caption? :sm:w-56 :sm:w-16)]
             (if @menu-right?
               [:div
-               [:div {:class [marg]} contents]
+               [:div#inner-document {:class [marg]} contents]
                [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
                 {:class [field-width]
                  :style {:right 0}}
                 [vertical-toolbar true]]]
               [:div
-               [:div {:class [marg]} contents]
+               [:div#inner-document {:class [marg]} contents]
                [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
                 {:class [field-width :print:hidden]
                  :style {:left 0}}
@@ -588,13 +597,13 @@
 
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
-(defonce a (r/atom nil))
+
 
 (defn set-ref [element a scroll-fn]
   (when-not @a
     (tap> {:set-ref-on @a})
     (.addEventListener element "scroll" (fn [e]
-                                          (tap> (.-scrollY element) #_(.. e -target -scrollTop)  #_(-> e .-target .-scrollTop))
+                                          (tap> e #_(.-scrollY element) #_(.. e -target -scrollTop)  #_(-> e .-target .-scrollTop))
                                           #_(scroll-fn (-> e .-target .-scrollTop))))
     (reset! a element)
     (tap> {:set-ref a})))
@@ -620,14 +629,11 @@
 (defn- render-frontpage [r {:keys [render]} v]
   [:<>
    [:div.sticky.top-0.noprint
-    {:style {;:z-index 0
-             :opacity v}}
+    {:style {:z-index 1
+             :opacity 1}}
     [header-line r true v]]
 
-   [:div.-mt-16 [render r]]
-
-   [:div.sticky.bottom-0.noprint
-    [bottom-toolbar]]])
+   [:div.-mt-16 [render r]]])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
@@ -644,8 +650,8 @@
                   :background-color "var(--content)"
                   :height           "100vh"}}
        [:div.sticky.top-0.noprint
-        {:style {:z-index 0}}
-        [header-line r false nil]]
+        {:style {:z-index 1}}
+        [header-line r false 1 #_(.-y (dom/getDocumentScroll))]]
        (cond
          render
          [sc/col-space-8

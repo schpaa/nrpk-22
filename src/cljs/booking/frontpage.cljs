@@ -29,8 +29,7 @@
 ;warning: Not a page-template
 (o/defstyled front-page :div
   [:&
-   {:background-color    "red"
-    :background-position "center center"
+   {:background-position "center center"
     :background-repeat   "no-repeat"
     :background-size     "cover"}
    [:&.light {:background-image ["var(--background-image-light)"]}]
@@ -534,7 +533,6 @@
                                              (tap> {"SET REF" el})
                                              (reset! a nil)
                                              ((set-ref a scroll-fn) el)))
-
                      :min-height "100vh"
                      :height     "100vh"}
 
@@ -542,9 +540,7 @@
                      (if @reg? :bottom-toolbar)]}
 
             [:div.min-h-full.z-0
-             ;{:style {:background-color "red"}}
-             {:style {;:background-color "red"
-                      :min-height "100vh"}}
+             {:style {:min-height "100vh"}}
              ;debug
              (when (and goog.DEBUG @master-emulation)
                [:div.max-w-lg.mx-auto
@@ -576,6 +572,8 @@
                (widgets/disclosure {:large 1
                                     :style {:padding-block "var(--size-2)"
                                             :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]
-            [widgets/after-content]]))})))
+            [widgets/after-content]
+            [:div.sticky.bottom-0.noprint
+             [booking.common-views/bottom-toolbar]]]))})))
 
 

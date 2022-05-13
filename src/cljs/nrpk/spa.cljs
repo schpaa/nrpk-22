@@ -10,6 +10,7 @@
 
 (defn app-wrapper-clean
   [route-table]
+
   (let [route-name (rf/subscribe [:app/route-name])
         route (rf/subscribe [:kee-frame/route])
         user-screenmode (schpaa.state/listen :app/dark-mode)
@@ -18,6 +19,7 @@
     (.setAttribute html "class" (if @user-screenmode "dark" "light"))
     (.setAttribute body "class" "font-sans")
     (.setAttribute body "style" "background-color:var(--content)")
+
     (if-let [page (get route-table @route-name)]
       (make-route-component page @route)
       [:div.bg-alt.fixed.inset-0.flex.items-center.justify-center "Subliminal message"])))
