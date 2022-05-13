@@ -193,10 +193,7 @@
              [hoc/user-logg]]]
            [hoc/all-boats-footer {}]])]))
 
-   :r.debug
-   (fn [r]
-     [+page-builder r
-      {:render (fn [] [booking.lab/render r])}])
+
 
    :r.designlanguage
    (fn [r]
@@ -455,6 +452,7 @@
          :always-panel booking.utlan/always-panel
          :render       #(booking.utlan/render uid)}]))
 
+   :r.debug              (fn [r] (page r {:render booking.lab/render}))
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
    ;todo Fordi når man skal bytte er det greit å ha et sted hvor dette skjer
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))

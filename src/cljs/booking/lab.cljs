@@ -14,7 +14,9 @@
             [booking.views]
             [clojure.set :as set]
             [booking.qrcode]
-            [schpaa.style.hoc.buttons :as hoc.buttons]))
+            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [booking.common-widgets :as widgets]
+            [schpaa.debug :as l]))
 
 ;region temporary, perhaps for later
 
@@ -172,43 +174,61 @@
                      (booking.qrcode/show link))))
 
 (defn render [r]
-  (r/with-let [settings (r/atom {:setting-1 false
-                                 :setting-2 1
-                                 :selection #{2 5}})
-               time-state (r/atom nil)
-               state (r/atom {:expanded #{}
-                              :selected #{100 415}})]
-    [:div.xp-2.space-y-4.relative
+  (let [data (sort-by (comp second first) <
+                      (group-by (comp (juxt :kind) val)
+                                (remove (comp nil? :boat-type val)
+                                        (filter (fn [[k v]] (= "1" (:location v)))
+                                                @(rf/subscribe [:db/boat-db])))))]
+    (r/with-let [settings (r/atom {:setting-1 false
+                                   :setting-2 1
+                                   :selection #{2 5}})
+                 time-state (r/atom nil)
+                 state (r/atom {:expanded #{}
+                                :selected #{100 415}})]
+      [:div.xp-2.space-y-4.relative
 
-     [:div                                                  ;.sticky.top-0.z-50
-      [time-input-form time-state]]
+       [:div.sticky.top-16
+        [time-input-form time-state]]
 
-     [:<>
-      [sc/grid-wide {:class [:gap-2 :place-content-center]}
-       (doall (for [[type data] (group-by :type card-data-v2)]
-                [sc/surface-e {:class []}
-                 [:div.space-y-1
-                  [schpaa.style.booking/collapsable-type-card
-                   {:on-click #(swap! state update :expanded (fn [e] (if (some #{type} e)
-                                                                       (set/difference e #{type})
-                                                                       (set/union e #{type}))))
-                    :expanded (some #{type} (:expanded @state))
-                    :content  (first (get (group-by :type type-data) type))}]
-                  (for [{:keys [id] :as each} data]
-                    [schpaa.style.booking/line-with-graph
-                     {:selected (some #{id} (:selected @state))
-                      :content  each
-                      :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
-                                                                         (set/difference e #{id})
-                                                                         (set/union e #{id}))))}])]]))]
+       [:div {:style {:display               :grid
+                      :grid-gap              "var(--size-2)"
+                      :grid-template-columns "repeat(auto-fit,minmax(10rem,1fr)"}}
+        (into [:<>]
+              (for [[[kind] & r] data #_(sort-by (comp :number val) < data)]
+                [:<>
+                 [sc/title {:style {:height      "4rem"
+                                    :display     :flex
+                                    :align-items :end
+                                    :grid-column "1/-1"}} (schpaa.components.views/normalize-kind kind)]
+                 (for [z r
+                       v (sort-by :navn (map val z))
+                       :let [navn (:navn v)
+                             id (:id v)]]
+                   [sc/row-sc-g4
+                    [widgets/badge {:class    []
+                                    :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})} (:number v)]
+                    [sc/text1 navn]])]))
 
-      (let [valid-registry? (and (empty? (time-input-validation (:values @time-state)))
-                                 (not (empty? (:selected @state))))]
-        [sc/row-end
-         [hoc.buttons/cta
-          {:disabled (not valid-registry?)
-           :on-click #(open-dialog-confirmbooking time-state state card-data-v2 type-data)}
-          "Book nå!"]])]]))
+
+
+
+        ;for history
+        #_(doall (for [[type data] (group-by :type card-data-v2)]
+                   [sc/surface-e {:class []}
+                    [:div.space-y-1
+                     [schpaa.style.booking/collapsable-type-card
+                      {:on-click #(swap! state update :expanded (fn [e] (if (some #{type} e)
+                                                                          (set/difference e #{type})
+                                                                          (set/union e #{type}))))
+                       :expanded (some #{type} (:expanded @state))
+                       :content  (first (get (group-by :type type-data) type))}]
+                     (for [{:keys [id] :as each} data]
+                       [schpaa.style.booking/line-with-graph
+                        {:selected (some #{id} (:selected @state))
+                         :content  each
+                         :on-click #(swap! state update :selected (fn [e] (if (some #{id} e)
+                                                                            (set/difference e #{id})
+                                                                            (set/union e #{id}))))}])]]))]])))
 
 (rf/reg-fx :lab/open-new-blog-entry-dialog (fn [_] (schpaa.style.dialog/open-dialog-addpost)))
 

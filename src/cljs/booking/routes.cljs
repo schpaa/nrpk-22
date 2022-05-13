@@ -3,8 +3,7 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [reitit.core :as reitit]
             [re-frame.core :as rf]
-            [user.database]
-            [schpaa.debug :as l]))
+            [user.database]))
 
 (def routes
   [["/"

@@ -28,7 +28,7 @@
 
 ;warning: Not a page-template
 (o/defstyled front-page :div
-  [:&
+  [:& :pt-24
    {:background-position "center center"
     :background-repeat   "no-repeat"
     :background-size     "cover"}
@@ -575,5 +575,3 @@
             [widgets/after-content]
             [:div.sticky.bottom-0.noprint
              [booking.common-views/bottom-toolbar]]]))})))
-
-

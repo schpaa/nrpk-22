@@ -76,12 +76,15 @@
 
 (o/defstyled header-top-frontpage :div
   [:& :flex :items-center :w-full :px-2 :gap-2
-   {:height "var(--size-9)"}])
+   {:background "var(--blue-2)"
+    :height     "var(--size-9)"}])
 
 (o/defstyled header-top :div
   [:& :flex :items-center :w-full :px-2 :gap-2
-   {:height           "var(--size-9)"
-    :background-color "var(--content)"}])
+   {:height            "var(--size-9)"
+    ;:z-index 10000
+    :position          :relative
+    :xbackground-color "var(--floating)"}])
 
 ;endregion
 
@@ -297,7 +300,7 @@
   (do
     (lookup-page-ref-from-name :r.forsiden)))
 
-(defn vertical-toolbar [left-side?]
+(defn vertical-toolbar [right-side?]
   (let [has-chrome? (rf/subscribe [:lab/has-chrome])
         with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
         current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
@@ -322,7 +325,7 @@
                                       (:text (lookup-page-ref-from-name dp))))))]
                       (if (keyword? e)
                         [:div.grow]
-                        [vertical-button (assoc e :right-side (not left-side?)
+                        [vertical-button (assoc e :right-side right-side?
                                                   :with-caption? with-caption?
                                                   :caption cap)])))
                   (remove nil? (vertical-toolbar-definitions))))])))
@@ -373,14 +376,14 @@
        :href  (k/path-for [link])}
       (:text (lookup-page-ref-from-name link))]]))
 
-(defn location-block [r links caption switch?]
+(defn location-block [r links caption right-menu?]
   (let [link (first links)]
     [:div.flex.flex-col.px-2.w-auto
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
       :style    {:z-index 9
                  :flex    "1 1 1"
                  :cursor  :pointer}
-      :class    [(if @switch? :text-right :text-left)]}
+      :class    [(if right-menu? :text-left :text-right)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
       [sc/title1 (or (if (fn? caption)
@@ -389,28 +392,30 @@
                      caption)]
       [:div
        {:style {:font-size "smaller"}}
-       (let [z {:link link #_(some-> r :data :header ffirst)
-                :text caption #_(some-> r :data :header ffirst lookup-page-ref-from-name :text)}]
+       (let [z {:link link
+                :text caption}]
          (try (see-also z)
               (catch js/Error e {:CRASH/see-also z})))]]]))
 
 (defn header-line [r frontpage v]
   (let [[links caption] (some-> r :data :header)
-        switch? (schpaa.state/listen :lab/menu-position-right)
-        location [location-block r links caption switch?]]
+        {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
+        location [location-block r links caption right-menu?]]
     [:div.w-full.flex.justify-between
-     {:class [:h-16 :items-center]
-      :style {:opacity    1                                 ;(- 2 v)
-              :background "var(--content)"}}
-     (let [items [location
-                  [:div.flex-grow.w-full]
-                  (when v (times.api/format "%0.3f" v))
+     {:class  [:h-16 :items-center]
+      :xstyle {:opacity     1                               ;(- 2 v)
+               :background  "red" #_"var(--floating)"
+               ;:z-index 1000
+               :xbackground "blue" #_"var(--content)"}}
+     (let [items [[:div.grow]
+                  location
+                  ;(when v (times.api/format "%0.3f" v))
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
-           items (if @switch? (reverse items) items)]
+           items (if right-menu? (reverse items) items)]
        (if frontpage
-         [apply header-top-frontpage items]
-         [apply header-top items]))]))
+         [header-top-frontpage {:style {:background-color "yellow"}} (into [:<>] items)]
+         [header-top (into [:<>] items)]))]))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -547,15 +552,12 @@
     (r/create-class
       {:display-name        "page-boundary"
        :component-did-mount (fn [_]
-                              (set-ref (.getElementById js/document "inner-document") a scroll-fn)
-                              ;fix: existence of #inner-document
-                              #_(when-let [el (.getElementById js/document "inner-document")]
-                                  (.focus el)))
+                              (set-ref (.getElementById js/document "inner-document") a scroll-fn))
        :reagent-render
        (fn [r _ & contents]
-         [:div
+         [:<>
           ;popups
-          [:div.noprint
+          [:div.noprint.z-2
            [booking.modals.boatinput/render-boatinput]
            [booking.modals.centered/render]
            [booking.modals.slideout/render]
@@ -597,8 +599,6 @@
 
 (rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
 
-
-
 (defn set-ref [element a scroll-fn]
   (when-not @a
     (tap> {:set-ref-on @a})
@@ -628,12 +628,12 @@
 
 (defn- render-frontpage [r {:keys [render]} v]
   [:<>
-   [:div.sticky.top-0.noprint
-    {:style {:z-index 1
-             :opacity 1}}
-    [header-line r true v]]
+   #_[:div.sticky.top-0.noprint
+      {:style {:z-index 1
+               :opacity 1}}
+      [header-line r true v]]
 
-   [:div.-mt-16 [render r]]])
+   [:div.x-mt-16 [render r]]])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
@@ -644,48 +644,35 @@
 
       [no-access-view r]
 
-      [:div
-       #_{:style {:width            "100%"
-                  :overflow-y       :auto
-                  :background-color "var(--content)"
-                  :height           "100vh"}}
-       [:div.sticky.top-0.noprint
-        {:style {:z-index 1}}
-        [header-line r false 1 #_(.-y (dom/getDocumentScroll))]]
+      [:<>
        (cond
          render
          [sc/col-space-8
-          {:style {
-                   :z-index       0
-                   ;:padding-inline "1rem"
-                   :padding-top   "3rem"
-
+          {:style {:padding-top   "8rem"
                    :margin-inline "auto"
                    :min-height    "100vh"
                    :max-width     "min(calc(100% - 2rem), 56ch)"}}
+          ;[:div {:style {:z-index 0}} "exp"]
           (when (fn? panel)
-            [:div.z-0 [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])
+            [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
           (when always-panel
-            [:div.z-0 [always-panel modify?]])
+            [:div {:style {:z-index -10}} [always-panel modify?]])
           [render r m]]
 
          render-fullwidth
          [sc/col-space-8
           {:class [:pt-4]
-           :style {:xmargin-inline "auto"
-                   :width          "100%"
-                   :min-height     "100%"
-                   :max-width      "100%"}}
-
-          [:div.mx-auto
-           (when (fn? panel)
+           :style {:width      "100%"
+                   :min-height "100vh"
+                   :max-width  "100%"}}
+          (when (fn? panel)
+            [:div.mx-auto
              [:div.-debug {:style {:margin-left "1rem"
                                    :width       "50ch"
                                    :max-width   "min(calc(100% - 2rem), 36ch)"}}
-              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]])]
-
-          (when always-panel
-            [always-panel modify?])
+              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]]])
+          [:div.z-0 (when always-panel
+                      [always-panel modify?])]
           [render-fullwidth]])
 
        [widgets/after-content]

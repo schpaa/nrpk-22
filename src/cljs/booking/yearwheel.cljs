@@ -111,13 +111,14 @@
      :data      m
      :on-submit submit-fn}))
 
-;region panels
+;; panels
 
 (defn always-panel
   ([]
    (always-panel false))
   ([modify?]
    [sc/row-sc-g2-w
+    [:div "text"]
     (when modify?
       (hoc.buttons/cta-pill-icon {:on-click #(edit-event nil)} ico/plus "Ny aktivitet"))
 
@@ -147,7 +148,7 @@
      (when modify? [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-deleted]) "Vis Slettede"])
      [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-content]) "Vis innhold"]]]))
 
-;endregion
+;;
 
 (defn- toggle-relative-time []
   (schpaa.state/toggle :app/show-relative-time-toggle))
@@ -243,7 +244,7 @@
 (comment
   (get-all-events))
 
-;region
+;; feed
 
 (defn yearwheel-feed []
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
@@ -264,6 +265,3 @@
                                                (when tldr
                                                  (weak tldr))]))]])])
      [sc/text1 "Se flere planlagte hendelser i " (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "årshjulet")]]))
-
-
-;end-region

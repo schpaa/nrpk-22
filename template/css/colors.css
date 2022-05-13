@@ -161,11 +161,13 @@ outline: 2px solid #a0a8;
     --light-toolbar: var(--gray-2);
     --light-toolbar-: var(--gray-3);
     --light-content: var(--gray-1);
+    --light-content-transp: rgba(229, 230, 230,0);
     --light-floating: var(--gray-00);
 
     --dim-toolbar: var(--gray-9);
     --dim-toolbar-: var(--gray-10);
     --dim-content: var(--gray-8);
+    --dim-content-transp: rgba(59, 62, 63, 0); /*var(--gray-8);*/
     --dim-floating: var(--gray-7);
 
     --weak-factor: 0.7;
@@ -333,6 +335,7 @@ outline: 2px solid #a0a8;
     --toolbar: var(--light-toolbar);
     --toolbar-: var(--light-toolbar-);
     --content: var(--light-content);
+    --content-transp: var(--light-content-transp);
     --floating: var(--light-floating);
     --switchon: var(--light-switchon);
     --switchoff: var(--light-switchoff);
@@ -408,6 +411,7 @@ outline: 2px solid #a0a8;
         --toolbar: var(--dim-toolbar);
         --toolbar-: var(--dim-toolbar-);
         --content: var(--dim-content);
+        --content-transp: var(--dim-content-transp);
         --floating: var(--dim-floating);
         --switchon: var(--dim-switchon);
         --switchoff: var(--dim-switchoff);
