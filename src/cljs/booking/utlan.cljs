@@ -490,8 +490,7 @@
   [:<>
    [:div {:class [:sticky :top-16]}
     [sc/row-center {:class [:py-4]
-                    :style {;:z-index          10
-                            :background-color "var(--content)"}}
+                    :style {:background-color "var(--content)"}}
      [hoc.buttons/cta-pill-icon
       {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
       ico/plus "Nytt utlån"]

@@ -3,8 +3,6 @@
             [reitit.core :as reitit]
     ;[clerk.core]
             [goog.dom :as dom]
-
-
             [kee-frame.error]
             [reagent.ratom]
             [lambdaisland.ornament :as o]
@@ -397,18 +395,17 @@
         (try (see-also z)
              (catch js/Error e {:CRASH/see-also z})))]]))
 
+(def scrollpos (r/atom 0))
+
 (defn header-line [r frontpage v]
   (let [[links caption] (some-> r :data :header)
         {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         location [location-block r links caption right-menu?]]
     [:div.w-full.flex.justify-between
-     {:class  [:h-16 :items-center]
-      :xstyle {:opacity     1                               ;(- 2 v)
-               :background  "red" #_"var(--floating)"
-               ;:z-index 1000
-               :xbackground "blue" #_"var(--content)"}}
+     {:class [:h-16 :items-center]}
+     ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
      (let [items [location
-                  ;[sc/small {:style {:color "yellow"}} (when v (times.api/format "%0.3f" v))]
+                  [sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
                   [:div.grow]
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
@@ -505,46 +502,35 @@
       (str/trim (str @account-email))]]))
 
 (defn new-version-available::dialog [_]
-  [widgets/dialog-template
-   "header"
-   [sc/text1 "body"]
-   [sc/small :footer]
-   (sc/row-ec
-     [hoc.buttons/regular "Lukk"]
-     [hoc.buttons/attn "Lagre"]
-     [hoc.buttons/cta-outline "cta-outline"])]
-  #_[sc/dropdown-dialog'
-     {:style {:position   :relative
-              :overflow   :auto
-              :z-index    20
-              :max-height "80vh"}}
-     [sc/col-space-8
-      [sc/dialog-title' "Oppfrisk nettsiden"]
-      [sc/col-space-4
-       [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du se den oppdaterte utgaven?"]
+  [sc/dropdown-dialog'
+   {:style {:position   :relative
+            :overflow   :auto
+            :z-index    20
+            :max-height "80vh"}}
+   [sc/col-space-8 {:class [:py-6 :-mx-6 :px-4 :mb-1]
+                    :style {:background-color           "var(--toolbar)"
+                            :border-bottom-left-radius  "var(--radius-1)"
+                            :border-bottom-right-radius "var(--radius-1)"}}
+    [sc/title {:class [:bold]} "Oppfrisk nettsiden"]
+    [sc/col-space-4
+     [sc/text1 "Det finnes en oppdatering av denne nettsiden — vil du laste ned den oppdaterte utgaven?"]
 
-       (let [link @(rf/subscribe [:kee-frame/route])
-             addr (or (some-> link :path) "")
-             path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
-         [:<>
-          ;[l/ppre-x link]
-          [sc/text1 path]]
-         [sc/row-ec
-          [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja, gjerne!"]])
+     [schpaa.style.hoc.page-controlpanel/togglepanel-local "Mer informasjon"
+      (fn [_]
+        [sc/col-space-4
+         [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
+         [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
+         [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
 
-       [schpaa.style.hoc.page-controlpanel/togglepanel-local
-        "Mer informasjon"
-        (fn [_]
-          [sc/col-space-4
-           [sc/text1 "Du får denne meldingen fordi dette nettstedet er under utvikling og oppdateringene skjer daglig og vi vil at du alltid skal bruke den siste utgaven."]
-           [sc/text2 [:span "Hvis du bruker Windows kan du trykke " [sc/as-shortcut "ctrl-r"] " (eller " [sc/as-shortcut "\u2318-r"] " på MacOS) for å laste inn siden på nytt."]]
-           [sc/text2 [:span "Du kan også klikke/trykke utenfor dette vinduet eller trykke på "] [sc/as-shortcut "ESC"] " hvis du ikke vil bli avbrutt med det du holdt på med."]])]
-       ;[sc/small1 db-timestamp]
-       #_[l/pre
-          {:db-timestamp  (times.api/arrival-date db-timestamp)
-           :app-timestamp (times.api/arrival-date app-timestamp)
-           :need-reload?  (t/< app-timestamp db-timestamp)}]
-       #_[sc/small0 "Denne meldingen vil komme opp hver gang du går til en ny lenke på dette nettstedet. side, inntil du ."]]]])
+     (let [link @(rf/subscribe [:kee-frame/route])
+           addr (or (some-> link :path) "")
+           path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
+       [sc/text1 path]
+       [sc/row-ec
+        [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja takk!"]])]]])
+(declare set-ref scroll-fn)
+
+(defonce a (r/atom nil))
 
 (defn check-latest-version []
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})]
@@ -555,11 +541,6 @@
             (widgets/open-slideout new-version-available::dialog)
             #_(rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
       (catch js/Error _))))
-
-(declare set-ref scroll-fn)
-(defonce a (r/atom nil))
-
-(def scrollpos (r/atom 0))
 
 (defn page-boundary [r {:keys [frontpage]} & contents]
   (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
@@ -598,9 +579,7 @@
                  :style {:left 0}}
                 [vertical-toolbar false]]]))
 
-          [booking.common-views/header @scrollpos]
-
-          #_(check-latest-version)])})))
+          [booking.common-views/header @scrollpos]])})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -647,13 +626,7 @@
     (str "calc(100vh - " (if h 11 4) "rem)")))
 
 (defn- render-frontpage [r {:keys [render]} v]
-  [:<>
-   #_[:div.sticky.top-0.noprint
-      {:style {:z-index 1
-               :opacity 1}}
-      [header-line r true v]]
-
-   [:div.x-mt-16 [render r]]])
+  [render r])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
@@ -661,9 +634,7 @@
         have-access? (booking.common-views/matches-access r users-access-tokens)
         modify? (booking.access/can-modify? r users-access-tokens)]
     (if-not have-access?
-
       [no-access-view r]
-
       [:<>
        (cond
          render
@@ -672,7 +643,6 @@
                    :margin-inline "auto"
                    :min-height    "100vh"
                    :max-width     "min(calc(100% - 2rem), 56ch)"}}
-          ;[:div {:style {:z-index 0}} "exp"]
           (when (fn? panel)
             [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
           (when always-panel
@@ -681,10 +651,10 @@
 
          render-fullwidth
          [sc/col-space-8
-          {:class [:pt-4]
-           :style {:width      "100%"
-                   :min-height "100vh"
-                   :max-width  "100%"}}
+          {:style {:padding-top "8rem"
+                   :width       "100%"
+                   :min-height  "100vh"
+                   :max-width   "100%"}}
           (when (fn? panel)
             [:div.mx-auto
              [:div.-debug {:style {:margin-left "1rem"
@@ -723,10 +693,12 @@
 
 
   "
-  [r {:keys [frontpage] :as m}]
+  [r {:keys [frontpage render] :as m}]
   (let [admin? (rf/subscribe [:lab/admin-access])]
     (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-      [page-boundary r {:frontpage frontpage}
-       (if frontpage
-         [render-frontpage r m v]
-         [render-normal r m admin?])])))
+      [:<>
+       [check-latest-version]
+       [page-boundary r {:frontpage frontpage}
+        (if frontpage
+          [render r]
+          [render-normal r m admin?])]])))

@@ -239,25 +239,23 @@
 (defn bottom-button-panel [& content]
   [:div
    {:style {
-            :position         :sticky
-            :bottom           0
-            ;:top "-4rem"
-            ;:margin-top       "132px"
-            :margin-inline    -24
-            :margin-bottom    4
-            :padding          24
-            :z-index          10
-            :background-color "var(--toolbar)"}}
-   #_{:style {:box-shadow       "var(--shadow-1)"
-              :background-color "var(--toolbar)"}
-      :class [:pt-4 :pb-6 :sticky :bottom-0 :-mx-8]}
-   [sc/row-ec {:class [:px-8]}
+            :position                   :sticky
+            :bottom                     0
+            :margin-inline              -24
+            :margin-bottom              4
+            :padding-block              16
+            :z-index                    10
+            :border-bottom-left-radius  "var(--radius-1)"
+            :border-bottom-right-radius "var(--radius-1)"
+            :background-color           "var(--toolbar-)"}}
+   [sc/row-ec {:class [:px-6]}
     content]])
 
 ;; react dialog (styling starts here)
 
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid] :as input}]
-  (let [{:keys [boat-type]} data
+  (let [admin? (rf/subscribe [:lab/admin-access])
+        {:keys [boat-type]} data
         boat-item-id (some-> (:id data) name)]
     (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
                  ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
@@ -290,29 +288,29 @@
             ;[l/pre boat-item-id]
             (when -debug [l/pre input boat-type])
             ;i want something in editor to execute when the close button is pressed
-            [togglepanel {:open     0
-                          :disabled true} :boats/editor "Endringer"
-             #(editor props) false]
+            #_[togglepanel {:open     0
+                            :disabled true} :boats/editor "Endringer"
+               #(editor props) false]
             [togglepanel :boats/damage "Trenger nærmere ettersyn"
              (fn [] [insert-damage props])]
-            [togglepanel :boats/worklog "Arbeidsliste"
-             (fn [] [insert-worklog
-                     boat-item-id
-                     (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])]
+            (if @admin? [togglepanel :boats/worklog "Arbeidsliste"
+                         (fn [] [insert-worklog
+                                 boat-item-id
+                                 (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])])
 
             [bottom-button-panel
 
-             [sc/row-sc-g4-w
-              [hoc.buttons/round'
-               {:type     :button
-                :on-click #()
-                :disabled (not dirty)}
-               [sc/icon ico/arrowLeft']]
+             [sc/row-sc-g2
+              #_[hoc.buttons/cta-outline
+                 {:type     :button
+                  :on-click #()
+                  :disabled true}
+                 [sc/icon ico/arrowLeft']]
 
-              [hoc.buttons/round
+              [hoc.buttons/cta-outline
                {:type     :button
                 :on-click #()
-                :disabled (not dirty)}
+                :disabled true}
                [sc/icon ico/arrowRight']]]
 
              [:div {:style {:flex "1"}}]

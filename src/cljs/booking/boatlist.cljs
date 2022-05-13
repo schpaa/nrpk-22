@@ -17,13 +17,11 @@
 
 (rf/reg-sub ::fontsize :-> #(:boatlist/fontsize % "100%"))
 
-
-
 (o/defstyled small-grid :div
   :grid
   {:row-gap               "0.25rem"
    :column-gap            "0.25rem"
-   :grid-template-columns "repeat(auto-fill,minmax(24ch,1fr))"})
+   :grid-template-columns "repeat(auto-fill,minmax(30ch,1fr))"})
 
 ;; store
 
