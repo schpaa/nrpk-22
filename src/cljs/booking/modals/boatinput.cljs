@@ -297,7 +297,7 @@
 ;endregion
 
 (defn f [a & b]
-  [sc/co
+  [sc/co {:style {:padding-inline "4px"}}
    [sc/ptitle1 a]
    [sc/ptext b]])
 
@@ -337,8 +337,8 @@
             [sc/ptext "Bruk de siste 3 siffer av nøkkelnr. F.eks E18-"
              [:span.font-bold {:style {:color "var(--brand2)"}} "987"]]
             (f "Telefonnr"
-               "eller de 3 siste siffer i nøkkelnr"
-               #_"eller de siste 3 siffer av nøkkelnummer"))))]
+               "eller de 3 siste sifre i nøkkelnr"))))]
+
 
      [:div {:style {:grid-column "1/4"
                     :overflow    :hidden}}
@@ -391,20 +391,21 @@
 
      :else
      [sc/row-sc-g2 {:style {:width           "100%"
-                            :justify-content :space-around}}
+                            :padding-inline  "4px"
+                            :justify-content :space-between}}
       [widgets/stability-name-category boat]
       (r/with-let [boat-type (:boat-type boat)
                    uid (rf/subscribe [:lab/uid])
                    bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
                    ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
-        [widgets/favourites-star
-         {:bt-data       bt-data
-          :ex-data       ex-data
-          :on-star-click (fn [boat-type value]
-                           (rf/dispatch [:star/write-star-change
-                                         {:boat-type boat-type
-                                          :value     value
-                                          :uid       @uid}]))}])]
+        #_[widgets/favourites-star
+           {:bt-data       bt-data
+            :ex-data       ex-data
+            :on-star-click (fn [boat-type value]
+                             (rf/dispatch [:star/write-star-change
+                                           {:boat-type boat-type
+                                            :value     value
+                                            :uid       @uid}]))}])]
      #_(if (or (:selected @st) boat)
          (do
            (if (:selected @st)
@@ -596,7 +597,8 @@
             :-> #(seq @c-boat-list))
 
 (rf/reg-sub ::completed (fn [_]
-                          (and @(rf/subscribe [::completed-contact])
+                          (and (empty? @c-textinput-boat)
+                               @(rf/subscribe [::completed-contact])
                                @(rf/subscribe [::completed-users])
                                @(rf/subscribe [::completed-boats]))))
 
@@ -642,7 +644,10 @@
                            (reset! ref e)))}
            [bis/panel
             {:style {:padding "var(--size-2)"}
-             :class [:mobile]}
+             :class [(cond
+                       mobile? :mobile
+                       left-side? :right-side
+                       :else :left-side)]}
             (doall (concat
                      (let [f (fn [[area-name component]]
                                [:div {:style {:grid-area area-name}} component])
@@ -651,7 +656,7 @@
                                       {:class [:h-full]}
                                       [sc/icon-large
                                        {:style {:color "var(--text1)"}}
-                                       (if complete? ico/check ico/arrowRight')]])]
+                                       (if complete? ico/check (if (and (not mobile?) left-side?) ico/arrowRight' ico/arrowLeft'))]])]
                        (mapv f [["child" [children-slider c-children]]
                                 ["juvenile" [juveniles-slider c-juveniles]]
                                 ["moon" [moon-toggle c-moon]]

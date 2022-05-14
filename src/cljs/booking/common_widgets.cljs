@@ -12,7 +12,8 @@
 
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [db.core :as db]))
+            [db.core :as db]
+            [clojure.string :as str]))
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -159,16 +160,17 @@
                                  stability expert number navn kind description
                                  last-update weight length width aquired-year aquired-price] :as m}]
 
-  [sc/col {:class [:truncate]}
-   [sc/row-sba
-    (when (or stability expert) [stability-expert m])
-    ;[l/pre boat-type]
-    [sc/ptext {:style {:overflow      :hidden
-                       :text-overflow :ellipsis
-                       :white-space   :nowrap
-                       ;:color         "unset"
-                       :font-size     "small"}} navn]]
-   [sc/ptitle1 (schpaa.components.views/normalize-kind kind)]])
+  [sc/row-sc-g4
+
+   [sc/col {:class [:truncate :space-y-1]}
+    [sc/row-sba
+     (when (or stability expert) [stability-expert m])
+     [sc/ptext {:style {:overflow      :hidden
+                        :text-overflow :ellipsis
+                        :white-space   :nowrap
+                        :font-size     "small"}} navn]]
+
+    [sc/ptitle1 (schpaa.components.views/normalize-kind kind)]]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]

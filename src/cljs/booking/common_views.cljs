@@ -376,13 +376,18 @@
        :href  (k/path-for [link])}
       (:text (lookup-page-ref-from-name link))]]))
 
+(o/defstyled location :div
+  [:& :flex :flex-col :p-2 :w-auto
+   {:border-radius "var(--radius-1)"
+    :cursor        :pointer
+    :flex          "1 1 1"}
+   [:&:active {:background "var(--text0-copy)"}]])
+
+
 (defn location-block [r links caption right-menu?]
   (let [link (first links)]
-    [:div.flex.flex-col.p-2.w-auto.hover:bg-white
+    [location
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
-      :style    {:z-index 9
-                 :flex    "1 1 1"
-                 :cursor  :pointer}
       :class    [(if right-menu? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
@@ -397,11 +402,16 @@
 
 (def scrollpos (r/atom 0))
 
+(o/defstyled headerline :div
+  [:&
+   :w-full :flex :justify-between :pointer-events-auto
+   #_[:&:active {:background "var(--text1-copy)"}]])
+
 (defn header-line [r frontpage v]
   (let [[links caption] (some-> r :data :header)
         {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         location [location-block r links caption right-menu?]]
-    [:div.w-full.flex.justify-between
+    [headerline
      {:class [:h-16 :items-center]}
      ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
      (let [items [location
@@ -418,9 +428,9 @@
   (let [route (rf/subscribe [:kee-frame/route])
         scroll-pos (rf/subscribe [:scroll-pos])
         {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
-        marg (when-not mobile? (if menu-caption? "14rem" "4rem"))]
+        marg (when-not mobile? (if menu-caption? "14rem" (if right-menu? "5rem" "4rem")))]
     (when-let [route @route]
-      [:div.fixed.top-0.noprint.inset-x-0.h-16
+      [:div.fixed.top-0.noprint.inset-x-0.h-16.pointer-events-none
        {:style {:margin-left  (when-not right-menu? marg)
                 :margin-right (when right-menu? marg)
                 :height       "8rem"
@@ -538,48 +548,45 @@
       (if-let [app-timestamp (some-> booking.data/DATE t/date-time)]
         (if-let [db-timestamp (some-> version-timestamp deref t/date-time)]
           (when (t/< app-timestamp db-timestamp)
-            (widgets/open-slideout new-version-available::dialog)
-            #_(rf/dispatch [:modal.slideout/show {:content-fn new-version-available::dialog}]))))
+            (widgets/open-slideout new-version-available::dialog))))
       (catch js/Error _))))
 
 (defn page-boundary [r {:keys [frontpage]} & contents]
-  (let [menu-right? (schpaa.state/listen :lab/menu-position-right)
-        with-caption? (schpaa.state/listen :app/toolbar-with-caption)
+  (let [geo (rf/subscribe [:lab/screen-geometry])
         admin? (rf/subscribe [:lab/admin-access])]
     (r/create-class
       {:display-name        "page-boundary"
        :component-did-mount (fn [_]
-                              (set-ref
-                                js/document
-                                #_(.getElementById js/document "inner-document") a scroll-fn))
+                              (set-ref js/document a scroll-fn))
        :reagent-render
        (fn [r _ & contents]
-         [:<>
-          ;popups
-          [:div.noprint
-           [booking.modals.boatinput/render-boatinput]
-           [booking.modals.centered/render]
-           [booking.modals.slideout/render]
-           [booking.modals.commandpalette/window-anchor]]
+         (let [{:keys [right-menu? mobile? menu-caption?]} @geo]
+           [:<>
+            ;popups
+            [:div.noprint
+             [booking.modals.boatinput/render-boatinput]
+             [booking.modals.centered/render]
+             [booking.modals.slideout/render]
+             [booking.modals.commandpalette/window-anchor]]
 
-          (let [marg (if @menu-right? (if @with-caption? :sm:mr-56 :sm:mr-16)
-                                      (if @with-caption? :sm:ml-56 :sm:ml-16))
-                field-width (if @with-caption? :sm:w-56 :sm:w-16)]
-            (if @menu-right?
-              [:div
-               [:div#inner-document {:class [marg]} contents]
-               [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
-                {:class [field-width]
-                 :style {:right 0}}
-                [vertical-toolbar true]]]
-              [:div
-               [:div#inner-document {:class [marg]} contents]
-               [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
-                {:class [field-width :print:hidden]
-                 :style {:left 0}}
-                [vertical-toolbar false]]]))
+            (let [marg (if right-menu? (if menu-caption? :sm:mr-56 :sm:mr-16)
+                                       (if menu-caption? :sm:ml-56 :sm:ml-16))
+                  field-width (if menu-caption? :sm:w-56 :sm:w-16)]
+              (if right-menu?
+                [:div
+                 [:div#inner-document {:class [marg]} contents]
+                 [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
+                  {:class [field-width]
+                   :style {:right 0}}
+                  [vertical-toolbar true]]]
+                [:div
+                 [:div#inner-document {:class [marg]} contents]
+                 [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
+                  {:class [field-width :print:hidden]
+                   :style {:left 0}}
+                  [vertical-toolbar false]]]))
 
-          [booking.common-views/header @scrollpos]])})))
+            [booking.common-views/header @scrollpos]]))})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -600,25 +607,13 @@
 
 (defn set-ref [element a scroll-fn]
   (when-not @a
-    ;(tap> {:set-ref-on @a})
-    (.addEventListener element "scroll"
-                       (fn [e]
-                         (reset! z e)
-                         (tap> {:azz (.. e -target)} #_(.-scrollY element) #_(.. e -target -scrollTop)  #_(-> e .-target .-scrollTop))
-                         (scroll-fn e)))
-    (reset! a element)
-    (tap> {:set-ref a})))
+    (.addEventListener element "scroll" (fn [e] (scroll-fn e)))
+    (reset! a element)))
 
 (def max-width "54ch")
 
 (defn scroll-fn [e]
-  (let [v (.. js/window -scrollY)]
-    #_(if (< 50 v)
-        (do))
-    ;(rf/dispatch [:lab/we-know-how-to-scroll true])
-    ;(rf/dispatch [:lab/close-menu])))
-    (reset! scrollpos v)
-    (tap> ["scroll-pos" v])))
+  (let [v (.. js/window -scrollY)] (reset! scrollpos v)))
 
 (defn- height-calculation! []
   (let [h @(rf/subscribe [:breaking-point.core/mobile?])]
@@ -646,7 +641,7 @@
           (when (fn? panel)
             [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
           (when always-panel
-            [:div {:style {:xz-index -10}} [always-panel modify?]])
+            [always-panel modify?])
           [render r m]]
 
          render-fullwidth
@@ -695,10 +690,9 @@
   "
   [r {:keys [frontpage render] :as m}]
   (let [admin? (rf/subscribe [:lab/admin-access])]
-    (let [v (- 1 (/ (- (+ @scrollpos 0.001) 30) 70))]
-      [:<>
-       [check-latest-version]
-       [page-boundary r {:frontpage frontpage}
-        (if frontpage
-          [render r]
-          [render-normal r m admin?])]])))
+    [:<>
+     [check-latest-version]
+     [page-boundary r {:frontpage frontpage}
+      (if frontpage
+        [render r]
+        [render-normal r m admin?])]]))

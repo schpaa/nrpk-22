@@ -42,7 +42,7 @@
     :background    "var(--floating)"
     :place-items   "center"}
    [:&.add {:color            "var(--content)"
-            :background-color "var(--text1)"}
+            :background-color "var(--brand1)"}
     [:&:active:enabled {:color            "var(--green-1)"
                         :background-color "var(--brand1-lighter)"}]]
 
@@ -121,8 +121,7 @@
     :height                "100%"
     :grid-template-columns "repeat(5,1fr)"
     :grid-template-rows    "4rem 4rem auto auto repeat(4,3.5rem)"}
-   [:&.mobile {:grid-template-areas [#_[". welcome" "welcome" "welcome" "welcome"]
-                                     ["check-a  child    juvenile moon        adult"]
+   [:&.mobile {:grid-template-areas [["check-a  child    juvenile moon        adult"]
                                      ["check-a  child    juvenile key         adult"]
                                      ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
                                      ["check-c    boats    boats    boats     boats"]
@@ -131,24 +130,22 @@
                                      ["complete       .     numpad   numpad   numpad"]
                                      ["complete .   numpad   numpad   numpad"]]}]
 
-   [:&.right-side {:grid-template-areas [["child" "juvenile" "moon" "adult"]
-                                         ["child " "juvenile" "key" "adult"]
-                                         ["boat" "boat" "boat" "boat"]
-                                         ["boat" "boat" "boat" "boat"]
-                                         ["trash" "input" "input" "add"]
-                                         ["boats" "numpad" "numpad" "numpad"]
-                                         ["boats" "numpad" "numpad" "numpad"]
-                                         ["restart" "numpad" "numpad" "numpad"]
-                                         ["complete" "numpad" "numpad" "numpad"]]}]
-   [:&.left-side {:grid-template-areas [["adult" "moon" "juvenile" "child"]
-                                        ["adult" "key" "juvenile" "child"]
-                                        ["boat" "boat" "boat" "boat"]
-                                        ["boat" "boat" "boat" "boat"]
-                                        ["add" "input" "input" "trash"]
-                                        ["numpad" "numpad" "numpad" "boats"]
-                                        ["numpad" "numpad" "numpad" "boats"]
-                                        ["numpad" "numpad" "numpad" "restart"]
-                                        ["numpad" "numpad" "numpad" "complete"]]}]])
+   [:&.right-side {:grid-template-areas [["check-a  child    juvenile moon        adult"]
+                                         ["check-a  child    juvenile key         adult"]
+                                         ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
+                                         ["check-c    boats    boats    boats     boats"]
+                                         ["next .          numpad   numpad   numpad"]
+                                         ["prev   .  numpad   numpad   numpad"]
+                                         ["complete       .     numpad   numpad   numpad"]
+                                         ["complete .   numpad   numpad   numpad"]]}]
+   [:&.left-side {:grid-template-areas [["adult    moon    juvenile child      check-a"]
+                                        ["adult    key     juvenile child      check-a"]
+                                        ["aboutyou  aboutyou  aboutyou   aboutyou  check-b"]
+                                        ["boats     boats     boats      boats     check-c"]
+                                        ["numpad    numpad   numpad . next"]
+                                        ["numpad    numpad   numpad . prev"]
+                                        ["numpad    numpad   numpad . complete"]
+                                        ["numpad    numpad   numpad . complete"]]}]])
 
 (o/defstyled pad :div
   [:div :flex-center

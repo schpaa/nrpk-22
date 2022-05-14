@@ -12,7 +12,8 @@
             [schpaa.debug :as l]
             [tick.core :as t]
             [lambdaisland.ornament :as o]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [clojure.string :as str]))
 
 ;; styles
 
@@ -217,6 +218,7 @@
   [sc/col-space-4
    [sc/row-sc-g2
     [sc/badge-2 {:class [:big]} number]
+    [sc/badge-2 {:class [:slot]} (str/trim (str slot))]
     [widgets/stability-name-category data]
     [:div.grow]
     [widgets/favourites-star

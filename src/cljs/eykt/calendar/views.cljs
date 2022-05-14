@@ -125,29 +125,46 @@
 
 (defn- send-reminder-action [{:keys [base data]}]
   (let [f (second data)
-        [{:keys [dt starttime section]} group] (first (group-by #(select-keys % [:dt :starttime :section]) f))
-        _ (tap> {:group group})
-        date (t/date (t/date-time dt))
+        ;_ (tap> {:data1 data})
+        ;_ (tap> {:base1 base})
+        ;_ (tap> {:f f})
+        [{:keys [dt starttime section]} _group] (first (group-by #(select-keys % [:dt :starttime :section]) f))
+        ;_ (tap> {:group group})
+        date (t/date dt)
         alle-regs-i-denne-periodegruppen (invert (get base section))
-        _ (tap> {:alle-regs-i-denne-periodegruppen alle-regs-i-denne-periodegruppen})
+        ;_ (tap> {:alle-regs-i-denne-periodegruppen alle-regs-i-denne-periodegruppen})
         starttime' (t/at date (t/time starttime))
-        _ (tap> {:starttime  starttime
-                 :starttime' starttime'})
-        [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) (str starttime')))
-                                              alle-regs-i-denne-periodegruppen))
-        data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
-        _ (tap> {:data data})
+        ;_ (tap> {:starttime  starttime :starttime' starttime'})
+        #_#_[_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) (str starttime')))
+                                                  alle-regs-i-denne-periodegruppen))
+        ;data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
+        ;_ (tap> {:data data})
+        ;_ (tap> {:slots-on-this-eykt slots-on-this-eykt})
 
-        text-date (str (times.api/date-format-sans-year starttime') " kl. " (times.api/time-format starttime'))
+        distinct-ids (->> alle-regs-i-denne-periodegruppen
+                          (filter (fn [[k _v]]
+                                    ;(tap> (t/date (t/date-time (name k))))
+                                    (t/= (t/date (t/date-time (name k))) (t/date date))))
+                          (map second)
+                          (flatten1)
+                          (map (comp name key))
+                          (distinct))
+        phone-numbers-to-call (map (comp :telefon user.database/lookup-userinfo) distinct-ids)
+
+        text-date (str (times.api/day-name starttime') " " (times.api/date-format-sans-year starttime'))
         sms-message (str "sms:/open?addresses="
-                         (apply str (interpose "," (map :telefon data)))
+                         (apply str (interpose "," phone-numbers-to-call))
                          "?&body="
-                         (js/encodeURI (str "En liten påminnelse om nøkkelvakt " text-date "...")))]
+                         (js/encodeURI (str "Husk at du har nøkkelvakt " text-date "...")))]
 
-    [sc/row-sc-g2
-     {:style {:align-items :center
-              :height      "3rem"}}
-     [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]]))
+    [sc/co
+     ;[l/pre phone-numbers-to-call]
+     ;[l/pre distinct-ids]
+     [sc/row-sc-g2
+      {:style {:align-items :center
+               :height      "3rem"}}
+      [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]]]))
+
 
 (defn table [{:keys [base data] :as m}]
   (let [show-only-available? @(schpaa.state/listen :calendar/show-only-available)
