@@ -13,6 +13,7 @@
             (fn [_] (rf/subscribe [:breaking-point.core/mobile?]))
             (fn [a _]
               {:mobile?       a
+               :hidden-menu?  (not @(schpaa.state/listen :lab/toggle-chrome))
                :menu-caption? @(schpaa.state/listen :app/toolbar-with-caption)
                :right-menu?   @(schpaa.state/listen :lab/menu-position-right)}))
 

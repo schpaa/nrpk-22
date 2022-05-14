@@ -416,7 +416,7 @@
      ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
      (let [items [location
                   [:div.grow]
-                  [sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
+                  ;[sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
            items (if right-menu? (reverse items) items)]
@@ -427,8 +427,9 @@
 (defn header [v]
   (let [route (rf/subscribe [:kee-frame/route])
         scroll-pos (rf/subscribe [:scroll-pos])
-        {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
-        marg (when-not mobile? (if menu-caption? "14rem" (if right-menu? "5rem" "4rem")))]
+        {:keys [hidden-menu? right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
+        marg (when-not hidden-menu?
+               (when-not mobile? (if menu-caption? "14rem" (if right-menu? "5rem" "4rem"))))]
     (when-let [route @route]
       [:div.fixed.top-0.noprint.inset-x-0.h-16.pointer-events-none
        {:style {:margin-left  (when-not right-menu? marg)
@@ -560,7 +561,7 @@
                               (set-ref js/document a scroll-fn))
        :reagent-render
        (fn [r _ & contents]
-         (let [{:keys [right-menu? mobile? menu-caption?]} @geo]
+         (let [{:keys [right-menu? mobile? menu-caption? hidden-menu?]} @geo]
            [:<>
             ;popups
             [:div.noprint
@@ -569,16 +570,29 @@
              [booking.modals.slideout/render]
              [booking.modals.commandpalette/window-anchor]]
 
-            (let [marg (if right-menu? (if menu-caption? :sm:mr-56 :sm:mr-16)
-                                       (if menu-caption? :sm:ml-56 :sm:ml-16))
-                  field-width (if menu-caption? :sm:w-56 :sm:w-16)]
-              (if right-menu?
+            (let [marg (if hidden-menu?
+                         :sm:mx-0
+                         (if right-menu? (if menu-caption? :sm:mr-56 :sm:mr-16)
+                                         (if menu-caption? :sm:ml-56 :sm:ml-16)))
+                  field-width (if hidden-menu?
+                                nil
+                                (if menu-caption? :sm:w-56 :sm:w-16))]
+              (cond
+                hidden-menu?
+                [:div
+                 [:div#inner-document {:class [marg]} contents]
+                 #_[:div.fixed.top-0.bottom-0.left-0.hidden.sm:block.noprint
+                    {:class [field-width :print:hidden]
+                     :style {:left 0}}
+                    [vertical-toolbar false]]]
+                right-menu?
                 [:div
                  [:div#inner-document {:class [marg]} contents]
                  [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
                   {:class [field-width]
                    :style {:right 0}}
                   [vertical-toolbar true]]]
+                :else
                 [:div
                  [:div#inner-document {:class [marg]} contents]
                  [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint

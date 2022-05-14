@@ -434,7 +434,7 @@
   (let [route @(rf/subscribe [:kee-frame/route])
         user-uid (rf/subscribe [:lab/uid])
         ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
-    [:div.p-2.noprint {:style {:background-color "var(--toolbar-)"}}
+    [:div.p-2.noprint {:style {:background-colorx "var(--toolbar-)"}}
      [:div.z-1.rounded-top
       {:style {:border-radius "var(--radius-1)"
                ;:border-top-right-radius "var(--radius-2)"

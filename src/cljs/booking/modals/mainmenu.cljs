@@ -33,12 +33,14 @@
   (let [current-page (some-> r :data :name)]
     (if (= :r.oversikt current-page)
       [:item {:icon     ico/new-home
+              :class    :taller
               :style    {:color "var(--text1)"}
               :label    "Forsiden"
               :action   #(rf/dispatch [:app/navigate-to [:r.forsiden]])
               :disabled false
               :value    #()}]
       [:item {:icon      ico/new-home
+              :class     :taller
               :style     {:color         "var(--gray-1)"
                           :background    "var(--brand1)"
                           :margin        "-4px"
@@ -54,6 +56,7 @@
   (let [current-page (some-> r :data :name)
         username-or-fakename (rf/subscribe [:lab/username-or-fakename])]
     [:item {:icon      ico/user
+            ;:class :taller
             :label     [sc/col
                         [sc/text1 {:style {:font-size "var(--font-size-2)"}} "Mine opplysninger"]
                         [sc/small1 @username-or-fakename]]
@@ -64,6 +67,7 @@
 
 (defn item=search []
   [:item {:icon      (sc/icon ico/commandPaletteClosed)
+          :class     :taller
           :style     {:color "var(--brand1)"}
           :label     "Hva kan jeg gjøre?"
           :stay-open true
@@ -71,14 +75,15 @@
           :action    #(rf/dispatch [:app/toggle-command-palette])}])
 
 (defn item=more-buttons []
-  [:toggle {:disabled  true
-            :stay-open true
-            :content   (fn [_]
-                         [:div.w-full
-                          [schpaa.style.hoc.toggles/stored-toggle :lab/toggle-chrome "Flere knapper"
-                           (fn [t c]
-                             [:div.flex.justify-between.items-center.w-full.gap-2.h-12x
-                              [sc/text1 c] t])]])}])
+  [:toggle
+   {:disabled  true
+    :stay-open true
+    :content   (fn [_]
+                 [:div.w-full
+                  [schpaa.style.hoc.toggles/stored-toggle :lab/toggle-chrome "Flere knapper"
+                   (fn [t c]
+                     [:div.flex.justify-between.items-center.w-full.gap-2.h-12x
+                      [sc/text1 c] t])]])}])
 
 (defn item=show-pictures []
   [:toggle {:disabled  true
@@ -119,18 +124,18 @@
 
 (defn item=dark-light-mode-selector []
   [:div
-   [:div.-m-1xx
-    {:style {:background "var(--brand1)"}}
+   [:div
+    {:style {:background "var(--toolbar-)"}}
     [sc/row-std {:style {:width "100%"}}
-     [sc/title {:style {:margin-left "1rem"
-                        :color       "var(--text0-copy)"}} [:span.font-bold "Eykt"] " / NRPK"]
+     [sc/title1 {:style {:margin-left "1rem"
+                         :color       "var(--text0)"}} "eykt.nrpk.no"]
      [schpaa.style.hoc.toggles/dark-light-toggle :app/dark-mode ""
       (fn [t c]
         [:div.flex.justify-between.items-center.w-full.gap-2.ml-12.mr-4.h-16
          [sc/text1 c] t])]]]])
 
 (defn item=switch-position []
-  [:item {:label     "Plasser sidelinjen på den andre siden av skjermen"
+  [:item {:label     "Speilvendt plassering"
           :action    #(schpaa.state/toggle :lab/menu-position-right)
           :stay-open true}])
 
@@ -141,7 +146,7 @@
   (let [reg? @(rf/subscribe [:lab/at-least-registered])]
     (remove nil?
             [(item=dark-light-mode-selector)
-             [:space]
+             ;[:space]
              (item=forsiden-oversikt r)
              (when reg? (item=mine-opplysninger r))
              (item=search)
@@ -157,7 +162,7 @@
              (item=show-pictures)
              (when goog.DEBUG (item=state))
 
-             #_[:space]
+             [:space]
              #_(item=dark-light-mode-selector)])))
 
 (def zero-width-space-props
@@ -177,7 +182,7 @@
           :type     :button
           :class    [:large]
           :style    {:color "var(--text0)"}}
-         [sc/icon (if open? ico/closewindow ico/menu)]]]
+         [sc/icon-large (if open? ico/closewindow ico/menu)]]]
 
        [ui/transition
         {:show open?}
@@ -209,7 +214,7 @@
 
 (defn main-menu [r]
   (r/with-let [mainmenu-visible (rf/subscribe [:lab/menu-open])]
-    ;this is just a button
+    ;this is just a button                     
     [settings-dialog
      [scm/settings-floating
       {:data       (mainmenu-definitions r)
