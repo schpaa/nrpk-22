@@ -419,10 +419,11 @@
          badge-view-fn
          (fn [{:keys [id returned number datum slot]}]
            [deleted-item::style
-            [sc/row-sc-g1
+            [sc/row
              [widgets/badge
               {:on-click #(open-modal-boatinfo {:data (assoc datum :id id)})
                :class    [class
+                          :right-square
                           :whitespace-nowrap
                           (when-not (:boat-type datum) :active)
                           :big (when-not returned :in-use)]}
@@ -469,7 +470,8 @@
                     [g-area "time"
                      [sc/title1 {:class [:tracking-tight :tabular-nums]} start-time]])
                   [g-area "edit" [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
-                  [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]
+                  (when (t/= (t/date date) (t/today))
+                    [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]])
                   [g-area "content" [boat-badges db deleted-item::style boats :small]]]
                  [logg-listitem-grid
                   (when (some #{@selector} [:a :b])
@@ -490,9 +492,8 @@
                      (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
                      [badges deleted-item::style m]])
 
-
                   ;graph
-                  (if (= :b @selector)
+                  (if (and (t/= (t/date date) (t/today)) (= :b @selector))
                     [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]])
 
                   ;badges

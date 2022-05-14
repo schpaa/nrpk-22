@@ -426,10 +426,9 @@
 
 (defn header [v]
   (let [route (rf/subscribe [:kee-frame/route])
-        scroll-pos (rf/subscribe [:scroll-pos])
         {:keys [hidden-menu? right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         marg (when-not hidden-menu?
-               (when-not mobile? (if menu-caption? "14rem" (if right-menu? "5rem" "4rem"))))]
+               (when-not mobile? (if menu-caption? "14rem" "4rem")))]
     (when-let [route @route]
       [:div.fixed.top-0.noprint.inset-x-0.h-16.pointer-events-none
        {:style {:margin-left  (when-not right-menu? marg)

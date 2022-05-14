@@ -71,7 +71,10 @@
             [:span.inline-block.align-middle
              (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
             [ui/transition-child
-             {:class       (conj ["inline-block align-middle text-left"]
+             {:style       {
+                            :box-shadow "var(--shadow-6)"}
+
+              :class       (conj ["inline-block align-middle text-left"]
                                  [(o/classname sc/inner-dlg)])
               :enter       "ease-out transition-opacity transition-transform transform duration-200 "
               :enter-from  "opacity-0 -translate-y-32"

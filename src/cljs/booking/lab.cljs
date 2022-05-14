@@ -192,25 +192,24 @@
 
        [:div {:style {:display               :grid
                       :grid-gap              "var(--size-2)"
-                      :grid-template-columns "repeat(auto-fit,minmax(10rem,1fr)"}}
+                      :grid-template-columns "repeat(auto-fit,minmax(18rem,1fr)"}}
         (into [:<>]
               (for [[[kind] & r] data #_(sort-by (comp :number val) < data)]
                 [:<>
-                 [sc/title {:style {:height      "4rem"
-                                    :display     :flex
-                                    :align-items :end
-                                    :grid-column "1/-1"}} (schpaa.components.views/normalize-kind kind)]
+                 [sc/title1 {:style {:height      "4rem"
+                                     :display     :flex
+                                     :align-items :end
+                                     :grid-column "1/-1"}} (schpaa.components.views/normalize-kind kind)]
                  (for [z r
                        v (sort-by :navn (map val z))
                        :let [navn (:navn v)
                              id (:id v)]]
                    [sc/row-sc-g4
-                    [widgets/badge {:class    []
-                                    :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})} (:number v)]
+                    [sc/row-sc {:style {:gap 0}}
+                     [widgets/badge {:class    [:right-square]
+                                     :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})} (:number v)]
+                     [widgets/badge {:class [:slot]} (:slot v)]]
                     [sc/text1 navn]])]))
-
-
-
 
         ;for history
         #_(doall (for [[type data] (group-by :type card-data-v2)]

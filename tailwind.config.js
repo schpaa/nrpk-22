@@ -35,7 +35,7 @@ module.exports = {
                 },
             },
             hbounce: {
-                '0%, 100%': {
+                '0%': {
                     transform: 'translateX(0%)',
                     animationTimingFunction: 'cubic-bezier(0.8,0,1,1)',
                 },

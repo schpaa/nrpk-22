@@ -655,8 +655,18 @@
                                      [:div.flex.items-center.justify-center
                                       {:class [:h-full]}
                                       [sc/icon-large
-                                       {:style {:color "var(--text1)"}}
-                                       (if complete? ico/check (if (and (not mobile?) left-side?) ico/arrowRight' ico/arrowLeft'))]])]
+                                       {:style (conj {:color "var(--text1)"}
+                                                     (when-not complete?
+                                                       {;:animation-duration        "2s"
+                                                        ;:animation-iteration-count "infinite"
+                                                        ;:animation-delay           "4s"
+                                                        :animation "2s var(--animation-shake-x) 2s infinite"}))}
+                                       (if complete?
+                                         ico/check
+                                         (if (and (not mobile?)
+                                                  left-side?)
+                                           ico/arrowRight'
+                                           ico/arrowLeft'))]])]
                        (mapv f [["child" [children-slider c-children]]
                                 ["juvenile" [juveniles-slider c-juveniles]]
                                 ["moon" [moon-toggle c-moon]]
@@ -748,6 +758,8 @@
              (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
             [ui/transition-child
              {
+              :style       {:outline    "4px solid var(--text0-copy)"
+                            :box-shadow "var(--shadow-3)"}
               :class       [:inline-block :align-middle :text-left :transform
                             (o/classname sc/inner-dlg)]
               :enter       "ease-in-out duration-200"

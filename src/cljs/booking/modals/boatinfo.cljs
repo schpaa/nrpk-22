@@ -217,8 +217,9 @@
               {:keys [id boat-type slot location description number on-star-click] :as data}]
   [sc/col-space-4
    [sc/row-sc-g2
-    [sc/badge-2 {:class [:big]} number]
-    [sc/badge-2 {:class [:slot]} (str/trim (str slot))]
+    [sc/row
+     [sc/badge-2 {:class [:big :right-square]} number]
+     [sc/badge-2 {:class [:slot]} (str/trim (str slot))]]
     [widgets/stability-name-category data]
     [:div.grow]
     [widgets/favourites-star
@@ -229,12 +230,13 @@
     [widgets/dimensions-and-material data]
     [sc/col-space-4
      [sc/text0 description]
+
+     [sc/text1 "Plassert på " (widgets/location location)]
+
      [sc/col-space-1
       [sc/surface-ab
        [sc/row-sc-g2 [sc/small {:style {:user-select :all}} boat-type] [sc/small "(type)"]]
-       [sc/row-sc-g2 [sc/small {:style {:user-select :all}} id] [sc/small "(id)"]]]]
-
-     [sc/text1 "Plassert på " (widgets/location location) ", stativ " slot]]
+       [sc/row-sc-g2 [sc/small {:style {:user-select :all}} id] [sc/small "(id)"]]]]]
 
     (when -debug [l/pre data])]])
 

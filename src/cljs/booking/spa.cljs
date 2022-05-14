@@ -460,12 +460,13 @@
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
    :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
-   :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn [] [sc/col
-                                                          (for [e (range 30)]
-                                                            [sc/text1 {:class [:tabular-nums]}
-                                                             (let [n (.toString e 2)
-                                                                   c (- 8 (count n))]
-                                                               (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
+   :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn []
+                                                    [sc/col
+                                                     (for [e (range 30)]
+                                                       [sc/text1 {:class [:tabular-nums]}
+                                                        (let [n (.toString e 2)
+                                                              c (- 8 (count n))]
+                                                          (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
