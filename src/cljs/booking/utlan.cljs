@@ -32,8 +32,8 @@
                    :justify-content :between
                    :width           "100%"}}
      t
-     [sc/badge-2 {:class [:big (when-not v :in-use)]} number]
-     [sc/badge-2 {:class [:slot]} slot]
+     [widgets/badge
+      {:class [:big (when-not v :in-use)]} number slot]
      [sc/co-field {:style {:flex "1"}}
       [sc/text2 navn]
       [sc/title1 (schpaa.components.views/normalize-kind kind)]
@@ -52,7 +52,6 @@
     (r/with-let [st (r/atom initial)]
       [sc/dropdown-dialog'
        [sc/col-space-8 {:class [:pt-8]}
-
         [sc/col-space-4
          (let [f (fn [[k v]]
                    (let [m (get @db k)

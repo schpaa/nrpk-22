@@ -128,13 +128,11 @@
 
 (defn vertical-toolbar-definitions []
   (let [uid @(rf/subscribe [:lab/uid])
+        {:keys [right-menu? menu-caption?]} @(rf/subscribe [:lab/screen-geometry])
         presence (rf/subscribe [::db/presence-status])
         admin? (rf/subscribe [:lab/admin-access])
         member? (rf/subscribe [:lab/member])
         ipad? (= uid @(db/on-value-reaction {:path ["system" "active"]}))
-        booking? (rf/subscribe [:lab/booking])
-        right-side? (schpaa.state/listen :lab/menu-position-right)
-        with-caption? (schpaa.state/listen :app/toolbar-with-caption)
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
@@ -172,19 +170,14 @@
 
      (when (or @admin? @nokkelvakt ipad?)
        {:icon         ico/mystery1
-        #_#_:badge (fn [] {:value 2
-                           :attr  {:style {:background-color "var(--floating)"
-                                           :color            "var(--text1)"}}})
         :disabled     false
         :caption      "Utlån Nøklevann"
         :default-page :r.utlan
-        ;:page-name :r.utlan
         :page-name    #(some #{%} [:r.utlan :r.båtliste.nøklevann])
         :class        #(if (= % :r.utlan) :selected :oversikt)
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])
-        #_#_:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]] #_[:lab/toggle-boatpanel])})
+        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])})
 
-     (when (or @admin? @nokkelvakt #_(not ipad?))
+     (when (or @admin? @nokkelvakt)
        {:icon-fn      (fn [] (sc/icon-large ico/nokkelvakt))
         :on-click     #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
         :default-page :r.nokkelvakt
@@ -195,7 +188,7 @@
         :on-click     #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
         :default-page :r.yearwheel
         :page-name    :r.yearwheel})
-     #_:space
+
      #_(when (or @admin? @nokkelvakt)
          {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
                               [centered-thing (sc/icon-large (if @left-side?
@@ -223,28 +216,24 @@
         :class        #(if (= % :r.presence) :selected :oversikt)
         :page-name    #(some #{%} [:r.users :r.presence])})
      {:tall-height true
-      ;:default-page :r.forsiden
-      ;:page-name :r.forsiden
       :caption     "Hva kan jeg gjøre?"
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
                             (sc/icon-large
                               (if @st ico/commandPaletteClosed ico/commandPaletteOpen))))
       :on-click    #(rf/dispatch [:app/toggle-command-palette])}
      {:tall-height       true
-      :opposite-icon-fn  (fn [] (let [st @right-side?]
-                                  (sc/icon-large
-                                    {:style {:color "var(--brand2)"}}
-                                    (if st ico/arrowLeft ico/arrowRight))))
+      :opposite-icon-fn  (fn [] (sc/icon-large
+                                  {:style {:color "var(--brand2)"}}
+                                  (if right-menu? ico/arrowLeft ico/arrowRight)))
       :opposite-on-click (fn [] (schpaa.state/toggle :lab/menu-position-right))
-      :icon-fn           (fn [] (let [with-caption? @(schpaa.state/listen :app/toolbar-with-caption)]
-                                  (sc/icon-large
-                                    (if with-caption?
-                                      (if right-side?
-                                        ico/panelOpen
-                                        ico/panelClosed)
-                                      (if right-side?
-                                        ico/panelClosed
-                                        ico/panelOpen)))))
+      :icon-fn           (fn [] (sc/icon-large
+                                  (if menu-caption?
+                                    (if right-menu?
+                                      ico/panelClosed
+                                      ico/panelOpen)
+                                    (if right-menu?
+                                      ico/panelOpen
+                                      ico/panelClosed))))
 
       :on-click          #(schpaa.state/toggle :app/toolbar-with-caption)}]))
 
