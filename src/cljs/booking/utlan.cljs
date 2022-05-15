@@ -18,7 +18,7 @@
 
 ;; store
 
-(def store (r/atom {:selector :b}))
+(def store (r/atom {:selector :c}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -243,8 +243,8 @@
 ;; components
 
 (defn timegraph [start end to now]
-  (let [session-start (if (some #{(t/int (t/day-of-week start))} [5 6]) (* 4 11) (* 4 18))
-        session-end (if (some #{(t/int (t/day-of-week start))} [5 6]) (* 4 17) (* 4 21))
+  (let [session-start (if (some #{(t/int (t/day-of-week start))} [6 7]) (* 4 11) (* 4 18))
+        session-end (if (some #{(t/int (t/day-of-week start))} [6 7]) (* 4 17) (* 4 21))
         now (+ (* 4 (t/hour now))
                (quot (t/minute now) 15))
         start (if (and end
@@ -419,20 +419,15 @@
          badge-view-fn
          (fn [{:keys [id returned number datum slot]}]
            [deleted-item::style
-            [sc/row
-             [widgets/badge
-              {:on-click #(open-modal-boatinfo {:data (assoc datum :id id)})
-               :class    [class
-                          :right-square
-                          :whitespace-nowrap
-                          (when-not (:boat-type datum) :active)
-                          :big (when-not returned :in-use)]}
-              [sc/row-sc-g2
-               (or number (str (some-> id name) " (ny)"))
-               (when slot
-                 [widgets/badge
-                  {:class [class :slot :whitespace-nowrap]}
-                  slot])]]]])]
+            [widgets/badge
+             {:on-click #(open-modal-boatinfo {:data (assoc datum :id id)})
+              :class    [class
+                         :big
+                         :whitespace-nowrap
+                         (when-not (:boat-type datum) :active)
+                         (when-not returned :in-use)]}
+             (or number (str (some-> id name)))
+             slot]])]
      (map badge-view-fn (sort-by :number < (map prepared (remove nil? boats)))))])
 
 (defn g-area [grid-area content]
@@ -473,6 +468,7 @@
                   (when (t/= (t/date date) (t/today))
                     [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]])
                   [g-area "content" [boat-badges db deleted-item::style boats :small]]]
+
                  [logg-listitem-grid
                   (when (some #{@selector} [:a :b])
                     [g-area "badges" [sc/row-sc-g4

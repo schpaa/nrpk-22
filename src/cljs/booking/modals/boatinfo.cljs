@@ -217,9 +217,10 @@
               {:keys [id boat-type slot location description number on-star-click] :as data}]
   [sc/col-space-4
    [sc/row-sc-g2
-    [sc/row
-     [sc/badge-2 {:class [:big :right-square]} number]
-     [sc/badge-2 {:class [:slot]} (str/trim (str slot))]]
+    [widgets/badge
+     {:class [:big :right-square]}
+     number
+     slot]
     [widgets/stability-name-category data]
     [:div.grow]
     [widgets/favourites-star

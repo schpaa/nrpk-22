@@ -9,7 +9,8 @@
             [db.core :as db]
             [booking.ico :as ico]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [booking.utlan]))
+            [booking.utlan]
+            [schpaa.debug :as l]))
 
 (defonce settings
          (r/atom {:rent/show-details    false
@@ -143,8 +144,10 @@
              show-deleted? @(rf/subscribe [:booking/common-show-deleted])
              db @(rf/subscribe [:db/boat-db])
              lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
-                                             (map (juxt key (comp :number val)))))]
+                                             ;(map (juxt key (comp :number val) (comp :slot val)))
+                                             (map (fn [[k v]] [k [(:number v) (:slot v)]]))))]
          [sc/col-space-8
+          ;[l/pre lookup-id->number]
           [sc/col-space-1
            (into [:<>]
                  (for [[k {:keys [test start end alias list deleted] :as m}]
@@ -200,9 +203,11 @@
                                       (str end))]]))]]
                             [(map (fn [[id returned]]
                                     (let [returned (not (empty? returned))
-                                          number (get lookup-id->number (keyword id) (str " ? " id))]
-                                      (sc/badge-2 {:class    [:big #_(if-not returned :in-use)]
-                                                   :on-click #(open-modal-boatinfo
-                                                                {:uid  loggedin-uid
-                                                                 :data (get db (keyword id))})} number)))
+                                          [number slot] (get lookup-id->number (keyword id) (str " ? " id))]
+                                      (widgets/badge {:class    [:big #_(if-not returned :in-use)]
+                                                      :on-click #(open-modal-boatinfo
+                                                                   {:uid  loggedin-uid
+                                                                    :data (get db (keyword id))})}
+                                                     number
+                                                     slot)))
                                   (remove nil? boats))]))]))]]))}))

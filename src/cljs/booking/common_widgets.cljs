@@ -414,8 +414,10 @@
 (defn location [l]
   (if (= "0" (str l)) "Nøklevann" "Sjøbasen"))
 
-(defn badge [attr n]
-  [sc/badge-2 attr n])
+(defn badge [attr n v]
+  [sc/row
+   [sc/badge-2 (update attr :class conj :right-square :regular) n]
+   [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]])
 
 (defn pillbar
   ([c vs]

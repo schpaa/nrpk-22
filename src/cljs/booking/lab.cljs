@@ -16,7 +16,8 @@
             [booking.qrcode]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.common-widgets :as widgets]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [clojure.string :as str]))
 
 ;region temporary, perhaps for later
 
@@ -202,13 +203,18 @@
                                      :grid-column "1/-1"}} (schpaa.components.views/normalize-kind kind)]
                  (for [z r
                        v (sort-by :navn (map val z))
-                       :let [navn (:navn v)
+                       :let [number (:number v)
+                             in-use? (if (= 1 (rand-int 2)) :in-use)
+                             navn (:navn v)
                              id (:id v)]]
                    [sc/row-sc-g4
                     [sc/row-sc {:style {:gap 0}}
-                     [widgets/badge {:class    [:right-square]
-                                     :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})} (:number v)]
-                     [widgets/badge {:class [:slot]} (:slot v)]]
+                     [widgets/badge
+                      {:class    [:right-square in-use?]
+                       :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                      number
+                      (str/trim (:slot v))]]
+
                     [sc/text1 navn]])]))
 
         ;for history

@@ -118,12 +118,14 @@
                                       :flex-wrap       :wrap}}
              (into [:<>]
                    (for [[k v] (sort-by (comp :number val) < group)]
-                     [sc/badge-2 {:class    [:big (when (pos? (:location v)) :invert)]
-                                  :style    {:font-size "unset"
-                                             :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
-                                  :on-click #(open-modal-boatinfo
-                                               {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})}
-                      (:number v)]))])]]
+                     [widgets/badge
+                      {:class    [:big (when (pos? (:location v)) :invert)]
+                       :style    {:font-size "unset"
+                                  :transform (str "rotate(" (- 1.5 (rand-int 3)) "deg)")}
+                       :on-click #(open-modal-boatinfo
+                                    {:data (assoc (get @(rf/subscribe [:db/boat-db]) (keyword k)) :id (keyword k))})}
+                      (:number v)
+                      (:slot v)]))])]]
         [:div.flex.justify-between.gap-4
 
          [sc/col-space-8
@@ -205,13 +207,14 @@
 
 (defn arbeidsliste []
   (let [card (fn [[boat-item-id
-                   {:keys [number boat-type work-log] :as v}]]
+                   {:keys [number slot boat-type work-log] :as v}]]
                [sc/co {:class []}
                 [sc/row-sc-g4-w
                  [widgets/badge
                   {:on-click #(open-modal-boatinfo {:data v})
                    :class    [:big]}
-                  (or number boat-item-id "ingen")]
+                  (or number boat-item-id "ingen")
+                  slot]
                  [widgets/stability-name-category v]]
                 [small-grid
                  (for [[worklog-entry-id {:keys [deleted complete] :as v}] work-log
