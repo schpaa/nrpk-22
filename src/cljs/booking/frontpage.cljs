@@ -540,7 +540,8 @@
                      (if @reg? :bottom-toolbar)]}
 
             [:div.min-h-full.z-0
-             {:style {:min-height "100vh"}}
+             {:style {:min-height     "100vh"
+                      :padding-bottom "8rem"}}
              ;debug
              (when (and goog.DEBUG @master-emulation)
                [:div.max-w-lg.mx-auto
@@ -559,7 +560,7 @@
 
              [sc/col-space-8
               {:style {:max-width "min(calc(100% - 2rem), 56ch)"}
-               :class [:mx-auto :min-h-full :pb-8]}
+               :class [:mx-auto :min-h-full :xpb-8]}
               [sc/col-space-8
                (when-not @reg?
                  [please-login-and-register])

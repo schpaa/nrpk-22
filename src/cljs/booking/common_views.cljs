@@ -623,7 +623,7 @@
     (str "calc(100vh - " (if h 11 4) "rem)")))
 
 (defn- render-frontpage [r {:keys [render]} v]
-  [render r])
+  [:div {:style {:padding-block "8rem"}} [render r]])
 
 (defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
@@ -636,7 +636,7 @@
        (cond
          render
          [sc/col-space-8
-          {:style {:padding-top   "8rem"
+          {:style {:padding-block "8rem"
                    :margin-inline "auto"
                    :min-height    "100vh"
                    :max-width     "min(calc(100% - 2rem), 56ch)"}}
