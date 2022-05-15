@@ -331,7 +331,7 @@
                                  {:path  ["activity-22" (name k)]
                                   :value {:deleted (not deleted)}})) m])
    (if edit-mode?
-     [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel]) m])
+     [widgets/edit {:disabled false} #(rf/dispatch [:lab/toggle-boatpanel [k m]]) m])
 
    [hoc.buttons/pill {:class    [:w-20
                                  :narrow
@@ -526,7 +526,7 @@
    [sc/row-center {:class  [:py-4]
                    :stylex {:background-color "var(--content)"}}
     [hoc.buttons/cta-pill-icon
-     {:on-click #(rf/dispatch [:lab/toggle-boatpanel])}
+     {:on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
      ico/plus "Nytt utlån"]
     [hoc.buttons/danger-pill
      {:disabled true

@@ -19,8 +19,8 @@
                                               :keyCode keycodes/M}]]
                    [[:app/toggle-dark-mode] [{:metaKey true
                                               :keyCode keycodes/M}]]
-                   [[:lab/toggle-boatpanel] [{:ctrlKey true
-                                              :keyCode keycodes/E}]]
+                   [[:lab/toggle-boatpanel nil] [{:ctrlKey true
+                                                  :keyCode keycodes/E}]]
                    #_[[:lab/toggle-number-input] [{:metaKey true
                                                    :keyCode keycodes/E}]]
                    #_[[:lab/toggle-search-mode] [{:ctrlKey true

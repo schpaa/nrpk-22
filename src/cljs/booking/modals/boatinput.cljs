@@ -74,10 +74,21 @@
                                       [(:number v)
                                        (assoc (select-keys v [:boat-type :number :navn :kind :star-count :stability :material :weigth :length :width]) :id k)])))))
 
+(rf/reg-sub :rent/id-lookup :<- [:db/boat-db] :-> identity)
+
 (defn lookup [id]
   ;todo define as defonce
   (let [data @(rf/subscribe [:rent/lookup])]
     (get data id)))
+
+(defn lookup-id [id]
+  (let [id (if (keyword? id) id (keyword id))
+        data @(rf/subscribe [:db/boat-db])]
+    (get data id)))
+
+
+(comment
+  (lookup-id :-MeAStzi0016B5sFIxvR))
 
 (defn key-clicked [c-textinput value]
   ;if some in the list matches this number, make it selected
@@ -297,7 +308,7 @@
 ;endregion
 
 (defn f [a & b]
-  [sc/co {:style {:padding-inline "4px"}}
+  [sc/co
    [sc/ptitle1 a]
    [sc/ptext b]])
 
@@ -371,20 +382,20 @@
                  (repeat (- 4 m) [sc/badge {:class [:disabled]}]))])))])
 
 (defn- info-panel [has-focus? {:keys [new number navn] :as boat}]
-  [:div.-mx-2.-mt-2.p-2
+  [:div.p-1
    {:style (when (and has-focus? boat)
              {:background-color "var(--selected)"
               :color            "var(--selected-copy)"})
     :class [:flex :items-end :h-16]}
    (cond
      (some #{@c-textinput-boat} (map str (keep :number (filter :new @c-boat-list))))
-     [f "allerende" "i listen"]
+     [f "Skriv et annet båtnr" (str @c-textinput-boat " finnes fra før i listen din")]
 
      (and (nil? boat) @c-textinput-boat (= 3 (count @c-textinput-boat)))
      [f (str @c-textinput-boat " finnes ikke") "Lage den nå?"]
 
      (nil? boat)
-     [f "" "Båtnummer (3 siffer)"]
+     [f "Båtnummer (3 siffer)" "Båtnr som ikke finnes blir laget"]
 
      new
      [f number navn]
@@ -442,12 +453,11 @@
       :class    [:h-full (when has-focus? :focused) :overflow-clip]
       :style    {:display               :grid
                  :column-gap            "var(--size-4)"
+                 :row-gap               "var(--size-4)"
                  :grid-template-columns "repeat(4,1fr)"}}
      [sc/co {:class [:col-span-4]
              :style {:grid-column "1/-1"
                      :grid-row    "1/2"}}
-
-
       [info-panel has-focus? (or boat
                                  (if @c-selected
                                    {:new    true
@@ -456,7 +466,8 @@
                                    nil))]
 
       [:div {:style {:width      :100%
-                     :column-gap "var(--size-1)"
+                     :column-gap "var(--size-2)"
+                     ;:row-gap            "var(--size-4)"
                      :display    :grid :grid-template-columns "repeat(4,1fr)"}}
        (if (and boat (= 3 (count @c-textinput-boats)))
          [add-button st c-textinput-boats boat]
@@ -604,105 +615,121 @@
 
 ;endregion
 
-(defn boatpanel-window [mobile? left-side?]
+(defn boatpanel-window [mobile? left-side? datas]
   (let [ref (r/atom nil)
         user-uid (rf/subscribe [:lab/uid])
         nøkkelnummer (subs (str (:nøkkelnummer (user.database/lookup-userinfo @user-uid))) 4 7)
         ipad? (= @user-uid
                  @(db/on-value-reaction {:path ["system" "active"]}))]
     (r/create-class
-      {:component-did-mount
+      {:component-did-update
+       (fn [this old-argv old-state snapshot]
+         (tap> {:component-did-update this
+                :old-argv             old-argv
+                :old-state            old-state
+                :datas                datas
+                :snapshot             snapshot}))
+
+       :component-did-mount
        (fn [_]
-         (tap> nøkkelnummer)
-         (reset! c-textinput-phone nøkkelnummer)
-         (reset! c-focus (if ipad? :phone :boats)))
+         (if-let [[k v] datas]
+           (do
+             (reset! c-adults (:adults v 0))
+             (reset! c-juveniles (:juveniles v 0))
+             (reset! c-children (:children v 0))
+             (reset! c-moon (:moon v))
+             (reset! c-litteral-key (:havekey v))
+             (reset! c-textinput-phone (:phone v))
+             (reset! c-boat-list
+                     (mapv (fn [[k _v]]
+                             (if-some [r (lookup-id k)]
+                               (select-keys r [:description :navn :number :kind :id])
+                               {:new    true
+                                :number (name k)})) (:list v)))
+             (reset! c-moon (:moon v)))
+
+           (if ipad?
+             (do
+               (reset! c-textinput-phone nil))
+             (do
+               (reset! c-textinput-phone nøkkelnummer)
+               (reset! c-focus (if ipad? :phone :boats))))))
+
        :reagent-render
-       (fn [_]
+       (fn [mobile? left-side? datas]
          [sc/row
+          {:tab-index 0
+           :class     (if mobile?
+                        [:outline-none
+                         :h-full :flex :flex-col :justify-end]
+                        [:outline-none
+                         :focus:outline-none])
+           :ref       (fn [e]
+                        (when-not @ref
+                          (.addEventListener e "keydown" keydown-f)
+                          (.focus e)
+                          (reset! ref e)))}
+          [bis/panel
+           {:style {:padding "var(--size-2)"}
+            :class [(cond
+                      mobile? :mobile
+                      left-side? :right-side
+                      :else :left-side)]}
 
-          (when debug
-            [sc/col-space-1
-             {:style {:width "20rem"}}
-             [l/pre @c-boat-list]
-             [l/pre (remove (comp not :new) @c-boat-list)]
-             [l/pre @c-selected]
-             [l/pre @st]])
-          ;[l/pre @st]
-          ;[l/pre (actions/prepare-data @user-uid (t/now) @st)]])
+           (doall (concat
+                    (let [f (fn [[area-name component]]
+                              [:div {:style {:grid-area area-name}} component])
+                          pointer (fn [complete?]
+                                    [:div.flex.items-center.justify-center
+                                     {:class [:h-full]}
+                                     [sc/icon-large
+                                      {:style (conj {:color "var(--text1)"}
+                                                    (when-not complete?
+                                                      {;:animation-duration        "2s"
+                                                       ;:animation-iteration-count "infinite"
+                                                       ;:animation-delay           "4s"
+                                                       :animation "2s var(--animation-shake-x) 2s infinite"}))}
+                                      (if complete?
+                                        ico/check
+                                        (if (and (not mobile?)
+                                                 left-side?)
+                                          ico/arrowRight'
+                                          ico/arrowLeft'))]])]
+                      (mapv f [["child" [children-slider c-children]]
+                               ["juvenile" [juveniles-slider c-juveniles]]
+                               ["moon" [moon-toggle c-moon]]
+                               ["key" [litteralkey-toggle c-litteral-key]]
+                               ["adult" [adults-slider c-adults]]
+                               ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
+                               ["boats" [selected-boats st c-focus c-textinput-boat]]
+                               ["numpad" [number-pad st]]
+                               ["check-a" (pointer @(rf/subscribe [::completed-users]))]
+                               ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
+                               ["check-c" (pointer (pos? (count @c-boat-list)))]
+                               ["complete" [complete st]]
+                               #_["prev" [move-to-prev st]]
+                               #_["next" [move-to-next st]]]))))]])})))
 
-          [:div
-           {:tab-index 0
-            :class     (if mobile?
-                         [:outline-none
-                          :h-full :flex :flex-col :justify-end]
-                         [:outline-none
-                          :focus:outline-none])
-            :ref       (fn [e]
-                         (when-not @ref
-                           (.addEventListener e "keydown" keydown-f)
-                           (.focus e)
-                           (reset! ref e)))}
-           [bis/panel
-            {:style {:padding "var(--size-2)"}
-             :class [(cond
-                       mobile? :mobile
-                       left-side? :right-side
-                       :else :left-side)]}
-            (doall (concat
-                     (let [f (fn [[area-name component]]
-                               [:div {:style {:grid-area area-name}} component])
-                           pointer (fn [complete?]
-                                     [:div.flex.items-center.justify-center
-                                      {:class [:h-full]}
-                                      [sc/icon-large
-                                       {:style (conj {:color "var(--text1)"}
-                                                     (when-not complete?
-                                                       {;:animation-duration        "2s"
-                                                        ;:animation-iteration-count "infinite"
-                                                        ;:animation-delay           "4s"
-                                                        :animation "2s var(--animation-shake-x) 2s infinite"}))}
-                                       (if complete?
-                                         ico/check
-                                         (if (and (not mobile?)
-                                                  left-side?)
-                                           ico/arrowRight'
-                                           ico/arrowLeft'))]])]
-                       (mapv f [["child" [children-slider c-children]]
-                                ["juvenile" [juveniles-slider c-juveniles]]
-                                ["moon" [moon-toggle c-moon]]
-                                ["key" [litteralkey-toggle c-litteral-key]]
-                                ["adult" [adults-slider c-adults]]
-                                ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
-                                ["boats" [selected-boats st c-focus c-textinput-boat]]
-                                ["numpad" [number-pad st]]
-                                ["check-a" (pointer @(rf/subscribe [::completed-users]))]
-                                ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
-                                ["check-c" (pointer (pos? (count @c-boat-list)))]
-                                ["complete" [complete st]]
-                                #_["prev" [move-to-prev st]]
-                                #_["next" [move-to-next st]]]))))]]])})))
-
-(defn window-content [{:keys [on-close]}]
-  (let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
-        right? (schpaa.state/listen :lab/menu-position-right)]
-    [:div
-     {:style {:background-color "var(--content)"
-              :border-radius    "var(--radius-2)"
-              :display          :grid
-              :overflow-y       :auto
-              :place-content    :center}}
+(defn window-content
+  ([m]
+   (window-content nil))
+  ([{:keys [on-close]} args]
+   (let [{:keys [:right-menu? :mobile?]} (rf/subscribe [:lab/screen-geometry])]
      [:div
-      {:style {:padding-block "0rem"
-               :width         "auto"
-               :max-height    "90vh"}}
-      [boatpanel-window @mobile? @right?]]]))
+      {:style {:overflow-y :auto
+               :width      "auto"
+               :max-height "90vh"}}
+      [boatpanel-window mobile? right-menu? args]])))
 
 (rf/reg-event-fx :lab/toggle-boatpanel
-                 (fn [_ _]
+                 (fn [_ [_ args]]
                    {:fx [[:dispatch
                           [:modal.boatinput/show
                            {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
-                            :content-fn        #(window-content %)}]]]}))
+                            :mode              (when args :edit)
+                            :content-fn        (fn [e] (if args
+                                                         (window-content e args)
+                                                         (window-content e nil)))}]]]}))
 
 ;region dialog-related
 
@@ -722,22 +749,21 @@
                                           ;(reset! st {})
                                           (assoc db :modal.boatinput/context nil)))
 
-(defn open-boatpanel
-  ""
-  [_]
-  {:fx [[:dispatch
-         [:modal.boatinput/show
-          {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
-           :content-fn        #(window-content %)}]]]})
+#_(defn open-boatpanel
+    ""
+    [_]
+    {:fx [[:dispatch
+           [:modal.boatinput/show
+            {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
+             :content-fn        #(window-content %)}]]]})
 
 (defn render-boatinput
   "centered dialog used by this component"
   []
-  (let [{:keys [context vis close]}
-        {:context @(rf/subscribe [:modal.boatinput/get-context])
-         :vis     (rf/subscribe [:modal.boatinput/is-visible])
-         :close   #(rf/dispatch [:modal.boatinput/close])}
-        {:keys [action on-primary-action click-overlay-to-dismiss content-fn]
+  (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.boatinput/get-context])
+                                     :vis     (rf/subscribe [:modal.boatinput/is-visible])
+                                     :close   #(rf/dispatch [:modal.boatinput/close])}
+        {:keys [action on-primary-action click-overlay-to-dismiss content-fn mode]
          :or   {click-overlay-to-dismiss true}} context]
     (r/with-let [mobile? (rf/subscribe [:breaking-point.core/mobile?])
                  right-side? (schpaa.state/listen :lab/menu-position-right)
@@ -757,9 +783,23 @@
             [:span.inline-block.h-screen.align-middle
              (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
             [ui/transition-child
-             {
-              :style       {:outline    "4px solid var(--text0-copy)"
-                            :box-shadow "var(--shadow-3)"}
+             {:style       (conj
+                             (cond
+                               (= mode :edit) {:box-shadow
+                                               (apply str (interpose ","
+                                                                     [#_"0 0 0px calc(var(--size-2) * 1) var(--blue-9)"
+                                                                      #_"0 0 0px calc(var(--size-2) * 2) var(--blue-8)"
+                                                                      "0 0 0px calc(var(--size-2) * 2) var(--blue-7)"
+                                                                      "0 0 0px calc(var(--size-2) * 3) var(--toolbar-)"
+                                                                      #_"0 0 0px calc(var(--size-2) * 4) var(--blue-6)"]))}
+
+                               :else {:box-shadow (apply str (interpose ","
+                                                                        ["0 0 0px calc(var(--size-2) * 2) var(--brand1)"
+                                                                         "0 0 0px calc(var(--size-2) * 3) var(--toolbar-)"]))
+                                      :outline    :none
+                                      :border     :none})
+                             {:border-radius    "var(--size-2)"
+                              :background-color "var(--toolbar)"})
               :class       [:inline-block :align-middle :text-left :transform
                             (o/classname sc/inner-dlg)]
               :enter       "ease-in-out duration-200"

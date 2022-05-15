@@ -10,7 +10,7 @@
              (gevents/listen source type dispatch)))
 
 (rf/reg-sub :lab/screen-geometry
-            (fn [_] (rf/subscribe [:breaking-point.core/mobile?]))
+            :<- [:breaking-point.core/mobile?]
             (fn [a _]
               {:mobile?       a
                :hidden-menu?  (not @(schpaa.state/listen :lab/toggle-chrome))

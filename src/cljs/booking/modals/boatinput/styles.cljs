@@ -88,7 +88,7 @@
     :sbox-shadow      "var(--inner-shadow-1)"
     :background-color "var(--floating)"                     ;"var(--vener)"
 
-    :border-radius    "var(--radius-1)"}
+    :border-radius    "var(--radius-0)"}
 
    [:&.some {:opacity          1
              :color            "var(--selected-copy)"
@@ -108,14 +108,14 @@
   {:display       :grid
    :background    "var(--floating)"
    :place-content :center
-   :border-radius "var(--radius-1)"})
+   :border-radius "var(--radius-0)"})
 
 
 (o/defstyled panel :div
   [:& :mx-auto
    {:display               :grid
     :column-gap            "var(--size-1)"
-    :row-gap               "var(--size-2)"
+    :row-gap               "var(--size-1)"
     :min-width             "24rem"
     :max-width             "24rem"
     :height                "100%"

@@ -170,7 +170,7 @@
                         :white-space   :nowrap
                         :font-size     "small"}} navn]]
 
-    [sc/ptitle1 (schpaa.components.views/normalize-kind kind)]]])
+    (when kind [sc/ptitle1 (schpaa.components.views/normalize-kind kind)])]])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
