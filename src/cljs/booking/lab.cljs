@@ -72,7 +72,8 @@
 
        (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
          [:form.space-y-1.w-full
-          {:id        form-id
+          {:class     [(when @lightning-visible :shadow-sm)]
+           :id        form-id
            :on-submit handle-submit}
           [booking.views/time-input props false]])])))
 
@@ -174,22 +175,71 @@
                    (let [link @(rf/subscribe [:kee-frame/route])]
                      (booking.qrcode/show link))))
 
-(defn render [r]
-  (let [data (sort-by (comp second first) <
-                      (group-by (comp (juxt :kind) val)
-                                (remove (comp nil? :boat-type val)
-                                        (filter (fn [[k v]] (= "1" (:location v)))
-                                                @(rf/subscribe [:db/boat-db])))))]
-    (r/with-let [settings (r/atom {:setting-1 false
-                                   :setting-2 1
-                                   :selection #{2 5}})
-                 time-state (r/atom nil)
-                 state (r/atom {:expanded #{}
-                                :selected #{100 415}})]
-      [:div.xp-2.space-y-4.relative
+(def store (r/atom {:selector :b}))
 
-       [:div.sticky.top-16
-        [time-input-form time-state]]
+(def selector (r/cursor store [:selector]))
+
+(defn always-panel []
+  [sc/row-center {:class [:py-4 :sticky :top-20 :z-10]}
+   [widgets/pillbar
+    selector
+    [[:a "Type"]
+     [:b "Hylle"]
+     [:c "Merke"]]]])
+
+(defn render [r]
+  (case @selector
+    :c [:div "c?"]
+    :b (let [data (sort-by (comp (juxt last first) #(str/split % #" ") first) <
+                           (group-by (comp last #(str/split % #" ") :slot val)
+                                     (into {}
+                                           (map (fn [[k v]] [k v])
+                                                (remove (comp nil? :boat-type val)
+                                                        (filter (fn [[k v]] (= "1" (:location v)))
+                                                                @(rf/subscribe [:db/boat-db])))))))]
+         [:<>
+          (for [[[a] b] data]
+            [sc/co
+             [sc/title1 (str a)]
+             [:div
+              {:style {:display               :grid
+                       :grid-gap              "var(--size-2)"
+                       :grid-template-columns "repeat(auto-fit,minmax(16rem,1fr)"}}
+              (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
+                [sc/row-sc-g2
+                 [widgets/badge {:class    [:big]
+                                 :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                  number
+                  slot]
+                 [sc/col
+                  [sc/text1 (schpaa.components.views/normalize-kind kind)]
+                  [sc/text0 navn]
+                  #_[sc/text1 description]]])]])
+          ;[l/pre data]
+
+
+          #_(for [[[slot] e] data
+                  [[_k {:keys [navn number description kind] :as v}]] e]
+              [l/pre v]
+              #_[sc/row-sc-g2
+                 [widgets/badge {:class    [:small]
+                                 :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                  number
+                  slot]
+                 [sc/col
+                  [sc/text1 (schpaa.components.views/normalize-kind kind)]
+                  [sc/text0 navn]
+                  [sc/text1 description]]])])
+    :a
+    (let [data (sort-by (comp second first) <
+                        (group-by (comp (juxt :kind) val)
+                                  (remove (comp nil? :boat-type val)
+                                          (filter (fn [[k v]] (= "1" (:location v)))
+                                                  @(rf/subscribe [:db/boat-db])))))]
+      [sc/col-space-4
+
+       #_[:div.sticky.top-16
+          [time-input-form time-state]]
 
        [:div {:style {:display               :grid
                       :grid-gap              "var(--size-2)"
@@ -197,25 +247,24 @@
         (into [:<>]
               (for [[[kind] & r] data #_(sort-by (comp :number val) < data)]
                 [:<>
-                 [sc/title1 {:style {:height      "4rem"
+                 [sc/title1 {:style {:height      "3rem"
                                      :display     :flex
                                      :align-items :end
                                      :grid-column "1/-1"}} (schpaa.components.views/normalize-kind kind)]
                  (for [z r
-                       v (sort-by :navn (map val z))
-                       :let [number (:number v)
-                             in-use? (if (= 1 (rand-int 2)) :in-use)
-                             navn (:navn v)
-                             id (:id v)]]
-                   [sc/row-sc-g4
+                       v (sort-by :slot (map val z))
+                       :let [{:keys [number slot navn description]} v]]
+                   [sc/row-sc-g2
                     [sc/row-sc {:style {:gap 0}}
                      [widgets/badge
-                      {:class    [:right-square in-use?]
+                      {:class    [:small]
                        :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
                       number
-                      (str/trim (:slot v))]]
+                      slot]]
 
-                    [sc/text1 navn]])]))
+                    [sc/col
+                     [sc/text1 navn]
+                     [sc/small description]]])]))
 
         ;for history
         #_(doall (for [[type data] (group-by :type card-data-v2)]
