@@ -27,22 +27,12 @@
           (let [admin? @(rf/subscribe [:lab/admin-access])
                 {:keys [saldo timekrav] :as user} (user.database/lookup-userinfo uid)
                 datas (clojure.walk/stringify-keys @data)
-                data datas ;(mapcat val datas)
-                antall-økter (->> data vals (map vals) flatten count)
-                fullførte-timer (or
-                                  (* 3 antall-økter) 0
-
-                                  #_(when (some? saldo)
-                                      (- saldo timekrav (+ (* 3 antall-økter)))) 0)]
+                antall-økter (->> datas vals (map vals) flatten count)
+                fullførte-timer (or (* 3 antall-økter) 0)]
             [sc/col-space-8
-             ;[l/pre (->> data vals (map vals) flatten count)]
              [beskjeder uid @datum]
-             ;[beskjeder uid @sent]
-             ;[l/pre (path-beskjedersent uid) @sent]
-             #_(for [{:keys [id data]} @sent]
-                 [l/pre id])
              [tilbakemeldinger uid (cached-datasource uid)]
-             [l/pre antall-økter fullførte-timer data]
+             
              (when-not ipad?
                (widgets/disclosure {}
                                    :oversikt/vakter
