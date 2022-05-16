@@ -26,8 +26,8 @@
         (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
           (let [admin? @(rf/subscribe [:lab/admin-access])
                 {:keys [saldo timekrav] :as user} (user.database/lookup-userinfo uid)
-                data (clojure.walk/stringify-keys @data)
-                data (mapcat val data)
+                datas (clojure.walk/stringify-keys @data)
+                data (mapcat val datas)
                 antall-eykter (when (some? saldo)
                                 (- saldo timekrav (- (* 3 (count (seq data))))))]
             [sc/col-space-8
@@ -41,11 +41,13 @@
                 (seq (vakter uid data))
                 (seq [1 2])]
 
+             ;[l/pre datas]
+
              (when-not ipad?
                (widgets/disclosure {}
                                    :oversikt/vakter
                                    "Vakter i '22"
-                                   (vakter uid data)
+                                   (vakter uid datas)
                                    "Ingen vakter"))
              [widgets/personal user]
              (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)

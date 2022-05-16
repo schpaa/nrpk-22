@@ -9,7 +9,8 @@
             [tick.core :as t]
             [schpaa.debug :as l]
             [booking.mine-dine-vakter :refer [path-endringslogg
-                                              path-beskjederinbox]]))
+                                              path-beskjederinbox]]
+            [eykt.calendar.actions :as actions]))
 
 
 
@@ -47,27 +48,50 @@
                     (date-header rec)
                     [sc/text0 (str (some-> (get-in rec ["after"])))]])]))]])))
 
-(defn vakter [loggedin-uid data]
-  (when (seq data)
-    [sc/col-space-8 {:class []}
-     [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
-      (into [:<>]
-            (for [[slot kv] data
-                  :let [date-registered (some-> (get kv loggedin-uid) t/date-time times.api/arrival-date)]]
-              [sc/row-sc-g4-w
-               [button/reg-pill-icon
-                {:class    [:message]
-                 :disabled false}
-                ico/bytte
-                "Bytte"]
-               [button/reg-pill-icon
-                {:class    [:danger]
-                 :disabled false}
-                ico/trash
-                "Avlys"]
-               [sc/col
-                [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                [sc/small1 "Registrert " date-registered]]]))]]))
+(defn- within-undo-limits? [now date]
+  ;(tap> [now date (tick.alpha.interval/new-interval (t/instant date) now)])
+  (< (t/hours (t/duration (tick.alpha.interval/new-interval (t/instant date) now))) 24))
+
+(defn vakter [uid data::stringified]
+  (when (seq data::stringified)
+    (let [collector (sort-by :date-proper <
+                             (for [[section vs] data::stringified
+                                   [timeslot uid-registered-tuple] vs
+                                   [_userid dt] uid-registered-tuple
+                                   :let [date-registered (some-> dt t/date-time)
+                                         date-proper (some-> timeslot t/date-time)
+                                         completed? (when date-proper (t/< (t/instant date-proper) (t/now)))]]
+                               {:section         section
+                                :timeslot        timeslot
+                                :date-registered date-registered
+                                :date-proper     date-proper
+                                :completed?      completed?}))]
+      [sc/col-space-8 {:class []}
+       [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
+        (into [:<>]
+              (->> collector
+                   (map (fn [{:keys [date-registered date-proper completed? section timeslot]}]
+                          [:div
+                           ;[l/pre uid-registered-tuple]
+                           [sc/row-sc-g4-w
+                            ;[l/pre data::stringified]
+                            (if completed?
+                              [:<>]
+                              (if (within-undo-limits? (t/now) date-registered)
+                                [button/reg-pill-icon
+                                 {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
+                                  :class    [:danger]
+                                  :disabled false}
+                                 ico/trash
+                                 "Avlys"]
+                                [button/reg-pill-icon
+                                 {:class    [:message]
+                                  :disabled true}
+                                 ico/bytte
+                                 "Bytte"]))
+                            [sc/col
+                             [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
+                             [sc/small1 "Registrert " (some-> date-registered times.api/arrival-date)]]]]))))]])))
 
 (defn beskjeder [loggedin-uid datum]
   (let [admin? false
@@ -140,36 +164,38 @@
     (if-let [uid (some-> r :path-params :id)]
       (r/with-let [inbox-messages (db/on-snapshot-docs-reaction {:path (path-beskjederinbox uid)})]
         (when @inbox-messages
-          (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
+          (if-let [datas (db/on-value-reaction {:path ["calendar" uid]})]
             (let [user (user.database/lookup-userinfo uid)
                   nøkkelvakt? (:godkjent user)
-                  data (mapcat val (clojure.walk/stringify-keys @data))
+                  data::stringified (clojure.walk/stringify-keys @datas)
                   saldo (:saldo user)
                   timekrav (:timekrav user)
                   antall-eykter (when (some? saldo)
-                                  (- saldo timekrav (- (* 3 (count (seq data))))))]
-              [sc/col-space-8
-               ;[l/pre user]
-               [widgets/personal user
+                                  (- saldo timekrav (- (* 3 (count (seq data::stringified))))))]
+              [:div
+
+               [sc/col-space-8
+
+                [widgets/personal user
+                 (when admin?
+                   [sc/row-bl
+                    [sc/text1 "Identitet"]
+                    (sc/as-identity uid)])]
+                [beskjeder uid @inbox-messages]
+
+                (when nøkkelvakt?
+                  (when (seq data::stringified)
+                    [sc/col-space-4
+                     [sc/title1 "Påmeldte vakter '22"]
+                     [vakter uid data::stringified]]))
+
+                (when (and admin? nøkkelvakt?)
+                  [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
+
                 (when admin?
-                  [sc/row-bl
-                   [sc/text1 "Identitet"]
-                   (sc/as-identity uid)])]
-               [beskjeder uid @inbox-messages]
-
-               (when nøkkelvakt?
-                 (when (seq data)
-                   [sc/col-space-4
-                    [sc/title1 "Påmeldte vakter '22"]
-                    [vakter uid data]]))
-
-               (when (and admin? nøkkelvakt?)
-                 [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
-
-               (when admin?
-                 [:div {:style {:padding-block "var(--size-4)"
-                                :border-left   "4px solid var(--brand1)"}}
-                  [endringslogg uid (path-endringslogg uid)]])])
+                  [:div {:style {:padding-block "var(--size-4)"
+                                 :border-left   "4px solid var(--brand1)"}}
+                   [endringslogg uid (path-endringslogg uid)]])]])
 
             [sc/title1 "Ingen vakter"])))
       [widgets/no-access-view r])))
