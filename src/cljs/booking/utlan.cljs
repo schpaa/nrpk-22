@@ -178,14 +178,14 @@
     :display               :grid
     ;:border-radius         "var(--radius-1)"
     :column-gap            "var(--size-3)"
-    :row-gap               "var(--size-1)"
-    :grid-template-columns "15rem min-content min-content 1fr  min-content"
+    :row-gap               "var(--size-2)"
+    :grid-template-columns "min-content min-content min-content 1fr 10rem"
     :grid-auto-rows        "min-content"
     :align-items           :start
-    :grid-template-areas   [["start-time start-date . end-date end-time"]
-                            ["edit content content content content"]
-                            [". badges . details details"]
-                            [". graph graph graph graph"]]}
+    :grid-template-areas   [["start-date edit content content content"]
+                            ["badges start-time graph graph details "]
+                            ;[". . . . details"]
+                            #_[". graph graph graph graph"]]}
    #_[:&:hover
       {:background "rgba(0,0,0,0.05)"}]])
 
@@ -341,7 +341,7 @@
     [:div (:style {:grid-area "agegroups"})
      [:div
       {:style {:display               "grid"
-               :grid-template-columns "repeat(3,1rem)"}}
+               :grid-template-columns "repeat(3,1.4rem)"}}
       (f adults)
       (f juveniles)
       (f children)]]))
@@ -365,14 +365,8 @@
      :end-date   (when dt
                    (when-not (t/= (t/date dt) (t/date start))
                      (times.api/logg-date-format dt)))
-     #_(when dt
-         (when-not (empty? a-date)
-           (times.api/logg-date-format a-date)))
-     #_nil #_(when (and a-date start)
-               (when-not (t/= a-date start)
-                 (times.api/logg-date-format a-date)))
      :end-time   (when dt
-                   (when a-time (str "kl " a-time)))}))
+                   a-time)}))
 
 (defn passed-date-test?
   "docstring"
@@ -423,7 +417,8 @@
 ;todo REFACTOR!
 (defn render [loggedin-uid]
   (when-let [db @(rf/subscribe [:db/boat-db])]
-    (let [show-deleted? @(rf/subscribe [:rent/common-show-deleted])
+    (let [nitty-gritty @(rf/subscribe [:rent/common-show-details])
+          show-deleted? @(rf/subscribe [:rent/common-show-deleted])
           ;show-timegraph? (= :b @selector) #_(rf/subscribe [:rent/common-show-timegraph])
           show-details? (= :b @selector) #_@(rf/subscribe [:rent/common-show-details])
           show-overview? (= :c @selector)
@@ -459,10 +454,10 @@
                    [g-area "content" [boat-badges db deleted-item::style boats :small]]]
 
                   [logg-listitem-grid
-                   (when (some #{@selector} [:a :b])
-                     [g-area "badges" [sc/row-sc-g4
-                                       [agegroups-detail m]]])
-
+                   (when nitty-gritty
+                     (when (some #{@selector} [:a :b])
+                       [g-area "badges" [sc/row-sc-g4
+                                         [agegroups-detail m]]]))
 
                    [:div {:style {:display     "flex"
                                   :align-items "center"
@@ -470,25 +465,35 @@
 
                     [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
 
-                   (when (some #{@selector} [:a :b])
-                     [sc/row-sc-g2 {:style {:align-items     "center"
-                                            :justify-content :end
-                                            :grid-area       "details"}}
-                      (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
-                      [badges deleted-item::style m]])
+                   (when nitty-gritty
+                     (when (some #{@selector} [:a :b])
+                       [sc/row-sc-g2 {:style {:align-items     "center"
+                                              :justify-content :end
+                                              :grid-area       "details"}}
+                        (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+                        [badges deleted-item::style m]]))
 
                    ;graph
-                   #_(if (and (t/= (t/date date) (t/today)) (= :b @selector))
-                       [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]])
-
+                   (when nitty-gritty
+                     (if (and (t/= (t/date date) (t/today)) (= :b @selector))
+                       [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
 
                    [g-area "content" [boat-badges db deleted-item::style boats]]
-                   (let [{:keys [start-date end-date start-time end-time]}
-                         (preformat-dates date end::time-instant)]
-                     (for [[areaname value style] [["start-date" start-date {}]
-                                                   ["start-time" start-time]
-                                                   ["end-date" end-date {:justify-content :end}]
-                                                   ["end-time" end-time {:justify-content :end}]]]
+
+                   (let [{:keys [start-date end-date start-time end-time]} (preformat-dates date end::time-instant)]
+                     (for [[areaname value style] [["start-date" start-date {;:height :1rem
+                                                                             :place-self :center
+                                                                             :salign-items :center}]
+                                                   (when nitty-gritty
+                                                     ["start-time" (str "kl. " start-time
+
+                                                                        (if end-date
+                                                                          (str (str "-->" end-date "")
+                                                                               " kl. " end-time)
+                                                                          (when end-time
+                                                                            (str "—" end-time)))) {}])
+                                                   #_["end-date" end-date {:justify-content :end}]
+                                                   #_["end-time" end-time {:justify-content :end}]]]
                        [:div.flex
                         {:style (merge-with conj {:align-items :center
                                                   :display     :flex
