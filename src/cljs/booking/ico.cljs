@@ -85,4 +85,4 @@
 (def chevronDoubleDown [:> solid/ChevronDoubleLeftIcon])
 (def chevronDoubleRight [:> solid/ChevronDoubleRightIcon])
 
-(def rotate-left [:div.m-1 [schpaa.icon/adapt :rotate-left]])
+(def rotate-left [:div.m-px [schpaa.icon/adapt :rotate-left]])

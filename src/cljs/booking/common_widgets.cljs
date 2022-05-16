@@ -13,7 +13,9 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [db.core :as db]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [schpaa.style.hoc.buttons :as button]
+            [eykt.calendar.actions :as actions]))
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -189,6 +191,14 @@
 
 ;region
 
+(defn trashcan' [{:keys [on-click deleted?]} caption]
+  [button/reg-pill-icon
+   {:on-click #(on-click)
+    :class    [(if deleted? :outline2 :danger)]
+    :disabled false}
+   (if deleted? ico/rotate-left ico/trash)
+   caption])
+
 (defn trashcan [on-click {:keys [deleted id]}]
   [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
    {:on-click #(on-click id)}
@@ -203,7 +213,7 @@
     [hoc.buttons/reg-pill-icon
      (conj
        attr
-       {:class    [:inverse]
+       {:class    [:outline2]
         :style    {:text-transform "uppercase"
                    :xbackground    "var(--blue-6)"
                    :xcolor         "var(--blue-0)"}
@@ -211,7 +221,7 @@
      [sc/icon-small
       {:style {:xcolor "var(--blue-0)"}}
       ico/pencil]
-     "Rediger"]))
+     "edit"]))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
