@@ -200,13 +200,18 @@
 (defn edit [attr on-click {:keys [deleted] :as m}]
   (if deleted
     [:div.w-8]
-    [scb/round-normal-listitem
+    [hoc.buttons/reg-pill-icon
      (conj
        attr
-       {:on-click #(on-click m)})
+       {:class    [:inverse]
+        :style    {:text-transform "uppercase"
+                   :xbackground    "var(--blue-6)"
+                   :xcolor         "var(--blue-0)"}
+        :on-click #(on-click m)})
      [sc/icon-small
-      {:style {:color "var(--text1)"}}
-      ico/pencil]]))
+      {:style {:xcolor "var(--blue-0)"}}
+      ico/pencil]
+     "Rediger"]))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}

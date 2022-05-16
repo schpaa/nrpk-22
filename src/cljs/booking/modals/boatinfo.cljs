@@ -103,7 +103,7 @@
   [{:keys [class]} {:keys [deleted complete timestamp description uid] :as worklog-entry}
    boat-item-id worklog-entry-id]
   (let [q-button (partial q-button boat-item-id worklog-entry-id)]
-    [sc/zebra
+    [sc/zebra'
      {;:class [:divider]
       :sstyle {;:margin-inline "4rem"
                :margin-before "4rem"

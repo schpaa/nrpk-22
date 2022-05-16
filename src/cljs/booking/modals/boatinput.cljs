@@ -16,6 +16,8 @@
             [lambdaisland.ornament :as o]
             [db.core :as db]))
 
+;region machinery
+
 (defn- equals-to [a b]
   (= a (str b)))
 
@@ -81,7 +83,6 @@
   (let [id (if (keyword? id) id (keyword id))
         data @(rf/subscribe [:db/boat-db])]
     (get data id)))
-
 
 (comment
   (lookup-id :-MeAStzi0016B5sFIxvR))
@@ -308,7 +309,9 @@
    [sc/ptitle1 a]
    [sc/ptext b]])
 
-;; components
+;endregion
+
+;region components
 
 (defn hvem-er-du [st c-focus c-textinput-phone]
   (let [field c-textinput-phone
@@ -530,7 +533,7 @@
      [sc/row-sc-g2
       (sc/icon-huge ico/check)]]))
 
-;;
+;endregion
 
 (rf/reg-sub :rent/list
             #(sort-by (comp :timestamp val) >
