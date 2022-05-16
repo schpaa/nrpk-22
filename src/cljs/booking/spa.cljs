@@ -449,6 +449,7 @@
      (let [uid @(rf/subscribe [:lab/uid])]
        [+page-builder r
         {;:panel            booking.utlan/panel
+         :headline         booking.utlan/headline-extension
          :always-panel     booking.utlan/always-panel
          :render-fullwidth #(booking.utlan/render uid)}]))
 

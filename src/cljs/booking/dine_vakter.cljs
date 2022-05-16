@@ -170,28 +170,24 @@
                   data::stringified (clojure.walk/stringify-keys @datas)
                   saldo (:saldo user)
                   timekrav (:timekrav user)
-                  antall-eykter (when (some? saldo)
-                                  (- saldo timekrav (- (* 3 (count (seq data::stringified))))))]
+                  antall-økter (->> data::stringified vals (map vals) flatten count)
+                  fullførte-timer (* 3 antall-økter) #_(or (when (some? saldo))
+                                                           (- saldo timekrav (- (* 3 (count (seq data::stringified))))))]
               [:div
-
                [sc/col-space-8
-
                 [widgets/personal user
                  (when admin?
                    [sc/row-bl
                     [sc/text1 "Identitet"]
                     (sc/as-identity uid)])]
                 [beskjeder uid @inbox-messages]
-
                 (when nøkkelvakt?
                   (when (seq data::stringified)
                     [sc/col-space-4
                      [sc/title1 "Påmeldte vakter '22"]
                      [vakter uid data::stringified]]))
-
                 (when (and admin? nøkkelvakt?)
-                  [booking.mine-dine-vakter/saldo-header saldo timekrav antall-eykter])
-
+                  [booking.mine-dine-vakter/saldo-header saldo timekrav fullførte-timer])
                 (when admin?
                   [:div {:style {:padding-block "var(--size-4)"
                                  :border-left   "4px solid var(--brand1)"}}

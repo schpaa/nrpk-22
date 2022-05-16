@@ -378,7 +378,7 @@
   (let [link (first links)]
     [location
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
-      :class    [(if right-menu? :text-right :text-left)]}
+      :class    [:truncate (if right-menu? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
       [sc/title1 {:style {:font-weight "var(--font-weight-4)"}} (or (if (fn? caption)
@@ -397,15 +397,16 @@
    :w-full :flex :justify-between :pointer-events-auto
    #_[:&:active {:background "var(--text1-copy)"}]])
 
-(defn header-line [r frontpage v]
+(defn header-line [r frontpage headline]
   (let [[links caption] (some-> r :data :header)
         {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         location [location-block r links caption right-menu?]]
     [headerline
-     {:class [:h-16 :items-center]}
+     {:class [:h-16 :items-center :truncate]}
      ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
      (let [items [location
                   [:div.grow]
+                  (when headline [headline])
                   ;[sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
@@ -414,7 +415,7 @@
          [header-top-frontpage {:style {:background-color "yellow"}} (into [:<>] items)]
          [header-top (into [:<>] items)]))]))
 
-(defn header [v]
+(defn header [v headline]
   (let [route (rf/subscribe [:kee-frame/route])
         {:keys [hidden-menu? right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         marg (when-not hidden-menu?
@@ -427,7 +428,7 @@
                 :background   "linear-gradient(180deg,var(--content-transp-top) 0%,
                                                       var(--content-transp-bottom) 5rem,
                                                       var(--content-transp) 100%)"}}
-       [booking.common-views/header-line route false v]])))
+       [booking.common-views/header-line route false headline]])))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -541,7 +542,7 @@
             (widgets/open-slideout new-version-available::dialog))))
       (catch js/Error _))))
 
-(defn page-boundary [r {:keys [frontpage]} & contents]
+(defn page-boundary [r {:keys [frontpage headline]} & contents]
   (let [geo (rf/subscribe [:lab/screen-geometry])
         admin? (rf/subscribe [:lab/admin-access])]
     (r/create-class
@@ -589,7 +590,7 @@
                    :style {:left 0}}
                   [vertical-toolbar false]]]))
 
-            [booking.common-views/header @scrollpos]]))})))
+            [booking.common-views/header @scrollpos headline]]))})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -626,7 +627,7 @@
 (defn- render-frontpage [r {:keys [render]} v]
   [:div {:style {:padding-block "8rem"}} [render r]])
 
-(defn- render-normal [r {:keys [frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
+(defn- render-normal [r {:keys [headline frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
   (let [pagename (some-> r :data :name)
         users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         have-access? (booking.common-views/matches-access r users-access-tokens)
@@ -691,11 +692,11 @@
 
 
   "
-  [r {:keys [frontpage render] :as m}]
+  [r {:keys [frontpage render headline] :as m}]
   (let [admin? (rf/subscribe [:lab/admin-access])]
     [:<>
      [check-latest-version]
-     [page-boundary r {:frontpage frontpage}
+     [page-boundary r {:frontpage frontpage :headline headline}
       (if frontpage
         [render r]
         [render-normal r m admin?])]]))

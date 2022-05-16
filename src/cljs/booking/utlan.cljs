@@ -13,7 +13,8 @@
             [booking.database]
             [booking.ico :as ico]
             [logg.database]
-            [db.core :as db]))
+            [db.core :as db]
+            [schpaa.style.hoc.buttons :as button]))
 
 ;; store
 
@@ -174,20 +175,17 @@
 
 (o/defstyled logg-listitem-grid :div
   [:& :py-1
-   {;:outline               "1px solid red"
-    :display               :grid
-    ;:border-radius         "var(--radius-1)"
+   {:display               :grid
     :column-gap            "var(--size-3)"
     :row-gap               "var(--size-2)"
-    :grid-template-columns "min-content min-content min-content 1fr 10rem"
+    :grid-template-columns "5rem min-content min-content 1fr 1fr"
     :grid-auto-rows        "min-content"
     :align-items           :start
     :grid-template-areas   [["start-date edit content content content"]
-                            ["badges start-time graph graph details "]
-                            ;[". . . . details"]
-                            #_[". graph graph graph graph"]]}
-   #_[:&:hover
-      {:background "rgba(0,0,0,0.05)"}]])
+                            ["badges start-time graph graph details "]]}])
+
+
+
 
 (o/defstyled logg-listitem :div
   [:& :gap-2
@@ -482,7 +480,7 @@
 
                    (let [{:keys [start-date end-date start-time end-time]} (preformat-dates date end::time-instant)]
                      (for [[areaname value style] [["start-date" start-date {;:height :1rem
-                                                                             :place-self :center
+                                                                             :place-self   :center
                                                                              :salign-items :center}]
                                                    (when nitty-gritty
                                                      ["start-time" (str "kl. " start-time
@@ -527,12 +525,21 @@
         :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
        "HMS Hendelse"]]
 
+
    [sc/row-center {:class [:py-4 :sticky :top-20]}
-    [widgets/pillbar
-     selector
-     [[:a "Alle"]
-      [:b "Ute"]
-      [:c "Oversikt"]]]]])
+    [sc/row-center
+     [sc/col-space-4
+      [widgets/pillbar
+       selector
+       [[:a "Alle"]
+        [:b "Ute"]
+        #_[:c "Nytt utlån"]]]
+      [sc/row-center
+       [hoc.buttons/round-pill
+        {:class    [:large :xoutline :message]
+         :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
+        [sc/icon-large ico/plus]
+        #_"Nytt utlån"]]]]]])
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]
@@ -541,3 +548,13 @@
                    (db/database-set {:path  ["boad-item"]
                                      :value {}})
                    {}))
+
+(defn headline-extension []
+  [sc/row-sc-g4
+   [button/reg-pill {:class    [:clear]
+                     :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
+    [sc/icon-huge (if @(rf/subscribe [:rent/common-show-details]) ico/eye-off ico/eye)]]
+
+   [button/reg-pill {:class    [:clear]
+                     :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
+    [sc/icon-huge ico/trash]]])

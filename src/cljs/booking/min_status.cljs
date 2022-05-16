@@ -27,22 +27,22 @@
           (let [admin? @(rf/subscribe [:lab/admin-access])
                 {:keys [saldo timekrav] :as user} (user.database/lookup-userinfo uid)
                 datas (clojure.walk/stringify-keys @data)
-                data (mapcat val datas)
-                antall-eykter (when (some? saldo)
-                                (- saldo timekrav (- (* 3 (count (seq data))))))]
+                data datas ;(mapcat val datas)
+                antall-økter (->> data vals (map vals) flatten count)
+                fullførte-timer (or
+                                  (* 3 antall-økter) 0
+
+                                  #_(when (some? saldo)
+                                      (- saldo timekrav (+ (* 3 antall-økter)))) 0)]
             [sc/col-space-8
+             ;[l/pre (->> data vals (map vals) flatten count)]
              [beskjeder uid @datum]
              ;[beskjeder uid @sent]
              ;[l/pre (path-beskjedersent uid) @sent]
              #_(for [{:keys [id data]} @sent]
                  [l/pre id])
              [tilbakemeldinger uid (cached-datasource uid)]
-             #_[l/pre
-                (seq (vakter uid data))
-                (seq [1 2])]
-
-             ;[l/pre datas]
-
+             [l/pre antall-økter fullførte-timer data]
              (when-not ipad?
                (widgets/disclosure {}
                                    :oversikt/vakter
@@ -50,17 +50,14 @@
                                    (vakter uid datas)
                                    "Ingen vakter"))
              [widgets/personal user]
-             (when (and (or admin? (not ipad?)) saldo timekrav antall-eykter)
-               [saldo-header saldo timekrav antall-eykter])
+             (when (and (or admin? (not ipad?)) saldo timekrav fullførte-timer)
+               [saldo-header saldo timekrav fullførte-timer])
              (widgets/disclosure {}
                                  :oversikt/endringslogg
                                  "Endringslogg"
                                  (endringslogg uid (path-endringslogg uid))
-                                 "Det er ikke gjort noen endringer.")
+                                 "Det er ikke gjort noen endringer.")])
 
-             #_(when admin?
-                 [sc/row-bl
-                  [sc/small1 "Identitet"]
-                  (sc/as-identity uid)])])
+
           [sc/title1 "Ingen definerte vakter"])))
     [widgets/no-access-view r]))

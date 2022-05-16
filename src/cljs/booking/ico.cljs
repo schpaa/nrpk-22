@@ -9,6 +9,7 @@
 (def trash [:> outline/TrashIcon])
 (def check [:> solid/CheckIcon])
 (def eye [:> outline/EyeIcon])
+(def eye-off [:> outline/EyeOffIcon])
 (def pencil [:> outline/PencilIcon])
 (def qrcode [:> outline/QrcodeIcon])
 (def nullstill [:> outline/ShieldExclamationIcon])
