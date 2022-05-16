@@ -19,7 +19,7 @@
             [schpaa.debug :as l]
             [clojure.string :as str]))
 
-(def store (r/atom {:selector :a}))
+(def store (r/atom {:selector :b}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -210,19 +210,22 @@
                                               "")) "Ukjent")]]
                         [:div
                          {:style {:display               :grid
-                                  :grid-gap              "var(--size-3)"
+                                  :grid-gap              "var(--size-1)"
                                   :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
                          (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
-                           [sc/row-sc-g2
-                            [widgets/badge {:class    [:big]
+                           [sc/row-sc-g2 {:style {:padding          "var(--size-1)"
+                                                  :background-color "var(--floating)"}}
+                            [widgets/badge {:class    [:small]
                                             :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
                              number
                              slot]
-                            [sc/col
-                             {:class [:truncate]}
-                             [sc/text2 {:class [:truncate]} navn]
-                             [sc/title1 (schpaa.components.views/normalize-kind kind)]
-                             #_[sc/text1 description]]])]])
+
+                            [widgets/stability-name-category v #_(dissoc (-> r first val) :kind)]
+                            #_[sc/col
+                               {:class [:truncate]}
+                               [sc/text2 {:class [:truncate]} navn]
+                               [sc/title1 (schpaa.components.views/normalize-kind kind)]
+                               #_[sc/text1 description]]])]])
                      ;[l/pre data]
 
 
@@ -244,35 +247,35 @@
                                              (remove (comp nil? :boat-type val)
                                                      (filter (fn [[k v]] (= "0" (:location v)))
                                                              @(rf/subscribe [:db/boat-db])))))]
-                 [sc/col-space-4
-
-                  #_[:div.sticky.top-16
-                     [time-input-form time-state]]
-                  ;(l/pre data)
+                 [:div
                   (into [:div]
-                        (for [[kind & r] data #_(sort-by (comp :number val) < data)]
-                          [sc/col
-                           [sc/title (schpaa.components.views/normalize-kind kind)]
+                        (for [[kind & r] data]
+                          [sc/co
+                           [sc/row {:style {:height      "4rem"
+                                            :align-items :end}}
+                            [sc/title (schpaa.components.views/normalize-kind kind)]]
 
                            (for [{:keys [navn] :as z} r]
-                             [sc/co
-                              [sc/co
-                               {:style {:display               :grid
-                                        :grid-gap              "var(--size-1)"
-                                        :grid-template-columns "repeat(auto-fit,minmax(18rem,1fr)"}}
-                               (for [[[boat-type navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
-                                 [:div.gap-2.flex.flex-col
-                                  {:style {:padding          "var(--size-1)"
-                                           :background-color "var(--vener-hl)"}}
-                                  [widgets/stability-name-category (dissoc (-> r first val) :kind)]
-                                  [sc/row-sc-g2-w {:xstyle {:gap "var(--size-2)"}}
-                                   (for [v (sort-by :number (map val r))
-                                         :let [{:keys [number slot navn description]} v]]
-                                     [widgets/badge
-                                      {:class    [:small]
-                                       :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                                      number
-                                      slot])]])]])]))]))])
+                             [:div.gap-1
+                              {:style {:display               :grid
+                                       :grid-auto-rows        "auto"
+                                       :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
+                              (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
+                                [:div.flex.flex-col.gap-2
+                                 {:style {:padding          "var(--size-1)"
+                                          :background-color "var(--floating)"
+                                          :border-radius    "var(--radius-0)"}}
+                                 [widgets/stability-name-category (dissoc (-> r first val) :kind)]
+                                 [:div.flex.flex-wrap.gap-1
+                                  {:xstyle {:gap "var(--size-2)" :height "2rem"}}
+                                  (for [v (sort-by :number (map val r))
+                                        :let [{:keys [number slot _navn _description]} v]]
+                                    ;[:div.text-4xl number]
+                                    [widgets/badge
+                                     {:class    [:small]
+                                      :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                                     number
+                                     slot])]])])]))]))])
 
 (rf/reg-fx :lab/open-new-blog-entry-dialog (fn [_] (schpaa.style.dialog/open-dialog-addpost)))
 

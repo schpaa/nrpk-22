@@ -29,7 +29,7 @@ html {
 
 :where(html) {
     --background-image-light: url('/img/bg/bg-light-1.jpg');
-    --background-image-dark: url('/img/bg/bg-dark-5.jpg');
+    --background-image-dark: url('/img/bg/bg-dark-2.jpg');
     --animation-spin:  spin-sun 7s ease-in-out infinite;
 }
 @keyframes spin-sun {

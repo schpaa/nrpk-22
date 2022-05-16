@@ -159,18 +159,16 @@
                                 [boat-type star-count location slot material
                                  stability expert number navn kind description
                                  last-update weight length width aquired-year aquired-price] :as m}]
+  [sc/col {:class [:truncate :space-y-px]}
+   [sc/row-sba
+    (when (or stability expert) [stability-expert m])
+    [sc/text2 {:style {:overflow      :hidden
+                       :text-overflow :ellipsis
+                       :white-space   :nowrap}}
+     navn]]
 
-  [sc/row-sc-g4
-
-   [sc/col {:class [:truncate :space-y-1]}
-    [sc/row-sba
-     (when (or stability expert) [stability-expert m])
-     [sc/ptext {:style {:overflow      :hidden
-                        :text-overflow :ellipsis
-                        :white-space   :nowrap
-                        :font-size     "small"}} navn]]
-
-    (when kind [sc/ptitle1 (schpaa.components.views/normalize-kind kind)])]])
+   (when kind
+     [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])])
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
@@ -317,7 +315,7 @@
    (apply disclosure m))
   ([attr tag question answer]
    (disclosure attr tag question answer nil))
-  ([attr tag question answer empty-message]
+  ([attr tag question answer extra-section]
    (let [open @(schpaa.state/listen tag)
          attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
      [ui/disclosure {:as    :div
@@ -328,12 +326,11 @@
           {:on-click #(schpaa.state/toggle tag)
            :style    {:cursor :default}
            :class    "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
-
           [sc/row-sc-g2
            {:style    {:cursor :pointer}
             :on-click #(schpaa.state/toggle tag)}
            (sc/icon {:style {:color "var(--brand2)"}
-                     :class (concat [:duration-100 :w-12 :h-12]
+                     :class (concat [[:duration-100 :w-12 :h-12]]
                                     (when open
                                       [:transform :rotate-90]))}
                     ico/showdetails)
@@ -348,12 +345,15 @@
                       {:style (if open {:margin-block "var(--size-2)"})})
 
           (if (:links attr)
-            (if open [sc/col-space-4 answer empty-message] empty-message)
+            (if open
+              [sc/col-space-4 answer extra-section]
+              extra-section)
             (if open
               (if answer
                 [sc/text2 answer]
-                [sc/text2 empty-message])
-              (when-not answer [sc/text2 empty-message])))]])])))
+                [sc/text2 extra-section])
+              (when-not answer
+                [sc/text2 extra-section])))]])])))
 
 (defn send-msg [uid-reciever]
   (rf/dispatch [:app/open-send-message uid-reciever]))
@@ -415,7 +415,7 @@
   (if (= "0" (str l)) "Nøklevann" "Sjøbasen"))
 
 (defn badge [attr n v]
-  [sc/row
+  [:div.flex
    [sc/badge-2 (update attr :class conj :right-square :regular) n]
    [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]])
 

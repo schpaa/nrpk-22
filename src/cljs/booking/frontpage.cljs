@@ -26,18 +26,15 @@
        :-webkit-font-smoothing   :antialiased
        :-moz-osx-font-smoothing  :grayscale}])
 
-;warning: Not a page-template
-(o/defstyled front-page :div
-  [:& :pt-24
+(o/defstyled page-with-background :div
+  [:& :pt-10
    {:background-position "center center"
     :background-repeat   "no-repeat"
     :background-size     "cover"}
-   [:&.light {:background-image ["var(--background-image-light)"]}]
-   [:&.dark {:background-image ["var(--background-image-dark)"]}]
-   [:at-media {:max-width "511px"}]])
-
-
-
+   [:&.light {:background-image "var(--background-image-light)"}]
+   [:&.dark {:background-image "var(--background-image-dark)"}]]
+  [:at-media {:max-width "511px"}
+   [:&.light {:background-image "none"}]])
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -102,38 +99,6 @@
                                    :letter-spacing "0.025rem"
                                    :font-size      "var(--font-size-fluid-0)"}} b]]])
 
-(defn- stats []
-  (let [{:keys [online offline]} @(rf/subscribe [::db/presence-status])
-        nv @(db/on-value-reaction {:path ["users"]})]
-    [:div {:style {;:opacity               1
-                   :display               :grid
-                   :gap                   "var(--size-2)"
-                   :grid-template-columns "4rem 1fr"}}
-
-     [:div.justify-self-end [sc/ingress' {:style {:font-size "var(--font-size-fluid-1)"}} (str 4251)]]
-     [sc/ingress' {:style {:font-size "var(--font-size-fluid-1)"}} "medlemmer"]
-     [table-text (count (filter (comp :godkjent val) nv)) "nøkkelvakter"]
-     [table-text (str (count (filter (comp :instruktør val) nv))) "instruktører"]]))
-
-(defn- boats []
-  (let [{:keys [online offline]} @(rf/subscribe [::db/presence-status])
-        boats @(db/on-value-reaction {:path ["boad-item"]})]
-    [:div {:style {;:opacity               1
-                   :display               :grid
-                   :gap                   "var(--size-2)"
-                   :grid-template-columns "4rem 1fr"}}
-
-     [:div.justify-self-end [sc/ingress' {:style {:font-size "var(--font-size-fluid-1)"}} (count boats)]]
-     [sc/ingress' {:style {:font-size "var(--font-size-fluid-1)"}} "båter"]
-
-     [table-text 42 "flattvannskajakker"]
-     [table-text 54 "havkajakker"]
-     [table-text 22 "standup padlebrett"]
-     [table-text 11 "grønnlandskajakker"]
-     [table-text 12 "kanoer"]
-     [table-text 4 "skullere"]
-     [table-text 2 "robåter"]]))
-
 (def frontpage-images
   (map #(str "/img/caro/" %)
        ["img-0.jpg"
@@ -179,17 +144,6 @@
                #_(first (drop @c (cycle frontpage-images)))}]]
 
        (finally (js/clearInterval tm)))]]])
-
-(defn scroll-up-animation []
-  (let [know-how-to-scroll? (rf/subscribe [:lab/we-know-how-to-scroll?])]
-    [bs/scroll-up-animation
-     {:class [(if @know-how-to-scroll? :fadeaway :keepgoing)]}
-     [:div.p-1
-      {:style {:border-radius "var(--radius-round)"
-               :box-shadow    "var(--shadow-6)"
-               :background    "var(--toolbar)"
-               :color         "var(--text1)"}}
-      [sc/icon ico/more-if-you-scroll-down]]]))
 
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
@@ -528,7 +482,7 @@
                show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
                reg? (rf/subscribe [:lab/at-least-registered])
                master-emulation (rf/subscribe [:lab/master-state-emulation])]
-           [front-page
+           [page-with-background
             {:style {:ref        (fn [el] #(do
                                              (tap> {"SET REF" el})
                                              (reset! a nil)

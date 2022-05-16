@@ -59,19 +59,22 @@
     :links   [[:r.yearwheel "Oversikt 2022-23"]
               [:r.yearwheel "Tidligere sesonger"]]}])
 
-(defn shortcut [tag header ingress links]
-  (widgets/disclosure {:links 1
-                       :large 1
-                       :style {:padding-block "var(--size-2)"
-                               :margin-left   "var(--size-7)"}}
-                      tag
-                      header
-                      [:div {:style {:color       "var(--text2)" ;"rgba(0,0,0,0.7)"   
-                                     :font-size   "var(--font-size-2)"
-                                     :line-height "var(--font-lineheight-4)"
-                                     :font-weight "var(--font-weight-4)"}}
-                       [:span.clear-left ingress]]
-                      links))
+(defn shortcut [tag question ingress links]
+  (let [attr {:links 1
+              :large 1
+              :style {:padding-block "var(--size-2)"
+                      :margin-left   "var(--size-7)"}}
+        answer [:div {:style {:color       "var(--text2)"
+                              :font-size   "var(--font-size-2)"
+                              :line-height "var(--font-lineheight-4)"
+                              :font-weight "var(--font-weight-4)"}}
+                [:span.clear-left ingress]]]
+    (widgets/disclosure
+      attr
+      tag
+      question
+      answer
+      links)))
 
 ;todo generate links from the route instead of this laborious piece of eloquence
 ;https://english.stackexchange.com/questions/426378/rhetoric-vs-eloquence
@@ -85,15 +88,15 @@
                 [sc/subtext-with-link {:href (kee-frame.core/path-for [a])} b])))]
     (fn sample-render [r]
       [sc/col-space-8
-       (shortcut :oversikt/nrpk
-                 "Nøklevann ro– og padleklubb"
-                 "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunn\u00adkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."
-                 [sc/row-sc-g4-w
-                  (let [data [[3 :r.oversikt.organisasjon "Historie"]
-                              [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]
-                              [4 :r.oversikt.styret "Styret"]]]
+       [shortcut :oversikt/nrpk
+        "Nøklevann ro– og padleklubb"
+        "Medlemmer kan benytte klubbens materiell på Nøklevann. De som har våttkort grunn\u00adkurs hav har også tilgang til Sjøbasen som er selvbetjent og åpent året rundt. Nøklevann er betjent av nøkkelvakter og har derfor sesong\u00adbasert åpningstid."
+        [sc/row-sc-g4-w
+         (let [data [[3 :r.oversikt.organisasjon "Historie"]
+                     [5 [:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]
+                     [4 :r.oversikt.styret "Styret"]]]
 
-                    (map (comp f rest) (sort-by first data)))])
+           (map (comp f rest) (sort-by first data)))]]
        [sc/row-center
         [:div {:class [:w-20 :h-20]}
          [:img
@@ -101,15 +104,15 @@
            :width "475px" :height "475px"
            :src   "/img/logo-n.png"}]]]
 
-       (shortcut :oversikt/bli-medlem
-                 "Bli medlem"
-                 "Forslag til ingress?"
-                 [sc/row-sc-g4-w
-                  (let [data [;[1 :r.forsiden "Registrer deg her"]
-                              [1 :r.min-status "Min status"]
-                              [2 :r.user "Mine opplysninger"]
-                              #_[3 :r.forsiden "Hva årskontigenten dekker"]]]
-                    (map (comp f rest) (sort-by first data)))])
+       [shortcut :oversikt/bli-medlem
+        "Bli medlem"
+        "Forslag til ingress?"
+        [sc/row-sc-g4-w
+         (let [data [;[1 :r.forsiden "Registrer deg her"]
+                     [1 :r.min-status "Min status"]
+                     [2 :r.user "Mine opplysninger"]
+                     #_[3 :r.forsiden "Hva årskontigenten dekker"]]]
+           (map (comp f rest) (sort-by first data)))]]
 
 
        [shortcut
