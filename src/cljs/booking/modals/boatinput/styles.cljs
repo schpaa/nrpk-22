@@ -121,31 +121,31 @@
     :height                "100%"
     :grid-template-columns "repeat(5,1fr)"
     :grid-template-rows    "4rem 4rem auto auto repeat(4,3.5rem)"}
-   [:&.mobile {:grid-template-areas [["check-a  child    juvenile moon        adult"]
-                                     ["check-a  child    juvenile key         adult"]
-                                     ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
-                                     ["check-c    boats    boats    boats     boats"]
-                                     ["next .          numpad   numpad   numpad"]
-                                     ["prev   .  numpad   numpad   numpad"]
-                                     ["complete       .     numpad   numpad   numpad"]
-                                     ["complete .   numpad   numpad   numpad"]]}]
+   #_[:&.mobile {:grid-template-areas [["check-a  child    juvenile moon        adult"]
+                                       ["check-a  child    juvenile key         adult"]
+                                       ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
+                                       ["check-c    boats    boats    boats     boats"]
+                                       ["next .          numpad   numpad   numpad"]
+                                       ["prev   .  numpad   numpad   numpad"]
+                                       ["complete       .     numpad   numpad   numpad"]
+                                       ["complete .   numpad   numpad   numpad"]]}]
 
    [:&.right-side {:grid-template-areas [["check-a  child    juvenile moon        adult"]
                                          ["check-a  child    juvenile key         adult"]
                                          ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
-                                         ["check-c    boats    boats    boats     boats"]
-                                         ["next .          numpad   numpad   numpad"]
-                                         ["prev   .  numpad   numpad   numpad"]
-                                         ["complete       .     numpad   numpad   numpad"]
-                                         ["complete .   numpad   numpad   numpad"]]}]
+                                         ["check-c  boats     boats    boats     boats"]
+                                         ["complete complete  numpad   numpad   numpad"]
+                                         ["complete complete  numpad   numpad   numpad"]
+                                         ["complete complete  numpad   numpad   numpad"]
+                                         ["complete complete  numpad   numpad   numpad"]]}]
    [:&.left-side {:grid-template-areas [["adult    moon    juvenile child      check-a"]
                                         ["adult    key     juvenile child      check-a"]
                                         ["aboutyou  aboutyou  aboutyou   aboutyou  check-b"]
                                         ["boats     boats     boats      boats     check-c"]
-                                        ["numpad    numpad   numpad . next"]
-                                        ["numpad    numpad   numpad . prev"]
-                                        ["numpad    numpad   numpad . complete"]
-                                        ["numpad    numpad   numpad . complete"]]}]])
+                                        ["numpad    numpad    numpad     complete  complete"]
+                                        ["numpad    numpad    numpad     complete  complete"]
+                                        ["numpad    numpad    numpad     complete  complete"]
+                                        ["numpad    numpad    numpad     complete  complete"]]}]])
 
 (o/defstyled pad :div
   [:div :flex-center

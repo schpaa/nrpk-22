@@ -19,7 +19,7 @@
             [schpaa.debug :as l]
             [clojure.string :as str]))
 
-(def store (r/atom {:selector :b}))
+(def store (r/atom {:selector :a}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -81,111 +81,19 @@
            :on-submit handle-submit}
           [booking.views/time-input props false]])])))
 
-(def type-data
-  [{:type        5000
-    :category    "Grønnlandskayakk"
-    :material    "Epoxy"
-    :stability   4
-    :description "Ufattelig lang beskrivelse som går over flere linjer og som sier en hel drøss om hva dette er godt for og at du burde prøve den!"
-    :brand       "Rebel Naja"
-    :weight      "33 kg"
-    :width       "50 cm"
-    :length      "490 cm"}
-   {:type      3100
-    :category  "Havkayakk"
-    :material  "Plast"
-    :stability 1
-    ;:description ""
-    :brand     "P3 Baffin Boreal"
-    ;:weight      "23 kg"
-    :width     "50 cm"
-    :length    "490 cm"}
-   {:type      3200
-    :category  "Tomahawk"
-    :material  "Plast"
-    :stability 1
-    ;:description ""
-    :brand     "P3 Baffin Boreal"
-    ;:weight      "23 kg"
-    :width     "50 cm"
-    :length    "490 cm"}
-   {:type      4100
-    :category  "Testthing"
-    :material  "Plast"
-    :stability 1
-    ;:description ""
-    :brand     "P3 Baffin Boreal"
-    ;:weight      "23 kg"
-    :width     "50 cm"
-    :length    "490 cm"}])
-
-(def card-data-v2
-  [{:id 100 :loc "C3" :number "310" :type 5000}
-   {:id 102 :loc "C4" :number "313" :type 5000}
-   {:id 210 :loc "A2" :number "439" :type 3100}
-   {:id 211 :loc "A2" :number "439" :type 3200}
-   {:id 212 :loc "A2" :number "212" :type 3200}
-   {:id 412 :loc "A2" :number "412" :type 4100}
-   {:id 413 :loc "A2" :number "413" :type 4100}
-   {:id 414 :loc "A2" :number "414" :type 4100}
-   {:id 415 :loc "A2" :number "415" :type 4100}])
-
-(def card-data
-  [{:content  {:category    "Grønnlandskayakk"
-               :number      "600"
-               :location    "E5"
-               :material    "Epoxy"
-               :stability   4
-               :description "Ufattelig lang beskrivelse som går over flere linjer og som sier en hel drøss om hva dette er godt for og at du burde prøve den!"
-               :brand       "Rebel Naja"
-               :weight      "33 kg"
-               :width       "50 cm"
-               :length      "490 cm"}
-
-    :on-click #()
-    :expanded true
-    :selected false}
-   {:content  {:category  "Havkayakk"
-               :number    "310"
-               :location  "C3"
-               :material  "Plast"
-               :stability 1
-               ;:description ""
-               :brand     "P3 Baffin Boreal"
-               ;:weight      "23 kg"
-               :width     "50 cm"
-               :length    "490 cm"}
-
-    :on-click #()
-    :expanded true
-    :selected false}
-   {:content  {:category    "Havkayakk"
-               :number      "310"
-               :location    "C3"
-               :material    "Epoxy"
-               :stability   4
-               :description "Passer best for de som liker å padle på vann og land."
-               :brand       "P3 Baffin Boreal"
-               :weight      "23 kg"
-               :width       "50 cm"
-               :length      "490 cm"}
-
-    :on-click #()
-    :expanded true
-    :selected false}])
-
 (rf/reg-event-fx :lab/qr-code-for-current-page
                  (fn [_ _]
                    (let [link @(rf/subscribe [:kee-frame/route])]
                      (booking.qrcode/show link))))
 
 (defn always-panel []
-  [sc/row-center {:class [:py-4 :sticky :top-20 :z-10]}
-   [widgets/pillbar
-    selector
-    [[:a "Type"]
-     [:b "Hylle"]
-     [:c "Merke"]]]])
+  [:div.sticky.top-20
+   [sc/row-center {:class [:py-4 :z-10]}
+    [widgets/pillbar
+     selector
+     [[:a "Type"]
+      [:b "Hylle"]
+      [:c "Merke"]]]]])
 
 (defn render [r]
   [:div.px-4 (case @selector
@@ -250,16 +158,16 @@
                  [:div
                   (into [:div]
                         (for [[kind & r] data]
-                          [sc/co
-                           [sc/row {:style {:height      "4rem"
-                                            :align-items :end}}
-                            [sc/title (schpaa.components.views/normalize-kind kind)]]
+                          [widgets/disclosure
+                           {}
+                           kind
+                           [sc/title1 (schpaa.components.views/normalize-kind kind)]
 
                            (for [{:keys [navn] :as z} r]
                              [:div.gap-1
                               {:style {:display               :grid
                                        :grid-auto-rows        "auto"
-                                       :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
+                                       :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
                               (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
                                 [:div.flex.flex-col.gap-2
                                  {:style {:padding          "var(--size-1)"

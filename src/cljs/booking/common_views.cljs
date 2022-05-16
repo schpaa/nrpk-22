@@ -425,7 +425,7 @@
                 :margin-right (when right-menu? marg)
                 :height       "8rem"
                 :background   "linear-gradient(180deg,var(--content-transp-top) 0%,
-                                                      var(--content-transp-bottom) 4rem,
+                                                      var(--content-transp-bottom) 5rem,
                                                       var(--content-transp) 100%)"}}
        [booking.common-views/header-line route false v]])))
 
@@ -659,8 +659,8 @@
                                    :width       "50ch"
                                    :max-width   "min(calc(100% - 2rem), 36ch)"}}
               [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]]])
-          [:div.z-0 (when always-panel
-                      [always-panel modify?])]
+          (when always-panel
+            [always-panel modify?])
           [render-fullwidth]])
 
        [widgets/after-content]
