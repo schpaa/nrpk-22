@@ -70,22 +70,29 @@
 
      [sc/small "this is"]]))
 
-(defn vertical-button [{:keys [right-side caption
-                               opposite-on-click
-                               with-caption?
-                               opposite-icon-fn
-                               tall-height special
-                               icon icon-fn class style on-click
-                               page-name badge disabled]
-                        :or   {style {}}}]
+(defn vertical-button
+  [{:keys [right-side
+           caption
+           opposite-on-click
+           with-caption?
+           opposite-icon-fn
+           tall-height
+           special
+           icon
+           icon-fn
+           class
+           on-click
+           page-name
+           badge
+           disabled]}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
-        active? (if (fn? page-name)
-                  (page-name current-page)
-                  (= current-page page-name))]
+        selected? (if (fn? page-name)
+                    (page-name current-page)
+                    (= current-page page-name))]
     [sc/toolbar-button-with-caption
      {:style    {:justify-content :space-between
                  :align-items     :center}
-      :class    [:gap-2 :w-full :flex :flex-row-reverse :justify-center]
+      :class    [:gap-2 :w-full :flex :flex-row-reverse :justify-center (when selected? :selected)]
       :on-click #(on-click current-page)}
 
      (when right-side
@@ -121,12 +128,11 @@
 
        [sc/toolbar-button
         {:disabled  disabled
-         :tab-index (when active? "-1")
-         ;:style     {:aspect-ratio "1/1"}
+         :tab-index (when selected? "-1")
          :class     [(if right-side :right-side :left-side)
-                     (if active? (or (when class (class current-page)) :selected))
+                     (if selected? (or (when class (class current-page)) :selected))
                      (if special :special)]}
-        [:div.shrink-0 #_{:style {:border "1px solid blue"}}
+        [:div.shrink-0
          [sc/icon-large
           (if icon-fn
             (icon-fn current-page)

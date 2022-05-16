@@ -297,6 +297,7 @@
         :style {:box-shadow "var(--inner-shadow-2)"
                 :background "var(--toolbar)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
+       ;;
        (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.items-start
               {:style {:padding-top "var(--size-0)"}}]
              (map (fn [{:keys [opposite-icon-fn] :as e}]
