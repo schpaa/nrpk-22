@@ -1,24 +1,23 @@
 (ns booking.utlan
   (:require [tick.core :as t]
+            [re-frame.core :as rf]
+            [reagent.core :as r]
             [lambdaisland.ornament :as o]
             [schpaa.style.ornament :as sc]
             [schpaa.debug :as l]
-            [schpaa.style.dialog :as dlg :refer []]
-            [booking.modals.boatinfo :refer [open-modal-boatinfo]]
-            [re-frame.core :as rf]
             [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [schpaa.icon :as icon]
+            [booking.modals.boatinfo :refer [open-modal-boatinfo]]
+            [booking.common-widgets :as widgets]
             [booking.database]
             [booking.ico :as ico]
             [logg.database]
-            [reagent.core :as r]
-            [db.core :as db]
-            [schpaa.style.hoc.toggles :as hoc.toggles]
-            [schpaa.icon :as icon]
-            [booking.common-widgets :as widgets]))
+            [db.core :as db]))
 
 ;; store
 
-(def store (r/atom {:selector :b}))
+(def store (r/atom {:selector :a}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -145,23 +144,6 @@
   [:&:hover {:background "white" #_"var(--surface000)"}]
   [:&.deleted {:background "red"}])
 
-(defn trashcan [k {:keys [deleted] :as v}]
-  [hoc.buttons/reg-icon
-   {:class    (if deleted [:regular] [:danger])
-    :on-click #(db/database-update
-                 {:path  ["activity-22" (name k)]
-                  :value {:deleted (not deleted)}})}
-   (if deleted (icon/adapt :rotate-left) ico/trash)
-
-   #_[round-normal-listitem
-      {:class    [(if deleted :deleted)]
-       :on-click #(db/database-update
-                    {:path  ["activity-22" (name k)]
-                     :value {:deleted (not deleted)}})}
-      [sc/icon-small
-       {:style {:color "var(--text1)"}}
-       (if deleted (icon/small :rotate-left) ico/trash)]]])
-
 (o/defstyled inline-item :div
   [:&
    :inline-flex
@@ -181,31 +163,31 @@
    {;:outline               "1px solid red"
     :display               :grid
     :align-items           :center
-    :border-radius         "var(--radius-1)"
+    ;:border-radius         "var(--radius-1)"
     :column-gap            "var(--size-2)"
     :row-gap               "var(--size-1)"
     :grid-template-columns "min-content min-content 1fr 1fr"
     :grid-auto-rows        "auto"
     :grid-template-areas   [["time edit content graph"]]}
-   [:&:hover
-    {:background "rgba(0,0,0,0.05)"}]])
+   #_[:&:hover
+      {:background "rgba(0,0,0,0.05)"}]])
 
 (o/defstyled logg-listitem-grid :div
-  [:& :p-1x
+  [:& :py-1
    {;:outline               "1px solid red"
     :display               :grid
-    :border-radius         "var(--radius-1)"
+    ;:border-radius         "var(--radius-1)"
     :column-gap            "var(--size-3)"
     :row-gap               "var(--size-1)"
-    :grid-template-columns "min-content min-content min-content 1fr  min-content"
+    :grid-template-columns "15rem min-content min-content 1fr  min-content"
     :grid-auto-rows        "min-content"
     :align-items           :start
     :grid-template-areas   [["start-time start-date . end-date end-time"]
                             ["edit content content content content"]
                             [". badges . details details"]
                             [". graph graph graph graph"]]}
-   [:&:hover
-    {:background "rgba(0,0,0,0.05)"}]])
+   #_[:&:hover
+      {:background "rgba(0,0,0,0.05)"}]])
 
 (o/defstyled logg-listitem :div
   [:& :gap-2
@@ -326,37 +308,43 @@
 
 (defn- edit-bar [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}
                  all-returned?]
-  [sc/row-sc-g4
+  [sc/row-sc-g2
    (when edit-mode?
-     [widgets/trashcan (fn [_] (db/database-update
-                                 {:path  ["activity-22" (name k)]
-                                  :value {:deleted (not deleted)}})) m])
-   [widgets/edit {:disabled false} #(rf/dispatch [:lab/toggle-boatpanel [k m]]) m]
+     [widgets/trashcan'
+      {:deleted? deleted
+       :on-click (fn [] (db/database-update
+                          {:path  ["activity-22" (name k)]
+                           :value {:deleted (not deleted)}}))}
+      (if deleted "Angre" "Slett")])
 
-   [hoc.buttons/reg-pill-icon
-    {:class    [(if all-returned?
-                  :outline2
+   (when-not deleted
+     [hoc.buttons/reg-pill-icon
+      {:class    [:narrow
                   (if (= uid loggedin-uid)
-                    :cta
-                    :regular))]
+                    (if all-returned? :regular :cta)
+                    :regular)]
+       :on-click #(innlevering {:k         k
+                                :timestamp timestamp
+                                :boats     list})}
+      ico/status
+      (if all-returned? "ut" "inn")])
 
-     :on-click #(innlevering {:k         k
-                              :timestamp timestamp
-                              :boats     list})}
-    ico/status
-    (if all-returned? "Endre" "Status")]])
+   [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel [k m]]) m]])
 
 (defn agegroups-detail [{:keys [adults children juveniles] :as m}]
-  [:div (:style {:grid-area "agegroups"})
-   [sc/row-sc-g4-w
-    [sc/text1 {:style {:font-weight "var(--font-weight-5)"
-                       :white-space :nowrap}
-               :class [:tabular-nums]}
-     (if (pos? adults) adults "–")
-     " "
-     (if (pos? juveniles) juveniles "–")
-     " "
-     (if (pos? children) children "–")]]])
+  (letfn [(f [n]
+            [sc/text1 {:style {:justify-self :center
+                               :font-weight  "var(--font-weight-5)"
+                               :white-space  :nowrap}
+                       :class [:tabular-nums]}
+             (if (pos? n) n "—")])]
+    [:div (:style {:grid-area "agegroups"})
+     [:div
+      {:style {:display               "grid"
+               :grid-template-columns "repeat(3,1rem)"}}
+      (f adults)
+      (f juveniles)
+      (f children)]]))
 
 (comment
   (let [dt "2022-05-10T09:32:24.084Z"
@@ -397,11 +385,11 @@
            (t/= (t/today) (t/date arrived-datetime)))))
 
 (defn- boat-badges [db deleted-item::style boats class]
-  [:div {:class [:gap-1 :mb-1x]
+  [:div {:class [:gap-2]
          :style {:flex            "1 0 auto"
                  :display         "flex"
                  :flex-wrap       :wrap
-                 :justify-content "between"
+                 :justify-content "end"
                  :align-items     "center"
                  :grid-area       "content"}}
    (let [prepared
@@ -458,7 +446,7 @@
                            show-overview? (t/= (t/today) (t/date date))
                            show-details? (not all-returned?)
                            :else true)]
-               [sc/zebra
+               [sc/zebra {:class [:px-4]}
                 (if show-overview?
                   [logg-listitem-overview
                    (let [{:keys [start-date end-date start-time end-time]}
@@ -471,9 +459,9 @@
                    [g-area "content" [boat-badges db deleted-item::style boats :small]]]
 
                   [logg-listitem-grid
-                   #_(when (some #{@selector} [:a :b])
-                       [g-area "badges" [sc/row-sc-g4
-                                         [agegroups-detail m]]])
+                   (when (some #{@selector} [:a :b])
+                     [g-area "badges" [sc/row-sc-g4
+                                       [agegroups-detail m]]])
 
 
                    [:div {:style {:display     "flex"
@@ -482,12 +470,12 @@
 
                     [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
 
-                   #_(when (some #{@selector} [:a :b])
-                       [sc/row-sc-g2 {:style {:align-items     "center"
-                                              :justify-content :end
-                                              :grid-area       "details"}}
-                        (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
-                        [badges deleted-item::style m]])
+                   (when (some #{@selector} [:a :b])
+                     [sc/row-sc-g2 {:style {:align-items     "center"
+                                            :justify-content :end
+                                            :grid-area       "details"}}
+                      (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+                      [badges deleted-item::style m]])
 
                    ;graph
                    #_(if (and (t/= (t/date date) (t/today)) (= :b @selector))
@@ -495,18 +483,17 @@
 
 
                    [g-area "content" [boat-badges db deleted-item::style boats]]
-
-
-                   #_(let [{:keys [start-date end-date start-time end-time]}
-                           (preformat-dates date end::time-instant)]
-                       (for [[areaname value style] [["start-date" start-date {}]
-                                                     ["start-time" start-time]
-                                                     ["end-date" end-date {:justify-content :end}]
-                                                     ["end-time" end-time {:justify-content :end}]]]
-                         [:div.flex {:style (merge-with conj {:align-items :center
-                                                              :display     :flex
-                                                              :grid-area   areaname} style)}
-                          [sc/title1 {:class [:tracking-tight]} value]]))])]))])))
+                   (let [{:keys [start-date end-date start-time end-time]}
+                         (preformat-dates date end::time-instant)]
+                     (for [[areaname value style] [["start-date" start-date {}]
+                                                   ["start-time" start-time]
+                                                   ["end-date" end-date {:justify-content :end}]
+                                                   ["end-time" end-time {:justify-content :end}]]]
+                       [:div.flex
+                        {:style (merge-with conj {:align-items :center
+                                                  :display     :flex
+                                                  :grid-area   areaname} style)}
+                        [sc/title1 {:class [:xtracking-tight]} value]]))])]))])))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
@@ -525,15 +512,15 @@
 
 (defn always-panel []
   [:<>
-   [sc/row-center {:class  [:py-4]
-                   :stylex {:background-color "var(--content)"}}
-    [hoc.buttons/cta-pill-icon
-     {:on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
-     ico/plus "Nytt utlån"]
-    [hoc.buttons/danger-pill
-     {:disabled true
-      :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
-     "HMS Hendelse"]]
+   #_[sc/row-center {:class  [:py-4]
+                     :stylex {:background-color "var(--content)"}}
+      [hoc.buttons/cta-pill-icon
+       {:on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
+       ico/plus "Nytt utlån"]
+      [hoc.buttons/danger-pill
+       {:disabled true
+        :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])}
+       "HMS Hendelse"]]
 
    [sc/row-center {:class [:py-4 :sticky :top-20]}
     [widgets/pillbar
