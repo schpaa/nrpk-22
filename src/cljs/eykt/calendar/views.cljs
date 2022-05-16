@@ -210,7 +210,9 @@
                          (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
                                (concat
                                  (map #(occupied-slot uid %) slots-on-this-eykt)
-                                 (map #(avail-user-slot "Ledig") (range slots-free))))]]]))]))]))
+                                 (map (fn [] (avail-user-slot
+                                               {:on-click #(let [args {:uid uid :section section :timeslot starttime-key}]
+                                                             (actions/add args))} "Ledig")) (range slots-free))))]]]))]))]))
 
 (defn hoc3
   "lookup startdatetime->enddatetime,slots,duration-in-minutes"

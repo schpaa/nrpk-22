@@ -3,15 +3,13 @@
             [tick.core :as t]))
 
 (defn add
-  "add to database at [calendar uid timeslot]"
+  "add to database at [calendar uid section timeslot]"
   [{:keys [uid section timeslot]}]
-  ;(js/alert "not allowed!")
   (let [uid (if (keyword? uid) (name uid) uid)
         path ["calendar" uid section]
         value {(name timeslot) {uid (str (t/date-time))}}]
-    (database-update
-      {:path  path
-       :value value})))
+    (database-update {:path  path
+                      :value value})))
 
 (defonce a (atom nil))
 
