@@ -24,6 +24,7 @@
 (def admin [:> solid/IdentificationIcon])
 (def booking [:> solid/ClockIcon])
 (def status [:> outline/SwitchVerticalIcon])
+(def bytte [:> outline/SwitchHorizontalIcon])
 (def booking-disabled [:> outline/ClockIcon])
 (def ticket [:> solid/TicketIcon])
 (def vaktrapport [:> solid/KeyIcon])

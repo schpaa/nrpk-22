@@ -4,7 +4,7 @@
             [re-frame.core :as rf]
             [schpaa.style.ornament :as sc]
             [booking.common-widgets :as widgets]
-            [schpaa.style.hoc.buttons :as hoc.buttons]
+            [schpaa.style.hoc.buttons :as button]
             [booking.ico :as ico]
             [tick.core :as t]
             [schpaa.debug :as l]
@@ -52,15 +52,22 @@
     [sc/col-space-8 {:class []}
      [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
       (into [:<>]
-            (for [[slot kv] data]
+            (for [[slot kv] data
+                  :let [date-registered (some-> (get kv loggedin-uid) t/date-time times.api/arrival-date)]]
               [sc/row-sc-g4-w
-               [schpaa.style.hoc.buttons/reg-pill
-                {:class    [:narrow]
-                 :disabled true}
-                "Ta over"]
+               [button/reg-pill-icon
+                {:class    [:message]
+                 :disabled false}
+                ico/bytte
+                "Bytte"]
+               [button/reg-pill-icon
+                {:class    [:danger]
+                 :disabled false}
+                ico/trash
+                "Avlys"]
                [sc/col
                 [sc/text1 (some-> slot t/date-time times.api/arrival-date)]
-                [sc/small1 "Registrert " (some-> (get kv loggedin-uid) t/date-time times.api/arrival-date)]]]))]]))
+                [sc/small1 "Registrert " date-registered]]]))]]))
 
 (defn beskjeder [loggedin-uid datum]
   (let [admin? false
@@ -85,7 +92,7 @@
                   [widgets/trashcan
                    (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
                    {:deleted deleted :id msg-id}]
-                  [hoc.buttons/round-cta-pill {:on-click #(reply-to-msg loggedin-uid uid msg-id)} [sc/icon ico/tilbakemelding]]
+                  [button/round-cta-pill {:on-click #(reply-to-msg loggedin-uid uid msg-id)} [sc/icon ico/tilbakemelding]]
                   [sc/col-space-2
                    [sc/col-space-1
                     [sc/text2 (if (= uid loggedin-uid)
