@@ -34,14 +34,18 @@
                 {:fx [[:rent/write [data new-boat-map]]]}))
 
 (defn- create-boat! [number]
-  (let [k (db.core/database-push
+  (let [n (str number)
+        k (db.core/database-push
             {:path  ["boad-item"]
-             :value {:number number}})]
-    [number (.-key k)]))
+             :value {:number    n
+                     :boat-type "undefined-brand"
+                     :location  "0"}})]
+    [n (.-key k)]))
 
 (rf/reg-event-fx :create-boats
                  (fn [{db :db} [_ boat-numbers]]
-                   (let [new-data (into {} (map create-boat! boat-numbers))]
+                   (let [;{"999" "-SOMEIDENTITY1"}
+                         new-data (into {} (map create-boat! boat-numbers))]
                      {:db (assoc db :boatnumber-to-uuid new-data)})))
 
 (defn- confirm-command [st]
