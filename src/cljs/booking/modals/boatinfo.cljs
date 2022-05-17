@@ -18,11 +18,11 @@
 ;; styles
 
 (o/defstyled checkbox-matrix :div
-  [:& :gap-4
+  [:& :gap-x-4 :gap-y-2
    {:display               "grid"
     :align-items           "center"
     :grid-auto-rows        "min-content"
-    :grid-template-columns "repeat(auto-fit,minmax(12ch,1fr))"}])
+    :grid-template-columns "repeat(auto-fit,minmax(14ch,1fr))"}])
 
 ;; constants
 
@@ -37,13 +37,16 @@
                    "Lokk"
                    "Lister"
                    "Ror"
-                   "Styre\u00adpinne"
-                   "Styre\u00ADwire"
+                   "Styrepinne"
+                   "Styrewire"
+                   "Feste"
+                   "Pedaler"
                    "Kjøl"
                    "Cockpit"
                    "Sete"
                    "Merking"
-                   "Skilt"])
+                   "Skilt på stativ"
+                   "Rettelse"])
 
 ;; storage
 
@@ -83,8 +86,15 @@
 
 (defn prep-for-submit [v]
   (let [;todo check timestamp-format for reading this
-        timestamp (str (t/now))]
-    (assoc v :timestamp timestamp)))
+        timestamp (str (t/now))
+        r (assoc v :timestamp timestamp)]
+    (reduce (fn [a [k v]]
+              (if (and (some #{k} damage-words)
+                       (false? v))
+                (dissoc a k)
+                a))
+            r
+            r)))
 
 (defn on-submit [id {:keys [values]}]
   (tap> {"on-submit " id})
@@ -187,15 +197,14 @@
   [sc/col-space-4
    [checkbox-matrix
     (into [:<>]
-          (for [e damage-words]
+          (for [e (sort damage-words)]
             [sc/co
              [hoc.toggles/largeswitch-local'
-              {:get     #(values (keyword e))
-               :set     #(set-values {(keyword e) %})
+              {:get     #(values e)
+               :set     #(set-values {e %})
                :view-fn (fn [t c v] [sc/row-sc-g2 t
                                      [(if v sc/text1 sc/text2) c]])
                :caption e}]]))]
-
    [sci/textarea props
     nil {:class [:-mx-2]} "Annen beskrivelse" :description]])
 
@@ -264,14 +273,9 @@
         boat-item-id (some-> (:id data) name)]
     (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
                  ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
-      ;(tap> {:modal-boatinfo-windowcontent data})
       [sc/dropdown-dialog'
        [:div.sticky.top-0
-        {:style {
-                 ;:position         :sticky
-                 ;:top "-4rem"
-                 ;:margin-top       "132px"
-                 :margin-inline    -24
+        {:style {:margin-inline    -24
                  :padding          24
                  :z-index          10
                  :background-color "var(--toolbar)"}}
@@ -284,53 +288,62 @@
                    :keywordize-keys   true
                    :path              :form-damange
                    :form-id           "damage-form2"
-                   :initial-values    {:description ""}
+                   :initial-values    (reduce (fn [a e] (assoc a e false)) {:description ""} damage-words)
                    :on-submit         #(on-submit boat-item-id %)}
         (fn [{:keys [dirty handle-submit form-id] :as props}]
           [:form {:id        form-id
                   :on-submit handle-submit}
            [sc/col-space-8 {:style {:padding-top "2rem"}}
-            ;[l/pre boat-item-id]
             (when -debug [l/pre input boat-type])
             ;i want something in editor to execute when the close button is pressed
             #_[togglepanel {:open     0
                             :disabled true} :boats/editor "Endringer"
                #(editor props) false]
+            [l/pre (:values props)]
             [togglepanel :boats/damage "Trenger nærmere ettersyn"
              (fn [] [insert-damage props])]
-            (if @admin? [togglepanel :boats/worklog "Arbeidsliste"
-                         (fn [] [insert-worklog
-                                 boat-item-id
-                                 (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])])
+            (if @admin?
+              [togglepanel :boats/worklog "Arbeidsliste"
+               (fn [] [insert-worklog
+                       boat-item-id
+                       (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])])
 
-            [bottom-button-panel
+            ;todo dirty is sometimes dirty when it really isn't, fix this by initializing
+            ; the checkboxmatrix
+            (if dirty
+              [bottom-button-panel
+               [sc/row-sc-g2]
+               [:div {:style {:flex "1"}}]
+               [hoc.buttons/regular
+                {:type     :button
+                 :style    {:background-color "var(--toolbar)"
+                            :color            "var(--buttoncopy)"}
+                 :on-click on-close}
+                "Avbryt"]
+               [hoc.buttons/attn
+                {:type     :submit
+                 :disabled false}
+                "Lagre"]]
+              [bottom-button-panel
+               [sc/row-sc-g2
+                #_[hoc.buttons/cta-outline
+                   {:type     :button
+                    :on-click #()
+                    :disabled true}
+                   [sc/icon ico/arrowLeft']]
 
-             [sc/row-sc-g2
-              #_[hoc.buttons/cta-outline
-                 {:type     :button
-                  :on-click #()
-                  :disabled true}
-                 [sc/icon ico/arrowLeft']]
-
-              [hoc.buttons/cta-outline
-               {:type     :button
-                :on-click #()
-                :disabled true}
-               [sc/icon ico/arrowRight']]]
-
-             [:div {:style {:flex "1"}}]
-
-             [hoc.buttons/attn
-              {:type     :submit
-               :disabled (not dirty)}
-              "Lagre"]
-
-             [hoc.buttons/regular
-              {:type     :button
-               :style    {:background-color "var(--toolbar)"
-                          :color            "var(--buttoncopy)"}
-               :on-click on-close}
-              "Lukk"]]]])]]
+                #_[hoc.buttons/cta-outline
+                   {:type     :button
+                    :on-click #()
+                    :disabled true}
+                   [sc/icon ico/arrowRight']]]
+               [:div {:style {:flex "1"}}]
+               [hoc.buttons/regular
+                {:type     :button
+                 :style    {:background-color "var(--toolbar)"
+                            :color            "var(--buttoncopy)"}
+                 :on-click on-close}
+                "Lukk"]])]])]]
 
       (finally))))
 
