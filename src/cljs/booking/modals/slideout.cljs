@@ -65,6 +65,7 @@
            :style    {:transform-origin "center center"}
            :on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
           [:div.fixed.inset-0
+           {:style {:z-index 2000}}
            [:div.text-center
             [schpaa.style.dialog/standard-overlay]
             ;; trick browser into centering modal contents

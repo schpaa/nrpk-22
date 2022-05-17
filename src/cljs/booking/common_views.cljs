@@ -78,7 +78,7 @@
     :height     "var(--size-9)"}])
 
 (o/defstyled header-top :div
-  [:& :flex :items-center :w-full :px-2 :gap-2
+  [:& :flex :items-center :w-full :px-2 :gap-4
    {:height            "var(--size-9)"
     ;:z-index 10000
     :position          :relative
@@ -404,9 +404,11 @@
     [headerline
      {:class [:h-16 :items-center :truncate]}
      ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
+     ;[l/pre (headline)]
      (let [items [location
                   [:div.grow]
-                  (when headline [headline])
+                  (when headline
+                    [sc/row-sc-g4 (into [:<>] (map identity (headline)))])
                   ;[sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
                   [:div.w-12 [main-menu r]]]
            ;:div.relative.-debug2.h-screen.w-screen
@@ -542,9 +544,8 @@
             (widgets/open-slideout new-version-available::dialog))))
       (catch js/Error _))))
 
-(defn page-boundary [r {:keys [frontpage headline]} & contents]
-  (let [geo (rf/subscribe [:lab/screen-geometry])
-        admin? (rf/subscribe [:lab/admin-access])]
+(defn page-boundary [r {:keys [headline-plugin]} & contents]
+  (let [geo (rf/subscribe [:lab/screen-geometry])]
     (r/create-class
       {:display-name        "page-boundary"
        :component-did-mount (fn [_]
@@ -560,29 +561,35 @@
              [booking.modals.slideout/render]
              [booking.modals.commandpalette/window-anchor]]
 
-            (let [marg (if hidden-menu?
-                         :sm:mx-0
-                         (if right-menu? (if menu-caption? :sm:mr-56 :sm:mr-16)
-                                         (if menu-caption? :sm:ml-56 :sm:ml-16)))
-                  field-width (if hidden-menu?
-                                nil
-                                (if menu-caption? :sm:w-56 :sm:w-16))]
-              (cond
-                hidden-menu?
+            (cond
+              hidden-menu?
+              (let [marg :sm:mx-0]
                 [:div
-                 [:div#inner-document {:class [marg]} contents]
-                 #_[:div.fixed.top-0.bottom-0.left-0.hidden.sm:block.noprint
-                    {:class [field-width :print:hidden]
-                     :style {:left 0}}
-                    [vertical-toolbar false]]]
-                right-menu?
+                 [:div#inner-document {:class [marg]} contents]])
+
+              right-menu?
+              (let [marg (if menu-caption?
+                           :sm:mr-56
+                           :sm:mr-16)
+                    field-width (when-not hidden-menu?
+                                  (if menu-caption?
+                                    :sm:w-56
+                                    :sm:w-16))]
                 [:div
                  [:div#inner-document {:class [marg]} contents]
                  [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
                   {:class [field-width]
                    :style {:right 0}}
-                  [vertical-toolbar true]]]
-                :else
+                  [vertical-toolbar true]]])
+
+              :else
+              (let [marg (if menu-caption?
+                           :sm:ml-56
+                           :sm:ml-16)
+                    field-width (when-not hidden-menu?
+                                  (if menu-caption?
+                                    :sm:w-56
+                                    :sm:w-16))]
                 [:div
                  [:div#inner-document {:class [marg]} contents]
                  [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
@@ -590,7 +597,7 @@
                    :style {:left 0}}
                   [vertical-toolbar false]]]))
 
-            [booking.common-views/header @scrollpos headline]]))})))
+            [booking.common-views/header @scrollpos headline-plugin]]))})))
 
 (defn matches-access "" [r [status access :as all-access-tokens]]
   (let [[req-status req-access :as req-tuple] (-> r :data :access)]
@@ -627,42 +634,58 @@
 (defn- render-frontpage [r {:keys [render]} v]
   [:div {:style {:padding-block "8rem"}} [render r]])
 
-(defn- render-normal [r {:keys [headline frontpage render render-fullwidth panel always-panel panel-title] :as m} admin?]
-  (let [pagename (some-> r :data :name)
-        users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
-        have-access? (booking.common-views/matches-access r users-access-tokens)
-        modify? (booking.access/can-modify? r users-access-tokens)]
+(defn- full-width [r {:keys [render-fullwidth panel always-panel panel-title]}]
+  (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
+        modify? (booking.access/can-modify? r users-access-tokens)
+        pagename (some-> r :data :name)]
+    [sc/col-space-8
+     {:style {:padding-top "8rem"
+              :width       "100%"
+              :min-height  "100vh"
+              :max-width   "100%"}}
+     (when (fn? panel)
+       [:div.mx-auto
+        [:div.-debug {:style {:margin-left "1rem"
+                              :width       "50ch"
+                              :max-width   "min(calc(100% - 2rem), 36ch)"}}
+         [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]]])
+     (when always-panel
+       [always-panel modify?])
+     [render-fullwidth]]))
+
+(defn- normal-width [r {:keys [render panel always-panel panel-title] :as m} modify?]
+  (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
+        modify? (booking.access/can-modify? r users-access-tokens)
+        pagename (some-> r :data :name)]
+    [sc/col-space-8
+     {:style {:padding-block "8rem"
+              :margin-inline "auto"
+              :min-height    "100vh"
+              :max-width     "min(calc(100% - 2rem), 56ch)"}}
+     (when (fn? panel)
+       [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
+     (when always-panel
+       [always-panel modify?])
+     [render r m]]))
+
+(defn- render-normal [r {:keys [render render-fullwidth] :as m} admin?]
+  (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
+        have-access? (booking.common-views/matches-access r users-access-tokens)]
     (if-not have-access?
       [no-access-view r]
       [:<>
        (cond
          render
-         [sc/col-space-8
-          {:style {:padding-block "8rem"
-                   :margin-inline "auto"
-                   :min-height    "100vh"
-                   :max-width     "min(calc(100% - 2rem), 56ch)"}}
-          (when (fn? panel)
-            [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
-          (when always-panel
-            [always-panel modify?])
-          [render r m]]
+         [normal-width r m]
 
          render-fullwidth
-         [sc/col-space-8
-          {:style {:padding-top "8rem"
-                   :width       "100%"
-                   :min-height  "100vh"
-                   :max-width   "100%"}}
-          (when (fn? panel)
-            [:div.mx-auto
-             [:div.-debug {:style {:margin-left "1rem"
-                                   :width       "50ch"
-                                   :max-width   "min(calc(100% - 2rem), 36ch)"}}
-              [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]]])
-          (when always-panel
-            [always-panel modify?])
-          [render-fullwidth]])
+         [full-width r m]
+
+         :render-not-defined
+         [sc/title1 {:style {:color "var(--red-5)"
+                             :min-height "100vh"
+                             :padding-block "8rem"
+                             :padding-inline "1rem"}} :Render-not-defined])
 
        [widgets/after-content]
 
@@ -692,11 +715,11 @@
 
 
   "
-  [r {:keys [frontpage render headline] :as m}]
+  [r {:keys [frontpage render headline-plugin] :as m}]
   (let [admin? (rf/subscribe [:lab/admin-access])]
     [:<>
      [check-latest-version]
-     [page-boundary r {:frontpage frontpage :headline headline}
+     [page-boundary r {:frontpage frontpage :headline-plugin headline-plugin}
       (if frontpage
         [render r]
         [render-normal r m admin?])]]))

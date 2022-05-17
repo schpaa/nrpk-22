@@ -189,6 +189,7 @@
         [ui/dialog {:on-close close
                     :class    "z-100"}
          [:div.fixed.inset-0.z-0.overflow-y-auto
+          {:style {:z-index 2000}}
           [:div.min-h-screen.px-4.text-center
            (schpaa.style.dialog/standard-overlay)
            [:span.inline-block.h-screen.align-middle

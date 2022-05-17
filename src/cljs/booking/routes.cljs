@@ -175,6 +175,10 @@
     {:name   :r.mine-vakter-ipad
      :header [[:r.båtliste.nøklevann] "Vaktrapport"]}]
 
+   ["/experimental"
+    {:name   :r.experimental
+     :header [[:r.experimental] "Experimental"]}]
+
    ["/not-found"
     {:name   :r.page-not-found
      :header [[:r.oversikt] "Finner ikke siden"]}]])

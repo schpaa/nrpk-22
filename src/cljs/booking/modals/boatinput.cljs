@@ -74,6 +74,25 @@
 
 (rf/reg-sub :rent/id-lookup :<- [:db/boat-db] :-> identity)
 
+(defn input-area [length caption fieldname]
+  ;cap size of input to length
+  (let [c-field (r/cursor st [:textfield fieldname])]
+    (reset! c-field (subs (str @c-field) 0 length))
+    (let [has-focus? (= @c-focus fieldname)
+          textinput (fn [v]
+                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1
+                       [bis/input-caption v (when has-focus? [:span.blinking-cursor.pb-1 "|"])]])]
+      [:div.relative.h-16.shrink-0
+       {:on-click #()
+        :style    {:padding-inline   "var(--size-2)"
+                   :border-radius    "var(--radius-0)"
+                   :background-color (if has-focus? "var(--field-focus)" "var(--field)")
+                   :color            (if has-focus? "var(--fieldcopy)" "var(--text1)")
+                   :box-shadow       (if has-focus? "var(--inner-shadow-1)")}}
+       [:div.absolute.top-1.left-2
+        [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
+       (textinput (subs (str @c-field) 0 length))])))
+
 (defn lookup [id]
   ;todo define as defonce
   (let [data @(rf/subscribe [:rent/lookup])]
@@ -750,14 +769,6 @@
                                           ;(reset! st {})
                                           (assoc db :modal.boatinput/context nil)))
 
-#_(defn open-boatpanel
-    ""
-    [_]
-    {:fx [[:dispatch
-           [:modal.boatinput/show
-            {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
-             :content-fn        #(window-content %)}]]]})
-
 (defn render-boatinput
   "centered dialog used by this component"
   []
@@ -775,7 +786,8 @@
           :show        open?}
          [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
           [:div.fixed
-           {:class [:w-auto :top-0 :h-auto (cond
+           {:style {:z-index 2000}
+            :class [:w-auto :top-0 :h-auto (cond
                                              @mobile? :inset-0
                                              (not @right-side?) :left-12
                                              :else :right-12)]}
@@ -800,7 +812,8 @@
                                                                          "var(--shadow-6)"]))
                                       :outline    :none
                                       :border     :none})
-                             {:border-radius    "var(--size-2)"
+                             {
+                              :border-radius    "var(--size-2)"
                               :background-color "var(--toolbar)"})
               :class       [:inline-block :align-middle :text-left :transform
                             (o/classname sc/inner-dlg)]
@@ -833,21 +846,3 @@
 
 ;endregion
 
-(defn input-area [length caption fieldname]
-  ;cap size of input to length
-  (let [c-field (r/cursor st [:textfield fieldname])]
-    (reset! c-field (subs (str @c-field) 0 length))
-    (let [has-focus? (= @c-focus fieldname)
-          textinput (fn [v]
-                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1
-                       [bis/input-caption v (when has-focus? [:span.blinking-cursor.pb-1 "|"])]])]
-      [:div.relative.h-16.shrink-0
-       {:on-click #()
-        :style    {:padding-inline   "var(--size-2)"
-                   :border-radius    "var(--radius-0)"
-                   :background-color (if has-focus? "var(--field-focus)" "var(--field)")
-                   :color            (if has-focus? "var(--fieldcopy)" "var(--text1)")
-                   :box-shadow       (if has-focus? "var(--inner-shadow-1)")}}
-       [:div.absolute.top-1.left-2
-        [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
-       (textinput (subs (str @c-field) 0 length))])))

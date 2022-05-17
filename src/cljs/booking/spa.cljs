@@ -449,19 +449,50 @@
      (let [uid @(rf/subscribe [:lab/uid])]
        [+page-builder r
         {;:panel            booking.utlan/panel
-         :headline         booking.utlan/headline-extension
-         :always-panel     booking.utlan/always-panel
-         :render-fullwidth #(booking.utlan/render uid)}]))
+         :headline-plugin booking.utlan/headline-plugin
+         :always-panel    booking.utlan/always-panel
+         :render          #(booking.utlan/render uid)}]))
 
    :r.debug              (fn [r] (page r {:always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}))
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
-   ;todo Fordi når man skal bytte er det greit å ha et sted hvor dette skjer
+   ;todo Fordi når man skal bytte er det greit å alltid ha ett sted hvor dette kan skje
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
    :r.min-status         (fn [r] (page r {:render booking.min-status/render}))
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
    :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
+   :r.experimental
+   (fn [r]
+     (page r {:render-fullwidth
+              (fn []
+                [:div.-debug3.px-4
+                 (for [e (range 100)] [sc/text1 e])])
+              :headline-plugin
+              (letfn [(degrees-celsius [c]
+                        [:span c [:sup "°c"]])
+                      (centerline [a b]
+                        [sc/row {:style {:align-items :baseline
+                                         :width       "100%"}
+                                 :class [:gap-1]}
+                         [:div {:style {:flex         "1"
+                                        :text-align   :right
+                                        :justify-self :end}} a]
+                         [:div {:style {:flex         "1"
+                                        :justify-self :start}} b]])]
+                (fn [] [[sc/surface-a
+                         {:style {:border-radius  "var(--radius-blob-2)"
+                                  :padding-inline "2rem"
+                                  :background-color     "var(--blue-2)"
+                                  :padding-block  "0.25rem"}}
+                         [sc/col
+                          {:style {:width "min-content"}
+                           :class [:p-0 :m-0 :-debug2x]}
+                          (centerline [sc/text1 "luft"] [sc/title (degrees-celsius 23)])
+                          (centerline [sc/text1 "vann"] [sc/title (degrees-celsius 13)])]]]))}))
+   ;[sc/title1 "luft 16ºC"]
+   ;[sc/title1 "vann 7ºC"]]]]))}))
+
    :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn []
                                                     [sc/col
                                                      (for [e (range 30)]
