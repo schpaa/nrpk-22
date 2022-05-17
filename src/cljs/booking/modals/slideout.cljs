@@ -72,8 +72,7 @@
             [:span.inline-block.align-middle
              (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
             [ui/transition-child
-             {:style       {
-                            :box-shadow "var(--shadow-6)"}
+             {:style       {:box-shadow "var(--shadow-3)"}
 
               :class       (conj ["inline-block align-middle text-left"]
                                  [(o/classname sc/inner-dlg)])
@@ -93,8 +92,11 @@
                                 (reset! write-success false))
                               (rf/dispatch [:modal.slideout/clear]))}
              [:div {:style {:width     "512px"
-                            :max-width "90vw"}
-                    :class [:overflow-y-auto]}
+
+                            :max-width "100vw"}
+                    :class [;:px-1
+                            ;:pb-1
+                            :overflow-y-auto]}
 
               (when auto-dismiss
                 [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}
@@ -102,9 +104,6 @@
                   [:animate {:fill "freeze" :attributeName "y2" :from "50" :to "0" :dur (if auto-dismiss (str auto-dismiss "ms"))}]]])
 
               (if content-fn
-                #_[:div {:style {:background "red"
-                                 :z-index    -10}}]
-
                 (content-fn (assoc context
                               :on-close #(do
                                            (when on-close (on-close))

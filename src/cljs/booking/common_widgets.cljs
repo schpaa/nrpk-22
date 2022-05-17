@@ -442,12 +442,15 @@
 
 (defn pillbar
   ([c vs]
-   (pillbar {} c vs))
-  ([_attr c vs]
+   (pillbar {:class [:narrow :outline2 :normals]} c vs))
+  ([attr c vs]
    (let [f (fn [[k v]]
              [schpaa.style.hoc.toggles/pillbar
-              {:on-click #(reset! c k)
-               :class    [:narrow :outline2 :normals (if (= k @c) :inverse)]} v])]
+              (merge-with into {:on-click #(if (= k @c)
+                                             (reset! c nil)
+                                             (reset! c k))
+                                :class    [(if (= k @c) :inverse)]}
+                          attr) v])]
      [sc/row (into [:<>] (map f vs))])))
 
 (defn open-slideout [dialog-def]

@@ -224,7 +224,7 @@
 
 (defn header [{:keys [bt-data ex-data]}
               {:keys [id boat-type slot location description number on-star-click] :as data}]
-  [sc/col-space-4
+  [sc/col-space-4 {:style {:padding "1rem"}}
    [sc/row-sc-g2
     [widgets/badge
      {:class [:big :right-square]}
@@ -252,20 +252,23 @@
 
 (defn bottom-button-panel [& content]
   [:div
-   {:style {
+   {:style {:height                     "100%"
             :position                   :sticky
-            :bottom                     0
-            :margin-inline              -24
-            :margin-bottom              4
-            :padding-block              16
+            :bottom                     4
+            ;:padding-inline "1rem"
+            ;:margin-inline              -24
             :z-index                    10
             :border-bottom-left-radius  "var(--radius-1)"
             :border-bottom-right-radius "var(--radius-1)"
-            :background-color           "var(--toolbar-)"}}
-   [sc/row-ec {:class [:px-6]}
+            :background-color           "var(--content)"}}
+   [sc/row-ec {:style {
+                       :padding-block 16}
+               :class [:px-6]}
     content]])
 
 ;; react dialog (styling starts here)
+
+(defonce selected-tab (r/atom :feil))
 
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid] :as input}]
   (let [admin? (rf/subscribe [:lab/admin-access])
@@ -274,15 +277,29 @@
     (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
                  ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
       [sc/dropdown-dialog'
+       ;header
        [:div.sticky.top-0
-        {:style {:margin-inline    -24
-                 :padding          24
+        {:style {;:margin-inline    -24
+                 ;:padding          24
+                 :padding-bottom   0
+                 :xmargin-bottom   -32
                  :z-index          10
                  :background-color "var(--toolbar)"}}
         [header
          {:bt-data bt-data
           :ex-data ex-data}
-         data]]
+         data]
+
+        [sc/row-center {:style {:position       :relative
+                                :top            12
+                                :xmargin-bottom -32}}
+         ;pills
+         (widgets/pillbar {:class [:small]} selected-tab
+                          [[:feil "Feil"]
+                           (if @admin? [:arbeidsliste "Arbeidsliste"])
+                           [:data "Data"]])]]
+
+       ;body
        [fork/form {:prevent-default?  true
                    :clean-on-unmount? true
                    :keywordize-keys   true
@@ -292,58 +309,52 @@
                    :on-submit         #(on-submit boat-item-id %)}
         (fn [{:keys [dirty handle-submit form-id] :as props}]
           [:form {:id        form-id
+                  :class     []
                   :on-submit handle-submit}
-           [sc/col-space-8 {:style {:padding-top "2rem"}}
-            (when -debug [l/pre input boat-type])
-            ;i want something in editor to execute when the close button is pressed
-            #_[togglepanel {:open     0
-                            :disabled true} :boats/editor "Endringer"
-               #(editor props) false]
-            [l/pre (:values props)]
-            [togglepanel :boats/damage "Trenger nærmere ettersyn"
-             (fn [] [insert-damage props])]
-            (if @admin?
-              [togglepanel :boats/worklog "Arbeidsliste"
-               (fn [] [insert-worklog
-                       boat-item-id
-                       (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])])
+           [sc/col-space-8 {:style {:background     (if @selected-tab "var(--floating)" "var(--content)")
+                                    :padding-block  "2rem"
+                                    :padding-inline "1rem"}}
 
-            ;todo dirty is sometimes dirty when it really isn't, fix this by initializing
-            ; the checkboxmatrix
-            (if dirty
-              [bottom-button-panel
-               [sc/row-sc-g2]
-               [:div {:style {:flex "1"}}]
-               [hoc.buttons/regular
-                {:type     :button
-                 :style    {:background-color "var(--toolbar)"
-                            :color            "var(--buttoncopy)"}
-                 :on-click on-close}
-                "Avbryt"]
-               [hoc.buttons/attn
-                {:type     :submit
-                 :disabled false}
-                "Lagre"]]
-              [bottom-button-panel
-               [sc/row-sc-g2
-                #_[hoc.buttons/cta-outline
-                   {:type     :button
-                    :on-click #()
-                    :disabled true}
-                   [sc/icon ico/arrowLeft']]
-
-                #_[hoc.buttons/cta-outline
-                   {:type     :button
-                    :on-click #()
-                    :disabled true}
-                   [sc/icon ico/arrowRight']]]
-               [:div {:style {:flex "1"}}]
-               [hoc.buttons/regular
-                {:type     :button
-                 :style    {:background-color "var(--toolbar)"
-                            :color            "var(--buttoncopy)"}
-                 :on-click on-close}
-                "Lukk"]])]])]]
+            (case @selected-tab
+              :data [sc/title1 "wip"]
+              :feil [insert-damage props]
+              :arbeidsliste [insert-worklog
+                             boat-item-id
+                             (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})]
+              nil)]
+           (if dirty
+             [bottom-button-panel
+              [sc/row-sc-g2]
+              [:div {:style {:flex "1"}}]
+              [hoc.buttons/regular
+               {:type     :button
+                :style    {:background-color "var(--toolbar)"
+                           :color            "var(--buttoncopy)"}
+                :on-click on-close}
+               "Avbryt"]
+              [hoc.buttons/attn
+               {:type     :submit
+                :disabled false}
+               "Lagre"]]
+             [bottom-button-panel
+              [sc/row-sc-g2
+               #_[hoc.buttons/cta-outline
+                  {:type     :button
+                   :on-click #()
+                   :disabled true}
+                  [sc/icon ico/arrowLeft']]
+               #_[hoc.buttons/cta-outline
+                  {:type     :button
+                   :on-click #()
+                   :disabled true}
+                  [sc/icon ico/arrowRight']]]
+              [:div {:style {:flex "1"}}]
+              [hoc.buttons/regular
+               {:type     :button
+                :style    {:background-color "var(--toolbar)"
+                           :color            "var(--buttoncopy)"}
+                :on-click on-close}
+               "Lukk"]])])]]
 
       (finally))))
 

@@ -149,44 +149,44 @@
                              [sc/text1 (schpaa.components.views/normalize-kind kind)]
                              [sc/text0 navn]
                              [sc/text1 description]]])])
-               :a
-               (let [data (sort-by (comp second first) <
-                                   (group-by (comp :kind val)
-                                             (remove (comp nil? :boat-type val)
-                                                     (filter (fn [[k v]] (= "0" (:location v)))
-                                                             @(rf/subscribe [:db/boat-db])))))]
-                 [:div
-                  (into [:div]
-                        (for [[kind & r] data]
-                          [widgets/disclosure
-                           {}
-                           kind
-                           [sc/title1 (schpaa.components.views/normalize-kind kind)]
+               :a (let [data (sort-by (comp second first) <
+                                      (group-by (comp :kind val)
+                                                (remove (comp nil? :boat-type val)
+                                                        (filter (fn [[k v]] (= "0" (:location v)))
+                                                                @(rf/subscribe [:db/boat-db])))))]
+                    [:div
+                     (into [:div]
+                           (for [[kind & r] data]
+                             [widgets/disclosure
+                              {}
+                              kind
+                              [sc/title1 (schpaa.components.views/normalize-kind kind)]
 
-                           (for [{:keys [navn] :as z} r]
-                             [:div.gap-1
-                              {:style {:display               :grid
-                                       :grid-auto-rows        "auto"
-                                       :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
-                              (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
-                                [:div.flex.flex-col.gap-2
-                                 {:style {:padding          "var(--size-1)"
-                                          :background-color "var(--floating)"
-                                          :border-radius    "var(--radius-0)"}}
-                                 [widgets/stability-name-category (dissoc (-> r first val) :kind)]
-                                 [:div.flex.flex-wrap.gap-1
-                                  {:xstyle {:gap "var(--size-2)" :height "2rem"}}
-                                  (for [v (sort-by :number (map val r))
-                                        :let [{:keys [number slot _navn _description]} v]]
-                                    ;[:div.text-4xl number]
-                                    [widgets/badge
-                                     {:class    [:small]
-                                      :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                                     number
-                                     slot])]])])]))]))])
+                              (for [{:keys [navn] :as z} r]
+                                [:div.gap-1
+                                 {:style {:display               :grid
+                                          :grid-auto-rows        "auto"
+                                          :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
+                                 (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
+                                   [:div.flex.flex-col.gap-2
+                                    {:style {:padding          "var(--size-1)"
+                                             :background-color "var(--floating)"
+                                             :border-radius    "var(--radius-0)"}}
+                                    [widgets/stability-name-category (dissoc (-> r first val) :kind)]
+                                    [:div.flex.flex-wrap.gap-1
+                                     {:xstyle {:gap "var(--size-2)" :height "2rem"}}
+                                     (for [v (sort-by :number (map val r))
+                                           :let [{:keys [number slot _navn _description]} v]]
+                                       ;[:div.text-4xl number]
+                                       [widgets/badge
+                                        {:class    [:small]
+                                         :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                                        number
+                                        slot])]])])]))])
+               nil)])
 
 (rf/reg-fx :lab/open-new-blog-entry-dialog (fn [_] (schpaa.style.dialog/open-dialog-addpost)))
-
+    
 (rf/reg-event-fx :lab/just-create-new-blog-entry
                  (fn [_ _]
                    (tap> :lab/new-blog-entry)
