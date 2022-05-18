@@ -192,12 +192,36 @@
 ;region
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
-  [button/reg-pill-icon
-   {:on-click #(on-click)
-    :class    [(if deleted? :outline2 :danger)]
-    :disabled false}
-   (if deleted? ico/rotate-left ico/trash)
-   caption])
+  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
+    (if mobile?
+      [button/reg-icon
+       {:on-click #(on-click)
+        :class    [(if deleted? :outline2 :danger) :round]
+        :disabled false}
+       (if deleted? ico/rotate-left ico/trash)]
+
+      [button/reg-pill-icon
+       {:on-click #(on-click)
+        :class    [(if deleted? :outline2 :danger)]
+        :disabled false}
+       (if deleted? ico/rotate-left ico/trash)
+       caption])))
+
+(defn in-out' [{:keys [on-click deleted?]} caption]
+  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
+    (if mobile?
+      [button/reg-icon
+       {:on-click #(on-click)
+        :class    [(if deleted? :outline2 :cta) :round]
+        :disabled false}
+       ico/status]
+
+      [button/reg-pill-icon
+       {:on-click #(on-click)
+        :class    [(if deleted? :outline2 :cta)]
+        :disabled false}
+       ico/status
+       caption])))
 
 (defn trashcan [on-click {:keys [deleted id]}]
   [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
@@ -208,20 +232,35 @@
       ico/trash)]])
 
 (defn edit [attr on-click {:keys [deleted] :as m}]
-  (if deleted
-    [:div.w-8]
-    [hoc.buttons/reg-pill-icon
-     (conj
-       attr
-       {:class    [:outline2]
-        :style    {:text-transform "uppercase"
-                   :xbackground    "var(--blue-6)"
-                   :xcolor         "var(--blue-0)"}
-        :on-click #(on-click m)})
-     [sc/icon-small
-      {:style {:xcolor "var(--blue-0)"}}
-      ico/pencil]
-     "edit"]))
+  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
+    (if deleted
+      [:div.w-8]
+      (if mobile?
+        [hoc.buttons/reg-icon
+         (conj
+           attr
+           {:class    [:outline2]
+            :style    {:text-transform "uppercase"
+                       :xbackground    "var(--blue-6)"
+                       :xcolor         "var(--blue-0)"}
+            :on-click #(on-click m)})
+         [sc/icon-small
+          {:style {:xcolor "var(--blue-0)"}}
+          ico/pencil]]
+
+
+       [hoc.buttons/reg-pill-icon
+        (conj
+          attr
+          {:class    [:outline2]
+           :style    {:text-transform "uppercase"
+                      :xbackground    "var(--blue-6)"
+                      :xcolor         "var(--blue-0)"}
+           :on-click #(on-click m)})
+        [sc/icon-small
+         {:style {:xcolor "var(--blue-0)"}}
+         ico/pencil]
+        "Forandre"]))))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
@@ -235,7 +274,9 @@
 
 (defn user-link [uid]
   [sc/link
-   {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
+   {:class [:truncate]
+    :style {:white-space :nowrap}
+    :href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
    (user.database/lookup-alias uid)])
 
 (defn auto-link
@@ -319,7 +360,7 @@
                                      [sc/text2 "Gå til"]
                                      [auto-link :r.forsiden]
                                      [auto-link :r.oversikt]]]])
-                                [:div.mt-24
+                                [:div.mt-32
                                  [:div
                                   {:style {
                                            ;:width          "100%"
@@ -412,7 +453,7 @@
   ([header content footer]
    [dialog-template header content footer nil])
   ([header content footer buttons]
-   [sc/dropdown-dialog' {:style {:padding-bottom "1rem"}}
+   [sc/dropdown-dialog' {:style {:padding "1rem"}}
     [sc/col-space-4
      [sc/col-space-4
       [sc/row {:class []

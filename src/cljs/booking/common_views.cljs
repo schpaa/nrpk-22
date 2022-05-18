@@ -661,7 +661,7 @@
      {:style {:padding-block "8rem"
               :margin-inline "auto"
               :min-height    "100vh"
-              :max-width     "min(calc(100% - 2rem), 56ch)"}}
+              :max-width     "min(calc(100% - 1rem), calc(768px - 4rem))"}}
      (when (fn? panel)
        [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
      (when always-panel

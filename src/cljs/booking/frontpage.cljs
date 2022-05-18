@@ -341,10 +341,9 @@
    [hoc.buttons/attn
     {:on-click #(rf/dispatch [:app/login])}
     [sc/col {:style {:text-align :left}}
-     [sc/ingress {:style {:line-height "1.2"
-                          :font-weight "var(--font-weight-2)"
-                          :xcolor      "var(--brand1)"}} "Logg inn"]
-     [:div {:style {:color "var(--gray-3)"}} "& registrer deg"]]]])
+     [sc/title1 {:style {:font-weight "var(--font-weight-7)"
+                         :color      "var(--text0-copy)"}} "Logg inn"]
+     [:div {:style {:color "var(--text0-copy)"}} "& registrer deg"]]]])
 
 (defn current-status []
   [:div.space-y-4

@@ -279,20 +279,15 @@
       [sc/dropdown-dialog'
        ;header
        [:div.sticky.top-0
-        {:style {;:margin-inline    -24
-                 ;:padding          24
-                 :padding-bottom   0
-                 :xmargin-bottom   -32
+        {:style {:padding-bottom   0
                  :z-index          10
                  :background-color "var(--toolbar)"}}
         [header
          {:bt-data bt-data
           :ex-data ex-data}
          data]
-
         [sc/row-center {:style {:position       :relative
-                                :top            12
-                                :xmargin-bottom -32}}
+                                :top            12}}
          ;pills
          (widgets/pillbar {:class [:small]} selected-tab
                           [[:feil "Feil"]

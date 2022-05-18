@@ -5,6 +5,7 @@
             [re-frame.core :as rf]
             [tick.core :as t]
             [booking.aktivitetsliste]
+            [schpaa.style.dialog]
             [goog.events.KeyCodes :as keycodes]
             [booking.ico :as ico]
             [booking.common-widgets :refer [vertical-button]]

@@ -50,8 +50,8 @@
   (let [{:keys [initial original timestamp]} data
         db (rf/subscribe [:db/boat-db])]
     (r/with-let [st (r/atom initial)]
-      [sc/dropdown-dialog'
-       [sc/col-space-8 {:class [:pt-8]}
+      [sc/dropdown-dialog' {:style {:padding "1rem"}}
+       [sc/col-space-8
         [sc/col-space-4
          (let [f (fn [[k v]]
                    (let [m (get @db k)
@@ -60,7 +60,7 @@
                        {:atoma   (r/cursor st [k])
                         :view-fn (fn [t c] (view-fn m args timestamp t))})))]
            (map f @st))]
-        [sc/row-ec {:class [:pb-6]}
+        [sc/row-ec {:class [:pb-6x]}
          [:div.grow]
          [hoc.buttons/regular {:on-click on-close} "Avbryt"]
          [hoc.buttons/danger {:disabled (= initial @st)
@@ -170,7 +170,6 @@
     :grid-auto-rows        "auto"
     :grid-template-areas   [["time edit content graph"]]}])
 
-
 (o/defstyled logg-listitem-grid :div
   [:& :py-1
    {:display               :grid
@@ -180,10 +179,8 @@
     :grid-template-rows    "minmax(2rem,1fr) min-content"
     :align-items           :end
     :grid-template-areas   [["start-date edit content content content"]
-                            ["badges start-time start-time graph details "]]}])
-
-
-
+                            ["badges start-time start-time details details "]
+                            [". graph . . ."]]}])
 
 (o/defstyled logg-listitem :div
   [:& :gap-2
@@ -304,28 +301,37 @@
 
 (defn- edit-bar [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}
                  all-returned?]
-  [sc/row-sc-g2
-   (when edit-mode?
-     [widgets/trashcan'
-      {:deleted? deleted
-       :on-click (fn [] (db/database-update
-                          {:path  ["activity-22" (name k)]
-                           :value {:deleted (not deleted)}}))}
-      (if deleted "Angre" "Slett")])
+  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
+    [sc/row-sc-g2
+     (when edit-mode?
+       [widgets/trashcan'
+        {:deleted? deleted
+         :on-click (fn [] (db/database-update
+                            {:path  ["activity-22" (name k)]
+                             :value {:deleted (not deleted)}}))}
+        (if deleted "Angre" "Slett")])
 
-   (when-not deleted
-     [hoc.buttons/reg-pill-icon
-      {:class    [:narrow
-                  (if (= uid loggedin-uid)
-                    (if all-returned? :regular :cta)
-                    :regular)]
-       :on-click #(innlevering {:k         k
-                                :timestamp timestamp
-                                :boats     list})}
-      ico/status
-      (if all-returned? "ut" "inn")])
+     (when-not deleted
+       [widgets/in-out'
+        {
+         :on-click #(innlevering {:k         k
+                                  :timestamp timestamp
+                                  :boats     list})}
+        (if all-returned? "ut" "inn")]
 
-   [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel [k m]]) m]])
+       #_[hoc.buttons/reg-pill-icon
+          {:class    [(if mobile? :round :narrow)
+                      (if (= uid loggedin-uid)
+                        (if all-returned? :regular :cta)
+                        :regular)]
+           :on-click #(innlevering {:k         k
+                                    :timestamp timestamp
+                                    :boats     list})}
+          ico/status
+          (when-not mobile?
+            (if all-returned? "ut" "inn"))])
+
+     [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel [k m]]) m]]))
 
 (defn agegroups-detail [{:keys [adults children juveniles] :as m}]
   (letfn [(f [n]
@@ -436,64 +442,67 @@
                           show-overview? (t/= (t/today) (t/date date))
                           show-details? (not all-returned?)
                           :else true)]
-              [sc/zebra {:class [:px-4]}
-               (if show-overview?
-                 [logg-listitem-overview
-                  (let [{:keys [start-date end-date start-time end-time]}
-                        (preformat-dates date end::time-instant)]
-                    [g-area "time"
-                     [sc/title1 {:class [:tracking-tight :tabular-nums]} start-time]])
-                  [g-area "edit" [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
-                  (when (t/= (t/date date) (t/today))
-                    [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]])
-                  [g-area "content" [boat-badges db deleted-item::style boats :small]]]
+              (when @selector
+                [sc/zebra {:class [:xpx-4]}
+                 (if show-overview?
+                   [logg-listitem-overview
+                    (let [{:keys [start-date end-date start-time end-time]}
+                          (preformat-dates date end::time-instant)]
+                      [g-area "time"
+                       [sc/title1 {:class [:tracking-tight :tabular-nums]} start-time]])
+                    [g-area "edit" [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
+                    (when nitty-gritty
+                      (when (t/= (t/date date) (t/today))
+                        [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
+                    [g-area "content" [boat-badges db deleted-item::style boats :small]]]
 
-                 [logg-listitem-grid
-                  (when nitty-gritty
-                    (when (some #{@selector} [:a :b])
-                      [g-area "badges" [agegroups-detail m]]))
+                   [logg-listitem-grid
+                    (when nitty-gritty
+                      (when (some #{@selector} [:a :b])
+                        [g-area "badges" [agegroups-detail m]]))
 
-                  [:div {:style {:display     "flex"
-                                 :align-items "center"
-                                 :grid-area   "edit"}}
+                    [:div {:style {:display     "flex"
+                                   :align-items "center"
+                                   :grid-area   "edit"}}
 
-                   [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
+                     [edit-bar loggedin-uid @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
 
-                  (when nitty-gritty
-                    (when (some #{@selector} [:a :b])
-                      [sc/row-sc-g2 {:style {:align-items     "center"
-                                             :justify-content :end
-                                             :grid-area       "details"}}
-                       (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
-                       [badges deleted-item::style m]]))
+                    (when nitty-gritty
+                      (when (some #{@selector} [:a :b])
+                        [sc/row-sc-g2 {:class [:truncate]
+                                       :style {:align-items     "center"
+                                               :justify-content :end
+                                               :grid-area       "details"}}
+                         (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+                         [badges deleted-item::style m]]))
 
-                  ;graph
-                  (when nitty-gritty
-                    (if (and (t/= (t/date date) (t/today)) (= :b @selector))
-                      [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
+                    ;graph
+                    (when nitty-gritty
+                      (if (and (t/= (t/date date) (t/today)) (= :b @selector))
+                        [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
 
-                  [g-area "content" [boat-badges db deleted-item::style boats]]
+                    [g-area "content" [boat-badges db deleted-item::style boats]]
 
-                  (let [{:keys [start-date end-date start-time end-time]} (preformat-dates date end::time-instant)]
-                    (for [[areaname value style] [["start-date" start-date {;:height :1rem
-                                                                            :place-self   :center
-                                                                            :salign-items :center}]
-                                                  (when nitty-gritty
-                                                    ["start-time" (str "kl. " start-time
+                    (let [{:keys [start-date end-date start-time end-time]} (preformat-dates date end::time-instant)]
+                      (for [[areaname value style] [["start-date" start-date {;:height :1rem
+                                                                              :place-self   :center
+                                                                              :salign-items :center}]
+                                                    (when nitty-gritty
+                                                      ["start-time" (str "kl. " start-time
 
-                                                                       (if end-date
-                                                                         (str (str "-->" end-date "")
-                                                                              " kl. " end-time)
-                                                                         (when end-time
-                                                                           (str "—" end-time)))) {}])
-                                                  #_["end-date" end-date {:justify-content :end}]
-                                                  #_["end-time" end-time {:justify-content :end}]]]
-                      [:div.flex
-                       {:style (merge-with conj {:align-items :end
-                                                 ;:height"2rem"
-                                                 :display     :flex
-                                                 :grid-area   areaname} style)}
-                       [sc/text1 {:class [:xtracking-tight]} value]]))])])))))
+                                                                         (if end-date
+                                                                           (str (str "-->" end-date "")
+                                                                                " kl. " end-time)
+                                                                           (when end-time
+                                                                             (str "—" end-time)))) {}])
+                                                    #_["end-date" end-date {:justify-content :end}]
+                                                    #_["end-time" end-time {:justify-content :end}]]]
+                        [:div.flex
+                         {:style (merge-with conj {:align-items :end
+                                                   ;:height"2rem"
+                                                   :display     :flex
+                                                   :grid-area   areaname} style)}
+                         [sc/text1 {:class [:xtracking-tight]} value]]))])]))))))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
@@ -527,7 +536,6 @@
         {:class    [:large :xoutline :cta]
          :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
         [sc/icon ico/plus]]]]]]])
-
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]
