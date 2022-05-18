@@ -58,40 +58,51 @@
                              (for [[section vs] data::stringified
                                    [timeslot uid-registered-tuple] vs
                                    [_userid dt] uid-registered-tuple
-                                   :let [date-registered (some-> dt t/date-time)
+                                   :let [status (if (map? dt) :cancel :ok)
+                                         date-registered (when-not (map? dt) (some-> dt t/date-time))
                                          date-proper (some-> timeslot t/date-time)
                                          completed? (when date-proper (t/< (t/instant date-proper) (t/now)))]]
-                               {:section         section
+                               {:status          (clojure.walk/keywordize-keys (if (map? dt) dt {:ok dt}))
+                                :section         section
                                 :timeslot        timeslot
                                 :date-registered date-registered
                                 :date-proper     date-proper
-                                :completed?      completed?}))]
+                                :completed?      (and completed? (= :ok status))}))]
       [sc/col-space-8 {:class []}
        [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
         (into [:<>]
               (->> collector
-                   (map (fn [{:keys [date-registered date-proper completed? section timeslot]}]
+                   (map (fn [{:keys [status date-registered date-proper completed? section timeslot]}]
                           [:div
                            ;[l/pre uid-registered-tuple]
                            [sc/row-sc-g4-w
                             ;[l/pre data::stringified]
                             (if completed?
                               [:<>]
-                              (if (within-undo-limits? (t/now) date-registered)
+                              (if (:cancel status)
                                 [button/reg-pill-icon
-                                 {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
-                                  :class    [:danger]
-                                  :disabled false}
-                                 ico/trash
-                                 "Avlys"]
-                                [button/reg-pill-icon
-                                 {:class    [:message]
+                                 {:class    [:regular :wide]
                                   :disabled true}
-                                 ico/bytte
-                                 "Bytte"]))
+                                 ico/exclamation
+                                 "Frafalt"]
+                                (if (within-undo-limits? (t/now) date-registered)
+                                  [button/reg-pill-icon
+                                   {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
+                                    :class    [:danger]
+                                    :disabled false}
+                                   ico/trash
+                                   "Avlys"]
+                                  [button/reg-pill-icon
+                                   {:class    [:message :wide]
+                                    :disabled true}
+                                   ico/bytte
+                                   "Bytte"])))
                             [sc/col
                              [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
-                             [sc/small1 "Registrert " (some-> date-registered times.api/arrival-date)]]]]))))]])))
+                             [sc/small1 "Registrert "
+                              (if (:cancel status)
+                                (some-> date-registered times.api/arrival-date)
+                                (some-> date-registered times.api/arrival-date))]]]]))))]])))
 
 (defn beskjeder [loggedin-uid datum]
   (let [admin? false

@@ -74,6 +74,7 @@
 (def cog [:> outline/CogIcon])
 (def cog-open [:> solid/CogIcon])
 (def experimental [:> solid/BeakerIcon])
+(def exclamation [:> outline/ExclamationIcon])
 (def plusCircle [:> outline/PlusCircleIcon])
 (def checkCircle [:> solid/CheckCircleIcon])
 (def stjerne [:> solid/StarIcon])

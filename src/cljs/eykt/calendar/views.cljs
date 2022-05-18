@@ -42,6 +42,11 @@
     :color            "var(--text1)"
     :background-color "var(--toolbar)"
     :cursor           :pointer}
+   [:&.cancelled
+    {:background-color     "transparent"
+     :text-decoration-line :line-through
+     :border               "2px solid var(--toolbar-)"
+     :color                "var(--toolbar-)"}]
    [:&.owner {:background "var(--brand1)"
               :color      "var(--brand1-copy)"}]
    [:&:active {:background "var(--toobar-)"}
@@ -74,25 +79,26 @@
     [sc/small1 description]
     [sc/small0 (str "UKE " (times.api/week-number dt))]]])
 
-(defn- badge-text [this-uid owner?]
+(defn- badge-text [this-uid owner? cancelled?]
   (let [{:keys [alias navn]} (user.database/lookup-userinfo (name this-uid))
         badge-text (cond
                      (not (empty? alias)) alias
                      (not (empty? navn)) navn
                      :else "...")]
-    [sc/text1 {:style {:color (when owner? :unset)}
+    [sc/text1 {:style {:color (if cancelled? :unset (when owner? :unset))}
                :class [:truncate]}
      badge-text]))
 
 ;endregion
 
-(defn- occupied-slot [uid [this-uid]]
+(defn- occupied-slot [uid [this-uid status]]
   (let [owner? (= this-uid uid)
+        cancelled? (and (map? status) (:cancel status))
         path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
     [taken-user-slot
-     {:class    [(when owner? :owner)]
+     {:class    [(if cancelled? :cancelled (when owner? :owner))]
       :on-click #(rf/dispatch [:app/navigate-to path])}
-     [badge-text this-uid owner?]]))
+     [badge-text this-uid owner? cancelled?]]))
 
 (defn command [uid base section slots-free starttime-key]
   [:div.h-10.flex.items-center
@@ -147,6 +153,8 @@
                                     (t/= (t/date (t/date-time (name k))) (t/date date))))
                           (map second)
                           (flatten1)
+                          (into {})
+                          (remove (comp map? val))
                           (map (comp name key))
                           (distinct))
         phone-numbers-to-call (map (comp :telefon user.database/lookup-userinfo) distinct-ids)
@@ -158,6 +166,7 @@
                          (js/encodeURI (str "Husk at du har nøkkelvakt " text-date "...")))]
 
     [sc/co
+     ;[l/pre distinct-ids]
      ;[l/pre phone-numbers-to-call]
      ;[l/pre distinct-ids]
      [sc/row-sc-g2
@@ -192,12 +201,13 @@
                                 starttime' (str (t/at dt (t/time starttime)))
                                 [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
                                                                       alle-regs-i-denne-periodegruppen))
-                                slots-free (- slots (count slots-on-this-eykt))]
+                                slots-free (- slots (count (remove (comp map? second) slots-on-this-eykt)))]
                           :when (if (and (not (= idx 1))
                                          show-only-available?)
                                   (or (pos? slots-free) (get-in base [section uid starttime-key]))
                                   true)]
                       [:div.ml-4
+                       ;[l/pre slots-on-this-eykt]
                        [sc/col-space-2
                         [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap
                                                  :align-items "start"}}
@@ -212,7 +222,8 @@
                                  (map #(occupied-slot uid %) slots-on-this-eykt)
                                  (map (fn [] (avail-user-slot
                                                {:on-click #(let [args {:uid uid :section section :timeslot starttime-key}]
-                                                             (actions/add args))} "Ledig")) (range slots-free))))]]]))]))]))
+                                                             (actions/add args))} "Ledig"))
+                                      (range slots-free))))]]]))]))]))
 
 (defn hoc3
   "lookup startdatetime->enddatetime,slots,duration-in-minutes"
