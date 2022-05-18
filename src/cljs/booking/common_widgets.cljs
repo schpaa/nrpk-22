@@ -248,18 +248,18 @@
           ico/pencil]]
 
 
-       [hoc.buttons/reg-pill-icon
-        (conj
-          attr
-          {:class    [:outline2]
-           :style    {:text-transform "uppercase"
-                      :xbackground    "var(--blue-6)"
-                      :xcolor         "var(--blue-0)"}
-           :on-click #(on-click m)})
-        [sc/icon-small
-         {:style {:xcolor "var(--blue-0)"}}
-         ico/pencil]
-        "Forandre"]))))
+        [hoc.buttons/reg-pill-icon
+         (conj
+           attr
+           {:class    [:outline2]
+            :style    {:text-transform "uppercase"
+                       :xbackground    "var(--blue-6)"
+                       :xcolor         "var(--blue-0)"}
+            :on-click #(on-click m)})
+         [sc/icon-small
+          {:style {:xcolor "var(--blue-0)"}}
+          ico/pencil]
+         "Forandre"]))))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
@@ -275,26 +275,27 @@
   [sc/link
    {:class [:truncate]
     :style {:white-space :nowrap}
-    :href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
+    :href  (kee-frame.core/path-for [:r.dine-vakter {:id uid}])}
    (user.database/lookup-alias uid)])
 
 (defn auto-link
-  ([link]
+  ([{:keys [caption] :as opts} link]
+   (cond
+     caption
+     [sc/link {:href (kee-frame.core/path-for [link])} caption]
+
+     :else
+     (if (vector? link)
+       [sc/link {:href (kee-frame.core/path-for link)} (second link)]
+       (let [{:keys [link text]} (lookup-page-ref-from-name link)]
+         [sc/link {:href (kee-frame.core/path-for [link])} text]))))
+  ([opts [_ l :as link] resolver]
    (if (vector? link)
-     ;(let [{:keys [link text]} (lookup-page-ref-from-name (first link))])
-     [sc/link {:href (kee-frame.core/path-for link)} (second link)]
-     (let [{:keys [link text]} (lookup-page-ref-from-name link)]
-       [sc/link {:href (kee-frame.core/path-for [link])} text])))
-  ([link resolver]
-   (if (vector? link)
-     ;(let [{:keys [link text]} (lookup-page-ref-from-name (first link))])
      [sc/link
       {:href (kee-frame.core/path-for link)}
       ((fn [{:keys [id]}]
-         (:caption (first (filter (fn [m]
-                                    (= id (:id m)))
-                                  resolver))
-           {:caption (str id)})) (second link))]
+         (:caption (first (filter (fn [m] (= id (:id m))) resolver))
+           {:caption (str id)})) l)]
      (let [{:keys [link text]} (lookup-page-ref-from-name link)]
        [sc/link {:href (kee-frame.core/path-for [link])} text]))))
 
@@ -392,7 +393,7 @@
               {:style {;:min-height     "calc(100vh - 4rem)"
                        ;:padding-inline "var(--size-4)"
                        ;:padding-top    "var(--size-10)"
-                       :margin-inline  "auto"}}
+                       :margin-inline "auto"}}
 
               [sc/col-space-8 {:class [:items-center]}
                [sc/hero {:style {:white-space :nowrap
@@ -414,17 +415,11 @@
                ;fix: routes and links
                [sc/row-sc-g4-w
                 [sc/text2 "Gå til"]
-                [auto-link :r.forsiden]
-                [auto-link :r.oversikt]]]])
+                [auto-link nil :r.forsiden]
+                [auto-link nil :r.oversikt]]]])
            [:div.mt-32
             [:div
-             {:style {
-                      ;:width          "100%"
-                      ;:ouline         "1px solid red"
-                      :min-height     "calc(100vh -  4rem)"
-                      ;:padding-inline "var(--size-4)"
-                      ;:padding-top    "var(--size-10)"
-                      :xmargin-inline "auto"}}
+             {:style {:min-height "calc(100vh -  4rem)"}}
              [:div.flex.justify-center.items-center.h-full.w-full
               [sc/title (icon/spinning :spinner)]]]]))})))
 

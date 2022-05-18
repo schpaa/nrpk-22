@@ -140,8 +140,8 @@
   ([modify?]
    [sc/col-space-8
     [sc/row-sc-g2-w
-     [widgets/auto-link :r.oversikt.styret]
-     [widgets/auto-link :r.oversikt.organisasjon]]
+     [widgets/auto-link nil :r.oversikt.styret]
+     [widgets/auto-link nil :r.oversikt.organisasjon]]
 
     [sc/row-sc-g2-w
      (when modify? [hoc.toggles/switch-local (r/cursor settings [:yearwheel/show-editing]) "Rediger"])

@@ -82,11 +82,11 @@
   [:<>
    [sc/col-space-8 {:class []}
     [sc/row-sc-g4-w
-     [widgets/auto-link [:r.reports {:id "saldo-setter"}] booking.reports/report-list]
-     [widgets/auto-link [:r.reports {:id "siste-nye-vakter"}] booking.reports/report-list]
-     [widgets/auto-link [:r.reports {:id "brukere-av-booking"}] booking.reports/report-list]
-     [widgets/auto-link [:r.reports {:id "tilbakemeldinger"}] booking.reports/report-list]
-     [widgets/auto-link [:r.reports {:id "oppmøte"}] booking.reports/report-list]]]
+     [widgets/auto-link nil [:r.reports {:id "saldo-setter"}] booking.reports/report-list]
+     [widgets/auto-link nil [:r.reports {:id "siste-nye-vakter"}] booking.reports/report-list]
+     [widgets/auto-link nil [:r.reports {:id "brukere-av-booking"}] booking.reports/report-list]
+     [widgets/auto-link nil [:r.reports {:id "tilbakemeldinger"}] booking.reports/report-list]
+     [widgets/auto-link nil [:r.reports {:id "oppmøte"}] booking.reports/report-list]]]
    [:div {:class [:sticky :top-20]}
     [sc/row-center
      [widgets/pillbar (r/atom :a) [[:a "Nøkkelvakter"] [:b "Booking"] [:c "Uregistrerte"]]]]]])

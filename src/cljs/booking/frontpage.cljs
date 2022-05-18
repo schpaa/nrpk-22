@@ -108,8 +108,6 @@
         "img-12.jpg"
         "img-4.jpg"]))
 
-
-
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
    (if date
@@ -255,7 +253,6 @@
        [:div {:style {:align-self :center
                       :grid-area  "status"}} (todays-numbers "— " "— " c '—)]))])
 
-
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
                  :style {:position   :relative
@@ -345,20 +342,38 @@
                     :gap                   "var(--size-4) var(--size-2)"
                     :grid-template-columns "1fr"}}
 
+
+      [listitem' (t/at (t/date "2022-05-18") (t/time "18:00"))
+       [sc/col-space-2
+        [:p "Sesongen er godt i gang. " [widgets/auto-link {:caption "Utlånsloggen"} :r.utlan]]  " likeså. Håper dere finner den enklere i bruk enn fjorårets."
+        [:small "Vann— og luft-temperaturen kan nå registreres øverst på forsiden. Trykk på været og legg inn nye tall. "]
+
+        [sc/row-end
+         [widgets/auto-link
+          nil
+          [:r.booking-blog-doc {:id "utlånsloggen"}]
+          [{:id      "utlånsloggen"
+            :name    "id123"
+            :caption "Les mer her"
+            :action  #(rf/dispatch [:app/navigate-to :r.utlan])
+            :f       (fn [_] [:div "ugh"])}]]]]]
+
+
+
       [listitem' (t/at (t/date "2022-04-24") (t/time "18:00"))
        [sc/col-space-2
-        [:div "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
+        [:p "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
 
-        [:div "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
-         [widgets/auto-link :r.min-status]
+        [:small "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
+         [widgets/auto-link {} :r.min-status]
          #_[sc/link {:style {:display :inline-block}
                      :href  (kee-frame.core/path-for [:r.min-status])} "her!"]]]]
       [listitem' (t/at (t/date "2022-04-20") (t/time "10:00"))
        [sc/col-space-2
-        [:div "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.
-        april fyller vi på med rest-vakter for de med utestående saldo.
-        Resten av vaktlisten åpner når vi ser at alt virker som det skal (2-3 dager)."]
-        [:div "Vaktlisten finner du "
+        [:p "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.
+        april fyller vi på med rest-vakter for de med utestående saldo."]
+        [:small "Resten av vaktlisten åpner når vi ser at alt virker som det skal (2-3 dager)."]
+        [:p "Vaktlisten finner du "
          [sc/link {:style {:display :inline-block}
                    :href  (kee-frame.core/path-for [:r.nokkelvakt])} "her!"]]]]
 
@@ -384,7 +399,7 @@
                      :href  (kee-frame.core/path-for [:r.user])} "her."]]]])
       (when @er-nokkelvakt?
         [listitem' (t/date "2022-04-13")
-         [:span "Bruk båtloggen for å registrere "
+         [:span "Bruk utlånsloggen for å registrere "
           [sc/link {:style {:display :inline-block}
                     :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])]]))
 
@@ -476,9 +491,14 @@
               [sc/col-space-8
                (when-not @reg?
                  [please-login-and-register])
-               (widgets/disclosure {:large 1
-                                    :style {:padding-block "var(--size-2)"
-                                            :margin-left   "var(--size-7)"}} :frontpage/news "Hva skjer?" [news-feed])
+               (widgets/disclosure
+                 {:large 1
+                  :style {:padding-block "var(--size-2)"
+                          :margin-left   "var(--size-7)"}}
+                 :frontpage/news
+                 "Hva skjer?"
+                 [news-feed])
+
                (widgets/disclosure {:large 1
                                     :style {:padding-block "var(--size-2)"
                                             :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])

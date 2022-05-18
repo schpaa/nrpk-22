@@ -51,9 +51,9 @@
    [sc/row-sc-g4-w
     ;[sc/text1 "Se også"]
     ;[widgets/auto-link :r.båtliste.nøklevann]
-    [widgets/auto-link :r.booking.faq]
+    [widgets/auto-link nil :r.booking.faq]
     #_[sc/link {:href (kee-frame.core/path-for [:r.dokumenter {:id "tidslinje-forklaring"}])} "Ofte stilte spørsmål"]
-    [widgets/auto-link :r.utlan]]
+    [widgets/auto-link nil :r.utlan]]
    [sc/row-sc-g1 {:style {:flex-wrap :wrap}}
     [hoc.toggles/switch-local (r/cursor settings [:booking/show-deleted]) "vis slettede"]]])
 
