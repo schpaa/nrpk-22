@@ -108,42 +108,7 @@
         "img-12.jpg"
         "img-4.jpg"]))
 
-(defn circular-logo-thing [dark-mode?]
-  [:div {:style {:width        "6em"
-                 :height       "6em"
-                 :transform    "rotate(6deg)"
-                 :aspect-ratio "1/1"}}
-   [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
-    [:img {:src   "/img/logo-n.png"
-           :style {:position                  :absolute
-                   :inset                     0
-                   :object-fit                :contain
-                   :border-radius             "var(--radius-round)"
-                   :animation-name            "spin3"
-                   :animation-timing-function "var(--ease-4)"
-                   :animation-delay           "0s"
-                   :animation-duration        "1.3s"
-                   :animation-iteration-count 1
-                   :animation-direction       :forward
-                   :transform-origin          "center"}}]
-    [:div
-     {:style {:position  :absolute
-              :inset     0
-              :clip-path "circle(35% at 50% 50%)"}}
-     (r/with-let [c (r/atom 0)
-                  f (fn [] (swap! c inc))
-                  tm (js/setInterval f 3000)]
-       [:div {:style {:transition "opacity 1s"}}
-        [:img {:style {:position      "absolute"
-                       :width         "100%"
-                       :height        "100%"
-                       :inset         0
-                       :border-radius "var(--radius-round)"
-                       :opacity       1}
-               :src   "/img/logo-n.png"
-               #_(first (drop @c (cycle frontpage-images)))}]]
 
-       (finally (js/clearInterval tm)))]]])
 
 (defn listitem' [date text]
   [:div.col-span-2.space-y-0
@@ -259,12 +224,6 @@
     large-grid
     {:-background-color "blue"}]])
 
-(defn logo-graph []
-  [:div {:style {:align-self   :center
-                 :justify-self :start}}
-   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
-     [circular-logo-thing dark-mode?])])
-
 (def logo-type
   [:div {:class [:flex :items-center :justify-end]
          :style {:transform        "rotate(-6deg)"
@@ -289,7 +248,7 @@
      (fancy-front
        [:div {:style {:align-self   :center
                       :justify-self :center
-                      :grid-area    "graph"}} (logo-graph)]
+                      :grid-area    "graph"}} (widgets/logo-graph)]
        [:div {:style {
                       :align-self :center
                       :grid-area  "type"}} logo-type]

@@ -27,7 +27,14 @@
           (let [admin? @(rf/subscribe [:lab/admin-access])
                 {:keys [saldo timekrav] :as user} (user.database/lookup-userinfo uid)
                 datas (clojure.walk/stringify-keys @data)
-                antall-økter (->> datas vals (map vals) flatten count)
+                antall-økter #_(->> datas vals (map vals) (remove (comp map? val)) flatten count)
+                (->> datas
+                     vals
+                     (map vals)
+                     flatten
+                     (map (comp first vals))
+                     (remove (fn [m] (get m "cancel")))
+                     count)
                 fullførte-timer (or (* 3 antall-økter) 0)]
             [sc/col-space-8
              [beskjeder uid @datum]

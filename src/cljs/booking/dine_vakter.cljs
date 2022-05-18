@@ -50,59 +50,82 @@
 
 (defn- within-undo-limits? [now date]
   ;(tap> [now date (tick.alpha.interval/new-interval (t/instant date) now)])
-  (< (t/hours (t/duration (tick.alpha.interval/new-interval (t/instant date) now))) 24))
+  (when-some [date date]
+    (< (t/hours (t/duration (tick.alpha.interval/new-interval (t/instant date) now))) 24)))
+
+(defn- frafall [_])
 
 (defn vakter [uid data::stringified]
-  (when (seq data::stringified)
-    (let [collector (sort-by :date-proper <
-                             (for [[section vs] data::stringified
-                                   [timeslot uid-registered-tuple] vs
-                                   [_userid dt] uid-registered-tuple
-                                   :let [status (if (map? dt) :cancel :ok)
-                                         date-registered (when-not (map? dt) (some-> dt t/date-time))
-                                         date-proper (some-> timeslot t/date-time)
-                                         completed? (when date-proper (t/< (t/instant date-proper) (t/now)))]]
-                               {:status          (clojure.walk/keywordize-keys (if (map? dt) dt {:ok dt}))
-                                :section         section
-                                :timeslot        timeslot
-                                :date-registered date-registered
-                                :date-proper     date-proper
-                                :completed?      (and completed? (= :ok status))}))]
-      [sc/col-space-8 {:class []}
-       [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
-        (into [:<>]
-              (->> collector
-                   (map (fn [{:keys [status date-registered date-proper completed? section timeslot]}]
-                          [:div
-                           ;[l/pre uid-registered-tuple]
-                           [sc/row-sc-g4-w
-                            ;[l/pre data::stringified]
-                            (if completed?
-                              [:<>]
-                              (if (:cancel status)
-                                [button/reg-pill-icon
-                                 {:class    [:regular :wide]
-                                  :disabled true}
-                                 ico/exclamation
-                                 "Frafalt"]
-                                (if (within-undo-limits? (t/now) date-registered)
+  (let [admin? (rf/subscribe [:lab/admin-access])]
+    (when (seq data::stringified)
+      (let [within-undo-limits? (partial within-undo-limits? (t/now))
+            collector (sort-by :date-proper <
+                               (for [[section vs] data::stringified
+                                     [timeslot uid-registered-tuple] vs
+                                     [_userid dt] uid-registered-tuple
+                                     :let [status (if (map? dt) :cancel :ok)
+                                           date-registered (when-not (map? dt) (some-> dt t/date-time))
+                                           date-proper (some-> timeslot t/date-time)
+                                           completed? (when date-proper (t/< (t/instant date-proper) (t/now)))]]
+                                 {:status          (clojure.walk/keywordize-keys (if (map? dt) dt {:ok dt}))
+                                  :section         section
+                                  :timeslot        timeslot
+                                  :date-registered date-registered
+                                  :date-proper     date-proper
+                                  :completed?      (and completed? (= :ok status))}))]
+        [sc/col-space-8 {:class []}
+         [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
+          (into [:<>]
+                (->> collector
+                     (map (fn [{:keys [status date-registered date-proper completed? section timeslot]}]
+                            [:div
+                             ;[l/pre uid-registered-tuple]
+                             [sc/row-sc-g4-w
+                              ;[l/pre data::stringified]
+                              (if completed?
+                                [:<>]
+                                (if (:cancel status)
                                   [button/reg-pill-icon
-                                   {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
-                                    :class    [:danger]
-                                    :disabled false}
-                                   ico/trash
-                                   "Avlys"]
-                                  [button/reg-pill-icon
-                                   {:class    [:message :wide]
+                                   {:class    [:regular]
                                     :disabled true}
-                                   ico/bytte
-                                   "Bytte"])))
-                            [sc/col
-                             [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
-                             [sc/small1 "Registrert "
-                              (if (:cancel status)
-                                (some-> date-registered times.api/arrival-date)
-                                (some-> date-registered times.api/arrival-date))]]]]))))]])))
+                                   ico/exclamation
+                                   "Frafalt"]
+                                  (if (within-undo-limits? date-registered)
+                                    [button/reg-pill-icon
+                                     {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
+                                      :class    [:danger]
+                                      :disabled false}
+                                     ico/trash
+                                     "Avlys"]
+                                    [button/reg-pill-icon
+                                     {:class    [:message]
+                                      :disabled true}
+                                     ico/bytte
+                                     "Bytte"])))
+                              (when (and @admin?
+                                         (not (within-undo-limits? date-registered))
+                                         (not completed?)
+                                         (not (:cancel status)))
+                                [button/reg-pill-icon
+                                 {:on-click #(actions/frafall {:uid uid :section section :timeslot timeslot})
+                                  :class    [:danger]
+                                  :disabled false}
+                                 ico/thumbsdown
+                                 "Frafall"])
+                              (when (and @admin? (not completed?) (:cancel status))
+                                [button/reg-pill-icon 
+                                 {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
+                                  :class    [:cta :outliner]
+                                  :disabled false}
+                                 ico/thumbsup
+                                 "Deltar"])
+                              [sc/col
+                               [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
+                               [sc/small1 "Registrert "
+                                (if (:cancel status)
+                                  (some-> date-registered times.api/arrival-date)
+                                  (some-> date-registered times.api/arrival-date))]]]]))))]]))))
+
 
 (defn beskjeder [loggedin-uid datum]
   (let [admin? false
@@ -181,10 +204,32 @@
                   data::stringified (clojure.walk/stringify-keys @datas)
                   saldo (:saldo user)
                   timekrav (:timekrav user)
-                  antall-økter (->> data::stringified vals (map vals) flatten count)
+                  #_#_temp (->> data::stringified
+                                vals
+                                (map vals)
+                                flatten
+                                (map (comp first vals))
+                                (remove (fn [m]
+                                          (tap> {:k2 m})
+                                          (get m "cancel")))
+
+                                #_flatten
+                                #_(into []))
+
+                  antall-økter (->> data::stringified
+                                    vals
+
+                                    (map vals)
+                                    flatten
+                                    (map (comp first vals))
+                                    (remove (fn [m]
+                                              ;(tap> {:k2 m})
+                                              (get m "cancel")))
+                                    count)
                   fullførte-timer (* 3 antall-økter) #_(or (when (some? saldo))
                                                            (- saldo timekrav (- (* 3 (count (seq data::stringified))))))]
               [:div
+               ;[l/pre temp]
                [sc/col-space-8
                 [widgets/personal user
                  (when admin?

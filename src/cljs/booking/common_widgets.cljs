@@ -9,7 +9,6 @@
             [booking.routes]
             [schpaa.debug :as l]
             [headlessui-reagent.core :as ui]
-
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [db.core :as db]
@@ -320,6 +319,64 @@
 (comment
   (dimensions-and-material {:width 1 :length 2 :weight "" :material 2}))
 
+;; logo
+
+(defn circular-logo-thing [{:keys [dark-mode? clear-map?] :as opts}]
+  [:div {:style {:width        "6em"
+                 :height       "6em"
+                 :transform    "rotate(6deg)"
+                 :aspect-ratio "1/1"}}
+   [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
+    [:img {:src   "/img/logo-n.png"
+           :style {:position                  :absolute
+                   :inset                     0
+                   :object-fit                :contain
+                   :border-radius             "var(--radius-round)"
+                   :animation-name            "spin3"
+                   :animation-timing-function "var(--ease-4)"
+                   :animation-delay           "0s"
+                   :animation-duration        "1.1s"
+                   :animation-iteration-count 1
+                   :animation-direction       :forward
+                   :transform-origin          "center"}}]
+    [:div
+     {:style {:position         :absolute
+              :inset            0
+              :clip-path        "circle(35% at 50% 50%)"
+              :background-color (if clear-map? "var(--toolbar-)")}}
+     #_(r/with-let [c (r/atom 0)
+                    f (fn [] (swap! c inc))
+                    tm (js/setInterval f 3000)]
+         [:div {:style {:transition "opacity 1s"}}
+          [:img {:style {:position      "absolute"
+                         :width         "100%"
+                         :height        "100%"
+                         :inset         0
+                         :border-radius "var(--radius-round)"
+                         :opacity       1}
+                 :src   "/img/logo-n.png"
+                 #_(first (drop @c (cycle frontpage-images)))}]]
+
+         (finally (js/clearInterval tm)))]]])
+
+(defn logo-graph
+  ([]
+   (logo-graph {}))
+  ([opts]
+   [:div {:style {:align-self   :center
+                  :justify-self :start}}
+    (let [dark-mode? @(schpaa.state/listen :app/dark-mode)]
+      [circular-logo-thing (conj opts {:dark-mode? dark-mode?})])]))
+
+(defn logo-embedded [icon]
+  [:div.relative
+   [logo-graph {:clear-map? true}]
+   [:div.absolute.inset-0.grid.place-content-center
+    {:style {:color "var(--gray-5)"}}
+    [sc/icon-huge icon]]])
+
+;;
+
 (defn no-access-view [r]
   ;todo start a timeout on mount and show no access after 2 seconds
   (let [show-error (r/atom false)]
@@ -327,50 +384,49 @@
       {:display-name        "no-access-view"
        :component-did-mount (fn [_]
                               (js/setTimeout #(reset! show-error true) 2000))
-       :reagent-render      (fn [r]
-                              (if @show-error
-                                (let [required-access (-> r :data :access)]
-                                  [sc/container
-                                   {:style {:min-height     "calc(100vh - 4rem)"
-                                            :padding-inline "var(--size-4)"
-                                            :padding-top    "var(--size-10)"
-                                            :margin-inline  "auto"}}
-                                   [:div.absolute.inset-0.pointer-events-none
-                                    {:style {:opacity          0.3
-                                             :background-color "var(--brand1)"}}]
-                                   [sc/col-space-8
-                                    [sc/hero {:style {:white-space :nowrap
-                                                      :text-align  :center
-                                                      :color       "var(--text2)"}} "Ingen tilgang"]
-                                    [sc/row-center [sc/icon {:style {:text-align :center
-                                                                     :color      "var(--text2)"}} ico/stengt]]
-                                    [sc/text2 "For å se dette må du"]
-                                    [sc/title1x
-                                     (cond
-                                       (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunn\u00adleggende infor\u00ADmasjon om deg selv."
-                                       (some #{:waitinglist} (first required-access)) "Være påmeldt inn\u00ADmeldingskurs."
-                                       :else "Være medlem i NRPK.")]
-                                    [sc/title1x
-                                     (cond
-                                       (some #{:nøkkelvakt} (last required-access)) "Være godkjent nøkkelvakt (ifølge aktiv konto)."
-                                       (some #{:admin} (last required-access)) "Være administrator.")]
+       :reagent-render
+       (fn [r]
+         (if @show-error
+           (let [required-access (-> r :data :access)]
+             [sc/container
+              {:style {;:min-height     "calc(100vh - 4rem)"
+                       ;:padding-inline "var(--size-4)"
+                       ;:padding-top    "var(--size-10)"
+                       :margin-inline  "auto"}}
 
-                                    ;fix: routes and links
-                                    [sc/row-sc-g4-w
-                                     [sc/text2 "Gå til"]
-                                     [auto-link :r.forsiden]
-                                     [auto-link :r.oversikt]]]])
-                                [:div.mt-32
-                                 [:div
-                                  {:style {
-                                           ;:width          "100%"
-                                           ;:ouline         "1px solid red"
-                                           :min-height     "calc(100vh -  4rem)"
-                                           ;:padding-inline "var(--size-4)"
-                                           ;:padding-top    "var(--size-10)"
-                                           :xmargin-inline "auto"}}
-                                  [:div.flex.justify-center.items-center.h-full.w-full
-                                   [sc/title (icon/spinning :spinner)]]]]))})))
+              [sc/col-space-8 {:class [:items-center]}
+               [sc/hero {:style {:white-space :nowrap
+                                 :text-align  :center
+                                 :color       "var(--text2)"}} "Ingen tilgang"]
+
+               [sc/row-center [logo-embedded ico/stengt]]
+               [sc/text2 "For å se dette må du"]
+               [sc/title1x
+                (cond
+                  (some #{:registered} (first required-access)) "Være innlogget og ha registrert deg med grunn\u00adleggende infor\u00ADmasjon om deg selv."
+                  (some #{:waitinglist} (first required-access)) "Være påmeldt inn\u00ADmeldingskurs."
+                  :else "Være medlem i NRPK.")]
+               [sc/title1x
+                (cond
+                  (some #{:nøkkelvakt} (last required-access)) "Være godkjent nøkkelvakt (ifølge aktiv konto)."
+                  (some #{:admin} (last required-access)) "Være administrator.")]
+
+               ;fix: routes and links
+               [sc/row-sc-g4-w
+                [sc/text2 "Gå til"]
+                [auto-link :r.forsiden]
+                [auto-link :r.oversikt]]]])
+           [:div.mt-32
+            [:div
+             {:style {
+                      ;:width          "100%"
+                      ;:ouline         "1px solid red"
+                      :min-height     "calc(100vh -  4rem)"
+                      ;:padding-inline "var(--size-4)"
+                      ;:padding-top    "var(--size-10)"
+                      :xmargin-inline "auto"}}
+             [:div.flex.justify-center.items-center.h-full.w-full
+              [sc/title (icon/spinning :spinner)]]]]))})))
 
 (defn disclosure
   ([m]
