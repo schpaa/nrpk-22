@@ -13,6 +13,7 @@
             [tick.core :as t]
             [lambdaisland.ornament :as o]
             [booking.ico :as ico]
+            [booking.flextime]
             [clojure.string :as str]))
 
 ;; styles

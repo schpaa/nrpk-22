@@ -215,7 +215,6 @@
 
 (defn main-menu [r]
   (r/with-let [mainmenu-visible (rf/subscribe [:lab/menu-open])]
-    ;this is just a button                     
     [settings-dialog
      [scm/settings-floating
       {:data       (mainmenu-definitions r)

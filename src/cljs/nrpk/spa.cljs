@@ -2,7 +2,8 @@
   (:require [goog.events :as gevents]
             [re-frame.core :as rf]
             [kee-frame.router :refer [make-route-component]]
-            [schpaa.debug :as l]))
+            [kee-frame.core]
+            [breaking-point.core]))
 
 (defonce _ (let [source (. js/window matchMedia "(prefers-color-scheme: dark)")
                  type gevents/EventType.CHANGE

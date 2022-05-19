@@ -11,6 +11,7 @@
            fork/fork                             {:mvn/version "2.4.2"}
            com.lambdaisland/ornament             {:mvn/version "0.4.34"}
            com.github.mainej/headlessui-reagent  {:mvn/version "1.6.0.62"}
+           
            arco/arco                             {:local/root    "./lib/arco"
                                                   :deps/manifest :deps}
            times/times                           {:local/root    "./lib/times"
@@ -23,7 +24,7 @@
                                                   :deps/manifest :deps}
            schpaa/schpaa                         {:local/root    "./lib/schpaa"
                                                   :deps/manifest :deps}
-           #_#_devcards/devcards {:mvn/version "0.2.7"}}
+           devcards/devcards {:mvn/version "0.2.7"}} 
  :aliases {:shadow-cljs
            {:main-opts  ["-m" "shadow.cljs.devtools.cli"]
             :extra-deps {thheller/shadow-cljs       {:mvn/version "2.17.2"}

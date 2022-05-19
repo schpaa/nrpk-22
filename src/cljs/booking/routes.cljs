@@ -122,7 +122,7 @@
     {:name       :r.utlan
      :shorttitle "Utlånslogg"
      :access     [[:member] #{}]
-     :header     [[:r.båtliste.nøklevann] "Utlånslogg på Nøklevann"]}]
+     :header     [[:r.båtliste.nøklevann] "Utlånslogg"]}]
 
    ["/booking"
     {:name       :r.booking
@@ -177,7 +177,11 @@
 
    ["/experimental"
     {:name   :r.experimental
-     :header [[:r.experimental] "Experimental"]}]
+     :header [[:r.temperature] "Experimental"]}]
+
+   ["/temperatur"
+    {:name :r.temperature
+     :header [[:r.experimental] "Temperatur"]}]
 
    ["/not-found"
     {:name   :r.page-not-found

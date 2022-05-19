@@ -78,11 +78,11 @@
     :height     "var(--size-9)"}])
 
 (o/defstyled header-top :div
-  [:& :flex :items-center :w-full :px-2 :gap-4
-   {:height            "var(--size-9)"
-    ;:z-index 10000
-    :position          :relative
-    :xbackground-color "var(--floating)"}])
+  [:& :flex :items-center :w-full :px-2 :gap-1
+   {:margin    "auto"
+    :max-width "calc(768px - 3rem)"
+    :height    "var(--size-9)"
+    :position  :relative}])
 
 ;endregion
 
@@ -124,7 +124,7 @@
 
 ;endregion
 
-;region toolbars
+;; toolbars
 
 (defn vertical-toolbar-definitions []
   (let [uid @(rf/subscribe [:lab/uid])
@@ -136,23 +136,28 @@
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
-    [{:icon-fn      #(sc/icon-large ico/new-home)
+    [{:on-click   #()
+      :caption    "Badetemperatur"
+      :content-fn (fn []
+                    [:div.w-full.h-full {:style {:background-color "var(--gray-0)"}}
+                     [widgets/temperature]])}
+
+     {:icon-fn      #(sc/icon-large ico/new-home)
       :default-page :r.forsiden
 
       :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
       :class        #(if (= % :r.oversikt) :oversikt :selected)
       :page-name    #(some #{%} [:r.forsiden :r.oversikt])}
 
-     (when ipad?
+     (if ipad?
        {:icon-fn      (fn [] (sc/icon-large ico/vaktrapport))
         :caption      "Vaktrapport"
         :default-page :r.mine-vakter-ipad
         :class        #(if (= % :r.user) :oversikt :selected)
         :on-click     #(rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad #_(if (= % :r.min-status) :r.user :r.min-status)]])
         #_#(rf/dispatch [:app/navigate-to [:r.min-status]])
-        :page-name    :r.mine-vakter-ipad #_#(some #{%} [:r.min-status :r.user])})
+        :page-name    :r.mine-vakter-ipad #_#(some #{%} [:r.min-status :r.user])}
 
-     (when-not ipad?
        {:icon-fn      (fn [] (sc/icon-large ico/user))
         :caption      "Mine opplysninger"
         :default-page :r.min-status
@@ -169,7 +174,7 @@
           :page-name    :r.booking})
 
      (when (or @admin? @nokkelvakt ipad?)
-       {:icon         ico/mystery1
+       {:icon-fn      #(-> ico/mystery1)
         :disabled     false
         :caption      "Utlån Nøklevann"
         :default-page :r.utlan
@@ -323,7 +328,7 @@
         data ((if switch? reverse identity) (horizontal-toolbar-definitions))]
     [booking.fiddle/render data]))
 
-;endregion
+;;
 
 (defn compute-pagetitles [r]
   (let [path-fn (some-> r :data :path-fn)
@@ -373,7 +378,6 @@
     :flex          "1 1 1"}
    [:&:active {:background "var(--text0-copy)"}]])
 
-
 (defn location-block [r links caption right-menu?]
   (let [link (first links)]
     [location
@@ -381,10 +385,11 @@
       :class    [:truncate (if right-menu? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
-      [sc/title1 {:style {:font-weight "var(--font-weight-4)"}} (or (if (fn? caption)
-                                                                      (caption (some-> r :path-params))
-                                                                      (if (map? caption) (:text caption) caption))
-                                                                    caption)]
+      [sc/title1 {:style {:font-weight "var(--font-weight-4)"}}
+       (or (if (fn? caption)
+             (caption (some-> r :path-params))
+             (if (map? caption) (:text caption) caption))
+           caption)]
       (let [z {:link link
                :text caption}]
         (try (see-also z)
@@ -397,25 +402,21 @@
    :w-full :flex :justify-between :pointer-events-auto
    #_[:&:active {:background "var(--text1-copy)"}]])
 
-(defn header-line [r frontpage headline]
-  (let [[links caption] (some-> r :data :header)
-        {:keys [right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
-        location [location-block r links caption right-menu?]]
+(defn right-menu? [] (when-let [s (rf/subscribe [:lab/screen-geometry])]
+                       (:right-menu? @s)))
+
+(defn header-line [r headline v]
+  (let [[links caption] (some-> r :data :header)]
+    ;{xright-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])]
     [headerline
      {:class [:h-16 :items-center :truncate]}
-     ;[l/pre (times.api/format "%0.2f" (/ (- (+ @scrollpos 0.001) 30) 70))]
-     ;[l/pre (headline)]
-     (let [items [location
+     (let [items [[location-block r links caption (right-menu?)]
                   [:div.grow]
-                  (when headline
-                    [sc/row-sc-g4 (into [:<>] (map identity (headline)))])
-                  ;[sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]
-                  [:div.w-12 [main-menu r]]]
-           ;:div.relative.-debug2.h-screen.w-screen
-           items (if right-menu? (reverse items) items)]
-       (if frontpage
-         [header-top-frontpage {:style {:background-color "yellow"}} (into [:<>] items)]
-         [header-top (into [:<>] items)]))]))
+                  (when headline (map identity (headline)))
+                  [:div.w-12 [main-menu r]]
+                  #_[sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]]
+           items (if (right-menu?) (reverse items) items)]
+       [header-top (into [:<>] items)])]))
 
 (defn header [v headline]
   (let [route (rf/subscribe [:kee-frame/route])
@@ -430,7 +431,7 @@
                 :background   "linear-gradient(180deg,var(--content-transp-top) 0%,
                                                       var(--content-transp-bottom) 5rem,
                                                       var(--content-transp) 100%)"}}
-       [booking.common-views/header-line route false headline]])))
+       [booking.common-views/header-line route headline v]])))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -641,7 +642,7 @@
     [sc/col-space-8
      {:style {:padding-top "8rem"
               :width       "100%"
-              :min-height  "100vh"
+              :min-height  "90vh"
               :max-width   "100%"}}
      (when (fn? panel)
        [:div.mx-auto
@@ -660,7 +661,7 @@
     [sc/col-space-8
      {:style {:padding-block "8rem"
               :margin-inline "auto"
-              :min-height    "100vh"
+              :min-height    "90vh"
               :max-width     "min(calc(100% - 1rem), calc(768px - 4rem))"}}
      (when (fn? panel)
        [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
@@ -682,9 +683,9 @@
          [full-width r m]
 
          :render-not-defined
-         [sc/title1 {:style {:color "var(--red-5)"
-                             :min-height "100vh"
-                             :padding-block "8rem"
+         [sc/title1 {:style {:color          "var(--red-5)"
+                             :min-height     "90vh"
+                             :padding-block  "8rem"
                              :padding-inline "1rem"}} :Render-not-defined])
 
        [widgets/after-content]

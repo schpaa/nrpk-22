@@ -171,17 +171,17 @@
   [sc/row-sc-g2 {:style {:-transform       "translateY(1rem) rotate(6deg)"
                          :opacity          0.33
                          :transform-origin "end bottom "}}
-   [sc/col {:class [:gap-2]}
-    [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])
-                       :class    [:narrow :shadow :center]
-                       :style    {:border-radius    "var(--radius-1)"
-                                  :background-color "var(--gray-9)"
-                                  :color            "var(--gray-1)"}} a]
-    [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]])
-                       :class    [:center :narrow :shadow]
-                       :style    {:border-radius    "var(--radius-1)"
-                                  :color            "var(--blue-1)"
-                                  :background-color "var(--blue-9)"}} b]]
+   #_[sc/col {:class [:gap-2]}
+      [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])
+                         :class    [:narrow :shadow :center]
+                         :style    {:border-radius    "var(--radius-1)"
+                                    :background-color "var(--gray-9)"
+                                    :color            "var(--gray-1)"}} a]
+      [hoc.buttons/pill {:on-click #(rf/dispatch [:app/navigate-to [:r.utlan]])
+                         :class    [:center :narrow :shadow]
+                         :style    {:border-radius    "var(--radius-1)"
+                                    :color            "var(--blue-1)"
+                                    :background-color "var(--blue-9)"}} b]]
    [sc/surface-a
     {:style {:padding-inline "var(--size-3)"
              :padding-block  "var(--size-2)"
@@ -200,15 +200,16 @@
    :grid-row-gap          "1rem"
    :grid-template-columns "1fr min-content"
    :grid-template-areas   [["type" "graph"]
-                           ["." "status"]]})
+                           ["status" "status"]]})
 
 (o/defstyled large-grid :div
   {:display               :grid
    :padding               "4px"
    :font-size             "90%"
    :grid-column-gap       "1rem"
-   :grid-template-columns "1fr min-content 1fr"
-   :grid-template-areas   [["type" "graph" "status"]]})
+   :grid-template-columns "1fr  1fr"
+   :grid-template-areas   [["type" "graph"]
+                           ["status" "status"]]})
 
 (o/defstyled fancy-front :div
   [:&
@@ -218,9 +219,9 @@
     :padding-inline    "4px"
     :-background-color "hsla(0,50%,50%,20%)"}
 
-   [:at-media {:min-width "512px"}
+   [:at-media {:max-width "511px"}
     large-grid
-    {:-background-color "blue"}]])
+    {:xbackground-color "blue"}]])
 
 (def logo-type
   [:div {:class [:flex :items-center :justify-end]
@@ -245,13 +246,14 @@
    (let [c (count (logg.database/boat-db))]
      (fancy-front
        [:div {:style {:align-self   :center
-                      :justify-self :center
+                      :justify-self :start
                       :grid-area    "graph"}} (widgets/logo-graph)]
-       [:div {:style {
-                      :align-self :center
+       [:div {:style {:align-self :center
                       :grid-area  "type"}} logo-type]
        [:div {:style {:align-self :center
-                      :grid-area  "status"}} (todays-numbers "— " "— " c '—)]))])
+                      :justify-self :center
+                      :grid-area  "status"}}
+        (todays-numbers "12" "11" c '—)]))])
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -346,7 +348,7 @@
       [listitem' (t/at (t/date "2022-05-18") (t/time "18:00"))
        [sc/col-space-2
         [:p "Sesongen er godt i gang. " [widgets/auto-link {:caption "Utlånsloggen"} :r.utlan]]  " likeså. Håper dere finner den enklere i bruk enn fjorårets."
-        [:small "Vann— og luft-temperaturen kan nå registreres øverst på forsiden. Trykk på været og legg inn nye tall. "]
+        [:p "Vann— og luft-temperaturen kan nå registreres øverst på forsiden. Trykk på været og legg inn nye tall. "]
 
         [sc/row-end
          [widgets/auto-link
@@ -364,7 +366,7 @@
        [sc/col-space-2
         [:p "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
 
-        [:small "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
+        [:p "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
          [widgets/auto-link {} :r.min-status]
          #_[sc/link {:style {:display :inline-block}
                      :href  (kee-frame.core/path-for [:r.min-status])} "her!"]]]]
@@ -372,7 +374,7 @@
        [sc/col-space-2
         [:p "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.
         april fyller vi på med rest-vakter for de med utestående saldo."]
-        [:small "Resten av vaktlisten åpner når vi ser at alt virker som det skal (2-3 dager)."]
+        [:p "Resten av vaktlisten åpner når vi ser at alt virker som det skal (2-3 dager)."]
         [:p "Vaktlisten finner du "
          [sc/link {:style {:display :inline-block}
                    :href  (kee-frame.core/path-for [:r.nokkelvakt])} "her!"]]]]

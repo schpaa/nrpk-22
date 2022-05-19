@@ -17,7 +17,8 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.common-widgets :as widgets]
             [schpaa.debug :as l]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [booking.access]))
 
 (def store (r/atom {:selector :a}))
 

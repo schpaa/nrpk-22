@@ -18,7 +18,7 @@
 
 ;; store
 
-(def store (r/atom {:selector :b}))
+(def store (r/atom {:selector :a}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -161,11 +161,10 @@
 
 (o/defstyled logg-listitem-overview :div
   [:&
-   {;:outline               "1px solid red"
+   {
     :display               :grid
-    :align-items           :center
     :column-gap            "var(--size-2)"
-    ;:row-gap               "var(--size-1)"
+    :row-gap               "var(--size-1)"
     :grid-template-columns "min-content min-content 1fr 1fr"
     :grid-auto-rows        "auto"
     :grid-template-areas   [["time edit content graph"]]}])
@@ -176,8 +175,8 @@
     :column-gap            "var(--size-3)"
     :row-gap               "var(--size-1)"
     :grid-template-columns "5rem 1fr 1fr min-content 1fr"
-    :grid-template-rows    "minmax(2rem,1fr) min-content"
-    :align-items           :end
+    :grid-template-rows    "minmax(2rem,1fr) min(min-content,2rem)"
+
     :grid-template-areas   [["start-date edit content content content"]
                             ["badges start-time start-time details details "]
                             [". graph . . ."]]}])
@@ -302,36 +301,23 @@
 (defn- edit-bar [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}
                  all-returned?]
   (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
-    [sc/row-sc-g2
-     (when edit-mode?
+    [sc/row-sc-g2 {:style {:align-self "start"}}
+     (if edit-mode?
        [widgets/trashcan'
         {:deleted? deleted
          :on-click (fn [] (db/database-update
                             {:path  ["activity-22" (name k)]
                              :value {:deleted (not deleted)}}))}
-        (if deleted "Angre" "Slett")])
-
-     (when-not deleted
-       [widgets/in-out'
-        {
-         :on-click #(innlevering {:k         k
-                                  :timestamp timestamp
-                                  :boats     list})}
-        (if all-returned? "ut" "inn")]
-
-       #_[hoc.buttons/reg-pill-icon
-          {:class    [(if mobile? :round :narrow)
-                      (if (= uid loggedin-uid)
-                        (if all-returned? :regular :cta)
-                        :regular)]
-           :on-click #(innlevering {:k         k
+        (if deleted "Angre" "Slett")]
+       (when-not deleted
+         [widgets/in-out'
+          {:on-click #(innlevering {:k         k
                                     :timestamp timestamp
                                     :boats     list})}
-          ico/status
-          (when-not mobile?
-            (if all-returned? "ut" "inn"))])
-
-     [widgets/edit {:disabled true} #(rf/dispatch [:lab/toggle-boatpanel [k m]]) m]]))
+          (if all-returned? "ut" "inn")]))
+     [widgets/edit {:disabled false}
+      #(rf/dispatch [:lab/toggle-boatpanel [k m]])
+      m]]))
 
 (defn agegroups-detail [{:keys [adults children juveniles] :as m}]
   (letfn [(f [n]
@@ -340,7 +326,9 @@
                                :white-space  :nowrap}
                        :class [:tabular-nums]}
              (if (pos? n) n "—")])]
-    [:div (:style {:grid-area "agegroups"})
+    [sc/row {:class [:h-full]
+             :style {:align-items :end
+                     :grid-area  "agegroups"}}
      [:div
       {:style {:display               "grid"
                :grid-template-columns "repeat(3,1.4rem)"}}
@@ -414,7 +402,7 @@
      (map badge-view-fn (sort-by :number < (map prepared (remove nil? boats)))))])
 
 (defn g-area [grid-area content]
-  [:div {:style {:grid-area grid-area}} content])
+  [:div.pt-1 {:style {:grid-area grid-area}} content])
 
 ;todo REFACTOR!
 (defn render [loggedin-uid]
@@ -443,14 +431,16 @@
                           show-details? (not all-returned?)
                           :else true)]
               (when @selector
-                [sc/zebra {:class [:xpx-4]}
+                [sc/zebra {:class []}
                  (if show-overview?
                    [logg-listitem-overview
                     (let [{:keys [start-date end-date start-time end-time]}
                           (preformat-dates date end::time-instant)]
                       [g-area "time"
-                       [sc/title1 {:class [:tracking-tight :tabular-nums]} start-time]])
-                    [g-area "edit" [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
+                       [sc/title1 {:style {:align-self :center}
+                                   :class [:tracking-tight :tabular-nums :-debug]} start-time]])
+                    [g-area "edit"
+                     [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
                     (when nitty-gritty
                       (when (t/= (t/date date) (t/today))
                         [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
@@ -462,47 +452,42 @@
                         [g-area "badges" [agegroups-detail m]]))
 
                     [:div {:style {:display     "flex"
-                                   :align-items "center"
+                                   :align-items "start"
                                    :grid-area   "edit"}}
-
                      [edit-bar loggedin-uid @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
-
-                    (when nitty-gritty
-                      (when (some #{@selector} [:a :b])
-                        [sc/row-sc-g2 {:class [:truncate]
-                                       :style {:align-items     "center"
-                                               :justify-content :end
-                                               :grid-area       "details"}}
-                         (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
-                         [badges deleted-item::style m]]))
 
                     ;graph
                     (when nitty-gritty
                       (if (and (t/= (t/date date) (t/today)) (= :b @selector))
                         [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
 
-                    [g-area "content" [boat-badges db deleted-item::style boats]]
+                    [g-area "content" [:div.px-2 [boat-badges db deleted-item::style boats]]]
+
 
                     (let [{:keys [start-date end-date start-time end-time]} (preformat-dates date end::time-instant)]
-                      (for [[areaname value style] [["start-date" start-date {;:height :1rem
-                                                                              :place-self   :center
-                                                                              :salign-items :center}]
-                                                    (when nitty-gritty
-                                                      ["start-time" (str "kl. " start-time
+                      [:<>
+                       [:div {:style {:align-self :center
+                                      :padding-left "8px"
+                                      :grid-area "start-date"}} start-date]
+                       (if nitty-gritty
 
-                                                                         (if end-date
-                                                                           (str (str "-->" end-date "")
-                                                                                " kl. " end-time)
-                                                                           (when end-time
-                                                                             (str "—" end-time)))) {}])
-                                                    #_["end-date" end-date {:justify-content :end}]
-                                                    #_["end-time" end-time {:justify-content :end}]]]
-                        [:div.flex
-                         {:style (merge-with conj {:align-items :end
-                                                   ;:height"2rem"
-                                                   :display     :flex
-                                                   :grid-area   areaname} style)}
-                         [sc/text1 {:class [:xtracking-tight]} value]]))])]))))))
+                         [:div {:style {:grid-column "2/-1"
+                                        :display     :flex
+                                        :height      "2rem"
+                                        :align-items :center}}
+                          [sc/text1 start-time]
+                          (if-not end-time "-->" "—")
+                          [sc/text1 end-time]
+
+                          [:div.grow]
+                          [sc/row-sc-g2 {:class [:truncate]
+                                         :style {:align-items     "center"
+                                                 :justify-content :end
+                                                 :grid-area       "details"}}
+                           (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+                           [badges deleted-item::style m]]])])])]))))))
+
+
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
@@ -528,12 +513,15 @@
      [sc/col-space-8
       {:class [:pointer-events-auto]}
       [widgets/pillbar
+       {:style {:box-shadow "var(--shadow-2)"}}
        selector
        [[:b "Ute"]
         [:a "Alle"]]]
       [sc/row-center
-       [hoc.buttons/round-pill
-        {:class    [:large :xoutline :cta]
+
+       [hoc.buttons/pill
+        {:style    {:box-shadow "var(--shadow-2)"}
+         :class    [:large :cta]
          :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
         [sc/icon ico/plus]]]]]]])
 
@@ -551,10 +539,9 @@
     [[button/reg-pill
       {:class    [:large (if details-mode? :message :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
-      [sc/icon-large (if details-mode? ico/collection ico/collection)]]
-
+      [sc/icon-large ico/more-details]]
      [button/reg-pill
       {:class    [:large
                   (if delete-mode? :danger :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-deleted]) not)}
-      [sc/icon-large (if delete-mode? ico/trash ico/trash)]]]))
+      [sc/icon-large ico/trash]]]))

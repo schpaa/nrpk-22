@@ -1,5 +1,6 @@
 (ns booking.common-widgets
   (:require [schpaa.style.ornament :as sc]
+            [kee-frame.core]
             [reagent.core :as r]
             [reitit.core :as reitit]
             [re-frame.core :as rf]
@@ -7,14 +8,14 @@
             [schpaa.style.button :as scb]
             [schpaa.icon :as icon]
             [booking.routes]
-            [schpaa.debug :as l]
             [headlessui-reagent.core :as ui]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [db.core :as db]
             [clojure.string :as str]
             [schpaa.style.hoc.buttons :as button]
-            [eykt.calendar.actions :as actions]))
+            [booking.styles]
+            [schpaa.debug :as l]))
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -71,6 +72,7 @@
 
      [sc/small "this is"]]))
 
+;todo refactor on right-side
 (defn vertical-button
   [{:keys [right-side
            caption
@@ -81,6 +83,7 @@
            special
            icon
            icon-fn
+           content-fn
            class
            on-click
            page-name
@@ -96,20 +99,17 @@
       :class    [:gap-2 :w-full :flex :flex-row-reverse :justify-center (when selected? :selected)]
       :on-click #(on-click current-page)}
 
-     (when right-side
-       (when caption
-         [sc/text2 {:style {:width       "auto"
-                            :white-space :normal
-                            :color       "unset"
-                            :flex-grow   1
-                            :flex        "1 1 auto"}} caption]))
+     (when (and right-side caption)
+       [sc/text2 {:style {:width       "auto"
+                          :white-space :normal
+                          :color       "unset"
+                          :flex-grow   1
+                          :flex        "1 1 auto"}} caption])
 
-     (when right-side
-       (when with-caption?
-         (when opposite-icon-fn
-           [:div.w-16.h-20.flex.justify-center.items-center
-            {:on-click opposite-on-click}
-            [sc/icon (opposite-icon-fn)]])))
+     (when (and right-side opposite-icon-fn caption)
+       [:div.w-16.h-20.flex.justify-center.items-center
+        {:on-click opposite-on-click}
+        [sc/icon (opposite-icon-fn)]])
 
      [:div.w-16
       {:style {:display         :flex
@@ -127,17 +127,22 @@
              [sc/top-right-badge attr value]
              [sc/top-left-badge attr value])))
 
-       [sc/toolbar-button
-        {:disabled  disabled
-         :tab-index (when selected? "-1")
-         :class     [(if right-side :right-side :left-side)
-                     (if selected? (or (when class (class current-page)) :selected))
-                     (if special :special)]}
-        [:div.shrink-0
-         [sc/icon-large
-          (if icon-fn
-            (icon-fn current-page)
-            icon)]]]]]
+       (cond
+         content-fn
+         (content-fn)
+
+         icon-fn
+         [sc/toolbar-button
+          {:disabled  disabled
+           :tab-index (when selected? "-1")
+           :class     [(if right-side :right-side :left-side)
+                       (if selected? (or (when class (class current-page)) :selected))
+                       (if special :special)]}
+          [:div.shrink-0
+           [sc/icon-large
+            (if icon-fn
+              (icon-fn current-page)
+              icon)]]])]]
 
      (when-not right-side
        (when with-caption?
@@ -191,7 +196,7 @@
 ;region
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
-  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
+  (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
     (if mobile?
       [button/reg-icon
        {:on-click #(on-click)
@@ -231,35 +236,28 @@
       ico/trash)]])
 
 (defn edit [attr on-click {:keys [deleted] :as m}]
-  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
+  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])
+        attr (conj
+               attr
+               {:class    [:frame]
+                :style    {:text-transform "uppercase"
+                           :border-color   "var(--blue-7)"
+                           :background     "var(--blue-6)"
+                           :color          "var(--blue-0)"}
+                :on-click #(on-click m)})]
     (if deleted
       [:div.w-8]
       (if mobile?
-        [hoc.buttons/reg-icon
-         (conj
-           attr
-           {:class    [:outline2]
-            :style    {:text-transform "uppercase"
-                       :xbackground    "var(--blue-6)"
-                       :xcolor         "var(--blue-0)"}
-            :on-click #(on-click m)})
+        [hoc.buttons/reg-icon attr
          [sc/icon-small
           {:style {:xcolor "var(--blue-0)"}}
           ico/pencil]]
 
-
-        [hoc.buttons/reg-pill-icon
-         (conj
-           attr
-           {:class    [:outline2]
-            :style    {:text-transform "uppercase"
-                       :xbackground    "var(--blue-6)"
-                       :xcolor         "var(--blue-0)"}
-            :on-click #(on-click m)})
+        [hoc.buttons/reg-pill-icon attr
          [sc/icon-small
           {:style {:xcolor "var(--blue-0)"}}
           ico/pencil]
-         "Forandre"]))))
+         "Endre"]))))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
@@ -344,21 +342,7 @@
      {:style {:position         :absolute
               :inset            0
               :clip-path        "circle(35% at 50% 50%)"
-              :background-color (if clear-map? "var(--toolbar-)")}}
-     #_(r/with-let [c (r/atom 0)
-                    f (fn [] (swap! c inc))
-                    tm (js/setInterval f 3000)]
-         [:div {:style {:transition "opacity 1s"}}
-          [:img {:style {:position      "absolute"
-                         :width         "100%"
-                         :height        "100%"
-                         :inset         0
-                         :border-radius "var(--radius-round)"
-                         :opacity       1}
-                 :src   "/img/logo-n.png"
-                 #_(first (drop @c (cycle frontpage-images)))}]]
-
-         (finally (js/clearInterval tm)))]]])
+              :background-color (if clear-map? "var(--toolbar-)")}}]]])
 
 (defn logo-graph
   ([]
@@ -429,44 +413,51 @@
   ([attr tag question answer]
    (disclosure attr tag question answer nil))
   ([attr tag question answer extra-section]
-   (let [open @(schpaa.state/listen tag)
+   (let [open? @(schpaa.state/listen tag)
          attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
-     [ui/disclosure {:as    :div
-                     :style {:cursor :default}}
-      (fn [{:keys []}]
-        [sc/col
-         [ui/disclosure-button
-          {:on-click #(schpaa.state/toggle tag)
-           :style    {:cursor :default}
-           :class    "flex justify-start items-center gap-2 w-full focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"}
-          [sc/row-sc-g2
-           {:style    {:cursor :pointer}
-            :on-click #(schpaa.state/toggle tag)}
-           (sc/icon {:style {:color "var(--brand2)"}
-                     :class (concat [[:duration-100 :w-12 :h-12]]
-                                    (when open
-                                      [:transform :rotate-90]))}
-                    ico/showdetails)
-           [:span [sc/fp-headersmaller {:class [:text-left
-                                                :pointer-events-none (when (:large attr) :large)]
-                                        :style {:color (if open "var(--text0)" "var(--text2)")}}
-                   question]]]]
-         [ui/disclosure-panel
-          (merge-with into
-                      {:static true}
-                      (dissoc attr :links)
-                      {:style (if open {:margin-block "var(--size-2)"})})
+     (let [disclojure-button
+           (fn [{:keys [open]}]
+             [sc/row-sc-g2
+              {:style    {:cursor :pointer}
+               :on-click #(schpaa.state/toggle tag)}
+              (sc/icon {:style {:color "var(--brand2)"}
+                        :class [:duration-200 :w-12 :h-12
+                                :transform
+                                (when open :rotate-90)]}
+                       ico/showdetails)
+              [:span [sc/fp-headersmaller {:class [:text-left
+                                                   :pointer-events-none (when (:large attr) :large)]
+                                           :style {:color (if open "var(--text0)" "var(--text2)")}}
+                      question]]])]
+       [ui/disclosure {:style {:cursor :default}
+                       #_#_:defaultOpen true}
+        (fn [_]
+          [sc/col
 
-          (if (:links attr)
-            (if open
-              [sc/col-space-4 answer extra-section]
-              extra-section)
-            (if open
-              (if answer
-                [sc/text2 answer]
-                [sc/text2 extra-section])
-              (when-not answer
-                [sc/text2 extra-section])))]])])))
+           [ui/disclosure-button
+            {:on-click #(schpaa.state/toggle tag)
+             :style    {:cursor :default}
+             :class    [:flex :justify-start :items-center :gap-2
+                        :w-full
+                        :focus:outline-none :focus-visible:ring :focus-visible:ring-purple-500 :focus-visible:ring-opacity-75]}
+            disclojure-button]
+
+           [ui/disclosure-panel
+            (merge-with into
+                        {:static  true
+                         :unmount false}
+                        (dissoc attr :links))
+            (fn [{:keys [open]}]
+              (if (:links attr)
+                (if open?
+                  [sc/col-space-4 answer extra-section]
+                  extra-section)
+                (if open?
+                  (if answer
+                    [sc/text2 answer]
+                    [sc/text2 extra-section])
+                  (when-not answer
+                    [sc/text2 extra-section]))))]])]))))
 
 (defn send-msg [uid-reciever]
   (rf/dispatch [:app/open-send-message uid-reciever]))
@@ -517,15 +508,8 @@
      (when buttons
        buttons)]]))
 
-(defn pre [& p]
-  (let [item (fn [e] [:div.bg-black.text-white.h-full.w-auto e])]
-    [:div.space-y-1
-     [l/pre p]
-     (into [:div.flex.justify-end.h-12.items-center.gap-1]
-           (mapv item ["a1" "b2" "b3"]))]))
-
 (defn location [l]
-  (if (= "0" (str l)) "Nøklevann" "Sjøbasen"))
+  (if (= "1" (str l)) "Sjøbasen" "Nøklevann"))
 
 (defn badge [attr n v]
   [:div.flex
@@ -534,63 +518,162 @@
 
 (defn pillbar
   ([c vs]
-   (pillbar {:class [:narrow :outline2 :normals]} c vs))
+   (pillbar {:class [:narrow :outline2 :normal]} c vs))
   ([attr c vs]
    (let [f (fn [[k v]]
              [schpaa.style.hoc.toggles/pillbar
-              (merge-with into {:on-click #(if (= k @c)
-                                             (reset! c nil)
-                                             (reset! c k))
-                                :class    [(if (= k @c) :inverse)]}
-                          attr) v])]
+              (let [s (merge-with into {:class    [:normal (when (= k @c) :inverse)]
+                                        :on-click #(if (= k @c)
+                                                     (reset! c nil)
+                                                     (reset! c k))}
+                                  attr)
+                    _ (tap> {:style s})]
+                s)
+              v])]
      [sc/row (into [:<>] (map f vs))])))
 
 (defn open-slideout [dialog-def]
   (rf/dispatch [:modal.slideout/show {:content-fn dialog-def}]))
 
+(defn waves [base]
+  (let [colors (map #(str "#" base %) ["44" "66" "88" "ff"])]
+    [:svg#svg.transition.duration-300.ease-in-out.delay-150
+     {:width               "100%" :height "100%" :viewBox "0 0 1440 400"
+      :preserveAspectRatio "none"
+      :xmlns               "http://www.w3.org/2000/svg"}
+     [:defs
+      [:linearGradient#gradienta
+       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+       [:stop {:offset "5%" :stop-color (nth colors 0)}]
+       [:stop {:offset "95%" :stop-color (nth colors 0)}]]
+      [:linearGradient#gradientb
+       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+       [:stop {:offset "5%" :stop-color (nth colors 1)}]
+       [:stop {:offset "95%" :stop-color (nth colors 1)}]]
+      [:linearGradient#gradientc
+       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+       [:stop {:offset "5%" :stop-color (nth colors 2)}]
+       [:stop {:offset "95%" :stop-color (nth colors 2)}]]
+      [:linearGradient#gradientd
+       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+       [:stop {:offset "5%" :stop-color (nth colors 3)}]
+       [:stop {:offset "95%" :stop-color (nth colors 3)}]]]
+     [:path.transition-all.duration-300.ease-in-out.delay-150.path-0
+      {:d "M 0,400 C 0,400 0,80 0,80 C 90.82296650717703,72.28708133971293 181.64593301435406,64.57416267942584 271,59 C 360.35406698564594,53.42583732057416 448.23923444976083,49.99043062200957 531,62 C 613.7607655502392,74.00956937799043 691.3971291866028,101.46411483253587 810,108 C 928.6028708133972,114.53588516746413 1088.1722488038276,100.1531100478469 1200,92 C 1311.8277511961724,83.8468899521531 1375.9138755980862,81.92344497607655 1440,80 C 1440,80 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradienta)"}]
+     [:path.transition-all.duration-300.ease-in-out.delay-150.path-1
+      {:d "M 0,400 C 0,400 0,160 0,160 C 92.00956937799043,157.21531100478467 184.01913875598086,154.43062200956936 275,154 C 365.98086124401914,153.56937799043064 455.93301435406704,155.49282296650716 558,162 C 660.066985645933,168.50717703349284 774.2488038277512,179.5980861244019 884,172 C 993.7511961722488,164.4019138755981 1099.071770334928,138.11483253588517 1191,133 C 1282.928229665072,127.88516746411483 1361.4641148325359,143.94258373205741 1440,160 C 1440,160 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientb)"}]
+     [:path.transition-all.duration-300.ease-in-out.delay-150.path-2
+      {:d "M 0,400 C 0,400 0,240 0,240 C 98.25837320574163,227.42583732057415 196.51674641148327,214.85167464114832 291,219 C 385.48325358851673,223.14832535885168 476.1913875598086,244.01913875598083 558,245 C 639.8086124401914,245.98086124401917 712.7177033492824,227.07177033492823 826,230 C 939.2822966507176,232.92822966507177 1092.9377990430621,257.69377990430627 1202,263 C 1311.0622009569379,268.30622009569373 1375.531100478469,254.15311004784687 1440,240 C 1440,240 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientc)"}]
+     [:path.transition-all.duration-300.ease-in-out.delay-150.path-3
+      {:d "M 0,400 C 0,400 0,320 0,320 C 82.33492822966508,327.18660287081343 164.66985645933016,334.3732057416268 249,331 C 333.33014354066984,327.6267942583732 419.6555023923445,313.6937799043062 528,312 C 636.3444976076555,310.3062200956938 766.7081339712919,320.85167464114835 881,329 C 995.2918660287081,337.14832535885165 1093.511961722488,342.8995215311005 1184,341 C 1274.488038277512,339.1004784688995 1357.244019138756,329.55023923444975 1440,320 C 1440,320 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientd)"}]]))
+
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])
+        screenmode (rf/subscribe [:app/user-screenmode])
         user-uid (rf/subscribe [:lab/uid])
         ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
-    [:div.p-2.noprint {:style {:background-colorx "var(--toolbar-)"}}
-     [:div.z-1.rounded-top
-      {:style {:border-radius "var(--radius-1)"
-               ;:border-top-right-radius "var(--radius-2)"
-               :background    "var(--gray-9)"}}
-      [:div.mx-auto.max-w-xl.pt-8.pb-16
-       [:div.mx-4
-        [sc/col-space-4
-         [sc/col-space-1
-          [sc/title {:style {:color "var(--gray-4)"}} "Postadresse"]
-          [sc/col-space-1
-           {:style {:user-select :contain
-                    :color       "var(--gray-5)"}}
-           [sc/text1-cl "Nøklevann ro- og padleklubb"]
-           [sc/text1-cl "Postboks 37, 0621 Bogerud"]
-           [:div.flex.justify-start.flex-wrap.gap-4
-            [sc/subtext-with-link {:class [:dark]
-                                   :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
-            [sc/subtext-with-link {:class [:dark]
-                                   :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
-         [sc/row-ec
-          [hoc.buttons/reg-pill-icon
-           {:on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-           ico/tilbakemelding "Tilbakemelding"]]
-         [sc/row-sc-g4-w
-          [sc/col
-           [sc/small1 (or booking.data/VERSION "version")]
-           [sc/small1 (or booking.data/DATE "date")]]
+    (fn []
+      (let [base (if (= :dark @screenmode)
+                   (apply str (map #(.toString % 16) [146 186 110]))
+                   "0693e3")]
+        [:div.p-2.noprint
+         ;[l/pre @screenmode]
+         [:div.h-20 [waves base]]
+         [:div.z-1.rounded-top
+          {:style {:border-radius           "var(--radius-1)"
+                   :border-top-right-radius "0"
+                   :border-top-left-radius  "0"
+                   :background              (str "#" base "FF") #_"#0693e3ff"}}
+          [:div.mx-auto.max-w-xl.pt-4.pb-16
+           [:div.mx-4
+            [sc/col-space-4
 
-          (when-not ipad?
-            [hoc.buttons/reg-pill
-             {:on-click #(do
-                           (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
-                           (db/database-update {:path  ["system"]
-                                                :value {"active" @user-uid}}))}
-             "Bli til Båtlogg"])
+             [sc/row-center
+              [logo-graph]]
 
-          (when @(rf/subscribe [:lab/admin-access])
-            [hoc.buttons/danger-pill
-             {:on-click #(db/database-update {:path  ["system"]
-                                              :value {"timestamp" booking.data/DATE}})}
-             "Aktiver versjon"])]]]]]]))
+             [sc/row-fields
+              [sc/col-space-1
+               [sc/title {:class [:bold :pt-1]
+                          :style {:color "var(--gray-9)"}} "Postadresse"]
+               [sc/col-space-1
+                {:style {:user-select :contain
+                         :color       "var(--gray-9)"}}
+                [sc/text {:style {:color "var(--gray-9)"}} "Nøklevann ro- og padleklubb"]
+                [sc/text {:style {:color "var(--gray-9)"}} "Postboks 37, 0621 Bogerud"]
+                [:div.flex.justify-start.flex-wrap.gap-4
+                 [sc/subtext-with-link {:class [:neutral]
+                                        :style {:color        "var(--gray-1)"}
+                                        :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
+                 [sc/subtext-with-link {:class [:neutral]
+                                        :style {:color        "var(--gray-1)"}
+                                        :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
+              [sc/col-space-1
+               {:style {:align-items :end :justify-content :start}}
+               (when-not ipad?
+                 [:div
+                  [hoc.buttons/round-pill
+                   {:class    [:message :narrow]
+                    :on-click #(do
+                                 (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
+                                 (db/database-update {:path  ["system"]
+                                                      :value {"active" @user-uid}}))}
+                   "Bli til Båtlogg"]])
+
+               (when @(rf/subscribe [:lab/admin-access])
+                 [:div
+                  [hoc.buttons/round-pill
+                   {:class    [:danger :narrow]
+                    :on-click #(db/database-update {:path  ["system"]
+                                                    :value {"timestamp" booking.data/DATE}})}
+                   "Aktiver!"]])
+
+               [:div
+                [hoc.buttons/pill-icon-caption
+                 {:class    [:narrow :frame]
+                  :style    {:color        "var(--gray-1)"
+                             :border-color "var(--gray-1)"}
+                  :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+                 ico/tilbakemelding
+                 "Tilbakemelding"]]]]
+
+             [sc/row-fields
+              [sc/small (or booking.data/VERSION "version")]
+              [sc/small (or booking.data/DATE "date")]]]]]]]))))
+
+(defn temperature []
+  (letfn [(goto [link]
+            (rf/dispatch [:app/navigate-to [link]]))
+          (degrees-celsius [c]
+            [:span c [:sup "°c"]])
+          (centerline [a b]
+            [sc/row {:style {
+                             :overflow :hidden
+                             :align-items :baseline
+                             :width       "100%"}
+                     :class [:gap-1]}
+             #_[:p {:style {:flex         "1"
+                            :text-align   :right
+                            :color        :white
+                            :justify-self :end}} a]
+             [sc/text1-cl {:style {:font-weight  "700"
+                                   :font-size    "var(--font-size-4)"
+                                   :flex         "1"
+                                   ;:color        :
+                                   :justify-self :start}} b]])]
+
+    (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
+      (when-not mobile?
+        (let [air 18
+              water 11]
+          [sc/center
+           {:on-click #(goto :r.temperature)
+            :style    {:position :relative
+                       :color         "var(--text1)"
+                       :xpadding-block "0.25rem"}}
+           [sc/col
+            {:style {:width "min-content"}
+             :class [:p-0 :m-0]}
+            (centerline nil (degrees-celsius water))]
+           #_[:div.absolute.inset-x-0.bottom-0.z-1
+              {:style {:height "40%"}}
+              [waves "0693e3"]]])))))

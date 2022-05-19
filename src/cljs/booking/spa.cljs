@@ -35,10 +35,8 @@
             [booking.personas]
             [booking.frontpage]
             [booking.presence]
-            [schpaa.style.button :as scb]
             [booking.modals.commandpalette]
             [booking.utlan]
-            [booking.common-widgets :as widgets]
             [booking.reports]
             [booking.modals.boatinput]
             [booking.booking]
@@ -48,7 +46,8 @@
             [booking.min-status]
             [booking.oversikt]
             [booking.users]
-            [eykt.calendar.core]))
+            [eykt.calendar.core]
+            [booking.temperature]))
 
 ;; shortcuts
 
@@ -464,10 +463,10 @@
    :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
    :r.experimental
    (fn [r]
-     (page r {:render-fullwidth
+     (page r {:renderx
               (fn []
                 [:div.-debug3.px-4
-                 (for [e (range 100)] [sc/text1 e])])
+                 (for [e (range 10)] [sc/text1 e])])
               :headline-plugin
               (letfn [(degrees-celsius [c]
                         [:span c [:sup "°c"]])
@@ -480,11 +479,8 @@
                                         :justify-self :end}} a]
                          [:div {:style {:flex         "1"
                                         :justify-self :start}} b]])]
-                (fn [] [[sc/surface-a
-                         {:style {:border-radius  "var(--radius-blob-2)"
-                                  :padding-inline "2rem"
-                                  :background-color     "var(--blue-2)"
-                                  :padding-block  "0.25rem"}}
+                (fn [] [[:div
+                         {:style {:padding-block  "0.25rem"}}
                          [sc/col
                           {:style {:width "min-content"}
                            :class [:p-0 :m-0 :-debug2x]}
@@ -501,6 +497,7 @@
                                                               c (- 8 (count n))]
                                                           (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
+   :r.temperature        (fn [r] (page r (booking.temperature/render r)))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment

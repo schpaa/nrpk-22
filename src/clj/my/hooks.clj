@@ -16,11 +16,8 @@
                             :font-size             "1rem"
                             :font-feature-settings "'cv10', 'salt', 'zero'"}]])
 
-(defn write-styles-hook
-  {:shadow.build/stage :flush}
-  [build-state & args]
-  (my.tokens/set-it)
-  (spit "public/booking/css/ornament.css"
+(defn produce [filename]
+  (spit filename
         (str
           (slurp "template/css/colors.css")
           "\n"
@@ -28,13 +25,15 @@
                                                   girouette-preflight/preflight
                                                   global-styles))
           "\n"
-          #_(css (at-font-face {:font-family           "'Inter var experimental', sans-serif"
-                                :font-weight           "100 900"
-                                :font-display          :swap
-                                :font-style            "oblique 0deg 10deg"
-                                :font-feature-settings "'salt', 'zero'"
-                                :src                   [(url "'/fonts/Inter.var.woff2?v=3.19'")
-                                                        (format "'woff2'")]}))
-          "\n"
-          (o/defined-styles)))
+          (o/defined-styles))))
+
+(defn write-styles-hook
+  {:shadow.build/stage :flush}
+  [build-state & args]
+  (my.tokens/set-it)
+  (produce "public/booking/css/ornament.css")
+  (produce "public/devcards/css/ornament.css") 
   build-state)
+
+(comment
+  (write-styles-hook))

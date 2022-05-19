@@ -19,7 +19,8 @@
 ;idiom: unwrapped lines are candidates for new constructs
 (defn render [r]
   (if-let [uid @(rf/subscribe [:lab/uid])]
-    (r/with-let [ipad? ((fn is-master-input? [uid] (= uid @(db/on-value-reaction {:path ["system" "active"]}))) uid)
+    (r/with-let [;todo extract
+                 ipad? ((fn is-master-input? [uid] (= uid @(db/on-value-reaction {:path ["system" "active"]}))) uid)
                  datum (db/on-snapshot-docs-reaction {:path (path-beskjederinbox uid)})
                  #_#_sent (db/on-snapshot-docs-reaction {:path (path-beskjedersent uid)})]
       (when @datum
@@ -39,13 +40,14 @@
             [sc/col-space-8
              [beskjeder uid @datum]
              [tilbakemeldinger uid (cached-datasource uid)]
-             
+
              (when-not ipad?
-               (widgets/disclosure {}
-                                   :oversikt/vakter
-                                   "Vakter i '22"
-                                   (vakter uid datas)
-                                   "Ingen vakter"))
+               [widgets/disclosure
+                {:class []}
+                :oversikt/vakter
+                "Vakter i '22"
+                (vakter uid datas)
+                "Ingen vakter"])
              [widgets/personal user]
              (when (and (or admin? (not ipad?)) saldo timekrav fullførte-timer)
                [saldo-header saldo timekrav fullførte-timer])
