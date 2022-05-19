@@ -136,11 +136,11 @@
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
-    [{:on-click   #()
-      :caption    "Badetemperatur"
-      :content-fn (fn []
-                    [:div.w-full.h-full {:style {:background-color "var(--gray-0)"}}
-                     [widgets/temperature]])}
+    [(when-not goog.DEBUG {:on-click   #()
+                           :caption    "Badetemperatur"
+                           :content-fn (fn []
+                                         [:div.w-full.h-full {:style {:background-color "var(--floating)"}}
+                                          [widgets/temperature]])})
 
      {:icon-fn      #(sc/icon-large ico/new-home)
       :default-page :r.forsiden

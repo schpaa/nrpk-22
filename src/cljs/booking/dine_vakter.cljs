@@ -51,7 +51,8 @@
 (defn- within-undo-limits? [now date]
   ;(tap> [now date (tick.alpha.interval/new-interval (t/instant date) now)])
   (when-some [date date]
-    (< (t/hours (t/duration (tick.alpha.interval/new-interval (t/instant date) now))) 24)))
+    (< (t/hours (t/duration (tick.alpha.interval/new-interval (t/instant date) now)))
+       24)))
 
 (defn- frafall [_])
 
@@ -64,7 +65,9 @@
                                      [timeslot uid-registered-tuple] vs
                                      [_userid dt] uid-registered-tuple
                                      :let [status (if (map? dt) :cancel :ok)
-                                           date-registered (when-not (map? dt) (some-> dt t/date-time))
+                                           date-registered (if-not (map? dt)
+                                                             (some-> dt t/date-time)
+                                                             (some-> (get dt "registered") t/date-time))
                                            date-proper (some-> timeslot t/date-time)
                                            completed? (when date-proper (t/< (t/instant date-proper) (t/now)))]]
                                  {:status          (clojure.walk/keywordize-keys (if (map? dt) dt {:ok dt}))
@@ -122,9 +125,7 @@
                               [sc/col
                                [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
                                [sc/small1 "Registrert "
-                                (if (:cancel status)
-                                  (some-> date-registered times.api/arrival-date)
-                                  (some-> date-registered times.api/arrival-date))]]]]))))]]))))
+                                (booking.flextime/relative-time (some-> date-registered))]]]]))))]]))))
 
 
 (defn beskjeder [loggedin-uid datum]

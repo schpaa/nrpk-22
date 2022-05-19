@@ -294,7 +294,8 @@
 (defn- badges [deleted-item {:keys [deleted sleepover havekey] :as m}]
   ;note: Deleted-item is a partially applied sc/deleted-item
   [deleted-item
-   [sc/row-sc-g2 {:style {:flex-wrap :nowrap}}
+   [sc/row-sc-g2 {:class [:pr-2]
+                  :style {:flex-wrap :nowrap}}
     (when havekey [sc/icon-tiny-frame ico/harnøkkel])
     (when sleepover [sc/icon-tiny-frame ico/moon-filled])]])
 
@@ -321,13 +322,12 @@
 
 (defn agegroups-detail [{:keys [adults children juveniles] :as m}]
   (letfn [(f [n]
-            [sc/text1 {:style {:justify-self :center
-                               :font-weight  "var(--font-weight-5)"
+            [sc/text1 {:style {:font-weight  "var(--font-weight-5)"
                                :white-space  :nowrap}
                        :class [:tabular-nums]}
              (if (pos? n) n "—")])]
-    [sc/row {:class [:h-full]
-             :style {:align-items :end
+    [sc/row {:class [:h-full :pl-2]
+             :style {:align-items :start
                      :grid-area  "agegroups"}}
      [:div
       {:style {:display               "grid"

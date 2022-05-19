@@ -198,30 +198,29 @@
    :font-size             "90%"
    :grid-column-gap       "1rem"
    :grid-row-gap          "1rem"
-   :grid-template-columns "1fr min-content"
-   :grid-template-areas   [["type" "graph"]
-                           ["status" "status"]]})
+   :grid-template-columns "1fr min-content 1fr"
+   :grid-template-areas   [["type" "graph" "status"]]})
+
 
 (o/defstyled large-grid :div
   {:display               :grid
    :padding               "4px"
-   :font-size             "90%"
+   :font-size             "100%"
    :grid-column-gap       "1rem"
-   :grid-template-columns "1fr  1fr"
-   :grid-template-areas   [["type" "graph"]
-                           ["status" "status"]]})
+   :grid-template-columns "1fr min-content 1fr"
+   :grid-template-areas   [["type" "graph" "status"]]})
 
 (o/defstyled fancy-front :div
   [:&
-   small-grid
+   large-grid
    {:max-width         "calc(100% - 1rem)"
     :height            "auto"
     :padding-inline    "4px"
     :-background-color "hsla(0,50%,50%,20%)"}
 
    [:at-media {:max-width "511px"}
-    large-grid
-    {:xbackground-color "blue"}]])
+    small-grid
+    {:-background-color "blue"}]])
 
 (def logo-type
   [:div {:class [:flex :items-center :justify-end]
@@ -243,17 +242,37 @@
   [:div {:style {:min-font-size "80%"
                  :font-size     "100%"
                  :padding-block "var(--size-10)"}}
-   (let [c (count (logg.database/boat-db))]
-     (fancy-front
-       [:div {:style {:align-self   :center
-                      :justify-self :start
-                      :grid-area    "graph"}} (widgets/logo-graph)]
-       [:div {:style {:align-self :center
-                      :grid-area  "type"}} logo-type]
-       [:div {:style {:align-self :center
+   (fancy-front
+     [:div {:style {:align-self   :center
+                    :justify-self :start
+                    :grid-area    "graph"}} (widgets/logo-graph)]
+     [:div {:style {:align-self :center
+                    :grid-area  "type"}} logo-type]
+     [:div
+      {:style {:width "min-content"}}
+      [:div.inline-flex.flex-col.justify-center.space-y-2
+
+       [sc/text1 "Åpningstider"]
+
+       [sc/co
+        [sc/small1 "tirsdag, onsdag & torsdag:"]
+        [sc/text1 {:style {:line-height 1}
+                   :class [ :whitespace-nowrap]} "kl 18:00—21:00"]]
+
+       [:div.mx-px
+        {:style {:opacity 0.5
+                 :border-top "1px solid var(--text1)"}}]
+      
+       [sc/co
+        {:style {:line 1}}
+        [sc/small1 "lørdag & søndag:"]
+        [sc/text1 {:style {:line-height 1}
+                   :class [ :whitespace-nowrap]} "kl 11:00—17:00"]]]]
+
+     #_[:div {:style {:align-self   :center
                       :justify-self :center
-                      :grid-area  "status"}}
-        (todays-numbers "12" "11" c '—)]))])
+                      :grid-area    "status"}}
+        (todays-numbers "_" "_" c '—)])])
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]

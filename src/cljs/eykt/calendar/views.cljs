@@ -107,10 +107,16 @@
          path {:uid uid :section section :timeslot starttime-key}]
      (if (or owner? (pos? slots-free))
        (if owner?
-         [hoc.buttons/round-danger-pill
-          {:class    [:round :shrink-0]
-           :on-click #(actions/delete path)}
-          (sc/icon ico/trash)]
+         (if (actions/check-can-change? path)
+           [hoc.buttons/round-danger-pill
+            {:class    [:round :shrink-0]
+             :on-click #(actions/delete path)}
+            (sc/icon ico/trash)]
+           [hoc.buttons/pill
+            {:class    [:round :shrink-0 :message]
+             :on-click #(actions/delete path)}
+            (sc/icon ico/bytte)])
+
          [hoc.buttons/round-cta-pill
           {:class    [:round :shrink-0]
            :type     :button
@@ -201,7 +207,8 @@
                                 starttime' (str (t/at dt (t/time starttime)))
                                 [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
                                                                       alle-regs-i-denne-periodegruppen))
-                                slots-free (- slots (count (remove (comp map? second) slots-on-this-eykt)))]
+                                slots-free (- slots (count #_slots-on-this-eykt
+                                                           (remove (comp :cancel second) slots-on-this-eykt)))]
                           :when (if (and (not (= idx 1))
                                          show-only-available?)
                                   (or (pos? slots-free) (get-in base [section uid starttime-key]))

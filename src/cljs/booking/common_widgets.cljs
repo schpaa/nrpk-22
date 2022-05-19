@@ -200,13 +200,13 @@
     (if mobile?
       [button/reg-icon
        {:on-click #(on-click)
-        :class    [(if deleted? :outline2 :danger) :round]
+        :class    [(if deleted? :frame :danger) :round]
         :disabled false}
        (if deleted? ico/rotate-left ico/trash)]
 
       [button/reg-pill-icon
        {:on-click #(on-click)
-        :class    [(if deleted? :outline2 :danger)]
+        :class    [(if deleted? :frame :danger)]
         :disabled false}
        (if deleted? ico/rotate-left ico/trash)
        caption])))
@@ -239,7 +239,8 @@
   (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         attr (conj
                attr
-               {:class    [:frame]
+               {:disabled true
+                :class    [:frame]
                 :style    {:text-transform "uppercase"
                            :border-color   "var(--blue-7)"
                            :background     "var(--blue-6)"
