@@ -215,11 +215,11 @@
                                               :color            "var(--gray-9)"}}
                               :value (let [c (count (:online @presence))]
                                        (when (pos? c) c))})
-        :default-page :r.users
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.presence) :r.users :r.presence)]])
+
+        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
         :tall-height  true
         :class        #(if (= % :r.presence) :selected :oversikt)
-        :page-name    #(some #{%} [:r.users :r.presence])})
+        :page-name    #(some #{%} [:r.presence :r.users])})
      {:tall-height true
       :caption     "Hva kan jeg gjøre?"
       :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
@@ -413,8 +413,8 @@
      (let [items [[location-block r links caption (right-menu?)]
                   [:div.grow]
                   (when headline (map identity (headline)))
-                  [:div.w-12 [main-menu r]]
-                  #_[sc/small {:style {:color "var(--brand1)"}} (when v (times.api/format "%0.3f" v))]]
+                  [sc/text (when v (times.api/format "%04d" v))]
+                  [:div.w-12 [main-menu r]]]
            items (if (right-menu?) (reverse items) items)]
        [header-top (into [:<>] items)])]))
 

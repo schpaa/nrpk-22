@@ -74,25 +74,13 @@
 
 ;todo refactor on right-side
 (defn vertical-button
-  [{:keys [right-side
-           caption
-           opposite-on-click
-           with-caption?
-           opposite-icon-fn
-           tall-height
-           special
-           icon
-           icon-fn
-           content-fn
-           class
-           on-click
-           page-name
-           badge
-           disabled]}]
+  [{:keys [right-side caption opposite-on-click with-caption? opposite-icon-fn tall-height
+           special icon icon-fn content-fn class on-click page-name badge disabled]}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         selected? (if (fn? page-name)
                     (page-name current-page)
-                    (= current-page page-name))]
+                    (= current-page page-name))
+        screen-side (if right-side :right-side :left-side)]
     [sc/toolbar-button-with-caption
      {:style    {:justify-content :space-between
                  :align-items     :center}
@@ -132,17 +120,13 @@
          (content-fn)
 
          icon-fn
-         [sc/toolbar-button
-          {:disabled  disabled
-           :tab-index (when selected? "-1")
-           :class     [(if right-side :right-side :left-side)
-                       (if selected? (or (when class (class current-page)) :selected))
-                       (if special :special)]}
-          [:div.shrink-0
-           [sc/icon-large
-            (if icon-fn
-              (icon-fn current-page)
-              icon)]]])]]
+         (sc/toolbar-button
+           {:disabled  disabled
+            :tab-index (when selected? "-1")
+            :class     [screen-side
+                        (if selected? (or (when class (class current-page)) :selected))
+                        (if special :special)]}
+           [sc/icon-large {:class [:shrink-0]} (icon-fn current-page)]))]]
 
      (when-not right-side
        (when with-caption?
@@ -596,18 +580,20 @@
               [sc/col-space-1
                [sc/title {:class [:bold :pt-1]
                           :style {:color "var(--gray-9)"}} "Postadresse"]
-               [sc/col-space-1
-                {:style {:user-select :contain
-                         :color       "var(--gray-9)"}}
-                [sc/text {:style {:color "var(--gray-9)"}} "Nøklevann ro- og padleklubb"]
-                [sc/text {:style {:color "var(--gray-9)"}} "Postboks 37, 0621 Bogerud"]
+               [sc/col-space-4
+                [sc/col-space-1
+                 {:style {:user-select :contain
+                          :color       "var(--gray-9)"}}
+                 [sc/text {:style {:color "var(--gray-9)"}} "Nøklevann ro- og padleklubb"]
+                 [sc/text {:style {:color "var(--gray-9)"}} "Postboks 37, 0621 Bogerud"]]
+
                 [:div.flex.justify-start.flex-wrap.gap-4
                  [sc/subtext-with-link {:class [:neutral]
-                                        :style {:color        "var(--gray-1)"}
-                                        :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]
+                                        :style {:color "var(--gray-1)"}
+                                        :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]
                  [sc/subtext-with-link {:class [:neutral]
-                                        :style {:color        "var(--gray-1)"}
-                                        :href  "mailto:medlem@nrpk.no"} "medlem@nrpk.no"]]]]
+                                        :style {:color "var(--gray-1)"}
+                                        :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]]]]
               [sc/col-space-1
                {:style {:align-items :end :justify-content :start}}
                (when-not ipad?

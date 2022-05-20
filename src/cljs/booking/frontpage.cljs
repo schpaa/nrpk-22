@@ -33,8 +33,8 @@
     :background-size     "cover"}
    [:&.light {:background-image "var(--background-image-light)"}]
    [:&.dark {:background-image "var(--background-image-dark)"}]]
-  [:at-media {:max-width "511px"}
-   [:&.light {:background-image "none"}]])
+  #_[:at-media {:max-width "511px"}
+     [:&.light {:background-image "none"}]])
 
 (o/defstyled fp-right-aligned-link sc/ingress'
   :text-right :whitespace-nowrap
@@ -255,7 +255,7 @@
        [sc/text1 "Åpningstider"]
 
        [sc/co
-        [sc/small1 "tirsdag, onsdag & torsdag:"]
+        [sc/small1 "tir, ons & tor"]
         [sc/text1 {:style {:line-height 1}
                    :class [ :whitespace-nowrap]} "kl 18:00—21:00"]]
 
@@ -265,7 +265,7 @@
       
        [sc/co
         {:style {:line 1}}
-        [sc/small1 "lørdag & søndag:"]
+        [sc/small1 "lør & søn"]
         [sc/text1 {:style {:line-height 1}
                    :class [ :whitespace-nowrap]} "kl 11:00—17:00"]]]]
 
@@ -481,14 +481,14 @@
                                              (tap> {"SET REF" el})
                                              (reset! a nil)
                                              ((set-ref a scroll-fn) el)))
-                     :min-height "100vh"
-                     :height     "100vh"}
+                     :min-height "90vh"
+                     :height     "90vh"}
 
              :class [(if dark-mode? :dark :light)
                      (if @reg? :bottom-toolbar)]}
 
             [:div.min-h-full.z-0
-             {:style {:min-height     "100vh"
+             {:style {:min-height     "90vh"
                       :padding-bottom "8rem"}}
              ;debug
              (when (and goog.DEBUG @master-emulation)
@@ -507,7 +507,8 @@
                 [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
 
              [sc/col-space-8
-              {:style {:max-width "min(calc(100% - 2rem), 56ch)"}
+              {:style {:smax-width "min(calc(100% - 2rem), 56ch)"
+                       :max-width "calc(768px - 3rem)"}
                :class [:mx-auto :min-h-full :xpb-8]}
               [sc/col-space-8
                (when-not @reg?
@@ -523,9 +524,9 @@
                (widgets/disclosure {:large 1
                                     :style {:padding-block "var(--size-2)"
                                             :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
-               (widgets/disclosure {:large 1
-                                    :style {:padding-block "var(--size-2)"
-                                            :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]
+               #_(widgets/disclosure {:large 1
+                                      :style {:padding-block "var(--size-2)"
+                                              :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]
             [widgets/after-content]
             [:div.sticky.bottom-0.noprint
              [booking.common-views/bottom-toolbar]]]))})))
