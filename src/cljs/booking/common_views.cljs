@@ -78,7 +78,7 @@
     :height     "var(--size-9)"}])
 
 (o/defstyled header-top :div
-  [:& :flex :items-center :w-full :px-2 :gap-1
+  [:& :flex :items-center :w-full :gap-2
    {:margin    "auto"
     :max-width "calc(768px - 3rem)"
     :height    "var(--size-9)"
@@ -382,7 +382,9 @@
   (let [link (first links)]
     [location
      {:on-click #(rf/dispatch [:app/navigate-to [link]])
-      :class    [:truncate (if right-menu? :text-right :text-left)]}
+      :class    [:truncate
+                 (if right-menu? :mr-2 :ml-2)
+                 (if right-menu? :text-right :text-left)]}
      [sc/col-space-1
       {:style {:justify-content :start}}
       [sc/title1 {:style {:font-weight "var(--font-weight-4)"}}
@@ -398,9 +400,7 @@
 (def scrollpos (r/atom 0))
 
 (o/defstyled headerline :div
-  [:&
-   :w-full :flex :justify-between :pointer-events-auto
-   #_[:&:active {:background "var(--text1-copy)"}]])
+  [:& :w-full :flex :justify-between :pointer-events-auto])
 
 (defn right-menu? [] (when-let [s (rf/subscribe [:lab/screen-geometry])]
                        (:right-menu? @s)))
@@ -410,13 +410,21 @@
     ;{xright-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])]
     [headerline
      {:class [:h-16 :items-center :truncate]}
-     (let [items [[location-block r links caption (right-menu?)]
-                  [:div.grow]
-                  (when headline (map identity (headline)))
-                  [sc/text (when v (times.api/format "%04d" v))]
-                  [:div.w-12 [main-menu r]]]
+     (let [items (concat [[location-block r links caption (right-menu?)]
+                          [:div.grow]
+                          [:div.flex.items-center.justify-center.mx-4.tabular-nums
+                           [sc/small1 (when v (times.api/format "%04d" v))]]]
+
+                         (when headline
+                           [[:div.flex.px-2.pb-1.gap-2
+                             {:style {:border-radius "var(--radius-2)"
+                                      :background-color "rgba(0,0,0,0.05)"}}
+                             (into [:<>]
+                                   (mapv identity (headline)))]])
+
+                         [[:div.mx-2 [main-menu r]]])
            items (if (right-menu?) (reverse items) items)]
-       [header-top (into [:<>] items)])]))
+       [header-top items])]))
 
 (defn header [v headline]
   (let [route (rf/subscribe [:kee-frame/route])

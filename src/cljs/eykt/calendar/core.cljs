@@ -190,7 +190,7 @@
   (let [listener (db/on-value-reaction {:path ["calendar"]})
         data (->> (iterate-dates
                     {:rules     (expand short-rules)
-                     :utc-start (t/at (t/yesterday) (t/time "00:00"))
+                     :utc-start (t/at (t/today) (t/time "00:00"))
                      :utc-end   (t/at (t/date "2022-10-09") (t/time "00:00"))}
                     0)
                   (filter (fn [[v]] (pos? (:slots v)))))]

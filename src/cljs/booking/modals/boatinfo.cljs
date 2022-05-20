@@ -223,33 +223,31 @@
        :kind? [:w-full] :lable :names]]
      [sci/textarea props :text [] "Sample Label" :description]]))
 
-(defn header [{:keys [bt-data ex-data]}
-              {:keys [id boat-type slot location description number on-star-click] :as data}]
-  [sc/col-space-4 {:style {:padding "1rem"}}
-   [sc/row-sc-g2
-    [widgets/badge
-     {:class [:big :right-square]}
-     number
-     slot]
-    [widgets/stability-name-category data]
-    [:div.grow]
-    [widgets/favourites-star
-     {:bt-data       bt-data
-      :ex-data       ex-data
-      :on-star-click on-star-click} data]]
-   [sc/col-space-1
-    [widgets/dimensions-and-material data]
-    [sc/col-space-4
-     [sc/text0 description]
-
-     [sc/text1 "Plassert på " (widgets/location location)]
-
+(defn header [uid {:keys [id boat-type slot location description number on-star-click] :as data}]
+  (r/with-let [bt-data (or nil (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]}))
+               ex-data (or nil (db/on-value-reaction {:path ["users" uid "starred" boat-type]}))]
+    [sc/col-space-4 {:style {:padding "1rem"}}
+     [sc/row-sc-g2
+      [widgets/badge
+       {:class [:big :right-square (when-not number :active)]}
+       (or number id)
+       (or slot "ny")]
+      [widgets/stability-name-category data]
+      [:div.grow]
+      [widgets/favourites-star
+       {:bt-data       bt-data
+        :ex-data       ex-data
+        :on-star-click on-star-click} data]]
      [sc/col-space-1
-      [sc/surface-ab
-       [sc/row-sc-g2 [sc/small {:style {:user-select :all}} boat-type] [sc/small "(type)"]]
-       [sc/row-sc-g2 [sc/small {:style {:user-select :all}} id] [sc/small "(id)"]]]]]
+      [widgets/dimensions-and-material data]
+      [sc/col-space-4
+       [sc/text0 description]
 
-    (when -debug [l/pre data])]])
+       [sc/text1 "Plassert på " (widgets/location location)]]
+
+
+
+      (when -debug [l/pre data])]]))
 
 (defn bottom-button-panel [& content]
   [:div
@@ -273,86 +271,78 @@
 
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid] :as input}]
   (let [admin? (rf/subscribe [:lab/admin-access])
-        {:keys [boat-type]} data
-        boat-item-id (some-> (:id data) name)]
-    (r/with-let [bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
-                 ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
-      [sc/dropdown-dialog'
-       ;header
-       [:div.sticky.top-0
-        {:style {:padding-bottom   0
-                 :z-index          10
-                 :background-color "var(--toolbar)"}}
-        [header
-         {:bt-data bt-data
-          :ex-data ex-data}
-         data]
-        [sc/row-center {:style {:position       :relative
-                                :top            12}}
-         ;pills
-         (widgets/pillbar {:class [:small]} selected-tab
-                          [[:feil "Feil"]
-                           (if @admin? [:arbeidsliste "Arbeidsliste"])
-                           [:data "Data"]])]]
+        {:keys [id boat-type]} data
+        boat-item-id (some-> id name)
+        boat-item-id (when (< 3 (count boat-item-id))
+                       boat-item-id)]
+    [sc/dropdown-dialog'
+     ;header
+     ;[sc/text1 boat-item-id]
 
-       ;body
-       [fork/form {:prevent-default?  true
-                   :clean-on-unmount? true
-                   :keywordize-keys   true
-                   :path              :form-damange
-                   :form-id           "damage-form2"
-                   :initial-values    (reduce (fn [a e] (assoc a e false)) {:description ""} damage-words)
-                   :on-submit         #(on-submit boat-item-id %)}
-        (fn [{:keys [dirty handle-submit form-id] :as props}]
-          [:form {:id        form-id
-                  :class     []
-                  :on-submit handle-submit}
-           [sc/col-space-8 {:style {:background     (if @selected-tab "var(--floating)" "var(--content)")
-                                    :padding-block  "2rem"
-                                    :padding-inline "1rem"}}
+     [:div.sticky.top-0
+      {:style {:padding-bottom   0
+               :z-index          10
+               :background-color "var(--toolbar)"}}
+      [header uid data]
 
-            (case @selected-tab
-              :data [sc/title1 "wip"]
-              :feil [insert-damage props]
-              :arbeidsliste [insert-worklog
-                             boat-item-id
-                             (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})]
-              nil)]
-           (if dirty
-             [bottom-button-panel
-              [sc/row-sc-g2]
-              [:div {:style {:flex "1"}}]
-              [hoc.buttons/regular
-               {:type     :button
-                :style    {:background-color "var(--toolbar)"
-                           :color            "var(--buttoncopy)"}
-                :on-click on-close}
-               "Avbryt"]
-              [hoc.buttons/attn
-               {:type     :submit
-                :disabled false}
-               "Lagre"]]
-             [bottom-button-panel
-              [sc/row-sc-g2
-               #_[hoc.buttons/cta-outline
-                  {:type     :button
-                   :on-click #()
-                   :disabled true}
-                  [sc/icon ico/arrowLeft']]
-               #_[hoc.buttons/cta-outline
-                  {:type     :button
-                   :on-click #()
-                   :disabled true}
-                  [sc/icon ico/arrowRight']]]
-              [:div {:style {:flex "1"}}]
-              [hoc.buttons/regular
-               {:type     :button
-                :style    {:background-color "var(--toolbar)"
-                           :color            "var(--buttoncopy)"}
-                :on-click on-close}
-               "Lukk"]])])]]
+      [sc/row-center {:style {:position :relative
+                              :top      12}}
+       (widgets/pillbar {:class [:small]} selected-tab
+                        [[:feil "Feil"]
+                         (if @admin? [:arbeidsliste "Arbeidsliste"])
+                         [:data "Data"]])]]
 
-      (finally))))
+     [fork/form {:prevent-default?  true
+                 :clean-on-unmount? true
+                 :keywordize-keys   true
+                 :path              :form-damange
+                 :form-id           "damage-form2"
+                 :initial-values    (reduce (fn [a e] (assoc a e false)) {:description ""} damage-words)
+                 :on-submit         #(on-submit boat-item-id %)}
+      (fn [{:keys [dirty handle-submit form-id] :as props}]
+        [:form {:id        form-id
+                :class     []
+                :on-submit handle-submit}
+         [sc/col-space-8 {:style {:background     (if @selected-tab "var(--floating)" "var(--content)")
+                                  :padding-block  "2rem"
+                                  :padding-inline "1rem"}}
+
+          (case @selected-tab
+            :data [sc/surface-ab
+                   [sc/co
+                    ;;urls to firebase
+                    [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
+                     (widgets/data-url {:checked-path ["boat-brand" boat-type]})]                     
+                    [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} id] [sc/text1 "(id)"]
+                     (widgets/data-url {:checked-path ["boad-item" id]})]]]
+
+            :feil [insert-damage props]
+            :arbeidsliste (when boat-item-id [insert-worklog
+                                              boat-item-id
+                                              (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])
+            nil)]
+         (if dirty
+           [bottom-button-panel
+            [sc/row-sc-g2]
+            [:div {:style {:flex "1"}}]
+            [hoc.buttons/regular
+             {:type     :button
+              :style    {:background-color "var(--toolbar)"
+                         :color            "var(--buttoncopy)"}
+              :on-click on-close}
+             "Avbryt"]
+            [hoc.buttons/attn
+             {:type     :submit
+              :disabled false}
+             "Lagre"]]
+           [bottom-button-panel
+            [:div {:style {:flex "1"}}]
+            [hoc.buttons/regular
+             {:type     :button
+              :style    {:background-color "var(--toolbar)"
+                         :color            "var(--buttoncopy)"}
+              :on-click on-close}
+             "Lukk"]])])]]))
 
 ;; main accessor
 

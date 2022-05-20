@@ -16,34 +16,37 @@
 (o/defstyled table-controller-report :div
   [:& :overflow-x-auto
    {:width "calc(100vw - 14rem)"}
-   [:&.narrow-toolbar {:width "calc(100vw - 4rem)"}]]
+   [:&.narrow-toolbar
+    {:margin-inline "auto"
+     :width "calc(100vw - 4rem)"}]]
   [:at-media {:max-width "511px"}
    {:width "calc(100vw)"}
    [:&.narrow-toolbar {:width "calc(100vw)"}]])
 
 (defn table-controller-report' [& c]
   (let [narrow-toolbar (not @(schpaa.state/listen :app/toolbar-with-caption))]
-    [table-controller-report {:class [(when narrow-toolbar :narrow-toolbar)]} c]))
+    [:div ;table-controller-report
+     {:style {:padding-inline "1rem"}
+      :class [(when narrow-toolbar :narrow-toolbar)]} c]))
 
 (o/defstyled table-report :table
   [:&
-   {:width           "100%"
-    :padding-inline  "1rem"
+   {:width           "auto"
     :border-collapse :collapse}
    [:thead
-    {:height     "3rem"
-     :background "var(--toolbar-)"}
+    {:background "var(--floating)"}
     [:tr
      {:text-align :left}
-     [:th sc/small0
-      {:padding-inline "4px"
+     [:th sc/text
+      {:height     "3rem"
+       :padding-inline "4px"
        :padding-block  "var(--size-1)"}
       [:&.narrow {:min-width "5rem"
                   :xoutline  "1px solid red"}]]]]
 
    [:tbody
     ["tr:nth-child(odd)"
-     {:background "var(--floating)"}]
+     {:background "rgba(0,0,0,0.05)"}]
     [:tr
      {:color      "var(--text1)"
       ;:vertical-align :middle
@@ -61,9 +64,7 @@
        :whitespace-normal
        {:width "100%"}]
       [:&.hcenter {:padding-inline "1rem"}]
-
-      [:&.vcenter {
-                   :vertical-align :middle}]]]]])
+      [:&.vcenter {:vertical-align :middle}]]]]])
 
 (o/defstyled phonenumber :td
   :tabular-nums
@@ -79,25 +80,28 @@
                                           (key (first v))
                                           k])) [])
                          (sort-by first >))]
-    [:div
-     [table-controller-report'
-      [table-report
-       [:<>
-        [:thead
-         [:tr
-          [:th "registrert"]
-          [:th "navn"]
-          [:th "vaktdato"]
-          [:th "dag"]
-          [:th "kl"]]]
-        (into [:tbody]
-              (for [[time user-id slot] ordered-log]
-                [:tr {}
-                 [:td.tabular-nums (times.api/very-compressed-date (t/date-time time))]
-                 [:td.truncate (widgets/user-link (name user-id))]
-                 [:td.tabular-nums (times.api/date-format-sans-year (t/date-time (name slot)))]
-                 [:td.tabular-nums (times.api/day-name (t/date-time (name slot)) :length 3)]
-                 [:td.tabular-nums (times.api/time-format-hour (t/date-time (name slot)))]]))]]]]))
+    [table-controller-report'
+     [table-report
+      [:<>
+       [:thead
+        [:tr
+         [:th "registrert"]
+         [:th "navn"]
+         [:th "vaktdato"]
+         [:th "dag"]
+         [:th "kl"]
+         [:th "url"]]]
+       (into [:tbody]
+             (for [[time user-id slot] ordered-log]
+               [:tr {}
+                [:td.tabular-nums (some-> time :registered t/date-time times.api/very-compressed-date)]
+                [:td.truncate (some-> user-id name widgets/user-link)]
+                [:td.tabular-nums (some-> slot name t/date-time times.api/date-format-sans-year)]
+                [:td.tabular-nums (some-> slot name t/date-time (times.api/day-name :length 3))]
+                [:td.tabular-nums (times.api/time-format-hour (t/date-time (name slot)))]
+                [:td.tabular-nums
+                 (widgets/data-url {:checked-path ["users" user-id]})]]))]]]))
+
 
 (defn brukere-av-booking []
   (let [data @(db/on-value-reaction {:path ["users"]})
@@ -421,8 +425,13 @@
   (let [{report-id :id} (-> r :path-params)
         result (filter #(= (:id %) report-id) report-list)]
     (if-let [result (first result)]
-      {:always-panel     (fn [] [:div.w-full [sc/hero-p (:name result)]])
+      {:always-panel     (fn [] [:div
+                                 {:style {:padding-inline "1rem"}}
+                                 [sc/hero-p (:name result)]])
        :render-fullwidth (fn []
-                           [sc/col {:class [:w-full]}
+                           [sc/col
+                            {:style {:overflow-x :auto
+                                     :padding-inline ""
+                                     :width "100%"}}
                             ((:f result))])}
-      {:render (fn [] [:div "?"])})))
+      {:render (fn [] [:div ":render-fullwidth"])})))

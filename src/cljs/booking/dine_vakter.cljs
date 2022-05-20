@@ -57,9 +57,10 @@
 (defn- frafall [_])
 
 (defn vakter [uid data::stringified]
-  (let [admin? (rf/subscribe [:lab/admin-access])]
+  (let [loggedin-uid @(rf/subscribe [:lab/uid])
+        admin? @(rf/subscribe [:lab/admin-access])]
     (when (seq data::stringified)
-      (let [within-undo-limits? (partial within-undo-limits? (t/now))
+      (let [ within-undo-limits? (partial within-undo-limits? (t/now))
             collector (sort-by :date-proper <
                                (for [[section vs] data::stringified
                                      [timeslot uid-registered-tuple] vs
@@ -87,25 +88,26 @@
                               ;[l/pre data::stringified]
                               (if completed?
                                 [:<>]
-                                (if (:cancel status)
-                                  [button/reg-pill-icon
-                                   {:class    [:regular]
-                                    :disabled true}
-                                   ico/exclamation
-                                   "Frafalt"]
-                                  (if (within-undo-limits? date-registered)
+                                (when (or (= loggedin-uid uid) admin?)
+                                  (if (:cancel status)
                                     [button/reg-pill-icon
-                                     {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
-                                      :class    [:danger]
-                                      :disabled false}
-                                     ico/trash
-                                     "Avlys"]
-                                    [button/reg-pill-icon
-                                     {:class    [:message]
+                                     {:class    [:regular]
                                       :disabled true}
-                                     ico/bytte
-                                     "Bytte"])))
-                              (when (and @admin?
+                                     ico/exclamation
+                                     "Frafalt"]
+                                    (if (within-undo-limits? date-registered)
+                                      [button/reg-pill-icon
+                                       {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
+                                        :class    [(if admin? :inverse :danger)]
+                                        :disabled false}
+                                       ico/trash
+                                       "Avlys"]
+                                      [button/reg-pill-icon
+                                       {:class    [:message]
+                                        :disabled true}
+                                       ico/bytte
+                                       "Bytte"]))))
+                              (when (and admin?
                                          (not (within-undo-limits? date-registered))
                                          (not completed?)
                                          (not (:cancel status)))
@@ -115,7 +117,7 @@
                                   :disabled false}
                                  ico/thumbsdown
                                  "Frafall"])
-                              (when (and @admin? (not completed?) (:cancel status))
+                              (when (and admin? (not completed?) (:cancel status))
                                 [button/reg-pill-icon 
                                  {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
                                   :class    [:cta :outliner]
@@ -205,32 +207,16 @@
                   data::stringified (clojure.walk/stringify-keys @datas)
                   saldo (:saldo user)
                   timekrav (:timekrav user)
-                  #_#_temp (->> data::stringified
-                                vals
-                                (map vals)
-                                flatten
-                                (map (comp first vals))
-                                (remove (fn [m]
-                                          (tap> {:k2 m})
-                                          (get m "cancel")))
-
-                                #_flatten
-                                #_(into []))
-
                   antall-økter (->> data::stringified
                                     vals
-
                                     (map vals)
                                     flatten
                                     (map (comp first vals))
-                                    (remove (fn [m]
-                                              ;(tap> {:k2 m})
-                                              (get m "cancel")))
+                                    (remove (fn [m] (get m "cancel")))
                                     count)
-                  fullførte-timer (* 3 antall-økter) #_(or (when (some? saldo))
-                                                           (- saldo timekrav (- (* 3 (count (seq data::stringified))))))]
+                  fullførte-timer (* 3 antall-økter)]
               [:div
-               ;[l/pre temp]
+               ;[l/pre 'temp]
                [sc/col-space-8
                 [widgets/personal user
                  (when admin?

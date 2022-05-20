@@ -168,14 +168,14 @@
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
-  [sc/row {:style {:column-gap  "var(--size-2)"
-                   :align-items :center}}
-   (when (pos? @bt-data)
-     [sc/text1 @bt-data])
-   [sc/icon-large
-    {:on-click #(on-star-click boat-type (not @ex-data))
-     :style    {:color (if @ex-data "var(--yellow-6)" "rgba(0,0,0,0.5)")}}
-    (if @ex-data ico/stjerne ico/stjerne)]])
+  #_[sc/row {:style {:column-gap  "var(--size-2)"
+                     :align-items :center}}
+     (when (pos? @bt-data)
+       [sc/text1 @bt-data])
+     [sc/icon-large
+      {:on-click #(on-star-click boat-type (not @ex-data))
+       :style    {:color (if @ex-data "var(--yellow-6)" "rgba(0,0,0,0.5)")}}
+      (if @ex-data ico/stjerne ico/stjerne)]])
 
 ;region
 
@@ -397,13 +397,14 @@
    (apply disclosure m))
   ([attr tag question answer]
    (disclosure attr tag question answer nil))
-  ([attr tag question answer extra-section]
+  ([{:keys [padded-heading] :as attr} tag question answer extra-section]
    (let [open? @(schpaa.state/listen tag)
          attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
      (let [disclojure-button
            (fn [{:keys [open]}]
              [sc/row-sc-g2
-              {:style    {:cursor :pointer}
+              {:class (when padded-heading padded-heading)
+               :style    {:cursor :pointer}
                :on-click #(schpaa.state/toggle tag)}
               (sc/icon {:style {:color "var(--brand2)"}
                         :class [:duration-200 :w-12 :h-12
@@ -664,3 +665,11 @@
            #_[:div.absolute.inset-x-0.bottom-0.z-1
               {:style {:height "40%"}}
               [waves "0693e3"]]])))))
+
+(defn data-url [{:keys [checked-path]}]
+  (let [path (apply str (interpose "/" (mapv #(if (keyword? %) (name %) %) checked-path)))]
+    ;(tap> {:path path})
+    (sc/link {:target "_blank"
+              :href   (if goog.DEBUG
+                        (str "http://localhost:4000/database/nrpk-vakt/data/" path)
+                        (str "https://nrpk-vakt.firebaseio.com/" path))} "url")))

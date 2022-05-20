@@ -389,9 +389,12 @@
 
          badge-view-fn
          (fn [{:keys [id returned number datum slot]}]
-           [deleted-item::style
+           [deleted-item::style                                       
             [widgets/badge
-             {:on-click #(open-modal-boatinfo {:data (assoc datum :id id)})
+             {:on-click #(if datum
+                           ;(tap> [:widgets.badge id datum])
+                           (open-modal-boatinfo {:data (assoc datum :id id)})
+                           (open-modal-boatinfo {:data (assoc datum :id id)}))
               :class    [class
                          :small
                          :whitespace-nowrap
@@ -463,18 +466,17 @@
 
                     [g-area "content" [:div.px-2 [boat-badges db deleted-item::style boats]]]
 
-
                     (let [{:keys [start-date end-date start-time end-time]} (preformat-dates date end::time-instant)]
                       [:<>
-                       [:div {:style {:align-self :center
-                                      :padding-left "8px"
-                                      :grid-area "start-date"}} start-date]
+                       [sc/text1 {:style {:align-self :center
+                                          :padding-left "8px"
+                                          :grid-area "start-date"}} start-date]
                        (if nitty-gritty
 
-                         [:div {:style {:grid-column "2/-1"
-                                        :display     :flex
-                                        :height      "2rem"
-                                        :align-items :center}}
+                         [sc/text1 {:style {:grid-column "2/-1"
+                                            :display     :flex
+                                            :height      "2rem"
+                                            :align-items :center}}
                           [sc/text1 start-time]
                           (if-not end-time "-->" "—")
                           [sc/text1 end-time]
@@ -486,8 +488,6 @@
                                                  :grid-area       "details"}}
                            (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
                            [badges deleted-item::style m]]])])])]))))))
-
-
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
