@@ -33,7 +33,7 @@
                    :width           "100%"}}
      t
      [widgets/badge
-      {:class [:big (when-not v :in-use)]} number slot]
+      {:class [:big :work-log (when-not v :in-use)]} number slot]
      [sc/co-field {:style {:flex "1"}}
       [sc/text2 navn]
       [sc/title1 (schpaa.components.views/normalize-kind kind)]
@@ -386,10 +386,11 @@
                 :slot     (:slot datum)
                 :returned (not (empty? (str returned)))
                 :number   number})))
-
+                                         
          badge-view-fn
-         (fn [{:keys [id returned number datum slot]}]
-           [deleted-item::style                                       
+         (fn [{:keys [id work-log returned number datum slot]}]
+           [deleted-item::style
+            ;(tap> {:id id :datum datum})
             [widgets/badge
              {:on-click #(if datum
                            ;(tap> [:widgets.badge id datum])
@@ -397,10 +398,16 @@
                            (open-modal-boatinfo {:data (assoc datum :id id)}))
               :class    [class
                          :small
+                         #_(when (pos? (->> datum :work-log (remove (comp :deleted val)) count))
+                             :work-log)
                          :whitespace-nowrap
                          (when-not (:boat-type datum) :active)
                          (when-not returned :in-use)]}
-             (or number (str (some-> id name)))
+
+             (when-let [data (:work-log datum)]
+               (when-some [n (seq (remove (comp :deleted val) data))]
+                 (count n)))
+             (or number (str (some-> id name (subs 0 3))))
              slot]])]
      (map badge-view-fn (sort-by :number < (map prepared (remove nil? boats)))))])
 

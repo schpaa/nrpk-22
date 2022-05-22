@@ -15,7 +15,8 @@
             [clojure.string :as str]
             [schpaa.style.hoc.buttons :as button]
             [booking.styles]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [clojure.set :as set]))
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -145,16 +146,16 @@
 (defn stability-expert [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center
    [:svg.w-5.inline-block {:viewBox "-3 -3 6 6"}
-    [:circle {:cx 0 :cy 0 :r 2
+    [:circle {:cx           0 :cy 0 :r 2
               :stroke-width 0.5
-              :stroke (get {0 "var(--brand1)"
-                            1 "var(--blue-7)"
-                            2 "var(--orange-6)"
-                            3 "var(--red-7)"} (js/parseInt stability) :black)
-              :fill (get {0 "var(--brand1)"
-                          1 "var(--blue-7)"
-                          2 "var(--orange-6)"
-                          3 "var(--red-7)"} (js/parseInt stability) :white)}]
+              :stroke       (get {0 "var(--brand1)"
+                                  1 "var(--blue-7)"
+                                  2 "var(--orange-6)"
+                                  3 "var(--red-7)"} (js/parseInt stability) :black)
+              :fill         (get {0 "var(--brand1)"
+                                  1 "var(--blue-7)"
+                                  2 "var(--orange-6)"
+                                  3 "var(--red-7)"} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
 (defn favourites-star' [{:keys [on-star-click]}
@@ -167,9 +168,10 @@
         ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
     [sc/row {:style {:column-gap  "var(--size-1)"
                      :align-items :center
-                     :color       (if (and id @ex-data) "var(--yellow-6)"
-                                                        (if-not id "var(--toolbar-)"
-                                                                   "var(--red-6)"))}}
+                     :color       (if (and id @ex-data)
+                                    "var(--yellow-8)"
+                                    (if id "var(--text2)"
+                                           "var(--red-5)"))}}
      (when (pos? @bt-data)
        [:div {:line-height "var(--font-lineheight-2)"
               :font-size   "var(--font-size-1)"
@@ -179,9 +181,7 @@
         {:on-click #(on-star-click boat-type (not @ex-data) uid)}
         (if @ex-data ico/stjerne ico/ikkeStjerne)]
        [sc/icon-small
-        {:on-click #(do
-                      (tap> ["clack" boat-type id])
-                      (on-star-click boat-type (or (not @ex-data) true) uid))}
+        {:on-click #(on-star-click boat-type (or (not @ex-data) true) uid)}
         ico/ikkeStjerne])]))
 
 (defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
@@ -563,26 +563,68 @@
 (defn location [l]
   (if (= "1" (str l)) "Sjøbasen" "Nøklevann"))
 
-(defn badge [attr n v]
-  [:div.flex
-   [sc/badge-2 (update attr :class conj :right-square :regular) n]
-   [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]])
+(defn badge
+  ([attr n v]
+   (badge attr nil n v))
+  ([attr e n v]
+   [:div.flex
+    (when e
+      [sc/badge-2 (update attr :class conj :frame :regular :work-log) e])
+    [sc/badge-2 (update attr :class conj :right-square :regular) n]
+    [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]]))
 
 (defn pillbar
   ([c vs]
    (pillbar {:class [:narrow :outline2 :normal]} c vs))
   ([attr c vs]
    (let [f (fn [[k v]]
-             [schpaa.style.hoc.toggles/pillbar
-              (let [s (merge-with into {:class    [:normal (when (= k @c) :inverse)]
-                                        :on-click #(if (= k @c)
-                                                     (reset! c nil)
-                                                     (reset! c k))}
-                                  attr)
-                    _ (tap> {:style s})]
-                s)
-              v])]
-     [sc/row (into [:<>] (map f vs))])))
+             (let [a (merge-with into {:class    [:normal (when (= k @c) :inverse)]
+                                       :on-click #(if (= k @c)
+                                                    (reset! c nil)
+                                                    (reset! c k))}
+                                 attr)]
+               [schpaa.style.hoc.toggles/pillbar a v]))]
+     [sc/row {:style {:justify-content :center
+                      :flex-wrap       "wrap"}} (into [:<>] (map f vs))])))
+
+(defn cell [category table [k v]]
+  [sc/surface-a {:on-click #(if k
+                              (reset! category (if (some #{k} @category)
+                                                 (set/difference @category #{k})
+                                                 (set/union @category #{k})))
+                              (if (empty? @category)
+                                (reset! category (set (map key table)))
+                                (reset! category #{})))
+                 :style    {:background-color    (if (get @category k) "var(--text1)" "var(--floating)")
+                            :border-radius       "var(--radius-0)"
+                            :border              "none"
+                            :box-shadow          (when-not (get @category k) "var(--shadow-1)")
+                            :color               (if (get @category k) "var(--floating)" "var(--text1)")
+                            :cursor              "default"
+                            :user-select         "none"
+                            :-webkit-user-select "none"
+                            :padding             "0.25rem"}}
+   [sc/small {:style {:text-transform "uppercase"
+                      :font-weight    "var(--font-weight-5)"
+                      :letter-spacing "var(--font-letterspacing-1)"
+                      :height         "100%"
+                      :cursor         "default"
+                      :display        "grid"
+                      :place-content  "center"
+                      :text-align     "center"}} v]])
+
+(defn matrix [attr category table]
+  (into [:div.grid.gap-px.w-full
+         (conj {:style {:max-width             "min(66%,calc(512px - 4rem))"
+                        :grid-auto-rows        "2.5rem"
+                        :grid-template-columns "repeat(auto-fill,minmax(6.5rem,1fr))"}}
+               attr)]
+        (map (partial cell category table)
+             (conj (vec (sort-by val table))
+                   [nil (if (empty? @category) "Alle" "Ingen")]
+                   [nil nil]
+                   [nil nil]))))
+
 
 (defn open-slideout [dialog-def]
   (rf/dispatch [:modal.slideout/show {:content-fn dialog-def}]))
@@ -628,9 +670,9 @@
           (degrees-celsius [attr c]
             [:div
              (merge-with into
-                         {:style {:font-size   "100%"
-                                  :font-weight "var(--font-weight-6)"
-                                  :align-items :baseline
+                         {:style {:font-size    "100%"
+                                  :font-weight  "var(--font-weight-6)"
+                                  :align-items  :baseline
                                   :xtext-shadow "#FC0 1px 0 10px"}}
                          attr)
              (times.api/format "%0.1f" c) [:sup "°c"]])
@@ -648,8 +690,8 @@
       {:style {:justify-content :end}}
       [:div.grow]
       [:div {:style {:height (if wind (case wind
-                                        :high  "50%"
-                                        :mid  "40%"
+                                        :high "50%"
+                                        :mid "40%"
                                         :low "30%"
                                         "20%"))}} (waves "0693e3")]
       [:div
@@ -663,7 +705,7 @@
 
        (centerline (degrees-celsius {:class []
                                      :style {:z-index 1
-                                             :color "var(--text1)"}} air))
+                                             :color   "var(--text1)"}} air))
        (centerline (degrees-celsius {:style {:color "white"}} water))]]]))
 
 (defn after-content []
@@ -744,7 +786,7 @@
 (defn data-url [{:keys [checked-path text caption]}]
   (let [path (apply str (interpose "/" (mapv #(if (keyword? %) (name %) %) checked-path)))]
     (sc/link {:class  [:truncate]
-              :style {:text-decoration "none"}
+              :style  {:text-decoration "none"}
               :target "_blank"
               :href   (if goog.DEBUG
                         (str "http://localhost:4000/database/nrpk-vakt/data/" path)

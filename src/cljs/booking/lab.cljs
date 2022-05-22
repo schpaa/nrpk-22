@@ -22,9 +22,11 @@
             [schpaa.style.hoc.buttons :as button]
             [booking.ico :as ico]))
 
-(defonce store (r/atom {:selector :a}))
+(defonce store (r/atom {:selector :a
+                        :category #{"kano" "surfski" "sup"}}))
 
 (def selector (r/cursor store [:selector]))
+(def category (r/cursor store [:category]))
 
 ;region temporary, perhaps for later
 
@@ -117,28 +119,43 @@
               [sc/icon-large ico/trash]]])))
 
 (defn always-panel []
-  [:div.sticky.top-16.z-10
-   [sc/row-center {:class [:py-4x :z-10]}
-    [widgets/pillbar
-     selector
-     [[:a "Type"]
-      [:b "Plassering"]
-      [:c "Merke"]]]]])
+  [:<>
+   [sc/col-space-8
+    [sc/row-center
+     [widgets/matrix
+      {:class [:small :flex-wrap]}
+      category
+      schpaa.components.views/kind-table]]]
+   [:div.sticky.top-16.z-10
+    [sc/row-center {:class []}
+     [widgets/pillbar
+      selector
+      [[:a "Type"]
+       [:b "Plassering"]
+       [:c "Merke"]]]]]])
+
+
 
 (defn render [r]
   [:div.px-2
    (case @selector
-     :c (let [data (sort-by (comp :navn val) <
-                            @(rf/subscribe [:db/boat-type]))]
-          [:div.grid.gap-1 {:style {:grid-template-columns "repeat(auto-fit,minmax(17rem,1fr))"}}
+     :c (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
+                             (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))
+              data (sort-by (comp :navn val) <
+                            (filter (fn [[k _v]]
+                                      (if @show-stars
+                                        (some #{k} starred-keys)
+                                        true))
+                                    @(rf/subscribe [:db/boat-type])))]
+          [:div.grid.gap-1 {:style {:grid-template-columns "repeat(auto-fill,minmax(17rem,1fr))"}}
            (for [[k v] data]
              [sc/co
               {:style {:padding          "var(--size-1)"
                        :background-color "var(--floating)"
                        :border-radius    "var(--radius-0)"}}
               [widgets/stability-name-category' {:reversed? true
-                                                 :url? true
-                                                 :k    k} v]
+                                                 :url?      true
+                                                 :k         k} v]
               [widgets/dimensions-and-material v]
               [sc/text1 (:description v)]])])
 
@@ -173,10 +190,6 @@
                    slot]
 
                   [widgets/stability-name-category v]])]])])
-
-
-
-
 
      :a (let [keys (when-let [uid @(rf/subscribe [:lab/uid])]
                      (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))]

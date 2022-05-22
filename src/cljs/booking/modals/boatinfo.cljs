@@ -175,7 +175,7 @@
                               (some? (:state v)))))
                   reverse
                   (take 5))]
-    [sc/col-space-4
+    [sc/col-space-1
      (into [:<>]
            (for [[worklog-entry-id m] data]
              [worklog-card {:class [:opacity-100]} m boat-item-id worklog-entry-id]))
@@ -196,7 +196,7 @@
 ;; components
 
 (defn insert-damage [{:keys [values set-values] :as props}]
-  [sc/col-space-4 {:style {:padding "1rem"}}
+  [sc/col-space-4 {:style {:padding "0"}}
    [checkbox-matrix
     (into [:<>]
           (for [e (sort damage-words)]
@@ -229,7 +229,7 @@
   [sc/col-space-4 {:style {:padding "1rem"}}
    (let [n (->> work-log (remove (comp :deleted val)) vals count)]
      [sc/row-sc-g2
-      [l/pre n (->> work-log (remove (comp :deleted val)) keys)]
+      ;[l/pre n (->> work-log (remove (comp :deleted val)) keys)]
       [widgets/badge
        {:class [:big (if (pos? n) :work-log)
                 :right-square (when-not number :active)]}
@@ -252,9 +252,7 @@
   [:div
    {:style {:height                     "100%"
             :position                   :sticky
-            :bottom                     4
-            ;:padding-inline "1rem"
-            ;:margin-inline              -24
+            :bottom                     0
             :z-index                    10
             :border-bottom-left-radius  "var(--radius-1)"
             :border-bottom-right-radius "var(--radius-1)"
@@ -275,19 +273,17 @@
         boat-item-id (when (< 3 (count boat-item-id))
                        boat-item-id)]
     [sc/dropdown-dialog'
-     ;header
-     ;[sc/text1 boat-item-id]
-
-     [:div.sticky.top-0
-      {:style {:padding-bottom   0
+     [:div
+      {:style {:padding-bottom   "2rem"
                :z-index          10
                :background-color "var(--toolbar)"}}
-      [header uid data]
+      [header uid data]]
 
-      [sc/row-center {:style {:position :relative
-                              :top      20}}
+     [:div.sticky.top-4.z-10
+      {:style {:margin-top "-1.4rem"}}
+      [sc/row-center
        (widgets/pillbar {:class [:small]} selected-tab
-                        [[:feil "Feil"]
+                        [[:feil "Mangler"]
                          (if @admin? [:arbeidsliste "Arbeidsliste"])
                          [:data "Data"]])]]
 
@@ -305,28 +301,27 @@
                 :class     []
                 :on-submit handle-submit}
          [sc/co
-          {:style {:background     (if @selected-tab "var(--floating)" "var(--content)")
-                   :padding-block-end  "2rem"
-                   :padding-inline "1rem"}}
+          {:xstyle {;:background     (if @selected-tab "var(--floating)" "var(--content)")
+                    :padding-block-end  "1rem"
+                    :padding-inline "1rem"}}
 
-          (case @selected-tab
-            :feil [sc/surface-ab {:style {:margin-block-start "3rem"}}
-                   [insert-damage props]]
+          (if @selected-tab
+            (into [:div.px-8.pt-8.pb-1]
+                  [(case @selected-tab
+                     :feil [insert-damage props]
 
-            :arbeidsliste [sc/surface-ab {:style {:margin-block-start "3rem"}}
-                           (when boat-item-id
-                             [insert-worklog
-                              boat-item-id
-                              (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])]
+                     :arbeidsliste (when boat-item-id
+                                     [insert-worklog
+                                      boat-item-id
+                                      (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])
 
-            :data [sc/surface-ab {:style {:margin-block-start "3rem"}}
-                   [sc/co
-                    ;;urls to firebase
-                    [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
-                     (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
-                    [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} id] [sc/text1 "(id)"]
-                     (widgets/data-url {:checked-path ["boad-item" id]})]]]
-            nil)]
+                     [sc/co
+                      ;;urls to firebase
+                      [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
+                       (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
+                      [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} id] [sc/text1 "(id)"]
+                       (widgets/data-url {:checked-path ["boad-item" id]})]])])
+            [:div.h-8])]
          (if dirty
            [bottom-button-panel
             [sc/row-sc-g2]
