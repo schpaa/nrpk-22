@@ -4,6 +4,7 @@
             [lambdaisland.ornament :as o]
             [db.core :as db]
             [schpaa.style.ornament :as sc]
+            [booking.style.table :as tsc]
             [schpaa.debug :as l]
             [re-frame.core :as rf]
             [booking.ico :as ico]

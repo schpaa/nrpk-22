@@ -13,7 +13,8 @@
             [fork.re-frame :as fork]
             [schpaa.debug :as l]           
             [schpaa.button :as bu]
-            [example.buttons]))
+            [example.buttons]
+            [example.temperature]))
 
 (js/goog.exportSymbol "hljs" hljs)
 (js/goog.exportSymbol "DevcardsSyntaxHighlighter" hljs)

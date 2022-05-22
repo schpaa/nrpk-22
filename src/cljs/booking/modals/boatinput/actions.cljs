@@ -35,12 +35,14 @@
 
 (defn- create-boat! [number]
   (let [n (str number)
-        k (db.core/database-push
-            {:path  ["boad-item"]
-             :value {:number    n
-                     :boat-type "undefined-brand"
-                     :location  "0"}})]
-    [n (.-key k)]))
+        fx (db.core/database-push
+             {:path  ["boad-item"]
+              :value (db.core/timestamp
+                       {:number    n
+                        :boat-type "undefined-brand"
+                        :uid (str @(rf/subscribe [:lab/uid]))
+                        :location  "0"})})]
+    [n (.-key fx)]))
 
 (rf/reg-event-fx :create-boats
                  (fn [{db :db} [_ boat-numbers]]

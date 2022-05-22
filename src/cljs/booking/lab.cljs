@@ -18,9 +18,11 @@
             [booking.common-widgets :as widgets]
             [schpaa.debug :as l]
             [clojure.string :as str]
-            [booking.access]))
+            [booking.access]
+            [schpaa.style.hoc.buttons :as button]
+            [booking.ico :as ico]))
 
-(def store (r/atom {:selector :a}))
+(defonce store (r/atom {:selector :a}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -87,107 +89,147 @@
                    (let [link @(rf/subscribe [:kee-frame/route])]
                      (booking.qrcode/show link))))
 
+(defonce settings (r/atom nil))
+
+(def show-stars (r/cursor settings [:rent/show-details]))
+
+(defn headline-plugin []
+  (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
+        details-mode? @(rf/subscribe [:rent/common-show-details])]
+    (remove nil?
+            [(when-let [uid @(rf/subscribe [:lab/uid])]
+               (when-let [data @(db/on-value-reaction {:path ["users" uid "starred"]})]
+                 (when-let [c (remove (comp false? val) data)]
+                   (when (pos? (count c))
+                     [sc/row-sc-g2
+                      [sc/title1 {:class [:ml-2 :text-right]} (count c)]
+                      [button/reg-pill
+                       {:class    [:large (if details-mode? :message :clear)]
+                        :style    {:background-color (if @show-stars "var(--yellow-9)")}
+                        :on-click #(swap! show-stars (fnil not false))}
+
+                       [sc/icon-large {:style {:color (when @show-stars "var(--yellow-6)")}}
+                        ico/stjerne]]]))))
+             [button/reg-pill
+              {:class    [:large
+                          (if delete-mode? :danger :clear)]
+               :on-click #(swap! (r/cursor settings [:rent/show-deleted]) not)}
+              [sc/icon-large ico/trash]]])))
+
 (defn always-panel []
-  [:div.sticky.top-20
-   [sc/row-center {:class [:py-4 :z-10]}
+  [:div.sticky.top-16.z-10
+   [sc/row-center {:class [:py-4x :z-10]}
     [widgets/pillbar
      selector
      [[:a "Type"]
-      [:b "Hylle"]
+      [:b "Plassering"]
       [:c "Merke"]]]]])
 
 (defn render [r]
-  [:div.px-4 (case @selector
-               :c [:div "c?"]
-               :b (let [data (sort-by (comp (juxt last first) #(str/split % #" ") first) <
-                                      (group-by (comp last #(str/split % #" ") :slot val)
-                                                (into {}
-                                                      (map (fn [[k v]] [k v])
-                                                           (remove (comp nil? :boat-type val)
-                                                                   (filter (fn [[k v]] (= "1" (:location v)))
-                                                                           @(rf/subscribe [:db/boat-db])))))))]
-                    [:<>
-                     (for [[[a] b] data]
-                       [sc/co
-                        [sc/row {:style {:min-height  "var(--size-10)"
-                                         :align-items :end}}
-                         [sc/title1 (if a (str
-                                            (str "Hylle " a)
-                                            (case (str a)
-                                              "1" ", nederst"
-                                              "4" ", øverst"
-                                              "")) "Ukjent")]]
-                        [:div
+  [:div.px-2
+   (case @selector
+     :c (let [data (sort-by (comp :navn val) <
+                            @(rf/subscribe [:db/boat-type]))]
+          [:div.grid.gap-1 {:style {:grid-template-columns "repeat(auto-fit,minmax(17rem,1fr))"}}
+           (for [[k v] data]
+             [sc/co
+              {:style {:padding          "var(--size-1)"
+                       :background-color "var(--floating)"
+                       :border-radius    "var(--radius-0)"}}
+              [widgets/stability-name-category' {:reversed? true
+                                                 :url? true
+                                                 :k    k} v]
+              [widgets/dimensions-and-material v]
+              [sc/text1 (:description v)]])])
+
+     :b (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <
+                            (group-by (comp first #(str/split % #" ") :slot val)
+                                      (into {}
+                                            (map (fn [[k v]] [k v])
+                                                 (remove (comp nil? :boat-type val)
+                                                         (filter (fn [[k v]] (not= "1" (:location v)))
+                                                                 @(rf/subscribe [:db/boat-db])))))))]
+          [:<>
+           (for [[[a] b] data]
+             [sc/co
+              [sc/row {:style {:min-height  "var(--size-10)"
+                               :align-items :end}}
+               [sc/title1 (if a (str
+                                  (str "Stativ " a)
+                                  (case (str a)
+                                    "1" ", nederst"
+                                    "4" ", øverst"
+                                    "")) "Ukjent")]]
+              [:div
+               {:style {:display               :grid
+                        :grid-gap              "var(--size-1)"
+                        :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
+               (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
+                 [sc/row-sc-g2 {:style {:padding          "var(--size-1)"
+                                        :background-color "var(--floating)"}}
+                  [widgets/badge {:class    [:small]
+                                  :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                   number
+                   slot]
+
+                  [widgets/stability-name-category v]])]])])
+
+
+
+
+
+     :a (let [keys (when-let [uid @(rf/subscribe [:lab/uid])]
+                     (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))]
+          (let [data (sort-by (comp second first) <
+                              (group-by (comp :kind val)
+                                        (remove (comp nil? :boat-type val)
+                                                (filter (fn [[k v]] (and (= "0" (:location v))
+                                                                         (if @show-stars
+                                                                           (some #{k} keys)
+                                                                           true)))
+                                                        @(rf/subscribe [:db/boat-db])))))]
+            [:div
+             (into [:div]
+                   (for [[kind & r] data
+                         :let [undefined? (empty? kind)]]
+                     [widgets/disclosure
+                      {:padded-heading true}
+                      (or kind "noname")
+                      [sc/title1
+                       (or (schpaa.components.views/normalize-kind kind)
+                           "Udefinert")]
+                      (for [{:keys [navn] :as z} r]
+                        [:div.gap-1.w-full
                          {:style {:display               :grid
-                                  :grid-gap              "var(--size-1)"
-                                  :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
-                         (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
-                           [sc/row-sc-g2 {:style {:padding          "var(--size-1)"
-                                                  :background-color "var(--floating)"}}
-                            [widgets/badge {:class    [:small]
-                                            :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                             number
-                             slot]
+                                  :grid-auto-rows        "auto"
+                                  :grid-template-columns (if undefined?
+                                                           "1fr"
+                                                           "repeat(auto-fill,minmax(16rem,1fr)")}}
+                         (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
+                           [:div.flex.flex-col.gap-2.w-full
+                            {:style {:padding          "var(--size-2)"
+                                     :background-color "var(--floating)"
+                                     :border-radius    "var(--radius-0)"}}
+                            (when-not undefined?
+                              [widgets/stability-name-category (dissoc (-> r first val) :kind)])
+                            ;todo toggle visibility via headerplugin
+                            #_[:div.flex.flex-wrap.gap-1
+                               (for [v (sort-by :number (map val r))
+                                     :let [{:keys [number slot _navn _description]} v]]
+                                 [widgets/badge
+                                  {:class    [:small]
+                                   :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                                  (subs (str number) 0 3)
+                                  slot])]])])]))]))
+     nil)])
 
-                            [widgets/stability-name-category v #_(dissoc (-> r first val) :kind)]
-                            #_[sc/col
-                               {:class [:truncate]}
-                               [sc/text2 {:class [:truncate]} navn]
-                               [sc/title1 (schpaa.components.views/normalize-kind kind)]
-                               #_[sc/text1 description]]])]])
-                     ;[l/pre data]
-
-
-                     #_(for [[[slot] e] data
-                             [[_k {:keys [navn number description kind] :as v}]] e]
-                         [l/pre v]
-                         #_[sc/row-sc-g2
-                            [widgets/badge {:class    [:small]
-                                            :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                             number
-                             slot]
-                            [sc/col
-                             [sc/text1 (schpaa.components.views/normalize-kind kind)]
-                             [sc/text0 navn]
-                             [sc/text1 description]]])])
-               :a (let [data (sort-by (comp second first) <
-                                      (group-by (comp :kind val)
-                                                (remove (comp nil? :boat-type val)
-                                                        (filter (fn [[k v]] (= "0" (:location v)))
-                                                                @(rf/subscribe [:db/boat-db])))))]
-                    [:div
-                     (into [:div]
-                           (for [[kind & r] data]
-                             [widgets/disclosure
-                              {}
-                              kind
-                              [sc/title1 (schpaa.components.views/normalize-kind kind)]
-
-                              (for [{:keys [navn] :as z} r]
-                                [:div.gap-1
-                                 {:style {:display               :grid
-                                          :grid-auto-rows        "auto"
-                                          :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
-                                 (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
-                                   [:div.flex.flex-col.gap-2
-                                    {:style {:padding          "var(--size-1)"
-                                             :background-color "var(--floating)"
-                                             :border-radius    "var(--radius-0)"}}
-                                    [widgets/stability-name-category (dissoc (-> r first val) :kind)]
-                                    [:div.flex.flex-wrap.gap-1
-                                     {:xstyle {:gap "var(--size-2)" :height "2rem"}}
-                                     (for [v (sort-by :number (map val r))
-                                           :let [{:keys [number slot _navn _description]} v]]
-                                       ;[:div.text-4xl number]
-                                       [widgets/badge
-                                        {:class    [:small]
-                                         :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                                        number
-                                        slot])]])])]))])
-               nil)])
+(comment
+  (do
+    (let [keys (when-let [uid @(rf/subscribe [:lab/uid])]
+                 (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))])))
 
 (rf/reg-fx :lab/open-new-blog-entry-dialog (fn [_] (schpaa.style.dialog/open-dialog-addpost)))
-    
+
 (rf/reg-event-fx :lab/just-create-new-blog-entry
                  (fn [_ _]
                    (tap> :lab/new-blog-entry)

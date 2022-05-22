@@ -457,10 +457,14 @@
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
    ;todo Fordi når man skal bytte er det greit å alltid ha ett sted hvor dette kan skje
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
-   :r.min-status         (fn [r] (page r {:render booking.min-status/render}))
+   :r.min-status         (fn [r] (page r {:render-halfwidth true
+                                          :render-fullwidth booking.min-status/render}))
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
-   :r.båtliste.nøklevann (fn [r] (page r (booking.boatlist/page r)))
+   :r.båtliste.nøklevann (fn [r] (page r {:headline-plugin booking.lab/headline-plugin
+                                          :always-panel     booking.lab/always-panel
+                                          :render-fullwidth booking.lab/render}
+                                       #_(booking.boatlist/page r)))
    :r.experimental
    (fn [r]
      (page r {:renderx
@@ -480,15 +484,12 @@
                          [:div {:style {:flex         "1"
                                         :justify-self :start}} b]])]
                 (fn [] [[:div
-                         {:style {:padding-block  "0.25rem"}}
+                         {:style {:padding-block "0.25rem"}}
                          [sc/col
                           {:style {:width "min-content"}
                            :class [:p-0 :m-0 :-debug2x]}
                           (centerline [sc/text1 "luft"] [sc/title (degrees-celsius 23)])
                           (centerline [sc/text1 "vann"] [sc/title (degrees-celsius 13)])]]]))}))
-   ;[sc/title1 "luft 16ºC"]
-   ;[sc/title1 "vann 7ºC"]]]]))}))
-
    :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn []
                                                     [sc/col
                                                      (for [e (range 30)]
@@ -497,7 +498,8 @@
                                                               c (- 8 (count n))]
                                                           (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
-   :r.temperature        (fn [r] (page r (booking.temperature/render r)))
+   :r.temperature        (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
+                                          :render (fn [] [booking.temperature/render r])}))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment

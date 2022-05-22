@@ -144,38 +144,104 @@
 
 (defn stability-expert [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center
-   [:svg.w-4.inline-block {:viewBox "-2 -2 4 4"}
-    [:circle {:cx 0 :cy 0 :r 2 :fill (get {0 "var(--brand1)"
-                                           1 "var(--blue-7)"
-                                           2 "var(--orange-6)"
-                                           3 "var(--red-7)"} (js/parseInt stability) :white)}]
+   [:svg.w-5.inline-block {:viewBox "-3 -3 6 6"}
+    [:circle {:cx 0 :cy 0 :r 2
+              :stroke-width 0.5
+              :stroke (get {0 "var(--brand1)"
+                            1 "var(--blue-7)"
+                            2 "var(--orange-6)"
+                            3 "var(--red-7)"} (js/parseInt stability) :black)
+              :fill (get {0 "var(--brand1)"
+                          1 "var(--blue-7)"
+                          2 "var(--orange-6)"
+                          3 "var(--red-7)"} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
-(defn stability-name-category [{:keys
-                                [boat-type star-count location slot material
-                                 stability expert number navn kind description
-                                 last-update weight length width aquired-year aquired-price] :as m}]
-  [sc/col {:class [:truncate :space-y-px]}
-   [sc/row-sba
+(defn favourites-star' [{:keys [on-star-click]}
+                        {:keys [id] :as m}]
+  (let [uid (some-> @(rf/subscribe [:lab/uid]) name)
+        ;_ (tap> {:boat-type id})
+        boat-type (or (some-> id name) nil)
+        bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+        ;_ (tap> ["users" uid "starred" boat-type])
+        ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
+    [sc/row {:style {:column-gap  "var(--size-1)"
+                     :align-items :center
+                     :color       (if (and id @ex-data) "var(--yellow-6)"
+                                                        (if-not id "var(--toolbar-)"
+                                                                   "var(--red-6)"))}}
+     (when (pos? @bt-data)
+       [:div {:line-height "var(--font-lineheight-2)"
+              :font-size   "var(--font-size-1)"
+              :font-weight "var(--font-weight-4)"} @bt-data])
+     (if id
+       [sc/icon-small
+        {:on-click #(on-star-click boat-type (not @ex-data) uid)}
+        (if @ex-data ico/stjerne ico/ikkeStjerne)]
+       [sc/icon-small
+        {:on-click #(do
+                      (tap> ["clack" boat-type id])
+                      (on-star-click boat-type (or (not @ex-data) true) uid))}
+        ico/ikkeStjerne])]))
+
+(defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
+  [sc/col {:class [:truncate :space-y-px :w-full]}
+   (when kind
+     [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])
+
+   [:div.flex.items-center.justify-between.gap-1
+
     (when (or stability expert) [stability-expert m])
     [sc/text2 {:style {:overflow      :hidden
                        :text-overflow :ellipsis
-                       :white-space   :nowrap}}
-     navn]]
+                       :white-space   :nowrap}} navn]
+    [:div.grow]
+    [favourites-star' {:on-star-click (fn [boat-type value uid]
+                                        (rf/dispatch [:star/write-star-change
+                                                      {:boat-type boat-type
+                                                       :value     value
+                                                       :uid       uid}]))} m]]])
 
+(declare data-url)
+
+(defn stability-name-category' [{:keys [url? k reversed?]}
+                                {:keys [stability expert navn kind] :as m}]
+  [sc/col {:style {:flex-direction (if reversed? :column-reverse)}
+           :class [:truncate :space-y-px :w-full]}
    (when kind
-     [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])])
+     [sc/text1 {:class []} (schpaa.components.views/normalize-kind kind)])
+
+   [:div.flex.items-center.justify-between.gap-1
+    (when (or stability expert) [stability-expert m])
+    (if url?
+      (data-url {:caption      navn
+                 :checked-path ["boat-brand" k]
+                 :text         #(vector sc/title1 {:style {:overflow      :hidden
+                                                           :text-overflow :ellipsis
+                                                           :white-space   :nowrap}} %)}))
+
+    [:div.grow]
+    [favourites-star' {:on-star-click (fn [boat-type value uid]
+                                        (rf/dispatch [:star/write-star-change
+                                                      {:boat-type boat-type
+                                                       :value     value
+                                                       :uid       uid}]))}
+     m]]])
+
 
 (defn favourites-star [{:keys [ex-data bt-data on-star-click]}
                        {:keys [boat-type] :as m}]
-  #_[sc/row {:style {:column-gap  "var(--size-2)"
+  (let [uid @(rf/subscribe [:lab/uid])
+        bt-data (or nil (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]}))
+        ex-data (or nil (db/on-value-reaction {:path ["users" uid "starred" boat-type]}))]
+    [sc/row {:style {:column-gap  "var(--size-2)"
                      :align-items :center}}
      (when (pos? @bt-data)
        [sc/text1 @bt-data])
      [sc/icon-large
       {:on-click #(on-star-click boat-type (not @ex-data))
        :style    {:color (if @ex-data "var(--yellow-6)" "rgba(0,0,0,0.5)")}}
-      (if @ex-data ico/stjerne ico/stjerne)]])
+      (if @ex-data ico/stjerne ico/stjerne)]]))
 
 ;region
 
@@ -403,7 +469,7 @@
      (let [disclojure-button
            (fn [{:keys [open]}]
              [sc/row-sc-g2
-              {:class (when padded-heading padded-heading)
+              {:class    (when padded-heading padded-heading)
                :style    {:cursor :pointer}
                :on-click #(schpaa.state/toggle tag)}
               (sc/icon {:style {:color "var(--brand2)"}
@@ -521,37 +587,84 @@
 (defn open-slideout [dialog-def]
   (rf/dispatch [:modal.slideout/show {:content-fn dialog-def}]))
 
-(defn waves [base]
-  (let [colors (map #(str "#" base %) ["44" "66" "88" "ff"])]
-    [:svg#svg.transition.duration-300.ease-in-out.delay-150
-     {:width               "100%" :height "100%" :viewBox "0 0 1440 400"
-      :preserveAspectRatio "none"
-      :xmlns               "http://www.w3.org/2000/svg"}
-     [:defs
-      [:linearGradient#gradienta
-       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
-       [:stop {:offset "5%" :stop-color (nth colors 0)}]
-       [:stop {:offset "95%" :stop-color (nth colors 0)}]]
-      [:linearGradient#gradientb
-       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
-       [:stop {:offset "5%" :stop-color (nth colors 1)}]
-       [:stop {:offset "95%" :stop-color (nth colors 1)}]]
-      [:linearGradient#gradientc
-       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
-       [:stop {:offset "5%" :stop-color (nth colors 2)}]
-       [:stop {:offset "95%" :stop-color (nth colors 2)}]]
-      [:linearGradient#gradientd
-       {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
-       [:stop {:offset "5%" :stop-color (nth colors 3)}]
-       [:stop {:offset "95%" :stop-color (nth colors 3)}]]]
-     [:path.transition-all.duration-300.ease-in-out.delay-150.path-0
-      {:d "M 0,400 C 0,400 0,80 0,80 C 90.82296650717703,72.28708133971293 181.64593301435406,64.57416267942584 271,59 C 360.35406698564594,53.42583732057416 448.23923444976083,49.99043062200957 531,62 C 613.7607655502392,74.00956937799043 691.3971291866028,101.46411483253587 810,108 C 928.6028708133972,114.53588516746413 1088.1722488038276,100.1531100478469 1200,92 C 1311.8277511961724,83.8468899521531 1375.9138755980862,81.92344497607655 1440,80 C 1440,80 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradienta)"}]
-     [:path.transition-all.duration-300.ease-in-out.delay-150.path-1
-      {:d "M 0,400 C 0,400 0,160 0,160 C 92.00956937799043,157.21531100478467 184.01913875598086,154.43062200956936 275,154 C 365.98086124401914,153.56937799043064 455.93301435406704,155.49282296650716 558,162 C 660.066985645933,168.50717703349284 774.2488038277512,179.5980861244019 884,172 C 993.7511961722488,164.4019138755981 1099.071770334928,138.11483253588517 1191,133 C 1282.928229665072,127.88516746411483 1361.4641148325359,143.94258373205741 1440,160 C 1440,160 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientb)"}]
-     [:path.transition-all.duration-300.ease-in-out.delay-150.path-2
-      {:d "M 0,400 C 0,400 0,240 0,240 C 98.25837320574163,227.42583732057415 196.51674641148327,214.85167464114832 291,219 C 385.48325358851673,223.14832535885168 476.1913875598086,244.01913875598083 558,245 C 639.8086124401914,245.98086124401917 712.7177033492824,227.07177033492823 826,230 C 939.2822966507176,232.92822966507177 1092.9377990430621,257.69377990430627 1202,263 C 1311.0622009569379,268.30622009569373 1375.531100478469,254.15311004784687 1440,240 C 1440,240 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientc)"}]
-     [:path.transition-all.duration-300.ease-in-out.delay-150.path-3
-      {:d "M 0,400 C 0,400 0,320 0,320 C 82.33492822966508,327.18660287081343 164.66985645933016,334.3732057416268 249,331 C 333.33014354066984,327.6267942583732 419.6555023923445,313.6937799043062 528,312 C 636.3444976076555,310.3062200956938 766.7081339712919,320.85167464114835 881,329 C 995.2918660287081,337.14832535885165 1093.511961722488,342.8995215311005 1184,341 C 1274.488038277512,339.1004784688995 1357.244019138756,329.55023923444975 1440,320 C 1440,320 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientd)"}]]))
+(defn waves
+  ([base]
+   (let [colors (map #(str "#" base %) ["44" "66" "88" "ff"])]
+     [:svg#svg.transition.duration-300.ease-in-out.delay-150
+      {:width               "100%" :height "100%" :viewBox "0 0 1440 400"
+       :preserveAspectRatio "none"
+       :xmlns               "http://www.w3.org/2000/svg"}
+      [:defs
+       [:linearGradient#gradienta
+        {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+        [:stop {:offset "5%" :stop-color (nth colors 0)}]
+        [:stop {:offset "95%" :stop-color (nth colors 0)}]]
+       [:linearGradient#gradientb
+        {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+        [:stop {:offset "5%" :stop-color (nth colors 1)}]
+        [:stop {:offset "95%" :stop-color (nth colors 1)}]]
+       [:linearGradient#gradientc
+        {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+        [:stop {:offset "5%" :stop-color (nth colors 2)}]
+        [:stop {:offset "95%" :stop-color (nth colors 2)}]]
+       [:linearGradient#gradientd
+        {:x1 "89%" :y1 "19%" :x2 "11%" :y2 "81%"}
+        [:stop {:offset "5%" :stop-color (nth colors 3)}]
+        [:stop {:offset "95%" :stop-color (nth colors 3)}]]]
+      (into [:<>]
+            [[:path.transition-all.duration-300.ease-in-out.delay-150.path-0
+              {:d    "M 0,400 C 0,400 0,80 0,80 C 90.82296650717703,72.28708133971293 181.64593301435406,64.57416267942584 271,59 C 360.35406698564594,53.42583732057416 448.23923444976083,49.99043062200957 531,62 C 613.7607655502392,74.00956937799043 691.3971291866028,101.46411483253587 810,108 C 928.6028708133972,114.53588516746413 1088.1722488038276,100.1531100478469 1200,92 C 1311.8277511961724,83.8468899521531 1375.9138755980862,81.92344497607655 1440,80 C 1440,80 1440,400 1440,400 Z" :stroke "none" :stroke-width "0"
+               :fill "url(#gradienta)"}]
+             [:path.transition-all.duration-300.ease-in-out.delay-150.path-1
+              {:d "M 0,400 C 0,400 0,160 0,160 C 92.00956937799043,157.21531100478467 184.01913875598086,154.43062200956936 275,154 C 365.98086124401914,153.56937799043064 455.93301435406704,155.49282296650716 558,162 C 660.066985645933,168.50717703349284 774.2488038277512,179.5980861244019 884,172 C 993.7511961722488,164.4019138755981 1099.071770334928,138.11483253588517 1191,133 C 1282.928229665072,127.88516746411483 1361.4641148325359,143.94258373205741 1440,160 C 1440,160 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientb)"}]
+             [:path.transition-all.duration-300.ease-in-out.delay-150.path-2
+              {:d "M 0,400 C 0,400 0,240 0,240 C 98.25837320574163,227.42583732057415 196.51674641148327,214.85167464114832 291,219 C 385.48325358851673,223.14832535885168 476.1913875598086,244.01913875598083 558,245 C 639.8086124401914,245.98086124401917 712.7177033492824,227.07177033492823 826,230 C 939.2822966507176,232.92822966507177 1092.9377990430621,257.69377990430627 1202,263 C 1311.0622009569379,268.30622009569373 1375.531100478469,254.15311004784687 1440,240 C 1440,240 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientc)"}]
+             [:path.transition-all.duration-300.ease-in-out.delay-150.path-3
+              {:d "M 0,400 C 0,400 0,320 0,320 C 82.33492822966508,327.18660287081343 164.66985645933016,334.3732057416268 249,331 C 333.33014354066984,327.6267942583732 419.6555023923445,313.6937799043062 528,312 C 636.3444976076555,310.3062200956938 766.7081339712919,320.85167464114835 881,329 C 995.2918660287081,337.14832535885165 1093.511961722488,342.8995215311005 1184,341 C 1274.488038277512,339.1004784688995 1357.244019138756,329.55023923444975 1440,320 C 1440,320 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientd)"}]])])))
+
+(defn temperature [{:keys [air water wind on-click]}]
+  (letfn [(goto [link]
+            (rf/dispatch [:app/navigate-to [link]]))
+          (degrees-celsius [attr c]
+            [:div
+             (merge-with into
+                         {:style {:font-size   "100%"
+                                  :font-weight "var(--font-weight-6)"
+                                  :align-items :baseline
+                                  :xtext-shadow "#FC0 1px 0 10px"}}
+                         attr)
+             (times.api/format "%0.1f" c) [:sup "°c"]])
+          (centerline [value]
+            [sc/row-end {:class [:text-right :mx-auto]
+                         :style {:overflow        :hidden
+                                 :align-items     :baseline
+                                 :justify-content :end
+                                 :width           "auto"}}
+             value])]
+    [:div.relative.w-full.h-full
+     {:on-click on-click}
+     ;bg
+     [:div.flex.flex-col.h-full
+      {:style {:justify-content :end}}
+      [:div.grow]
+      [:div {:style {:height (if wind (case wind
+                                        :high  "50%"
+                                        :mid  "40%"
+                                        :low "30%"
+                                        "20%"))}} (waves "0693e3")]
+      [:div
+       {:style {:height           "30%"
+                :width            "100%"
+                :background-color "#0693e3"}}]]
+     ;text
+     [:div.absolute.inset-0
+      [:div.flex.flex-col.h-full.items-center.min-w-fit
+       {:style {:justify-content :space-around}}
+
+       (centerline (degrees-celsius {:class []
+                                     :style {:z-index 1
+                                             :color "var(--text1)"}} air))
+       (centerline (degrees-celsius {:style {:color "white"}} water))]]]))
 
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])
@@ -628,48 +741,14 @@
               [sc/small (or booking.data/VERSION "version")]
               [sc/small (or booking.data/DATE "date")]]]]]]]))))
 
-(defn temperature []
-  (letfn [(goto [link]
-            (rf/dispatch [:app/navigate-to [link]]))
-          (degrees-celsius [c]
-            [:span c [:sup "°c"]])
-          (centerline [a b]
-            [sc/row {:style {
-                             :overflow :hidden
-                             :align-items :baseline
-                             :width       "100%"}
-                     :class [:gap-1]}
-             #_[:p {:style {:flex         "1"
-                            :text-align   :right
-                            :color        :white
-                            :justify-self :end}} a]
-             [sc/text1-cl {:style {:font-weight  "700"
-                                   :font-size    "var(--font-size-4)"
-                                   :flex         "1"
-                                   ;:color        :
-                                   :justify-self :start}} b]])]
-
-    (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
-      (when-not mobile?
-        (let [air 18
-              water 11]
-          [sc/center
-           {:on-click #(goto :r.temperature)
-            :style    {:position :relative
-                       :color         "var(--text1)"
-                       :xpadding-block "0.25rem"}}
-           [sc/col
-            {:style {:width "min-content"}
-             :class [:p-0 :m-0]}
-            (centerline nil (degrees-celsius water))]
-           #_[:div.absolute.inset-x-0.bottom-0.z-1
-              {:style {:height "40%"}}
-              [waves "0693e3"]]])))))
-
-(defn data-url [{:keys [checked-path]}]
+(defn data-url [{:keys [checked-path text caption]}]
   (let [path (apply str (interpose "/" (mapv #(if (keyword? %) (name %) %) checked-path)))]
-    ;(tap> {:path path})
-    (sc/link {:target "_blank"
+    (sc/link {:class  [:truncate]
+              :style {:text-decoration "none"}
+              :target "_blank"
               :href   (if goog.DEBUG
                         (str "http://localhost:4000/database/nrpk-vakt/data/" path)
-                        (str "https://nrpk-vakt.firebaseio.com/" path))} "url")))
+                        (str "https://nrpk-vakt.firebaseio.com/" path))}
+             (if text
+               (text caption)
+               "url"))))

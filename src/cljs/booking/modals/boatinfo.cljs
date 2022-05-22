@@ -106,8 +106,10 @@
 ;; worklog
 
 (defn q-button [boat-item-id worklog-entry-id attr icon action]
-  (hoc.buttons/round-pill
-    (merge-with into {:on-click #(action boat-item-id worklog-entry-id)} attr)
+  (hoc.buttons/pill
+    (merge-with into {:class [:round]
+                      :type     "button"
+                      :on-click #(action boat-item-id worklog-entry-id)} attr)
     [sc/icon icon]))
 
 (defn worklog-card
@@ -115,8 +117,7 @@
    boat-item-id worklog-entry-id]
   (let [q-button (partial q-button boat-item-id worklog-entry-id)]
     [sc/zebra'
-     {;:class [:divider]
-      :sstyle {;:margin-inline "4rem"
+     {:sstyle {;:margin-inline "4rem"
                :margin-before "4rem"
                :border-bottom "1px dashed var(--text2)"}}
      [sc/col-space-4
@@ -132,14 +133,14 @@
            (fn [a b] (delete-worklog-entry a (some-> b name) true))))
 
        (if complete
-         (hoc.buttons/round-pill
-           {:on-click #(do (complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
-                           #_(.stopPropagation %))
-            :class    [:outline2 :inverse]} [sc/icon ico/check])
-         (hoc.buttons/round-pill
-           {:on-click #(do (complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
-                           #_(.stopPropagation %))
-            :class    [:outline2]} [sc/icon ico/check]))
+         (hoc.buttons/pill
+           {:type :button
+            :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
+            :class    [:round :frame :inverse]} [sc/icon ico/check])
+         (hoc.buttons/pill
+           {:type :button
+            :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
+            :class    [:round :frame]} [sc/icon ico/check]))
 
        ;todo compress!
        [sc/col-space-1 {:style {:flex "1"}}
@@ -195,7 +196,7 @@
 ;; components
 
 (defn insert-damage [{:keys [values set-values] :as props}]
-  [sc/col-space-4
+  [sc/col-space-4 {:style {:padding "1rem"}}
    [checkbox-matrix
     (into [:<>]
           (for [e (sort damage-words)]
@@ -207,7 +208,8 @@
                                      [(if v sc/text1 sc/text2) c]])
                :caption e}]]))]
    [sci/textarea props
-    nil {:class [:-mx-2]} "Annen beskrivelse" :description]])
+    nil {:placeholder "Annen beskrivelse"
+         :class [:-mx-2]} "" :description]])
 
 (defn editor [props]
   (let [people (map (fn [[k v]] {:id (some-> k name) :name (:navn v)})
@@ -223,31 +225,28 @@
        :kind? [:w-full] :lable :names]]
      [sci/textarea props :text [] "Sample Label" :description]]))
 
-(defn header [uid {:keys [id boat-type slot location description number on-star-click] :as data}]
-  (r/with-let [bt-data (or nil (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]}))
-               ex-data (or nil (db/on-value-reaction {:path ["users" uid "starred" boat-type]}))]
-    [sc/col-space-4 {:style {:padding "1rem"}}
+(defn header [_uid {:keys [id work-log slot location description number] :as data}]
+  [sc/col-space-4 {:style {:padding "1rem"}}
+   (let [n (->> work-log (remove (comp :deleted val)) vals count)]
      [sc/row-sc-g2
+      [l/pre n (->> work-log (remove (comp :deleted val)) keys)]
       [widgets/badge
-       {:class [:big :right-square (when-not number :active)]}
+       {:class [:big (if (pos? n) :work-log)
+                :right-square (when-not number :active)]}
        (or number id)
        (or slot "ny")]
       [widgets/stability-name-category data]
-      [:div.grow]
-      [widgets/favourites-star
-       {:bt-data       bt-data
-        :ex-data       ex-data
-        :on-star-click on-star-click} data]]
-     [sc/col-space-1
-      [widgets/dimensions-and-material data]
-      [sc/col-space-4
-       [sc/text0 description]
+      [:div.grow]])
+   [sc/col-space-1
+    [widgets/dimensions-and-material data]
+    [sc/col-space-2
+     [sc/text0 description]
 
-       [sc/text1 "Plassert på " (widgets/location location)]]
+     [sc/row-end [sc/text1 (widgets/location location)]]]
 
 
 
-      (when -debug [l/pre data])]]))
+    (when -debug [l/pre data])]])
 
 (defn bottom-button-panel [& content]
   [:div
@@ -286,7 +285,7 @@
       [header uid data]
 
       [sc/row-center {:style {:position :relative
-                              :top      12}}
+                              :top      20}}
        (widgets/pillbar {:class [:small]} selected-tab
                         [[:feil "Feil"]
                          (if @admin? [:arbeidsliste "Arbeidsliste"])
@@ -298,28 +297,35 @@
                  :path              :form-damange
                  :form-id           "damage-form2"
                  :initial-values    (reduce (fn [a e] (assoc a e false)) {:description ""} damage-words)
-                 :on-submit         #(on-submit boat-item-id %)}
+                 :on-submit         #(do
+                                       (on-submit boat-item-id %)
+                                       (on-close))}
       (fn [{:keys [dirty handle-submit form-id] :as props}]
         [:form {:id        form-id
                 :class     []
                 :on-submit handle-submit}
-         [sc/col-space-8 {:style {:background     (if @selected-tab "var(--floating)" "var(--content)")
-                                  :padding-block  "2rem"
-                                  :padding-inline "1rem"}}
+         [sc/co
+          {:style {:background     (if @selected-tab "var(--floating)" "var(--content)")
+                   :padding-block-end  "2rem"
+                   :padding-inline "1rem"}}
 
           (case @selected-tab
-            :data [sc/surface-ab
+            :feil [sc/surface-ab {:style {:margin-block-start "3rem"}}
+                   [insert-damage props]]
+
+            :arbeidsliste [sc/surface-ab {:style {:margin-block-start "3rem"}}
+                           (when boat-item-id
+                             [insert-worklog
+                              boat-item-id
+                              (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])]
+
+            :data [sc/surface-ab {:style {:margin-block-start "3rem"}}
                    [sc/co
                     ;;urls to firebase
                     [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
-                     (widgets/data-url {:checked-path ["boat-brand" boat-type]})]                     
+                     (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
                     [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} id] [sc/text1 "(id)"]
                      (widgets/data-url {:checked-path ["boad-item" id]})]]]
-
-            :feil [insert-damage props]
-            :arbeidsliste (when boat-item-id [insert-worklog
-                                              boat-item-id
-                                              (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])
             nil)]
          (if dirty
            [bottom-button-panel

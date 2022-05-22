@@ -16,7 +16,8 @@
             [booking.yearwheel]
             [booking.openhours]
             [booking.account]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [schpaa.debug :as l]))
 
 ;region
 
@@ -30,6 +31,8 @@
   [:& :pt-10
    {:background-position "center center"
     :background-repeat   "no-repeat"
+    ;todo 
+    ;:background-color "transparent"
     :background-size     "cover"}
    #_[:&.light {:background-image "var(--background-image-light)"}]
    [:&.dark {:background-image "var(--background-image-dark)"}]]
@@ -130,67 +133,60 @@
 (o/defstyled frame :div
   {:box-shadow "0 0 0 4px red"})
 
-(o/defstyled portrait :img
-  {:aspect-ratio "2/3"})
+(o/defstyled portrait :img 
+  {:object-fit :cover
+   :aspect-ratio "2/3"})
 
-(defn news-listitem [date images & text]
-  [:div
-   {:style {:z-index 0}}
-   [:div.flex.w-full
-    {:class [(when false #_(pos? (rand-int 2)) :flex-row-reverse)]}
+(o/defstyled landscape :img
+  {:object-fit   :cover
+   :aspect-ratio "3/2"})
 
-    [block-text
-     {:class []}
-     [sc/co
-      (when date
-        [booking.flextime/flex-datetime date (fn [type d]
-                                               (if (= :date type)
-                                                 [sc/datetimelink (ta/date-format-sans-year d)]
-                                                 [sc/datetimelink d]))])
-      text]]
+(defn news-listitem [idx date images & text]
+  (let [direction (odd? idx)]
+    [:div
+     {:style {:background-color (if (even? idx)  "rgba(0,0,0,0.05)")
+              ;:padding-block "1rem"
+              :z-index          0}}
+     [:div.flex.w-full
+      {:class [(when direction :flex-row-reverse)]}
 
-    (when (seq images) 
-      [outer-image {:style {:padding-top "2rem" :margin-inline "1rem"}}
-       [block-image
-        (let [source images]
+      [block-text
+       {:class []}
+       [sc/co
+        (when date
+          [booking.flextime/flex-datetime
+           date
+           (fn [type d]
+             (if (= :date type)
+               [sc/datetimelink (ta/date-format-sans-year d)]
+               [sc/datetimelink d]))])
+        text]]
 
-          (case 2;(count source)
-            0 [frame "nothing"]
-            2 [:div.flex.gap-1 (for [e (take 2 source)]
-                                 [portrait {:style {:width "50%"}
-                                            :src e}])]
-            [frame (count source)])
-
-          #_[:div.flex.gap-1.items-start.h-32.-debug3
-             [:img {;:width 320
-                    ;:height 100
-                    :style {:object-fit   :none
-                            ;:height       "33%"
-                            ;:width        ""
-                            :aspect-ratio "2/3"
-                            :overflow-y   :hidden}
-                    :src   (rand-nth frontpage-images)}]
-             [:img {:style {:object-fit   :none
-                            ;:height       "33%"
-                            ;:width        "auto"
-                            :aspect-ratio "2/3"
-                            :overflow-y   :hidden}
-                    :src   (rand-nth frontpage-images)}]]
-
-          #_(case (count source)
-              1 [:div "image-" 1]
-              2 [:div.flex.gap-2 (for [i source]
-                                   #_[:div {:style {:width        "50%"
-                                                    :background   "rgba(120,120,120,0.5)"
-                                                    ;:outline "1px solid red"
-                                                    :aspect-ratio "3/4"}}]
-                                   [:img {:style {:object-fit   :cover
-                                                  :height       "100%"
-                                                  :width        "100%"
-                                                  :aspect-ratio "3/2"
-                                                  :overflow-y   :hidden}
-                                          :src   "/img/caro/img-1.jpg" #_(nth frontpage-images i)}])]
-              nil))]])]])
+      (when-not (empty? images)
+        [outer-image {:style {:padding-top "2rem" :margin-inline "1rem"}}
+         [block-image
+          {:class [(when direction :ml-7)]}
+          (case (count images)
+            1 [landscape {:style {:width     "100%"
+                                  :box-shadow "var(--shadow-2)"
+                                  :border-radius "0.5rem"
+                                  :transform (if direction
+                                               "rotate(-2deg)"
+                                               "rotate(2deg)")}
+                          :src   (first images)}]
+            2 [:div.flex.gap-1 (for [e (take 2 images)]
+                                 [landscape {:style {:width "50%"}
+                                             :src   e}])]
+            3 [:div.flex.gap-1 (for [e (take 3 images)]
+                                 [portrait {:style {:width "33%"}
+                                            :src   e}])]
+            [:div.grid.w-full.gap-1
+             {:style {:grid-template-columns "repeat(2,1fr)"
+                      :grid-auto-rows        "5rem"}}
+             (for [e (take 4 images)]
+               [landscape {:class []
+                           :style {:width "100%"}
+                           :src   e}])])]])]]))
 
 (defn config []
   {:dots             true
@@ -271,7 +267,6 @@
    :grid-row-gap          "1rem"
    :grid-template-columns "1fr min-content 1fr"
    :grid-template-areas   [["type" "graph" "status"]]})
-
 
 (o/defstyled large-grid :div
   {:display               :grid
@@ -426,24 +421,30 @@
      [sc/text2 "2 utlån i dag"]
      [sc/text1 "1 utlån nå"]]]])
 
-(o/defstyled p sc/fp-text)
+(o/defstyled p :p
+  sc/fp-text
+  {:font-family    "Lora"
+   :font-weight "500"
+   :font-size "18px"
+   :line-height    "1.8"
+   :letter-spacing "1"})
 
 (defn news-feed []
   (let [{right-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])
-        news-listitem (fn [date & content]
-                        (news-listitem date
-                                       (take (rand-int (count frontpage-images)) frontpage-images)
+        news-listitem (fn [idx date & content]
+                        (news-listitem idx date
+                                       (take (rand-int (count frontpage-images))
+                                             (shuffle frontpage-images))
                                        content))]
     (let [er-nokkelvakt? (rf/subscribe [:lab/nokkelvakt])]
       [:div.space-y-4
-
        [:div {:style {:display               "grid"
                       :gap                   "var(--size-4) var(--size-2)"
                       :grid-template-columns "1fr"}}
 
 
         (when goog.DEBUG
-          [news-listitem (t/at (t/date "2022-05-18") (t/time "18:00"))
+          [news-listitem 0 (t/at (t/date "2022-05-18") (t/time "18:00"))
 
            [p "Sesongen er godt i gang. "
             [widgets/auto-link {:caption "Utlånsloggen"} :r.utlan]
@@ -459,16 +460,14 @@
                :action  #(rf/dispatch [:app/navigate-to :r.utlan])
                :f       (fn [_] [:div "ugh"])}]]]])
 
-
-
-        [news-listitem (t/at (t/date "2022-04-24") (t/time "18:00"))
+        [news-listitem 1 (t/at (t/date "2022-04-24") (t/time "18:00"))
          
           [p "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
 
           [p "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
            [widgets/auto-link {} :r.min-status]]]
 
-        [news-listitem (t/at (t/date "2022-04-20") (t/time "10:00"))
+        [news-listitem 2 (t/at (t/date "2022-04-20") (t/time "10:00"))
          
           [p "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.
         april fyller vi på med rest-vakter for de med utestående saldo."]
@@ -478,7 +477,7 @@
                      :href  (kee-frame.core/path-for [:r.nokkelvakt])} "her!"]]]
 
         (when-not @er-nokkelvakt?
-          [news-listitem (t/at (t/date "2022-04-19") (t/time "19:00"))
+          [news-listitem 3 (t/at (t/date "2022-04-19") (t/time "19:00"))
            [sc/col-space-2
             [p "Er du nøkkelvakt med nylaget konto (fordi Facebook ikke vil) og ser at du ikke er godkjent som nøkkelvakt?"]
             [p "Dette må du "
@@ -486,18 +485,18 @@
                        :target "_blank"
                        :href   "https://nrpk.no"} "gjøre!"]]]])
 
-        [news-listitem (t/at (t/date "2022-04-18") (t/time "15:00"))
+        [news-listitem 3 (t/at (t/date "2022-04-18") (t/time "15:00"))
          [p "Hva skjer til hvilken tid? Oversikten finner du under Planlagt!"]]
 
         (when @er-nokkelvakt?
-          [news-listitem (t/at (t/date "2022-04-14") (t/time "18:00"))
+          [news-listitem 4 (t/at (t/date "2022-04-14") (t/time "18:00"))
            [sc/col-space-2
             [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at informasjonen vi har om deg er oppdatert."]
             [:span "Dine opplysninger finner du "
              [sc/link {:style {:display :inline-block}
                        :href  (kee-frame.core/path-for [:r.user])} "her."]]]])
         (when @er-nokkelvakt?
-          [news-listitem (t/date "2022-04-13")
+          [news-listitem 5 (t/date "2022-04-13")
            [:span "Bruk utlånsloggen for å registrere "
             [sc/link {:style {:display :inline-block}
                       :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])]])))

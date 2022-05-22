@@ -32,7 +32,7 @@
   [build-state & args]
   (my.tokens/set-it)
   (produce "public/booking/css/ornament.css")
-  (produce "public/devcards/css/ornament.css") 
+  #_(produce "public/devcards/css/ornament.css")
   build-state)
 
 (comment

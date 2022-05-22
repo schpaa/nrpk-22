@@ -21,7 +21,7 @@
 (defn app-wrapper-clean
   [route-table]
 
-  (let [route-name (rf/subscribe [:app/route-name])
+  (let [route-name (rf/subscribe [:app/route-name])             
         route (rf/subscribe [:kee-frame/route])
         user-screenmode (schpaa.state/listen :app/dark-mode)
         html (aget (.getElementsByTagName js/document "html") 0)
@@ -31,7 +31,10 @@
     (.setAttribute body "style" "background-color:var(--content)")
 
     (if-let [page (get route-table @route-name)]
-      [:div (make-route-component page @route)]
+      [:div
+       #_{:style {:color "white"
+                  :background-color "var(--dim-brand1)"}}
+       (make-route-component page @route)]
       [:div.bg-alt.fixed.inset-0.flex.items-center.justify-center "(subliminal :message)"])))
 
 

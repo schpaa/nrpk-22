@@ -136,11 +136,13 @@
         registered? (rf/subscribe [:lab/at-least-registered])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
-    [(when-not goog.DEBUG {:on-click   #()
-                           :caption    "Badetemperatur"
-                           :content-fn (fn []
-                                         [:div.w-full.h-full {:style {:background-color "var(--floating)"}}
-                                          [widgets/temperature]])})
+    [(when goog.DEBUG
+       {:on-click   #()
+        :caption    "Badetemperatur"
+        :content-fn (fn []
+                      [:div.w-full.h-full
+                       {:style {:background-color "var(--floating)"}}
+                       [widgets/temperature {:air 17 :water 13 :on-click #(rf/dispatch [:app/navigate-to [:r.temperature]])}]])})
 
      {:icon-fn      #(sc/icon-large ico/new-home)
       :default-page :r.forsiden
@@ -405,28 +407,28 @@
 (defn right-menu? [] (when-let [s (rf/subscribe [:lab/screen-geometry])]
                        (:right-menu? @s)))
 
-(defn header-line [r headline v]
+(defn header-line [r headline scroll-pos]
   (let [[links caption] (some-> r :data :header)]
-    ;{xright-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])]
     [headerline
      {:class [:h-16 :items-center :truncate]}
      (let [items (concat [[location-block r links caption (right-menu?)]
                           [:div.grow]
-                          [:div.flex.items-center.justify-center.mx-4.tabular-nums
-                           [sc/small1 (when v (times.api/format "%04d" v))]]]
+                          ;todo no use for scroll-pos yet
+                          #_[:div.flex.items-center.justify-center.mx-4.tabular-nums
+                             [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]]
 
                          (when headline
-                           [[:div.flex.px-2.pb-1.gap-2
-                             {:style {:border-radius "var(--radius-2)"
-                                      :background-color "rgba(0,0,0,0.05)"}}
-                             (into [:<>]
-                                   (mapv identity (headline)))]])
+                           (when-some [headline (seq (headline))]
+                             [[:div.flex.px-2.pb-1.gap-2
+                               {:style {:border-radius    "var(--radius-2)"
+                                        :background-color "rgba(0,0,0,0.05)"}}
+                               (into [:<>] headline)]]))
 
                          [[:div.mx-2 [main-menu r]]])
            items (if (right-menu?) (reverse items) items)]
        [header-top items])]))
 
-(defn header [v headline]
+(defn header [scroll-pos headline]
   (let [route (rf/subscribe [:kee-frame/route])
         {:keys [hidden-menu? right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
         marg (when-not hidden-menu?
@@ -436,10 +438,10 @@
        {:style {:margin-left  (when-not right-menu? marg)
                 :margin-right (when right-menu? marg)
                 :height       "8rem"
-                :background   "linear-gradient(180deg,var(--content-transp-top) 0%,
+                :background   "linear-gradient(180deg,var(--content-transp-top) 0%,    
                                                       var(--content-transp-bottom) 5rem,
                                                       var(--content-transp) 100%)"}}
-       [booking.common-views/header-line route headline v]])))
+       [booking.common-views/header-line route headline scroll-pos]])))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -447,7 +449,7 @@
     (when true                                              ;@(rf/subscribe [:lab/toggle-userstate-panel])
       [:div
        (r/with-let [bookingx (rf/subscribe [:lab/booking])
-                    nokkelvakt (rf/subscribe [:lab/nokkelvakt])
+                    nokkelvakt (rf/subscribe [:lab/nokkelvakt])      
                     admin (rf/subscribe [:lab/admin-accessn])
                     sim-uid (r/atom "")
                     st (r/atom {:admin      admin
@@ -643,20 +645,22 @@
 (defn- render-frontpage [r {:keys [render]} v]
   [:div {:style {:padding-block "8rem"}} [render r]])
 
-(defn- full-width [r {:keys [render-fullwidth panel always-panel panel-title]}]
+(defn- full-width [r {:keys [render-halfwidth render-fullwidth panel always-panel panel-title]}]
   (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         modify? (booking.access/can-modify? r users-access-tokens)
         pagename (some-> r :data :name)]
     [sc/col-space-8
-     {:style {:padding-top "8rem"
-              :width       "100%"
-              :min-height  "90vh"
-              :max-width   "100%"}}
+     {:style {:min-height  "90vh"
+              :padding-top "8rem"
+              :width       (if render-halfwidth "75%" "100%")
+              :max-width   (if render-halfwidth "75%" "100%")}}
      (when (fn? panel)
        [:div.mx-auto
         [:div.-debug {:style {:margin-left "1rem"
                               :width       "50ch"
-                              :max-width   "min(calc(100% - 2rem), 36ch)"}}
+                              :max-width   (if render-halfwidth
+                                             "min(calc(100% - 2rem), 56ch)"
+                                             "min(calc(100% - 2rem), 36ch)")}}
          [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?]]])
      (when always-panel
        [always-panel modify?])
@@ -677,7 +681,7 @@
        [always-panel modify?])
      [render r m]]))
 
-(defn- render-normal [r {:keys [render render-fullwidth] :as m} admin?]
+(defn- render-normal [r {:keys [render render-halfwidth render-fullwidth] :as m} admin?]
   (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
         have-access? (booking.common-views/matches-access r users-access-tokens)]
     (if-not have-access?
@@ -686,6 +690,9 @@
        (cond
          render
          [normal-width r m]
+
+         render-halfwidth
+         [full-width r m]
 
          render-fullwidth
          [full-width r m]

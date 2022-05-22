@@ -813,9 +813,8 @@
                                                                          "var(--shadow-6)"]))
                                       :outline    :none
                                       :border     :none})
-                             {
-                              :border-radius    "var(--size-2)"
-                              :background-color "var(--toolbar)"})
+                             {:border-radius    "var(--size-2)"
+                              :background-color "var(--toolbar)"}) 
               :class       [:inline-block :align-middle :text-left :transform
                             (o/classname sc/inner-dlg)]
               :enter       "ease-in-out duration-200"

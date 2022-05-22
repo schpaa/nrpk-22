@@ -15,7 +15,8 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
             [schpaa.style.ornament :as sc]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [booking.common-widgets :as widgets]))
 
 (js/goog.exportSymbol "hljs" hljs)
 (js/goog.exportSymbol "DevcardsSyntaxHighlighter" hljs)
@@ -25,16 +26,16 @@
   (rf/dispatch-sync [::bp/set-breakpoints nrpk.core/screen-breakpoints]))
 
 ;;todo enable this!!
-#_(defn reload! [] (init!))
+(defn reload! [] (init!))
 
 (defcard-rg danger-pill
   [:div
    [hoc.buttons/reg-pill
     {:class    [:inverse :pad-right :narrow]
      :on-click #()}
-    "Bli til Båtlogg"]])                                      
+    "Bli til Båtlogg"]])
 
-(defcard-rg round-pill                            
+(defcard-rg round-pill
   [:div
    [hoc.buttons/round-pill
     {:class    [:message :narrow]
@@ -48,3 +49,8 @@
      :on-click #()}
     [sc/icon ico/menu]
     "Bli til Båtlogg nu"]])
+
+
+
+
+

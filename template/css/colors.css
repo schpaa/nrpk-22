@@ -134,6 +134,31 @@ outline: 2px solid #a0a8;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
 
+
+
+
+
+
+
+
+
+
+
+/*
+
+--gray-0: #fafaf9;
+--gray-1: #f5f5f4;
+--gray-2: #e7e5e4;
+--gray-3: #d6d3d1;
+--gray-4: #a8a29e;
+--gray-5: #78716c;
+--gray-6: #57534e;
+--gray-7: #44403c;
+--gray-8: #292524;
+--gray-9: #1c1917;
+*/
+
+
     --gray-00: #F9FAFA;
     --gray-0: #F0F1F1;
     --gray-1: #E5E6E6;
@@ -147,6 +172,15 @@ outline: 2px solid #a0a8;
     --gray-9: #222425;
     --gray-10: #1a1c1d;
 
+/*
+    --light-hue: 170;
+    --light-sat: 70%;
+    --light-bri: 40%;
+    --light-content: hsl(var(--light-hue),var(--light-sat),var(--light-bri));
+    --light-content-transp-top: var(--light-content);
+    --light-content-transp-bottom: hsla(var(--light-hue),var(--light-sat),var(--light-bri),0.7);
+    --light-content-transp: hsla(var(--light-hue),var(--light-sat),var(--light-bri),0);
+*/
     --light-toolbar: var(--gray-2);
     --light-toolbar-: var(--gray-3);
     --light-content: var(--gray-1);
@@ -161,6 +195,7 @@ outline: 2px solid #a0a8;
     --dim-content-transp-top: rgba(59, 62, 63, 0.9);
     --dim-content-transp-bottom: rgba(59, 62, 63, 0.7);
     --dim-content-transp: rgba(59, 62, 63, 0);
+
     --dim-floating: var(--gray-7);
 
     --weak-factor: 0.7;
@@ -212,7 +247,7 @@ outline: 2px solid #a0a8;
     --dim-danger-bright: var(--red-6);
     --dim-dangercopy: white;
 
-    --light-field: var(--gray-1);
+    --light-field: var(--gray-00);
     --light-field-focus: var(--gray-00);
     --light-fieldcopy: var(--gray-7);
     --dim-field: var(--gray-7);
@@ -327,10 +362,12 @@ outline: 2px solid #a0a8;
 
     --toolbar: var(--light-toolbar);
     --toolbar-: var(--light-toolbar-);
+
     --content: var(--light-content);
     --content-transp-top: var(--light-content-transp-top);
     --content-transp-bottom: var(--light-content-transp-bottom);
     --content-transp: var(--light-content-transp);
+
     --floating: var(--light-floating);
     --switchon: var(--light-switchon);
     --switchoff: var(--light-switchoff);
