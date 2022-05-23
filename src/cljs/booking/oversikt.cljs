@@ -63,7 +63,7 @@
   (let [attr {:links 1
               :large 1
               :style {:padding-block "var(--size-2)"
-                      :margin-left   "var(--size-7)"}}
+                      :margin-left   "24px"}}
         answer [:div {:style {:color       "var(--text2)"
                               :font-size   "var(--font-size-2)"
                               :line-height "var(--font-lineheight-4)"

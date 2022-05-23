@@ -15,7 +15,7 @@
 
 (defn show [link]
   (schpaa.style.dialog/open-dialog-any
-    {:form (fn [{:keys [on-close]}]
+    {:form (fn form-thing [{:keys [on-close]}]
              (when-let [page-path (some-> link :path)]
                (let [page-title (some-> link :data :header)
                      size 192
@@ -23,11 +23,12 @@
                               "//"
                               (.-host js/window.location)
                               page-path)]
-                 [sc/dropdown-dialog
+                 [sc/dropdown-dialog' {:style {:padding "1rem"}}
                   [:div
                    [sc/col {:class [:space-y-8]}
                     [sc/col-space-4
-                     [sc/title-p (if (seq? page-title) (last page-title) page-title)]
+                     ;[l/pre page-title]
+                     [sc/title-p (if (vector? page-title) (last page-title) page-title)]
                      [sc/row-center
                       [booking.qrcode/qr-code [:> QRCode {:title "untitled"
                                                           :size  size
@@ -39,4 +40,4 @@
                               :style  {:user-select :all
                                        :white-space :nowrap}} url]
                     [sc/row-ec
-                     [hoc.buttons/regular {:on-click on-close} "Lukk"]]]]])))}))
+                     [hoc.buttons/regular {:on-click #(on-close)} "Lukk"]]]]])))}))

@@ -467,49 +467,52 @@
    (let [open? @(schpaa.state/listen tag)
          attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
      (let [disclojure-button
-           (fn [{:keys [open]}]
-             [sc/row-sc-g2
+           (fn [{:keys [_open]}]
+             [:div.flex.items-center
               {:class    (when padded-heading padded-heading)
                :style    {:cursor :pointer}
                :on-click #(schpaa.state/toggle tag)}
               (sc/icon {:style {:color "var(--brand2)"}
                         :class [:duration-200 :w-12 :h-12
                                 :transform
-                                (when open :rotate-90)]}
+                                (when open? :rotate-90)]}
                        ico/showdetails)
               [:span [sc/fp-headersmaller {:class [:text-left
                                                    :pointer-events-none (when (:large attr) :large)]
-                                           :style {:color (if open "var(--text0)" "var(--text2)")}}
+                                           :style {:color (if open? "var(--text0)" "var(--text2)")}}
                       question]]])]
-       [ui/disclosure {:style {:cursor :default}
-                       #_#_:defaultOpen true}
-        (fn [_]
-          [sc/col
+       [:div
 
-           [ui/disclosure-button
-            {:on-click #(schpaa.state/toggle tag)
-             :style    {:cursor :default}
-             :class    [:flex :justify-start :items-center :gap-2
-                        :w-full
-                        :focus:outline-none :focus-visible:ring :focus-visible:ring-purple-500 :focus-visible:ring-opacity-75]}
-            disclojure-button]
+        [ui/disclosure {:style {:cursor :default}
+                        #_#_:defaultOpen true}
+         (fn [{:keys [open]}]
+           [sc/col
+            ;[l/pre open? open]
+            [ui/disclosure-button
+             {:on-click #(schpaa.state/toggle tag)
+              :style    {:cursor :default}
+              :class    [:flex :justify-start :items-center :gap-2
+                         :w-full
+                         :focus:outline-none :focus-visible:ring :focus-visible:ring-purple-500 :focus-visible:ring-opacity-75]}
+             disclojure-button]
 
-           [ui/disclosure-panel
-            (merge-with into
-                        {:static  true
-                         :unmount false}
-                        (dissoc attr :links))
-            (fn [{:keys [open]}]
-              (if (:links attr)
-                (if open?
-                  [sc/col-space-4 answer extra-section]
-                  extra-section)
-                (if open?
-                  (if answer
-                    [sc/text2 answer]
-                    [sc/text2 extra-section])
-                  (when-not answer
-                    [sc/text2 extra-section]))))]])]))))
+            (when open?
+              [ui/disclosure-panel
+               (merge-with into
+                           {:static  true
+                            :unmount false}
+                           (dissoc attr :links))
+               (fn [{:keys [open]}]
+                 (if (:links attr)
+                   (if open?
+                     [sc/col-space-4 answer extra-section]
+                     extra-section)
+                   (if open?
+                     (if answer
+                       [sc/text2 answer]
+                       [sc/text2 extra-section])
+                     (when-not answer
+                       [sc/text2 extra-section]))))])])]]))))
 
 (defn send-msg [uid-reciever]
   (rf/dispatch [:app/open-send-message uid-reciever]))
@@ -689,13 +692,13 @@
      [:div.flex.flex-col.h-full
       {:style {:justify-content :end}}
       [:div.grow]
-      [:div {:style {:height (if wind (case wind
-                                        :high "50%"
-                                        :mid "40%"
-                                        :low "30%"
-                                        "20%"))}} (waves "0693e3")]
+      #_[:div {:style {:height (if wind (case wind
+                                          :high "50%"
+                                          :mid "40%"
+                                          :low "30%"
+                                          "20%"))}} (waves "0693e3")]
       [:div
-       {:style {:height           "30%"
+       {:style {:height           "50%"
                 :width            "100%"
                 :background-color "#0693e3"}}]]
      ;text

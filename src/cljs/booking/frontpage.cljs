@@ -103,17 +103,57 @@
                                    :font-size      "var(--font-size-fluid-0)"}} b]]])
 
 (def frontpage-images
-  (map #(str "/img/caro/" %)
-       ["img-0.jpg"
-        "img-1.jpg"
-        "img-13.jpg"
-        "img-16.jpg"
-        "img-12.jpg"
-        "img-4.jpg"]))
+  (repeat 10 ["img/placeholder.png"]) #_(map #(str "/img/caros/" %)
+                                           ["img-0.jpg"
+                                            "img-1.jpg"
+                                            "img-13.jpg"
+                                            "img-16.jpg"
+                                            "img-12.jpg"
+                                            "img-4.jpg"]))
+
+(def frontpage-images'
+  (map #(str "/img/personas/" %)
+    ["noun-persona-410775.png"
+     "noun-persona-410777.png"
+     "noun-persona-410780.png"
+     "noun-persona-410782.png"
+     "noun-persona-410783.png"
+     "noun-persona-410786.png"
+     "noun-persona-410788.png"
+     "noun-persona-410790.png"
+     "noun-persona-415635.png"
+     "noun-persona-415668.png"
+     "noun-persona-426505.png"
+     "noun-persona-436706.png"
+     "noun-persona-488544.png"
+     "noun-persona-488556.png"
+     "noun-persona-497844.png"
+     "noun-persona-497847.png"
+     "noun-persona-622291.png"
+     "noun-persona-622293.png"
+     "noun-persona-623584.png"
+     "noun-persona-633475.png"
+     "noun-persona-633483.png"
+     "noun-persona-4144932.png"
+     "noun-persona-4144944.png"
+     "noun-persona-4144945.png"
+     "noun-persona-4144951.png"
+     "noun-persona-4144954.png"
+     "noun-persona-4145149.png"
+     "noun-persona-4145160.png"
+     "noun-persona-4145168.png"
+     "noun-persona-4145173.png"
+     "noun-persona-4145177.png"
+     "noun-persona-4145185.png"
+     "noun-persona-4145187.png"
+     "noun-persona-4145191.png"
+     "noun-persona-4145197.png"
+     "noun-persona-4145199.png"
+     "noun-persona-4145214.png"]))
 
 (o/defstyled block-text :div
   {:flex           "3"
-   :padding-inline-start "2.5rem"})
+   :padding-inline-start "24px"})
 
 (o/defstyled block-image :div
   {:flex         "1"
@@ -142,28 +182,29 @@
    :aspect-ratio "3/2"})
 
 (defn news-listitem [idx date images & text]
-  (let [direction (odd? idx)]
-    [:div
-     {:style {:background-color (if (even? idx)  "rgba(0,0,0,0.05)")
-              ;:padding-block "1rem"
+  (let [direction false #_(odd? idx)]
+    [:div.py-2.pr-2
+     {:style {:background-color (if (odd? idx)  "rgba(0,0,0,0.025)")
+              :border-radius "var(--radius-0)"
               :z-index          0}}
      [:div.flex.w-full
-      {:class [(when direction :flex-row-reverse)]}
-
+      {:class [:gap-4 (when direction :flex-row-reverse)]}
       [block-text
        {:class []}
        [sc/co
-        (when date
-          [booking.flextime/flex-datetime
-           date
-           (fn [type d]
-             (if (= :date type)
-               [sc/datetimelink (ta/date-format-sans-year d)]
-               [sc/datetimelink d]))])
+        [sc/row-bl
+         (when date
+           [booking.flextime/flex-datetime
+            date
+            (fn [type d]
+              (if (= :date type)
+                [sc/datetimelink (ta/date-format-sans-year d)]
+                [sc/datetimelink d]))])
+         [sc/title "Overskrift/kategori"]]
         text]]
 
       (when-not (empty? images)
-        [outer-image {:style {:padding-top "2rem" :margin-inline "1rem"}}
+        [outer-image {:style {:padding-top "0rem" :margin-inline "0rem"}}
          [block-image
           {:class [(when direction :ml-7)]}
           (case (count images)
@@ -182,7 +223,7 @@
                                             :src   e}])]
             [:div.grid.w-full.gap-1
              {:style {:grid-template-columns "repeat(2,1fr)"
-                      :grid-auto-rows        "5rem"}}
+                      :grid-auto-rows        "auto"}}
              (for [e (take 4 images)]
                [landscape {:class []
                            :style {:width "100%"}
@@ -423,11 +464,11 @@
 
 (o/defstyled p :p
   sc/fp-text
-  {:font-family    "Lora"
-   :font-weight "500"
-   :font-size "18px"
-   :line-height    "1.8"
-   :letter-spacing "1"})
+  {;:font-family    "Lora"
+   ;:font-weight "500"
+   ;:font-size "18px"
+   :line-height    "1.7"
+   #_#_:letter-spacing "1"})
 
 (defn news-feed []
   (let [{right-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])
@@ -585,7 +626,8 @@
 
              ;;disclosed units
              [sc/col-space-8
-              {:style {:max-width  "min(calc(100%), calc(768px - 3rem))"
+              {:style {:padding-inline "var(--size-0)"
+                       :max-width  "min(calc(100%), calc(768px - 4rem))"
                        :xwidth     "calc(768px - 5rem)"
                        :xmax-width "calc(768px - 5rem)"}
                :class [:mx-auto :min-h-full :xpb-8]}
@@ -594,7 +636,7 @@
                  [please-login-and-register])
 
                (widgets/disclosure
-                 {:padded-heading [:px-2]
+                 {:padded-heading []
                   :large          1
                   :style          {:padding-block "var(--size-2)"
                                    :xmargin-left  "var(--size-7)"}}
@@ -602,9 +644,12 @@
                  "Hva skjer?"
                  [news-feed])
 
-               (widgets/disclosure {:large 1
-                                    :style {:padding-block "var(--size-2)"
-                                            :margin-left   "var(--size-7)"}} :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
+               (widgets/disclosure
+                 {:padded-heading []
+                  :large 1
+                  :style {:padding-block "var(--size-2)"
+                          :xmargin-left   "2rem"}}
+                 :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
                #_(widgets/disclosure {:large 1
                                       :style {:padding-block "var(--size-2)"
                                               :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]

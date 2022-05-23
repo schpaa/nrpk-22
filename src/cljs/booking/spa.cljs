@@ -51,8 +51,9 @@
 
 ;; shortcuts
 
-(defn page [r c]
-  [+page-builder r c])
+(defn page [r {:keys [render render-fullwidth] :as c}]
+  [+page-builder r (assoc c :render (when render #(render r))
+                            :render-fullwidth (when render-fullwidth #(render-fullwidth r)))])
 
 ;region related to flex-date and how to display relative time
 
@@ -461,7 +462,7 @@
                                           :render-fullwidth booking.min-status/render}))
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
-   :r.båtliste.nøklevann (fn [r] (page r {:headline-plugin booking.lab/headline-plugin
+   :r.båtliste.nøklevann (fn [r] (page r {:headline-plugin  booking.lab/headline-plugin
                                           :always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}
                                        #_(booking.boatlist/page r)))
@@ -499,7 +500,7 @@
                                                           (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
    :r.temperature        (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
-                                          :render (fn [] [booking.temperature/render r])}))
+                                          :render          (fn [] [booking.temperature/render r])}))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment

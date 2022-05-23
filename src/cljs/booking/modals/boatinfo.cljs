@@ -266,15 +266,15 @@
 
 (defonce selected-tab (r/atom :feil))
 
-(defn modal-boatinfo-windowcontent [{:keys [data on-close uid] :as input}]
+(defn modal-boatinfo-windowcontent [{:keys [data on-close uid]}]
   (let [admin? (rf/subscribe [:lab/admin-access])
         {:keys [id boat-type]} data
         boat-item-id (some-> id name)
         boat-item-id (when (< 3 (count boat-item-id))
                        boat-item-id)]
-    [sc/dropdown-dialog'
+    [sc/dropdown-dialog' 
      [:div
-      {:style {:padding-bottom   "2rem"
+      {:style {:padding-bottom  "2rem"
                :z-index          10
                :background-color "var(--toolbar)"}}
       [header uid data]]

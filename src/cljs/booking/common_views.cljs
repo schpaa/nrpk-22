@@ -79,7 +79,8 @@
 
 (o/defstyled header-top :div
   [:& :flex :items-center :w-full :gap-2
-   {:margin    "auto"
+   {;:outline "1px red solid"
+    :margin    "auto"
     :max-width "calc(768px - 3rem)"
     :height    "var(--size-9)"
     :position  :relative}])
@@ -412,10 +413,10 @@
     [headerline
      {:class [:h-16 :items-center :truncate]}
      (let [items (concat [[location-block r links caption (right-menu?)]
-                          [:div.grow]
+                          [:div.grow]]
                           ;todo no use for scroll-pos yet
-                          #_[:div.flex.items-center.justify-center.mx-4.tabular-nums
-                             [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]]
+                          ;[:div.flex.items-center.justify-center.mx-4.tabular-nums
+                          ; [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]]
 
                          (when headline
                            (when-some [headline (seq (headline))]

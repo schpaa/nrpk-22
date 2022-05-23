@@ -23,10 +23,12 @@
             [booking.ico :as ico]))
 
 (defonce store (r/atom {:selector :a
+                        :current-filter nil
                         :category #{"kano" "surfski" "sup"}}))
 
 (def selector (r/cursor store [:selector]))
 (def category (r/cursor store [:category]))
+(def current-filter (r/cursor store [:current-filter]))
 
 ;region temporary, perhaps for later
 
@@ -88,7 +90,7 @@
 
 (rf/reg-event-fx :lab/qr-code-for-current-page
                  (fn [_ _]
-                   (let [link @(rf/subscribe [:kee-frame/route])]
+                   (when-let [link @(rf/subscribe [:kee-frame/route])]
                      (booking.qrcode/show link))))
 
 (defonce settings (r/atom nil))
@@ -104,14 +106,22 @@
                  (when-let [c (remove (comp false? val) data)]
                    (when (pos? (count c))
                      [sc/row-sc-g2
-                      [sc/title1 {:class [:ml-2 :text-right]} (count c)]
-                      [button/reg-pill
-                       {:class    [:large (if details-mode? :message :clear)]
-                        :style    {:background-color (if @show-stars "var(--yellow-9)")}
-                        :on-click #(swap! show-stars (fnil not false))}
+                      ;[sc/title1 {:class [:ml-2 :text-right]} (count c)]
+                      [:div.relative
+                       [button/reg-pill
+                        {:class    [:large (if details-mode? :message :clear)]
+                         :style    {:background-color (if @show-stars "var(--yellow-6)")}
+                         :on-click #(swap! show-stars (fnil not false))}
 
-                       [sc/icon-large {:style {:color (when @show-stars "var(--yellow-6)")}}
-                        ico/stjerne]]]))))
+                        [sc/icon-large {:style {:color (when @show-stars "var(--gray-9)")}}
+                         ico/stjerne]]
+                       [:div.absolute.-bottom-2.right-0.pointer-events-none
+                        [:div.px-1x.h-4.grid.place-content-center
+                         {:style {:min-width "1.3rem"
+                                  :background "var(--text2)"
+                                  :border-radius "var(--radius-round)"}}
+                         [sc/small {:style {:color "var(--floating)"}
+                                    :class [ :bold]} (count c)]]]]]))))
              [button/reg-pill
               {:class    [:large
                           (if delete-mode? :danger :clear)]
@@ -121,11 +131,24 @@
 (defn always-panel []
   [:<>
    [sc/col-space-8
-    [sc/row-center
-     [widgets/matrix
-      {:class [:small :flex-wrap]}
-      category
-      schpaa.components.views/kind-table]]]
+    [sc/col
+     [sc/row-center {:class [:z-10]}
+      [widgets/pillbar {:class [:small]}
+       current-filter
+       [[:a "Vis alle"]
+        [:b "Bruk filter"]]]]
+     (when (= :b @current-filter)
+       [sc/surface-ab
+        {:style {:width "100%"
+                 :max-width "768px"
+                 :margin-inline "auto"
+                 :margin-top  "-1rem"
+                 :padding-top "2rem"}}
+        [sc/row-center
+         [widgets/matrix
+          {:class [:small :flex-wrap]}
+          category
+          schpaa.components.views/kind-table]]])]]
    [:div.sticky.top-16.z-10
     [sc/row-center {:class []}
      [widgets/pillbar
@@ -135,106 +158,115 @@
        [:c "Merke"]]]]]])
 
 
+(defmulti render-list (fn [a r] a))
+
+(defmethod render-list :default [_ r]
+  [sc/surface-a
+   [sc/row-center
+     [sc/text "Hjelp"]]])
+
+(defmethod render-list :a [_ r]
+  (let [keys (when-let [uid @(rf/subscribe [:lab/uid])]
+               (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))]
+    (let [data (sort-by (comp second first) <
+                        (group-by (comp :kind val)
+                                  (remove (comp nil? :boat-type val)
+                                          (filter (fn [[k v]] (and (= "0" (:location v))
+                                                                   (if @show-stars
+                                                                     (some #{k} keys)
+                                                                     true)))
+                                                  @(rf/subscribe [:db/boat-db])))))]
+      [:div
+       (into [:div]
+             (for [[kind & r] data
+                   :let [undefined? (empty? kind)]]
+               [widgets/disclosure
+                {:padded-heading true}
+                (or kind "noname")
+                [sc/title1
+                 (or (schpaa.components.views/normalize-kind kind)
+                     "Udefinert")]
+                (for [{:keys [navn] :as z} r]
+                  [:div.gap-1.w-full
+                   {:style {:display               :grid
+                            :grid-auto-rows        "auto"
+                            :grid-template-columns (if undefined?
+                                                     "1fr"
+                                                     "repeat(auto-fill,minmax(16rem,1fr)")}}
+                   (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
+                     [:div.flex.flex-col.gap-2.w-full
+                      {:style {:padding          "var(--size-2)"
+                               :background-color "var(--floating)"
+                               :border-radius    "var(--radius-0)"}}
+                      (when-not undefined?
+                        [widgets/stability-name-category (dissoc (-> r first val) :kind)])
+                      ;todo toggle visibility via headerplugin
+                      #_[:div.flex.flex-wrap.gap-1
+                         (for [v (sort-by :number (map val r))
+                               :let [{:keys [number slot _navn _description]} v]]
+                           [widgets/badge
+                            {:class    [:small]
+                             :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                            (subs (str number) 0 3)
+                            slot])]])])]))])))
+
+(defmethod render-list :b [_ r]
+  (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <
+                      (group-by (comp first #(str/split % #" ") :slot val)
+                                (into {}
+                                      (map (fn [[k v]] [k v])
+                                           (remove (comp nil? :boat-type val)
+                                                   (filter (fn [[k v]] (not= "1" (:location v)))
+                                                           @(rf/subscribe [:db/boat-db])))))))]
+    [:<>
+     (for [[[a] b] data]
+       [sc/co
+        [sc/row {:style {:min-height  "var(--size-10)"
+                         :align-items :end}}
+         [sc/title1 (if a (str
+                            (str "Stativ " a)
+                            (case (str a)
+                              "1" ", nederst"
+                              "4" ", øverst"
+                              "")) "Ukjent")]]
+        [:div
+         {:style {:display               :grid
+                  :grid-gap              "var(--size-1)"
+                  :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
+         (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
+           [sc/row-sc-g2 {:style {:padding          "var(--size-1)"
+                                  :background-color "var(--floating)"}}
+            [widgets/badge {:class    [:small]
+                            :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+             number
+             slot]
+
+            [widgets/stability-name-category v]])]])]))
+
+(defmethod render-list :c [_ r]
+  (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
+                       (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))
+        data (sort-by (comp :navn val) <
+                      (filter (fn [[k _v]]
+                                (if @show-stars
+                                  (some #{k} starred-keys)
+                                  true))
+                              @(rf/subscribe [:db/boat-type])))]
+    [:div.grid.gap-1 {:style {:grid-template-columns "repeat(auto-fill,minmax(17rem,1fr))"}}
+     (for [[k v] data]
+       [sc/co
+        {:style {:padding          "var(--size-1)"
+                 :background-color "var(--floating)"
+                 :border-radius    "var(--radius-0)"}}
+        [widgets/stability-name-category' {:reversed? true
+                                           :url?      true
+                                           :k         k} v]
+        [widgets/dimensions-and-material v]
+        [sc/text1 (:description v)]
+        [l/pre k]])]))
 
 (defn render [r]
-  [:div.px-2
-   (case @selector
-     :c (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
-                             (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))
-              data (sort-by (comp :navn val) <
-                            (filter (fn [[k _v]]
-                                      (if @show-stars
-                                        (some #{k} starred-keys)
-                                        true))
-                                    @(rf/subscribe [:db/boat-type])))]
-          [:div.grid.gap-1 {:style {:grid-template-columns "repeat(auto-fill,minmax(17rem,1fr))"}}
-           (for [[k v] data]
-             [sc/co
-              {:style {:padding          "var(--size-1)"
-                       :background-color "var(--floating)"
-                       :border-radius    "var(--radius-0)"}}
-              [widgets/stability-name-category' {:reversed? true
-                                                 :url?      true
-                                                 :k         k} v]
-              [widgets/dimensions-and-material v]
-              [sc/text1 (:description v)]])])
-
-     :b (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <
-                            (group-by (comp first #(str/split % #" ") :slot val)
-                                      (into {}
-                                            (map (fn [[k v]] [k v])
-                                                 (remove (comp nil? :boat-type val)
-                                                         (filter (fn [[k v]] (not= "1" (:location v)))
-                                                                 @(rf/subscribe [:db/boat-db])))))))]
-          [:<>
-           (for [[[a] b] data]
-             [sc/co
-              [sc/row {:style {:min-height  "var(--size-10)"
-                               :align-items :end}}
-               [sc/title1 (if a (str
-                                  (str "Stativ " a)
-                                  (case (str a)
-                                    "1" ", nederst"
-                                    "4" ", øverst"
-                                    "")) "Ukjent")]]
-              [:div
-               {:style {:display               :grid
-                        :grid-gap              "var(--size-1)"
-                        :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
-               (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
-                 [sc/row-sc-g2 {:style {:padding          "var(--size-1)"
-                                        :background-color "var(--floating)"}}
-                  [widgets/badge {:class    [:small]
-                                  :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                   number
-                   slot]
-
-                  [widgets/stability-name-category v]])]])])
-
-     :a (let [keys (when-let [uid @(rf/subscribe [:lab/uid])]
-                     (map key (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))]
-          (let [data (sort-by (comp second first) <
-                              (group-by (comp :kind val)
-                                        (remove (comp nil? :boat-type val)
-                                                (filter (fn [[k v]] (and (= "0" (:location v))
-                                                                         (if @show-stars
-                                                                           (some #{k} keys)
-                                                                           true)))
-                                                        @(rf/subscribe [:db/boat-db])))))]
-            [:div
-             (into [:div]
-                   (for [[kind & r] data
-                         :let [undefined? (empty? kind)]]
-                     [widgets/disclosure
-                      {:padded-heading true}
-                      (or kind "noname")
-                      [sc/title1
-                       (or (schpaa.components.views/normalize-kind kind)
-                           "Udefinert")]
-                      (for [{:keys [navn] :as z} r]
-                        [:div.gap-1.w-full
-                         {:style {:display               :grid
-                                  :grid-auto-rows        "auto"
-                                  :grid-template-columns (if undefined?
-                                                           "1fr"
-                                                           "repeat(auto-fill,minmax(16rem,1fr)")}}
-                         (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
-                           [:div.flex.flex-col.gap-2.w-full
-                            {:style {:padding          "var(--size-2)"
-                                     :background-color "var(--floating)"
-                                     :border-radius    "var(--radius-0)"}}
-                            (when-not undefined?
-                              [widgets/stability-name-category (dissoc (-> r first val) :kind)])
-                            ;todo toggle visibility via headerplugin
-                            #_[:div.flex.flex-wrap.gap-1
-                               (for [v (sort-by :number (map val r))
-                                     :let [{:keys [number slot _navn _description]} v]]
-                                 [widgets/badge
-                                  {:class    [:small]
-                                   :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                                  (subs (str number) 0 3)
-                                  slot])]])])]))]))
-     nil)])
+  [:div.px-2 (render-list @selector r)])
 
 (comment
   (do
