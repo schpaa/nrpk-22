@@ -304,7 +304,7 @@
                       :data
                       :header
                       second)
-             "wtf?")})
+             "wat?")})
 
 (defn user-link [uid]
   [sc/link
@@ -562,6 +562,9 @@
      [sc/badge-2 (update attr :class conj :right-square :regular) n]
      [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]]]))
 
+(defn deleted? [[k v]]
+  (nil? k))
+
 (defn pillbar
   ([c vs]
    (pillbar {:class [:narrow :outline2 :normal]} c vs))
@@ -573,8 +576,10 @@
                                                     (reset! c k))}
                                  attr)]
                [schpaa.style.hoc.toggles/pillbar a v]))]
-     [sc/row {:style {:justify-content :center
-                      :flex-wrap       "wrap"}} (into [:<>] (map f vs))])))
+     [sc/row
+      {:style {:justify-content "center"
+               :flex-wrap       "wrap"}}
+      (into [:<>] (map f (remove deleted? vs)))])))
 
 (defn cell [category table [k v]]
   [sc/surface-a {:on-click #(if k

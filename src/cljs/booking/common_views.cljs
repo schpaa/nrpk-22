@@ -161,7 +161,9 @@
 
 ;; page layout
 
-(defn page-boundary [r {:keys [headline-plugin]} & contents]
+(defn page-boundary
+  "core layout"
+  [r {:keys [headline-plugin]} & contents]
   (let [geo (rf/subscribe [:lab/screen-geometry])]
     (r/create-class
       {:display-name        "page-boundary"

@@ -36,7 +36,7 @@
 
 ;a clickable region
 (o/defstyled location :div
-  [:& :p-2 :truncate
+  [:& :p-2 :truncate :space-y-1
    {:display         "flex"
     :flex-direction  "column"
     :justify-content "start"
@@ -58,9 +58,11 @@
                           :font-weight "var(--font-weight-4)"}}
        "Se også "
        [sc/subtext-with-link
-        {:class [:small]
+        {
+         :class [:small :mb-1]
          :href  href}
         caption]])))
+
 
 (defn location-block [r links caption right-menu?]
   (let [link (first links)]
@@ -95,8 +97,10 @@
 
                       (when headline
                         (when-some [headline (seq (headline))]
-                          [[:div.flex.px-2.pb-1.gap-2
+                          [[:div.flex.px-3.pb-2.gap-3.-mt-2.pt-3
                             {:style {:border-radius    "var(--radius-2)"
+                                     :border-top-right-radius 0
+                                     :border-top-left-radius 0
                                      :background-color "rgba(0,0,0,0.05)"}}
                             (into [:<>] headline)]]))
 

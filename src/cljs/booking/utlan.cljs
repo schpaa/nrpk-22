@@ -14,7 +14,8 @@
             [booking.ico :as ico]
             [logg.database]
             [db.core :as db]
-            [schpaa.style.hoc.buttons :as button]))
+            [schpaa.style.hoc.buttons :as button]
+            [booking.timegraph :refer [timegraph]]))
 
 ;; store
 
@@ -216,81 +217,6 @@
 
 ;; components
 
-(defn timegraph [start end to now]
-  (let [session-start (if (some #{(t/int (t/day-of-week start))} [6 7]) (* 4 11) (* 4 18))
-        session-end (if (some #{(t/int (t/day-of-week start))} [6 7]) (* 4 17) (* 4 21))
-        now (+ (* 4 (t/hour now))
-               (quot (t/minute now) 15))
-        start (if (and end
-                       (t/< (t/date start) (t/date end)))
-                0
-                (+ (* 4 (t/hour start)) (quot (t/minute start) 15)))
-        end (if-let [to' end]
-              (if-let [x (some-> to' t/instant t/date-time)]
-                (+ (* 4 (t/hour x)) (quot (t/minute x) 15)))
-              nil)
-        end (if (< now end) 10 end)
-        field-color "var(--floating)"
-        session-color "var(--selected)"
-        time-color "var(--yellow-5)"
-        timeline-color "var(--text3)"
-        color (if (nil? end) "var(--blue-8)" "var(--text1) ")]
-
-    [:div.h-8 {:on-click #(swap!
-                            settings update :rent/graph-view-mode (fn [e] (mod (inc e) 2)))
-               :style    {:overflow         :clip
-                          :box-shadow       "var(--shadow-1)"
-                          :border-radius    "var(--radius-1)"
-                          :cursor           :pointer
-                          :background-color field-color}}
-     (let [v-start (case @(r/cursor settings [:rent/graph-view-mode])
-                     0 (* 4 0)
-                     1 (- session-start 4))
-           v-end (case @(r/cursor settings [:rent/graph-view-mode])
-                   0 96
-                   1 (+ session-end 4))
-
-           arrow-length (/ (- v-end v-start) 15)]
-       [:svg
-        {:viewBox             (l/strp v-start 0 (- v-end v-start) 8)
-         :height              "100%"
-         :width               "100%"
-         :preserveAspectRatio "none"}
-        [:rect {:fill    session-color
-                :x       session-start
-                :width   (- session-end session-start)
-                :opacity 0.5
-                :y       "0"
-                :height  "8"}]
-        (when (nil? end)
-          [:path {:fill           color
-                  :stroke-linecap :round
-                  :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
-
-        (when true
-          ;(< start now)
-          [:path {:stroke         color
-                  ;:vector-effect  :non-scaling-stroke
-                  :stroke-width   (if (< 1 (count to)) 2 1)
-                  :stroke-linecap :round
-                  :d              (l/strp "M" start 4 "l" (- (if (< start end) end now) start) 0)}])
-        (when false
-          [:path
-           {:stroke  "none"
-            :opacity 0.5
-            :fill    time-color
-            :d       (l/strp "M" 0 0 "L" (- now 1) 0 "l" 3 "8" "H" 0 "z")}])
-
-        [:line {:x2                96
-                :x1                0
-                :y2                "8"
-                :y1                "8"
-                :opacity           1
-                :stroke-dashoffset "0"
-                :stroke-dasharray  "4 4"
-                :stroke-width      1
-                :stroke            timeline-color}]])]))
-
 (defn- badges [deleted-item {:keys [deleted sleepover havekey] :as m}]
   ;note: Deleted-item is a partially applied sc/deleted-item
   [deleted-item
@@ -453,7 +379,7 @@
                      [edit-bar loggedin-uid @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
                     (when nitty-gritty
                       (when (t/= (t/date date) (t/today))
-                        [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
+                        [g-area "graph" [timegraph {}  settings date end::time-instant boats (t/date-time)]]))
                     [g-area "content" [boat-badges db deleted-item::style boats :small]]]
 
                    [logg-listitem-grid
@@ -469,7 +395,7 @@
                     ;graph
                     (when nitty-gritty
                       (if (and (t/= (t/date date) (t/today)) (= :b @selector))
-                        [g-area "graph" [timegraph date end::time-instant boats (t/date-time)]]))
+                        [g-area "graph" [timegraph {}  settings date end::time-instant boats (t/date-time)]]))
 
                     [g-area "content" [:div.px-2 [boat-badges db deleted-item::style boats]]]
 
@@ -515,12 +441,13 @@
   [:<>
    [sc/row-center {:class [:sticky :pointer-events-none :noprint]
                    :style {:z-index 1000
-                           :top     "4rem"}}
+                           :top     "8rem"}}
     [sc/row-center
      [sc/col-space-8
       {:class [:pointer-events-auto]}
       [widgets/pillbar
-       {:style {:box-shadow "var(--shadow-2)"}}
+       {:class [:small]
+        :style {:box-shadow "var(--shadow-2)"}}
        selector
        [[:b "Ute"]
         [:a "Alle"]]]
