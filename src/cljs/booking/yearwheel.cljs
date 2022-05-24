@@ -55,7 +55,7 @@
                          (not (some? (:type e))) ((fnil conj []) "mangler"))})))
 
 (defn addpost-form [{:keys [data type on-close on-save on-submit] :as context}]
-  [sc/dropdown-dialog
+  [sc/dropdown-dialog' {:style {:padding "1rem"}}
    [fork/form {:initial-values    data
                :form-id           "addpost-form"
                :validation        form-validation
@@ -73,8 +73,15 @@
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
            [sc/row-sc-g2-w {:class []}
-            [sci/combobox (conj props {:people       sci/people
-                                       :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
+            [sc/label-field-col
+             [sc/label "Kategori"]
+             [sci/combobox-example
+              {:value     (values :type)
+               :on-change #(tap> %)
+               :class     [:w-auto]}]]
+
+            #_[sci/combobox (conj props {:people       sci/people
+                                         :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
             [sci/input props :date [:w-40] "Dato" :date]
             [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
             [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]
@@ -249,6 +256,7 @@
 (defn yearwheel-feed []
   (let [data (take 5 (sort-by (comp :date second) < (booking.yearwheel/get-all-events false)))]
     [sc/col-space-4
+     {:style {:padding-left "24px"}}
      (when (seq data)
        [:ol
         (for [[_id {:keys [date type tldr]}] data]

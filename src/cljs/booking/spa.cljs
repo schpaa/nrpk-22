@@ -151,15 +151,7 @@
           :my-state      schpaa.components.views/my-state
           :booking-data' (sort-by :date > (booking.database/read))}]]))
 
-   :r.booking-blog
-   (fn [r]
-     (let [user-auth (rf/subscribe [::db/user-auth])]
-       [+page-builder r
-        {:always-panel content.booking-blog/always-panel
-         :render       (fn [] [content.booking-blog/render
-                               {:fsm  {}
-                                :uid  (:uid @user-auth)
-                                :path ["booking-posts" "articles"]}])}]))
+
 
    :r.booking-blog-doc
    (fn [r]
@@ -435,10 +427,7 @@
          :always-panel     booking.presence/always
          :render-fullwidth #(booking.presence/render r data)}]))
 
-   :r.users
-   (fn [r] (page r {:render-fullwidth booking.users/render
-                    :always-panel     booking.users/always-panel
-                    :panel            booking.users/panel}))
+
    #_(fn r []
        [+page-builder r
         {:aa               {}
@@ -459,12 +448,12 @@
    ;todo Fordi når man skal bytte er det greit å alltid ha ett sted hvor dette kan skje
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
    :r.min-status         (fn [r] (page r {:render-halfwidth true
-                                          :render-fullwidth booking.min-status/render}))
+                                          :render booking.min-status/render}))
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
    :r.båtliste.nøklevann (fn [r] (page r {:headline-plugin  booking.lab/headline-plugin
                                           :always-panel     booking.lab/always-panel
-                                          :render-fullwidth booking.lab/render}
+                                          :render booking.lab/render}
                                        #_(booking.boatlist/page r)))
    :r.experimental
    (fn [r]
@@ -491,16 +480,30 @@
                            :class [:p-0 :m-0 :-debug2x]}
                           (centerline [sc/text1 "luft"] [sc/title (degrees-celsius 23)])
                           (centerline [sc/text1 "vann"] [sc/title (degrees-celsius 13)])]]]))}))
-   :r.båtliste.sjøbasen  (fn [r] (page r {:render (fn []
-                                                    [sc/col
-                                                     (for [e (range 30)]
-                                                       [sc/text1 {:class [:tabular-nums]}
-                                                        (let [n (.toString e 2)
-                                                              c (- 8 (count n))]
-                                                          (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
+   :r.båtliste.sjøbasen
+   (fn [r] (page r {:render (fn []
+                              [sc/col
+                               (for [e (range 30)]
+                                 [sc/text1 {:class [:tabular-nums]}
+                                  (let [n (.toString e 2)
+                                        c (- 8 (count n))]
+                                    (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
    :r.temperature        (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
                                           :render          (fn [] [booking.temperature/render r])}))
+   :r.users
+   (fn [r] (page r {:render-fullwidth booking.users/render
+                    :always-panel     booking.users/always-panel
+                    :panel            booking.users/panel}))
+   :r.booking-blog
+   (fn [r]
+     (let [user-auth (rf/subscribe [::db/user-auth])]
+       (fn [r]
+         (page r {:always-panel content.booking-blog/always-panel
+                  :render       (fn [r] [content.booking-blog/render
+                                         {:fsm  {}
+                                          :uid  (:uid @user-auth)
+                                          :path ["booking-posts" "articles"]}])}))))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment

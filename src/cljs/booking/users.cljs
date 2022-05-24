@@ -78,9 +78,14 @@
     [hoc.toggles/switch-local (r/cursor state [:timekrav]) "timekrav"]
     [hoc.toggles/switch-local (r/cursor state [:reverse]) "omvendt"]]])
 
+(defonce settings (r/atom nil))
+
+(def selected (r/cursor settings [:selected]))
+
 (defn always-panel []
   [:<>
-   [sc/col-space-8 {:class []}
+   [sc/col-space-8 {:style {:margin-inline "auto"
+                            :max-width "min(calc(100% - 2rem),calc(768px - 4rem)"}}
     [sc/row-sc-g4-w
      [widgets/auto-link nil [:r.reports {:id "saldo-setter"}] booking.reports/report-list]
      [widgets/auto-link nil [:r.reports {:id "siste-nye-vakter"}] booking.reports/report-list]
@@ -89,7 +94,13 @@
      [widgets/auto-link nil [:r.reports {:id "oppmøte"}] booking.reports/report-list]]]
    [:div {:class [:sticky :top-20]}
     [sc/row-center
-     [widgets/pillbar (r/atom :a) [[:a "Nøkkelvakter"] [:b "Booking"] [:c "Uregistrerte"]]]]]])
+     [widgets/pillbar
+      {:class [:small :z-10]}
+      selected
+      [[:a "Nøkkelvakter"]
+       [:b "Booking"]
+       [:c "Uregistrerte"]
+       [:d "Tilbakemeldinger"]]]]]])
 
 (def admin::c (r/cursor state [:admin]))
 

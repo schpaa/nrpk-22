@@ -13,7 +13,8 @@
     [nrpk.spa]
     [booking.routes]
     [booking.keyboard]
-    [booking.fiddle]))
+    [booking.fiddle]
+    [booking.lab]))
 
 (defn kee-start []
   (k/start! {:routes         booking.routes/routes

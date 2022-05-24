@@ -19,7 +19,9 @@
             [schpaa.style.button :as scb]
             [schpaa.style.dialog]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [booking.common-widgets :as widgets]
+            [booking.news :as news]))
 
 (defn article-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
@@ -156,30 +158,37 @@
                [:div]]]]]])))
 
 (defn initial-page [{:keys [data date-of-last-seen id uid pointer]}]
-  (into [:div.space-y-20]
+  (into [:div.space-y-1]
         (concat
-          #_[[sc/row {:class [:justify-center]}
-              [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]]]
+          [[sc/row {:class [:justify-center]}
+            [hoc.buttons/pill
+             {:class [:cta :round :large]
+              :on-click #(schpaa.style.dialog/open-dialog-addpost)}
+             [sc/icon-large ico/plus]]]]
 
           (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse data))
                 :let [uid' (:uid e)]]
             ^{:key (str k)}
-            [lineitem (assoc e
-                        :content content
-                        :item-id (name k)
-                        :date-of-last-seen date-of-last-seen
-                        :id-of-last-seen id
-                        :uid uid
-                        :kv kv
-                        :date date
-                        :uid' uid' #_(:uid e))])
+            [news/header-listitem 0 e]
+
+
+            #_[lineitem (assoc e
+                          :content content
+                          :item-id (name k)
+                          :date-of-last-seen date-of-last-seen
+                          :id-of-last-seen id
+                          :uid uid
+                          :kv kv
+                          :date date
+                          :uid' uid' #_(:uid e))])
 
           [[sc/row {:class [:justify-center]}
             (if (< @pointer (count data))
-              [hoc.buttons/regular {:disabled (zero? (count data))
-                                    :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
+              [hoc.buttons/reg-pill {:disabled (zero? (count data))
+                                     :class [:narrow :regular]
+                                     :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
               (when (pos? (count data))
-                [sc/subtext "Ingen flere innlegg"]))]])))
+                [sc/small1 "Ingen flere innlegg"]))]])))
 
 (def fsm
   {:initial :s.startup
@@ -295,13 +304,18 @@ Helt til slutt, en kinaputt"
                {date-of-last-seen :date id :id} @(db/on-value-reaction {:path ["booking-posts" "receipts" uid "articles"]})
                date-of-last-seen (some-> date-of-last-seen t/instant t/date-time)
                list-of-posts (db/on-value-reaction {:path path})
+               data' (map (juxt (comp name key) (comp :title val) #_(comp keys val) (comp :date val))
+                          (sort-by (comp :date val) >
+                                   (remove (comp :deleted val) @list-of-posts)))
                *fsm-rapport (:blog @(rf/subscribe [::rs/state :main-fsm]) :s.startup)]
-           [sc/col {:class [:space-y-4 :xmax-w-lg :xmx-auto :xpx-4]}
-
-
+           [sc/col {:class [:space-y-4]}
+            [widgets/data-url {:checked-path path :text #(vector sc/text1 %) :caption "db-url"}]
+            #_[l/pre data']
             #_[sc/row {:class [:justify-center]}
                [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Nytt innlegg"]
                [scb2/cta-small {:on-click #(schpaa.style.dialog/open-dialog-addpost)} "Oversikt"]]
+
+            ;[l/pre *fsm-rapport]
 
             (rs/match-state *fsm-rapport
               [:s.startup]
@@ -326,12 +340,12 @@ Helt til slutt, en kinaputt"
 
               [:div "other " *fsm-rapport])
 
-            [:div.absolute.bottom-24.sm:bottom-4.left-4.sm:left-20
-             [sc/row-end {:class [:pt-4]}
-              (bottom-menu uid)]]]))})))
+            #_[:div.absolute.bottom-24.sm:bottom-4.left-4.sm:left-20
+               [sc/row-end {:class [:pt-4]}
+                (bottom-menu uid)]]]))})))
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [schpaa.style.hoc.buttons/pill {:class [:cta :narrow]} "fsm"]
+   ;[schpaa.style.hoc.buttons/pill {:class [:cta :narrow]} "fsm"]
    [schpaa.style.hoc.buttons/pill {:class    [:regular :narrow]
                                    :on-click #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])} "liste over innlegg"]])

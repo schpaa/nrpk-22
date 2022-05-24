@@ -1,448 +1,54 @@
 (ns booking.common-views
-  (:require [booking.content.blog-support :refer [err-boundary]]
-            [reitit.core :as reitit]
-    ;[clerk.core]
-            [goog.dom :as dom]
-            [kee-frame.error]
-            [reagent.ratom]
-            [lambdaisland.ornament :as o]
-            [schpaa.style.ornament :as sc]
-            [booking.content.booking-blog]
-            [schpaa.style.menu :as scm]
-            [schpaa.style.button :as scb]
-            [reagent.core :as r]
-            [re-frame.core :as rf]
-            [db.core :as db]
-            [booking.fileman]
-            [kee-frame.core :as k]
-            [booking.routes]
-            [schpaa.style.hoc.page-controlpanel :as hoc.panel]
-            [booking.ico :as ico]
-            [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
-            [schpaa.debug :as l]
-            [booking.data]
-            [booking.access]
-            [clojure.set :as set]
-            [schpaa.style.input :as sci]
-            [booking.common-widgets :refer [lookup-page-ref-from-name vertical-button horizontal-button no-access-view]]
-            [booking.modals.boatinput]
-            [booking.modals.feedback]
-            [booking.modals.commandpalette]
-            [booking.modals.slideout]
-            [booking.modals.centered]
-            [booking.modals.mainmenu :refer [main-menu]]
-            [booking.account]
-            [tick.core :as t]
-            [clojure.string :as str]
-            [booking.common-widgets :as widgets]
-            [booking.fiddle]))
+  (:require
+    [goog.dom :as dom]
+    [kee-frame.error]
+    [reagent.ratom]
+    [lambdaisland.ornament :as o]
+    [schpaa.style.ornament :as sc]
+    [booking.content.booking-blog]
+    [reagent.core :as r]
+    [re-frame.core :as rf]
+    [db.core :as db]
+    [booking.fileman]
+    [kee-frame.core :as k]
+    [booking.routes]
+    [schpaa.style.hoc.page-controlpanel :as hoc.panel]
+    [booking.ico :as ico]
+    [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
+    [schpaa.debug :as l]
+    [booking.data]
+    [booking.access]
+    [clojure.set :as set]
+    [schpaa.style.input :as sci]
+    [booking.common-widgets :refer [lookup-page-ref-from-name vertical-button horizontal-button no-access-view]]
+    [booking.modals.boatinput]
+    [booking.modals.feedback]
+    [booking.modals.commandpalette]
+    [booking.modals.slideout]
+    [booking.modals.centered]
+    [booking.account]
+    [tick.core :as t]
+    [clojure.string :as str]
+    [booking.common-widgets :as widgets]
+    [booking.fiddle]
+    [booking.toolbar :as toolbar]
+    [booking.header]))
 
-;region styles
+;; state
 
-(o/defstyled sidebar :div
-  :cursor-pointer :m-0 :p-0 :w-8 :h-8 :grid
-  {:place-content  :center
-   :text-transform "lowercase"
-   :line-height    1
-   :font-family    "IBM Plex Sans"
-   :font-size      "var(--font-size-5)"
-   :font-weight    "var(--font-weight-5)"})
+(defonce a (r/atom nil))
 
-(o/defstyled centered-thing :div
-  :flex-center
-  #_{:border-radius "var(--radius-round)"
-     :padding       "var(--size-1)"
-     :color         :white
-     :background    "var(--brand1)"})
+(def scrollpos (r/atom nil))
 
-(o/defstyled centered-thing-red :div
-  :flex-center
-  {:border-radius "var(--radius-round)"
-   :padding       "var(--size-2)"
-   :color         :white
-   :background    "var(--gray-4)"})
+(defn scroll-fn [_]
+  (reset! scrollpos (.. js/window -scrollY)))
 
-(o/defstyled result-item :div
-  {:display        :flex
-   :align-items    :center
-   :min-width      "12rem"
-   :padding-inline "var(--size-4)"
-   :padding-block  "var(--size-3)"
-   :background     "var(--content)"
-   :color          "var(--text1)"}
-  [:&:hover {:background "var(--toolbar-)"}])
-
-(o/defstyled header-top-frontpage :div
-  [:& :flex :items-center :w-full :px-2 :gap-2
-   {:background "var(--blue-2)"
-    :height     "var(--size-9)"}])
-
-(o/defstyled header-top :div
-  [:& :flex :items-center :w-full :gap-2
-   {;:outline "1px red solid"
-    :margin    "auto"
-    :max-width "calc(768px - 3rem)"
-    :height    "var(--size-9)"
-    :position  :relative}])
-
-;endregion
-
-;region junk
-
-(defn bottom-menu-definition [settings-atom]
-  [[:header [sc/row' {:class [:justify-between :items-end :w-44 :px-2]}
-             [sc/header-title "Booking"]
-             [sc/pill (or "dev.3.12" booking.data/VERSION)]]]
-
-
-   [:space]
-   [:div [:div.px-2 [sc/small1 "Skrevet av meg for NRPK"]]]
-   [:space]
-   [:div [:div.px-2 [sc/row-center {:class [:py-4]}
-                     [:div.relative.w-24.h-24
-                      [:div.absolute.rounded-full.-inset-1.blur
-                       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
-                                :group-hover:-inset-1 :duration-500]}]
-                      [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]]]
-   [:footer [:div.p-2
-             [sc/row-end {:class [:gap-1 :justify-end :items-center]}
-              [sc/small1 "Vilkår"]
-              [sc/small1 "&"]
-              [sc/small1 "Betingelser"]]]]])
-
-(defn bottom-menu []
-  (r/with-let [main-visible (r/atom false)]
-    (let [toggle-mainmenu #(swap! main-visible (fnil not false))]
-      [scm/mainmenu-example-with-args
-       {:close-button #()
-        :showing      @main-visible
-        :dir          #{:up :right}
-        :data         (bottom-menu-definition (r/atom nil))
-        :button       (fn [_]
-                        [scb/round-mainpage
-                         {:on-click toggle-mainmenu}
-                         [sc/corner-symbol "?"]])}])))
-
-;endregion
-
-;; toolbars
-
-(defn vertical-toolbar-definitions []
-  (let [uid @(rf/subscribe [:lab/uid])
-        {:keys [right-menu? menu-caption?]} @(rf/subscribe [:lab/screen-geometry])
-        presence (rf/subscribe [::db/presence-status])
-        admin? (rf/subscribe [:lab/admin-access])
-        member? (rf/subscribe [:lab/member])
-        ipad? (= uid @(db/on-value-reaction {:path ["system" "active"]}))
-        registered? (rf/subscribe [:lab/at-least-registered])
-        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-    ;(tap> [ipad?])
-    [(when goog.DEBUG
-       {:on-click   #()
-        :caption    "Badetemperatur"
-        :content-fn (fn []
-                      [:div.w-full.h-full
-                       {:style {:background-color "var(--floating)"}}
-                       [widgets/temperature {:air 17 :water 13 :on-click #(rf/dispatch [:app/navigate-to [:r.temperature]])}]])})
-
-     {:icon-fn      #(sc/icon-large ico/new-home)
-      :default-page :r.forsiden
-
-      :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      :class        #(if (= % :r.oversikt) :oversikt :selected)
-      :page-name    #(some #{%} [:r.forsiden :r.oversikt])}
-
-     (if ipad?
-       {:icon-fn      (fn [] (sc/icon-large ico/vaktrapport))
-        :caption      "Vaktrapport"
-        :default-page :r.mine-vakter-ipad
-        :class        #(if (= % :r.user) :oversikt :selected)
-        :on-click     #(rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad #_(if (= % :r.min-status) :r.user :r.min-status)]])
-        #_#(rf/dispatch [:app/navigate-to [:r.min-status]])
-        :page-name    :r.mine-vakter-ipad #_#(some #{%} [:r.min-status :r.user])}
-
-       {:icon-fn      (fn [] (sc/icon-large ico/user))
-        :caption      "Mine opplysninger"
-        :default-page :r.min-status
-        :class        #(if (= % :r.user) :oversikt :selected)
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.min-status) :r.user :r.min-status)]])
-        #_#(rf/dispatch [:app/navigate-to [:r.min-status]])
-        :page-name    #(some #{%} [:r.min-status :r.user])})
-
-     #_(when (or @admin? @booking?)
-         {:icon-fn      (fn [] (sc/icon-large ico/booking))
-          :caption      "Booking Sjøbasen"
-          :default-page :r.booking
-          :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
-          :page-name    :r.booking})
-
-     (when (or @admin? @nokkelvakt ipad?)
-       {:icon-fn      #(-> ico/mystery1)
-        :disabled     false
-        :caption      "Utlån Nøklevann"
-        :default-page :r.utlan
-        :page-name    #(some #{%} [:r.utlan :r.båtliste.nøklevann])
-        :class        #(if (= % :r.utlan) :selected :oversikt)
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])})
-
-     (when (or @admin? @nokkelvakt)
-       {:icon-fn      (fn [] (sc/icon-large ico/nokkelvakt))
-        :on-click     #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
-        :default-page :r.nokkelvakt
-        :page-name    :r.nokkelvakt})
-
-     (when (or @member? @admin? @registered?)
-       {:icon-fn      (fn [] (sc/icon-large ico/yearwheel))
-        :on-click     #(rf/dispatch [:app/navigate-to [:r.yearwheel]])
-        :default-page :r.yearwheel
-        :page-name    :r.yearwheel})
-
-     #_(when (or @admin? @nokkelvakt)
-         {:icon-fn   (fn [] (let [st (rf/subscribe [:lab/number-input])]
-                              [centered-thing (sc/icon-large (if @left-side?
-                                                               (if @st ico/panelOpen ico/panelClosed)
-                                                               (if @st ico/panelClosed ico/panelOpen)))]))
-          :special   true
-          :centered? true
-          :on-click  #(rf/dispatch [:lab/toggle-number-input])})
-     :space
-     (when @admin?
-       {:tall-height  true
-        :default-page :r.fileman-temporary
-        :icon-fn      (fn [] (sc/icon-large ico/fileman))
-        :on-click     #(rf/dispatch [:app/navigate-to [:r.fileman-temporary]])
-        :page-name    :r.fileman-temporary})
-     (when (or @admin?)
-       {:icon-fn      (fn [] (sc/icon-large ico/users))
-        :badge        (fn [] {:attr  {:style {:background-color "var(--yellow-7)"
-                                              :color            "var(--gray-9)"}}
-                              :value (let [c (count (:online @presence))]
-                                       (when (pos? c) c))})
-
-        :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.users) :r.presence :r.users)]])
-        :tall-height  true
-        :class        #(if (= % :r.presence) :selected :oversikt)
-        :page-name    #(some #{%} [:r.presence :r.users])})
-     {:tall-height true
-      :caption     "Hva kan jeg gjøre?"
-      :icon-fn     (fn [] (let [st (rf/subscribe [:lab/modal-selector])]
-                            (sc/icon-large
-                              (if @st ico/commandPaletteClosed ico/commandPaletteOpen))))
-      :on-click    #(rf/dispatch [:app/toggle-command-palette])}
-     {:tall-height       true
-      :opposite-icon-fn  (fn [] (sc/icon-large
-                                  {:style {:color "var(--brand2)"}}
-                                  (if right-menu? ico/arrowLeft ico/arrowRight)))
-      :opposite-on-click (fn [] (schpaa.state/toggle :lab/menu-position-right))
-      :icon-fn           (fn [] (sc/icon-large
-                                  (if menu-caption?
-                                    (if right-menu?
-                                      ico/panelClosed
-                                      ico/panelOpen)
-                                    (if right-menu?
-                                      ico/panelOpen
-                                      ico/panelClosed))))
-
-      :on-click          #(schpaa.state/toggle :app/toolbar-with-caption)}]))
-
-(defn horizontal-toolbar-definitions []
-  (let [;uid (rf/subscribe [:lab/uid])
-        admin? (rf/subscribe [:lab/admin-access])
-        member? (rf/subscribe [:lab/member])
-        booking? (rf/subscribe [:lab/booking])
-        registered? (rf/subscribe [:lab/at-least-registered])
-        nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
-
-    [{:icon-fn       #(-> ico/new-home)
-      :short-caption "Hjem"
-      :on-click      #(rf/dispatch [:app/navigate-to [(if (= % :r.forsiden) :r.oversikt :r.forsiden)]])
-      :class         #(if (= % :r.oversikt) :oversikt :active)
-      :page-name     #(some #{%} [:r.forsiden :r.oversikt])}
-
-     (when booking?
-       {:icon          ico/booking
-        :short-caption "Booking"
-        :icon-disabled ico/booking-disabled
-        :disabled      true})
-
-     {:icon-fn       (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
-                               (if st ico/commandPaletteOpen ico/commandPaletteClosed)))
-      :special       true
-      :short-caption "Søk"
-      :on-click      #(rf/dispatch [:app/toggle-command-palette])
-      :page-name     :r.debug}
-
-
-     (when (or @admin? @nokkelvakt)
-       {:icon          ico/mystery1
-        :disabled      false
-        :caption       "Utlån Nøklevann"
-        :short-caption "Utlån"
-        :default-page  :r.utlan
-        :page-name     #(some #{%} [:r.utlan :r.båtliste.nøklevann])
-        :class         #(if (= % :r.utlan) :selected :oversikt)
-        :on-click      #(rf/dispatch [:app/navigate-to [(if (= % :r.utlan) :r.båtliste.nøklevann :r.utlan)]])})
-
-     {:icon-fn       #(-> ico/user)
-      :short-caption "Mine"
-      :caption       "Mine opplysninger"
-      :default-page  :r.min-status
-      :class         #(if (= % :r.user) :oversikt :selected)
-      :on-click      #(rf/dispatch [:app/navigate-to [(if (= % :r.min-status) :r.user :r.min-status)]])
-      :page-name     #(some #{%} [:r.min-status :r.user])}]))
-
-(comment
-  (do
-    (lookup-page-ref-from-name :r.forsiden)))
-
-(defn vertical-toolbar [right-side?]
-  (let [has-chrome? (rf/subscribe [:lab/has-chrome])
-        with-caption? @(schpaa.state/listen :app/toolbar-with-caption)
-        current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)]
-    (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
-      [:div.shrink-0.h-full.sm:flex.hidden.relative.select-none
-       {:class [(if with-caption? :w-56 :w-16)]
-        :style {:box-shadow "var(--inner-shadow-2)"
-                :background "var(--toolbar)"}}
-       ;; force the toolbar to stay on top when boat-panel is displayed (?)
-       ;;
-       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.items-start
-              {:style {:padding-top "var(--size-0)"}}]
-             (map (fn [{:keys [opposite-icon-fn] :as e}]
-                    (let [cap (when with-caption?
-                                (let [p (:page-name e)]
-                                  (if-some [caption (or (some->
-                                                          (if (fn? p) (p current-page) p)
-                                                          lookup-page-ref-from-name
-                                                          :text)
-                                                        (:caption e))]
-                                    caption
-                                    (when-let [dp (:default-page e)]
-                                      (:text (lookup-page-ref-from-name dp))))))]
-                      (if (keyword? e)
-                        [:div.grow]
-                        [vertical-button (assoc e :right-side right-side?
-                                                  :with-caption? with-caption?
-                                                  :caption cap)])))
-                  (remove nil? (vertical-toolbar-definitions))))])))
-
-(defn bottom-toolbar []
-  (let [switch? @(schpaa.state/listen :lab/menu-position-right)
-        data ((if switch? reverse identity) (horizontal-toolbar-definitions))]
-    [booking.fiddle/render data]))
+(defn set-ref [element a scroll-fn]
+  (when-not @a
+    (.addEventListener element "scroll" (fn [e] (scroll-fn e)))
+    (reset! a element)))
 
 ;;
-
-(defn compute-pagetitles [r]
-  (let [path-fn (some-> r :data :path-fn)
-        page-title (-> r :data :header)]
-    {:text (cond
-             (vector? page-title) (second page-title)
-             :else [])
-     #_(if (vector? page-title)
-         (first (remove nil? [(if (keyword? (first page-title))
-                                (lookup-page-ref-from-name (first page-title))
-                                (first page-title))
-                              (or (last page-title) "no-title")
-                              (when path-fn [:div.truncate (path-fn r)])]))
-         (or (if path-fn
-               (path-fn r))
-             (or page-title "no-title")))
-     :link (if path-fn (path-fn {:id "Ri0icn4bbffkwB3sQ1NWyTxoGmo1"}) (some-> page-title
-                                                                              ffirst
-                                                                              lookup-page-ref-from-name
-                                                                              :text))}))
-
-(comment
-  ;todo what about this?
-  (do
-    (compute-pagetitles {:data {:path-fn (fn [{:keys [id] :as m}]
-                                           (:navn (user.database/lookup-userinfo id) "not found"))
-                                :header  ["headers"]}})
-    (compute-pagetitles {:data {:path-fn (fn [{:keys [id] :as m}]
-                                           (:navn (user.database/lookup-userinfo id) "not found"))
-                                :header  ["headers"]}})))
-
-(defn see-also
-  [{:keys [text link]}]
-  (when link
-    [sc/small0 {:style {:white-space :nowrap
-                        :font-size   "var(--font-size-0)"
-                        :font-weight "var(--font-weight-4)"}} "Se også "
-     [sc/subtext-with-link
-      {:class [:small :hover:opacity-100]
-       :href  (k/path-for [link])}
-      (:text (lookup-page-ref-from-name link))]]))
-
-(o/defstyled location :div
-  [:& :flex :flex-col :p-2 :w-auto
-   {:border-radius "var(--radius-1)"
-    :cursor        :pointer
-    :flex          "1 1 1"}
-   [:&:active {:background "var(--text0-copy)"}]])
-
-(defn location-block [r links caption right-menu?]
-  (let [link (first links)]
-    [location
-     {:on-click #(rf/dispatch [:app/navigate-to [link]])
-      :class    [:truncate
-                 (if right-menu? :mr-2 :ml-2)
-                 (if right-menu? :text-right :text-left)]}
-     [sc/col-space-1
-      {:style {:justify-content :start}}
-      [sc/title1 {:style {:font-weight "var(--font-weight-4)"}}
-       (or (if (fn? caption)
-             (caption (some-> r :path-params))
-             (if (map? caption) (:text caption) caption))
-           caption)]
-      (let [z {:link link
-               :text caption}]
-        (try (see-also z)
-             (catch js/Error e {:CRASH/see-also z})))]]))
-
-(def scrollpos (r/atom 0))
-
-(o/defstyled headerline :div
-  [:& :w-full :flex :justify-between :pointer-events-auto])
-
-(defn right-menu? [] (when-let [s (rf/subscribe [:lab/screen-geometry])]
-                       (:right-menu? @s)))
-
-(defn header-line [r headline scroll-pos]
-  (let [[links caption] (some-> r :data :header)]
-    [headerline
-     {:class [:h-16 :items-center :truncate]}
-     (let [items (concat [[location-block r links caption (right-menu?)]
-                          [:div.grow]]
-                          ;todo no use for scroll-pos yet
-                          ;[:div.flex.items-center.justify-center.mx-4.tabular-nums
-                          ; [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]]
-
-                         (when headline
-                           (when-some [headline (seq (headline))]
-                             [[:div.flex.px-2.pb-1.gap-2
-                               {:style {:border-radius    "var(--radius-2)"
-                                        :background-color "rgba(0,0,0,0.05)"}}
-                               (into [:<>] headline)]]))
-
-                         [[:div.mx-2 [main-menu r]]])
-           items (if (right-menu?) (reverse items) items)]
-       [header-top items])]))
-
-(defn header [scroll-pos headline]
-  (let [route (rf/subscribe [:kee-frame/route])
-        {:keys [hidden-menu? right-menu? mobile? menu-caption?] :as geo} @(rf/subscribe [:lab/screen-geometry])
-        marg (when-not hidden-menu?
-               (when-not mobile? (if menu-caption? "14rem" "4rem")))]
-    (when-let [route @route]
-      [:div.fixed.top-0.noprint.inset-x-0.h-16.pointer-events-none
-       {:style {:margin-left  (when-not right-menu? marg)
-                :margin-right (when right-menu? marg)
-                :height       "8rem"
-                :background   "linear-gradient(180deg,var(--content-transp-top) 0%,    
-                                                      var(--content-transp-bottom) 5rem,
-                                                      var(--content-transp) 100%)"}}
-       [booking.common-views/header-line route headline scroll-pos]])))
 
 (defn master-control-box []
   (let [user-state (rf/subscribe [:lab/user-state])
@@ -450,7 +56,7 @@
     (when true                                              ;@(rf/subscribe [:lab/toggle-userstate-panel])
       [:div
        (r/with-let [bookingx (rf/subscribe [:lab/booking])
-                    nokkelvakt (rf/subscribe [:lab/nokkelvakt])      
+                    nokkelvakt (rf/subscribe [:lab/nokkelvakt])
                     admin (rf/subscribe [:lab/admin-accessn])
                     sim-uid (r/atom "")
                     st (r/atom {:admin      admin
@@ -543,9 +149,6 @@
        [sc/text1 path]
        [sc/row-ec
         [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja takk!"]])]]])
-(declare set-ref scroll-fn)
-
-(defonce a (r/atom nil))
 
 (defn check-latest-version []
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})]
@@ -555,6 +158,8 @@
           (when (t/< app-timestamp db-timestamp)
             (widgets/open-slideout new-version-available::dialog))))
       (catch js/Error _))))
+
+;; page layout
 
 (defn page-boundary [r {:keys [headline-plugin]} & contents]
   (let [geo (rf/subscribe [:lab/screen-geometry])]
@@ -592,7 +197,7 @@
                  [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
                   {:class [field-width]
                    :style {:right 0}}
-                  [vertical-toolbar true]]])
+                  [toolbar/vertical-toolbar true]]])
 
               :else
               (let [marg (if menu-caption?
@@ -607,41 +212,15 @@
                  [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
                   {:class [field-width :print:hidden]
                    :style {:left 0}}
-                  [vertical-toolbar false]]]))
+                  [toolbar/vertical-toolbar false]]]))
 
-            [booking.common-views/header @scrollpos headline-plugin]]))})))
+            [booking.header/header r @scrollpos headline-plugin]]))})))
 
-(defn matches-access "" [r [status access :as all-access-tokens]]
-  (let [[req-status req-access :as req-tuple] (-> r :data :access)]
+(defn matches-access "" [r [status _access :as _all-access-tokens]]
+  (let [[req-status _req-access :as req-tuple] (-> r :data :access)]
     (if req-tuple
-      (and (some #{status} (if (vector? req-status) req-status [req-status]))
-           #_(if req-access (some access req-access) true))
+      (some #{status} (if (vector? req-status) req-status [req-status]))
       true)))
-
-(comment
-  (can-modify? {:data {:modify [:member #{:admin}]}} [nil #{:admin}])
-  #_(some? (seq (set/intersection #{:as} #{:a}))))
-
-(rf/reg-sub :lab/we-know-how-to-scroll? :-> :lab/we-know-how-to-scroll)
-
-(rf/reg-event-db :lab/we-know-how-to-scroll (fn [db [_ arg]] (assoc db :lab/we-know-how-to-scroll arg)))
-
-(defonce z (atom nil))
-
-(defn set-ref [element a scroll-fn]
-  (when-not @a
-    (.addEventListener element "scroll" (fn [e] (scroll-fn e)))
-    (reset! a element)))
-
-(def max-width "54ch")
-
-(defn scroll-fn [e]
-  (let [v (.. js/window -scrollY)] (reset! scrollpos v)))
-
-(defn- height-calculation! []
-  (let [h @(rf/subscribe [:breaking-point.core/mobile?])]
-    (tap> {:h h})
-    (str "calc(100vh - " (if h 11 4) "rem)")))
 
 (defn- render-frontpage [r {:keys [render]} v]
   [:div {:style {:padding-block "8rem"}} [render r]])
@@ -675,7 +254,7 @@
      {:style {:padding-block "8rem"
               :margin-inline "auto"
               :min-height    "90vh"
-              :max-width     "min(calc(100% - 1rem), calc(768px - 4rem))"}}
+              :max-width     "min(calc(100% - 1rem), calc(768px - 3rem))"}}
      (when (fn? panel)
        [hoc.panel/togglepanel pagename (or panel-title "lenker & valg") panel modify?])
      (when always-panel
@@ -713,7 +292,7 @@
                    :transform "translateX(-50%)"}}
           [name-badge]])
 
-       [:div.sticky.bottom-0.noprint [bottom-toolbar]]])))
+       [:div.sticky.bottom-0.noprint [toolbar/bottom-toolbar]]])))
 
 (defn +page-builder
   "

@@ -37,8 +37,7 @@
   stats        {:depends []
                 :task    (do
                            (sh "bash" "-c" (str "ls -l ./dist/" -app-name "/js/*.js >> ./history.md"))
-                           (shell {:continue true} "cat ./history.md")
-                           (shell "say done"))}
+                           (shell {:continue true} "cat ./history.md"))}
   template     {:task (do
                         (replacer
                           {:app-name      -app-name
@@ -62,7 +61,12 @@
                           (str "public/" -app-name "/css/ornament.css")
                           (str -dist-dir "/" -app-name "/css/ornament.css")
                           :replace-existing))}
-  deploy-test  {:depends [clean build template ornament css fonts stats]
+  deploy-test2 {:depends [clean build template ornament css fonts stats]
+                :task    (let [app-name (case -app-name "eykt" "eyktv-22" "booking" "booking-22")]
+                           (shell (str "firebase hosting:channel:deploy samplepreview --only " app-name)))}
+  -deploy-sample {:task    (let [app-name (case -app-name "eykt" "eyktv-22" "booking" "booking-22")]
+                             (shell (str "firebase hosting:channel:deploy samplepreview --only " app-name)))}
+  deploy-test  {:depends [clean build template ornament css fonts stats -deploy-sample]
                 :task    (let [app-name (case -app-name "eykt" "eyktv-22" "booking" "booking-22")]
                            (shell (str "firebase hosting:channel:deploy samplepreview --only " app-name)))}
   deploy       {:depends [clean build template ornament css fonts stats]

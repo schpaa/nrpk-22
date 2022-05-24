@@ -6,7 +6,6 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [re-frame.core :as rf]
             [reagent.core :as r]
-            [db.core :as db]
             [booking.common-views]
             [arco.react]
             [times.api :as ta]
@@ -17,9 +16,10 @@
             [booking.openhours]
             [booking.account]
             [booking.common-widgets :as widgets]
-            [schpaa.debug :as l]))
+            [booking.news :as news]
+            [booking.toolbar]))
 
-;region
+;; styles
 
 (o/defstyled antialiased :div
   [:* {:x-webkit-font-smoothing  :auto
@@ -92,7 +92,7 @@
     [:&.toolbar
      {:width "calc(100vw)"}]]])
 
-;endregion
+;;
 
 (defn table-text [a b]
   [:<>
@@ -101,15 +101,6 @@
    [sc/text0 [antialiased {:style {:text-transform :uppercase
                                    :letter-spacing "0.025rem"
                                    :font-size      "var(--font-size-fluid-0)"}} b]]])
-
-(def frontpage-images
-  (repeat 10 ["img/placeholder.png"]) #_(map #(str "/img/caros/" %)
-                                           ["img-0.jpg"
-                                            "img-1.jpg"
-                                            "img-13.jpg"
-                                            "img-16.jpg"
-                                            "img-12.jpg"
-                                            "img-4.jpg"]))
 
 (def frontpage-images'
   (map #(str "/img/personas/" %)
@@ -150,84 +141,6 @@
      "noun-persona-4145197.png"
      "noun-persona-4145199.png"
      "noun-persona-4145214.png"]))
-
-(o/defstyled block-text :div
-  {:flex           "3"
-   :padding-inline-start "24px"})
-
-(o/defstyled block-image :div
-  {:flex         "1"
-   :aspect-ratio "4/3"
-   ;:background "rgba(120,120,120,0.25)"
-   :width        "100%"
-   ;:height "100%"
-   ;:min-width "20%"
-   :xmax-width   "20rem"})
-
-(o/defstyled outer-image :div
-  {;:box-shadow "0 0 0 4px red"
-   ;:border-radius "1rem"
-   :padding-top "0.25rem"
-   :width       "33%"})
-
-(o/defstyled frame :div
-  {:box-shadow "0 0 0 4px red"})
-
-(o/defstyled portrait :img 
-  {:object-fit :cover
-   :aspect-ratio "2/3"})
-
-(o/defstyled landscape :img
-  {:object-fit   :cover
-   :aspect-ratio "3/2"})
-
-(defn news-listitem [idx date images & text]
-  (let [direction false #_(odd? idx)]
-    [:div.py-2.pr-2
-     {:style {:background-color (if (odd? idx)  "rgba(0,0,0,0.025)")
-              :border-radius "var(--radius-0)"
-              :z-index          0}}
-     [:div.flex.w-full
-      {:class [:gap-4 (when direction :flex-row-reverse)]}
-      [block-text
-       {:class []}
-       [sc/co
-        [sc/row-bl
-         (when date
-           [booking.flextime/flex-datetime
-            date
-            (fn [type d]
-              (if (= :date type)
-                [sc/datetimelink (ta/date-format-sans-year d)]
-                [sc/datetimelink d]))])
-         [sc/title "Overskrift/kategori"]]
-        text]]
-
-      (when-not (empty? images)
-        [outer-image {:style {:padding-top "0rem" :margin-inline "0rem"}}
-         [block-image
-          {:class [(when direction :ml-7)]}
-          (case (count images)
-            1 [landscape {:style {:width     "100%"
-                                  :box-shadow "var(--shadow-2)"
-                                  :border-radius "0.5rem"
-                                  :transform (if direction
-                                               "rotate(-2deg)"
-                                               "rotate(2deg)")}
-                          :src   (first images)}]
-            2 [:div.flex.gap-1 (for [e (take 2 images)]
-                                 [landscape {:style {:width "50%"}
-                                             :src   e}])]
-            3 [:div.flex.gap-1 (for [e (take 3 images)]
-                                 [portrait {:style {:width "33%"}
-                                            :src   e}])]
-            [:div.grid.w-full.gap-1
-             {:style {:grid-template-columns "repeat(2,1fr)"
-                      :grid-auto-rows        "auto"}}
-             (for [e (take 4 images)]
-               [landscape {:class []
-                           :style {:width "100%"}
-                           :src   e}])])]])]]))
 
 (defn config []
   {:dots             true
@@ -273,7 +186,7 @@
                                                :overflow-y   :hidden}
                                       :width  "100%"
                                       :height "100%"
-                                      :src    e}]])) frontpage-images)}]]]))
+                                      :src    e}]])) news/frontpage-images)}]]]))
 
 (defn todays-numbers [c1 c2 a b]
   [sc/row-sc-g2 {:style {:-transform       "translateY(1rem) rotate(6deg)"
@@ -462,103 +375,11 @@
      [sc/text2 "2 utlån i dag"]
      [sc/text1 "1 utlån nå"]]]])
 
-(o/defstyled p :p
-  sc/fp-text
-  {;:font-family    "Lora"
-   ;:font-weight "500"
-   ;:font-size "18px"
-   :line-height    "1.7"
-   #_#_:letter-spacing "1"})
-
-(defn news-feed []
-  (let [{right-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])
-        news-listitem (fn [idx date & content]
-                        (news-listitem idx date
-                                       (take (rand-int (count frontpage-images))
-                                             (shuffle frontpage-images))
-                                       content))]
-    (let [er-nokkelvakt? (rf/subscribe [:lab/nokkelvakt])]
-      [:div.space-y-4
-       [:div {:style {:display               "grid"
-                      :gap                   "var(--size-4) var(--size-2)"
-                      :grid-template-columns "1fr"}}
-
-
-        (when goog.DEBUG
-          [news-listitem 0 (t/at (t/date "2022-05-18") (t/time "18:00"))
-
-           [p "Sesongen er godt i gang. "
-            [widgets/auto-link {:caption "Utlånsloggen"} :r.utlan]
-            " er i bruk. Håper dere finner den enklere i bruk enn fjorårets."
-            " Vann— og lufttemperatur registreres ved å klikke på temperaturen øverst til " (if right-menu? "høyre" "venstre")]
-           [sc/row
-            [widgets/auto-link
-             nil
-             [:r.booking-blog-doc {:id "utlånsloggen"}]
-             [{:id      "utlånsloggen"
-               :name    "id123"
-               :caption "Mer her"
-               :action  #(rf/dispatch [:app/navigate-to :r.utlan])
-               :f       (fn [_] [:div "ugh"])}]]]])
-
-        [news-listitem 1 (t/at (t/date "2022-04-24") (t/time "18:00"))
-         
-          [p "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
-
-          [p "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
-           [widgets/auto-link {} :r.min-status]]]
-
-        [news-listitem 2 (t/at (t/date "2022-04-20") (t/time "10:00"))
-         
-          [p "Nå kan du velge vakter som går fram til og med 3. juli. Etter 29.
-        april fyller vi på med rest-vakter for de med utestående saldo."]
-          [p "Resten av vaktlisten åpner når vi ser at alt virker som det skal (2-3 dager)."]
-          [p "Vaktlisten finner du "
-           [sc/link {:style {:display :inline-block}
-                     :href  (kee-frame.core/path-for [:r.nokkelvakt])} "her!"]]]
-
-        (when-not @er-nokkelvakt?
-          [news-listitem 3 (t/at (t/date "2022-04-19") (t/time "19:00"))
-           [sc/col-space-2
-            [p "Er du nøkkelvakt med nylaget konto (fordi Facebook ikke vil) og ser at du ikke er godkjent som nøkkelvakt?"]
-            [p "Dette må du "
-             [sc/link {:style  {:display :inline-block}
-                       :target "_blank"
-                       :href   "https://nrpk.no"} "gjøre!"]]]])
-
-        [news-listitem 3 (t/at (t/date "2022-04-18") (t/time "15:00"))
-         [p "Hva skjer til hvilken tid? Oversikten finner du under Planlagt!"]]
-
-        (when @er-nokkelvakt?
-          [news-listitem 4 (t/at (t/date "2022-04-14") (t/time "18:00"))
-           [sc/col-space-2
-            [:div "Fordi du er nøkkelvakt må du foreta den årlige sjekken om at informasjonen vi har om deg er oppdatert."]
-            [:span "Dine opplysninger finner du "
-             [sc/link {:style {:display :inline-block}
-                       :href  (kee-frame.core/path-for [:r.user])} "her."]]]])
-        (when @er-nokkelvakt?
-          [news-listitem 5 (t/date "2022-04-13")
-           [:span "Bruk utlånsloggen for å registrere "
-            [sc/link {:style {:display :inline-block}
-                      :href  (kee-frame.core/path-for [:r.utlan])} "utlån av båt."]]])]])))
-
 ;todo blog-system
 ;[listitem' (t/date "2022-04-11") "Båtarkivet er i bruk"]
 ;[listitem' (t/date "2022-03-04") "Ny layout og organisering av hjemmesiden."]
 ;[listitem' (t/date "2022-02-15") "Nøkkelvakter kan nå rapportere hms-hendelser og dokumentere materielle mangler og skader her."]
 ;[listitem' (t/date "2021-11-01") "Nye båter er kjøpt inn."]]]))
-
-(defn debug-panel []
-  [sc/row-sc-g2-w
-
-   (when goog.DEBUG
-     [hoc.buttons/regular {:on-click #(rf/dispatch [:app/sign-out])} "Sign out"])
-
-   (when goog.DEBUG
-     [hoc.buttons/regular {:on-click #(rf/dispatch [:app/successful-login])} "Sign in"])
-
-   (when goog.DEBUG
-     [hoc.buttons/regular {:on-click #(booking.account/open-dialog-confirmaccountdeletion)} "go"])])
 
 (defn set-ref [a scroll-fn]
   (tap> {:set-ref a})
@@ -569,90 +390,67 @@
       (reset! a el))))
 
 (defn frontpage []
-  (let [a (r/atom nil)
-        scrollpos (r/atom 0)
-        scroll-fn (fn [e]
-                    (tap> "Scrols")
-                    (let [v (-> e .-target .-scrollTop)]
-                      (if (< 50 v)
-                        (do
-                          (rf/dispatch [:lab/we-know-how-to-scroll true])
-                          (rf/dispatch [:lab/close-menu])))
-                      (reset! scrollpos v)
-                      (tap> ["scroll" (-> e .-target .-scrollTop)])))]
-    (r/create-class
-      {:component-will-unmount
-       (fn [_] (when @a
-                 (.removeEventListener @a "scroll" scroll-fn)))
+  (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
+        show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
+        reg? (rf/subscribe [:lab/at-least-registered])
+        master-emulation (rf/subscribe [:lab/master-state-emulation])]
+    [page-with-background
+     {:style {:min-height "90vh"
+              :height     "90vh"}
 
-       :component-did-mount (fn [_]
-                              (reset! a nil))
+      :class [(if dark-mode? :dark :light)
+              (if @reg? :bottom-toolbar)]}
 
-       :reagent-render
-       (fn []
-         (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
-               show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
-               reg? (rf/subscribe [:lab/at-least-registered])
-               master-emulation (rf/subscribe [:lab/master-state-emulation])]
-           [page-with-background
-            {:style {:ref        (fn [el] #(do
-                                             (tap> {"SET REF" el})
-                                             (reset! a nil)
-                                             ((set-ref a scroll-fn) el)))
-                     :min-height "90vh"
-                     :height     "90vh"}
+     [:div.min-h-full.z-0
+      {:style {:min-height     "90vh"
+               :padding-bottom "8rem"}}
+      ;debug
+      (when (and goog.DEBUG @master-emulation)
+        [:div.max-w-lg.mx-auto
+         [:div.mx-4.py-4.pt-24
+          [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+           booking.common-views/master-control-box]]])
 
-             :class [(if dark-mode? :dark :light)
-                     (if @reg? :bottom-toolbar)]}
+      [header-with-logo]
 
-            [:div.min-h-full.z-0
-             {:style {:min-height     "90vh"
-                      :padding-bottom "8rem"}}
-             ;debug
-             (when (and goog.DEBUG @master-emulation)
-               [:div.max-w-lg.mx-auto
-                [:div.mx-4.py-4.pt-24
-                 [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-                  booking.common-views/master-control-box]]])
+      (when @show-image-carousell? [image-carousell])
 
-             [header-with-logo]
+      (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
+                 (not @reg?))
+        [:div.mx-4.pb-12
+         [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
 
-             (when @show-image-carousell? [image-carousell])
+      ;;disclosed units
+      [sc/col-space-8
+       {:style {:padding-inline "var(--size-0)"
+                :max-width      "min(calc(100% - 1rem), calc(768px - 3rem))"
+                :xwidth         "calc(768px - 5rem)"
+                :xmax-width     "calc(768px - 5rem)"}
+        :class [:mx-auto :min-h-full :xpb-8]}
+       [sc/col-space-8
+        (when-not @reg?
+          [please-login-and-register])
 
-             (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
-                        (not @reg?))
-               [:div.mx-4.pb-12
-                [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
+        [sc/col-space-2
+         [sc/text {:class [:pl-6]} [widgets/auto-link {:caption "Alle saker"} :r.booking-blog]]
+         (widgets/disclosure
+           {:padded-heading []
+            :large          1
+            :style          {:padding-block "var(--size-2)"
+                             :xmargin-left  "var(--size-7)"}}
+           :frontpage/news
+           [sc/row-bl
+            [sc/fp-header "Hva skjer?"]]
 
-             ;;disclosed units
-             [sc/col-space-8
-              {:style {:padding-inline "var(--size-0)"
-                       :max-width  "min(calc(100%), calc(768px - 4rem))"
-                       :xwidth     "calc(768px - 5rem)"
-                       :xmax-width "calc(768px - 5rem)"}
-               :class [:mx-auto :min-h-full :xpb-8]}
-              [sc/col-space-8
-               (when-not @reg?
-                 [please-login-and-register])
+           [news/news-feed])]
 
-               (widgets/disclosure
-                 {:padded-heading []
-                  :large          1
-                  :style          {:padding-block "var(--size-2)"
-                                   :xmargin-left  "var(--size-7)"}}
-                 :frontpage/news
-                 "Hva skjer?"
-                 [news-feed])
+        (widgets/disclosure
+          {:padded-heading []
+           :large          1
+           :style          {:padding-block "var(--size-2)"
+                            :xmargin-left  "2rem"}}
+          :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])]]]
 
-               (widgets/disclosure
-                 {:padded-heading []
-                  :large 1
-                  :style {:padding-block "var(--size-2)"
-                          :xmargin-left   "2rem"}}
-                 :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])
-               #_(widgets/disclosure {:large 1
-                                      :style {:padding-block "var(--size-2)"
-                                              :margin-left   "var(--size-7)"}} :frontpage/openinghours "Åpningstider" [booking.openhours/opening-hours])]]]
-            [widgets/after-content]
-            [:div.sticky.bottom-0.noprint
-             [booking.common-views/bottom-toolbar]]]))})))
+     [widgets/after-content]
+     [:div.sticky.bottom-0.noprint
+      [booking.toolbar/bottom-toolbar]]]))

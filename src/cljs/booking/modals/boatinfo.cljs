@@ -181,14 +181,13 @@
              [worklog-card {:class [:opacity-100]} m boat-item-id worklog-entry-id]))
 
      (r/with-let [more? (r/atom false)]
-       [sc/co
+       [:<>
         (when-not @more?
-          [hoc.buttons/regular
-           {:type     "button"
-            :on-click #(reset! more? true)}
-           [sc/co
-            [sc/small "Du har kommet til slutten av listen"]
-            [sc/text1 "Vis tidligere"]]])
+          [:div.flex.flex-col.items-center.space-y-4.py-4
+           [sc/text1 "Dette er slutten av listen"]
+           [hoc.buttons/pill {:type     "button"
+                              :class    [:regular :narrow]
+                              :on-click #(reset! more? true)} "Søk etter flere"]])
         (when @more?
           (for [[worklog-entry-id m] all-data]
             [worklog-card {:class [:opacity-50]} m boat-item-id worklog-entry-id]))])]))

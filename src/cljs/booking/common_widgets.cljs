@@ -1,5 +1,6 @@
 (ns booking.common-widgets
   (:require [schpaa.style.ornament :as sc]
+            [lambdaisland.ornament :as o]
             [kee-frame.core]
             [reagent.core :as r]
             [reitit.core :as reitit]
@@ -9,14 +10,14 @@
             [schpaa.icon :as icon]
             [booking.routes]
             [headlessui-reagent.core :as ui]
-            [schpaa.style.hoc.buttons :as hoc.buttons]
-            [schpaa.style.hoc.toggles :as hoc.toggles]
+            [schpaa.style.hoc.toggles]
             [db.core :as db]
             [clojure.string :as str]
             [schpaa.style.hoc.buttons :as button]
             [booking.styles]
-            [schpaa.debug :as l]
             [clojure.set :as set]))
+
+(declare data-url)
 
 (defn horizontal-button [{:keys [right-side
                                  tall-height
@@ -74,6 +75,7 @@
      [sc/small "this is"]]))
 
 ;todo refactor on right-side
+
 (defn vertical-button
   [{:keys [right-side caption opposite-on-click with-caption? opposite-icon-fn tall-height
            special icon icon-fn content-fn class on-click page-name badge disabled]}]
@@ -159,30 +161,33 @@
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
 (defn favourites-star' [{:keys [on-star-click]}
-                        {:keys [id] :as m}]
+                        {:keys [id boat-type] :as m}]
   (let [uid (some-> @(rf/subscribe [:lab/uid]) name)
         ;_ (tap> {:boat-type id})
-        boat-type (or (some-> id name) nil)
+        boat-type (or (some-> boat-type name) nil)
         bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
         ;_ (tap> ["users" uid "starred" boat-type])
-        ex-data (db/on-value-reaction {:path ["users" uid "starred" boat-type]})]
+        ex-data (when boat-type
+                  @(db/on-value-reaction {:path ["users" uid "starred" boat-type]}))]
     [sc/row {:style {:column-gap  "var(--size-1)"
                      :align-items :center
-                     :color       (if (and id @ex-data)
-                                    "var(--yellow-8)"
-                                    (if id "var(--text2)"
-                                           "var(--red-5)"))}}
+                     :color       (if (and id ex-data)
+                                    "var(--yellow-9)"
+                                    (if id
+                                      "var(--toolbar-)"
+                                      "var(--red-5)"))}}
      (when (pos? @bt-data)
-       [:div {:line-height "var(--font-lineheight-2)"
-              :font-size   "var(--font-size-1)"
-              :font-weight "var(--font-weight-4)"} @bt-data])
+       [sc/text {:line-height "var(--font-lineheight-2)"
+                 :font-size   "var(--font-size-1)"
+                 :font-weight "var(--font-weight-4)"}
+        @bt-data])
      (if id
        [sc/icon-small
-        {:on-click #(on-star-click boat-type (not @ex-data) uid)}
-        (if @ex-data ico/stjerne ico/ikkeStjerne)]
+        {:on-click #(on-star-click boat-type (not ex-data) uid)}
+        (if ex-data ico/ikkeStjerne ico/stjerne)]
        [sc/icon-small
-        {:on-click #(on-star-click boat-type (or (not @ex-data) true) uid)}
-        ico/ikkeStjerne])]))
+        {:on-click #(on-star-click boat-type (or (not ex-data) true) uid)}
+        ico/stjerne])]))
 
 (defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
   [sc/col {:class [:truncate :space-y-px :w-full]}
@@ -201,8 +206,6 @@
                                                       {:boat-type boat-type
                                                        :value     value
                                                        :uid       uid}]))} m]]])
-
-(declare data-url)
 
 (defn stability-name-category' [{:keys [url? k reversed?]}
                                 {:keys [stability expert navn kind] :as m}]
@@ -227,23 +230,6 @@
                                                        :value     value
                                                        :uid       uid}]))}
      m]]])
-
-
-(defn favourites-star [{:keys [ex-data bt-data on-star-click]}
-                       {:keys [boat-type] :as m}]
-  (let [uid @(rf/subscribe [:lab/uid])
-        bt-data (or nil (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]}))
-        ex-data (or nil (db/on-value-reaction {:path ["users" uid "starred" boat-type]}))]
-    [sc/row {:style {:column-gap  "var(--size-2)"
-                     :align-items :center}}
-     (when (pos? @bt-data)
-       [sc/text1 @bt-data])
-     [sc/icon-large
-      {:on-click #(on-star-click boat-type (not @ex-data))
-       :style    {:color (if @ex-data "var(--yellow-6)" "rgba(0,0,0,0.5)")}}
-      (if @ex-data ico/stjerne ico/stjerne)]]))
-
-;region
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
@@ -299,12 +285,12 @@
     (if deleted
       [:div.w-8]
       (if mobile?
-        [hoc.buttons/reg-icon attr
+        [button/reg-icon attr
          [sc/icon-small
           {:style {:xcolor "var(--blue-0)"}}
           ico/pencil]]
 
-        [hoc.buttons/reg-pill-icon attr
+        [button/reg-pill-icon attr
          [sc/icon-small
           {:style {:xcolor "var(--blue-0)"}}
           ico/pencil]
@@ -459,6 +445,7 @@
               [sc/title (icon/spinning :spinner)]]]]))})))
 
 (defn disclosure
+  "headlessui is rather picky regarding what is surrounded with divs and not, thread carefully!"
   ([m]
    (apply disclosure m))
   ([attr tag question answer]
@@ -468,31 +455,29 @@
          attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
      (let [disclojure-button
            (fn [{:keys [_open]}]
-             [:div.flex.items-center
-              {:class    (when padded-heading padded-heading)
+             [:div.flex.items-center.gap-2
+              {:class    [(when padded-heading padded-heading)]
                :style    {:cursor :pointer}
                :on-click #(schpaa.state/toggle tag)}
-              (sc/icon {:style {:color "var(--brand2)"}
-                        :class [:duration-200 :w-12 :h-12
-                                :transform
-                                (when open? :rotate-90)]}
-                       ico/showdetails)
+              [sc/icon
+               {:style {:color "var(--brand2)"}
+                :class [:duration-200
+                        :transform
+                        (when open? :rotate-90)]}
+               ico/showdetails]
               [:span [sc/fp-headersmaller {:class [:text-left
                                                    :pointer-events-none (when (:large attr) :large)]
                                            :style {:color (if open? "var(--text0)" "var(--text2)")}}
                       question]]])]
        [:div
-
-        [ui/disclosure {:style {:cursor :default}
-                        #_#_:defaultOpen true}
-         (fn [{:keys [open]}]
+        [ui/disclosure
+         {:style {:cursor :default}}
+         (fn [_]
            [sc/col
-            ;[l/pre open? open]
             [ui/disclosure-button
              {:on-click #(schpaa.state/toggle tag)
               :style    {:cursor :default}
-              :class    [:flex :justify-start :items-center :gap-2
-                         :w-full
+              :class    [:flex :justify-start :items-center :w-full
                          :focus:outline-none :focus-visible:ring :focus-visible:ring-purple-500 :focus-visible:ring-opacity-75]}
              disclojure-button]
 
@@ -570,11 +555,12 @@
   ([attr n v]
    (badge attr nil n v))
   ([attr e n v]
-   [:div.flex
-    (when e
-      [sc/badge-2 (update attr :class conj :frame :regular :work-log) e])
-    [sc/badge-2 (update attr :class conj :right-square :regular) n]
-    [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]]))
+   [sc/row-sc'
+    (when-not (nil? e)
+      [sc/badge-2 (update attr :class conj :right-square :round :work-log) e])
+    [sc/row
+     [sc/badge-2 (update attr :class conj :right-square :regular) n]
+     [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]]]))
 
 (defn pillbar
   ([c vs]
@@ -628,7 +614,6 @@
                    [nil nil]
                    [nil nil]))))
 
-
 (defn open-slideout [dialog-def]
   (rf/dispatch [:modal.slideout/show {:content-fn dialog-def}]))
 
@@ -667,49 +652,65 @@
              [:path.transition-all.duration-300.ease-in-out.delay-150.path-3
               {:d "M 0,400 C 0,400 0,320 0,320 C 82.33492822966508,327.18660287081343 164.66985645933016,334.3732057416268 249,331 C 333.33014354066984,327.6267942583732 419.6555023923445,313.6937799043062 528,312 C 636.3444976076555,310.3062200956938 766.7081339712919,320.85167464114835 881,329 C 995.2918660287081,337.14832535885165 1093.511961722488,342.8995215311005 1184,341 C 1274.488038277512,339.1004784688995 1357.244019138756,329.55023923444975 1440,320 C 1440,320 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientd)"}]])])))
 
+(o/defstyled odebug :div
+  {:outline "1px solid red"})
+
+(o/defstyled shadow :div
+  {:box-shadow "var(--shadow-1)"})
+
+(o/defstyled round-large-shadow :div
+  [:&
+   :p-2 :w-full :h-full
+   {:background-color "var(--toolbar)"}])
+
 (defn temperature [{:keys [air water wind on-click]}]
-  (letfn [(goto [link]
-            (rf/dispatch [:app/navigate-to [link]]))
-          (degrees-celsius [attr c]
+  (letfn [(degrees-celsius [attr c]
             [:div
              (merge-with into
-                         {:style {:font-size    "100%"
-                                  :font-weight  "var(--font-weight-6)"
-                                  :align-items  :baseline
-                                  :xtext-shadow "#FC0 1px 0 10px"}}
+                         {:style {:font-size   "80%"
+                                  :font-weight "var(--font-weight-6)"
+                                  :align-items "baseline"}}
                          attr)
              (times.api/format "%0.1f" c) [:sup "°c"]])
           (centerline [value]
-            [sc/row-end {:class [:text-right :mx-auto]
-                         :style {:overflow        :hidden
-                                 :align-items     :baseline
-                                 :justify-content :end
+            [sc/row-end {:class [:tabular-nums]
+                         :style {;:overflow        "hidden"
+                                 :text-align      "right"
+                                 :margin          "auto"
+                                 :align-items     "baseline"
+                                 :justify-content "end"
                                  :width           "auto"}}
              value])]
-    [:div.relative.w-full.h-full
-     {:on-click on-click}
-     ;bg
-     [:div.flex.flex-col.h-full
-      {:style {:justify-content :end}}
-      [:div.grow]
-      #_[:div {:style {:height (if wind (case wind
-                                          :high "50%"
-                                          :mid "40%"
-                                          :low "30%"
-                                          "20%"))}} (waves "0693e3")]
-      [:div
-       {:style {:height           "50%"
-                :width            "100%"
-                :background-color "#0693e3"}}]]
-     ;text
-     [:div.absolute.inset-0
-      [:div.flex.flex-col.h-full.items-center.min-w-fit
-       {:style {:justify-content :space-around}}
+    [round-large-shadow
+     [:div
+      {:on-click on-click
+       :style    {:display "relative"
+                  :width   "100%"
+                  :height  "100%"}}
 
-       (centerline (degrees-celsius {:class []
-                                     :style {:z-index 1
-                                             :color   "var(--text1)"}} air))
-       (centerline (degrees-celsius {:style {:color "white"}} water))]]]))
+      ;bg
+      [sc/col
+       {:style {:height           "100%"
+                :overflow         "clip"
+                :border-radius    "var(--radius-1)"
+                :box-shadow       "var(--shadow-1)"
+                :background-color "var(--floating)"
+                :justify-content  "end"}}
+       [:div.grow]
+       ;[:div.h-4 [waves]]
+       [:div {:style {:height           "50%"
+                      :background-color "#0693e3"}}]]
+      ;text
+      [:div.absolute.inset-0
+       [sc/col {:class [:gap-y-1]
+                :style {:height "100%"
+                        :padding-block "1rem"}} ;:div.flex.flex-col.h-full.items-center.justify-center.min-w-fit.gap-y-1
+        ;{:style {:justify-content :center}}
+
+        (centerline (degrees-celsius {:class []
+                                      :style {:z-index 1
+                                              :color   "var(--text1)"}} air))
+        (centerline (degrees-celsius {:style {:color "white"}} water))]]]]))
 
 (defn after-content []
   (let [route @(rf/subscribe [:kee-frame/route])
@@ -757,7 +758,7 @@
                {:style {:align-items :end :justify-content :start}}
                (when-not ipad?
                  [:div
-                  [hoc.buttons/round-pill
+                  [button/round-pill
                    {:class    [:message :narrow]
                     :on-click #(do
                                  (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
@@ -767,14 +768,14 @@
 
                (when @(rf/subscribe [:lab/admin-access])
                  [:div
-                  [hoc.buttons/round-pill
+                  [button/round-pill
                    {:class    [:danger :narrow]
                     :on-click #(db/database-update {:path  ["system"]
                                                     :value {"timestamp" booking.data/DATE}})}
                    "Aktiver!"]])
 
                [:div
-                [hoc.buttons/pill-icon-caption
+                [button/pill-icon-caption
                  {:class    [:narrow :frame]
                   :style    {:color        "var(--gray-1)"
                              :border-color "var(--gray-1)"}

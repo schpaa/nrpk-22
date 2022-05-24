@@ -27,7 +27,7 @@
    ["/nytt"
     {:name   :r.booking-blog
      :access [[:member] nil]
-     :header [[:r.forsiden] "Hva er nytt?"]}]
+     :header [[:r.forsiden] "Nytt"]}]
 
    ["/nytt/:id"
     {:name     :r.booking-blog-doc
