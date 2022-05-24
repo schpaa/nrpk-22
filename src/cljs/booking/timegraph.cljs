@@ -77,25 +77,33 @@
 
 (defn hour-ticks [total-hours]
   (let [timeline-color "var(--text3)"]
-    [:line {:x2                total-hours
-            :x1                0
-            :y2                8
-            :y1                8
-            :opacity           1
-            :stroke-dashoffset 0
-            :stroke-dasharray  "1 7"
-            :stroke-width      3
-            :stroke            timeline-color}]))
+    [:<>
+     [:line {:x1                0
+             :y1                7
+             :x2                total-hours
+             :y2                7
+             :stroke-dashoffset 0
+             :stroke-dasharray  "1 7"
+             :stroke-width      4
+             :stroke            timeline-color}]
+     [:line {:x2                total-hours
+             :x1                0
+             :y2                0
+             :y1                0
+             :stroke-dashoffset 0
+             :stroke-dasharray  "1 96"
+             :stroke-width      5
+             :stroke            timeline-color}]]))
 
-(defn timegraph-multi [_idx {:keys [now session-start session-end settings]} xs]
+(defn timegraph-multi [_idx {:keys [total-hours now session-start session-end settings ok]} xs]
   (let [[start end] (first xs)
         session-start (or session-start (if (some #{(t/int (t/day-of-week start))} [6 7]) (* 4 11) (* 4 18)))
         session-end (or session-end (if (some #{(t/int (t/day-of-week start))} [6 7]) (* 4 17) (* 4 21)))
-        total-hours (* 3 96)
+
         now (+ (* 4 (t/hour now))
                (quot (t/minute now) 15))
         end (if (< now end) 10 end)
-        session-color "var(--selected)"
+        session-color "var(--green-5)"
         color (if (nil? end) "var(--blue-8)" "var(--text1) ")
         ;padding start and end
         v-start (case @(r/cursor settings [:rent/graph-view-mode])
@@ -111,24 +119,24 @@
        :height              "100%"
        :width               "100%"
        :preserveAspectRatio "none"}
-      [:rect {:fill    session-color
+      (hour-ticks total-hours)
+      [:rect {:fill    (if ok session-color "var(--red-5)")
               :width   (- session-end session-start)
-              :opacity 0.5
+              ;:opacity 0.8
               :x       session-start
-              :y       0
-              :height  8}]
+              :y       2
+              :height  2}]
       (when (nil? end)
         [:path {:fill           color
                 :stroke-linecap :round
                 :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
-      (hour-ticks total-hours)
       (into [:<>]
             (for [[start end] xs
                   :let [start (if (and end (< start end)) start 0)]]
               [:path {:stroke         color
-                      :stroke-width   1
+                      :stroke-width   2
                       :stroke-linecap :square
-                      :d              (l/strp "M" start 6 "l" (- (if (< start end) end now) start) 0)}]))]]))
+                      :d              (l/strp "M" start 5 "l" (- (if (< start end) end now) start) 0)}]))]]))
 
 (comment
   (do
