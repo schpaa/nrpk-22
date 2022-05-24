@@ -567,14 +567,17 @@
 
 (defn pillbar
   ([c vs]
-   (pillbar {:class [:narrow :outline2 :normal]} c vs))
+   (pillbar {:class []} c vs))
   ([attr c vs]
    (let [f (fn [[k v]]
              (let [a (merge-with into {:class    [:normal (when (= k @c) :inverse)]
-                                       :on-click #(if (= k @c)
-                                                    (reset! c nil)
-                                                    (reset! c k))}
-                                 attr)]
+                                       :on-click #(do
+                                                    (if (= k @c)
+                                                      (reset! c nil)
+                                                      (reset! c k))
+                                                    (when-let [f (:on-click attr)]
+                                                      (f @c)))}
+                                 (dissoc attr :on-click))]
                [schpaa.style.hoc.toggles/pillbar a v]))]
      [sc/row
       {:style {:justify-content "center"

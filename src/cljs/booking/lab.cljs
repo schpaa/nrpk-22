@@ -24,15 +24,23 @@
             [booking.timegraph :refer [timegraph-multi]]
             [lambdaisland.ornament :as o]
             [schpaa.style.button2 :as scb2]
-            [schpaa.icon :as icon]))
+            [schpaa.icon :as icon]
+            [headlessui-reagent.core :as ui]))
 
-(defonce store (r/atom {:selector       :sjøbasen
-                        :current-filter nil
-                        :category       #{"kano" "surfski" "sup"}}))
+(defonce store (r/atom {:selector            :sjøbasen
+                        :previous-step-value nil
+                        :step                nil
+                        :current-filter      nil
+                        :category            #{"kano" "surfski" "sup"}}))
 
 (def selector (r/cursor store [:selector]))
 (def category (r/cursor store [:category]))
 (def current-filter (r/cursor store [:current-filter]))
+(def step (r/cursor store [:step]))
+
+(defonce settings (r/atom nil))
+
+(def show-stars (r/cursor settings [:rent/show-details]))
 
 ;region temporary, perhaps for later
 
@@ -97,12 +105,6 @@
                    (when-let [link @(rf/subscribe [:kee-frame/route])]
                      (booking.qrcode/show link))))
 
-(defonce settings (r/atom nil))
-
-(def show-stars (r/cursor settings [:rent/show-details]))
-(def start-time (r/cursor settings [:rent/start-time]))
-(def end-time (r/cursor settings [:rent/end-time]))
-
 ;;
 
 (defn headline-plugin []
@@ -138,101 +140,195 @@
 (o/defstyled timenav :div
   [:input sc/small-rounded
    scb2/focus-button
-   {:border "2px solid var(--text2)"
+   {:border         "2px solid var(--text2)"
     :padding-block  "0.25rem"
     :padding-inline "0.25rem"}
    [:focus]])
 
+(def start-time (r/cursor settings [:rent/start-time]))
+(def end-time (r/cursor settings [:rent/end-time]))
+
+(defn plus-minus-time [time]
+  (let [has-time (some? @time)]
+    [sc/row-sc-g1
+     [button/pill-icon-caption
+      {:on-click #(do
+                    (reset! time (-> (t/<< (t/time @time) (t/new-duration 1 :hours))
+                                     (t/truncate :hours)))
+                    (tap> [@time (some-> @time t/time)]))
+       :disabled (not has-time)
+       :style    {:min-width "3rem"}
+       :class    [:regular :right-square :narrow]}
+      [sc/icon-small ico/minus]]
+     [:input {:type "time" :value @time :on-change #(reset! time (.. % -target -value))}]
+     [button/pill-icon-caption
+      {:on-click #(do
+                    (reset! time (-> (t/>> (some-> @time t/time) (t/new-duration 1 :hours))
+                                     (t/truncate :hours)))
+                    (tap> [@time (some-> @time t/time)]))
+       :disabled (not has-time)
+       :style    {:min-width "3rem"}
+       :class    [:inverse :left-square :narrow]}
+      [sc/icon-small ico/plus]]]))
+
+(def previous-step-value (r/cursor store [:previous-step-value]))
+
 (defn always-panel []
-  [:<>
-   [:div.sticky.top-32.z-10
-    [sc/col-space-8
-     [sc/row-center {:class [:z-10]}
-      [widgets/pillbar {:class [:small]}
+  (let [next-step #(do
+                     (reset! previous-step-value @step)
+                     (swap! step (fn [e] (mod (inc e) 3))))
+        prev-step #(do
+                     (reset! previous-step-value @step)
+                     (swap! step (fn [e] (mod (dec e) 3))))]
+    [:div
+     {:class     [:sticky :top-32 :z-100 :space-y-4 :h-80x]
+      :xon-click next-step}
+     #_[l/pre {:step                @step
+               :previous-step-value @previous-step-value} @selector]
+     [sc/row-center {:class [:z-100]}
+      [widgets/pillbar {:on-click #(if (= :booking @selector)
+                                     (reset! step 0))
+                        :class    [:small]}
        selector
        [[:nøklevann "Nøklevann"]
-        [nil "Bruk filter"]
-        [:sjøbasen "Sjøbasen"]]]]
-     [sc/surface-ab {:style {:margin-inline    "0"
-                             :box-shadow       "var(--shadow-2)"
-                             :background-color "var(--floating)" #_"rgba(255,255,255,0.95)"}}
-      [sc/row-center
-       [button/pill {:class [:round :regular]} [sc/icon (icon/adapt :refresh 3)]]
+        [:sjøbasen "Sjøbasen"]
+        [:booking "Booking"]]]]
+     [:div.relative
+      {:class [:z-100 :w-full]}
 
-       [timenav
-        [:div.grid.place-content-center.gap-2
-         {:style {:grid-template-columns "repeat(4,min-content)"
-                  :grid-auto-rows        "auto"}}
-         [sc/col {:class [:justify-self-start :self-end]
-                  :style {:grid-column   "1/3"
-                          :grid-row      "1/1"
-                          :border-radius "var(--radius-0)"}}
+      ;spacer
+      [ui/transition
+       ;when step = 1
+       {:show       (and (= :booking @selector)
+                         (= 0 @step))
+        :class      [:w-full]
+        :enter      "ease-in-out duration-500 transform transition-height"
+        :enter-from "h-0"
+        :enter-to   "h-64"
+        :entered    "h-64"
+        :leave      "ease-in-out duration-500 transform transition-height"
+        :leave-from "h-64"
+        :leave-to   "h-0"}
+       [:<> [:div]]]
 
-          [:input {:type "date" :value "2022-05-23"}]
-          [sc/field-label "Start"]]
+      [ui/transition
+       {:show    (and (= :booking @selector)
+                      (= 0 @step))
+        :xappear true}
+       [ui/transition-child
+        ;when step = 0
+        {:class      [:absolute :top-0 :w-full]
+         :enter      "ease-in-out duration-200 transform"
+         :enter-from (if (zero? @previous-step-value)
+                       "translate-x-full"
+                       "-translate-x-full")
+         :enter-to   "translate-x-0"
+         :entered    ""
+         :leave      "ease-in-out duration-200"
+         :leave-from "translate-x-0 opacity-100"
+         :leave-to   (if (zero? @previous-step-value)
+                       "-translate-x-full opacity-0"
+                       "translate-x-full opacity-0")}
+        [:<>
+         [sc/surface-ab {:style {:margin-inline    "auto"
+                                 :height           "auto"
+                                 :width            "25rem"
+                                 :box-shadow       "var(--shadow-4)"
+                                 :background-color "var(--floating)"}}
+          [sc/row-center
+           {:style {:class []}}
+           [button/pill {:class [:large :round :message]}
+            [sc/icon (icon/adapt :refresh 1.8)]]
 
-         (let [has-start-time true]
-           [:div.justify-self-center.self-center.w-full
-            {:style {:grid-column "1/-1"
-                     :grid-row    "2"}}
-            [sc/row-sc-g1
-             [button/pill-icon-caption {:disabled (not has-start-time)
-                                        :style    {:min-width "3rem"}
-                                        :class    [:regular :right-square :narrow]}
-              [sc/icon-small ico/minus]]
-             [:input {:type "time" :value "10:10"}]
-             [button/pill-icon-caption {:disabled (not has-start-time)
-                                        :style    {:min-width "3rem"}
-                                        :class    [:inverse :left-square :narrow]}
-              [sc/icon-small ico/plus]]]])
+           [timenav
+            {:class [:w-full]}
+            [:div.grid.place-content-center.gap-2.w-full
+             {:style {:grid-template-columns "repeat(4,min-content)"
+                      :grid-auto-rows        "auto"}}
+             [sc/col {:class [:justify-self-start :self-end]
+                      :style {:grid-column   "1/3"
+                              :grid-row      "1/1"
+                              :border-radius "var(--radius-0)"}}
 
+              [:input {:type "date" :value "2022-05-23"}]
+              [sc/field-label "Start"]]
 
-         (let [has-end-time true]
-           [:div.justify-self-center.self-center.w-full
-            {:style {:grid-column "1/-1"
-                     :grid-row    "3"}}
-            [sc/row-sc-g1
-             [button/pill-icon-caption {:disabled (not has-end-time)
-                                        :style    {:min-width "3rem"}
-                                        :class    [:regular :right-square :narrow]}
-              [sc/icon-small ico/minus]]
-             [:input {:type "time" :value "20:10"}]
-             [button/pill-icon-caption {:disabled (not has-end-time)
-                                        :style    {:min-width "3rem"}
-                                        :class    [:inverse :left-square :narrow]}
-              [sc/icon-small ico/plus]]]])
-         [sc/col {:class [:self-start :justify-self-end]
-                  :style {:grid-column   "1/-1"
-                          :grid-row      "4"
-                          :border-radius "var(--radius-0)"}}
+             [:div.justify-self-center.self-center.w-full
+              {:style {:grid-column "1/-1"
+                       :grid-row    "2"}}
+              [plus-minus-time start-time]]
 
-          [sc/field-label {:class [:text-right]} "Slutt"]
-          [:input {:type "date"
-                   :value "2022-05-23"}]]
-         [:div]]]
+             [:div.justify-self-center.self-center.w-full
+              {:style {:grid-column "1/-1"
+                       :grid-row    "3"}}
+              [plus-minus-time end-time]]
+             [sc/col {:class [:self-start :justify-self-end]
+                      :style {:grid-column   "1/-1"
+                              :grid-row      "4"
+                              :border-radius "var(--radius-0)"}}
 
-       [button/pill {:class [:round :regular]} ico/chevronDoubleRight]]]
+              [sc/field-label {:class [:text-right]} "Slutt"]
+              [:input {:type  "date"
+                       :value "2022-05-23"}]]
+             [:div]]]
+           [sc/col
+            {:class [:justify-center]
+             :style {:height "15rem"}}
+            [button/pill {:class    [:large :round :cta]
+                          :on-click next-step}
+             [sc/icon ico/chevronDoubleRight]]]]]]]]
 
+      [ui/transition
+       {:show   (and (= :booking @selector)
+                     (= 1 @step))
+        :appear true}
+       [ui/transition-child
+        {:class      [:absolute :top-0 :w-full]
+         :enter      "ease-in-out duration-200 transform"
+         :enter-from (if (zero? @previous-step-value)
+                       "translate-x-full"
+                       "-translate-x-full")
+         :enter-to   "translate-x-0"
+         :entered    ""
+         :leave      "ease-in-out duration-200"
+         :leave-from "translate-x-0 opacity-100"
+         :leave-to   (if (zero? @previous-step-value)
+                       "-translate-x-full opacity-0"
+                       "translate-x-full opacity-0")}
+        [:<>
+         [sc/surface-ab {:style {:margin-inline    "auto"
+                                 :height           "auto"
+                                 :width            "25rem"
+                                 :box-shadow       "var(--shadow-4)"
+                                 :background-color "var(--floating)"}}
+          [sc/co
+           [sc/row-sc-g2 {:style {:align-items :start
+                                  :height      "100%"}}
+            [:div.w-full.h-full
+             [sc/title "Bekreft"]]
+            [sc/col
+             {:class [:justify-center]
+              :style {:height "15rem"}}
+             [button/pill {:class    [:large :round :cta]
+                           :on-click #(do
+                                        (prev-step)
+                                        (.stopPropagation %))}
+              [sc/icon ico/panelOpen]]]]
+           [sc/row-center
+            [button/regular
+             {:class    [:large :narrow :danger]
+              :on-click #(do
+                           (next-step)
+                           (.stopPropagation %))}
 
-     
-     #_[sc/surface-ab
-        {:style {:width         "100%"
-                 :max-width     "768px"
-                 :margin-inline "auto"
-                 :margin-top    "-1rem"
-                 :padding-top   "2rem"}}
-        [sc/row-center
-         [widgets/matrix
-          {:class [:small :flex-wrap]}
-          current-filter
-          schpaa.components.views/kind-table]]]]]
-   #_[:div.sticky.top-16.z-10
-      [sc/row-center {:class []}
-       [widgets/pillbar
-        selector
-        [[:a "Type"]
-         [:b "Plassering"]
-         [:c "Merke"]]]]]])
+             "Avbryt"]
+            [button/cta
+             {:class    [:large :narrow :cta]
+              :on-click #(do
+                           (next-step)
+                           (.stopPropagation %))}
+
+             "Bekreft"]]]]]]]]]))
 
 ;;
 
@@ -333,6 +429,9 @@
        :session-start start
        :session-end   end}
       data]]))
+
+(defmethod render-list :booking [_ r]
+  (render-list :sjøbasen r))
 
 (defmethod render-list :sjøbasen [_ r]
   (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
