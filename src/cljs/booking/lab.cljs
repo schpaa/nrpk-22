@@ -138,10 +138,13 @@
               [sc/icon-large ico/trash]]])))
 
 (o/defstyled timenav :div
-  [:input sc/small-rounded
+  [:input
+   ;sc/small-rounded
    scb2/focus-button
    {:border         "2px solid var(--text2)"
-    :padding-block  "0.25rem"
+    :height         "2rem"
+
+    :xpadding-block "0.25rem"
     :padding-inline "0.25rem"}
    [:focus]])
 
@@ -151,15 +154,18 @@
 (defn plus-minus-time [time]
   (let [has-time (some? @time)]
     [sc/row-sc-g1
+
      [button/pill-icon-caption
       {:on-click #(do
                     (reset! time (-> (t/<< (t/time @time) (t/new-duration 1 :hours))
                                      (t/truncate :hours)))
                     (tap> [@time (some-> @time t/time)]))
        :disabled (not has-time)
-       :style    {:min-width "3rem"}
+       :style    {:min-width "3rem"
+                  :border    "2px solid var(--text2)"}
        :class    [:regular :right-square :narrow]}
       [sc/icon-small ico/minus]]
+
      [:input {:type "time" :value @time :on-change #(reset! time (.. % -target -value))}]
      [button/pill-icon-caption
       {:on-click #(do
@@ -167,11 +173,112 @@
                                      (t/truncate :hours)))
                     (tap> [@time (some-> @time t/time)]))
        :disabled (not has-time)
-       :style    {:min-width "3rem"}
+       :style    {:min-width "3rem"
+                  :border    "2px solid var(--text2)"}
        :class    [:inverse :left-square :narrow]}
       [sc/icon-small ico/plus]]]))
 
 (def previous-step-value (r/cursor store [:previous-step-value]))
+
+(defn time-nav [next-step]
+  [sc/surface-ab {:style {:margin-inline    "auto"
+                          :height           "auto"
+                          :width            "25rem"
+                          :box-shadow       "var(--shadow-4)"
+                          :background-color "var(--floating)"}}
+   [sc/col
+    [sc/row-center
+     [button/pill {:class [:large :round :message]}
+      [sc/icon (icon/adapt :refresh 1.8)]]
+
+     [timenav
+      {:class [:w-full]}
+      [:div.grid.place-content-center.gap-2.w-full
+       {:style {:grid-template-columns "repeat(4,min-content)"
+                :grid-auto-rows        "auto"}}
+       [sc/col {:class [:justify-self-start :self-end]
+                :style {:grid-column   "1/3"
+
+                        :grid-row      "1/1"
+                        :border-radius "var(--radius-0)"}}
+
+        [:input {:type "date" :value "2022-05-23"}]
+        [sc/field-label "Start"]]
+
+       [:div.justify-self-center.self-center.w-full
+        {:style {:grid-column "1/-1"
+                 :grid-row    "2"}}
+        [plus-minus-time start-time]]
+
+       [:div.justify-self-center.self-center.w-full
+        {:style {:grid-column "1/-1"
+                 :grid-row    "3"}}
+        [plus-minus-time end-time]]
+       [sc/col {:class [:self-start :justify-self-end]
+                :style {:grid-column   "1/-1"
+                        :grid-row      "4"
+                        :border-radius "var(--radius-0)"}}
+
+        [sc/field-label {:class [:text-right]} "Slutt"]
+        [:input {:type  "date"
+                 :value "2022-05-23"}]]
+       [:div]]]
+
+     [sc/col
+      {:class [:justify-center]
+       :style {:height "15rem"}}
+      [button/pill {:class    [:large :round :regular]
+                    :on-click #()}
+       [sc/icon ico/chevronDoubleRight]]]]
+
+    [sc/row-fields
+     [button/pill {:class    [:large :round :danger]
+                   :on-click next-step}
+      [sc/icon ico/closewindow]]
+     [button/pill {:class    [:large :round :cta]
+                   :on-click next-step}
+      [sc/icon ico/chevronDoubleRight]]]]])
+
+
+(defn card-confirm [prev-step]
+  [sc/surface-ab {:style {:margin-inline    "auto"
+                          :height           "auto"
+                          :width            "25rem"
+                          :box-shadow       "var(--shadow-4)"
+                          :background-color "var(--floating)"}}
+   [sc/co
+    [sc/row-sc-g2 {:style {:align-items :start
+                           :height      "100%"}}
+     [sc/col
+      {:class [:justify-center]
+       :style {:height "15rem"}}
+
+      [button/pill {:class    [:large :round :regular]
+                    :on-click #(do
+                                 (prev-step)
+                                 (.stopPropagation %))}
+       [sc/icon ico/panelOpen]]]
+     [:div.w-full.h-full
+      [sc/title "Bekreft"]]]
+    [sc/row-center
+     [button/regular
+      {:class    [:large :narrow :danger]
+       :on-click #(do
+                    (reset! selector :sjøbasen)
+                    (.stopPropagation %))}
+
+      "Avbryt"]
+     [button/cta
+      {:class    [:large :narrow :cta]
+       :on-click #(do
+                    (reset! selector :sjøbasen)
+                    (.stopPropagation %))}
+
+      "Bekreft"]
+     [:div.grow]
+     [button/pill {:class    [:large :round :regular]
+                   :on-click #()}
+      [sc/icon ico/panelOpen]]]]])
 
 (defn always-panel []
   (let [next-step #(do
@@ -181,10 +288,8 @@
                      (reset! previous-step-value @step)
                      (swap! step (fn [e] (mod (dec e) 3))))]
     [:div
-     {:class     [:sticky :top-32 :z-100 :space-y-4 :h-80x]
-      :xon-click next-step}
-     #_[l/pre {:step                @step
-               :previous-step-value @previous-step-value} @selector]
+     {:class [:sticky :top-20 :z-100 :space-y-4]}
+
      [sc/row-center {:class [:z-100]}
       [widgets/pillbar {:on-click #(if (= :booking @selector)
                                      (reset! step 0))
@@ -230,53 +335,7 @@
                        "-translate-x-full opacity-0"
                        "translate-x-full opacity-0")}
         [:<>
-         [sc/surface-ab {:style {:margin-inline    "auto"
-                                 :height           "auto"
-                                 :width            "25rem"
-                                 :box-shadow       "var(--shadow-4)"
-                                 :background-color "var(--floating)"}}
-          [sc/row-center
-           {:style {:class []}}
-           [button/pill {:class [:large :round :message]}
-            [sc/icon (icon/adapt :refresh 1.8)]]
-
-           [timenav
-            {:class [:w-full]}
-            [:div.grid.place-content-center.gap-2.w-full
-             {:style {:grid-template-columns "repeat(4,min-content)"
-                      :grid-auto-rows        "auto"}}
-             [sc/col {:class [:justify-self-start :self-end]
-                      :style {:grid-column   "1/3"
-                              :grid-row      "1/1"
-                              :border-radius "var(--radius-0)"}}
-
-              [:input {:type "date" :value "2022-05-23"}]
-              [sc/field-label "Start"]]
-
-             [:div.justify-self-center.self-center.w-full
-              {:style {:grid-column "1/-1"
-                       :grid-row    "2"}}
-              [plus-minus-time start-time]]
-
-             [:div.justify-self-center.self-center.w-full
-              {:style {:grid-column "1/-1"
-                       :grid-row    "3"}}
-              [plus-minus-time end-time]]
-             [sc/col {:class [:self-start :justify-self-end]
-                      :style {:grid-column   "1/-1"
-                              :grid-row      "4"
-                              :border-radius "var(--radius-0)"}}
-
-              [sc/field-label {:class [:text-right]} "Slutt"]
-              [:input {:type  "date"
-                       :value "2022-05-23"}]]
-             [:div]]]
-           [sc/col
-            {:class [:justify-center]
-             :style {:height "15rem"}}
-            [button/pill {:class    [:large :round :cta]
-                          :on-click next-step}
-             [sc/icon ico/chevronDoubleRight]]]]]]]]
+         [time-nav next-step]]]]
 
       [ui/transition
        {:show   (and (= :booking @selector)
@@ -296,39 +355,8 @@
                        "-translate-x-full opacity-0"
                        "translate-x-full opacity-0")}
         [:<>
-         [sc/surface-ab {:style {:margin-inline    "auto"
-                                 :height           "auto"
-                                 :width            "25rem"
-                                 :box-shadow       "var(--shadow-4)"
-                                 :background-color "var(--floating)"}}
-          [sc/co
-           [sc/row-sc-g2 {:style {:align-items :start
-                                  :height      "100%"}}
-            [:div.w-full.h-full
-             [sc/title "Bekreft"]]
-            [sc/col
-             {:class [:justify-center]
-              :style {:height "15rem"}}
-             [button/pill {:class    [:large :round :cta]
-                           :on-click #(do
-                                        (prev-step)
-                                        (.stopPropagation %))}
-              [sc/icon ico/panelOpen]]]]
-           [sc/row-center
-            [button/regular
-             {:class    [:large :narrow :danger]
-              :on-click #(do
-                           (next-step)
-                           (.stopPropagation %))}
+         [card-confirm prev-step]]]]]]))
 
-             "Avbryt"]
-            [button/cta
-             {:class    [:large :narrow :cta]
-              :on-click #(do
-                           (next-step)
-                           (.stopPropagation %))}
-
-             "Bekreft"]]]]]]]]]))
 
 ;;
 
@@ -458,54 +486,55 @@
               [sc/title1
                (or (schpaa.components.views/normalize-kind kind)
                    "Udefinert")]
-              (for [z r]
-                [:div.gap-1.w-full
-                 {:style {:display               :grid
-                          :grid-auto-rows        "auto"
-                          :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
-                 (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
-                   [:div.flex.flex-col.gap-2.w-full
-                    {:style {:padding          "var(--size-2)"
-                             :background-color "var(--floating)"
-                             :border-radius    "var(--radius-0)"}}
-                    [widgets/stability-name-category (dissoc (-> r first val) :kind)]
-                    ;todo toggle visibility via headerplugin
-                    [:div.flex.flex-col.xflex-wrap.gap-1
-                     (for [[idx v] (map-indexed vector (sort-by (juxt :slot :number) (map val r)))
-                           :let [{:keys [number slot work-log _navn _description]} v
-                                 work-log (count (remove (fn [[k v]] (or (:complete v)
-                                                                         (:deleted v))) work-log))]]
-                       (let [bool (rand-nth [true false])
-                             data (->> (make-series-of-abutting-elements
-                                         #(rand-int 96) #(+ 20 (rand-int 12)))
-                                       (drop 1)
-                                       (take 10)
-                                       ;(mapv digits->time)  !!!
-                                       (into []))
-                             start (* 10 8)
-                             end (* 16 8)]
-                         [sc/col
-                          [sc/row-sc-g2 {:style {:align-items "start"}}
-                           [widgets/badge
-                            {:class    [:small]
-                             :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                            (when (pos? work-log)
-                              work-log)
-                            (subs (str number) 0 3)
-                            slot]
-                           (when-not (pos? work-log)
-                             [:div.w-full [svg-time-graph idx bool data start end]])
-                           ;intent Device to accept/select boat for booking
-                           (when-not (pos? work-log)
-                             [:div.w-10x.h-10x.grid.place-content-center
-                              (if bool
-                                [:div.w-6.h-6 {:style {:color "var(--green-6)"}} (schpaa.icon/adapt :circle-check)]
-                                #_[button/pill
-                                   {}
-                                   [sc/icon ico/checkCircle]]
-                                [:div.grid.place-content-center
-                                 [:div.w-6.h-6.opacity-30 {:style {:color "var(--red-6)"}} (schpaa.icon/adapt :circle-filled)]]
-                                #_[:div.w-8.h-8])])]]))]])])]]))))
+              (into [:<>] (for [z r]
+                            [:div.gap-1.w-full
+                             {:style {:display               :grid
+                                      :grid-auto-rows        "auto"
+                                      :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
+                             (into [:<>] (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
+                                           [:div.flex.flex-col.gap-2.w-full
+                                            {:style {:padding          "var(--size-2)"
+                                                     :background-color "var(--floating)"
+                                                     :border-radius    "var(--radius-0)"}}
+                                            [widgets/stability-name-category (dissoc (-> r first val) :kind)]
+                                            ;todo toggle visibility via headerplugin
+                                            (into [:div.flex.flex-col.xflex-wrap.gap-1]
+                                                  (for [[idx v] (map-indexed vector (sort-by (juxt :slot :number) (map val r)))
+                                                        :let [{:keys [number slot work-log _navn _description]} v
+                                                              work-log (count (remove (fn [[k v]] (or (:complete v)
+                                                                                                      (:deleted v))) work-log))]]
+                                                    (let [bool (rand-nth [true false])
+                                                          data (->> (make-series-of-abutting-elements
+                                                                      #(rand-int 96) #(+ 20 (rand-int 12)))
+                                                                    (drop 1)
+                                                                    (take 4)
+                                                                    ;(mapv digits->time)  !!!
+                                                                    (into []))
+                                                          starts (or (some-> @start-time t/hour) 0)
+                                                          ends (or (some-> @end-time t/hour) 0)]
+                                                      [sc/col
+                                                       ;[l/pre starts ends]
+                                                       [sc/row-sc-g2 {:style {:align-items "start"}}
+                                                        [widgets/badge
+                                                         {:class    [:small]
+                                                          :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+                                                         (when (pos? work-log)
+                                                           work-log)
+                                                         (subs (str number) 0 3)
+                                                         slot]
+                                                        (when-not (pos? work-log)
+                                                          [:div.w-full [svg-time-graph idx bool data (* 8 starts) (* 8 ends)]])
+                                                        ;intent Device to accept/select boat for booking
+                                                        (when-not (pos? work-log)
+                                                          [:div.w-10x.h-10x.grid.place-content-center
+                                                           (if bool
+                                                             [:div.w-6.h-6 {:style {:color "var(--green-6)"}} (schpaa.icon/adapt :circle-check)]
+                                                             #_[button/pill
+                                                                {}
+                                                                [sc/icon ico/checkCircle]]
+                                                             [:div.grid.place-content-center
+                                                              [:div.w-6.h-6.opacity-30 {:style {:color "var(--red-6)"}} (schpaa.icon/adapt :circle-filled)]]
+                                                             #_[:div.w-8.h-8])])]])))]))]))]]))))
 
 (defmethod render-list :b [_ r]
   (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <

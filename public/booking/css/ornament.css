@@ -1050,4 +1050,4 @@ body {
 .booking_common-widgets__debug{outline:1px solid red}
 .booking_common-widgets__odebug{outline:1px solid red}
 .booking_timegraph__some_thing{height:2rem;overflow:clip;cursor:pointer;background-color:var(--floating)}
-.booking_lab__timenav input{border-radius:var(--radius-0);transition-duration:50ms;border:2px solid var(--text2);padding-block:.25rem;padding-inline:.25rem}.booking_lab__timenav input:focus{outline:2px solid transparent;outline-offset:2px}.booking_lab__timenav input:enabled:active:hover,.booking_lab__timenav input:enabled:focus-visible{box-shadow:0 0 0 3px var(--selected)}
+.booking_lab__timenav input{transition-duration:50ms;border:2px solid var(--text2);height:2rem;xpadding-block:.25rem;padding-inline:.25rem}.booking_lab__timenav input:focus{outline:2px solid transparent;outline-offset:2px}.booking_lab__timenav input:enabled:active:hover,.booking_lab__timenav input:enabled:focus-visible{box-shadow:0 0 0 3px var(--selected)}

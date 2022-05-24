@@ -572,8 +572,8 @@
    (let [f (fn [[k v]]
              (let [a (merge-with into {:class    [:normal (when (= k @c) :inverse)]
                                        :on-click #(do
-                                                    (if (= k @c)
-                                                      (reset! c nil)
+                                                    (if-not (= k @c)
+                                                      ;(reset! c nil)
                                                       (reset! c k))
                                                     (when-let [f (:on-click attr)]
                                                       (f @c)))}
