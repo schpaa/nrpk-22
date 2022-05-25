@@ -11,7 +11,8 @@
             [tick.core :as t]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [re-frame.core :as rf]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [schpaa.style.hoc.buttons :as button]))
 
 (comment
   (do
@@ -417,8 +418,8 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [schpaa.style.hoc.buttons/cta-pill-icon {} ico/plus "HMS-hendelse"]
-   [schpaa.style.hoc.buttons/reg-pill-icon {} ico/plus "Skade på materiell"]])
+   [button/cta-pill-icon {} ico/plus "HMS-hendelse"]
+   [button/reg-pill-icon {} ico/plus "Skade på materiell"]])
 
 (defn panel []
   ;(when @(rf/subscribe [:lab/nokkelvakt]))

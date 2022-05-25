@@ -15,6 +15,7 @@
         member? (rf/subscribe [:lab/member])
         ipad? (= uid @(db/on-value-reaction {:path ["system" "active"]}))
         registered? (rf/subscribe [:lab/at-least-registered])
+        booking? (rf/subscribe [:lab/booking])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
     [(when goog.DEBUG
@@ -49,13 +50,6 @@
         #_#(rf/dispatch [:app/navigate-to [:r.min-status]])
         :page-name    #(some #{%} [:r.min-status :r.user])})
 
-     #_(when (or @admin? @booking?)
-         {:icon-fn      (fn [] (sc/icon-large ico/booking))
-          :caption      "Booking Sjøbasen"
-          :default-page :r.booking
-          :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
-          :page-name    :r.booking})
-
      (when (or @admin? @nokkelvakt ipad?)
        {:icon-fn      #(-> ico/mystery1)
         :disabled     false
@@ -70,6 +64,13 @@
         :on-click     #(rf/dispatch [:app/navigate-to [:r.nokkelvakt]])
         :default-page :r.nokkelvakt
         :page-name    :r.nokkelvakt})
+
+     (when (or @admin? @booking?)
+       {:icon-fn      (fn [] (sc/icon-large ico/booking))
+        :caption      "Booking Sjøbasen"
+        :default-page :r.booking
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name    :r.booking})
 
      (when (or @member? @admin? @registered?)
        {:icon-fn      (fn [] (sc/icon-large ico/yearwheel))
@@ -139,11 +140,18 @@
       :class         #(if (= % :r.oversikt) :oversikt :active)
       :page-name     #(some #{%} [:r.forsiden :r.oversikt])}
 
-     (when booking?
-       {:icon          ico/booking
-        :short-caption "Booking"
-        :icon-disabled ico/booking-disabled
-        :disabled      true})
+     (when (or @admin? @booking?)
+       {:icon-fn      (fn [] ico/booking)
+        :caption      "Booking Sjøbasen"
+        :default-page :r.booking
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name    :r.booking})
+
+     #_(when booking?
+         {:icon          ico/booking
+          :short-caption "Booking"
+          :icon-disabled ico/booking-disabled
+          :disabled      false})
 
      {:icon-fn       (fn [_] (let [st @(rf/subscribe [:lab/modal-selector])]
                                (if st ico/commandPaletteOpen ico/commandPaletteClosed)))

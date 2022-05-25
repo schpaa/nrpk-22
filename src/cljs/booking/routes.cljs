@@ -129,7 +129,7 @@
      :shorttitle "Sjøbasen"
      :icon       ico/booking
      :access     [[:member] #{:admin}]
-     :header     [[:r.båtliste.sjøbasen] "Utlånslogg på sjøbasen"]}]
+     :header     [[:r.båtliste.sjøbasen] "Bookinglogg"]}]
 
    ["/booking/oversikt"
     {:name   :r.booking.oversikt

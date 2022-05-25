@@ -433,7 +433,7 @@
         #_[widgets/favourites-star
            {:bt-data       bt-data
             :ex-data       ex-data
-            :on-star-click (fn [boat-type value]
+            :on-flag-click (fn [boat-type value]
                              (rf/dispatch [:star/write-star-change
                                            {:boat-type boat-type
                                             :value     value
@@ -452,7 +452,7 @@
               [widgets/favourites-star
                {:bt-data       bt-data
                 :ex-data       ex-data
-                :on-star-click (fn [boat-type value]
+                :on-flag-click (fn [boat-type value]
                                  (rf/dispatch [:star/write-star-change
                                                {:boat-type boat-type
                                                 :value     value

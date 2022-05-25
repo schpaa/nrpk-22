@@ -160,7 +160,7 @@
                                   3 "var(--red-7)"} (js/parseInt stability) :white)}]
     [:circle {:cx 0 :cy 0 :r 1 :fill (if expert :red :transparent)}]]])
 
-(defn favourites-star' [{:keys [on-star-click]}
+(defn favourites-star' [{:keys [on-flag-click]}
                         {:keys [id boat-type] :as m}]
   (let [uid (some-> @(rf/subscribe [:lab/uid]) name)
         ;_ (tap> {:boat-type id})
@@ -183,10 +183,10 @@
         @bt-data])
      (if id
        [sc/icon-small
-        {:on-click #(on-star-click boat-type (not ex-data) uid)}
+        {:on-click #(on-flag-click boat-type (not ex-data) uid)}
         (if ex-data ico/ikkeStjerne ico/stjerne)]
        [sc/icon-small
-        {:on-click #(on-star-click boat-type (or (not ex-data) true) uid)}
+        {:on-click #(on-flag-click boat-type (or (not ex-data) true) uid)}
         ico/stjerne])]))
 
 (defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
@@ -201,11 +201,30 @@
                        :text-overflow :ellipsis
                        :white-space   :nowrap}} navn]
     [:div.grow]
-    [favourites-star' {:on-star-click (fn [boat-type value uid]
+    [favourites-star' {:on-flag-click (fn [boat-type value uid]
                                         (rf/dispatch [:star/write-star-change
                                                       {:boat-type boat-type
                                                        :value     value
                                                        :uid       uid}]))} m]]])
+
+(defn stability-name-category-front-flag [{:keys [stability expert navn kind] :as m}]
+  [sc/col {:class [:truncate :space-y-pxx :w-full]}
+   (when kind
+     [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])
+   [:div.flex.items-center.justify-start.gap-1
+
+    [favourites-star'
+     {:on-flag-click (fn [boat-type value uid]
+                       (rf/dispatch [:star/write-star-change
+                                     {:boat-type boat-type
+                                      :value     value
+                                      :uid       uid}]))}
+     m]
+    (when (or stability expert) [stability-expert m])
+    [sc/text1 {:style {:overflow      :hidden
+                       :text-overflow :ellipsis
+                       :white-space   :nowrap}} navn]]])
+
 
 (defn stability-name-category' [{:keys [url? k reversed?]}
                                 {:keys [stability expert navn kind] :as m}]
@@ -224,7 +243,7 @@
                                                            :white-space   :nowrap}} %)}))
 
     [:div.grow]
-    [favourites-star' {:on-star-click (fn [boat-type value uid]
+    [favourites-star' {:on-flag-click (fn [boat-type value uid]
                                         (rf/dispatch [:star/write-star-change
                                                       {:boat-type boat-type
                                                        :value     value
@@ -233,35 +252,24 @@
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
-    (if mobile?
-      [button/reg-icon
-       {:on-click #(on-click)
-        :class    [(if deleted? :frame :danger) :round]
-        :disabled false}
-       (if deleted? ico/rotate-left ico/trash)]
+    [button/reg-pill-icon
+     {:on-click #(on-click)
+      :class    [(if deleted? :frame :danger)
+                 (if mobile? :round)]
+      :disabled false}
+     (sc/icon-small (if deleted? ico/rotate-left ico/trash))
+     (when-not mobile? caption)]))
 
-      [button/reg-pill-icon
-       {:on-click #(on-click)
-        :class    [(if deleted? :frame :danger)]
-        :disabled false}
-       (if deleted? ico/rotate-left ico/trash)
-       caption])))
-
-(defn in-out' [{:keys [on-click deleted?]} caption]
+(defn in-out [all-returned? {:keys [on-click deleted?]} caption]
   (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
-    (if mobile?
-      [button/reg-icon
-       {:on-click #(on-click)
-        :class    [(if deleted? :outline2 :cta) :round]
-        :disabled false}
-       ico/status]
-
-      [button/reg-pill-icon
-       {:on-click #(on-click)
-        :class    [(if deleted? :outline2 :cta)]
-        :disabled false}
-       ico/status
-       caption])))
+    [button/reg-pill-icon
+     {:on-click #(on-click)
+      :class    [(if deleted? :frame)
+                 (if mobile? :round)
+                 (if all-returned? :regular :cta)]
+      :disabled false}
+     (sc/icon-small ico/status)
+     (when-not mobile? caption)]))
 
 (defn trashcan [on-click {:keys [deleted id]}]
   [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
@@ -284,17 +292,11 @@
                 :on-click #(on-click m)})]
     (if deleted
       [:div.w-8]
-      (if mobile?
-        [button/reg-icon attr
-         [sc/icon-small
-          {:style {:xcolor "var(--blue-0)"}}
-          ico/pencil]]
-
-        [button/reg-pill-icon attr
-         [sc/icon-small
-          {:style {:xcolor "var(--blue-0)"}}
-          ico/pencil]
-         "Endre"]))))
+      [button/reg-pill-icon attr
+       [sc/icon-small
+        {:style {:xcolor "var(--blue-0)"}}
+        ico/pencil]
+       (when-not mobile? "Endre")])))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}
@@ -711,8 +713,8 @@
       ;text
       [:div.absolute.inset-0
        [sc/col {:class [:gap-y-1]
-                :style {:height "100%"
-                        :padding-block "1rem"}} ;:div.flex.flex-col.h-full.items-center.justify-center.min-w-fit.gap-y-1
+                :style {:height        "100%"
+                        :padding-block "1rem"}}             ;:div.flex.flex-col.h-full.items-center.justify-center.min-w-fit.gap-y-1
         ;{:style {:justify-content :center}}
 
         (centerline (degrees-celsius {:class []
@@ -766,24 +768,26 @@
                {:style {:align-items :end :justify-content :start}}
                (when-not ipad?
                  [:div
-                  [button/round-pill
+                  [button/reg-pill-icon
                    {:class    [:message :narrow]
                     :on-click #(do
                                  (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
                                  (db/database-update {:path  ["system"]
                                                       :value {"active" @user-uid}}))}
+                   ico/exclamation
                    "Bli til Båtlogg"]])
 
                (when @(rf/subscribe [:lab/admin-access])
                  [:div
-                  [button/round-pill
+                  [button/reg-pill-icon
                    {:class    [:danger :narrow]
                     :on-click #(db/database-update {:path  ["system"]
                                                     :value {"timestamp" booking.data/DATE}})}
+                   ico/exclamation
                    "Aktiver!"]])
 
                [:div
-                [button/pill-icon-caption
+                [button/reg-pill-icon
                  {:class    [:narrow :frame]
                   :style    {:color        "var(--gray-1)"
                              :border-color "var(--gray-1)"}

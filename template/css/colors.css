@@ -267,7 +267,7 @@ outline: 2px solid #a0a8;
     --textmarker-light:var(--gray-9);
     --textmarker-dim:var(--gray-9);
     --text0-dim: var(--gray-1);
-    --text0-copy-dim: var(--gray-9);
+    --text0-copy-dim: var(--gray-0);
     --text1-dim: var(--gray-2);
     --text1-copy-dim: var(--gray-8);
     --text2-dim: var(--gray-4);

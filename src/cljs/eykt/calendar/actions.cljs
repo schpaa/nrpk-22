@@ -56,15 +56,15 @@
                         (some-> (get-in @last-write [:registered]) t/date-time)
                         (some-> @last-write t/date-time))]
     (database-update {:path  path
-                      :value {:registered (str last-write-dt)
-                              :cancel     (str (t/date-time))}})))
+                      :value {:registered    (str last-write-dt)
+                              :action/cancel (str (t/date-time))}})))
 
 (defn deltar [{:keys [uid section timeslot]}]
   (let [uid (some-> uid name)
         timeslot (some-> timeslot name)
         path ["calendar" uid section timeslot uid]]
     (database-update {:path  path
-                      :value {:cancel nil}})))
+                      :value {:action/cancel nil}})))
 
 (comment
   @a)

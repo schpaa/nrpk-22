@@ -93,7 +93,7 @@
 
 (defn- occupied-slot [uid [this-uid status]]
   (let [owner? (= this-uid uid)
-        cancelled? (and (map? status) (:cancel status))
+        cancelled? (and (map? status) (:action/cancel status))
         path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
     [taken-user-slot
      {:class    [(if cancelled? :cancelled (when owner? :owner))]
@@ -208,7 +208,7 @@
                                 [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
                                                                       alle-regs-i-denne-periodegruppen))
                                 slots-free (- slots (count #_slots-on-this-eykt
-                                                           (remove (comp :cancel second) slots-on-this-eykt)))]
+                                                      (remove (comp :action/cancel second) slots-on-this-eykt)))]
                           :when (if (and (not (= idx 1))
                                          show-only-available?)
                                   (or (pos? slots-free) (get-in base [section uid starttime-key]))

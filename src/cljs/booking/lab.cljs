@@ -5,6 +5,8 @@
             [db.core :as db]
             [db.auth]
             [schpaa.style.ornament :as sc]
+            [booking.styles-cljc :as sc-cljc]
+            [booking.styles :as bs]
             [schpaa.style.booking]
             [booking.data]
             [schpaa.style.menu]
@@ -27,85 +29,157 @@
             [schpaa.icon :as icon]
             [headlessui-reagent.core :as ui]))
 
-(defonce store (r/atom {:selector            :sjøbasen
-                        :previous-step-value nil
-                        :step                nil
-                        :current-filter      nil
-                        :category            #{"kano" "surfski" "sup"}}))
+;; store
+
+(defonce store
+         (r/atom {:selector            :sjøbasen
+                  :show-flagged        true
+                  :previous-step-value nil
+                  :step                0
+                  :current-filter      nil
+                  :category            #{"kano" "surfski" "sup"}}))
+
+;; accessors/cursors
 
 (def selector (r/cursor store [:selector]))
+(def selection (r/cursor store [:selection]))
 (def category (r/cursor store [:category]))
 (def current-filter (r/cursor store [:current-filter]))
 (def step (r/cursor store [:step]))
+(def previous-step-value (r/cursor store [:previous-step-value]))
+(def show-flagged (r/cursor store [:show-flagged]))
 
-(defonce settings (r/atom nil))
+;; selection
 
-(def show-stars (r/cursor settings [:rent/show-details]))
+(defn- toggle [id]
+  (swap! store
+         update-in [:selection]
+         (fn [e]
+           (if (some #{id} e)
+             (set/difference e #{id})
+             (set/union e #{id})))))
 
-;region temporary, perhaps for later
+(defn- clear-selection [r]
+  (tap> {:r r})
+  (when r
+    (let [x (set (map (comp :id val) r))
+          _ (tap> [(count x) x])
+          this-group (remove nil? (map @selection x))
+          _ (tap> this-group)]
+      (button/reg-pill-icon
+        {:disabled (zero? (count this-group))
+         :on-click #(reset! selection (set/difference @selection x))
+         :class    [:round :inverse :shrink-0]}
+        ico/closewindow))))
 
-(rf/reg-event-db :lab/show-popover (fn [db]
-                                     (tap> (:lab/show-popover db))
-                                     (update db :lab/show-popover (fnil not false))))
-(rf/reg-sub :lab/show-popover (fn [db] (get db :lab/show-popover false)))
+(defn- select-all-in-group [r]
+  (button/reg-pill-icon
+    {:disabled (every? (set @selection) (vals r))
+     :on-click #(doseq [e (map :id (vals r))]
+                  (toggle e))
+     :class    [:round :cta :shrink-0]}
+    ico/check))
 
-;endregion
 
-(defn time-input-validation [e]
-  (into {} (remove (comp nil? val)
-                   {:start-date (cond-> nil
-                                  (empty? (:start-date e)) ((fnil conj []) "mangler")
-                                  (and (not (empty? (:start-date e)))
-                                       (some #{(tick.alpha.interval/relation
-                                                 (t/date (:start-date e)) (t/date))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+#_(defn time-input-validation [e]
+    (into {} (remove (comp nil? val)
+                     {:start-date (cond-> nil
+                                    (empty? (:start-date e)) ((fnil conj []) "mangler")
+                                    (and (not (empty? (:start-date e)))
+                                         (some #{(tick.alpha.interval/relation
+                                                   (t/date (:start-date e)) (t/date))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
 
-                    :start-time (cond-> nil
-                                  (empty? (:start-time e)) ((fnil conj []) "mangler")
-                                  (and (not (empty? (:start-date e)))
-                                       (not (empty? (:start-time e)))
-                                       (some #{(tick.alpha.interval/relation
-                                                 (t/at (t/date (:start-date e)) (t/time (:start-time e)))
-                                                 (t/date-time (t/now)))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
-                    :end-time   (cond-> nil
-                                  (empty? (:end-time e)) ((fnil conj []) "mangler")
-                                  (and (not (empty? (:start-date e)))
-                                       (not (empty? (:end-time e)))
-                                       (some #{(tick.alpha.interval/relation
-                                                 (t/at (t/date (:end-date e)) (t/time (:end-time e)))
-                                                 (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "er før 'fra kl'"))})))
+                      :start-time (cond-> nil
+                                    (empty? (:start-time e)) ((fnil conj []) "mangler")
+                                    (and (not (empty? (:start-date e)))
+                                         (not (empty? (:start-time e)))
+                                         (some #{(tick.alpha.interval/relation
+                                                   (t/at (t/date (:start-date e)) (t/time (:start-time e)))
+                                                   (t/date-time (t/now)))} [:precedes :meets])) ((fnil conj []) "er i fortiden"))
+                      :end-time   (cond-> nil
+                                    (empty? (:end-time e)) ((fnil conj []) "mangler")
+                                    (and (not (empty? (:start-date e)))
+                                         (not (empty? (:end-time e)))
+                                         (some #{(tick.alpha.interval/relation
+                                                   (t/at (t/date (:end-date e)) (t/time (:end-time e)))
+                                                   (t/at (t/date (:start-date e)) (t/time (:start-time e))))} [:precedes :meets])) ((fnil conj []) "er før 'fra kl'"))})))
 
-(defn time-input-form [time-state]
-  (r/with-let [lightning-visible (r/atom nil)]
-    (let [toggle-lightning #(swap! lightning-visible (fnil not false))]
-      [fork/form {:initial-values    {:start-date  (str (t/new-date))
-                                      :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
-                                      ;todo adjust for 22-23
-                                      :end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 3 :hours)) :hours))
-                                      :end-date    (str (t/new-date))
-                                      :id          0
-                                      :description ""}
-                  :form-id           "sample-form"
+#_(defn time-input-form [time-state]
+    (r/with-let [lightning-visible (r/atom nil)]
+      (let [toggle-lightning #(swap! lightning-visible (fnil not false))]
+        [fork/form {:initial-values    {:start-date  (str (t/new-date))
+                                        :start-time  (str (t/truncate (t/>> (t/time) (t/new-duration 1 :hours)) :hours))
+                                        ;todo adjust for 22-23
+                                        :end-time    (str (t/truncate (t/>> (t/time) (t/new-duration 3 :hours)) :hours))
+                                        :end-date    (str (t/new-date))
+                                        :id          0
+                                        :description ""}
+                    :form-id           "sample-form"
 
-                  :prevent-default?  true
-                  :state             time-state
-                  :clean-on-unmount? true
-                  :keywordize-keys   true
-                  :on-submit         (fn [e] (tap> {:on-submit e}))
-                  :validation        time-input-validation}
+                    :prevent-default?  true
+                    :state             time-state
+                    :clean-on-unmount? true
+                    :keywordize-keys   true
+                    :on-submit         (fn [e] (tap> {:on-submit e}))
+                    :validation        time-input-validation}
 
-       (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
-         [:form.space-y-1.w-full
-          {:class     [(when @lightning-visible :shadow-sm)]
-           :id        form-id
-           :on-submit handle-submit}
-          [booking.views/time-input props false]])])))
+         (fn [{:keys [errors form-id handle-submit handle-change values set-values] :as props}]
+           [:form.space-y-1.w-full
+            {:class     [(when @lightning-visible :shadow-sm)]
+             :id        form-id
+             :on-submit handle-submit}
+            [booking.views/time-input props false]])])))
 
-(rf/reg-event-fx :lab/qr-code-for-current-page
-                 (fn [_ _]
-                   (when-let [link @(rf/subscribe [:kee-frame/route])]
-                     (booking.qrcode/show link))))
+;; styles
 
-;;
+(def start-time (r/cursor store [:booking/start]))
+
+(def end-time (r/cursor store [:booking/end]))
+
+;; utils
+
+(defn digits->time [[a b]]
+  (let [ref (t/at (t/today) (t/midnight))]
+    [(t/>> ref (t/new-duration (* 15 a) :minutes))
+     (t/>> ref (t/new-duration (* 15 b) :minutes))]))
+
+;; actions
+
+(defn cancel-booking [cancel]
+  [button/regular
+   {:class    [:large :narrow :danger]
+    :on-click cancel}
+   "Avbryt"])
+
+(defn cancel-booking' [cancel]
+  [button/pill
+   {:class    [:large :round :danger]
+    :on-click cancel}
+   [sc/icon ico/closewindow]])
+
+(defn confirm-booking [complete]
+  [button/cta
+   {:class    [:large :narrow :cta]
+    :on-click complete}
+   "Bekreft"])
+
+(defn confirm-booking' [complete]
+  [button/pill {:class    [:large :round :cta]
+                :on-click complete}
+   [sc/icon ico/check]])
+
+(defn previous-step [prev-step]
+  [button/pill {:class    [:large :round :regular]
+                :on-click prev-step}
+   [sc/icon ico/prevStep]])
+
+(defn next-step' [next-step]
+  [button/pill {:class    [:large :round :cta]
+                :disabled (empty? @selection)
+                :on-click next-step}
+   [sc/icon ico/nextStep]])
+
+;; user-interface
 
 (defn headline-plugin []
   (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
@@ -119,10 +193,10 @@
                       [:div.relative
                        [button/reg-pill
                         {:class    [:large (if details-mode? :message :clear)]
-                         :style    {:background-color (if @show-stars "var(--yellow-6)" "transparent")}
-                         :on-click #(swap! show-stars (fnil not false))}
+                         :style    {:background-color (if @show-flagged "var(--yellow-6)" "transparent")}
+                         :on-click #(swap! show-flagged (fnil not false))}
 
-                        [sc/icon-large {:style {:color (when @show-stars "var(--gray-9)")}}
+                        [sc/icon-large {:style {:color (when @show-flagged "var(--gray-9)")}}
                          ico/stjerne]]
                        [:div.absolute.-bottom-1.right-1.pointer-events-none
                         [:div.px-1x.h-4.grid.place-content-center
@@ -131,31 +205,17 @@
                                   :border-radius "var(--radius-round)"}}
                          [sc/small {:style {:color "var(--floating)"}
                                     :class [:bold]} (count c)]]]]]))))
-             [button/reg-pill
-              {:class    [:large
-                          (if delete-mode? :danger :clear)]
-               :on-click #(swap! (r/cursor settings [:rent/show-deleted]) not)}
-              [sc/icon-large ico/trash]]])))
-
-(o/defstyled timenav :div
-  [:input
-   ;sc/small-rounded
-   scb2/focus-button
-   {:border         "2px solid var(--text2)"
-    :height         "2rem"
-
-    :xpadding-block "0.25rem"
-    :padding-inline "0.25rem"}
-   [:focus]])
-
-(def start-time (r/cursor settings [:rent/start-time]))
-(def end-time (r/cursor settings [:rent/end-time]))
+             #_[button/reg-pill
+                {:class    [:large
+                            (if delete-mode? :danger :clear)]
+                 :on-click #(swap! (r/cursor store [:rent/show-deleted]) not)}
+                [sc/icon-large ico/trash]]])))
 
 (defn plus-minus-time [time]
   (let [has-time (some? @time)]
     [sc/row-sc-g1
 
-     [button/pill-icon-caption
+     [button/reg-pill-icon
       {:on-click #(do
                     (reset! time (-> (t/<< (t/time @time) (t/new-duration 1 :hours))
                                      (t/truncate :hours)))
@@ -167,7 +227,7 @@
       [sc/icon-small ico/minus]]
 
      [:input {:type "time" :value @time :on-change #(reset! time (.. % -target -value))}]
-     [button/pill-icon-caption
+     [button/reg-pill-icon
       {:on-click #(do
                     (reset! time (-> (t/>> (some-> @time t/time) (t/new-duration 1 :hours))
                                      (t/truncate :hours)))
@@ -178,107 +238,89 @@
        :class    [:inverse :left-square :narrow]}
       [sc/icon-small ico/plus]]]))
 
-(def previous-step-value (r/cursor store [:previous-step-value]))
+;; forms
 
-(defn time-nav [next-step]
-  [sc/surface-ab {:style {:margin-inline    "auto"
-                          :height           "auto"
-                          :width            "25rem"
-                          :box-shadow       "var(--shadow-4)"
-                          :background-color "var(--floating)"}}
-   [sc/col
-    [sc/row-center
-     [button/pill {:class [:large :round :message]}
-      [sc/icon (icon/adapt :refresh 1.8)]]
+(defn form-date-and-time [{:action/keys [action/next-step action/cancel]}]
+  [:<>
+   [bs/popup-frame
+    [sc/co
+     [sc/row-fields
+      [:div]
+      (next-step' next-step)]
 
-     [timenav
-      {:class [:w-full]}
-      [:div.grid.place-content-center.gap-2.w-full
-       {:style {:grid-template-columns "repeat(4,min-content)"
-                :grid-auto-rows        "auto"}}
-       [sc/col {:class [:justify-self-start :self-end]
-                :style {:grid-column   "1/3"
+     [sc/row-center
+      [bs/timenav
+       {:class [:w-full]}
+       [:div.grid.place-content-center.gap-2.w-full
+        {:style {:grid-template-columns "repeat(4,min-content)"
+                 :grid-auto-rows        "auto"}}
+        [sc/col {:class [:justify-self-start :self-end]
+                 :style {:grid-column   "1/3"
 
-                        :grid-row      "1/1"
-                        :border-radius "var(--radius-0)"}}
+                         :grid-row      "1/1"
+                         :border-radius "var(--radius-0)"}}
 
-        [:input {:type "date" :value "2022-05-23"}]
-        [sc/field-label "Start"]]
+         [:input {:type "date" :value "2022-05-23"}]
+         [sc/field-label "Start"]]
 
-       [:div.justify-self-center.self-center.w-full
-        {:style {:grid-column "1/-1"
-                 :grid-row    "2"}}
-        [plus-minus-time start-time]]
+        [:div.justify-self-center.self-center.w-full
+         {:style {:grid-column "1/-1"
+                  :grid-row    "2"}}
+         [plus-minus-time start-time]]
 
-       [:div.justify-self-center.self-center.w-full
-        {:style {:grid-column "1/-1"
-                 :grid-row    "3"}}
-        [plus-minus-time end-time]]
-       [sc/col {:class [:self-start :justify-self-end]
-                :style {:grid-column   "1/-1"
-                        :grid-row      "4"
-                        :border-radius "var(--radius-0)"}}
+        [:div.justify-self-center.self-center.w-full
+         {:style {:grid-column "1/-1"
+                  :grid-row    "3"}}
+         [plus-minus-time end-time]]
+        [sc/col {:class [:self-start :justify-self-end]
+                 :style {:grid-column   "1/-1"
+                         :grid-row      "4"
+                         :border-radius "var(--radius-0)"}}
 
-        [sc/field-label {:class [:text-right]} "Slutt"]
-        [:input {:type  "date"
-                 :value "2022-05-23"}]]
-       [:div]]]
+         [sc/field-label {:class [:text-right]} "Slutt"]
+         [:input {:type  "date"
+                  :value "2022-05-23"}]]
+        [:div]]]]
 
-     [sc/col
-      {:class [:justify-center]
-       :style {:height "15rem"}}
-      [button/pill {:class    [:large :round :regular]
-                    :on-click #()}
-       [sc/icon ico/chevronDoubleRight]]]]
+     [sc/row-fields
+      (cancel-booking' cancel)]]]])
 
-    [sc/row-fields
-     [button/pill {:class    [:large :round :danger]
-                   :on-click next-step}
-      [sc/icon ico/closewindow]]
-     [button/pill {:class    [:large :round :cta]
-                   :on-click next-step}
-      [sc/icon ico/chevronDoubleRight]]]]])
+(defn form-confirm [{:action/keys [prev-step complete action/cancel]}]
+  [:<>
+   [bs/popup-frame 
+    [sc/co
+     [sc/row-fields
+      (previous-step prev-step)
+      (confirm-booking' complete)]
 
+     [sc/row-sc-g2 {:style {:align-items :start
+                            :height      "100%"}}
+      [sc/col
+       {:class [:justify-center]
+        :style {:height "100%"
+                :width  "100%"}}
+       [:div.w-full.h-full
+        [sc/title1 "Bekreft booking"]
+        [l/pre (count @selection)]]]]
 
-(defn card-confirm [prev-step]
-  [sc/surface-ab {:style {:margin-inline    "auto"
-                          :height           "auto"
-                          :width            "25rem"
-                          :box-shadow       "var(--shadow-4)"
-                          :background-color "var(--floating)"}}
-   [sc/co
-    [sc/row-sc-g2 {:style {:align-items :start
-                           :height      "100%"}}
-     [sc/col
-      {:class [:justify-center]
-       :style {:height "15rem"}}
+     [sc/row-fields
+      (cancel-booking' cancel)]]]])
 
-      [button/pill {:class    [:large :round :regular]
-                    :on-click #(do
-                                 (prev-step)
-                                 (.stopPropagation %))}
-       [sc/icon ico/panelOpen]]]
-     [:div.w-full.h-full
-      [sc/title "Bekreft"]]]
-    [sc/row-center
-     [button/regular
-      {:class    [:large :narrow :danger]
-       :on-click #(do
-                    (reset! selector :sjøbasen)
-                    (.stopPropagation %))}
+;;
 
-      "Avbryt"]
-     [button/cta
-      {:class    [:large :narrow :cta]
-       :on-click #(do
-                    (reset! selector :sjøbasen)
-                    (.stopPropagation %))}
-
-      "Bekreft"]
-     [:div.grow]
-     [button/pill {:class    [:large :round :regular]
-                   :on-click #()}
-      [sc/icon ico/panelOpen]]]]])
+(defn- transition-map [p]
+  {:class      [:absolute :top-0 :w-fullx :mx-auto :-mt-16  :-debug2]
+   :enter      "ease-in-out duration-300 transform -mt-16"
+   :enter-from (if p
+                 "translate-x-full"
+                 "-translate-x-full")
+   :enter-to   "translate-x-0 -mt-16"
+   :entered    "-mt-16  pointer-events-auto"
+   :leave      "ease-in-out duration-300 -mt-16"
+   :leave-from "translate-x-0 opacity-200"
+   :leave-to   (if p
+                 "-mt-16 translate-x-full opacity-0 pointer-events-none"
+                 "-mt-16 -translate-x-full opacity-0 pointer-events-none")})
 
 (defn always-panel []
   (let [next-step #(do
@@ -286,79 +328,80 @@
                      (swap! step (fn [e] (mod (inc e) 3))))
         prev-step #(do
                      (reset! previous-step-value @step)
-                     (swap! step (fn [e] (mod (dec e) 3))))]
-    [:div
-     {:class [:sticky :top-20 :z-100 :space-y-4]}
-
+                     (swap! step (fn [e] (mod (dec e) 3))))
+        complete #(do
+                    (reset! selector :sjøbasen)
+                    (reset! step 0))
+        cancel #(do (reset! selector :sjøbasen)
+                    (reset! step 0))]
+    [:div.pointer-events-none
+     {:class [:sticky :top-24 :z-100 :space-y-8]}
+     ;[l/pre @store]
      [sc/row-center {:class [:z-100]}
-      [widgets/pillbar {:on-click #(if (= :booking @selector)
-                                     (reset! step 0))
-                        :class    [:small]}
-       selector
-       [[:nøklevann "Nøklevann"]
-        [:sjøbasen "Sjøbasen"]
-        [:booking "Booking"]]]]
-     [:div.relative
+      [sc/col-space-8
+
+       [widgets/pillbar {:on-click nil #_#(if (= :booking @selector)
+                                            (reset! step 0))
+                         :class    [:large]}
+        selector
+        [[:nøklevann "Nøklevann"]
+         [:sjøbasen "Sjøbasen"]]]
+
+       [sc/row-center
+        (if (= :sjøbasen @selector)
+          [button/pill-icon-caption
+           {:style    {:box-shadow "var(--shadow-2)"}
+            :class    [:large :cta :narrow]
+            :on-click #(case @selector
+                         :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
+                         :sjøbasen (reset! step 1))}
+           ico/plus
+           "Ny booking"]
+          [button/pill-icon-caption
+           {:style    {:box-shadow "var(--shadow-2)"}
+            :class    [:large :cta :narrow]
+            :on-click #(case @selector
+                         :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
+                         :sjøbasen (reset! step 1))}
+           ico/plus
+           "Nytt utlån"])]]]
+
+     [:div.relative.pointer-events-nonex
       {:class [:z-100 :w-full]}
 
       ;spacer
       [ui/transition
-       ;when step = 1
-       {:show       (and (= :booking @selector)
-                         (= 0 @step))
-        :class      [:w-full]
+       {:show       (and                                    ;(= :sjøbasen @selector)
+                      ;(= 2 @previous-step-value)
+                      (= 1 @step))
+        :class      [:w-full :h-64 :pointer-events-nonex]
         :enter      "ease-in-out duration-500 transform transition-height"
         :enter-from "h-0"
         :enter-to   "h-64"
-        :entered    "h-64"
+        :entered    "h-64 pointer-events-nonex"
         :leave      "ease-in-out duration-500 transform transition-height"
         :leave-from "h-64"
         :leave-to   "h-0"}
-       [:<> [:div]]]
+       [:<> [:div.h-full.w-full]]]
 
       [ui/transition
-       {:show    (and (= :booking @selector)
-                      (= 0 @step))
-        :xappear true}
-       [ui/transition-child
-        ;when step = 0
-        {:class      [:absolute :top-0 :w-full]
-         :enter      "ease-in-out duration-200 transform"
-         :enter-from (if (zero? @previous-step-value)
-                       "translate-x-full"
-                       "-translate-x-full")
-         :enter-to   "translate-x-0"
-         :entered    ""
-         :leave      "ease-in-out duration-200"
-         :leave-from "translate-x-0 opacity-100"
-         :leave-to   (if (zero? @previous-step-value)
-                       "-translate-x-full opacity-0"
-                       "translate-x-full opacity-0")}
-        [:<>
-         [time-nav next-step]]]]
-
-      [ui/transition
-       {:show   (and (= :booking @selector)
-                     (= 1 @step))
+       {:show   (and (= :sjøbasen @selector) (= 1 @step))
         :appear true}
        [ui/transition-child
-        {:class      [:absolute :top-0 :w-full]
-         :enter      "ease-in-out duration-200 transform"
-         :enter-from (if (zero? @previous-step-value)
-                       "translate-x-full"
-                       "-translate-x-full")
-         :enter-to   "translate-x-0"
-         :entered    ""
-         :leave      "ease-in-out duration-200"
-         :leave-from "translate-x-0 opacity-100"
-         :leave-to   (if (zero? @previous-step-value)
-                       "-translate-x-full opacity-0"
-                       "translate-x-full opacity-0")}
-        [:<>
-         [card-confirm prev-step]]]]]]))
+        (transition-map (zero? @previous-step-value))
+        [form-date-and-time
+         {:action/next-step next-step
+          :action/cancel    cancel}]]]
 
-
-;;
+      [ui/transition
+       {:show   (and (= :sjøbasen @selector) (= 2 @step))
+        :appear true}
+       [ui/transition-child
+        (transition-map (zero? @previous-step-value))
+        [form-confirm
+         {:action/cancel    cancel
+          :action/complete  complete
+          :action/prev-step prev-step}]]]]]))
 
 (defmulti render-list (fn [a r] a))
 
@@ -382,7 +425,7 @@
                                           (into {} (map (fn [[k v]] [k (assoc v :id (some-> k name))]))
                                                 (filter (fn [[k {:keys [boat-type kind] :as v}]]
                                                           (and (= "0" (:location v))
-                                                               (if (and @show-stars (pos? (count keys)))
+                                                               (if (and @show-flagged (pos? (count keys)))
                                                                  (some #{(some-> boat-type name)} keys)
                                                                  (some? kind))))
                                                         @(rf/subscribe [:db/boat-db]))))))]
@@ -430,19 +473,6 @@
                    b (+ a (rb))]
                [a b])) nil))
 
-(comment
-  (do
-    (take 4 (make-series-of-abutting-elements (rand-int 10) (rand-int 10)))))
-
-(defn digits->time [[a b]]
-  (let [ref (t/at (t/today) (t/midnight))]
-    [(t/>> ref (t/new-duration (* 15 a) :minutes))
-     (t/>> ref (t/new-duration (* 15 b) :minutes))]))
-
-(comment
-  (do
-    (digits->time 20 0)))
-
 (defn svg-time-graph [idx ok! data start end]
   (let [settings (r/atom {:rent/graph-view-mode 0})
         now (t/date-time)]
@@ -458,8 +488,64 @@
        :session-end   end}
       data]]))
 
-(defmethod render-list :booking [_ r]
-  (render-list :sjøbasen r))
+(o/defstyled boat-group-block :div
+  [:& :flex :flex-col :gap-2 :w-full
+   {:padding          "var(--size-2)"
+    :background-color "var(--floating)"
+    :border-radius    "var(--radius-0)"}])
+
+(defn- item [idx v]
+  (let [{:keys [id number slot work-log _navn _description]} v
+        selected? (some? (some #{id} (:selection @store)))
+        work-log-count (count (remove (fn [[_k v]] (or (:complete v) (:deleted v))) work-log))
+        has-work-log? (pos? work-log-count)
+        inhibit false ;nil ;(rand-nth [true false])
+        data nil #_(->> (make-series-of-abutting-elements #(-> 10) #(-> 10))
+                        ;#(rand-int 96) #(+ 20 (rand-int 12)))
+                        (drop 1)
+                        (take 4)
+                        ;(mapv digits->time)  !!!
+                        (into []))
+        starts (some-> @start-time t/time t/hour)
+        ends (some-> @end-time t/time t/hour)]
+    [sc/col
+     ;[l/pre starts ends]
+     [sc/row-sc-g2 {:style {:align-items "start"}}
+      [widgets/badge
+       {:class    [:small]
+        :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+       (when has-work-log?
+         work-log-count)
+       (subs (str number) 0 3)
+       slot]
+      (when-not has-work-log?
+        [svg-time-graph idx inhibit data
+         (* 8 (or starts 12))
+         (* 8 (or ends 18))])
+      ;intent Device to accept/select boat for booking
+      (when (pos? @step)
+        (when-not has-work-log?
+          [:div.grid.place-content-center.shrink-0
+           (if inhibit
+             (button/reg-pill-icon
+               {:on-click #(toggle id)
+                :class    [:round :large]
+                :style    {:border-color "var(--red-6)"
+                           :color        "var(--red-6)"}}
+               [:div.w-8.h-8.grid.place-content-center
+                (schpaa.icon/adapt :circle-filled)])
+             (button/reg-pill-icon
+               {:on-click #(toggle id)
+                :class    [:frame :round]
+                :style    {:border-color (if selected? "var(--green-6)" "var(--gray-6)")
+                           :background-color (when selected? "var(--green-6)")
+                           :color        (if selected? "var(--green-0)" "var(--gray-6)")}}
+               (when selected? ico/check)))]))]]))
+
+(defn- list-of-boats [{:keys [slot number] :as r}]
+  (into [:div.flex.flex-col.gap-1]
+        (for [[idx v] (map-indexed vector (sort-by (juxt :slot :number) (map val r)))]
+          (item idx v))))
 
 (defmethod render-list :sjøbasen [_ r]
   (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
@@ -469,7 +555,7 @@
         data (some->> @(rf/subscribe [:db/boat-db])
                       (filter (comp #(= % "1") :location val))
                       (filter (fn [[_k {:keys [boat-type kind] :as v}]]
-                                (if (and @show-stars has-stars?)
+                                (if (and @show-flagged has-stars?)
                                   (some #{(some-> boat-type name)} starred-keys)
                                   ; new entries doesn't have ~kind~, so exclude them
                                   (some? kind))))
@@ -479,62 +565,29 @@
                       (sort-by (comp second first) <))]
     (into [:div.space-y-2]
           (for [[kind & r] data]
-            [:div
-             [widgets/disclosure
-              {:padded-heading true}
-              (or kind "noname")
-              [sc/title1
-               (or (schpaa.components.views/normalize-kind kind)
-                   "Udefinert")]
-              (into [:<>] (for [z r]
-                            [:div.gap-1.w-full
-                             {:style {:display               :grid
-                                      :grid-auto-rows        "auto"
-                                      :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
-                             (into [:<>] (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
-                                           [:div.flex.flex-col.gap-2.w-full
-                                            {:style {:padding          "var(--size-2)"
-                                                     :background-color "var(--floating)"
-                                                     :border-radius    "var(--radius-0)"}}
-                                            [widgets/stability-name-category (dissoc (-> r first val) :kind)]
-                                            ;todo toggle visibility via headerplugin
-                                            (into [:div.flex.flex-col.xflex-wrap.gap-1]
-                                                  (for [[idx v] (map-indexed vector (sort-by (juxt :slot :number) (map val r)))
-                                                        :let [{:keys [number slot work-log _navn _description]} v
-                                                              work-log (count (remove (fn [[k v]] (or (:complete v)
-                                                                                                      (:deleted v))) work-log))]]
-                                                    (let [bool (rand-nth [true false])
-                                                          data (->> (make-series-of-abutting-elements
-                                                                      #(rand-int 96) #(+ 20 (rand-int 12)))
-                                                                    (drop 1)
-                                                                    (take 4)
-                                                                    ;(mapv digits->time)  !!!
-                                                                    (into []))
-                                                          starts (or (some-> @start-time t/hour) 0)
-                                                          ends (or (some-> @end-time t/hour) 0)]
-                                                      [sc/col
-                                                       ;[l/pre starts ends]
-                                                       [sc/row-sc-g2 {:style {:align-items "start"}}
-                                                        [widgets/badge
-                                                         {:class    [:small]
-                                                          :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-                                                         (when (pos? work-log)
-                                                           work-log)
-                                                         (subs (str number) 0 3)
-                                                         slot]
-                                                        (when-not (pos? work-log)
-                                                          [:div.w-full [svg-time-graph idx bool data (* 8 starts) (* 8 ends)]])
-                                                        ;intent Device to accept/select boat for booking
-                                                        (when-not (pos? work-log)
-                                                          [:div.w-10x.h-10x.grid.place-content-center
-                                                           (if bool
-                                                             [:div.w-6.h-6 {:style {:color "var(--green-6)"}} (schpaa.icon/adapt :circle-check)]
-                                                             #_[button/pill
-                                                                {}
-                                                                [sc/icon ico/checkCircle]]
-                                                             [:div.grid.place-content-center
-                                                              [:div.w-6.h-6.opacity-30 {:style {:color "var(--red-6)"}} (schpaa.icon/adapt :circle-filled)]]
-                                                             #_[:div.w-8.h-8])])]])))]))]))]]))))
+            [widgets/disclosure
+             {:padded-heading true}
+             (or kind "noname")
+             [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
+
+             (into [:<>]
+                   (for [z r]
+                     [:div.gap-1.w-full
+                      {:style {:display               :grid
+                               :grid-auto-rows        "auto"
+                               :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}}
+                      (into [:<>]
+                            (for [[[_boat-type _navn] r]
+                                  (sort-by (comp last first) <
+                                           (group-by (comp (juxt :boat-type :navn) val) z))]
+                              [boat-group-block
+                               [sc/row-sc-g2
+                                {:style {:height "auto"}}
+                                [widgets/stability-name-category-front-flag
+                                 (dissoc (-> r first val) :kind)]
+                                (clear-selection r)
+                                (select-all-in-group r)]
+                               (list-of-boats r)]))]))]))))
 
 (defmethod render-list :b [_ r]
   (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <
@@ -575,7 +628,7 @@
         data (sort-by (comp :navn val) <
                       (into {} (map (fn [[k v]] [k (assoc v :id (some-> k name))])
                                     (filter (fn [[k {:keys [kind]}]]
-                                              (if @show-stars
+                                              (if @show-flagged
                                                 (some #{k} starred-keys)
                                                 (some? kind)))
                                             @(rf/subscribe [:db/boat-type])))))]
@@ -790,3 +843,26 @@
                                   (schpaa.style.dialog/open-user-info-dialog data)))
 
 (rf/reg-event-fx :lab/show-userinfo (fn [_ [_ uid]] {:fx [[:lab/showuserinfo-fx uid]]}))
+
+(rf/reg-event-fx :lab/qr-code-for-current-page
+                 (fn [_ _]
+                   (when-let [link @(rf/subscribe [:kee-frame/route])]
+                     (booking.qrcode/show link))))
+
+;region temporary, perhaps for later
+
+(rf/reg-event-db :lab/show-popover (fn [db]
+                                     (tap> (:lab/show-popover db))
+                                     (update db :lab/show-popover (fnil not false))))
+(rf/reg-sub :lab/show-popover (fn [db] (get db :lab/show-popover false)))
+
+;endregion
+
+(comment
+  (do
+    (take 4 (make-series-of-abutting-elements (rand-int 10) (rand-int 10)))))
+
+(comment
+  (do
+    (digits->time 20 0)))
+

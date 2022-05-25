@@ -147,7 +147,7 @@
           :selected      hoc/selected
           :uid           (:uid user-auth)
           :on-submit     #(send :e.complete %)
-          :cancel        #(send :e.cancel-booking)
+          :action/cancel #(send :e.cancel-booking)
           :my-state      schpaa.components.views/my-state
           :booking-data' (sort-by :date > (booking.database/read))}]]))
 
@@ -448,12 +448,12 @@
    ;todo Fordi når man skal bytte er det greit å alltid ha ett sted hvor dette kan skje
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
    :r.min-status         (fn [r] (page r {:render-halfwidth true
-                                          :render booking.min-status/render}))
+                                          :render           booking.min-status/render}))
    :r.mine-vakter-ipad   (fn [r] (page r {:render booking.min-status/render}))
    :r.reports            (fn [r] (page r (booking.reports/page r)))
-   :r.båtliste.nøklevann (fn [r] (page r {:headline-plugin  booking.lab/headline-plugin
-                                          :always-panel     booking.lab/always-panel
-                                          :render booking.lab/render}
+   :r.båtliste.nøklevann (fn [r] (page r {:headline-plugin booking.lab/headline-plugin
+                                          :always-panel    booking.lab/always-panel
+                                          :render          booking.lab/render}
                                        #_(booking.boatlist/page r)))
    :r.experimental
    (fn [r]

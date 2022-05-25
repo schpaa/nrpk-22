@@ -65,7 +65,7 @@
                                (for [[section vs] data::stringified
                                      [timeslot uid-registered-tuple] vs
                                      [_userid dt] uid-registered-tuple
-                                     :let [status (if (map? dt) :cancel :ok)
+                                     :let [status (if (map? dt) :action/cancel :ok)
                                            date-registered (if-not (map? dt)
                                                              (some-> dt t/date-time)
                                                              (some-> (get dt "registered") t/date-time))
@@ -89,7 +89,7 @@
                               (if completed?
                                 [:<>]
                                 (when (or (= loggedin-uid uid) admin?)
-                                  (if (:cancel status)
+                                  (if (:action/cancel status)
                                     [button/reg-pill-icon
                                      {:class    [:regular]
                                       :disabled true}
@@ -110,14 +110,14 @@
                               (when (and admin?
                                          (not (within-undo-limits? date-registered))
                                          (not completed?)
-                                         (not (:cancel status)))
+                                         (not (:action/cancel status)))
                                 [button/reg-pill-icon
                                  {:on-click #(actions/frafall {:uid uid :section section :timeslot timeslot})
                                   :class    [:danger]
                                   :disabled false}
                                  ico/thumbsdown
                                  "Frafall"])
-                              (when (and admin? (not completed?) (:cancel status))
+                              (when (and admin? (not completed?) (:action/cancel status))
                                 [button/reg-pill-icon 
                                  {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
                                   :class    [:cta :outliner]

@@ -126,10 +126,10 @@
               :x       session-start
               :y       2
               :height  2}]
-      (when (nil? end)
-        [:path {:fill           color
-                :stroke-linecap :round
-                :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
+      #_(when (nil? end)
+          [:path {:fill           color
+                  :stroke-linecap :round
+                  :d              (l/strp "M" now 2 "l" arrow-length 2 "l" (- arrow-length) 2 "z")}])
       (into [:<>]
             (for [[start end] xs
                   :let [start (if (and end (< start end)) start 0)]]

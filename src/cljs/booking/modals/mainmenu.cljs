@@ -80,7 +80,7 @@
     :stay-open true
     :content   (fn [_]
                  [:div.w-full
-                  [schpaa.style.hoc.toggles/stored-toggle :lab/toggle-chrome "Flere knapper"
+                  [schpaa.style.hoc.toggles/stored-toggle :lab/toggle-chrome "Vis snarveier"
                    (fn [t c]
                      [:div.flex.justify-between.items-center.w-full.gap-2.h-12x
                       [sc/text1 c] t])]])}])

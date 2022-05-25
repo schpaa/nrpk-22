@@ -40,6 +40,7 @@
 (def logout [:> outline/LogoutIcon])
 (def login [:> outline/LoginIcon])
 (def closewindow [:> solid/XIcon])
+(def cancel [:> solid/XIcon])
 (def removeitem [:> solid/XCircleIcon])
 (def earlierchanges [:> outline/DocumentIcon])
 (def signout [:> outline/LogoutIcon])
@@ -66,6 +67,10 @@
 (def switchHoriz [:> outline/SwitchHorizontalIcon])
 (def panelOpen [:> outline/ChevronLeftIcon])
 (def panelClosed [:> outline/ChevronRightIcon])
+
+(def prevStep [:> outline/ChevronLeftIcon])
+(def nextStep [:> outline/ChevronRightIcon])
+
 (def commandPaletteOpen [:> solid/SearchIcon])
 (def commandPaletteClosed [:> outline/SearchIcon])
 (def mystery1 [:> solid/TableIcon])
@@ -92,4 +97,4 @@
 (def chevronDoubleDown [:> solid/ChevronDoubleLeftIcon])
 (def chevronDoubleRight [:> solid/ChevronDoubleRightIcon])
 
-(def rotate-left [:div.m-px [schpaa.icon/adapt :rotate-left 1.4]])
+(def rotate-left [:div.m-1 [schpaa.icon/adapt :rotate-left 2]])

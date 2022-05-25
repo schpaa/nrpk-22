@@ -79,8 +79,8 @@
              (t/< (t/date) (t/date removal-date)))
       (hoc.buttons/regular {:on-click #(readymade/ok-cancel
                                          {:flags           #{:wide}
-                                          :button-captions (fn [id] (get {:ok     "Gjennopprett nå!"
-                                                                          :cancel "Nei, forresten"} id))
+                                          :button-captions (fn [id] (get {:ok            "Gjennopprett nå!"
+                                                                          :action/cancel "Nei, forresten"} id))
                                           :ok              (fn [] (user.database/mark-account-for-restore uid))
                                           #_#_:footer [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
                                                        [:div "Etter 14 dager slettes alle data."]]
@@ -91,8 +91,8 @@
          :on-click
          #(readymade/ok-cancel
             {:flags           #{:wide}
-             :button-captions (fn [id] (get {:ok     "Slett konto!"
-                                             :cancel "Avbryt"} id))
+             :button-captions (fn [id] (get {:ok            "Slett konto!"
+                                             :action/cancel "Avbryt"} id))
              :ok              (fn [] (user.database/mark-account-for-removal uid))
              :footer          [[:div "Kontoen din blir markert som slettet og du vil bli logget ut på alle enheter."]
                                [:div "Etter 14 dager slettes alle data."]]
