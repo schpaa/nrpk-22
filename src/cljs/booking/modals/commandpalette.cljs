@@ -35,10 +35,12 @@
                                                  :access  :admin
                                                  :action  #(rf/dispatch [:app/navigate-to [:r.dine-vakter {:id k}]])})
                                     (users))
-                              #_[{:name   "Kontakt aktivitetskoordinator"
-                                  ;:access :admin
-                                  ;:icon   ico/nokkelvakt
-                                  :action #(rf/dispatch [:app/navigate-to [:r.oversikt.styret]])}]
+
+                              (mapv (fn [[k v]] {:private true
+                                                 :caption (:navn v "nocaption")
+                                                 :key     (name k)
+                                                 :name    (str (:number v "") " " (:navn v))}) (logg.database/boat-db))
+
                               booking.reports/report-list
                               [{:name   "Kontakt aktivitetskoordinator"
                                 :action #(rf/dispatch [:app/navigate-to [:r.oversikt.styret]])}
@@ -145,12 +147,12 @@
             :display         :flex
             :color           (cond
                                active (if (pos? group)
-                                        "var(--brand1-bright)"
-                                        "var(--gray-1)")
-                               disabled "var(--gray-9)"
-                               :elses (if (pos? group)
-                                        "var(--brand1-bright)"
-                                        "var(--gray-0)"))
+                                        "var(--text0-copy)"
+                                        "var(--text2)")
+                               disabled "var(--text2)"
+                               :else (if (pos? group)
+                                       "var(--brand1-bright)"
+                                       "var(--text1)"))
             :align-items     :center
             :justify-content :start
             :border-left     (str "6px solid " (if active "var(--brand1)" "transparent"))
@@ -159,11 +161,11 @@
             :font-family     "Inter"
             :font-weight     400
             :background      (cond
-                               disabled "var(--gray-8)"
-                               active "var(--gray-9)"
+                               disabled "var(--content)"
+                               active "var(--toolbar-)"
                                :else (if (pos? group)
-                                       "var(--gray-7)"
-                                       "var(--gray-8)"))}}
+                                       "var(--floating)"
+                                       "var(--floating)"))}}
    [sc/icon-small {:class [:shrink-0]} (when-not (or disabled) icon)]
    [:div.truncate value]])
 
@@ -237,15 +239,15 @@
            [ui/combobox-options
             {:static true
              :style  {;:scroll-behavior :smooth
-                      :overflow-y      :auto
-                      :height          "21rem"
-                      :max-height      "21rem"
-                      :max-width       "28rem"}
+                      :overflow-y :auto
+                      :height     "21rem"
+                      :max-height "21rem"
+                      :max-width  "28rem"}
              :class  [:xsnap-y :truncate]}
             [:<>
              (if (seq filtered-commands)
                (for [cmd filtered-commands]
-
+                 ^{:key (or (:key cmd) (:id cmd))}
                  [ui/combobox-option
                   {:disabled (:disabled cmd)
                    :value    (:id cmd)
@@ -320,8 +322,7 @@
             :leave-from  "opacity-100  translate-y-0"
             :leave-to    "opacity-0 translate-y-32"
             :after-leave #(rf/dispatch [:lab/modal-selector-clear])}
-           [:div {:style {
-                          :overflow         :hidden
+           [:div {:style {:overflow         :hidden
                           :background-color "var(--toolbar)"}
                   :class [:max-h-screen :outline-none :focus:outline-none]}
             (if content-fn
