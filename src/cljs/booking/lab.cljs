@@ -65,7 +65,7 @@
               (->> r keys (map name) set)
               nil)
           this-group (remove nil? (map @selection x))]
-      (button/reg-pill
+      (button/just-icon
         {:disabled (or
                      (nil? this-group)
                      (empty? this-group))
@@ -74,7 +74,7 @@
         ico/closewindow))))
 
 (defn- select-all-in-group [r]
-  (button/reg-pill
+  (button/just-icon
     {:disabled (every? (set @selection) (vals r))
      :on-click #(doseq [e (map :id (vals r))]
                   (toggle e))
@@ -192,7 +192,7 @@
                    (when (pos? (count c))
                      [sc/row-sc-g2
                       [:div.relative
-                       [button/pill-large
+                       [button/just-large-icon
                         {:class    [(if details-mode? :message :clear)]
                          :style    {:background-color (if @show-flagged "var(--yellow-6)" "transparent")}
                          :on-click #(swap! show-flagged (fnil not false))}
@@ -206,7 +206,7 @@
                                   :border-radius "var(--radius-round)"}}
                          [sc/small {:style {:color "var(--floating)"}
                                     :class [:bold]} (count c)]]]]]))))
-             [button/pill-large
+             [button/just-large-icon
               {:class    [:large
                           (if delete-mode? :danger :clear)]
                :on-click #(swap! (r/cursor store [:rent/show-deleted]) not)}
@@ -245,7 +245,7 @@
   [:<>
    [bs/popup-frame
     [sc/co
-     [sc/row-fields
+     [sc/row-field
       [:div]
       (next-step' next-step)]
 
@@ -283,14 +283,14 @@
                   :value "2022-05-23"}]]
         [:div]]]]
 
-     [sc/row-fields
+     [sc/row-field
       (cancel-booking' cancel)]]]])
 
 (defn form-confirm [{:action/keys [prev-step complete action/cancel]}]
   [:<>
    [bs/popup-frame
     [sc/co
-     [sc/row-fields
+     [sc/row-field
       (previous-step prev-step)
       (confirm-booking' complete)]
 
@@ -304,7 +304,7 @@
         [sc/title1 "Bekreft booking"]
         [l/pre (count @selection)]]]]
 
-     [sc/row-fields
+     [sc/row-field
       (cancel-booking' cancel)]]]])
 
 ;;
@@ -335,7 +335,7 @@
                     (reset! step 0))
         cancel #(do (reset! selector :sjøbasen)
                     (reset! step 0))]
-    [:div.pointer-events-none
+    [:div.pointer-events-nonex
      {:class [:sticky :top-24 :z-100 :space-y-8]}
      ;[l/pre @store]
      [sc/row-center {:class [:z-100]}
@@ -352,22 +352,23 @@
         (if (= :sjøbasen @selector)
           [button/pill-icon-caption
            {:style    {:box-shadow "var(--shadow-2)"}
-            :class    [:large :cta :narrow]
+            :class    [:large :cta :xnarrow]
             :on-click #(case @selector
                          :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
                          :sjøbasen (reset! step 1))}
            ico/plus
            "Ny booking"]
           [button/pill-icon-caption
-           {:style    {:box-shadow "var(--shadow-2)"}
-            :class    [:large :cta :narrow]
+           {:style    {:box-shadow "var(--shadow-2)"
+                       :scolor :reds}
+            :class    [:largex :cta :xnarrow]
             :on-click #(case @selector
                          :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
                          :sjøbasen (reset! step 1))}
            ico/plus
            "Nytt utlån"])]]]
 
-     [:div.relative.pointer-events-nonex
+     [:div.relative
       {:class [:z-100 :w-full]}
 
       ;spacer
@@ -375,7 +376,7 @@
        {:show       (and                                    ;(= :sjøbasen @selector)
                       ;(= 2 @previous-step-value)
                       (= 1 @step))
-        :class      [:w-full :h-64 :pointer-events-nonex]
+        :class      [:w-full :h-64]
         :enter      "ease-in-out duration-500 transform transition-height"
         :enter-from "h-0"
         :enter-to   "h-64"
@@ -528,13 +529,13 @@
         (when-not has-work-log?
           [:div.grid.place-content-center.shrink-0
            (if inhibit
-             (button/reg-pill
+             (button/just-icon
                {:on-click #(toggle id)
                 :class    [:round]
                 :style    {:border-color "var(--red-6)"
                            :color        "var(--red-6)"}}
                [sc/icon ico/exclamation])
-             (button/reg-pill
+             (button/just-icon
                {:on-click #(toggle id)
                 :class    [:frame :round]
                 :style    {:border-color     (if selected? "var(--green-6)" "var(--gray-6)")

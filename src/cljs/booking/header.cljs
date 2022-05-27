@@ -102,7 +102,7 @@
                             {:style {:border-radius           "var(--radius-2)"
                                      :border-top-right-radius 0
                                      :border-top-left-radius  0
-                                     :background-color        "rgba(0,0,0,0.025)"}}
+                                     :background-color        "rgba(0,0,0,0.08)"}}
                             (into [:<>] headline)]]))
 
                       [[:div.mx-2 [main-menu r]]])

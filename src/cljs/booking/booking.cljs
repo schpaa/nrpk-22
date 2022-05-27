@@ -38,8 +38,8 @@
    [sc/row-sc-g2-w
     [hoc.buttons/cta-pill-icon {:disabled true
                                 :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
-    [hoc.buttons/danger-pill {:disabled true
-                              :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
+    [hoc.buttons/just-caption {:disabled true
+                               :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
    #_[sc/row-sc-g2-w
       [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
@@ -61,8 +61,8 @@
   (if (= uid loggedin-uid)
     [hoc.buttons/cta-pill {:class    [:narrow]
                            :on-click #()} "Avlys"]
-    [hoc.buttons/reg-pill {:class    [:narrow]
-                           :on-click #()} "Bli med"]))
+    [hoc.buttons/just-icon {:class   [:narrow]
+                            :on-click #()} "Bli med"]))
 
 (defn edit [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
   [:<>
@@ -161,13 +161,13 @@
                    :grid-area       "content"}}]
          (concat
            [[sc/col {:class [:tabular-nums :w-44]}
-             [sc/row-fields
+             [sc/row-field
               [sc/text1 {:class [:tracking-tight]} (times.api/logg-date-format start)]
               [:div.grow]
               [sc/text1 {:class [:tracking-tight]} "kl. " (times.api/time-format start)]]
              (when end
                (let [dt end]
-                 [sc/row-fields
+                 [sc/row-field
                   (when-not (t/= (t/date dt) (t/date start))
                     [sc/text1 {:class [:tracking-tight]
                                :style {:white-space :nowrap}} (times.api/logg-date-format dt)])

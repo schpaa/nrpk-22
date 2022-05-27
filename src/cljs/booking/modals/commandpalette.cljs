@@ -39,7 +39,9 @@
                               (mapv (fn [[k v]] {:private true
                                                  :caption (:navn v "nocaption")
                                                  :key     (name k)
-                                                 :name    (str (:number v "") " " (:navn v))}) (logg.database/boat-db))
+                                                 :action  #(booking.modals.boatinfo/open-modal-boatinfo {:data (assoc v :id k)})
+                                                 :name    (str (:number v "") " " (:navn v))})
+                                    (filter (comp :boat-type val) (logg.database/boat-db)))
 
                               booking.reports/report-list
                               [{:name   "Kontakt aktivitetskoordinator"
@@ -91,8 +93,8 @@
                                ;{:id "3", :name "Lage vafler" :keywords "mat" :disabled true}
                                {:id "4", :name "Avlys kurs" :disabled true :icon [:> outline/LockClosedIcon]}
                                {:id "5", :name "Reserver båter for kurs" :disabled true :icon [:> outline/ArrowRightIcon]}
-                               {:id "6", :name "Vis båtlisten på Nøklevann" :disabled true}
-                               {:id "7", :name "Vis båtlisten på Sjøbasen" :disabled true}
+                               {:id "6", :name "Vis båtlisten på Nøklevann" :action #(rf/dispatch [:app/navigate-to [:r.båtliste.nøklevann]])}
+                               {:id "7", :name "Vis båtlisten på Sjøbasen" :action #(rf/dispatch [:app/navigate-to [:r.båtliste.sjøbasen]])}
                                {:id "8", :name "Endre mine opplysninger" :icon [:> outline/UserCircleIcon] :action #(rf/dispatch [:app/navigate-to [:r.user]])}
                                {:id   "9",
                                 :name "Skriv nytt innlegg"
@@ -170,13 +172,11 @@
    [:div.truncate value]])
 
 (o/defstyled placeholder :div
-  [:&
-   {:display     :relative
-    :font-family "Inter"
+  [:& :flex :w-16 :h-16 :gap-2
+   {:font-family "Inter"
     :color       "var(--text0)"}
-   [:input
-    {
-     :font-weight "var(--font-weight-4)"
+   [:&:input
+    {:font-weight "var(--font-weight-4)"
      :font-size   "var(--font-size-3)"
      :color       "var(--text0)"}
     ["&::placeholder"
@@ -204,68 +204,75 @@
                 :max-width     "25rem"
                 :overflow      "hidden"
                 :height        :100%}}
-       [ui/combobox {:value     (:id selected)
-                     :disabled  false
-                     :on-change #(let [action (:on-click context)
-                                       cmd (get (command-by-id) %)]
-                                   (if-not (:disabled cmd)
-                                     (reset! !selected cmd))
-                                   (tap> "ACTION")
-                                   (when action
-                                     (action cmd)))}
+       [ui/combobox {:value       (:id selected)
+                     :nullable    1
+                     :disabled    false
+                     ; <- already handled?
+                     :on-key-down #(let [v (.. % -code)]
+                                     (tap> {:keydown v}))
+                     :on-change   #(let [action (:on-click context)
+                                         cmd (get (command-by-id) %)]
+                                     (tap> {:on-change %})
+                                     (if-not (:disabled cmd)
+                                       (reset! !selected cmd))
+                                     (when action
+                                       (action cmd)))}
         (fn [_]
           [:div.relative.w-full
-           [:div.relative.w-full
-            [:div.flex.items-center.justify-between.w-full.overflow-hiddenx
-             [placeholder
-              [ui/combobox-input
-               {:style         {:width            "25rem"
-                                :height           :4rem
-                                :padding-inline   "var(--size-8)"
-                                :color            "var(--text1)"
-                                :background-color "var(--field)"}
-                :class         [:outline-none :focus:outline-none]
-                :placeholder   "Søk"
-                :display-value (fn [_id] "")
-                :on-change     #(let [v (-> % .-target .-value)]
-                                  (reset! !query (string->query v)))}]
-              [:div.absolute.inset-0
-               {:class [:pointer-events-none]
-                :style {:top            :50%
-                        :padding-inline "var(--size-3)"
-                        :padding-top    "3px"
-                        :transform      "translate(0,-50%)"}}
-               [sc/icon ico/commandPaletteClosed]]]]]
-           [ui/combobox-options
-            {:static true
-             :style  {;:scroll-behavior :smooth
-                      :overflow-y :auto
-                      :height     "21rem"
-                      :max-height "21rem"
-                      :max-width  "28rem"}
-             :class  [:xsnap-y :truncate]}
-            [:<>
-             (if (seq filtered-commands)
-               (for [cmd filtered-commands]
-                 ^{:key (or (:key cmd) (:id cmd))}
-                 [ui/combobox-option
-                  {:disabled (:disabled cmd)
-                   :value    (:id cmd)
-                   :class    [:outline-none]}
-                  (fn [{:keys [] :as attr}]
-                    (listitem
-                      (assoc attr
-                        :group (:group cmd)
-                        :icon (cmd :icon))
-                      (:name cmd)))])
-               (listitem
-                 {:notfound true :icon [sc/icon {:style {:color "var(--red-8)"}} ico/fill-heart]}
-                 [:div "Finner ikke " [:span {:style {:font-weight "var(--font-weight-6)"}} quops]]))]]])]])))
+
+           [:div
+            ;header input
+            [:div.flex.items-center.justify-between.w-full.gap-2.w-full.h-full
+             {:style {:background-color "var(--field)"}}
+             [:div.ml-5
+              {:style {:width "auto"
+                       :flex-shrink 1}
+               :class [:pointer-events-none  :w-full :grid :place-content-center]}
+              [sc/icon ico/commandPaletteClosed]]
+             [ui/combobox-input
+              {:style         {;:flex "1 0 auto"
+                               :flex-grow 1
+                               
+                               :height           :4rem
+                               ;:padding-inline   "var(--size-8)"
+                               :color            "var(--text1)"
+                               :background-color "var(--field)"}
+               :class         [:outline-none :focus:outline-none :w-full :bg-alt]
+               :placeholder   "Søk"
+               :display-value (fn [_id] "")
+               :on-change     #(let [v (-> % .-target .-value)]
+                                 (reset! !query (string->query v)))}]]
+            [ui/combobox-options
+             {:static true
+              :style  {;:scroll-behavior :smooth
+                       :overflow-y :auto
+                       :height     "21rem"
+                       :max-height "21rem"
+                       :max-width  "28rem"}
+              :class  [:xsnap-y :truncate]}
+             [:<>
+              (if (seq filtered-commands)
+                (for [cmd filtered-commands]
+                  ^{:key (or (:key cmd) (:id cmd))}
+                  [ui/combobox-option
+                   {:disabled (:disabled cmd)
+                    :value    (:id cmd)
+                    :class    [:outline-none]}
+                   (fn [attr]
+                     (listitem
+                       (assoc attr
+                         :group (:group cmd)
+                         :icon (cmd :icon))
+                       (:name cmd)))])
+                (listitem
+                  {:notfound true
+                   :icon     [sc/icon {:style {:color "var(--red-8)"}} ico/exclamation]}
+                  [:div "Ingen treff på \"" [:span {:style {:font-weight "var(--font-weight-6)"}} quops] "\""]))]]]])]])))
 
 (defn commandpalette [{db :db}]
   {:fx [[:dispatch [:lab/modal-selector
                     (-> db :lab/modal-selector not)
-                    {:content-fn commandpalette-window}]]]})
+                    {:content-fn (fn [e]  (commandpalette-window e))}]]]})
 
 (rf/reg-event-fx :app/toggle-command-palette [rf/trim-v] commandpalette)
 (rf/reg-event-fx :app/toggle-toolbar-caption [rf/trim-v] {})

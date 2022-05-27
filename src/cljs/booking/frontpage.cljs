@@ -431,25 +431,33 @@
         (when-not @reg?
           [please-login-and-register])
 
-        [sc/col-space-2
-         [sc/text {:class [:pl-6]} [widgets/auto-link {:caption "Alle saker"} :r.booking-blog]]
-         (widgets/disclosure
-           {:padded-heading []
-            :large          1
-            :style          {:padding-block "var(--size-2)"
-                             :xmargin-left  "var(--size-7)"}}
-           :frontpage/news
-           [sc/row-bl
-            [sc/fp-header "Hva skjer?"]]
-
-           [news/news-feed])]
+        [sc/col-space-1
+         [sc/row-field
+          (widgets/disclosure
+            {:padded-heading []
+             :large          1
+             :style          {:padding-block "var(--size-2)"
+                              :xmargin-left  "var(--size-7)"}}
+            :frontpage/news
+            [sc/row-sc-g4 {:style {:align-items :baseline}}              
+             [:p "Hva skjer?"]
+             [widgets/auto-link {:style   {:font-family "Inter"}
+                                 :class   [:z-10 :small]
+                                 :caption "mer her"} :r.booking-blog]]
+            [news/news-feed])]]
 
         (widgets/disclosure
           {:padded-heading []
            :large          1
            :style          {:padding-block "var(--size-2)"
                             :xmargin-left  "2rem"}}
-          :frontpage/yearwheel :Planlagt [booking.yearwheel/yearwheel-feed])]]]
+          :frontpage/yearwheel
+          [sc/row-sc-g4 {:style {:align-items :baseline}}
+           [:p "Årshjul"]
+           [widgets/auto-link {:style   {:font-family "Inter"}
+                               :class   [:z-10 :small]
+                               :caption "mer her"} :r.yearwheel]]
+          [booking.yearwheel/yearwheel-feed])]]]
 
      [widgets/after-content]
      [:div.sticky.bottom-0.noprint

@@ -315,10 +315,12 @@
    (user.database/lookup-alias uid)])
 
 (defn auto-link
-  ([{:keys [caption] :as opts} link]
+  ([{:keys [class caption style]} link]
    (cond
      caption
-     [sc/link {:href (kee-frame.core/path-for [link])} caption]
+     [sc/link {:style style
+               :class class
+               :href (kee-frame.core/path-for [link])} caption]
 
      :else
      (if (vector? link)
@@ -456,7 +458,7 @@
          attr (conj {:style {:padding-block "var(--size-2)"}} attr)]
      (let [disclojure-button
            (fn [{:keys [_open]}]
-             [:div.flex.items-center.gap-2
+             [:div.flex.items-center.gap-2.w-full
               {:class    [(when padded-heading padded-heading)]
                :style    {:cursor :pointer}
                :on-click #(schpaa.state/toggle tag)}
@@ -466,39 +468,45 @@
                         :transform
                         (when open? :rotate-90)]}
                ico/showdetails]
-              [:span [sc/fp-headersmaller {:class [:text-left
-                                                   :pointer-events-none (when (:large attr) :large)]
-                                           :style {:color (if open? "var(--text0)" "var(--text2)")}}
-                      question]]])]
-       [:div
-        [ui/disclosure
-         {:style {:cursor :default}}
-         (fn [_]
-           [sc/col
-            [ui/disclosure-button
-             {:on-click #(schpaa.state/toggle tag)
-              :style    {:cursor :default}
-              :class    [:flex :justify-start :items-center :w-full
-                         :focus:outline-none :focus-visible:ring :focus-visible:ring-purple-500 :focus-visible:ring-opacity-75]}
-             disclojure-button]
+              [sc/fp-headersmaller
+               {:class [:text-left
+                        :w-full
 
-            (when open?
-              [ui/disclosure-panel
-               (merge-with into
-                           {:static  true
-                            :unmount false}
-                           (dissoc attr :links))
-               (fn [{:keys [open]}]
-                 (if (:links attr)
-                   (if open?
-                     [sc/col-space-4 answer extra-section]
-                     extra-section)
-                   (if open?
-                     (if answer
-                       [sc/text2 answer]
-                       [sc/text2 extra-section])
-                     (when-not answer
-                       [sc/text2 extra-section]))))])])]]))))
+                        ;:pointer-events-none
+                        (when (:large attr) :large)]
+                :style {:color (if open? "var(--text0)" "var(--text2)")}}
+               [:div.overflow-visible.w-full question]]])]
+
+       [ui/disclosure
+        {
+         :style {:cursor :default}}
+        (fn [_]
+          [sc/co {:class [:overflow-x-hidden :w-full]}
+           [ui/disclosure-button
+            {:on-click #(schpaa.state/toggle tag)
+             :style    {:cursor :default}
+             :class    [:flex :justify-start :items-center :w-full
+                        :z-1
+                        :focus:outline-none :focus-visible:ring :focus-visible:ring-purple-500 :focus-visible:ring-opacity-75]}
+            disclojure-button]
+
+           (when open?
+             [ui/disclosure-panel
+              (merge-with into
+                          {:static  true
+                           :unmount false}
+                          (dissoc attr :links))
+              (fn [{:keys [open]}]
+                (if (:links attr)
+                  (if open?
+                    [sc/col-space-4 answer extra-section]
+                    extra-section)
+                  (if open?
+                    (if answer
+                      [sc/text2 answer]
+                      [sc/text2 extra-section])
+                    (when-not answer
+                      [sc/text2 extra-section]))))])])]))))
 
 (defn send-msg [uid-reciever]
   (rf/dispatch [:app/open-send-message uid-reciever]))
@@ -661,9 +669,6 @@
              [:path.transition-all.duration-300.ease-in-out.delay-150.path-3
               {:d "M 0,400 C 0,400 0,320 0,320 C 82.33492822966508,327.18660287081343 164.66985645933016,334.3732057416268 249,331 C 333.33014354066984,327.6267942583732 419.6555023923445,313.6937799043062 528,312 C 636.3444976076555,310.3062200956938 766.7081339712919,320.85167464114835 881,329 C 995.2918660287081,337.14832535885165 1093.511961722488,342.8995215311005 1184,341 C 1274.488038277512,339.1004784688995 1357.244019138756,329.55023923444975 1440,320 C 1440,320 1440,400 1440,400 Z" :stroke "none" :stroke-width "0" :fill "url(#gradientd)"}]])])))
 
-(o/defstyled odebug :div
-  {:outline "1px solid red"})
-
 (o/defstyled shadow :div
   {:box-shadow "var(--shadow-1)"})
 
@@ -746,7 +751,7 @@
              [sc/row-center
               [logo-graph]]
 
-             [sc/row-fields
+             [sc/row-field
               [sc/col-space-1
                [sc/title {:class [:bold :pt-1]
                           :style {:color "var(--gray-9)"}} "Postadresse"]
@@ -793,7 +798,7 @@
                 ico/tilbakemelding
                 (when-not mobile? "Tilbakemelding")]]]
 
-             [sc/row-fields
+             [sc/row-field
               [sc/small (or booking.data/VERSION "version")]
               [sc/small (or booking.data/DATE "date")]]]]]]]))))
 

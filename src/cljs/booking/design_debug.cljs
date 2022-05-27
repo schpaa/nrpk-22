@@ -242,7 +242,7 @@
                             [sc/title1 "sc/title"]
                             [sc/pill "sc/pill"]
                             [sc/text1 "sc/row-fields"
-                             [sc/row-fields
+                             [sc/row-field
                               [sc/text1 "field"]
                               [sc/text1 "field"]
                               [sc/text1 "field"]]]

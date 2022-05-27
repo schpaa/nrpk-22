@@ -124,8 +124,8 @@
       [sc/row-sc-g4-w {:style {:width "100%"}}
        (if deleted
          (q-button
-           {:class [:outline2]}
-           ico/rotate-left
+           {:class [:frame]}
+           ico/undo
            (fn [a b] (delete-worklog-entry a (some-> b name) false)))
          (q-button
            {:class [:danger]}
@@ -183,11 +183,12 @@
      (r/with-let [more? (r/atom false)]
        [:<>
         (when-not @more?
-          [:div.flex.flex-col.items-center.space-y-4.py-4
+          [:div.flex.flex-col.items-center.space-y-4 
            [sc/text1 "Dette er slutten av listen"]
-           [hoc.buttons/pill {:type     "button"
-                              :class    [:regular :narrow]
-                              :on-click #(reset! more? true)} "Søk etter flere"]])
+           [hoc.buttons/just-caption
+            {:type     "button"
+             :on-click #(reset! more? true)}
+            "oppdater"]])
         (when @more?
           (for [[worklog-entry-id m] all-data]
             [worklog-card {:class [:opacity-50]} m boat-item-id worklog-entry-id]))])]))

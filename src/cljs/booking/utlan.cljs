@@ -488,11 +488,11 @@
 (defn headline-plugin []
   (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
         details-mode? @(rf/subscribe [:rent/common-show-details])]
-    [[button/pill-large
+    [[button/just-large-icon
       {:class    [ :round (if details-mode? :message :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
       ico/more-details]
-     [button/pill-large
+     [button/just-large-icon
       {:class    [ :round
                   (if delete-mode? :danger-outline :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-deleted]) not)}

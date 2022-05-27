@@ -62,27 +62,54 @@
     ico/closewindow
     "Bli til Båtlogg"]])
 
-(defcard-rg pill
+(defcard-rg pill-with-just-caption
   [:div
-   [hoc.buttons/pill
-    {:class    [:message :narrow :uppercase :tracking-widest]
+   [button/just-caption
+    {:style    {:color      :white
+                :background "var(--orange-6)"}
      :on-click #()}
     "Bli til Båtlogg"]])
 
 (defcard-rg pill
   [:div
-   [hoc.buttons/icon-with-caption
-    {:class    [:regular :large]
-     :on-click #()}
-    ico/stjerne
-    nil]])
+   [sc/row-field
+    [button/just-icon
+     {:class    [:regular :large]
+      :on-click #()}
+     ico/stjerne]
+
+    [button/just-caption {:class    [:message :frame :narrow ]} "test"]
+
+    [button/just-icon {:class    [:regular :large]} ico/exclamation]
+
+    [button/just-icon
+     {:class    [:regular :large]
+      :on-click #()}
+     ico/stjerne]]])
+
 
 (defcard-rg pill
   [:div
-   [hoc.buttons/pill
-    {:class    [ :frame :pad-right :uppercase]
+   [button/icon-with-caption
+    {:class    [:frame :pad-right :uppercase]
      :on-click #()}
-    [sc/icon-small ico/commandPaletteClosed]
+    ico/commandPaletteClosed
+    "Bli til Båtlogg nu"]])
+
+(defcard-rg pill
+  [:div
+   [button/icon-with-caption
+    {:class    [:cta]
+     :on-click #()}
+    ico/commandPaletteClosed
+    "Bli til Båtlogg nu"]])
+
+(defcard-rg pill
+  [:div
+   [button/icon-with-caption
+    {:class    [:danger-outline]
+     :on-click #()}
+    ico/commandPaletteClosed
     "Bli til Båtlogg nu"]])
 
 

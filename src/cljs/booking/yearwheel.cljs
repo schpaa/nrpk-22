@@ -25,7 +25,8 @@
     [booking.flextime :refer [flex-datetime]]
     [schpaa.debug :as l]
     [booking.common-widgets :as widgets]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [schpaa.style.hoc.buttons :as button]))
 
 (o/defstyled listitem :div
   [:& :p-1
@@ -120,14 +121,26 @@
 
 ;; panels
 
+
+
+(defn headline-plugin []
+  [[:div.h-12 [sc/text2 "Stuff"]]
+   [button/just-icon {:class [:large :cta]} ico/check]
+   [:div.h-12 [sc/text1 "Stuff"]]])
+
 (defn always-panel
   ([]
    (always-panel false))
   ([modify?]
-   [sc/row-sc-g2-w
-    [:div "text"]
+   [sc/row-center
     (when modify?
-      (hoc.buttons/cta-pill-icon {:on-click #(edit-event nil)} ico/plus "Ny aktivitet"))
+      [:div.relative.cursor-default
+       [sc/col-space-2
+        (hoc.buttons/just-icon {:class    [:cta :large]
+                                :on-click #(edit-event nil)}
+                               ico/plus)
+        [sc/small2 "Ny aktivitet"]]])
+
 
     #_[hoc.buttons/pill
        {:class    [:regular :pad-right]
@@ -272,4 +285,4 @@
                                                  (strong [sc/text-inline (->> type (get sci/person-by-id) :name)]))
                                                (when tldr
                                                  (weak tldr))]))]])])
-     [sc/text1 "Se flere planlagte hendelser i " (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "årshjulet")]]))
+     #_[sc/text1 "Se flere planlagte hendelser i " (sc/header-accomp-link {:href (kee-frame.core/path-for [:r.yearwheel])} "årshjulet")]]))

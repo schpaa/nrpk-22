@@ -53,32 +53,32 @@
           "img-4.jpg"]))
 
 (defn news-data []
-  [[:id0 {:author  @(rf/subscribe [:lab/uid])
-          :date    (str (t/instant (t/at (t/yesterday) (t/noon))))
-          :title   "Ugly title"
-          :content [p "Sesongen er godt i gang. "
-                    [widgets/auto-link {:caption "Utlånsloggen"} :r.utlan]
-                    " er i bruk. Håper dere finner den enklere i bruk enn fjorårets."
-                    " Vann— og lufttemperatur registreres ved å klikke på temperaturene du ser øverst på siden."]}]
-   [:xx {:content [:div
-                   [p "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
-                   [p "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
-                    [widgets/auto-link {} :r.min-status]]]}]
-   ["id1" {:title   "title1"
+  [#_[:id0 {:author  @(rf/subscribe [:lab/uid])
+            :date    (str (t/instant (t/at (t/yesterday) (t/noon))))
+            :title   "uten tittel"
+            :content [p "Sesongen er godt i gang. "
+                      [widgets/auto-link {:caption "Utlånsloggen"} :r.utlan]
+                      " er i bruk. Håper dere finner den enklere i bruk enn fjorårets."
+                      " Vann— og lufttemperatur registreres ved å klikke på temperaturene du ser øverst på siden."]}]
+   ["id0" {:title "uten-tittel"
+           :content [:div
+                     [p "Hele vaktlisten er nå tilgjengelig. Saldo fra fjoråret registreres fortløpende i dagene fram til nøkkelvaktmøtet."]
+                     [p "Er det noe som ikke stemmer, send tilbakemelding fra nettsiden det gjelder, se "
+                      [widgets/auto-link {} :r.min-status]]]}]
+   ["id1" {:title   "uten-tittel"
            :content "markdown content 1"
-           :images  []
            :author  @(rf/subscribe [:lab/uid])
            :date    (str (t/instant (t/at (t/yesterday) (t/noon))))}]
    ["id2" {:title   "title2"
            :content "markdown content 2"
-           :images  []
            :author  @(rf/subscribe [:lab/uid])
            :date    (str (t/instant (t/at (t/yesterday) (t/noon))))}]])
 
 ;; items
 
 (defn header-listitem [idx {:keys [date images title content]}]
-  [:div {:class [:flex :items-center :gap-4]}
+  [:div {:class [:flex :items-center :gap-4]
+         :style {:min-height "3rem"}}
    [hoc.buttons/pill {:class [:round :cta]}
     [sc/icon-small ico/check]]
 
@@ -97,8 +97,10 @@
   (let [direction false]
     [:div
      {:style
-      {:background-color (if (odd? idx) "rgba(0,0,0,0.025)")
-       :margin-left      "32px"
+      {:background-color (if (odd? idx) "rgba(0,0,0,0.05)")
+       :margin-inline-start "32px"
+       :padding "1rem"
+       ;:margin-left      "32px"
        :border-radius    "var(--radius-0)"
        :z-index          0}}
      [:div.flex.w-full
@@ -149,8 +151,8 @@
             (news-listitem idx
                            (assoc m
                              :date (some-> date t/instant t/date-time)
-                             :images (take (rand-int (count frontpage-images))
-                                           (shuffle frontpage-images)))))]
+                             :images- (take (rand-int (count frontpage-images))
+                                            (shuffle frontpage-images)))))]
 
     (let [{right-menu? :right-menu?} @(rf/subscribe [:lab/screen-geometry])
           er-nokkelvakt? (rf/subscribe [:lab/nokkelvakt])]

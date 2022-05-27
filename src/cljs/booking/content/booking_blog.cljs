@@ -21,7 +21,8 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
             [booking.common-widgets :as widgets]
-            [booking.news :as news]))
+            [booking.news :as news]
+            [schpaa.style.hoc.buttons :as button]))
 
 (defn article-menu-definition [settings-atom]
   (let [uid (:uid @settings-atom)]
@@ -160,11 +161,18 @@
 (defn initial-page [{:keys [data date-of-last-seen id uid pointer]}]
   (into [:div.space-y-1]
         (concat
-          [[sc/row {:class [:justify-center]}
-            [hoc.buttons/pill
-             {:class [:cta :round :large]
-              :on-click #(schpaa.style.dialog/open-dialog-addpost)}
-             [sc/icon-large ico/plus]]]]
+          [
+           [sc/col-space-2
+            (hoc.buttons/just-icon {:class    [:cta :large]
+                                    :on-click #(schpaa.style.dialog/open-dialog-addpost)}
+                                   ico/plus)
+            [sc/small2 "Nytt innlegg"]]
+
+           #_[sc/row {:class [:justify-center]}
+              [hoc.buttons/pill
+               {:class [:cta :round :large]
+                :on-click #(schpaa.style.dialog/open-dialog-addpost)}
+               [sc/icon-large ico/plus]]]]
 
           (for [[k {:keys [content date] :as e} :as kv] (take @pointer (reverse data))
                 :let [uid' (:uid e)]]
@@ -184,9 +192,11 @@
 
           [[sc/row {:class [:justify-center]}
             (if (< @pointer (count data))
-              [hoc.buttons/reg-pill {:disabled (zero? (count data))
-                                     :class [:narrow :regular]
-                                     :on-click #(swap! pointer (fn [e] (+ e 5)))} "Vis flere"]
+              [button/just-caption
+               {:disabled (zero? (count data))
+                :class     [:narrow :regular]
+                :on-click  #(swap! pointer (fn [e] (+ e 5)))}
+               "Vis flere"]
               (when (pos? (count data))
                 [sc/small1 "Ingen flere innlegg"]))]])))
 

@@ -72,9 +72,9 @@
 ;region calendar elements/components
 
 (defn- week-component [dt description]
-  [sc/row-fields {:style {:width           "100%"
-                          :align-items     :end
-                          :justify-content :between}}
+  [sc/row-field {:style {:width            "100%"
+                         :align-items     :end
+                         :justify-content :between}}
    [sc/title2 (booking.flextime/relative-time dt ta/calendar-date-format)]
    [sc/row-ec
     [sc/small1 description]
