@@ -120,7 +120,7 @@
        :width               "100%"
        :preserveAspectRatio "none"}
       (hour-ticks total-hours)
-      [:rect {:fill    (if ok session-color "var(--red-5)")
+      [:rect {:fill    (if ok "var(--red-5)" session-color)
               :width   (- session-end session-start)
               ;:opacity 0.8
               :x       session-start

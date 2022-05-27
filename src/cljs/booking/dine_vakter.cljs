@@ -60,12 +60,12 @@
   (let [loggedin-uid @(rf/subscribe [:lab/uid])
         admin? @(rf/subscribe [:lab/admin-access])]
     (when (seq data::stringified)
-      (let [ within-undo-limits? (partial within-undo-limits? (t/now))
+      (let [within-undo-limits? (partial within-undo-limits? (t/now))
             collector (sort-by :date-proper <
                                (for [[section vs] data::stringified
                                      [timeslot uid-registered-tuple] vs
                                      [_userid dt] uid-registered-tuple
-                                     :let [status (if (map? dt) :action/cancel :ok)
+                                     :let [status (if (map? dt) :cancel :ok)
                                            date-registered (if-not (map? dt)
                                                              (some-> dt t/date-time)
                                                              (some-> (get dt "registered") t/date-time))
@@ -79,6 +79,7 @@
                                   :completed?      (and completed? (= :ok status))}))]
         [sc/col-space-8 {:class []}
          [sc/col-space-4 {:style {:margin-inline "var(--size-3)"}}
+          ;[l/pre collector]
           (into [:<>]
                 (->> collector
                      (map (fn [{:keys [status date-registered date-proper completed? section timeslot]}]
@@ -89,36 +90,36 @@
                               (if completed?
                                 [:<>]
                                 (when (or (= loggedin-uid uid) admin?)
-                                  (if (:action/cancel status)
-                                    [button/reg-pill-icon
+                                  (if (:cancel status)
+                                    [button/icon-with-caption
                                      {:class    [:regular]
                                       :disabled true}
                                      ico/exclamation
                                      "Frafalt"]
                                     (if (within-undo-limits? date-registered)
-                                      [button/reg-pill-icon
+                                      [button/icon-with-caption
                                        {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
-                                        :class    [(if admin? :inverse :danger)]
+                                        :class    [(if admin? :inverse :danger) :pad-right]
                                         :disabled false}
                                        ico/trash
                                        "Avlys"]
-                                      [button/reg-pill-icon
+                                      [button/icon-with-caption
                                        {:class    [:message]
-                                        :disabled true}
+                                        :disabled false}
                                        ico/bytte
                                        "Bytte"]))))
                               (when (and admin?
                                          (not (within-undo-limits? date-registered))
                                          (not completed?)
-                                         (not (:action/cancel status)))
-                                [button/reg-pill-icon
+                                         (not (:cancel status)))
+                                [button/icon-with-caption
                                  {:on-click #(actions/frafall {:uid uid :section section :timeslot timeslot})
                                   :class    [:danger]
                                   :disabled false}
                                  ico/thumbsdown
                                  "Frafall"])
-                              (when (and admin? (not completed?) (:action/cancel status))
-                                [button/reg-pill-icon 
+                              (when (and admin? (not completed?) (:cancel status))
+                                [button/icon-with-caption
                                  {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
                                   :class    [:cta :outliner]
                                   :disabled false}

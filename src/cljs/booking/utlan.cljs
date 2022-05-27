@@ -171,10 +171,11 @@
     :grid-template-areas   [["time edit content graph"]]}])
 
 (o/defstyled logg-listitem-grid :div
-  [:& :p-0
+  [:& :p-0 :w-full
    {:display               :grid
     :column-gap            "var(--size-3)"
-    :row-gap               "var(--size-1)"
+    :row-gap               "var(--size-0)"
+    :padding-block "var(--size-1)"
     :grid-template-columns "5rem 1fr 1fr min-content 1fr"
     :grid-template-rows    "min-content min-content"        ;"minmax(2rem,1fr) min(min-content,2rem)"
 
@@ -219,11 +220,12 @@
 
 (defn- badges [deleted-item {:keys [deleted sleepover havekey] :as m}]
   ;note: Deleted-item is a partially applied sc/deleted-item
-  [deleted-item
-   [sc/row-sc-g2 {:class [:pr-2]
-                  :style {:flex-wrap :nowrap}}
-    (when havekey [sc/icon-tiny-frame ico/harnøkkel])
-    (when sleepover [sc/icon-tiny-frame ico/moon-filled])]])
+  (when (or havekey sleepover)
+    [deleted-item
+     [sc/row-sc-g2 {:class []
+                    :style {:flex-wrap :nowrap}}
+      (when havekey [sc/icon-tiny-frame ico/harnøkkel])
+      (when sleepover [sc/icon-tiny-frame ico/moon-filled])]]))
 
 (defn- edit-bar [edit-mode? k {:keys [uid deleted timestamp list] :as m}
                  all-returned?]
@@ -236,6 +238,7 @@
                             {:path  ["activity-22" (name k)]
                              :value {:deleted (not deleted)}}))}
         (if deleted "Angre" "Slett")]
+
        (when-not deleted
          [widgets/in-out
           all-returned?
@@ -253,8 +256,8 @@
                                :white-space :nowrap}
                        :class [:tabular-nums]}
              (if (pos? n) n "—")])]
-    [sc/row {:class [:h-full :pl-2]
-             :style {:align-items :start
+    [sc/row {:class [:h-10 :pl-2]
+             :style {:align-items :center
                      :grid-area   "agegroups"}}
      [:div
       {:style {:display               "grid"
@@ -348,7 +351,7 @@
        (if show-overview?
          [logg-listitem-overview
           [g-area "time" [sc/title1 {:style {:align-self :center}
-                                     :class [:tracking-tight :tabular-nums]}
+                                     :class [:tracking-tight :tabular-nums :items-center]}
                           (-> (preformat-dates date end-time-instant) :start-time)]]
           [g-area "edit" [edit-bar @(rf/subscribe [:rent/common-edit-mode]) k m all-returned?]]
           [g-area "graph" (when (and details? (t/= (t/date date) (t/today)))
@@ -387,7 +390,11 @@
                             :style {:align-items     "center"
                                     :justify-content :end
                                     :grid-area       "details"}}
-              (if-not ref-uid [sc/text1 phone] [widgets/user-link ref-uid])
+              (if-not ref-uid
+                (if-let [uid (user.database/lookup-phone phone)]
+                  [widgets/user-link uid]
+                  [sc/text1 phone])
+                [widgets/user-link ref-uid])
               [badges item-wrapper m]]])])])))
 
 ;todo REFACTOR!
@@ -481,12 +488,12 @@
 (defn headline-plugin []
   (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
         details-mode? @(rf/subscribe [:rent/common-show-details])]
-    [[button/reg-pill
-      {:class    [:large (if details-mode? :message :clear)]
+    [[button/pill-large
+      {:class    [ :round (if details-mode? :message :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
-      [sc/icon-large ico/more-details]]
-     [button/reg-pill
-      {:class    [:large
-                  (if delete-mode? :danger :clear)]
+      ico/more-details]
+     [button/pill-large
+      {:class    [ :round
+                  (if delete-mode? :danger-outline :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-deleted]) not)}
-      [sc/icon-large ico/trash]]]))
+      ico/trash]]))

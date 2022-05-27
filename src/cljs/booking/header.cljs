@@ -86,33 +86,34 @@
   (when-let [s (rf/subscribe [:lab/screen-geometry])]
     (:right-menu? @s)))
 
-(defn header-line [r headline scroll-pos]
+(defn header-line [r headline-plugin scroll-pos]
   (let [[links caption] (some-> r :data :header)
         items (concat [[location-block r links caption (right-menu?)]
                        [:div.grow]]
 
-                      ;todo no use for scroll-pos yet
-                      [[:div.flex.items-center.justify-center.mx-4.tabular-nums
-                        [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]]
+                      (when goog.DEBUG
+                        ;todo no use for scroll-pos yet
+                        [[:div.flex.items-center.justify-center.mx-4.tabular-nums
+                          [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]])
 
-                      (when headline
-                        (when-some [headline (seq (headline))]
+                      (when headline-plugin
+                        (when-some [headline (seq (headline-plugin))]
                           [[:div.flex.px-3.pb-2.gap-3.-mt-2.pt-3
-                            {:style {:border-radius    "var(--radius-2)"
+                            {:style {:border-radius           "var(--radius-2)"
                                      :border-top-right-radius 0
-                                     :border-top-left-radius 0
-                                     :background-color "rgba(0,0,0,0.05)"}}
+                                     :border-top-left-radius  0
+                                     :background-color        "rgba(0,0,0,0.025)"}}
                             (into [:<>] headline)]]))
 
                       [[:div.mx-2 [main-menu r]]])
         items (if (right-menu?) (reverse items) items)]
     [headerline [header-top items]]))
 
-(defn header [r scroll-pos headline]
+(defn header [r scroll-pos headline-plugin]
   (let [{:keys [hidden-menu? right-menu? mobile? menu-caption?]} @(rf/subscribe [:lab/screen-geometry])
         marg (when-not hidden-menu?
                (when-not mobile? (if menu-caption? "14rem" "4rem")))]
     [header-overlay
      {:style {:margin-left  (when-not right-menu? marg)
               :margin-right (when right-menu? marg)}}
-     [header-line r headline scroll-pos]]))
+     [header-line r headline-plugin scroll-pos]]))

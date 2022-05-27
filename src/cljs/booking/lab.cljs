@@ -60,20 +60,21 @@
              (set/union e #{id})))))
 
 (defn- clear-selection [r]
-  (tap> {:r r})
   (when r
-    (let [x (set (map (comp :id val) r))
-          _ (tap> [(count x) x])
-          this-group (remove nil? (map @selection x))
-          _ (tap> this-group)]
-      (button/reg-pill-icon
-        {:disabled (zero? (count this-group))
+    (let [x (if (map? r)
+              (->> r keys (map name) set)
+              nil)
+          this-group (remove nil? (map @selection x))]
+      (button/reg-pill
+        {:disabled (or
+                     (nil? this-group)
+                     (empty? this-group))
          :on-click #(reset! selection (set/difference @selection x))
          :class    [:round :inverse :shrink-0]}
         ico/closewindow))))
 
 (defn- select-all-in-group [r]
-  (button/reg-pill-icon
+  (button/reg-pill
     {:disabled (every? (set @selection) (vals r))
      :on-click #(doseq [e (map :id (vals r))]
                   (toggle e))
@@ -191,8 +192,8 @@
                    (when (pos? (count c))
                      [sc/row-sc-g2
                       [:div.relative
-                       [button/reg-pill
-                        {:class    [:large (if details-mode? :message :clear)]
+                       [button/pill-large
+                        {:class    [(if details-mode? :message :clear)]
                          :style    {:background-color (if @show-flagged "var(--yellow-6)" "transparent")}
                          :on-click #(swap! show-flagged (fnil not false))}
 
@@ -205,11 +206,11 @@
                                   :border-radius "var(--radius-round)"}}
                          [sc/small {:style {:color "var(--floating)"}
                                     :class [:bold]} (count c)]]]]]))))
-             #_[button/reg-pill
-                {:class    [:large
-                            (if delete-mode? :danger :clear)]
-                 :on-click #(swap! (r/cursor store [:rent/show-deleted]) not)}
-                [sc/icon-large ico/trash]]])))
+             [button/pill-large
+              {:class    [:large
+                          (if delete-mode? :danger :clear)]
+               :on-click #(swap! (r/cursor store [:rent/show-deleted]) not)}
+              [sc/icon-large ico/trash]]])))
 
 (defn plus-minus-time [time]
   (let [has-time (some? @time)]
@@ -287,7 +288,7 @@
 
 (defn form-confirm [{:action/keys [prev-step complete action/cancel]}]
   [:<>
-   [bs/popup-frame 
+   [bs/popup-frame
     [sc/co
      [sc/row-fields
       (previous-step prev-step)
@@ -309,7 +310,7 @@
 ;;
 
 (defn- transition-map [p]
-  {:class      [:absolute :top-0 :w-fullx :mx-auto :-mt-16  :-debug2]
+  {:class      [:absolute :top-0 :w-fullx :mx-auto :-mt-16 :-debug2]
    :enter      "ease-in-out duration-300 transform -mt-16"
    :enter-from (if p
                  "translate-x-full"
@@ -473,7 +474,7 @@
                    b (+ a (rb))]
                [a b])) nil))
 
-(defn svg-time-graph [idx ok! data start end]
+(defn svg-time-graph [idx inhibit data start end]
   (let [settings (r/atom {:rent/graph-view-mode 0})
         now (t/date-time)]
     [sc/col
@@ -483,7 +484,7 @@
       {:total-hours   (* 4 96)                              ; 48 hours
        :settings      settings
        :now           now
-       :ok            ok!
+       :ok            inhibit
        :session-start start
        :session-end   end}
       data]]))
@@ -499,7 +500,7 @@
         selected? (some? (some #{id} (:selection @store)))
         work-log-count (count (remove (fn [[_k v]] (or (:complete v) (:deleted v))) work-log))
         has-work-log? (pos? work-log-count)
-        inhibit false ;nil ;(rand-nth [true false])
+        inhibit true                                       ;nil ;(rand-nth [true false])
         data nil #_(->> (make-series-of-abutting-elements #(-> 10) #(-> 10))
                         ;#(rand-int 96) #(+ 20 (rand-int 12)))
                         (drop 1)
@@ -527,19 +528,18 @@
         (when-not has-work-log?
           [:div.grid.place-content-center.shrink-0
            (if inhibit
-             (button/reg-pill-icon
+             (button/reg-pill
                {:on-click #(toggle id)
-                :class    [:round :large]
+                :class    [:round]
                 :style    {:border-color "var(--red-6)"
                            :color        "var(--red-6)"}}
-               [:div.w-8.h-8.grid.place-content-center
-                (schpaa.icon/adapt :circle-filled)])
-             (button/reg-pill-icon
+               [sc/icon ico/exclamation])
+             (button/reg-pill
                {:on-click #(toggle id)
                 :class    [:frame :round]
-                :style    {:border-color (if selected? "var(--green-6)" "var(--gray-6)")
+                :style    {:border-color     (if selected? "var(--green-6)" "var(--gray-6)")
                            :background-color (when selected? "var(--green-6)")
-                           :color        (if selected? "var(--green-0)" "var(--gray-6)")}}
+                           :color            (if selected? "var(--green-0)" "var(--gray-6)")}}
                (when selected? ico/check)))]))]]))
 
 (defn- list-of-boats [{:keys [slot number] :as r}]
@@ -550,6 +550,7 @@
 (defmethod render-list :sjøbasen [_ r]
   (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
                        (map (comp name key) (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))
+        show-selectors? (pos? @step)
         has-stars? (when starred-keys
                      (pos? (count starred-keys)))
         data (some->> @(rf/subscribe [:db/boat-db])
@@ -585,8 +586,10 @@
                                 {:style {:height "auto"}}
                                 [widgets/stability-name-category-front-flag
                                  (dissoc (-> r first val) :kind)]
-                                (clear-selection r)
-                                (select-all-in-group r)]
+                                (when show-selectors?
+                                  [sc/row-sc-g2
+                                   (clear-selection (into {} r))
+                                   (select-all-in-group (into {} r))])]
                                (list-of-boats r)]))]))]))))
 
 (defmethod render-list :b [_ r]

@@ -16,38 +16,73 @@
             [booking.ico :as ico]
             [schpaa.style.ornament :as sc]
             [re-frame.core :as rf]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [schpaa.debug :as l]
+            [schpaa.style.hoc.buttons :as button]))
 
 (js/goog.exportSymbol "hljs" hljs)
 (js/goog.exportSymbol "DevcardsSyntaxHighlighter" hljs)
 
 (defn ^:export init! []
+  (rf/clear-subscription-cache!)
   (dc/start-devcard-ui!)
   (rf/dispatch-sync [::bp/set-breakpoints nrpk.core/screen-breakpoints]))
 
 ;;todo enable this!!
 (defn reload! [] (init!))
 
-(defcard-rg danger-pill
+(defcard-rg pill
   [:div
-   [hoc.buttons/reg-pill
-    {:class    [:inverse :pad-right :narrow]
+   [button/icon-with-caption
+    {:on-click #()
+     :class    [:message]}
+    ico/closewindow
+    "Bli til Båtlogg"]])
+
+(defcard-rg pill
+  [:div
+   [button/icon-with-caption
+    {:on-click #()
+     :class    [:inverse]}
+    ico/closewindow nil]])
+
+(defcard-rg pill
+  [:div
+   [button/icon-with-caption
+    {:on-click #()
+     :class    [:inverse]}
+    ico/closewindow
+    "Bli til Båtlogg"]])
+
+(defcard-rg pill
+  [:div
+   [button/icon-with-caption
+    {:on-click #()
+     :class    [:large]}
+    ico/closewindow
+    "Bli til Båtlogg"]])
+
+(defcard-rg pill
+  [:div
+   [hoc.buttons/pill
+    {:class    [:message :narrow :uppercase :tracking-widest]
      :on-click #()}
     "Bli til Båtlogg"]])
 
-(defcard-rg round-pill
+(defcard-rg pill
   [:div
-   [hoc.buttons/round-pill
-    {:class    [:message :narrow]
+   [hoc.buttons/icon-with-caption
+    {:class    [:regular :large]
      :on-click #()}
-    "Bli til Båtlogg"]])
+    ico/stjerne
+    nil]])
 
-(defcard-rg round-pill2
+(defcard-rg pill
   [:div
-   [hoc.buttons/regoutline-pill-icon
-    {:class    [:narrow]
+   [hoc.buttons/pill
+    {:class    [ :frame :pad-right :uppercase]
      :on-click #()}
-    [sc/icon ico/menu]
+    [sc/icon-small ico/commandPaletteClosed]
     "Bli til Båtlogg nu"]])
 
 

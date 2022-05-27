@@ -8,7 +8,8 @@
             [times.api :refer [format]]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
-            [schpaa.style.ornament :as sc]))
+            [schpaa.style.ornament :as sc]
+            [schpaa.style.hoc.buttons :as button]))
 
 ;; styles
 
@@ -93,36 +94,40 @@
 
 (defn- occupied-slot [uid [this-uid status]]
   (let [owner? (= this-uid uid)
-        cancelled? (and (map? status) (:action/cancel status))
+        cancelled? (and (map? status) (:cancel status))
         path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
     [taken-user-slot
      {:class    [(if cancelled? :cancelled (when owner? :owner))]
       :on-click #(rf/dispatch [:app/navigate-to path])}
      [badge-text this-uid owner? cancelled?]]))
 
-(defn command [uid base section slots-free starttime-key]
+(defn command [ mobile? uid base section slots-free starttime-key]
   [:div.h-10.flex.items-center
+   {:class [(if mobile? :w-8 :w-28)]}
    ;fix: duplicated owner?
    (let [owner? (get-in base [section uid starttime-key])
          path {:uid uid :section section :timeslot starttime-key}]
      (if (or owner? (pos? slots-free))
        (if owner?
          (if (actions/check-can-change? path)
-           [hoc.buttons/round-danger-pill
-            {:class    [:round :shrink-0]
+           [button/icon-with-caption
+            {:class    [:danger :shrink-0]
              :on-click #(actions/delete path)}
-            (sc/icon ico/trash)]
-           [hoc.buttons/pill
-            {:class    [:round :shrink-0 :message]
+            ico/trash
+            (when-not mobile? "Avlys")]
+           [button/icon-with-caption
+            {:class    [:message]
              :on-click #(actions/delete path)}
-            (sc/icon ico/bytte)])
+            ico/bytte
+            (when-not mobile? "Overta")])
 
-         [hoc.buttons/round-cta-pill
-          {:class    [:round :shrink-0]
+         [button/icon-with-caption
+          {:class    [:cta]
            :type     :button
            :on-click #(actions/add path)}
-          (sc/icon ico/plus)])
-       [:div.w-8]))])
+          ico/plus
+          (when-not mobile? "Velg")])))])
+
 
 (defn prepare-data [data]
   data)
@@ -178,11 +183,15 @@
      [sc/row-sc-g2
       {:style {:align-items :center
                :height      "3rem"}}
-      [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]]]))
+      [sc/co
+
+       [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]
+       [sc/small "Ikke bruk iPad'en til dette, bruk din egen telefon."]]]]))
 
 
 (defn table [{:keys [base data] :as m}]
   (let [show-only-available? @(schpaa.state/listen :calendar/show-only-available)
+        mobile? (:mobile? @(rf/subscribe [:lab/screen-geometry]))
         uid @(rf/subscribe [:lab/uid])
         kald-periode? (:kald-periode (user.database/lookup-userinfo uid))
         uid (keyword uid)
@@ -208,7 +217,7 @@
                                 [_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) starttime'))
                                                                       alle-regs-i-denne-periodegruppen))
                                 slots-free (- slots (count #_slots-on-this-eykt
-                                                      (remove (comp :action/cancel second) slots-on-this-eykt)))]
+                                                      (remove (comp :cancel second) slots-on-this-eykt)))]
                           :when (if (and (not (= idx 1))
                                          show-only-available?)
                                   (or (pos? slots-free) (get-in base [section uid starttime-key]))
@@ -222,7 +231,7 @@
                                           :style {:white-space :nowrap
                                                   :width       "3rem"}}
                           [sc/text1 "" (t/hour starttime) "–" (t/hour endtime)]]
-                         [command uid base section slots-free starttime-key]
+                         [command mobile? uid base section slots-free starttime-key]
                          ; for every line
                          (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
                                (concat

@@ -252,23 +252,23 @@
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
-    [button/reg-pill-icon
-     {:on-click #(on-click)
+    [button/icon-with-caption
+     {:on-click on-click
       :class    [(if deleted? :frame :danger)
-                 (if mobile? :round)]
+                 (if mobile? :round :pad-right)]
       :disabled false}
-     (sc/icon-small (if deleted? ico/rotate-left ico/trash))
+     (if deleted? ico/undo ico/trash)
      (when-not mobile? caption)]))
 
 (defn in-out [all-returned? {:keys [on-click deleted?]} caption]
-  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
-    [button/reg-pill-icon
-     {:on-click #(on-click)
+  (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])]
+    [button/icon-with-caption
+     {:on-click on-click
       :class    [(if deleted? :frame)
-                 (if mobile? :round)
+                 (if mobile? :round :pad-right)
                  (if all-returned? :regular :cta)]
       :disabled false}
-     (sc/icon-small ico/status)
+     ico/status
      (when-not mobile? caption)]))
 
 (defn trashcan [on-click {:keys [deleted id]}]
@@ -280,11 +280,11 @@
       ico/trash)]])
 
 (defn edit [attr on-click {:keys [deleted] :as m}]
-  (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])
+  (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
         attr (conj
                attr
                {:disabled true
-                :class    [:frame]
+                :class    [(if mobile? :round :pad-right)]
                 :style    {:text-transform "uppercase"
                            :border-color   "var(--blue-7)"
                            :background     "var(--blue-6)"
@@ -292,10 +292,9 @@
                 :on-click #(on-click m)})]
     (if deleted
       [:div.w-8]
-      [button/reg-pill-icon attr
-       [sc/icon-small
-        {:style {:xcolor "var(--blue-0)"}}
-        ico/pencil]
+      [button/icon-with-caption
+       attr
+       ico/pencil
        (when-not mobile? "Endre")])))
 
 (defn lookup-page-ref-from-name [link]
@@ -726,13 +725,14 @@
   (let [route @(rf/subscribe [:kee-frame/route])
         screenmode (rf/subscribe [:app/user-screenmode])
         user-uid (rf/subscribe [:lab/uid])
+        geo (rf/subscribe [:lab/screen-geometry])
         ipad? (= @user-uid @(db/on-value-reaction {:path ["system" "active"]}))]
     (fn []
-      (let [base (if (= :dark @screenmode)
+      (let [mobile? (:mobile? @geo)
+            base (if (= :dark @screenmode)
                    (apply str (map #(.toString % 16) [146 186 110]))
                    "0693e3")]
         [:div.p-2.noprint
-         ;[l/pre @screenmode]
          [:div.h-20 [waves base]]
          [:div.z-1.rounded-top
           {:style {:border-radius           "var(--radius-1)"
@@ -764,36 +764,34 @@
                  [sc/subtext-with-link {:class [:neutral]
                                         :style {:color "var(--gray-1)"}
                                         :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]]]]
-              [sc/col-space-1
-               {:style {:align-items :end :justify-content :start}}
+              [sc/col-space-1 
+               {:style {:align-items :end
+                        :justify-content :end}}
                (when-not ipad?
-                 [:div
-                  [button/reg-pill-icon
-                   {:class    [:message :narrow]
-                    :on-click #(do
-                                 (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
-                                 (db/database-update {:path  ["system"]
-                                                      :value {"active" @user-uid}}))}
-                   ico/exclamation
-                   "Bli til Båtlogg"]])
+                 [button/icon-with-caption
+                  {:class    [:round :message]
+                   :on-click #(do
+                                (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
+                                (db/database-update {:path  ["system"]
+                                                     :value {"active" @user-uid}}))}
+                  ico/exclamation
+                  (when-not mobile? "Bli til Båtlogg")])
 
                (when @(rf/subscribe [:lab/admin-access])
-                 [:div
-                  [button/reg-pill-icon
-                   {:class    [:danger :narrow]
-                    :on-click #(db/database-update {:path  ["system"]
-                                                    :value {"timestamp" booking.data/DATE}})}
-                   ico/exclamation
-                   "Aktiver!"]])
+                 [button/icon-with-caption
+                  {:class    [:danger]
+                   :on-click #(db/database-update {:path  ["system"]
+                                                   :value {"timestamp" booking.data/DATE}})}
+                  ico/exclamation
+                  "Aktiver!"])
 
-               [:div
-                [button/reg-pill-icon
-                 {:class    [:narrow :frame]
-                  :style    {:color        "var(--gray-1)"
-                             :border-color "var(--gray-1)"}
-                  :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
-                 ico/tilbakemelding
-                 "Tilbakemelding"]]]]
+               [button/icon-with-caption
+                {:class    [:frame :always-wide]
+                 :style    {:color        "var(--gray-1)"
+                            :border-color "var(--gray-1)"}
+                 :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
+                ico/tilbakemelding
+                (when-not mobile? "Tilbakemelding")]]]
 
              [sc/row-fields
               [sc/small (or booking.data/VERSION "version")]

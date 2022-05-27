@@ -133,6 +133,58 @@
 
 ;endregion
 
+(defn logg-item [k {:keys [deleted alias loggedin-uid start end boats db] :as m}]
+  [booking.utlan/logg-listitem-grid
+   {:class [(when test :test)]}
+
+   [badges m #_(assoc m :sleepover true)]
+
+   (when @(rf/subscribe [:booking/common-edit-mode])
+     [:div {:class [:h-12x :flex :items-center :gap-2]
+            :style {:grid-area "edit"
+                    :display   :flex}}
+      [edit loggedin-uid true k m]
+      (when-not deleted [basic loggedin-uid m])])
+
+   [sc/text2 {:style {:grid-area "details"}} alias]
+   #_[sc/text1 {:class [:-debug]
+                :style {:place-self :center
+                        :grid-area  "badges"}} "badges"]
+   (into [booking.utlan/logg-listitem
+          {:class [(if deleted :deleted)
+                   :x-debug
+                   :w-full :py-2]
+           :style {:flex            "1 0 auto"
+                   :justify-content :between
+                   :align-items     :center
+                   :opacity         (if deleted 0.2 1)
+                   :grid-area       "content"}}]
+         (concat
+           [[sc/col {:class [:tabular-nums :w-44]}
+             [sc/row-fields
+              [sc/text1 {:class [:tracking-tight]} (times.api/logg-date-format start)]
+              [:div.grow]
+              [sc/text1 {:class [:tracking-tight]} "kl. " (times.api/time-format start)]]
+             (when end
+               (let [dt end]
+                 [sc/row-fields
+                  (when-not (t/= (t/date dt) (t/date start))
+                    [sc/text1 {:class [:tracking-tight]
+                               :style {:white-space :nowrap}} (times.api/logg-date-format dt)])
+                  [:div.grow]
+                  [sc/text1 {:class [:tracking-tight :w-full :h-auto :self-center :text-right]}
+                   (if end
+                     (str "kl. " (times.api/time-format (t/time dt)))
+                     (str end))]]))]]
+           [(map (fn [[id [number slot]]]
+                   (widgets/badge {:class    [:big #_(if-not returned :in-use)]
+                                   :on-click #(open-modal-boatinfo
+                                                {:uid  loggedin-uid
+                                                 :data (get db (keyword id))})}
+                                  number
+                                  slot))
+                 (remove nil? boats))]))])
+
 (defn page [r]
   (let [user-auth (rf/subscribe [::db/user-auth])
         loggedin-uid @(rf/subscribe [:lab/uid])]
@@ -144,70 +196,18 @@
              show-deleted? @(rf/subscribe [:booking/common-show-deleted])
              db @(rf/subscribe [:db/boat-db])
              lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
-                                             ;(map (juxt key (comp :number val) (comp :slot val)))
                                              (map (fn [[k v]] [k [(:number v) (:slot v)]]))))]
          [sc/col-space-8
-          ;[l/pre lookup-id->number]
           [sc/col-space-1
            (into [:<>]
-                 (for [[k {:keys [test start end alias list deleted] :as m}]
+                 (for [[k {:keys [start end  list ] :as m}]
                        (if show-deleted?
                          @data
-                         @data
-                         #_(remove (comp :deleted val) @data))
-                       :let [boats list
-                             start (t/date-time start)
-                             end (t/date-time end)]]
-
-                   [booking.utlan/logg-listitem-grid
-                    {:class [(when test :test)]}
-
-                    [badges m #_(assoc m :sleepover true)]
-
-                    (when @(rf/subscribe [:booking/common-edit-mode])
-                      [:div {:class [:h-12x :flex :items-center :gap-2]
-                             :style {:grid-area "edit"
-                                     :display   :flex}}
-                       [edit loggedin-uid true k m]
-                       (when-not deleted [basic loggedin-uid m])])
-
-                    [sc/text2 {:style {:grid-area "details"}} alias]
-                    #_[sc/text1 {:class [:-debug]
-                                 :style {:place-self :center
-                                         :grid-area  "badges"}} "badges"]
-                    (into [booking.utlan/logg-listitem
-                           {:class [(if deleted :deleted)
-                                    :x-debug
-                                    :w-full :py-2]
-                            :style {:flex            "1 0 auto"
-                                    :justify-content :between
-                                    :align-items     :center
-                                    :opacity         (if deleted 0.2 1)
-                                    :grid-area       "content"}}]
-                          (concat
-                            [[sc/col {:class [:tabular-nums :w-44]}
-                              [sc/row-fields
-                               [sc/text1 {:class [:tracking-tight]} (times.api/logg-date-format start)]
-                               [:div.grow]
-                               [sc/text1 {:class [:tracking-tight]} "kl. " (times.api/time-format start)]]
-                              (when end
-                                (let [dt end]
-                                  [sc/row-fields
-                                   (when-not (t/= (t/date dt) (t/date start))
-                                     [sc/text1 {:class [:tracking-tight]
-                                                :style {:white-space :nowrap}} (times.api/logg-date-format dt)])
-                                   [:div.grow]
-                                   [sc/text1 {:class [:tracking-tight :w-full :h-auto :self-center :text-right]}
-                                    (if end
-                                      (str "kl. " (times.api/time-format (t/time dt)))
-                                      (str end))]]))]]
-                            [(map (fn [[id returned]]
-                                    (let [returned (not (empty? returned))
-                                          [number slot] (get lookup-id->number (keyword id) (str " ? " id))]
-                                      (widgets/badge {:class    [:big #_(if-not returned :in-use)]
-                                                      :on-click #(open-modal-boatinfo
-                                                                   {:uid  loggedin-uid
-                                                                    :data (get db (keyword id))})}
-                                                     number
-                                                     slot)))
-                                  (remove nil? boats))]))]))]]))}))
+                         @data)]
+                   [logg-item k (assoc m
+                                  :k k
+                                  :db db
+                                  :boats (map (fn [[id _returned]] (get lookup-id->number (keyword id) (str " ? " id))) list)
+                                  :loggedin-uid loggedin-uid
+                                  :start (t/date-time start)
+                                  :end (t/date-time end))]))]]))}))

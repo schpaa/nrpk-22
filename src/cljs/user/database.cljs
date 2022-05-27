@@ -69,6 +69,26 @@
 
       (or alias navn uid (str "failed<lookup-alias>'" uid "'")))))
 
+(defn lookup-phone [phone]
+  (if-some [_ @(rf/subscribe [::db/user-auth])]
+    (->> @(db/on-value-reaction {:path ["users"]})
+         (map (fn [[k v]] [(:telefon v) (:uid v)]))
+         (into {})
+         (filter (fn [[a b]] (= (str a) (str phone))))
+         first
+         second)
+    nil))
+
+(lookup-phone "92491949")
+
+(comment
+  (do
+    (->> @(db/on-value-reaction {:path ["users"]})
+         (map (fn [[k v]] [(:telefon v) (:navn v)]))
+         (into {})
+         (filter (fn [[a b]] (= (str a) (str "92491949")))))))
+
+
 
 ;region
 

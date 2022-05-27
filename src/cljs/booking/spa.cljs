@@ -87,7 +87,7 @@
 
    [sc/text1 "Finner ikke noe på denne adressen! Det er kanskje en gammel lenke. Se om du finner det du leter etter i denne listen:"]
    (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}
-                                (sort-by :name < booking.modals.commandpalette/commands)]
+                                (sort-by :name < (remove :private (booking.modals.commandpalette/commands)))]
                             [:div [sc/subtext-with-link {:on-click action} name]]))])
 
 (def routing-table
@@ -147,7 +147,7 @@
           :selected      hoc/selected
           :uid           (:uid user-auth)
           :on-submit     #(send :e.complete %)
-          :action/cancel #(send :e.cancel-booking)
+          :cancel #(send :e.cancel-booking)
           :my-state      schpaa.components.views/my-state
           :booking-data' (sort-by :date > (booking.database/read))}]]))
 
