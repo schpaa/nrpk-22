@@ -175,7 +175,7 @@
    {:display               :grid
     :column-gap            "var(--size-3)"
     :row-gap               "var(--size-0)"
-    :padding-block "var(--size-1)"
+    :padding-block         "var(--size-1)"
     :grid-template-columns "5rem 1fr 1fr min-content 1fr"
     :grid-template-rows    "min-content min-content"        ;"minmax(2rem,1fr) min(min-content,2rem)"
 
@@ -455,11 +455,92 @@
 
    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
 
+(defn date-iter [n]
+  (lazy-seq
+    (when-let [a (t/>> (t/today) (t/new-period n :days))]
+      (cons a (date-iter (inc n))))))
+
+(defn deleted? [[_ e]] (:deleted e))
+
+(defn datasource [xf source]
+  (transduce xf
+             conj
+             source))
+
+
+
+(defn graph []
+  (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
+        existing (partial datasource (comp (remove deleted?)))
+        group-by-date (fn [db]
+                        (group-by (comp (juxt (comp str t/date t/instant :timestamp)
+                                              (comp count :list)
+                                              (comp (juxt :adults :juveniles :children)))
+                                        second)
+                                  db))
+
+        #_#_data' (sort-by key >
+                           (reduce (fn [db [_ [date cnt] _]]
+                                     (update db date + cnt)) {} existing))]
+    (let [ma 0 #_(reduce max 0 (map second group-by-date))]
+      [:div
+       [l/pre (-> activity-records existing count)]
+
+       ;[l/pre (take 10 (date-iter 0))]
+       [l/pre (->> activity-records
+                   existing
+                   group-by-date
+                   (map (fn [[[date boats [a b c] :as k] v]] [k (count v)]))
+                   (sort-by ffirst))]
+       [l/pre (-> activity-records existing group-by-date)]
+       [:svg.h-32.w-full
+        {:style               {:background "var(--floating)"}
+         :viewBox             (l/strp 0 -1 60 (+ 2 ma 10))
+         :width               "100%"
+         :preserveAspectRatio "none"}
+        #_(for [[idx [dt [cnt c2 c3]]] (map-indexed vector group-by-date)
+                :let [weekend? (some #{(t/int (t/day-of-week dt))} [5 6])
+                      x idx]]
+            [:<>
+             (if (zero? (mod idx 7))
+               [:<>
+                [:line {:vector-effect :non-scaling-stroke
+                        :stroke        :black
+                        :stroke-width  0.8
+                        :x1            x
+                        :x2            x
+                        :y1            ma
+                        :y2            (+ ma 2)}]
+                [:text {:lengthAdjust  "spacingAndGlyphs"
+                        :textLength    (count (str idx))
+                        :style         {:font "3px Inter"}
+                        ;:stroke-width 0.8
+                        :vector-effect :non-scaling-stroke
+                        :x             x
+                        :y             (+ ma 7)}
+                 x]
+                [:text {:lengthAdjust  "spacingAndGlyphs"
+                        :vector-effect :non-scaling-stroke
+                        :textLength    (count (times.api/short-date-format dt))
+                        :style         {:font "3px Inter"}
+                        ;:stroke-width 0.8
+                        :x             x
+                        :y             (+ ma 10)}
+                 (times.api/short-date-format dt)]])
+             [:line
+              {:stroke       (if weekend? :red :black)
+               :stroke-width 0.8
+               :x1           x :y1 (- ma cnt)
+               :x2           x :y2 ma}]])]])))
+
+
 (defn always-panel []
   [:<>
+   [graph]
    [sc/row-center {:class [:sticky :pointer-events-none :noprint]
                    :style {:z-index 1000
                            :top     "8rem"}}
+
     [sc/row-center
      [sc/col-space-8
       {:class [:pointer-events-auto]}
@@ -489,11 +570,11 @@
   (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
         details-mode? @(rf/subscribe [:rent/common-show-details])]
     [[button/just-large-icon
-      {:class    [ :round (if details-mode? :message :clear)]
+      {:class    [:round (if details-mode? :message :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
       ico/more-details]
      [button/just-large-icon
-      {:class    [ :round
+      {:class    [:round
                   (if delete-mode? :danger-outline :clear)]
        :on-click #(swap! (r/cursor settings [:rent/show-deleted]) not)}
       ico/trash]]))

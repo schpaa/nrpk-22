@@ -28,11 +28,11 @@
        :-moz-osx-font-smoothing  :grayscale}])
 
 (o/defstyled page-with-background :div
-  [:& :pt-10
+  [:& :pt-16
    {:background-position "center center"
     :background-repeat   "no-repeat"
-    ;todo 
-    ;:background-color "transparent"
+                                        ;todo
+                                        ;:background-color "transparent"
     :background-size     "cover"}
    #_[:&.light {:background-image "var(--background-image-light)"}]
    [:&.dark {:background-image "var(--background-image-dark)"}]]
@@ -149,10 +149,10 @@
    :slidesToShow     1
    :pauseOnHover     true
    :inside?          true
-   ;:autoplay         false
-   ;:autoplaySpeed    1000  
+                                        ;:autoplay         false
+                                        ;:autoplaySpeed    1000
    :afterChange      (fn [e] #_(rf/dispatch [::set-active-menu-page e]))
-   ;:beforeChange     (fn [_ e] (rf/dispatch [::set-active-menu-page]))
+                                        ;:beforeChange     (fn [_ e] (rf/dispatch [::set-active-menu-page]))
    :touchMove        true
    :speed            500
    :initialSlide     1
@@ -261,38 +261,38 @@
 (defn header-with-logo []
   [:div {:style {:min-font-size "80%"
                  :font-size     "100%"
-                 :padding-block "var(--size-10)"}}
+                 :padding-block "2rem"}}
    (fancy-front
-     [:div {:style {:align-self   :center
-                    :justify-self :start
-                    :grid-area    "graph"}} (widgets/logo-graph)]
-     [:div {:style {:align-self :center
-                    :grid-area  "type"}} logo-type]
-     [:div
-      {:style {:width "min-content"}}
-      [:div.inline-flex.flex-col.justify-center.space-y-2
+    [:div {:style {:align-self   :center
+                   :justify-self :start
+                   :grid-area    "graph"}} (widgets/logo-graph)]
+    [:div {:style {:align-self :center
+                   :grid-area  "type"}} logo-type]
+    [:div
+     {:style {:width "min-content"}}
+     [:div.inline-flex.flex-col.justify-center.space-y-2
 
-       [sc/text1 "Åpningstider"]
+      [sc/text1 "Åpningstider"]
 
-       [sc/co
-        [sc/small1 "tir, ons & tor"]
-        [sc/text1 {:style {:line-height 1}
-                   :class [:whitespace-nowrap]} "kl 18:00—21:00"]]
+      [sc/co
+       [sc/small1 "tir, ons & tor"]
+       [sc/text1 {:style {:line-height 1}
+                  :class [:whitespace-nowrap]} "kl 18:00—21:00"]]
 
-       [:div.mx-px
-        {:style {:opacity    0.5
-                 :border-top "1px solid var(--text1)"}}]
+      [:div.mx-px
+       {:style {:opacity    0.5
+                :border-top "1px solid var(--text1)"}}]
 
-       [sc/co
-        {:style {:line 1}}
-        [sc/small1 "lør & søn"]
-        [sc/text1 {:style {:line-height 1}
-                   :class [:whitespace-nowrap]} "kl 11:00—17:00"]]]]
+      [sc/co
+       {:style {:line 1}}
+       [sc/small1 "lør & søn"]
+       [sc/text1 {:style {:line-height 1}
+                  :class [:whitespace-nowrap]} "kl 11:00—17:00"]]]]
 
-     #_[:div {:style {:align-self   :center
-                      :justify-self :center
-                      :grid-area    "status"}}
-        (todays-numbers "_" "_" c '—)])])
+    #_[:div {:style {:align-self   :center
+                     :justify-self :center
+                     :grid-area    "status"}}
+       (todays-numbers "_" "_" c '—)])])
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -389,6 +389,36 @@
                                           (scroll-fn %)))
       (reset! a el))))
 
+(defn news-section []
+  [sc/col-space-1
+   [sc/row-field
+    (widgets/disclosure
+     {:padded-heading []
+      :large          1
+      :style          {:padding-block "var(--size-2)"}}
+     :frontpage/news
+     [sc/row-sc-g4 {:style {:align-items :baseline}}
+      [:p "Hva skjer?"]
+      [widgets/auto-link {:style   {:font-family "Inter"}
+                          :class   [:z-10 :small]
+                          :caption "mer her"} :r.booking-blog]]
+     [news/news-feed])]])
+
+(defn planned-section []
+  (widgets/disclosure
+   {:padded-heading []
+    :large          1
+    :style          {:padding-block "var(--size-2)"
+                     :xmargin-left  "2rem"}}
+   :frontpage/yearwheel
+   [sc/row-sc-g4 {:style {:align-items :baseline}}
+    [:p "Årshjul"]
+    [widgets/auto-link {:style   {:font-family "Inter"}
+                        :class   [:z-10 :small]
+                        :caption "mer her"} :r.yearwheel]]
+   [booking.yearwheel/yearwheel-feed]))
+
+;; here are some changes
 (defn frontpage []
   (let [dark-mode? @(schpaa.state/listen :app/dark-mode)
         show-image-carousell? (schpaa.state/listen :lab/show-image-carousell)
@@ -404,14 +434,14 @@
      [:div.min-h-full.z-0
       {:style {:min-height     "90vh"
                :padding-bottom "8rem"}}
-      ;debug
-      (when (and goog.DEBUG @master-emulation)
-        [:div.max-w-lg.mx-auto
-         [:div.mx-4.py-4.pt-24
-          [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-           booking.common-views/master-control-box]]])
+                                        ;debug
+      #_(when (and goog.DEBUG @master-emulation)
+          [:div.max-w-lg.mx-auto
+           [:div.mx-4.py-4x.pt-24x
+            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+             booking.common-views/master-control-box]]])
 
-      [header-with-logo]
+      [:div.-debug2 [header-with-logo]]
 
       (when @show-image-carousell? [image-carousell])
 
@@ -430,34 +460,8 @@
        [sc/col-space-8
         (when-not @reg?
           [please-login-and-register])
-
-        [sc/col-space-1
-         [sc/row-field
-          (widgets/disclosure
-            {:padded-heading []
-             :large          1
-             :style          {:padding-block "var(--size-2)"
-                              :xmargin-left  "var(--size-7)"}}
-            :frontpage/news
-            [sc/row-sc-g4 {:style {:align-items :baseline}}              
-             [:p "Hva skjer?"]
-             [widgets/auto-link {:style   {:font-family "Inter"}
-                                 :class   [:z-10 :small]
-                                 :caption "mer her"} :r.booking-blog]]
-            [news/news-feed])]]
-
-        (widgets/disclosure
-          {:padded-heading []
-           :large          1
-           :style          {:padding-block "var(--size-2)"
-                            :xmargin-left  "2rem"}}
-          :frontpage/yearwheel
-          [sc/row-sc-g4 {:style {:align-items :baseline}}
-           [:p "Årshjul"]
-           [widgets/auto-link {:style   {:font-family "Inter"}
-                               :class   [:z-10 :small]
-                               :caption "mer her"} :r.yearwheel]]
-          [booking.yearwheel/yearwheel-feed])]]]
+        [news-section]
+        [planned-section]]]]
 
      [widgets/after-content]
      [:div.sticky.bottom-0.noprint

@@ -12,9 +12,9 @@
 (defn field [idx k value focus-field-id act]
   (r/with-let [value (r/atom value)
                set-fn (fn [k v] (db/database-update
-                                  {:path  ["users" (name k)]
-                                   :value {:timestamp (str (t/now))
-                                           :saldo     (js/parseInt v)}}))]
+                                 {:path  ["users" (name k)]
+                                  :value {:timestamp (str (t/now))
+                                          :saldo     (js/parseInt v)}}))]
     [:div
      {:style {:overflow      :hidden
               :width         "4rem"
@@ -44,8 +44,8 @@
                 :style       {;:background    "white"
                               :overflow       :hidden
                               :padding-inline "var(--size-2)"
-                              ;:padding-block "var(--size-2)"
-                              ;:border        "2px solid var(--toolbar)"
+                                        ;:padding-block "var(--size-2)"
+                                        ;:border        "2px solid var(--toolbar)"
                               :height         "100%"}
                 :class       [:-debug :m-0 :xpy-0 :cursor-text
                               :focus:outline-none :w-full]}]
@@ -58,14 +58,14 @@
                                    (.focus @act)))
                                #_(.stopPropagation %))
                   :style    {;:padding-block     "var(--size-2)"
-                             ;:overflow :clip
-                             ;:background-color  "white"
-                             ;:vertical-align :middle
+                                        ;:overflow :clip
+                                        ;:background-color  "white"
+                                        ;:vertical-align :middle
                              :padding-inline    "var(--size-2)"
                              :display           :flex
                              :align-items       :center
                              :height            "100%"
-                             ;:height            "2rem"
+                                        ;:height            "2rem"
 
                              :xbackground-color "var(--toolbar)"}
                   :class    [:tabular-nums :tracking-tight :cursor-text
@@ -75,36 +75,36 @@
 (defn field2 [focus k field-name current-value]
   (let [ref (r/atom nil)]
     (r/create-class
-      {:component-did-mount (fn [_]
-                              (tap> [:component-did-mount @ref])
-                              (when @ref
-                                (.setSelectionRange @ref 0 12)))
+     {:component-did-mount
+      (fn [_]
+        (tap> [:component-did-mount @ref])
+        (when @ref
+          (.setSelectionRange @ref 0 12)))
 
-       :reagent-render      (fn [focus k field-name current-value]
-                              (let [have-focus? (= @focus {:k          k
-                                                           :field-name field-name})]
-                                [:td.h-full.w-24
-                                 {:style {:background-color (when have-focus? "white")
-                                          :padding-inline   "8px"
-                                          :padding-block    0
-                                          :margin           0}}
-
-                                 (if have-focus?
-                                   [:input
-                                    {:ref        #(when-not ref
-                                                    (reset! ref %))
-
-                                     :style      {;:background "green"
-                                                  :margin  0
-                                                  :padding 0
-                                                  :height  "100%"
-                                                  :width   "100%"}
-                                     :class      []
-                                     :auto-focus 1
-                                     :type       "text"
-                                     :value      current-value}]
-                                   [:div {:on-click #(reset! focus {:k          k
-                                                                    :field-name field-name})} current-value])]))})))
+      :reagent-render
+      (fn [focus k field-name current-value]
+        (let [have-focus? (= @focus {:k          k
+                                     :field-name field-name})]
+          [:td.h-full.w-24
+           {:style {:background-color (when have-focus? "white")
+                    :padding-inline   "8px"
+                    :padding-block    0
+                    :margin           0}}
+           (if have-focus?
+             [:input
+              {:ref        #(when-not ref
+                              (reset! ref %))
+               :style      {;:background "green"
+                            :margin  0
+                            :padding 0
+                            :height  "100%"
+                            :width   "100%"}
+               :class      []
+               :auto-focus 1
+               :type       "text"
+               :value      current-value}]
+             [:div {:on-click #(reset! focus {:k          k
+                                              :field-name field-name})} current-value])]))})))
 
 (defonce st (r/atom {}))
 
@@ -134,7 +134,7 @@
    [sc/surface-ab
     [sc/row-center [hoc.buttons/pill {:on-click #(rf/dispatch [:lab/toggle-boatpanel nil])
                                       :class    [:large :cta]} [sc/icon ico/plus]]]]])
- 
+
 (defn old-data [st data]
   [sc/co
    [tsc/table-report
@@ -148,10 +148,10 @@
         [field2 st k :vær vær]])]]])
 
 (defn render [r]
-  (r/with-let []                                            ;todo put st here
+  (r/with-let []
     (let [data (db/on-value-reaction {:path ["temperature"]})]
       [tsc/table-controller-report'
        [sc/col-space-8
+        [l/pre data]
         [new-data st]
         [old-data st (take 5 @data)]]])))
-
