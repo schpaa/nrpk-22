@@ -3,15 +3,16 @@
  :deps              {:aliases [:shadow-cljs]}
  :nrepl             {:port 9000}
  :cache-blockers    #{lambdaisland.ornament}
- ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
+                                        ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
  :dev-http          {8010 "public/booking"
                      8020 "public/eykt"
+                     8030 "public/test"
                      3001 ["public/devcards" "public"]}
  :builds            {:devcards
                      {:target           :browser            ; using :browser-test to pickup all files that match `-test$`
-                      ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
+                                        ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
                       :output-dir       "public/devcards/js"
-                      ;:runner-ns        example.devcards ; must have init fn to run
+                                        ;:runner-ns        example.devcards ; must have init fn to run
                       :modules          {:main {:init-fn example.devcards/init!}}
                       :after-load       example.devcards/reload!
                       :compiler-options {:devcards           true
@@ -36,6 +37,12 @@
                                :dev               {:compiler-options {:closure-defines {goog.DEBUG true}
                                                                       :infer-externs   :auto
                                                                       :optimizations   :none}}}
+
+
+                     :testing
+                     {:target :browser-test
+                      :ns-regexp "access$"
+                      :test-dir "public/test"}
 
                      :booking {:build-hooks       [(shadow-git-inject.core/hook)
                                                    (my.hooks/write-styles-hook)]

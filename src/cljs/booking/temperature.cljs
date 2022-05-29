@@ -1,13 +1,13 @@
 (ns booking.temperature
-  (:require [db.core :as db]
+  (:require [booking.ico :as ico]
             [booking.style.table :as tsc]
-            [tick.core :as t]
+            [db.core :as db]
+            [re-frame.core :as rf]
             [reagent.core :as r]
-            [schpaa.style.ornament :as sc]
             [schpaa.debug :as l]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [booking.ico :as ico]
-            [re-frame.core :as rf]))
+            [schpaa.style.ornament :as sc]
+            [tick.core :as t]))
 
 (defn field [idx k value focus-field-id act]
   (r/with-let [value (r/atom value)

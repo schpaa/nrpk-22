@@ -1,5 +1,6 @@
 (ns booking.access
-  (:require [clojure.set :as set]
+  (:require [cljs.test :refer [deftest is are]]
+            [clojure.set :as set]
             [user.database :refer [lookup-userinfo]]
             [db.core :as db]))
 
@@ -23,3 +24,5 @@
        uid])
     [:none nil nil]))
 
+(deftest access
+  (is (= 1 2)))
