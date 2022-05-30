@@ -28,7 +28,7 @@
         body (aget (.getElementsByTagName js/document "body") 0)]
     (.setAttribute html "class" (if @user-screenmode "dark" "light"))
     (.setAttribute body "class" "font-sans")
-    (.setAttribute body "style" "background-color:var(--content)")
+    (.setAttribute body "style" "background-color:var(--toolbar)")
 
     (if-let [page (get route-table @route-name)]
       [:div
@@ -36,9 +36,3 @@
                   :background-color "var(--dim-brand1)"}}
        (make-route-component page @route)]
       [:div.bg-alt.fixed.inset-0.flex.items-center.justify-center "(subliminal :message)"])))
-
-
-
-
-
-

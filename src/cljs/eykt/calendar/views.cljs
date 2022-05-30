@@ -15,10 +15,10 @@
 
 (o/defstyled user-cell :div
   [:&
+   :bg-white
    :flex
    :w-24
    :items-center
-
    :truncate
    :h-10
    :p-2
@@ -28,20 +28,19 @@
 (o/defstyled avail-user-slot :div
   [:&
    user-cell
-   :h-full
    {:color            "var(--text1)"
-
     :box-shadow       "var(--inner-shadow-1)"
     :background-color "var(--floating)"}])
 
 (o/defstyled taken-user-slot :div
   [:&
-   :h-full
-   :truncate
    user-cell
-   {:box-shadow       "var(--shadow-1)"
+   ;:h-full
+   :truncate
+   {:outline "2px solid red"
+    :box-shadow       "var(--shadow-1)"
     :color            "var(--text1)"
-    :background-color "var(--toolbar)"
+    :background-color "var(--toolbar-)"
     :cursor           :pointer}
    [:&.cancelled
     {:background-color     "transparent"
@@ -97,8 +96,10 @@
         cancelled? (and (map? status) (:cancel status))
         path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
     [taken-user-slot
-     {:class    [(if cancelled? :cancelled (when owner? :owner))]
+     {:class    [:p-1 :h-full (if cancelled? :cancelled (when owner? :owner))]
+      :style {:background-color "var(--field)"}
       :on-click #(rf/dispatch [:app/navigate-to path])}
+
      [badge-text this-uid owner? cancelled?]]))
 
 (defn command [ mobile? uid base section slots-free starttime-key]
@@ -208,9 +209,9 @@
                  :let [dt (t/date dt)
                        alle-regs-i-denne-periodegruppen (invert (get base section))]]
              ^{:key dt}
-             [:<>
-              (into [:div.w-full.space-y-2
-                     [week-component dt description]]
+             [sc/co
+              [week-component dt description]
+              (into [:<>]
                     (for [{:keys [starttime endtime]} (sort-by :starttime < group)
                           :let [starttime-key (-> (t/at dt starttime) str keyword)
                                 starttime' (str (t/at dt (t/time starttime)))
@@ -222,23 +223,35 @@
                                          show-only-available?)
                                   (or (pos? slots-free) (get-in base [section uid starttime-key]))
                                   true)]
-                      [:div.ml-4
+                      [:div
+                       {:style {:margin-left "1rem"
+                                :display "flex"
+                                :align-items "stretch"}}
                        ;[l/pre slots-on-this-eykt]
-                       [sc/col-space-2
-                        [sc/row-sc-g4-w {:style {:flex-wrap   :nowrap
-                                                 :align-items "start"}}
-                         [sc/col-space-1 {:class [:justify-center :h-10]
-                                          :style {:white-space :nowrap
-                                                  :width       "3rem"}}
-                          [sc/text1 "" (t/hour starttime) "–" (t/hour endtime)]]
-                         [command mobile? uid base section slots-free starttime-key]
-                         ; for every line
-                         (into [sc/row-sc-g1-w {:style {:flex "1 0 0"}}]
+                       [sc/row-sc-g4-w {:class []
+                                        :style {:width       "100%"
+                                                :flex-wrap   :nowrap
+                                                :align-items "start"}}
+                        [sc/col-space-1
+                         {:class [:justify-center :h-10]
+                          :style {:white-space :nowrap
+                                  :max-width   "3rem"}}
+                         [sc/text1 "" (t/hour starttime) "–" (t/hour endtime)]]
+                        [command mobile? uid base section slots-free starttime-key]
+                        ; for every line
+                        [:div {;:class [:-debug3 :h-full]
+                               :style {:flex "1 0 auto"
+                                       :height "100%"
+                                       :column-gap "0.5rem"
+                                       :display "grid"
+                                       :grid-auto-rows "auto"
+                                       :grid-template-columns "repeat(auto-fill,minmax(6rem,1fr))"}}
+                         (into [:<>]
                                (concat
                                  (map #(occupied-slot uid %) slots-on-this-eykt)
-                                 (map (fn [] (avail-user-slot
-                                               {:on-click #(let [args {:uid uid :section section :timeslot starttime-key}]
-                                                             (actions/add args))} "Ledig"))
+                                 (map #(avail-user-slot
+                                         {:on-click (fn [] (let [args {:uid uid :section section :timeslot starttime-key}]
+                                                             (actions/add args)))} "Ledig")
                                       (range slots-free))))]]]))]))]))
 
 (defn hoc3

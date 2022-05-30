@@ -22,10 +22,19 @@
                           (when (:booking-godkjent user) :booking)
                           (when (:nøkkelvakt user) :nøkkelvakt)]))
        uid])
-    [:none nil nil]))
+    nil))
 
 (deftest access
-  (is (= 1 1))
-  (are [a b] (= a b)
-    [:registered #{} "123"]
-    (build-access-tuple {:uid "123"})))
+  (let [uid "123"
+        build-access-tuple #(build-access-tuple (into {:uid uid} %&))]
+    (are [a b] (= a b)
+               nil (booking.access/build-access-tuple {})
+               [:member #{:booking} uid] (build-access-tuple {:booking-godkjent true})
+               ;; with a valid uid:
+               [:registered #{} uid] (build-access-tuple {})
+               [:waitinglist #{} uid] (build-access-tuple {:waitinglist true})
+               [:member #{:admin} uid] (build-access-tuple {:admin true})
+               [:registered #{:nøkkelvakt} uid] (build-access-tuple {:nøkkelvakt true})
+               [:registered #{} uid] (build-access-tuple {:nøkkelvakt false})
+               [:registered #{:nøkkelvakt} uid] (build-access-tuple {:nøkkelvakt true}))))
+

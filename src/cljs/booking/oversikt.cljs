@@ -63,7 +63,7 @@
   (let [attr {:links 1
               :large 1
               :style {:padding-block "var(--size-2)"
-                      :margin-left   "32px"}}
+                      :margin-left   "2rem"}}
         answer [:div {:style {:color       "var(--text2)"
                               :font-size   "var(--font-size-2)"
                               :line-height "var(--font-lineheight-4)"
@@ -97,12 +97,12 @@
                      [4 :r.oversikt.styret "Styret"]]]
 
            (map (comp f rest) (sort-by first data)))]]
-       [sc/row-center
-        [:div {:class [:w-20 :h-20]}
-         [:img
-          {:style {:object-fit :contain}
-           :width "475px" :height "475px"
-           :src   "/img/logo-n.png"}]]]
+       #_[sc/row-center
+          [:div {:class [:w-20 :h-20]}
+           [:img
+            {:style {:object-fit :contain}
+             :width "475px" :height "475px"
+             :src   "/img/logo-n.png"}]]]
 
        [shortcut :oversikt/bli-medlem
         "Bli medlem"

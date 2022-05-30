@@ -20,7 +20,7 @@
     ;(tap> [ipad?])
     [(when goog.DEBUG
        {:on-click   #()
-        :caption    "Badetemperatur"
+        :caption    "Lufttemperatur Vanntemperatur"
         :content-fn (fn []
                       [:div.w-full.h-full
                        {:style {:background-color "var(--floating)"}}
@@ -190,12 +190,15 @@
     (when (and @has-chrome? @(rf/subscribe [:lab/at-least-registered]))
       [:div.shrink-0.h-full.sm:flex.hidden.relative.select-none
        {:class [(if with-caption? :w-56 :w-16)]
-        :style {:box-shadow "var(--inner-shadow-2)"
+        :style {;:box-shadow "var(--inner-shadow-2)"
                 :background "var(--toolbar)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
        ;;
-       (into [:div.absolute.right-0.inset-y-0.w-full.h-full.flex.flex-col.relative.items-start
-              {:style {:padding-top "var(--size-0)"}}]
+
+       (into [:div.absolute.right-0.inset-y-0.w-full.flex.flex-col.relative.items-start
+              {:style {:padding-top "var(--size-0)"}}
+              (when right-side?
+                [:div.absolute.inset-y-0.right-0])]              
              (map (fn [{:keys [opposite-icon-fn] :as e}]
                     (let [cap (when with-caption?
                                 (let [p (:page-name e)]

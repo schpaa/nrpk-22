@@ -162,7 +162,7 @@
 ;; page layout
 
 (defn page-boundary
-  "core layout"
+  "core layout" 
   [r {:keys [headline-plugin]} & contents]
   (let [geo (rf/subscribe [:lab/screen-geometry])]
     (r/create-class
@@ -189,16 +189,21 @@
               right-menu?
               (let [marg (if menu-caption?
                            :sm:mr-56
-                           :sm:mr-16)
+                           :sm:mr-20)
                     field-width (when-not hidden-menu?
                                   (if menu-caption?
                                     :sm:w-56
-                                    :sm:w-16))]
+                                    :sm:w-20))]
                 [:div
-                 [:div#inner-document {:class [marg]} contents]
-                 [:div.fixed.inset-y-0.top-0.bottom-0.bg-alt.hidden.sm:block.noprint
+                 [:div#inner-document
+                  {:class [marg]
+                   :style {:background "var(--content)"
+                           :box-shadow "var(--shadow-5)"}}
+                  contents]
+                 [:div.fixed.inset-y-0.top-0.bottom-0.hidden.sm:block.noprint
                   {:class [field-width]
-                   :style {:right 0}}
+                   :style {:right 0
+                           :background-color "var(--toolbar)"}}
                   [toolbar/vertical-toolbar true]]])
 
               :else
@@ -210,8 +215,11 @@
                                     :sm:w-56
                                     :sm:w-16))]
                 [:div
-                 [:div#inner-document {:class [marg]} contents]
-                 [:div.fixed.top-0.bottom-0.bg-altx.left-0.hidden.sm:block.noprint
+                 [:div#inner-document
+                  {:style {:box-shadow "var(--inner-shadow-2)"}
+                   :class [marg]}
+                  contents]
+                 [:div.fixed.top-0.bottom-0.left-0.hidden.sm:block.noprint
                   {:class [field-width :print:hidden]
                    :style {:left 0}}
                   [toolbar/vertical-toolbar false]]]))
@@ -254,6 +262,7 @@
         pagename (some-> r :data :name)]
     [sc/col-space-8
      {:style {:padding-block "8rem"
+
               :margin-inline "auto"
               :min-height    "90vh"
               :max-width     "min(calc(100% - 1rem), calc(768px - 3rem))"}}

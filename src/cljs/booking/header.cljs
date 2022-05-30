@@ -112,7 +112,10 @@
 (defn header [r scroll-pos headline-plugin]
   (let [{:keys [hidden-menu? right-menu? mobile? menu-caption?]} @(rf/subscribe [:lab/screen-geometry])
         marg (when-not hidden-menu?
-               (when-not mobile? (if menu-caption? "14rem" "4rem")))]
+               (when-not mobile?
+                 (if menu-caption?
+                   "14rem"
+                   (if right-menu? "5rem" "4rem"))))]
     [header-overlay
      {:style {:margin-left  (when-not right-menu? marg)
               :margin-right (when right-menu? marg)}}

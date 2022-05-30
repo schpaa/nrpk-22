@@ -1,0 +1,1 @@
+{"version":3,"sources":["db/state.cljs"],"mappings":";AAEA,GAAA,QAAAA,+BAAAC,qCAAAC;AAAA;AAAA,AAAA,AAASC,eAAI,6CAAA,7CAACC","names":["js/db","js/db.state","js/db.state.app","db.state/app","cljs.core.atom"],"sourcesContent":["(ns db.state)\n\n(defonce app (atom nil))"]}

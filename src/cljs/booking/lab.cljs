@@ -847,7 +847,7 @@
                 (let [uid (:uid ua)
                       u @(db/on-value-reaction {:path ["users" uid]})]
                   (tap> {:user u})
-                  (if-let [[s a _ :as x] (booking.access/build-access-tuple u)]
+                  (if-let [[s a _] (booking.access/build-access-tuple u)]
                     (and (= s :member)
                          (= :nøkkelvakt (some #{:nøkkelvakt} (or a []))))
                     false)))))

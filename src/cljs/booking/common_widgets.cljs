@@ -87,7 +87,8 @@
     [sc/toolbar-button-with-caption
      {:style    {:justify-content :space-between
                  :align-items     :center}
-      :class    [:gap-2 :w-full :flex :flex-row-reverse :justify-center (when selected? :selected)]
+      :class    [:w-full
+                 :gap-2 :flex :flex-row-reverse :justify-center (when selected? :selected)]
       :on-click #(on-click current-page)}
 
      (when (and right-side caption)
@@ -98,18 +99,23 @@
                           :flex        "1 1 auto"}} caption])
 
      (when (and right-side opposite-icon-fn caption)
-       [:div.w-16.h-20.flex.justify-center.items-center
+       [:div.h-20.flex.justify-center.items-center
         {:on-click opposite-on-click}
         [sc/icon (opposite-icon-fn)]])
 
-     [:div.w-16
+     [:div.relative
       {:style {:display         :flex
+               ;:padding-right   (when right-side "0.5rem")
+               :width           (if right-side "4rem" "4rem")
                :align-items     :center
                :justify-content :center
                :flex-shrink     0
                :height          (if tall-height "var(--size-10)" "var(--size-9)")}}
-      [:div.w-full.h-full.flex.flex-col.items-center.justify-around.relative
-       {:style {:pointer-events :auto
+
+      [:div.w-full.items-center.justify-around.relative
+       {:style {:display        "flex"
+                :flex-direction "column"
+                :pointer-events :auto
                 :height         "var(--size-9)"}}
 
        (when badge
@@ -320,7 +326,7 @@
      caption
      [sc/link {:style style
                :class class
-               :href (kee-frame.core/path-for [link])} caption]
+               :href  (kee-frame.core/path-for [link])} caption]
 
      :else
      (if (vector? link)
@@ -675,7 +681,8 @@
 (o/defstyled round-large-shadow :div
   [:&
    :p-2 :w-full :h-full
-   {:background-color "var(--toolbar)"}])
+   {
+    :background-color "var(--toolbar)"}])
 
 (defn temperature [{:keys [air water wind on-click]}]
   (letfn [(degrees-celsius [attr c]
@@ -698,15 +705,16 @@
     [round-large-shadow
      [:div
       {:on-click on-click
-       :style    {:display "relative"
-                  :width   "100%"
-                  :height  "100%"}}
-
+       :style    {:display       "relative"
+                  :overflow      "hidden"
+                  :border-radius "var(--radius-0)"
+                  :width         "100%"
+                  :height        "100%"}}
       ;bg
       [sc/col
        {:style {:height           "100%"
                 :overflow         "clip"
-                :border-radius    "var(--radius-1)"
+                ;:border-radius    "var(--radius-1)"
                 :box-shadow       "var(--shadow-1)"
                 :background-color "var(--floating)"
                 :justify-content  "end"}}
@@ -716,11 +724,8 @@
                       :background-color "#0693e3"}}]]
       ;text
       [:div.absolute.inset-0
-       [sc/col {:class [:gap-y-1]
-                :style {:height        "100%"
-                        :padding-block "1rem"}}             ;:div.flex.flex-col.h-full.items-center.justify-center.min-w-fit.gap-y-1
-        ;{:style {:justify-content :center}}
-
+       [sc/col {:style {:height        "100%"
+                        :padding-block "0.6rem"}}
         (centerline (degrees-celsius {:class []
                                       :style {:z-index 1
                                               :color   "var(--text1)"}} air))
@@ -769,8 +774,8 @@
                  [sc/subtext-with-link {:class [:neutral]
                                         :style {:color "var(--gray-1)"}
                                         :href  "mailto:styret@nrpk.no"} "styret@nrpk.no"]]]]
-              [sc/col-space-1 
-               {:style {:align-items :end
+              [sc/col-space-1
+               {:style {:align-items     :end
                         :justify-content :end}}
                (when-not ipad?
                  [button/icon-with-caption

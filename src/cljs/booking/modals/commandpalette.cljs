@@ -198,10 +198,11 @@
     (let [selected @!selected
           filtered-commands @!filtered-commands
           quops @!query]
-      [:div.m-1.overflow-hidden
+      [:div
        {:class [:truncate]
         :style {:border-radius "var(--radius-2)"
                 :max-width     "25rem"
+                :min-width     "100%"                       ;"min(calc(100% - 2rem),5rem)"
                 :overflow      "hidden"
                 :height        :100%}}
        [ui/combobox {:value       (:id selected)
@@ -225,14 +226,14 @@
             [:div.flex.items-center.justify-between.w-full.gap-2.w-full.h-full
              {:style {:background-color "var(--field)"}}
              [:div.ml-5
-              {:style {:width "auto"
+              {:style {:width       "auto"
                        :flex-shrink 1}
-               :class [:pointer-events-none  :w-full :grid :place-content-center]}
+               :class [:pointer-events-none :w-full :grid :place-content-center]}
               [sc/icon ico/commandPaletteClosed]]
              [ui/combobox-input
               {:style         {;:flex "1 0 auto"
-                               :flex-grow 1
-                               
+                               :flex-grow        1
+
                                :height           :4rem
                                ;:padding-inline   "var(--size-8)"
                                :color            "var(--text1)"
@@ -272,7 +273,7 @@
 (defn commandpalette [{db :db}]
   {:fx [[:dispatch [:lab/modal-selector
                     (-> db :lab/modal-selector not)
-                    {:content-fn (fn [e]  (commandpalette-window e))}]]]})
+                    {:content-fn (fn [e] (commandpalette-window e))}]]]})
 
 (rf/reg-event-fx :app/toggle-command-palette [rf/trim-v] commandpalette)
 (rf/reg-event-fx :app/toggle-toolbar-caption [rf/trim-v] {})
@@ -311,7 +312,7 @@
        [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))}
         [:div.fixed.inset-0
          [:div.text-center
-          ;{:class [(if @right-side? :mr-16 :ml-16)]}
+          {:class [(if @right-side? :mr-20 :ml-16)]}
           [schpaa.style.dialog/standard-overlay]
           [:span.inline-block.h-screen.align-middle
            (assoc schpaa.style.dialog/zero-width-space-props :aria-hidden true)]
@@ -319,8 +320,11 @@
            {:class       (conj ["inline-block align-middle text-left transform overflow-hidden "
                                 :outline-none :focus:outline-none]
                                (some-> (sc/inner-dlg) last :class first))
-            :style       {:border-radius "var(--radius-3)"
-                          :max-width     "90vw"}
+            :style       {:box-shadow "0 0 0 4px var(--content)"
+                          :border-radius "var(--radius-2)"
+
+                          :min-width     "min(25rem,90vw)"
+                          :max-width     "min(25rem,90vw)"}
             :enter       "ease-in-out duration-200"
             :enter-from  "translate-y-16 opacity-0"
             :enter-to    "translate-y-0 opacity-100"
@@ -330,11 +334,10 @@
             :leave-to    "opacity-0 translate-y-32"
             :after-leave #(rf/dispatch [:lab/modal-selector-clear])}
            [:div {:style {:overflow         :hidden
-                          :background-color "var(--toolbar)"}
+                          :background-color "var(--toolbar-)"}
                   :class [:max-h-screen :outline-none :focus:outline-none]}
             (if content-fn
-              (content-fn (assoc context :on-click (fn [{:keys [action]}]
-                                                     (do
-                                                       (when action
-                                                         (action))
-                                                       (close))))))]]]]]])))
+              (content-fn (assoc context
+                            :on-click (fn [{:keys [action]}]
+                                        (when action (action))
+                                        (close)))))]]]]]])))
