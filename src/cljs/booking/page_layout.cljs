@@ -1,40 +1,38 @@
-(ns booking.common-views
+(ns booking.page-layout
   (:require
+    [clojure.string :as str]
     [goog.dom :as dom]
+    [tick.core :as t]
     [kee-frame.error]
-    [reagent.ratom]
-    [lambdaisland.ornament :as o]
-    [schpaa.style.ornament :as sc]
-    [booking.content.booking-blog]
     [reagent.core :as r]
     [re-frame.core :as rf]
+
     [db.core :as db]
-    [booking.fileman]
-    [kee-frame.core :as k]
-    [booking.routes]
+    
+    [schpaa.style.ornament :as sc]
     [schpaa.style.hoc.page-controlpanel :as hoc.panel]
-    [booking.ico :as ico]
-    [schpaa.style.hoc.buttons :as hoc.buttons :refer [cta pill icon-with-caption icon-with-caption-and-badge]]
+    [schpaa.style.hoc.buttons :as field]
     [schpaa.debug :as l]
-    [booking.data]
-    [booking.access]
-    [clojure.set :as set]
     [schpaa.style.input :as sci]
-    [booking.common-widgets :refer [lookup-page-ref-from-name vertical-button horizontal-button no-access-view]]
+
+    [booking.access]
+    [booking.account]
+    [booking.common-widgets :as widgets]
+    [booking.content.booking-blog]
+    [booking.data]
+    [booking.fiddle]
+    [booking.fileman]
+    [booking.header]
+    [booking.ico :as ico]
     [booking.modals.boatinput]
     [booking.modals.feedback]
     [booking.modals.commandpalette]
     [booking.modals.slideout]
     [booking.modals.centered]
-    [booking.account]
-    [tick.core :as t]
-    [clojure.string :as str]
-    [booking.common-widgets :as widgets]
-    [booking.fiddle]
-    [booking.toolbar :as toolbar]
-    [booking.header]))
+    [booking.routes]
+    [booking.toolbar]))
 
-;; state
+;; scrolling
 
 (defonce a (r/atom nil))
 
@@ -65,7 +63,7 @@
          (let [registered (some #{(:status @user-state)} [:member])
                status (:status @user-state)
                f-icon (fn [action token content]
-                        [pill
+                        [field/pill
                          {:class    [:regular :pad-right (when (= token status) :outlined)]
                           :on-click #(rf/dispatch action)}
                          content])]
@@ -76,10 +74,10 @@
                          :on-change #(rf/dispatch [:lab/set-sim :uid (-> % .-target .-value)]
                                                   #_(reset! sim-uid (-> % .-target .-value)))} :text [] "UID" :label]
              [sc/row-sc-g2-w
-              (f-icon [:lab/set-sim-type :none] :none [icon-with-caption ico/anonymous "anonym"])
-              (f-icon [:lab/set-sim-type :registered] :registered [icon-with-caption ico/user "registrert"])
-              (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [icon-with-caption-and-badge ico/waitinglist "påmeldt" 123])
-              (f-icon [:lab/set-sim-type :member] :member [icon-with-caption ico/member "medlem"])
+              (f-icon [:lab/set-sim-type :none] :none [field/icon-with-caption ico/anonymous "anonym"])
+              (f-icon [:lab/set-sim-type :registered] :registered [field/icon-with-caption ico/user "registrert"])
+              (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [field/icon-with-caption-and-badge ico/waitinglist "påmeldt" 123])
+              (f-icon [:lab/set-sim-type :member] :member [field/icon-with-caption ico/member "medlem"])
 
               [schpaa.style.hoc.toggles/small-switch-base
                {:disabled (not registered)}
@@ -148,7 +146,7 @@
            path (str (.-protocol js/window.location) "//" (.-host js/window.location) addr)]
        [sc/text1 path]
        [sc/row-ec
-        [hoc.buttons/cta {:on-click #(js/window.location.assign path)} "Ja takk!"]])]]])
+        [field/cta {:on-click #(js/window.location.assign path)} "Ja takk!"]])]]])
 
 (defn check-latest-version []
   (let [version-timestamp (db/on-value-reaction {:path ["system" "timestamp"]})]
@@ -162,7 +160,7 @@
 ;; page layout
 
 (defn page-boundary
-  "core layout" 
+  "core layout"
   [r {:keys [headline-plugin]} & contents]
   (let [geo (rf/subscribe [:lab/screen-geometry])]
     (r/create-class
@@ -197,14 +195,13 @@
                 [:div
                  [:div#inner-document
                   {:class [marg]
-                   :style {:background "var(--content)"
-                           :box-shadow "var(--shadow-5)"}}
+                   :style {:background "var(--content)"}}
                   contents]
                  [:div.fixed.inset-y-0.top-0.bottom-0.hidden.sm:block.noprint
                   {:class [field-width]
-                   :style {:right 0
+                   :style {:right            0
                            :background-color "var(--toolbar)"}}
-                  [toolbar/vertical-toolbar true]]])
+                  [booking.toolbar/vertical-toolbar true]]])
 
               :else
               (let [marg (if menu-caption?
@@ -216,13 +213,14 @@
                                     :sm:w-16))]
                 [:div
                  [:div#inner-document
-                  {:style {:box-shadow "var(--inner-shadow-2)"}
+                  {:style {:background "var(--content)"
+                           :box-shadow "var(--inner-shadow-2)"}
                    :class [marg]}
                   contents]
                  [:div.fixed.top-0.bottom-0.left-0.hidden.sm:block.noprint
                   {:class [field-width :print:hidden]
                    :style {:left 0}}
-                  [toolbar/vertical-toolbar false]]]))
+                  [booking.toolbar/vertical-toolbar false]]]))
 
             [booking.header/header r @scrollpos headline-plugin]]))})))
 
@@ -262,7 +260,6 @@
         pagename (some-> r :data :name)]
     [sc/col-space-8
      {:style {:padding-block "8rem"
-
               :margin-inline "auto"
               :min-height    "90vh"
               :max-width     "min(calc(100% - 1rem), calc(768px - 3rem))"}}
@@ -274,9 +271,9 @@
 
 (defn- render-normal [r {:keys [render render-halfwidth render-fullwidth] :as m} admin?]
   (let [users-access-tokens @(rf/subscribe [:lab/all-access-tokens])
-        have-access? (booking.common-views/matches-access r users-access-tokens)]
+        have-access? (booking.page-layout/matches-access r users-access-tokens)]
     (if-not have-access?
-      [no-access-view r]
+      [widgets/no-access-view r]
       [:<>
        (cond
          render
@@ -289,10 +286,51 @@
          [full-width r m]
 
          :render-not-defined
-         [sc/title1 {:style {:color          "var(--red-5)"
-                             :min-height     "90vh"
-                             :padding-block  "8rem"
-                             :padding-inline "1rem"}} :Render-not-defined])
+         (r/with-let [st (r/atom {})
+                      field-1 (r/cursor st [:field-1])
+                      field-2 (r/cursor st [:field-2])
+                      field-3 (r/cursor st [:field-3])]
+           [:div {:class [:pt-24 :mx-auto]
+                  :style {:max-width "min(calc(100% - 1rem), calc(768px - 3rem))"}}
+            [sc/surface-a {:class [:mx-2]}
+             [sc/co {:style {:color      "var(--red-5)"
+                             :row-gap    "1rem"
+                             :height     "24rem"
+                             :min-height "calc(80vh - 6rem)"
+                             :padding    "0"}}
+              [sc/title {:style {:height "100%"}}
+               (str :error/render-not-defined)]
+              [sc/row-field {:class []
+                             :style {:justify-content :start
+                                     :flex-wrap       :wrap :row-gap "1rem"}}
+               [field/textinput
+                {:cursor field-1
+                 :class [:on-bright]}
+                "INPUT"
+                :field-name]
+               [field/textinput
+                {:cursor field-2}
+                :label
+                :field-name]
+               [field/textinput
+                {:cursor field-3
+                 :errors      {:field-name ["mangler"]}}
+                "Årsak"
+                :field-name]
+               [field/textinput
+                {:errors      {:field-name ["?"]}
+                 :placeholder ""}
+                "Antall"
+                :field-name]
+
+               [sc/col
+                {:class [:space-y-1]}
+                [sc/row {:class [:gap-x-1]
+                         :style {:align-items :baseline}}
+                 [sc/label "Komboboks"]]
+                [sci/combobox-example {:class [:on-bright]}]]]
+              ;[:div {:style {:font-size "60%"}} [l/pre r]]
+              [sc/text "Move along nothing to see"]]]]))
 
        [widgets/after-content]
 
@@ -303,7 +341,7 @@
                    :transform "translateX(-50%)"}}
           [name-badge]])
 
-       [:div.sticky.bottom-0.noprint [toolbar/bottom-toolbar]]])))
+       [:div.sticky.bottom-0.noprint [booking.toolbar/bottom-toolbar]]])))
 
 (defn +page-builder
   "

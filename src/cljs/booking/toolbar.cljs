@@ -191,6 +191,8 @@
       [:div.shrink-0.h-full.sm:flex.hidden.relative.select-none
        {:class [(if with-caption? :w-56 :w-16)]
         :style {;:box-shadow "var(--inner-shadow-2)"
+                :z-index 0
+                
                 :background "var(--toolbar)"}}
        ;; force the toolbar to stay on top when boat-panel is displayed (?)
        ;;

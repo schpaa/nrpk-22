@@ -77,6 +77,7 @@
             [sc/label-field-col
              [sc/label "Kategori"]
              [sci/combobox-example
+              {}
               {:value     (values :type)
                :on-change #(tap> %)
                :class     [:w-auto]}]]

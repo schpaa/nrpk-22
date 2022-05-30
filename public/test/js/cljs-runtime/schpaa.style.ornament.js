@@ -176,8 +176,8 @@ schpaa.style.ornament.front_page = lambdaisland.ornament.styled(new cljs.core.Sy
 schpaa.style.ornament.zebra = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.ornament","zebra","schpaa.style.ornament/zebra",-1514102780,null),"schpaa_style_ornament__zebra",new cljs.core.Keyword(null,"div","div",1057191632),null,null);
 schpaa.style.ornament.zebra_SINGLEQUOTE_ = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.ornament","zebra'","schpaa.style.ornament/zebra'",-111034471,null),"schpaa_style_ornament__zebra_SINGLEQUOTE_",new cljs.core.Keyword(null,"div","div",1057191632),null,null);
 schpaa.style.ornament.debug_QMARK_ = (function schpaa$style$ornament$debug_QMARK_(var_args){
-var G__202997 = arguments.length;
-switch (G__202997) {
+var G__412991 = arguments.length;
+switch (G__412991) {
 case 0:
 return schpaa.style.ornament.debug_QMARK_.cljs$core$IFn$_invoke$arity$0();
 

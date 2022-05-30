@@ -455,10 +455,10 @@
 
    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
 
-(defn date-iter [n]
+(defn date-iter [start n]
   (lazy-seq
-    (when-let [a (t/>> (t/today) (t/new-period n :days))]
-      (cons a (date-iter (inc n))))))
+    (when-let [a (t/>> start (t/new-period n :days))]
+      (cons a (date-iter start (inc n))))))
 
 (defn deleted? [[_ e]] (:deleted e))
 
@@ -467,71 +467,95 @@
              conj
              source))
 
-
-
 (defn graph []
   (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
-        existing (partial datasource (comp (remove deleted?)))
+        existing (remove deleted?)
         group-by-date (fn [db]
-                        (group-by (comp (juxt (comp str t/date t/instant :timestamp)
-                                              (comp count :list)
-                                              (comp (juxt :adults :juveniles :children)))
-                                        second)
-                                  db))
+                        (group-by (juxt (comp str t/date t/instant :timestamp)
+                                        (comp count :list)
+                                        (comp (juxt :adults :juveniles :children)))
+                                  (into [] db)))]
+    (let [base (->> (datasource existing activity-records)
+                    (group-by (comp str t/date t/instant :timestamp val)))
+          dataset (into {} (map (juxt key (juxt (comp count val)
+                                                (comp
+                                                  #(reduce (fn [[a' b' c' d'] [a b c d]]
+                                                             [(+ (or a 0) a')
+                                                              (+ (or b 0) b')
+                                                              (+ (or c 0) c')
+                                                              (+ (or d 0) d')])
+                                                           [0 0 0 0] %)
+                                                  #(map (comp (juxt :adults :juveniles :children (comp count :list)) val) %)
+                                                  second))))
+                        base)
+          days-back-in-time 30
+          end-date (t/today)
+          start-date (t/<< end-date (t/new-period days-back-in-time :days))
+          lookup (map str (date-iter start-date 1))
+          data (take days-back-in-time (map #(vector % [(first (get dataset % [0]))
+                                                        (second (get dataset % [0]))]) lookup))
+          ma (reduce max 0 (map (comp first second) dataset))
+          first-day (drop-while (comp zero? second) data)
+          w days-back-in-time]
+      [sc/surface-a {:style {:position          :relative
+                             :border-radius     "var(--radius-0)"
+                             :box-shadow        "var(--shadow-1)"
+                             :padding-block-end "0.5rem"
+                             :padding-inline    "0.5rem"}}
+       ;[l/pre dataset]
+       ;[l/pre data]
+       [:div.absolute.left-3.top-2.text-black.xp-1
+        [sc/small1-inline
+         {:style {:font-weight "var(--font-weight-6)"
+                  :color       "var(--green-9)"}}
+         (times.api/date-format (t/date (ffirst first-day)))]]
+       [:div.absolute.right-3.bottom-2
+        [sc/row-sc-g4
+         [sc/small1-inline
+          {:style {:font-weight "var(--font-weight-6)"}}
+          (str "(" (reduce + 0 (map (comp first second) data)) ")")]
+         [sc/small1-inline
+          {:style {:font-weight "var(--font-weight-6)"}}
+          (str (get dataset (-> (t/today) t/date str)))]]]
 
-        #_#_data' (sort-by key >
-                           (reduce (fn [db [_ [date cnt] _]]
-                                     (update db date + cnt)) {} existing))]
-    (let [ma 0 #_(reduce max 0 (map second group-by-date))]
-      [:div
-       [l/pre (-> activity-records existing count)]
+       [:div.absolute.right-3.top-2.lineheight-1
+        [sc/small1-inline
+         {:style {:color       "var(--blue-5)"
+                  :font-weight "var(--font-weight-6)"}}
+         (times.api/date-format (t/today))]]
 
-       ;[l/pre (take 10 (date-iter 0))]
-       [l/pre (->> activity-records
-                   existing
-                   group-by-date
-                   (map (fn [[[date boats [a b c] :as k] v]] [k (count v)]))
-                   (sort-by ffirst))]
-       [l/pre (-> activity-records existing group-by-date)]
-       [:svg.h-32.w-full
-        {:style               {:background "var(--floating)"}
-         :viewBox             (l/strp 0 -1 60 (+ 2 ma 10))
+       #_[:div.absolute.left-3.top-2
+          [sc/small1-inline
+           {:style {:font-weight "var(--font-weight-6)"}}
+           (str start-date)]]
+
+       [:svg.h-24.w-full.mx-0.pr-6x.py-4.mx-1
+        {:viewBox             (l/strp 0 0 days-back-in-time (+ ma 20))
          :width               "100%"
+         :height              "auto"
          :preserveAspectRatio "none"}
-        #_(for [[idx [dt [cnt c2 c3]]] (map-indexed vector group-by-date)
-                :let [weekend? (some #{(t/int (t/day-of-week dt))} [5 6])
-                      x idx]]
-            [:<>
-             (if (zero? (mod idx 7))
-               [:<>
-                [:line {:vector-effect :non-scaling-stroke
-                        :stroke        :black
-                        :stroke-width  0.8
-                        :x1            x
-                        :x2            x
-                        :y1            ma
-                        :y2            (+ ma 2)}]
-                [:text {:lengthAdjust  "spacingAndGlyphs"
-                        :textLength    (count (str idx))
-                        :style         {:font "3px Inter"}
-                        ;:stroke-width 0.8
-                        :vector-effect :non-scaling-stroke
-                        :x             x
-                        :y             (+ ma 7)}
-                 x]
-                [:text {:lengthAdjust  "spacingAndGlyphs"
-                        :vector-effect :non-scaling-stroke
-                        :textLength    (count (times.api/short-date-format dt))
-                        :style         {:font "3px Inter"}
-                        ;:stroke-width 0.8
-                        :x             x
-                        :y             (+ ma 10)}
-                 (times.api/short-date-format dt)]])
-             [:line
-              {:stroke       (if weekend? :red :black)
-               :stroke-width 0.8
-               :x1           x :y1 (- ma cnt)
-               :x2           x :y2 ma}]])]])))
+
+        (for [[idx [dt [cnt _ _ _ ]]] (map-indexed vector data)
+              :let [x idx
+                    weekend? (some #{(t/int (t/day-of-week dt))} [6 7])]]
+          (if (= dt (ffirst first-day))
+            [:line
+             {:stroke           "var(--green-7)"
+              :vector-effect    :non-scaling-stroke
+              :stroke-width     2
+              :stroke-dasharray "2 2"
+              :x1               (- x 0.5) :y1 0
+              :x2               (- x 0.5) :y2 ma}]
+            [:line
+             {:stroke       (if weekend? "var(--text1)" "var(--text3)")
+              :stroke-width 0.85
+              :x1           (- x 0.5) :y1 (- ma cnt)
+              :x2           (- x 0.5) :y2 ma}]))
+
+        [:path {:stroke        "var(--blue-5)"
+                :fill          "var(--blue-5)"
+                :vector-effect :non-scaling-stroke
+                :d             (l/strp "m" (- w 1.5) (+ ma 5) "l" 0.5 9 "l" -1 0 "z")}]]])))
 
 
 (defn always-panel []

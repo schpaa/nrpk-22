@@ -3,6 +3,7 @@
             [schpaa.style.ornament :as sc]
             [schpaa.debug :as l]
             [db.core :as db]
+            [db.signin]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [clojure.string :as str]
             [lambdaisland.ornament :as o]

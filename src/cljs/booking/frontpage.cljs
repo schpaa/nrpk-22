@@ -6,7 +6,7 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [re-frame.core :as rf]
             [reagent.core :as r]
-            [booking.common-views]
+            [booking.page-layout]
             [arco.react]
             [times.api :as ta]
             [tick.core :as t]
@@ -28,13 +28,13 @@
        :-moz-osx-font-smoothing  :grayscale}])
 
 (o/defstyled page-with-background :div
-  [:& :pt-16
+  [:& :pt-16x
    {:background-position "center center"
     :background-repeat   "no-repeat"
-                                        ;todo
-                                        ;:background-color "transparent"
+    ;todo
+    ;:background-color "transparent"
     :background-size     "cover"}
-   #_[:&.light {:background-image "var(--background-image-light)"}]
+   [:&.light {:background-image "var(--background-image-light)"}]
    [:&.dark {:background-image "var(--background-image-dark)"}]]
   #_[:at-media {:max-width "511px"}
      [:&.light {:background-image "none"}]])
@@ -104,43 +104,43 @@
 
 (def frontpage-images'
   (map #(str "/img/personas/" %)
-    ["noun-persona-410775.png"
-     "noun-persona-410777.png"
-     "noun-persona-410780.png"
-     "noun-persona-410782.png"
-     "noun-persona-410783.png"
-     "noun-persona-410786.png"
-     "noun-persona-410788.png"
-     "noun-persona-410790.png"
-     "noun-persona-415635.png"
-     "noun-persona-415668.png"
-     "noun-persona-426505.png"
-     "noun-persona-436706.png"
-     "noun-persona-488544.png"
-     "noun-persona-488556.png"
-     "noun-persona-497844.png"
-     "noun-persona-497847.png"
-     "noun-persona-622291.png"
-     "noun-persona-622293.png"
-     "noun-persona-623584.png"
-     "noun-persona-633475.png"
-     "noun-persona-633483.png"
-     "noun-persona-4144932.png"
-     "noun-persona-4144944.png"
-     "noun-persona-4144945.png"
-     "noun-persona-4144951.png"
-     "noun-persona-4144954.png"
-     "noun-persona-4145149.png"
-     "noun-persona-4145160.png"
-     "noun-persona-4145168.png"
-     "noun-persona-4145173.png"
-     "noun-persona-4145177.png"
-     "noun-persona-4145185.png"
-     "noun-persona-4145187.png"
-     "noun-persona-4145191.png"
-     "noun-persona-4145197.png"
-     "noun-persona-4145199.png"
-     "noun-persona-4145214.png"]))
+       ["noun-persona-410775.png"
+        "noun-persona-410777.png"
+        "noun-persona-410780.png"
+        "noun-persona-410782.png"
+        "noun-persona-410783.png"
+        "noun-persona-410786.png"
+        "noun-persona-410788.png"
+        "noun-persona-410790.png"
+        "noun-persona-415635.png"
+        "noun-persona-415668.png"
+        "noun-persona-426505.png"
+        "noun-persona-436706.png"
+        "noun-persona-488544.png"
+        "noun-persona-488556.png"
+        "noun-persona-497844.png"
+        "noun-persona-497847.png"
+        "noun-persona-622291.png"
+        "noun-persona-622293.png"
+        "noun-persona-623584.png"
+        "noun-persona-633475.png"
+        "noun-persona-633483.png"
+        "noun-persona-4144932.png"
+        "noun-persona-4144944.png"
+        "noun-persona-4144945.png"
+        "noun-persona-4144951.png"
+        "noun-persona-4144954.png"
+        "noun-persona-4145149.png"
+        "noun-persona-4145160.png"
+        "noun-persona-4145168.png"
+        "noun-persona-4145173.png"
+        "noun-persona-4145177.png"
+        "noun-persona-4145185.png"
+        "noun-persona-4145187.png"
+        "noun-persona-4145191.png"
+        "noun-persona-4145197.png"
+        "noun-persona-4145199.png"
+        "noun-persona-4145214.png"]))
 
 (defn config []
   {:dots             true
@@ -149,10 +149,10 @@
    :slidesToShow     1
    :pauseOnHover     true
    :inside?          true
-                                        ;:autoplay         false
-                                        ;:autoplaySpeed    1000
+   ;:autoplay         false
+   ;:autoplaySpeed    1000
    :afterChange      (fn [e] #_(rf/dispatch [::set-active-menu-page e]))
-                                        ;:beforeChange     (fn [_ e] (rf/dispatch [::set-active-menu-page]))
+   ;:beforeChange     (fn [_ e] (rf/dispatch [::set-active-menu-page]))
    :touchMove        true
    :speed            500
    :initialSlide     1
@@ -263,36 +263,36 @@
                  :font-size     "100%"
                  :padding-block "2rem"}}
    (fancy-front
-    [:div {:style {:align-self   :center
-                   :justify-self :start
-                   :grid-area    "graph"}} (widgets/logo-graph)]
-    [:div {:style {:align-self :center
-                   :grid-area  "type"}} logo-type]
-    [:div
-     {:style {:width "min-content"}}
-     [:div.inline-flex.flex-col.justify-center.space-y-2
+     [:div {:style {:align-self   :center
+                    :justify-self :start
+                    :grid-area    "graph"}} (widgets/logo-graph)]
+     [:div {:style {:align-self :center
+                    :grid-area  "type"}} logo-type]
+     [:div
+      {:style {:width "min-content"}}
+      [:div.inline-flex.flex-col.justify-center.space-y-2
 
-      [sc/text1 "Åpningstider"]
+       [sc/text1 "Åpningstider"]
 
-      [sc/co
-       [sc/small1 "tir, ons & tor"]
-       [sc/text1 {:style {:line-height 1}
-                  :class [:whitespace-nowrap]} "kl 18:00—21:00"]]
+       [sc/co
+        [sc/small1 "tir, ons & tor"]
+        [sc/text1 {:style {:line-height 1}
+                   :class [:whitespace-nowrap]} "kl 18:00—21:00"]]
 
-      [:div.mx-px
-       {:style {:opacity    0.5
-                :border-top "1px solid var(--text1)"}}]
+       [:div.mx-px
+        {:style {:opacity    0.5
+                 :border-top "1px solid var(--text1)"}}]
 
-      [sc/co
-       {:style {:line 1}}
-       [sc/small1 "lør & søn"]
-       [sc/text1 {:style {:line-height 1}
-                  :class [:whitespace-nowrap]} "kl 11:00—17:00"]]]]
+       [sc/co
+        {:style {:line 1}}
+        [sc/small1 "lør & søn"]
+        [sc/text1 {:style {:line-height 1}
+                   :class [:whitespace-nowrap]} "kl 11:00—17:00"]]]]
 
-    #_[:div {:style {:align-self   :center
-                     :justify-self :center
-                     :grid-area    "status"}}
-       (todays-numbers "_" "_" c '—)])])
+     #_[:div {:style {:align-self   :center
+                      :justify-self :center
+                      :grid-area    "status"}}
+        (todays-numbers "_" "_" c '—)])])
 
 (defn helpful-to-earlier-users []
   [sc/surface-c {:class [:-mx-4x]
@@ -393,30 +393,31 @@
   [sc/col-space-1
    [sc/row-field
     (widgets/disclosure
-     {:padded-heading []
-      :large          1
-      :style          {:padding-block "var(--size-2)"}}
-     :frontpage/news
-     [sc/row-sc-g4 {:style {:align-items :baseline}}
-      [:p "Hva skjer?"]
-      [widgets/auto-link {:style   {:font-family "Inter"}
-                          :class   [:z-10 :small]
-                          :caption "mer her"} :r.booking-blog]]
-     [news/news-feed])]])
+      {:padded-heading []
+       :large          1
+       :style          {:padding-block "var(--size-2)"}}
+      :frontpage/news
+      [sc/row-sc-g4 {:style {:align-items :baseline}}
+       [:p "Hva skjer?"]
+       [widgets/auto-link {:style   {:font-family "Inter"}
+                           :class   [:z-10 :small]
+                           :caption "mer her"}
+        :r.booking-blog]]
+      [news/news-feed])]])
 
 (defn planned-section []
   (widgets/disclosure
-   {:padded-heading []
-    :large          1
-    :style          {:padding-block "var(--size-2)"
-                     :xmargin-left  "2rem"}}
-   :frontpage/yearwheel
-   [sc/row-sc-g4 {:style {:align-items :baseline}}
-    [:p "Årshjul"]
-    [widgets/auto-link {:style   {:font-family "Inter"}
-                        :class   [:z-10 :small]
-                        :caption "mer her"} :r.yearwheel]]
-   [booking.yearwheel/yearwheel-feed]))
+    {:padded-heading []
+     :large          1
+     :style          {:padding-block "var(--size-2)"
+                      :xmargin-left  "2rem"}}
+    :frontpage/yearwheel
+    [sc/row-sc-g4 {:style {:align-items :baseline}}
+     [:p "Årshjul"]
+     [widgets/auto-link {:style   {:font-family "Inter"}
+                         :class   [:z-10 :small]
+                         :caption "mer her"} :r.yearwheel]]
+    [booking.yearwheel/yearwheel-feed]))
 
 ;; here are some changes
 (defn frontpage []
@@ -427,21 +428,21 @@
     [page-with-background
      {:style {:min-height "90vh"
               :height     "90vh"}
-
-      :class [(if dark-mode? :dark :light)
+      :class [:-debugx
+              (if dark-mode? :dark :light)
               (if @reg? :bottom-toolbar)]}
 
      [:div.min-h-full.z-0
       {:style {:min-height     "90vh"
                :padding-bottom "8rem"}}
-                                        ;debug
+      ;debug
       #_(when (and goog.DEBUG @master-emulation)
           [:div.max-w-lg.mx-auto
            [:div.mx-4.py-4x.pt-24x
             [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-             booking.common-views/master-control-box]]])
+             booking.page-layout/master-control-box]]])
 
-      [:div.-debug2 [header-with-logo]]
+      [header-with-logo]
 
       (when @show-image-carousell? [image-carousell])
 

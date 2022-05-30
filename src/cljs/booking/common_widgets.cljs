@@ -7,6 +7,7 @@
             [re-frame.core :as rf]
             [booking.ico :as ico]
             [schpaa.style.button :as scb]
+            [schpaa.components.views]
             [schpaa.icon :as icon]
             [booking.routes]
             [headlessui-reagent.core :as ui]
@@ -15,7 +16,8 @@
             [clojure.string :as str]
             [schpaa.style.hoc.buttons :as button]
             [booking.styles]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [booking.data]))
 
 (declare data-url)
 
@@ -742,12 +744,13 @@
             base (if (= :dark @screenmode)
                    (apply str (map #(.toString % 16) [146 186 110]))
                    "0693e3")]
-        [:div.p-2.noprint
+        [:div.noprint
+         {:style {:background-color "var(--content)"}}
          [:div.h-20 [waves base]]
          [:div.z-1.rounded-top
-          {:style {:border-radius           "var(--radius-1)"
-                   :border-top-right-radius "0"
-                   :border-top-left-radius  "0"
+          {:style {:xborder-radius           "var(--radius-1)"
+                   :xborder-top-right-radius "0"
+                   :xborder-top-left-radius  "0"
                    :background              (str "#" base "FF") #_"#0693e3ff"}}
           [:div.mx-auto.max-w-xl.pt-4.pb-16
            [:div.mx-4

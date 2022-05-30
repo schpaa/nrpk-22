@@ -1,20 +1,20 @@
 goog.provide('schpaa.style.button');
 schpaa.style.button.base_button = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","base-button","schpaa.style.button/base-button",1480484850,null),"schpaa_style_button__base_button",new cljs.core.Keyword(null,"button","button",1456579943),null,null);
 schpaa.style.button.more_base_button = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","more-base-button","schpaa.style.button/more-base-button",-107768213,null),"schpaa_style_button__more_base_button",new cljs.core.Keyword(null,"button","button",1456579943),null,null);
-schpaa.style.button.danger = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","danger","schpaa.style.button/danger",-1472305388,null),"schpaa_style_button__danger",new cljs.core.Keyword(null,"button","button",1456579943),null,(function (p__74897,content){
-var map__74898 = p__74897;
-var map__74898__$1 = cljs.core.__destructure_map(map__74898);
-var attr = map__74898__$1;
-var type = cljs.core.get.cljs$core$IFn$_invoke$arity$3(map__74898__$1,new cljs.core.Keyword(null,"type","type",1174270348),"button");
-var on_click = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__74898__$1,new cljs.core.Keyword(null,"on-click","on-click",1632826543));
+schpaa.style.button.danger = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","danger","schpaa.style.button/danger",-1472305388,null),"schpaa_style_button__danger",new cljs.core.Keyword(null,"button","button",1456579943),null,(function (p__380197,content){
+var map__380198 = p__380197;
+var map__380198__$1 = cljs.core.__destructure_map(map__380198);
+var attr = map__380198__$1;
+var type = cljs.core.get.cljs$core$IFn$_invoke$arity$3(map__380198__$1,new cljs.core.Keyword(null,"type","type",1174270348),"button");
+var on_click = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__380198__$1,new cljs.core.Keyword(null,"on-click","on-click",1632826543));
 return cljs.core.with_meta(new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"<>","<>",1280186386),content], null),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"on-click","on-click",1632826543),on_click,new cljs.core.Keyword(null,"type","type",1174270348),type], null));
 }));
-schpaa.style.button.danger_small = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","danger-small","schpaa.style.button/danger-small",-39256045,null),"schpaa_style_button__danger_small",new cljs.core.Keyword(null,"button","button",1456579943),null,(function (p__74903,content){
-var map__74904 = p__74903;
-var map__74904__$1 = cljs.core.__destructure_map(map__74904);
-var attr = map__74904__$1;
-var type = cljs.core.get.cljs$core$IFn$_invoke$arity$3(map__74904__$1,new cljs.core.Keyword(null,"type","type",1174270348),"button");
-var on_click = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__74904__$1,new cljs.core.Keyword(null,"on-click","on-click",1632826543));
+schpaa.style.button.danger_small = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","danger-small","schpaa.style.button/danger-small",-39256045,null),"schpaa_style_button__danger_small",new cljs.core.Keyword(null,"button","button",1456579943),null,(function (p__380209,content){
+var map__380210 = p__380209;
+var map__380210__$1 = cljs.core.__destructure_map(map__380210);
+var attr = map__380210__$1;
+var type = cljs.core.get.cljs$core$IFn$_invoke$arity$3(map__380210__$1,new cljs.core.Keyword(null,"type","type",1174270348),"button");
+var on_click = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__380210__$1,new cljs.core.Keyword(null,"on-click","on-click",1632826543));
 return cljs.core.with_meta(new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"<>","<>",1280186386),content], null),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"on-click","on-click",1632826543),on_click,new cljs.core.Keyword(null,"type","type",1174270348),type], null));
 }));
 schpaa.style.button.clear = lambdaisland.ornament.styled(new cljs.core.Symbol("schpaa.style.button","clear","schpaa.style.button/clear",1563449545,null),"schpaa_style_button__clear",new cljs.core.Keyword(null,"button","button",1456579943),null,null);

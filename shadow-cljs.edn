@@ -3,16 +3,16 @@
  :deps              {:aliases [:shadow-cljs]}
  :nrepl             {:port 9000}
  :cache-blockers    #{lambdaisland.ornament}
-                                        ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
+ ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
  :dev-http          {8010 "public/booking"
                      8020 "public/eykt"
                      8030 "public/test"
                      3001 ["public/devcards" "public"]}
  :builds            {:devcards
                      {:target           :browser            ; using :browser-test to pickup all files that match `-test$`
-                                        ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
+                      ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
                       :output-dir       "public/devcards/js"
-                                        ;:runner-ns        example.devcards ; must have init fn to run
+                      ;:runner-ns        example.devcards ; must have init fn to run
                       :modules          {:main {:init-fn example.devcards/init!}}
                       :after-load       example.devcards/reload!
                       :compiler-options {:devcards           true
@@ -40,9 +40,9 @@
 
 
                      :testing
-                     {:target :browser-test
+                     {:target    :browser-test
                       :ns-regexp "access$"
-                      :test-dir "public/test"}
+                      :test-dir  "public/test"}
 
                      :booking {:build-hooks       [(shadow-git-inject.core/hook)
                                                    (my.hooks/write-styles-hook)]
@@ -52,17 +52,25 @@
                                :output-dir        "public/booking/js"
                                :asset-path        "/js"
                                :after-load        booking.core/reload!
+                               :ignore-warnings true
                                :modules           {:main {:init-fn booking.core/init!}}
                                :module-hash-names 4
                                :release           {:output-dir       "dist/booking/js"
-                                                   :compiler-options {:closure-defines {goog.DEBUG           false
-                                                                                        booking.data/VERSION :shadow-git-inject/version
-                                                                                        booking.data/DATE    :shadow-git-inject/build-iso-date-time}
-                                                                      :infer-externs   :auto
-                                                                      :optimizations   :advanced}}
+                                                   :compiler-options {:warnings-as-errors {:ignore #{taoensso cljc.java-time}
+                                                                                           :warnings-types #{:undeclared-var}}
+                                                                      :infer-externs      :auto
+                                                                      :optimizations      :advanced
+                                                                      :closure-defines    {goog.DEBUG           false
+                                                                                           booking.data/VERSION :shadow-git-inject/version
+                                                                                           booking.data/DATE    :shadow-git-inject/build-iso-date-time}}}
 
-                               :dev               {:compiler-options {:closure-defines {goog.DEBUG           true
-                                                                                        booking.data/VERSION "1.0.1"
-                                                                                        booking.data/DATE    "2023-04-26T00:00"}
-                                                                      :infer-externs   :auto
-                                                                      :optimizations   :none}}}}}
+                               :dev               {:compiler-options {:warnings {:redef false}
+                                                                      #_#_:warnings-as-errors
+                                                                      {:ignore #{taoensso.* cljc.java-time.*}
+                                                                       :warnings-types #{:redef
+                                                                                         :undeclared-var}}
+                                                                      :optimizations      :none
+                                                                      :infer-externs      :auto
+                                                                      :closure-defines    {goog.DEBUG           true
+                                                                                           booking.data/VERSION "1.0.1"
+                                                                                           booking.data/DATE    "2023-04-26T00:00"}}}}}}

@@ -1,5 +1,5 @@
 (ns booking.spa
-  (:require [booking.common-views :refer [page-boundary +page-builder]]
+  (:require [booking.page-layout :refer [page-boundary +page-builder]]
             [booking.content.booking-blog :as content.booking-blog :refer [render]]
             [reagent.core :as r]
             [lambdaisland.ornament :as o]
@@ -320,7 +320,7 @@
      [+page-builder r
       {:render (fn []
                  [:div
-                  (l/pre (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                  (l/pre (booking.page-layout/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
                   [:div "admin"]])}])
 
    :r.signedout
@@ -328,7 +328,7 @@
      [+page-builder r
       {:render (fn []
                  [:div
-                  (l/pre (booking.common-views/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
+                  (l/pre (booking.page-layout/matches-access r @(rf/subscribe [:lab/all-access-tokens])))
                   [:div "Du har altså logget ut"]])}])
 
 
@@ -500,10 +500,10 @@
      (let [user-auth (rf/subscribe [::db/user-auth])]
        (fn [r]
          (page r {:always-panel content.booking-blog/always-panel
-                  :render       (fn [r] [content.booking-blog/render
-                                         {:fsm  {}
-                                          :uid  (:uid @user-auth)
-                                          :path ["booking-posts" "articles"]}])}))))
+                  :srender       (fn [r] [content.booking-blog/render
+                                          {:fsm  {}
+                                           :uid  (:uid @user-auth)
+                                           :path ["booking-posts" "articles"]}])}))))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment
