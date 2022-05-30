@@ -25,4 +25,7 @@
     [:none nil nil]))
 
 (deftest access
-  (is (= 1 2)))
+  (is (= 1 1))
+  (are [a b] (= a b)
+    [:registered #{} "123"]
+    (build-access-tuple {:uid "123"})))
