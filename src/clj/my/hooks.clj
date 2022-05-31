@@ -16,11 +16,11 @@
                             :font-size             "1rem"
                             :font-feature-settings "'cv10', 'salt', 'zero'"}]])
 
-(defn produce [filename]
+(defn produce [filename] 
   (spit filename
         (str
           (slurp "template/css/colors.css")
-          "\n"
+          "\n"                         
           (gc/compile-css {:pretty-print? true} (concat
                                                   girouette-preflight/preflight
                                                   global-styles))
