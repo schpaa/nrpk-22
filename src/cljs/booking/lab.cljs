@@ -340,11 +340,11 @@
                     (reset! step 0))
         cancel #(do (reset! selector :sjøbasen)
                     (reset! step 0))]
-    [:div.pointer-events-nonex
+    [:div.pointer-events-none
      {:class [:sticky :top-24 :z-100 :space-y-8]}
-     ;[l/pre @store]
      [sc/row-center {:class [:z-100]}
       [sc/col-space-8
+       {:class [:pointer-events-auto]}
 
        [widgets/pillbar {:on-click nil #_#(if (= :booking @selector)
                                             (reset! step 0))
@@ -355,7 +355,7 @@
 
        [sc/row-center
         (if (= :sjøbasen @selector)
-          [button/pill-icon-caption
+          [button/icon-and-caption
            {:style    {:box-shadow "var(--shadow-2)"}
             :class    [:large :cta :xnarrow]
             :on-click #(case @selector
@@ -363,10 +363,9 @@
                          :sjøbasen (reset! step 1))}
            ico/plus
            "Ny booking"]
-          [button/pill-icon-caption
-           {:style    {:box-shadow "var(--shadow-2)"
-                       :scolor :reds}
-            :class    [:largex :cta :xnarrow]
+          [button/icon-and-caption
+           {:style    {:box-shadow "var(--shadow-2)"}
+            :class    [:large :cta]
             :on-click #(case @selector
                          :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
                          :sjøbasen (reset! step 1))}

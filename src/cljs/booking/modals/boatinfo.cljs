@@ -157,7 +157,6 @@
 
          [sc/text1 {:style {:text-decoration-line (when complete "line-through")}} description]])]]))
 
-
 (defn insert-worklog [boat-item-id work-log]
   (let [all-data (->> @work-log
                       (filter (fn [[k v]] (:deleted v)))

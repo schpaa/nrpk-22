@@ -740,6 +740,7 @@
     {:style {:overflow-y :auto
              :width      "auto"
              :max-height "90vh"}}
+
     [boatpanel-window args]]))
 
 (rf/reg-event-fx :lab/toggle-boatpanel
@@ -790,8 +791,8 @@
            {:style {:z-index 2000}
             :class [:w-auto :top-0 :h-auto (cond
                                              @mobile? :inset-0
-                                             (not @right-side?) :left-12
-                                             :else :right-12)]}
+                                             @right-side? :right-12
+                                             :else :left-12)]}
            [:div.text-center
             [schpaa.style.dialog/standard-overlay]
             [:span.inline-block.h-screen.align-middle
@@ -809,12 +810,12 @@
 
                                :else {:box-shadow (apply str (interpose ","
                                                                         ["0 0 0px calc(var(--size-2) * 1) var(--brand1)"
-                                                                         "0 0 0px calc(var(--size-2) * 2) var(--toolbar-)"
-                                                                         "var(--shadow-6)"]))
+                                                                         "0 0 0px calc(var(--size-1) * 3) var(--toolbar-)"
+                                                                         "var(--shadow-5)"]))
                                       :outline    :none
                                       :border     :none})
                              {:border-radius    "var(--size-2)"
-                              :background-color "var(--toolbar)"}) 
+                              :background-color "var(--toolbar)"})
               :class       [:inline-block :align-middle :text-left :transform
                             (o/classname sc/inner-dlg)]
               :enter       "ease-in-out duration-200"

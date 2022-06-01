@@ -310,7 +310,7 @@
        {:appear true
         :show   open?}
        [ui/dialog {:on-close #(if click-overlay-to-dismiss (close))}
-        [:div.fixed.inset-0.z-100
+        [:div.fixed.inset-0.z-10
          [:div.text-center
           {:class [#_(if @right-side? :mr-20 :ml-16)]}
           [schpaa.style.dialog/standard-overlay]

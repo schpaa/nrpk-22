@@ -92,11 +92,14 @@
                                 (reset! write-success false))
                               (rf/dispatch [:modal.slideout/clear]))}
              [:div {:style {:width     "512px"
-
-                            :max-width "100vw"}
-                    :class [;:px-1
-                            ;:pb-1
-                            :overflow-y-auto]}
+                            :max-width "calc(100vw - 2rem)"
+                            :border-bottom-right-radius "var(--radius-2)"
+                            :border-bottom-left-radius "var(--radius-2)"
+                            :box-shadow (apply str (interpose ","
+                                                              ["0 0 0px calc(var(--size-2) * 1) var(--brand1)"
+                                                               "0 0 0px calc(var(--size-1) * 3) var(--toolbar-)"
+                                                               "var(--shadow-5)"]))}
+                    :class [:overflow-y-auto]}
 
               (when auto-dismiss
                 [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}
