@@ -393,23 +393,25 @@
                  :transform    "rotate(6deg)"
                  :aspect-ratio "1/1"}}
    [booking.styles/logothing {:class [(if dark-mode? :dark :light)]}
-    [:img {:src   "/img/logo-n.png"
-           :style {:position                  :absolute
-                   :inset                     0
-                   :object-fit                :contain
-                   :border-radius             "var(--radius-round)"
+    [:img {:src   "/img/logo-n2.jpg"
+           :style {
                    :animation-name            "spin3"
                    :animation-timing-function "var(--ease-4)"
                    :animation-delay           "0s"
                    :animation-duration        "1.1s"
                    :animation-iteration-count 1
                    :animation-direction       :forward
+
+                   ;:position                  :absolute
+                   :inset                     0
+                   :object-fit                :contain
+                   :border-radius             "var(--radius-round)"
                    :transform-origin          "center"}}]
-    [:div
-     {:style {:position         :absolute
-              :inset            0
-              :clip-path        "circle(35% at 50% 50%)"
-              :background-color (if clear-map? "var(--toolbar-)")}}]]])
+    [:img {:src   "/img/logo-n2.jpg"
+           :style {:position         :absolute 
+                   :inset            0
+                   :clip-path        "circle(35% at 50% 50%)"
+                   :background-color (if clear-map? "var(--toolbar-)")}}]]])
 
 (defn logo-graph
   ([]
@@ -801,29 +803,29 @@
                         :justify-content :end}}
                (when-not ipad?
                  [button/icon-and-caption
-                  {:class    [:round :message]
+                  {:class    [:message :h-8]
                    :on-click #(do
                                 (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
                                 (db/database-update {:path  ["system"]
                                                      :value {"active" @user-uid}}))}
                   ico/exclamation
-                  (when-not mobile? "Bli til Båtlogg")])
+                  "Bli til Båtlogg"])
 
                (when @(rf/subscribe [:lab/admin-access])
                  [button/icon-and-caption
-                  {:class    [:danger]
+                  {:class    [:danger :h-8]
                    :on-click #(db/database-update {:path  ["system"]
                                                    :value {"timestamp" booking.data/DATE}})}
                   ico/exclamation
                   "Aktiver!"])
 
                [button/icon-and-caption
-                {:class    [:frame :always-wide]
+                {:class    [:frame :always-wide :h-8]
                  :style    {:color        "var(--gray-1)"
                             :border-color "var(--gray-1)"}
                  :on-click #(rf/dispatch [:app/give-feedback {:source (some-> route :path)}])}
                 ico/tilbakemelding
-                (when-not mobile? "Tilbakemelding")]]]
+                "Tilbakemelding"]]]
 
              [sc/row-field
               [sc/small (or booking.data/VERSION "version")]

@@ -13,7 +13,7 @@
   [:& :absolute :-top-20 :-right-12 :rotate-45 :opacity-20 :w-32])
 
 (defn corner-logo []
-  [corner-logo' {:src "/img/logo-n.png"}])
+  [corner-logo' {:src "/img/logo-n2.jpg"}])
 
 (defn welcome-dlg [{:keys [on-close on-save context]}]
   (let [uid @(rf/subscribe [:lab/uid])

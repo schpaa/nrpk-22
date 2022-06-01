@@ -350,7 +350,7 @@
         item-wrapper #(sc/item-wrapper-style {:class [(when deleted :deleted)]} %)
         {:keys [start-date start-time end-time]} (preformat-dates date end-time-instant)]
     (when @selector
-      [sc/zebra
+      [sc/zebra 
        [:div.flex.w-full 
         [logg-listitem-grid
          [g-area "badges" (when details? [agegroups-detail m])]
@@ -721,12 +721,12 @@
                              :xpos              0
                              :xstart            0
                              :touchdown         false}
-                 st (r/atom initial-st)
+                 st (r/atom initial-st)      
                  reset-view #(reset! st initial-st)
                  days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])]
       [sc/co
-       [l/pre (take 5 dataset)]
+       ;[l/pre (take 5 dataset)]
        [graph
         dataset
         #_{"2022-04-28" [1 [2 3 4 5]]

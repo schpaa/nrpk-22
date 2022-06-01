@@ -83,7 +83,7 @@
      [:div.absolute.rounded-full.-inset-1.blur
       {:class [:opacity-75 :bg-gradient-to-r :from-alt :to-sky-600
                :sgroup-hover:-inset-1 :duration-500]}]
-     [:div.relative [:img.object-cover {:src "/img/logo-n.png"}]]]]
+     [:div.relative [:img.object-cover {:src "/img/logo-n2.jpg"}]]]]
 
    [sc/text1 "Finner ikke noe på denne adressen! Det er kanskje en gammel lenke. Se om du finner det du leter etter i denne listen:"]
    (into [:div.space-y-1] (for [{:keys [id name icon disabled action keywords] :as e}

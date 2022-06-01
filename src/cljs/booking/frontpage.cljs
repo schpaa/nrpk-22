@@ -433,8 +433,8 @@
               (if @reg? :bottom-toolbar)]}
 
      [:div.min-h-full.z-0
-      {:style {:min-height     "90vh"
-               :padding-bottom "8rem"}}
+      {:style {;:min-height     "90vh"
+               :xmargin-bottom "8rem"}}
       ;debug
       #_(when (and goog.DEBUG @master-emulation)
           [:div.max-w-lg.mx-auto
@@ -442,14 +442,15 @@
             [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
              booking.page-layout/master-control-box]]])
 
-      [header-with-logo]
+      [:div.py-24 [header-with-logo]]
 
       (when @show-image-carousell? [image-carousell])
 
       (when (and (not @(schpaa.state/listen :lab/skip-easy-login))
                  (not @reg?))
         [:div.mx-4.pb-12
-         [:div.max-w-lg.mx-auto.px-4 [helpful-to-earlier-users]]])
+         [:div.max-w-lg.mx-auto.px-4
+          [helpful-to-earlier-users]]])
 
       ;;disclosed units
       [sc/col-space-8

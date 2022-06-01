@@ -165,7 +165,7 @@
     [sc/col-space-4
      (for [[idx kv] (map-indexed vector (news-data))]
        [:div
-        [l/pre idx]
+        ;[l/pre idx]
         [item idx kv]])
 
      #_[:div {:style {:display               "grid"

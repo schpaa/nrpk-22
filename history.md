@@ -207,3 +207,4 @@
 -rw-r--r--  1 chris  staff  4048899 Jun  1 08:45 ./dist/booking/js/main.B88F.js
 -rw-r--r--  1 chris  staff  4050130 Jun  1 10:15 ./dist/booking/js/main.1AA5.js
 -rw-r--r--  1 chris  staff  4049939 Jun  1 10:34 ./dist/booking/js/main.5340.js
+-rw-r--r--  1 chris  staff  4049881 Jun  1 10:44 ./dist/booking/js/main.8F70.js
