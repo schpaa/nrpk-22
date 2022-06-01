@@ -260,24 +260,39 @@
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
-    [button/icon-and-caption
-     {:on-click on-click
-      :class    [(if deleted? :frame :danger)
-                 (if mobile? :round :pad-right)]
-      :disabled false}
-     (if deleted? ico/undo ico/trash)
-     (when-not mobile? caption)]))
+    (if mobile?
+      [button/just-icon
+       {:on-click on-click
+        :class    [(if deleted? :frame :danger)
+                   (if mobile? :round :pad-right)]
+        :disabled false}
+       (if deleted? ico/undo ico/trash)]
+      [button/icon-and-caption
+       {:on-click on-click
+        :class    [(if deleted? :frame :danger)
+                   (if mobile? :round :pad-right)]
+        :disabled false}
+       (if deleted? ico/undo ico/trash)
+       caption])))
 
 (defn in-out [all-returned? {:keys [on-click deleted?]} caption]
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])]
-    [button/icon-and-caption
-     {:on-click on-click
-      :class    [(if deleted? :frame)
-                 (if mobile? :round :pad-right)
-                 (if all-returned? :regular :cta)]
-      :disabled false}
-     ico/status
-     (when-not mobile? caption)]))
+    (if mobile?
+      [button/just-icon
+       {:on-click on-click
+        :class    [(when deleted? :frame)
+                   :round
+                   (if all-returned? :regular :cta)]
+        :disabled false}
+       ico/status]
+      [button/icon-and-caption
+       {:on-click on-click
+        :class    [(if deleted? :frame)
+                   :padded
+                   (if all-returned? :regular :cta)]
+        :disabled false}
+       ico/status
+       caption])))
 
 (defn trashcan [on-click {:keys [deleted id]}]
   [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
@@ -292,7 +307,7 @@
         attr (conj
                attr
                {:disabled true
-                :class    [(if mobile? :round :pad-right)]
+                ;:class    [(if mobile? :round)]
                 :style    {:text-transform "uppercase"
                            :border-color   "var(--blue-7)"
                            :background     "var(--blue-6)"
@@ -300,10 +315,14 @@
                 :on-click #(on-click m)})]
     (if deleted
       [:div.w-8]
-      [button/icon-and-caption
-       attr
-       ico/pencil
-       (when-not mobile? "Endre")])))
+      (if mobile?
+        [button/just-icon
+         attr
+         ico/pencil]
+        [button/icon-and-caption
+         attr
+         ico/pencil
+         "Endre"]))))
 
 (defn lookup-page-ref-from-name [link]
   {:pre [(keyword? link)]}

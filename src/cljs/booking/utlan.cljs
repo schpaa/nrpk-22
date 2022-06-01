@@ -229,14 +229,16 @@
 (defn- edit-bar [edit-mode? k {:keys [uid deleted timestamp list] :as m}
                  all-returned?]
   (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
-    [sc/row-sc-g2 {:style {:align-self "start"}}
+    [sc/row-sc-g2 {:style {:align-self "start"
+                           :align-items "center"}
+                   :class [:h-8]}
      (if edit-mode?
        [widgets/trashcan'
         {:deleted? deleted
          :on-click (fn [] (db/database-update
                             {:path  ["activity-22" (name k)]
                              :value {:deleted (not deleted)}}))}
-        (if deleted "Angre" "Slett")]
+        (if deleted "Angre sletting" "Slett")]
 
        (when-not deleted
          [widgets/in-out
@@ -349,42 +351,43 @@
         {:keys [start-date start-time end-time]} (preformat-dates date end-time-instant)]
     (when @selector
       [sc/zebra
-       [logg-listitem-grid
-        [g-area "badges" (when details? [agegroups-detail m])]
-        [g-area "edit" [edit-bar @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
-        [g-area "graph" (when (and details? (t/= (t/date date) (t/today)) (= :b @selector))
-                          [timegraph {} settings date end-time-instant boats (t/date-time)])]
+       [:div.flex.w-full 
+        [logg-listitem-grid
+         [g-area "badges" (when details? [agegroups-detail m])]
+         [g-area "edit" [edit-bar @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
+         [g-area "graph" (when (and details? (t/= (t/date date) (t/today)) (= :b @selector))
+                           [timegraph {} settings date end-time-instant boats (t/date-time)])]
 
-        [g-area "content"
-         [sc/col
-          [:div.flex.gap-1.flex-wrap.justify-end
-           (map #(item-wrapper (badge-view-fn nil %)) (boat-badges db boats))]]]
+         [g-area "content"
+          [sc/col
+           [:div.flex.gap-1.flex-wrap.justify-end
+            (map #(item-wrapper (badge-view-fn nil %)) (boat-badges db boats))]]]
 
-        [g-area "start-date" [:div.flex.items-center.h-8
-                              [sc/text1 {:style {:display      :flex
-                                                 :align-items  :center
-                                                 :height       "100%"
-                                                 :padding-left "8px"}} start-date]]]
-        (when details?
-          [sc/text1 {:style {:grid-column "2/-1"
-                             :display     :flex
-                             :height      "2rem"
-                             :align-items :center}}
-           [sc/text1 start-time]
-           (if-not end-time "-->" "—")
-           [sc/text1 end-time]
+         [g-area "start-date" [:div.flex.items-center.h-8
+                               [sc/text1 {:style {:display      :flex
+                                                  :align-items  :center
+                                                  :height       "100%"
+                                                  :padding-left "8px"}} start-date]]]
+         (when details?
+           [sc/text1 {:style {:grid-column "2/-1"
+                              :display     :flex
+                              :height      "2rem"
+                              :align-items :center}}
+            [sc/text1 start-time]
+            (if-not end-time "-->" "—")
+            [sc/text1 end-time]
 
-           [:div.grow]
-           [sc/row-sc-g2 {:class [:truncate]
-                          :style {:align-items     "center"
-                                  :justify-content :end
-                                  :grid-area       "details"}}
-            (if-not ref-uid
-              (if-let [uid (user.database/lookup-phone phone)]
-                [widgets/user-link uid]
-                [sc/text1 phone])
-              [widgets/user-link ref-uid])
-            [badges item-wrapper m]]])]])))
+            [:div.grow]
+            [sc/row-sc-g2 {:class [:truncate]
+                           :style {:align-items     "center"
+                                   :justify-content :end
+                                   :grid-area       "details"}}
+             (if-not ref-uid
+               (if-let [uid (user.database/lookup-phone phone)]
+                 [widgets/user-link uid]
+                 [sc/text1 phone])
+               [widgets/user-link ref-uid])
+             [badges item-wrapper m]]])]]])))
 
 ;todo REFACTOR!
 (defn render [loggedin-uid]
@@ -547,14 +550,21 @@
                 {:style {:font-weight "var(--font-weight-6)"}}
                 (str "(maks " max-value ")")]]]
 
+             [:div.absolute.right-3.top-1
+              (when-let [dt (some-> end-date t/date)]
+                (let [future? (t/< (t/today) dt)]
+                  [sc/small1-inline
+                   {:style {:color       (if future? "var(--red-5)" "var(--blue-5)")
+                            :font-weight "var(--font-weight-6)"}}
+                   (times.api/date-format dt)]))]
+
              [:div.absolute.right-3.bottom-2
               [sc/row-sc-g4
 
                [sc/small1-inline
                 {:style {:font-weight "var(--font-weight-6)"}}
                 (let [[a [_ _ _ e]] (get dataset (-> end-date str))]
-                  (when a
-                    (times.api/format "%0.2f %s" (/ e a) a))
+                  a
                   #_(apply str (interpose ", " [a (str e)])))]
                [sc/small1-inline
                 {;:on-click #(swap! mode (fn [e] (mod (inc e) 4)))
@@ -563,9 +573,9 @@
                          :font-weight "var(--font-weight-6)"}}
                 (let [[a [b c d _]] (get dataset (-> end-date str))]
                   (when a
-                    (apply str (interpose ", " (map #(if (zero? %) "—" %) [b c d])))))]]]
+                    [:div.flex.gap-1 (map (fn [e] [:div.w-6 (if (zero? e) "—" e)]) [b c d])]))]]]
 
-             [:div.absolute.left-3.bottom-2.lineheight-1
+             [:div.absolute.left-3.bottom-2
               [sc/col
                [sc/small1-inline
                 {:on-click #(do
@@ -583,14 +593,6 @@
                [sc/small1-inline
                 {:style {:font-weight "var(--font-weight-6)"}}
                 (str "(totalt=>" (reduce + 0 (map (comp first second) data)) ")")]]]
-
-             [:div.absolute.right-3.top-1.lineheight-1
-              (when-let [dt (some-> end-date t/date)]
-                (let [future? (t/< (t/today) dt)]
-                  [sc/small1-inline
-                   {:style {:color       (if future? "var(--red-5)" "var(--blue-5)")
-                            :font-weight "var(--font-weight-6)"}}
-                   (times.api/date-format dt)]))]
 
              [:div.p-1
               {:style {:background-color (when (or @mousedown @touchdown) "var(--content)")}}
@@ -643,57 +645,62 @@
                        :d             (l/strp "m" (- w 1.5) (+ max-value 5) "l" 0.5 9 "l" -1 0 "z")}]]]]]))})))
 
 (defn graph-1 []
-  (r/with-let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
-               existing (remove deleted?)
-               base (->> (transduce existing conj activity-records)
-                         (group-by (ompc val :timestamp t/instant t/date str)))
-               dataset (into {}
-                             (map
-                               (juxt key
-                                     (juxt (comp count val)
-                                           (comp
-                                             #(reduce (fn [[a' b' c' d'] [a b c d]]
-                                                        [(+ (or a 0) a')
-                                                         (+ (or b 0) b')
-                                                         (+ (or c 0) c')
-                                                         (+ (or d 0) d')])
-                                                      [0 0 0 0] %)
-                                             #(map (ompc val (juxt :adults :juveniles :children (comp count :list))) %)
-                                             second))))
-                             base)
-               initial-st {:days-back-in-time 30
-                           :client-width      0
-                           :offset            0
-                           :delta             0
-                           :xpos              0
-                           :xstart            0
-                           :touchdown         false}
-               st (r/atom initial-st)
-               days-back-in-time (r/cursor st [:days-back-in-time])
-               offset (r/cursor st [:offset])
-               reset-view #(reset! st initial-st)
-               toprow [sc/row-field {:class [:h-8]}
-                       [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                             :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                                        :narrow
-                                                        :frame]} "16 uker"]
-                       [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                             :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                                        :narrow
-                                                        :frame]} "8 uker"]
-                       [:div.grow]
-                       [button/just-caption {:on-click #(swap! offset inc)
-                                             :class    [(if (= 1 @offset) :inverse :regular)
-                                                        :narrow
-                                                        :frame]} "Forrige"]
-                       [button/just-caption {:on-click #(swap! offset inc)
-                                             :class    [(if (= 1 @offset) :inverse :regular)
-                                                        :narrow
-                                                        :frame]} "I går"]
+  (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
+        existing (remove deleted?)
+        base (->> (transduce existing conj activity-records)
+                  (group-by (ompc val :timestamp t/instant t/date str)))
+        dataset (into {}
+                      (map
+                        (juxt key
+                              (juxt (comp count val)
+                                    (comp
+                                      #(reduce (fn [[a' b' c' d'] [a b c d]]
+                                                 [(+ (or a 0) a')
+                                                  (+ (or b 0) b')
+                                                  (+ (or c 0) c')
+                                                  (+ (or d 0) d')])
+                                               [0 0 0 0] %)
+                                      #(map (ompc val (juxt :adults :juveniles :children (comp count :list))) %)
+                                      second))))
+                      base)]
+    (r/with-let [initial-st {:days-back-in-time 30
+                             :client-width      0
+                             :offset            0
+                             :delta             0
+                             :xpos              0
+                             :xstart            0
+                             :touchdown         false}
+                 st (r/atom initial-st)
+                 days-back-in-time (r/cursor st [:days-back-in-time])
+                 offset (r/cursor st [:offset])
+                 reset-view #(reset! st initial-st)]
+      (let [toprow [sc/row-field {:class [:h-8]}
+                    [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                                          :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                                     :narrow
+                                                     :frame]} "16 uker"]
+                    [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                                          :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                                     :narrow
+                                                     :frame]} "8 uker"]
+                    [:div.grow]
+                    [button/just-caption {:on-click #(swap! offset inc)
+                                          :class    [:regular
+                                                     :narrow
+                                                     :frame]} "Forrige"]
 
-                       [button/just-icon {:on-click reset-view
-                                          :class    [:cta  :round]} ico/undo]]]
-    [graph dataset toprow st reset-view]))
+                    [button/just-caption {:on-click #(reset! offset 1)
+                                          :class    [(if (= 1 @offset) :inverse :regular)
+                                                     :narrow
+                                                     :frame]} "I går"]
+
+                    [button/just-icon {:on-click reset-view
+                                       :class    [(if (= 0 @offset) :regular :cta)
+                                                  :round]}
+                     ico/undo]]]
+        #_[sc/col
+           [l/pre @offset (= 1 @offset)]]
+        [graph dataset toprow st reset-view]))))
 
 (defn graph-2 []
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})
@@ -704,7 +711,7 @@
                       (map
                         (juxt key (ompc val #(map (ompc val (juxt (ompc :luft js/parseInt)
                                                                   (ompc :vann js/parseInt)
-                                                                  (ompc :vær js/parseInt))) %))))
+                                                                  (ompc :vær js/parseInt))) %) first)))
                       base)
         add-temperature (fn [])]
     (r/with-let [initial-st {:days-back-in-time 30
@@ -718,8 +725,8 @@
                  reset-view #(reset! st initial-st)
                  days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])]
-      [sc/col
-       ;[l/pre (take 5 dataset)]
+      [sc/co
+       [l/pre (take 5 dataset)]
        [graph
         dataset
         #_{"2022-04-28" [1 [2 3 4 5]]
@@ -730,11 +737,6 @@
            "2022-05-31" [15 [2 3 4 5]]
            "2022-06-30" [15 [2 3 4 5]]}
         [sc/row-field {:class [:h-8]}
-         [button/icon-and-caption
-          {:on-click add-temperature
-           :class    [ :cta :pad-rightx]}
-          ico/plus [:div.truncate "Ny temperatur"]]
-         [:div.grow]
          [button/just-caption {:on-click #(reset! days-back-in-time 180)
                                :class    [(if (= 180 @days-back-in-time) :inverse :regular)
                                           :narrow
@@ -743,13 +745,18 @@
                                :class    [(if (= 60 @days-back-in-time) :inverse :regular)
                                           :narrow
                                           :frame]} "8 uker"]
-         [button/just-caption {:on-click #(swap! offset inc)
+         [button/icon-and-caption
+          {:on-click add-temperature
+           :class    [:cta :pad-rightx]}
+          ico/plus [:div.truncate "Ny temperatur"]]
+         [:div.grow]
+         [button/just-caption {:on-click #(reset! offset 1)
                                :class    [(if (= 1 @offset) :inverse :regular)
                                           :narrow
-
-                                          :frame]} "<-- 1 dag"]
+                                          :frame]} "I går"]
          [button/just-icon {:on-click reset-view
-                            :class    [ :round :cta  ]} ico/undo]]
+                            :class    [(if (= 0 @offset) :regular :cta)
+                                       :round]} ico/undo]]
         st
         reset-view]])))
 
