@@ -260,7 +260,7 @@
 
 (defn trashcan' [{:keys [on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
-    [button/icon-with-caption
+    [button/icon-and-caption
      {:on-click on-click
       :class    [(if deleted? :frame :danger)
                  (if mobile? :round :pad-right)]
@@ -270,7 +270,7 @@
 
 (defn in-out [all-returned? {:keys [on-click deleted?]} caption]
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])]
-    [button/icon-with-caption
+    [button/icon-and-caption
      {:on-click on-click
       :class    [(if deleted? :frame)
                  (if mobile? :round :pad-right)
@@ -300,7 +300,7 @@
                 :on-click #(on-click m)})]
     (if deleted
       [:div.w-8]
-      [button/icon-with-caption
+      [button/icon-and-caption
        attr
        ico/pencil
        (when-not mobile? "Endre")])))
@@ -781,7 +781,7 @@
                {:style {:align-items     :end
                         :justify-content :end}}
                (when-not ipad?
-                 [button/icon-with-caption
+                 [button/icon-and-caption
                   {:class    [:round :message]
                    :on-click #(do
                                 (rf/dispatch [:app/navigate-to [:r.mine-vakter-ipad]])
@@ -791,14 +791,14 @@
                   (when-not mobile? "Bli til Båtlogg")])
 
                (when @(rf/subscribe [:lab/admin-access])
-                 [button/icon-with-caption
+                 [button/icon-and-caption
                   {:class    [:danger]
                    :on-click #(db/database-update {:path  ["system"]
                                                    :value {"timestamp" booking.data/DATE}})}
                   ico/exclamation
                   "Aktiver!"])
 
-               [button/icon-with-caption
+               [button/icon-and-caption
                 {:class    [:frame :always-wide]
                  :style    {:color        "var(--gray-1)"
                             :border-color "var(--gray-1)"}

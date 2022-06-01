@@ -1795,6 +1795,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   margin-top: -1rem;
 }
 
+.mt-px {
+  margin-top: 1px;
+}
+
 .block {
   display: block;
 }
@@ -3253,6 +3257,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .tracking-normal {
   letter-spacing: 0em;
+}
+
+.-tracking-wider {
+  letter-spacing: -0.05em;
 }
 
 .tracking-wide {

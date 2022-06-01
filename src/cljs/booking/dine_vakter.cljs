@@ -91,19 +91,19 @@
                                 [:<>]
                                 (when (or (= loggedin-uid uid) admin?)
                                   (if (:cancel status)
-                                    [button/icon-with-caption
+                                    [button/icon-and-caption
                                      {:class    [:regular]
                                       :disabled true}
                                      ico/exclamation
                                      "Frafalt"]
                                     (if (within-undo-limits? date-registered)
-                                      [button/icon-with-caption
+                                      [button/icon-and-caption
                                        {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
                                         :class    [(if admin? :inverse :danger) :pad-right]
                                         :disabled false}
                                        ico/trash
                                        "Avlys"]
-                                      [button/icon-with-caption
+                                      [button/icon-and-caption
                                        {:class    [:message]
                                         :disabled false}
                                        ico/bytte
@@ -112,14 +112,14 @@
                                          (not (within-undo-limits? date-registered))
                                          (not completed?)
                                          (not (:cancel status)))
-                                [button/icon-with-caption
+                                [button/icon-and-caption
                                  {:on-click #(actions/frafall {:uid uid :section section :timeslot timeslot})
                                   :class    [:danger]
                                   :disabled false}
                                  ico/thumbsdown
                                  "Frafall"])
                               (when (and admin? (not completed?) (:cancel status))
-                                [button/icon-with-caption
+                                [button/icon-and-caption
                                  {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
                                   :class    [:cta :outliner]
                                   :disabled false}

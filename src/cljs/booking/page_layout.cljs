@@ -74,10 +74,10 @@
                          :on-change #(rf/dispatch [:lab/set-sim :uid (-> % .-target .-value)]
                                                   #_(reset! sim-uid (-> % .-target .-value)))} :text [] "UID" :label]
              [sc/row-sc-g2-w
-              (f-icon [:lab/set-sim-type :none] :none [field/icon-with-caption ico/anonymous "anonym"])
-              (f-icon [:lab/set-sim-type :registered] :registered [field/icon-with-caption ico/user "registrert"])
+              (f-icon [:lab/set-sim-type :none] :none [field/icon-and-caption ico/anonymous "anonym"])
+              (f-icon [:lab/set-sim-type :registered] :registered [field/icon-and-caption ico/user "registrert"])
               (f-icon [:lab/set-sim-type :waitinglist] :waitinglist [field/icon-with-caption-and-badge ico/waitinglist "påmeldt" 123])
-              (f-icon [:lab/set-sim-type :member] :member [field/icon-with-caption ico/member "medlem"])
+              (f-icon [:lab/set-sim-type :member] :member [field/icon-and-caption ico/member "medlem"])
 
               [schpaa.style.hoc.toggles/small-switch-base
                {:disabled (not registered)}

@@ -79,7 +79,7 @@
          second)
     nil))
 
-(lookup-phone "92491949")
+;(lookup-phone "92491949")
 
 (comment
   (do

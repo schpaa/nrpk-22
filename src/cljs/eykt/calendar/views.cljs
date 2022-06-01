@@ -111,18 +111,18 @@
      (if (or owner? (pos? slots-free))
        (if owner?
          (if (actions/check-can-change? path)
-           [button/icon-with-caption
+           [button/icon-and-caption
             {:class    [:danger :shrink-0]
              :on-click #(actions/delete path)}
             ico/trash
             (when-not mobile? "Avlys")]
-           [button/icon-with-caption
+           [button/icon-and-caption
             {:class    [:message]
              :on-click #(actions/delete path)}
             ico/bytte
             (when-not mobile? "Overta")])
 
-         [button/icon-with-caption
+         [button/icon-and-caption
           {:class    [:cta]
            :type     :button
            :on-click #(actions/add path)}

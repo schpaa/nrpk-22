@@ -146,12 +146,12 @@
     #_[hoc.buttons/pill
        {:class    [:regular :pad-right]
         :on-click #(rf/dispatch [:lab/qr-code-for-current-page])}
-       (hoc.buttons/icon-with-caption ico/qrcode "QR-kode")]
+       (hoc.buttons/icon-and-caption ico/qrcode "QR-kode")]
     #_[hoc.buttons/pill
        {:on-click #(js/alert "wat")
         :class    [:regular :pad-right]
         :disabled true}
-       (hoc.buttons/icon-with-caption ico/nullstill "Nullstill")]]))
+       (hoc.buttons/icon-and-caption ico/nullstill "Nullstill")]]))
 
 (defonce settings (r/atom {}))
 

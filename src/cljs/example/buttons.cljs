@@ -33,7 +33,7 @@
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:on-click #()
      :class    [:message]}
     ico/closewindow
@@ -41,14 +41,14 @@
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:on-click #()
      :class    [:inverse]}
     ico/closewindow nil]])
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:on-click #()
      :class    [:inverse]}
     ico/closewindow
@@ -56,7 +56,7 @@
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:on-click #()
      :class    [:large]}
     ico/closewindow
@@ -90,7 +90,7 @@
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:class    [:frame :pad-right :uppercase]
      :on-click #()}
     ico/commandPaletteClosed
@@ -98,7 +98,7 @@
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:class    [:cta]
      :on-click #()}
     ico/commandPaletteClosed
@@ -106,7 +106,7 @@
 
 (defcard-rg pill
   [:div
-   [button/icon-with-caption
+   [button/icon-and-caption
     {:class    [:danger-outline]
      :on-click #()}
     ico/commandPaletteClosed

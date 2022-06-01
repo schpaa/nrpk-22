@@ -672,20 +672,27 @@
                days-back-in-time (r/cursor st [:days-back-in-time])
                offset (r/cursor st [:offset])
                reset-view #(reset! st initial-st)
-               toprow [sc/row-field
-                       [:div.grow]
+               toprow [sc/row-field {:class [:h-8]}
                        [button/just-caption {:on-click #(reset! days-back-in-time 180)
                                              :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                                        :narrow
                                                         :frame]} "16 uker"]
                        [button/just-caption {:on-click #(reset! days-back-in-time 60)
                                              :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                                        :narrow
                                                         :frame]} "8 uker"]
+                       [:div.grow]
                        [button/just-caption {:on-click #(swap! offset inc)
                                              :class    [(if (= 1 @offset) :inverse :regular)
-                                                        :frame]} "<-- 1 dag"]
+                                                        :narrow
+                                                        :frame]} "Forrige"]
+                       [button/just-caption {:on-click #(swap! offset inc)
+                                             :class    [(if (= 1 @offset) :inverse :regular)
+                                                        :narrow
+                                                        :frame]} "I går"]
 
                        [button/just-icon {:on-click reset-view
-                                          :class    [:frame :regular :round]} ico/undo]]]
+                                          :class    [:cta  :round]} ico/undo]]]
     [graph dataset toprow st reset-view]))
 
 (defn graph-2 []
@@ -712,7 +719,7 @@
                  days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])]
       [sc/col
-       [l/pre (take 5 dataset)]
+       ;[l/pre (take 5 dataset)]
        [graph
         dataset
         #_{"2022-04-28" [1 [2 3 4 5]]
@@ -722,26 +729,29 @@
            "2022-05-30" [11 [2 3 4 5]]
            "2022-05-31" [15 [2 3 4 5]]
            "2022-06-30" [15 [2 3 4 5]]}
-        [sc/row-field
-         [button/icon-with-caption
+        [sc/row-field {:class [:h-8]}
+         [button/icon-and-caption
           {:on-click add-temperature
-           :class    [:cta :frame]}
-          ico/plus "Ny temperatur"]
+           :class    [ :cta :pad-rightx]}
+          ico/plus [:div.truncate "Ny temperatur"]]
          [:div.grow]
          [button/just-caption {:on-click #(reset! days-back-in-time 180)
                                :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                          :narrow
                                           :frame]} "16 uker"]
          [button/just-caption {:on-click #(reset! days-back-in-time 60)
                                :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                          :narrow
                                           :frame]} "8 uker"]
          [button/just-caption {:on-click #(swap! offset inc)
                                :class    [(if (= 1 @offset) :inverse :regular)
+                                          :narrow
+
                                           :frame]} "<-- 1 dag"]
          [button/just-icon {:on-click reset-view
-                            :class    [:frame :regular :round]} ico/undo]]
+                            :class    [ :round :cta  ]} ico/undo]]
         st
         reset-view]])))
-
 
 (defn always-panel []
   [:<>
