@@ -68,6 +68,7 @@
   [:at-media {:max-width "511px"}
    [:& :grid :gap-0 :w-full :px-4 :pb-8
     {;fix <--- hardcoded!
+
      :height                "7rem"
      :width                 :100vw
      :bottom                0

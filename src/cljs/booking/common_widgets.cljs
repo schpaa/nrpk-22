@@ -262,14 +262,14 @@
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
     (if mobile?
       [button/just-icon
-       {:on-click on-click
-        :class    [(if deleted? :frame :danger)
+       {:on-click on-click 
+        :class    [(if deleted? :danger-outline :danger)
                    (if mobile? :round :pad-right)]
         :disabled false}
        (if deleted? ico/undo ico/trash)]
       [button/icon-and-caption
        {:on-click on-click
-        :class    [(if deleted? :frame :danger)
+        :class    [(if deleted? :danger-outline :danger)
                    (if mobile? :round :pad-right)]
         :disabled false}
        (if deleted? ico/undo ico/trash)
@@ -401,14 +401,13 @@
                    :animation-duration        "1.1s"
                    :animation-iteration-count 1
                    :animation-direction       :forward
-
                    ;:position                  :absolute
                    :inset                     0
                    :object-fit                :contain
                    :border-radius             "var(--radius-round)"
                    :transform-origin          "center"}}]
     [:img {:src   "/img/logo-n2.jpg"
-           :style {:position         :absolute 
+           :style {:position         :absolute
                    :inset            0
                    :clip-path        "circle(35% at 50% 50%)"
                    :background-color (if clear-map? "var(--toolbar-)")}}]]])
@@ -772,7 +771,7 @@
           {:style {:xborder-radius           "var(--radius-1)"
                    :xborder-top-right-radius "0"
                    :xborder-top-left-radius  "0"
-                   :background              (str "#" base "FF") #_"#0693e3ff"}}
+                   :background               (str "#" base "FF") #_"#0693e3ff"}}
           [:div.mx-auto.max-w-xl.pt-4.pb-16
            [:div.mx-4
             [sc/col-space-4

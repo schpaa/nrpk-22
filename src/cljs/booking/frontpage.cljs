@@ -428,20 +428,11 @@
     [page-with-background
      {:style {:min-height "90vh"
               :height     "90vh"}
-      :class [:-debugx
-              (if dark-mode? :dark :light)
+      :class [(if dark-mode? :dark :light)
               (if @reg? :bottom-toolbar)]}
-
      [:div.min-h-full.z-0
       {:style {;:min-height     "90vh"
                :xmargin-bottom "8rem"}}
-      ;debug
-      #_(when (and goog.DEBUG @master-emulation)
-          [:div.max-w-lg.mx-auto
-           [:div.mx-4.py-4x.pt-24x
-            [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
-             booking.page-layout/master-control-box]]])
-
       [:div.py-24 [header-with-logo]]
 
       (when @show-image-carousell? [image-carousell])
@@ -452,7 +443,7 @@
          [:div.max-w-lg.mx-auto.px-4
           [helpful-to-earlier-users]]])
 
-      ;;disclosed units
+      ;;disclosed units 
       [sc/col-space-8
        {:style {:padding-inline "var(--size-0)"
                 :max-width      "min(calc(100% - 1rem), calc(768px - 3rem))"
@@ -468,3 +459,10 @@
      [widgets/after-content]
      [:div.sticky.bottom-0.noprint
       [booking.toolbar/bottom-toolbar]]]))
+
+(comment
+  (when (and goog.DEBUG @master-emulation)
+    [:div.max-w-lg.mx-auto
+     [:div.mx-4.py-4x.pt-24x
+      [schpaa.style.hoc.page-controlpanel/togglepanel :frontpage/master-panel "master-panel"
+       booking.page-layout/master-control-box]]]))

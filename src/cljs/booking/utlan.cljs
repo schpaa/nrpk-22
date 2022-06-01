@@ -229,12 +229,13 @@
 (defn- edit-bar [edit-mode? k {:keys [uid deleted timestamp list] :as m}
                  all-returned?]
   (let [{:keys [mobile?] :as geo} @(rf/subscribe [:lab/screen-geometry])]
-    [sc/row-sc-g2 {:style {:align-self "start"
+    [sc/row-sc-g2 {:style {:align-self  "start"
                            :align-items "center"}
                    :class [:h-8]}
      (if edit-mode?
        [widgets/trashcan'
         {:deleted? deleted
+         :class    [:border-red]
          :on-click (fn [] (db/database-update
                             {:path  ["activity-22" (name k)]
                              :value {:deleted (not deleted)}}))}
@@ -350,8 +351,8 @@
         item-wrapper #(sc/item-wrapper-style {:class [(when deleted :deleted)]} %)
         {:keys [start-date start-time end-time]} (preformat-dates date end-time-instant)]
     (when @selector
-      [sc/zebra 
-       [:div.flex.w-full 
+      [sc/zebra
+       [:div.flex.w-full
         [logg-listitem-grid
          [g-area "badges" (when details? [agegroups-detail m])]
          [g-area "edit" [edit-bar @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
@@ -526,123 +527,126 @@
                lookup (map str (date-iter start-date 1))
                data (take @days-back-in-time (map #(vector % [(first (get dataset % [0]))
                                                               (second (get dataset % [0]))]) lookup))
-               max-value (min 50 (reduce max 0 (map (comp first second) dataset)))
+               max-value (max 50 (reduce max 0 (map (comp first second) dataset)))
                first-day (when-some [data data] (drop-while (comp zero? first second) data))
                w @days-back-in-time]
-           [sc/co
-            top-row
+           [sc/surface-a
+            {:style {:padding       "0.5rem"
+                     :border-radius "var(--radius-0)"
+                     :box-shadow    "var(--shadow-2)"}}
+            [sc/co
+             [:div.relative.h-full
+              
+              [:div.absolute.left-0.top-0
+               [sc/col
+                (when-some [dt (some-> first-day ffirst t/date)]
+                  (let [future? (t/< dt (t/today))]
+                    [sc/small1-inline
+                     {:style {:font-weight "var(--font-weight-6)"
+                              :color       (if future? "var(--green-9)" "var(--red-6)")}}
+                     (times.api/date-format dt)]))
+                [sc/small1-inline
+                 {:style {:font-weight "var(--font-weight-6)"}}
+                 (str "(topp=" max-value ")")]]]
 
-            [sc/surface-a
-             {:style {:position       :relative
-                      :border-radius  "var(--radius-0)"
-                      :box-shadow     "var(--shadow-1)"
-                      :padding-block  "0.5rem"
-                      :padding-inline "0.5rem"}}
-             [:div.absolute.left-3.top-1.lineheight-1.text-black
-              [sc/col
-               (when-some [dt (some-> first-day ffirst t/date)]
-                 (let [future? (t/< dt (t/today))]
-                   [sc/small1-inline
-                    {:style {:font-weight "var(--font-weight-6)"
-                             :color       (if future? "var(--green-9)" "var(--red-6)")}}
-                    (times.api/date-format dt)]))
-               [sc/small1-inline
-                {:style {:font-weight "var(--font-weight-6)"}}
-                (str "(maks " max-value ")")]]]
+              [:div.absolute.right-0.top-0
+               (when-let [dt (some-> end-date t/date)]
+                 (let [future? (t/< (t/today) dt)]
+                   [sc/small1
+                    {:style {:line-height 1
+                             :align-self :start
+                             :color       (if future? "var(--red-5)" "var(--blue-5)")
+                             :font-weight "var(--font-weight-6)"}}
+                    (times.api/date-format dt)]))]
 
-             [:div.absolute.right-3.top-1
-              (when-let [dt (some-> end-date t/date)]
-                (let [future? (t/< (t/today) dt)]
-                  [sc/small1-inline
-                   {:style {:color       (if future? "var(--red-5)" "var(--blue-5)")
-                            :font-weight "var(--font-weight-6)"}}
-                   (times.api/date-format dt)]))]
+              [:div.absolute.right-0.bottom-0
+               [sc/row-sc-g4
+                [sc/small1-inline
+                 {:style {:font-weight "var(--font-weight-6)"}}
+                 (let [[a [_ _ _ e]] (get dataset (-> end-date str))]
+                   a
+                   #_(apply str (interpose ", " [a (str e)])))]
+                [sc/small1-inline
+                 {;:on-click #(swap! mode (fn [e] (mod (inc e) 4)))
+                  :style {:color       "var(--blue-6)"
+                          :cursor      :default
+                          :font-weight "var(--font-weight-6)"}}
+                 (let [[a [b c d _]] (get dataset (-> end-date str))]
+                   (when a
+                     [:div.flex.gap-1 (map (fn [e] [:div.w-6 (if (zero? e) "—" e)]) [b c d])]))]]]
 
-             [:div.absolute.right-3.bottom-2
-              [sc/row-sc-g4
+              [:div.absolute.left-0.bottom-0
+               [sc/col
+                [sc/small1-inline
+                 {:on-click #(do
+                               (swap! mode (fn [e] (mod (inc e) 4)))
+                               (.preventDefault %)
+                               (.stopPropagation %))
+                  :style    {:cursor      :default
+                             :color       "var(--orange-6)"
+                             :font-weight "var(--font-weight-6)"}}
+                 (case @mode
+                   0 "antall utlån"
+                   1 "antall voksne"
+                   2 "antall ungdom"
+                   3 "antall barn")]
+                [sc/small1-inline
+                 {:style {:font-weight "var(--font-weight-6)"}}
+                 (str "(totalt=>" (reduce + 0 (map (comp first second) data)) ")")]]]
 
-               [sc/small1-inline
-                {:style {:font-weight "var(--font-weight-6)"}}
-                (let [[a [_ _ _ e]] (get dataset (-> end-date str))]
-                  a
-                  #_(apply str (interpose ", " [a (str e)])))]
-               [sc/small1-inline
-                {;:on-click #(swap! mode (fn [e] (mod (inc e) 4)))
-                 :style {:color       "var(--blue-6)"
-                         :cursor      :default
-                         :font-weight "var(--font-weight-6)"}}
-                (let [[a [b c d _]] (get dataset (-> end-date str))]
-                  (when a
-                    [:div.flex.gap-1 (map (fn [e] [:div.w-6 (if (zero? e) "—" e)]) [b c d])]))]]]
+              [:div
+               {:style {:background-color (when (or @mousedown @touchdown) "var(--content)")}}
+               [:svg.h-32.w-full.m-0.py-8
+                {:ref                 (fn [el]
+                                        (when-not @a
+                                          (reset! a el)
+                                          (tap> ["ref-set" @a])))
+                 :viewBox             (l/strp 0 0 @days-back-in-time (+ max-value 20))
+                 :width               "100%"
+                 :height              "auto"
 
-             [:div.absolute.left-3.bottom-2
-              [sc/col
-               [sc/small1-inline
-                {:on-click #(do
-                              (swap! mode (fn [e] (mod (inc e) 4)))
-                              (.preventDefault %)
-                              (.stopPropagation %))
-                 :style    {:cursor      :default
-                            :color       "var(--orange-6)"
-                            :font-weight "var(--font-weight-6)"}}
-                (case @mode
-                  0 "antall utlån"
-                  1 "antall voksne"
-                  2 "antall ungdom"
-                  3 "antall barn")]
-               [sc/small1-inline
-                {:style {:font-weight "var(--font-weight-6)"}}
-                (str "(totalt=>" (reduce + 0 (map (comp first second) data)) ")")]]]
+                 :preserveAspectRatio "none"}
 
-             [:div.p-1
-              {:style {:background-color (when (or @mousedown @touchdown) "var(--content)")}}
-              [:svg.h-32.w-full.m-0.py-8
-               {:ref                 (fn [el]
-                                       (when-not @a
-                                         (reset! a el)
-                                         (tap> ["ref-set" @a])))
-                :viewBox             (l/strp 0 0 @days-back-in-time (+ max-value 20))
-                :width               "100%"
-                :height              "auto"
-
-                :preserveAspectRatio "none"}
-
-               (for [[idx [dt [cnt [adults juveniles children b]]]] (map-indexed vector data)
-                     :let [x idx
-                           weekend? (some #{(t/int (t/day-of-week dt))} [6 7])]]
-                 (if (= dt (ffirst first-day))
-                   [:line
-                    {:stroke           "var(--green-7)"
-                     :vector-effect    :non-scaling-stroke
-                     :stroke-width     2
-                     :stroke-dasharray "2 2"
-                     :x1               (- x 0.5) :y1 0
-                     :x2               (- x 0.5) :y2 max-value}]
-                   [:<>
+                (for [[idx [dt [cnt [adults juveniles children b]]]] (map-indexed vector data)
+                      :let [x idx
+                            weekend? (some #{(t/int (t/day-of-week dt))} [6 7])]]
+                  (if (= dt (ffirst first-day))
                     [:line
-                     {:stroke       (if weekend? "var(--text1)" "var(--text3)")
-                      :stroke-width 0.85
-                      :x1           (- x 0.5) :y1 (- max-value cnt)
-                      :x2           (- x 0.5) :y2 max-value}]
+                     {:stroke           "var(--green-7)"
+                      :vector-effect    :non-scaling-stroke
+                      :stroke-width     2
+                      :stroke-dasharray "2 2"
+                      :x1               (- x 0.5) :y1 0
+                      :x2               (- x 0.5) :y2 max-value}]
+                    [:<>
+                     [:line
+                      {:stroke       (if weekend? "var(--text1)" "var(--text3)")
+                       :stroke-width 0.85
+                       :x1           (- x 0.5) :y1 (- max-value cnt)
+                       :x2           (- x 0.5) :y2 max-value}]
 
-                    [:line
-                     {:vector-effect :non-scaling-stroke
-                      :stroke        "var(--orange-6)"
-                      :stroke-width  4
-                      :x1            (- x 0.5)
-                      :x2            (- x 0.5)
-                      :y1            (- max-value (case @mode
-                                                    0 b
-                                                    1 adults
-                                                    2 juveniles
-                                                    3 children))
-                      :y2            max-value}]]))
+                     [:line
+                      {:vector-effect :non-scaling-stroke
+                       :stroke        "var(--orange-6)"
+                       :stroke-width  4
+                       :x1            (- x 0.5)
+                       :x2            (- x 0.5)
+                       :y1            (- max-value (case @mode
+                                                     0 b
+                                                     1 adults
+                                                     2 juveniles
+                                                     3 children))
+                       :y2            max-value}]]))
 
-               ;arrow pointing to now
-               [:path {:stroke        "var(--blue-5)"
-                       :fill          "var(--blue-5)"
-                       :vector-effect :non-scaling-stroke
-                       :d             (l/strp "m" (- w 1.5) (+ max-value 5) "l" 0.5 9 "l" -1 0 "z")}]]]]]))})))
+                ;arrow pointing to now
+                [:path {:stroke        "var(--blue-5)"
+                        :fill          "var(--blue-5)"
+                        :vector-effect :non-scaling-stroke
+                        :d             (l/strp "m" (- w 1.5) (+ max-value 5) "l" 0.5 9 "l" -1 0 "z")}]]]]
+             [sc/col
+              [:div.p-2.-mx-2.-mb-2
+               {:style {:background-color "rgba(0,0,0,0.06)"}}
+               top-row]]]]))})))
 
 (defn graph-1 []
   (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
@@ -674,32 +678,34 @@
                  days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])
                  reset-view #(reset! st initial-st)]
-      (let [toprow [sc/row-field {:class [:h-8]}
-                    [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                          :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                                     :narrow
-                                                     :frame]} "16 uker"]
-                    [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                          :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                                     :narrow
-                                                     :frame]} "8 uker"]
+      (let [toprow [sc/row-field
+                    [sc/co
+                     [sc/row-sc-g2
+                      [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                                            :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                                       :round]} "16"]
+                      [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                                            :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                                       :round]} "8"]
+                      [button/just-caption {:on-click #(reset! days-back-in-time 30)
+                                            :class    [(if (= 30 @days-back-in-time) :inverse :regular)
+                                                       :round]} "4"]]
+                     [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]]
+
                     [:div.grow]
+
                     [button/just-caption {:on-click #(swap! offset inc)
                                           :class    [:regular
-                                                     :narrow
-                                                     :frame]} "Forrige"]
+                                                     :narrow]} "Forrige"]
 
                     [button/just-caption {:on-click #(reset! offset 1)
                                           :class    [(if (= 1 @offset) :inverse :regular)
-                                                     :narrow
-                                                     :frame]} "I går"]
+                                                     :narrow]} "I går"]
 
                     [button/just-icon {:on-click reset-view
                                        :class    [(if (= 0 @offset) :regular :cta)
                                                   :round]}
                      ico/undo]]]
-        #_[sc/col
-           [l/pre @offset (= 1 @offset)]]
         [graph dataset toprow st reset-view]))))
 
 (defn graph-2 []
@@ -721,52 +727,69 @@
                              :xpos              0
                              :xstart            0
                              :touchdown         false}
-                 st (r/atom initial-st)      
+                 st (r/atom initial-st)
                  reset-view #(reset! st initial-st)
                  days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])]
-      [sc/co
-       ;[l/pre (take 5 dataset)]
-       [graph
-        dataset
-        #_{"2022-04-28" [1 [2 3 4 5]]
-           "2022-04-29" [1 [2 3 4 5]]
-           "2022-04-30" [1 [2 3 4 5]]
-           "2022-05-29" [1 [2 3 4 5]]
-           "2022-05-30" [11 [2 3 4 5]]
-           "2022-05-31" [15 [2 3 4 5]]
-           "2022-06-30" [15 [2 3 4 5]]}
-        [sc/row-field {:class [:h-8]}
-         [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                               :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                          :narrow
-                                          :frame]} "16 uker"]
-         [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                               :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                          :narrow
-                                          :frame]} "8 uker"]
-         [button/icon-and-caption
-          {:on-click add-temperature
-           :class    [:cta :pad-rightx]}
-          ico/plus [:div.truncate "Ny temperatur"]]
-         [:div.grow]
-         [button/just-caption {:on-click #(reset! offset 1)
-                               :class    [(if (= 1 @offset) :inverse :regular)
-                                          :narrow
-                                          :frame]} "I går"]
-         [button/just-icon {:on-click reset-view
-                            :class    [(if (= 0 @offset) :regular :cta)
-                                       :round]} ico/undo]]
-        st
-        reset-view]])))
+      [graph
+       ;dataset
+       {"2022-04-11" [1 [2 3 4 5]]
+        "2022-04-12" [1 [2 3 4 5]]
+        "2022-04-20" [1 [2 3 4 5]]
+        "2022-05-29" [231 [2 3 4 5]]
+        "2022-05-30" [211 [2 3 4 5]]
+        "2022-05-31" [115 [2 3 4 5]]
+        "2022-06-01" [55 [2 3 4 5]]}
+       [sc/row-field
+        [sc/co
+         [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]
+         [sc/row-sc-g2
+          [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                                :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                           :round
+                                           :naxrrow]}
+           "16"]
+          [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                                :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                           :round
+                                           :narxrow]}
+           "8"]
+          [button/just-caption {:on-click #(reset! days-back-in-time 30)
+                                :class    [(if (= 30 @days-back-in-time) :inverse :regular)
+                                           :round
+                                           :naxrrow]}
+           "4"]]]
+        [:div.grow]
+        [button/icon-and-caption
+         {:on-click add-temperature
+          :class    [:cta]}
+         ico/plus [:div.truncate "Ny temperatur"]]
+
+        [button/just-caption {:on-click #(reset! offset 1)
+                              ;:style {:box-shadow "var(--shadow-1)"}
+                              :class    [(if (= 1 @offset) :inverse :regular)
+                                         :narrow]} "I går"]
+        [button/just-icon {:on-click reset-view
+                           :class    [(if (= 0 @offset) :regular :cta)
+                                      :round]} ico/undo]]
+       st
+       reset-view])))
 
 (defn always-panel []
   [:<>
-   [graph-1]
-   [graph-2]
+   [widgets/disclosure
+    {}
+    :aaaa
+    "Statistikk"
+    [graph-1]]
+   [widgets/disclosure
+    {}
+    :bbbb
+    "Temperatur"
+    [graph-2]]
 
    [sc/row-center {:class [:sticky :pointer-events-none :noprint]
-                   :style {:z-index 1000
+                   :style {:z-index 10
                            :top     "8rem"}}
     [sc/row-center
      [sc/col-space-8

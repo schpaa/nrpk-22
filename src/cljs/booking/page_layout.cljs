@@ -341,7 +341,8 @@
                    :transform "translateX(-50%)"}}
           [name-badge]])
 
-       [:div.sticky.bottom-0.noprint [booking.toolbar/bottom-toolbar]]])))
+       [:div.sticky.bottom-0.noprint.z-100
+        [booking.toolbar/bottom-toolbar]]])))
 
 (defn +page-builder
   "
