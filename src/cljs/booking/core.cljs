@@ -14,7 +14,8 @@
     [booking.routes]
     [booking.keyboard]
     [booking.fiddle]
-    [booking.lab]))
+    [booking.lab]
+    [eykt.calendar.views]))       
 
 (defn kee-start []
   (k/start! {:routes         booking.routes/routes

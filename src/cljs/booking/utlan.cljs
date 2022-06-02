@@ -795,18 +795,18 @@
      [sc/col-space-8
       {:class [:pointer-events-auto]}
       [widgets/pillbar
-       {:class [:small]
+       {:class [:large]
         :style {:box-shadow "var(--shadow-2)"}}
        selector
        [[:b "Ute"]
         [:a "Alle"]]]
       [sc/row-center
 
-       [button/pill
+       [button/just-icon
         {:style    {:box-shadow "var(--shadow-2)"}
          :class    [:large :cta]
          :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
-        [sc/icon ico/plus]]]]]]])
+        ico/plus]]]]]])
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]

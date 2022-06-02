@@ -6,52 +6,50 @@
             [tick.core :as t]
             [re-frame.core :as rf]
             [times.api :refer [format]]
-            [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]
             [schpaa.style.ornament :as sc]
             [schpaa.style.hoc.buttons :as button]))
 
 ;; styles
-
+                             
 (o/defstyled user-cell :div
   [:&
-   :bg-white
    :flex
    :w-24
    :items-center
    :truncate
    :h-10
-   :p-2
+   
    {:user-select   :none
     :border-radius "var(--radius-0)"}])
 
 (o/defstyled avail-user-slot :div
   [:&
-   user-cell
-   {:color            "var(--text1)"
+   {:color            "green"
     :box-shadow       "var(--inner-shadow-1)"
-    :background-color "var(--floating)"}])
+    :background-color "var(--red-4)"}]
 
-(o/defstyled taken-user-slot :div
-  [:&
-   user-cell
-   ;:h-full
-   :truncate
-   {:outline "2px solid red"
-    :box-shadow       "var(--shadow-1)"
-    :color            "var(--text1)"
-    :background-color "var(--toolbar-)"
-    :cursor           :pointer}
-   [:&.cancelled
-    {:background-color     "transparent"
-     :text-decoration-line :line-through
-     :border               "2px solid var(--toolbar-)"
-     :color                "var(--toolbar-)"}]
-   [:&.owner {:background "var(--brand1)"
-              :color      "var(--brand1-copy)"}]
-   [:&:active {:background "var(--toobar-)"}
-    [:&.owner {:background "var(--brand2)"
-               :color      "var(--brand2-copy)"}]]])
+  #_[:&
+     :text-red-500
+     :bg-red-500
+     ;user-cell
+     :h-full
+     :truncate
+     {:outline "2px solid red"
+      :box-shadow       "var(--shadow-1)"
+      ;:color            "var(--text1)"
+      :background-color "red" #_"var(--toolbar-)"
+      :cursor           :pointer}
+     [:&.cancelled
+      {;:background-color     "transparent"
+       :text-decoration-line :line-through
+       :border               "2px solid var(--toolbar-)"
+       :color                "var(--toolbar-)"}]
+     [:&.owner {;:background "var(--brand1)"
+                :color      "var(--brand1-copy)"}]
+     [:&:active {:xbackground "var(--toolbar-)"}
+      [:&.owner {:xbackground "var(--brand2)"
+                 :color      "var(--brand2-copy)"}]]])
 
 (o/defstyled time-slot :div
   :w-32
@@ -91,44 +89,57 @@
 
 ;endregion
 
-(defn- occupied-slot [uid [this-uid status]]
+(defn occupied-slot [uid [this-uid status]]
   (let [owner? (= this-uid uid)
         cancelled? (and (map? status) (:cancel status))
         path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
-    [taken-user-slot
-     {:class    [:p-1 :h-full (if cancelled? :cancelled (when owner? :owner))]
-      :style {:background-color "var(--field)"}
+    [sc/taken-user-slot2
+     {:class    [:h-full (if cancelled? :cancelled (when owner? :owner))]
+      :style    {:color "white"
+                 :background-color (if owner?
+                                     "var(--brand1)"
+                                     "var(--toolbar)")}
       :on-click #(rf/dispatch [:app/navigate-to path])}
 
-     [badge-text this-uid owner? cancelled?]]))
+     (badge-text this-uid owner? cancelled?)]))
 
-(defn command [ mobile? uid base section slots-free starttime-key]
+(defn command [mobile? uid base section slots-free starttime-key]
   [:div.h-10.flex.items-center
    {:class [(if mobile? :w-8 :w-28)]}
    ;fix: duplicated owner?
+
    (let [owner? (get-in base [section uid starttime-key])
          path {:uid uid :section section :timeslot starttime-key}]
      (if (or owner? (pos? slots-free))
        (if owner?
          (if (actions/check-can-change? path)
-           [button/icon-and-caption
-            {:class    [:danger :shrink-0]
+           [(if mobile? button/just-icon button/icon-and-caption)
+            {:class    [:danger :padded]
              :on-click #(actions/delete path)}
             ico/trash
-            (when-not mobile? "Avlys")]
-           [button/icon-and-caption
-            {:class    [:message]
-             :on-click #(actions/delete path)}
+            "Avlys"]
+           [(if mobile? button/just-icon button/icon-and-caption)
+            {:class    [:message :padded]
+             :on-click #(actions/frafall path)}
             ico/bytte
-            (when-not mobile? "Overta")])
+            "Bytte"])
 
-         [button/icon-and-caption
-          {:class    [:cta]
-           :type     :button
-           :on-click #(actions/add path)}
-          ico/plus
-          (when-not mobile? "Velg")])))])
+         (if mobile?
+           [button/just-icon
+            {:class    [:cta :padded]
+             ;:type     :button
+             :on-click #(actions/add path)}
+            ico/bytte]
+           [button/icon-and-caption
+            {:class    [:cta :padded]
+             ;:type     :button
+             :on-click #(actions/add path)}
+            ico/plus
+            "Velg"]))))])
 
+
+
+;test
 
 (defn prepare-data [data]
   data)
@@ -136,32 +147,14 @@
 (defn open-reminder [data]
   (js/alert data))
 
-(defn- reminder [data]
-  [sc/row-sc-g2
-   [hoc.buttons/pill {:on-click #(open-reminder (prepare-data data))
-                      :class    [:narrow :inverse]} [sc/icon ico/tilbakemelding] "Husk vakt!"]])
-
 (defn- send-reminder-action [{:keys [base data]}]
   (let [f (second data)
-        ;_ (tap> {:data1 data})
-        ;_ (tap> {:base1 base})
-        ;_ (tap> {:f f})
         [{:keys [dt starttime section]} _group] (first (group-by #(select-keys % [:dt :starttime :section]) f))
-        ;_ (tap> {:group group})
         date (t/date dt)
         alle-regs-i-denne-periodegruppen (invert (get base section))
-        ;_ (tap> {:alle-regs-i-denne-periodegruppen alle-regs-i-denne-periodegruppen})
         starttime' (t/at date (t/time starttime))
-        ;_ (tap> {:starttime  starttime :starttime' starttime'})
-        #_#_[_ slots-on-this-eykt] (first (filter (fn [[k _v]] (= (name k) (str starttime')))
-                                                  alle-regs-i-denne-periodegruppen))
-        ;data (map (comp user.database/lookup-userinfo name first) slots-on-this-eykt)
-        ;_ (tap> {:data data})
-        ;_ (tap> {:slots-on-this-eykt slots-on-this-eykt})
-
         distinct-ids (->> alle-regs-i-denne-periodegruppen
                           (filter (fn [[k _v]]
-                                    ;(tap> (t/date (t/date-time (name k))))
                                     (t/= (t/date (t/date-time (name k))) (t/date date))))
                           (map second)
                           (flatten1)
@@ -178,17 +171,12 @@
                          (js/encodeURI (str "Husk at du har nøkkelvakt " text-date "...")))]
 
     [sc/co
-     ;[l/pre distinct-ids]
-     ;[l/pre phone-numbers-to-call]
-     ;[l/pre distinct-ids]
      [sc/row-sc-g2
       {:style {:align-items :center
                :height      "3rem"}}
       [sc/co
-
        [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]
        [sc/small "Ikke bruk iPad'en til dette, bruk din egen telefon."]]]]))
-
 
 (defn table [{:keys [base data] :as m}]
   (let [show-only-available? @(schpaa.state/listen :calendar/show-only-available)
@@ -233,7 +221,7 @@
                                                 :flex-wrap   :nowrap
                                                 :align-items "start"}}
                         [sc/col-space-1
-                         {:class [:justify-center :h-10]
+                         {:class [:justify-center :h-10 :w-16]
                           :style {:white-space :nowrap
                                   :max-width   "3rem"}}
                          [sc/text1 "" (t/hour starttime) "–" (t/hour endtime)]]
@@ -243,171 +231,17 @@
                                :style {:flex "1 0 auto"
                                        :height "100%"
                                        :column-gap "0.5rem"
+                                       :row-gap "0.5rem"
                                        :display "grid"
-                                       :grid-auto-rows "auto"
+                                       :grid-auto-rows "2.5rem"
                                        :grid-template-columns "repeat(auto-fill,minmax(6rem,1fr))"}}
-                         (into [:<>]
-                               (concat
-                                 (map #(occupied-slot uid %) slots-on-this-eykt)
-                                 (map #(avail-user-slot
-                                         {:on-click (fn [] (let [args {:uid uid :section section :timeslot starttime-key}]
-                                                             (actions/add args)))} "Ledig")
-                                      (range slots-free))))]]]))]))]))
+                         (mapcat identity
+                                 [(mapv (fn [e] [occupied-slot uid e]) slots-on-this-eykt)
+                                  (mapv (fn [] [avail-user-slot
+                                                {:style    {:background-color "var(--floating)"
+                                                            :padding          "0.25rem"}
+                                                 :on-click (fn [] (let [args {:uid uid :section section :timeslot starttime-key}]
+                                                                    (actions/add args)))}
+                                                "Ledig"])
 
-(defn hoc3
-  "lookup startdatetime->enddatetime,slots,duration-in-minutes"
-  [data]
-  (->> data
-       (filter (comp pos? :slots first))
-       flatten
-       (reduce (fn [a {:keys [dt starttime slots endtime]}]
-                 (let [start (-> (t/date dt) (t/at starttime) str)
-                       end (-> (t/date dt) (t/at endtime) str)]
-                   (assoc a start
-                            {:duration-minutes (-> (t/units (t/between start end)) :seconds (/ 60))
-                             :slots            slots
-                             :endtime          end})))
-               {})))
-
-(defn hoc2
-  "in reality a filter to include only valid records, excludes the superfluous registrations"
-  [lookup base]
-  (->
-    (fn [a [k vs]]
-      (let [slots (get-in lookup [(name k) :slots] 1)]
-        (assoc a k (->> (sort-by second < vs)               ;; første mann til mølla
-                        (take slots)                        ;; ta bare de ƒørste
-                        (vec)                               ;; omgjør til et map slik at ...
-                        (into {})))))
-    (reduce {} base)))
-
-(defn- summary-proper [{:keys [base data]}]
-  (let [lookup-duration (hoc3 data)
-        filtered (hoc2 lookup-duration base)
-        corrected (reduce (fn [a [k vs]]
-                            (reduce (fn [a' [k'-uid v']]
-                                      (update a' k'-uid conj k)) a vs))
-                          {}
-                          filtered)]
-    [:div
-     [:div "Summary proper"]
-     (into [:div.grid.gap-x-2
-            {:style {:grid-template-columns "1fr min-content min-content"}}]
-           (-> (fn [[k vs]]
-                 [:<>
-                  [:div.truncate.xw-20 k]
-                  [:div (count vs)]
-                  [:div (format "%0.1f" (/ (reduce (fn [a e]
-                                                     (+ a (-> (get lookup-duration (name e))
-                                                              :duration-minutes))) 0 vs)
-                                           60))]])
-               (map corrected)))]))
-
-(defn summary
-  "some summary"
-  [{:keys [root base data]}]
-  (let [; lookup table dates->slots, should also have duration?
-        lookup-duration (hoc3 data)
-        ; check with the slots (required resources) of each date/time to filter out unneeded resources
-        filtered (hoc2 lookup-duration base)
-        ; compare the result of `corrected` with the contents of `root`
-        corrected (reduce (fn [a [k vs]]
-                            (reduce (fn [a' [k'-uid v']]
-                                      (update a' k'-uid conj k)) a vs))
-                          {}
-                          filtered)]
-    [:<>
-     [:details {:open 1}
-      [:summary "Details"]
-      [:<>
-       [l/pre
-        lookup-duration
-        '---
-        corrected]
-       ;[l/ppre-x (flatten (filter (comp pos? :slots first) data))]
-       ;[l/ppre-x base]
-       ;[l/ppre-x root]
-       ;[l/ppre-x filtered]
-       #_[l/pre corrected]]]
-     (into [:div.grid.grid-cols-3]
-           (-> (fn [[k vs]]
-                 [:<>
-                  [:div.truncate.w-20 k]
-                  [:div (count vs)]
-                  [:div (/ (reduce (fn [a e]
-                                     (+ a (-> (get lookup-duration (name e))
-                                              :duration-minutes))) 0 vs)
-                           60)]])
-               (map corrected)))]))
-
-;todo Which of them is overflowed?
-
-(comment
-  (comment
-    (let [data {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-                {:2022-05-08T11:00
-                 {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
-                 :2022-05-08T14:00
-                 {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
-                :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
-                {:2022-05-08T11:00
-                 {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}}]
-      ;(routine data)
-      (->> (vals data)
-           (reduce (fn [a kvs]
-                     ;(prn kvs)
-                     (let [z (reduce (fn [a' [k v]]
-                                       ;(prn "> " k v)
-                                       (update a' k (fnil conj []) v)) a kvs)]
-                       ;(prn "z: " z)
-                       (conj a z))) {})
-           (map (fn [[k v]] [k (vec (sort-by vals > v))]))
-           (into {}))))
-
-  (comment
-    (let [data {"Kald periode helg"
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-                 {:2022-05-08T11:00
-                  {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
-                  :2022-05-08T14:00
-                  {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
-                 :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
-                 {:2022-05-08T11:00
-                  {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}},
-                "Kald periode ukedag"
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-                 {:2022-05-11T18:00
-                  {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:43:17.358"}}}}]
-      (reduce-kv (fn [m k v]
-                   (prn (vals v))
-                   (assoc m k
-                            (reduce-kv (fn [m' k' v']
-                                         (prn v')
-                                         m' #_(assoc m' k' v')) {}
-                                       (vals v)))
-
-                   #_(assoc m k (reduce-kv (fn [m k v] m) (get m k) (vals v))))
-                 {} data)))
-
-  (comment
-    (do
-      (invert {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1
-               {:2022-05-08T11:00
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:19.398"},
-                :2022-05-08T14:00
-                {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:42:22.729"}},
-               :testRi0icn4bbffkwB3sQ1NWyTxoGmo1
-               {:2022-05-08T11:00
-                {:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}}})))
-
-  (comment
-    (do
-      #_(reduce (fn [a kv] (assoc a (key kv) (val kv)))
-                {}
-                [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
-                 {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T14:45:50.061"}])
-      (reduce (fn [a kv] (assoc a (key kv) (val kv)))
-              {}
-              [{:testRi0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T12:40:53.392"}
-               {:Ri0icn4bbffkwB3sQ1NWyTxoGmo1 "2022-04-19T14:45:50.061"}]))))
-
+                                        (range slots-free))])]]]))]))]))

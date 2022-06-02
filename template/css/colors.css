@@ -29,9 +29,11 @@ html {
     --animation-spin:  spin-sun 7s ease-in-out infinite;
 }
  
-body {
+body { 
+/*
     background-color: #DFDBE580;
     background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+*/
 }
 
 @keyframes spin-sun {
@@ -128,6 +130,25 @@ outline: 2px solid #a0a8;
 }
 
 
+.bg-unfocused-field {
+    background: var(--field);
+    color: var(--text2);
+}
+
+.bg-focused-field {
+    background: var(--brand1);
+    color: var(--brand1-copy);
+}
+
+.outline-focused-field:focus {
+    outline: var(--brand1) 2px solid;
+}
+
+.on-bright > .bg-focused-field {
+    background: var(--brand1);
+    color: var(--brand1-copy);
+}
+
 :root {
     --radius-0: 3px;
     --radius-1: 6px;
@@ -139,31 +160,6 @@ outline: 2px solid #a0a8;
     --tw-ring-inset: 2;
     --tw-ring-offset-width: 2;
     --tw-ring-color: green;
-
-
-
-
-
-
-
-
-
-
-
-/*
-
---gray-0: #fafaf9;
---gray-1: #f5f5f4;
---gray-2: #e7e5e4;
---gray-3: #d6d3d1;
---gray-4: #a8a29e;
---gray-5: #78716c;
---gray-6: #57534e;
---gray-7: #44403c;
---gray-8: #292524;
---gray-9: #1c1917;
-*/
-
 
     --gray-00: #F9FAFA;
     --gray-0: #F0F1F1;
@@ -178,15 +174,6 @@ outline: 2px solid #a0a8;
     --gray-9: #222425;
     --gray-10: #1a1c1d;
 
-/*
-    --light-hue: 170;
-    --light-sat: 70%;
-    --light-bri: 40%;
-    --light-content: hsl(var(--light-hue),var(--light-sat),var(--light-bri));
-    --light-content-transp-top: var(--light-content);
-    --light-content-transp-bottom: hsla(var(--light-hue),var(--light-sat),var(--light-bri),0.7);
-    --light-content-transp: hsla(var(--light-hue),var(--light-sat),var(--light-bri),0);
-*/
     --light-toolbar: var(--gray-2);
     --light-toolbar-: var(--gray-3);
     --light-content: var(--gray-1);
@@ -219,11 +206,6 @@ outline: 2px solid #a0a8;
     --dim-brand1-weak: hsla(calc(var(--dim-brand-hue) - 0), 36%, 58%, var(--weak-factor));
     --dim-brand2: hsl(calc(var(--dim-brand-hue) + 90), 36%, 68%);
     --dim-brand2-weak: hsla(calc(var(--dim-brand-hue) + 90), 36%, 48%, var(--weak-factor));
-/*
-    --dim-brand3: hsl(calc(var(--brand-hue) - 60), 40%, 60%);
-    --dim-brand4: hsl(calc(var(--brand-hue) - 180), 40%, 60%);
-    --dim-brand5: hsl(calc(var(--brand-hue) + 270), 40%, 60%);
-*/
 
     --dim-brand1-bright: hsl(var(--brand-hue), 50%, 70%);
     --dim-brand1-copy: hsl(var(--brand-hue), 20%, 10%);
@@ -358,14 +340,6 @@ outline: 2px solid #a0a8;
     --buttonbase-active: var(--gray-3);
     --buttontext: var(--gray-7);
 
-/*
-       --forsiden: var(--green-5);
-       --new-booking: var(--yellow-6);
-       --hva-er-nytt: var(--pink-6);
-       --booking-oversikt: var(--teal-8);
-       --logg-ut: var(--red-5);
-*/
-
     --toolbar: var(--light-toolbar);
     --toolbar-: var(--light-toolbar-);
 
@@ -398,7 +372,6 @@ outline: 2px solid #a0a8;
     --vener: var(--light-vener);
     --vener-hl: var(--light-vener-hl);
     --text: var(--text-light);
-
 }
 
 
@@ -407,7 +380,6 @@ outline: 2px solid #a0a8;
 
     --selected: var(--dim-selected);
     --selected-copy: var(--dim-selected-copy);
-
 
     --textmarker-background: var(--textmarker-background-dim);
     --textmarker:var(--textmarker-dim);
@@ -435,42 +407,41 @@ outline: 2px solid #a0a8;
     --buttontext: var(--gray-3);
 
 
-      --buttoncta0: var(--buttoncta0-dim);
-      --buttoncta1: var(--buttoncta1-dim);
-      --buttoncta2: var(--buttoncta2-dim);
-      --buttondanger0: var(--buttondanger0-dim);
-      --buttondanger1: var(--buttondanger1-dim);
-      --buttondanger2: var(--buttondanger2-dim);
-      --button0: var(--button0-dim);
-      --button1: var(--button1-dim);
-      --button2: var(--button2-dim);
+    --buttoncta0: var(--buttoncta0-dim);
+    --buttoncta1: var(--buttoncta1-dim);
+    --buttoncta2: var(--buttoncta2-dim);
+    --buttondanger0: var(--buttondanger0-dim);
+    --buttondanger1: var(--buttondanger1-dim);
+    --buttondanger2: var(--buttondanger2-dim);
+    --button0: var(--button0-dim);
+    --button1: var(--button1-dim);
+    --button2: var(--button2-dim);
 
 
-        --toolbar: var(--dim-toolbar);
-        --toolbar-: var(--dim-toolbar-);
-        --content: var(--dim-content);
-        --content-transp-top: var(--dim-content-transp-top);
-        --content-transp-bottom: var(--dim-content-transp-bottom);
-        --content-transp: var(--dim-content-transp);
-        --floating: var(--dim-floating);
-        --switchon: var(--dim-switchon);
-        --switchoff: var(--dim-switchoff);
-        --brand1: var(--dim-brand1);
-        /*--brand1: #A7473D;*/
-        /*--brand1-copy: #EFDEDC;*/
-        --brand1-bright: var(--dim-brand1-bright);
-        --brand1-copy: var(--dim-brand1-copy);
-        --brand2: var(--dim-brand2);
-        --brand2-weak: var(--dim-brand2-weak);
-        --button: var(--dim-button);
-        --button-bright: var(--dim-button-bright);
-        --buttoncopy: var(--dim-buttoncopy);
-        --danger: var(--dim-danger);
-        --danger-bright: var(--dim-danger-bright);
-        --dangercopy: var(--dim-dangercopy);
-        --field: var(--dim-field);
-        --field-focus: var(--dim-field-focus);
-        --fieldcopy: var(--dim-fieldcopy);
+    --toolbar: var(--dim-toolbar);
+    --toolbar-: var(--dim-toolbar-);
+    --content: var(--dim-content);
+    --content-transp-top: var(--dim-content-transp-top);
+    --content-transp-bottom: var(--dim-content-transp-bottom);
+    --content-transp: var(--dim-content-transp);
+    --floating: var(--dim-floating);
+    --switchon: var(--dim-switchon);
+    --switchoff: var(--dim-switchoff);
+    --brand1: var(--dim-brand1);
+
+    --brand1-bright: var(--dim-brand1-bright);
+    --brand1-copy: var(--dim-brand1-copy);
+    --brand2: var(--dim-brand2);
+    --brand2-weak: var(--dim-brand2-weak);
+    --button: var(--dim-button);
+    --button-bright: var(--dim-button-bright);
+    --buttoncopy: var(--dim-buttoncopy);
+    --danger: var(--dim-danger);
+    --danger-bright: var(--dim-danger-bright);
+    --dangercopy: var(--dim-dangercopy);
+    --field: var(--dim-field);
+    --field-focus: var(--dim-field-focus);
+    --fieldcopy: var(--dim-fieldcopy);
 
     --vener: var(--dim-vener);
     --vener-hl: var(--dim-vener-hl);
@@ -478,21 +449,5 @@ outline: 2px solid #a0a8;
 }
 
 
-.bg-unfocused-field {
-    background: var(--field);
-    color: var(--text2);
-}
 
-.bg-focused-field {
-    background: var(--brand1);
-    color: var(--brand1-copy);
-}
-
-.on-bright > .bg-focused-field {
-    background: var(--brand1);
-    color: var(--brand1-copy);
-}
-
-.outline-focused-field:focus {
-    outline: var(--brand1) 2px solid;
-}
+.whatiswrong{color:red}

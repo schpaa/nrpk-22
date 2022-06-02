@@ -48,8 +48,8 @@
                       :test-dir  "public/test"}
 
                      :booking
-                     {:build-hooks       [(shadow-git-inject.core/hook)
-                                          (my.hooks/write-styles-hook)]
+                     {:build-hooks       [(my.hooks/write-styles-hook)
+                                          #_(shadow-git-inject.core/hook)]
                       :git-inject        {:ignore-dirty?   false
                                           :version-pattern "^v(.*)$"}
                       :target            :browser
@@ -58,7 +58,7 @@
                       :after-load        booking.core/reload!
                       :ignore-warnings true
                       :modules           {:main {:init-fn booking.core/init!}}
-                      :module-hash-names 4
+                      :module-hash-names 4    
                       :release           {:output-dir       "dist/booking/js"
                                           :compiler-options {#_#_:warnings-as-errors {:ignore #{taoensso cljc.java-time}
                                                                                       :warnings-types #{:undeclared-var}}
@@ -68,13 +68,13 @@
                                                                                   booking.data/VERSION :shadow-git-inject/version
                                                                                   booking.data/DATE    :shadow-git-inject/build-iso-date-time}}}
 
-                      :dev               {:compiler-options {:warnings {:redef false}
+                      :dev               {:compiler-options {;:warnings {:redef false}
                                                              #_#_:warnings-as-errors
                                                              {:ignore #{taoensso.* cljc.java-time.*}
                                                               :warnings-types #{:redef
                                                                                 :undeclared-var}}
                                                              :optimizations      :none
                                                              :infer-externs      :auto
-                                                             :closure-defines    {goog.DEBUG           false
+                                                             :closure-defines    {goog.DEBUG           true
                                                                                   booking.data/VERSION "1.0.1"
                                                                                   booking.data/DATE    "2023-04-26T00:00"}}}}}}

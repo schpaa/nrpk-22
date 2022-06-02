@@ -2,12 +2,12 @@ const colors = require('tailwindcss/colors')
 
 module.exports = {
     content: [
-    "./public/booking/index.html",
-    "./public/booking/js/cljs-runtime/**/*.js",
+//    "./public/booking/index.html",
+//    "./public/booking/js/cljs-runtime/**/*.js",
     "./public/booking/**/*.{html,js}",
-    "./public/eykt/index.html",
-    "./public/eykt/js/cljs-runtime/**/*.js",
-    "./public/eykt/**/*.{html,js}",
+//    "./public/eykt/index.html",
+//    "./public/eykt/js/cljs-runtime/**/*.js",
+//    "./public/eykt/**/*.{html,js}",
 //    "./lib/**/*.{cljs,js}",
 //    "./public/devcards/**/*.{html,js}",
 //    "./public/devcards/js/cljs-runtime/**/*.js",
@@ -81,47 +81,19 @@ module.exports = {
     colors: {
         brand1: {DEFAULT: "var(--brand1)"},
         alt: {
-//            text: 'white',
-//            '300': '#DBFFB0',
-//            '400': '#A9E87E',
-//            '500': '#68A73D',
-            DEFAULT: '#68A73D', //colors.sky[500],
-//            'inverse': 'white',
-//            'text-inverse': '#68A73D',
-//            '600': '#145C3E',
-//            '700': '#145C3E',
+            DEFAULT: '#68A73D', 
         },
         transparent: 'transparent',
-//        current: 'currentColor',
         black: colors.black,
-//        yellow: colors.yellow,
-//        green: colors.green,
         white: colors.white,
         gray: colors.stone,
-//        info: colors.amber,
-//         slate stone sinc neutral gray
-
-//        emerald: colors.emerald,
-//        indigo: colors.indigo,
-//        yellow:colors.yellow,
         amber: colors.amber,
         blue: colors.blue
-//        sky: colors.sky,
-//        orange: colors.orange,
-//        rose:colors.rose,
-//        pink: colors.pink,
-//        red: colors.red
     },
     screens: {
         xs: '412px',
         sm: '512px',
         md: '768px',
-//        br: '455px',
-//        mob: '768px',
-//        /*md: '768px',*/
-//        lg: '1024px',
-//        'print': {'raw':'print'},
-//        'screen': {'raw':'screen'},
     },
     zIndex: {
         auto: 'auto',

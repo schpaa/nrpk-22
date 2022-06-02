@@ -16,23 +16,32 @@
                             :font-size             "1rem"
                             :font-feature-settings "'cv10', 'salt', 'zero'"}]])
 
-(defn produce [filename] 
-  (spit filename
-        (str
-          (slurp "template/css/colors.css")
-          "\n"                         
-          (gc/compile-css {:pretty-print? true} (concat
-                                                  girouette-preflight/preflight
-                                                  global-styles))
-          "\n"
-          (o/defined-styles))))
+(defn produce [filename c]
+  (spit filename c))
 
 (defn write-styles-hook
   {:shadow.build/stage :flush}
   [build-state & args]
   (my.tokens/set-it)
-  (produce "public/booking/css/ornament.css")
+  (let [content (str
+                  (gc/compile-css {:pretty-print? false}
+                                  (concat
+                                    girouette-preflight/preflight
+                                    global-styles))
+
+                  "\n"
+                  (slurp "template/css/colors.css")
+                  "\n"
+                  (o/defined-styles)
+                  "\n")]
+    (produce "public/booking/css/ornament.css" content)
+    (println content)
+    (flush))
+
   #_(produce "public/devcards/css/ornament.css")
+  (do
+    (println "built styles")
+    (flush))
   build-state)
 
 (comment

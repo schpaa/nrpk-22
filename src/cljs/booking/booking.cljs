@@ -10,7 +10,8 @@
             [booking.ico :as ico]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [booking.utlan]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style.hoc.buttons :as button]))
 
 (defonce settings
          (r/atom {:rent/show-details    false
@@ -36,10 +37,10 @@
 (defn commands []
   [sc/col-space-4
    [sc/row-sc-g2-w
-    [hoc.buttons/cta-pill-icon {:disabled true
-                                :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
-    [hoc.buttons/just-caption {:disabled true
-                               :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
+    [button/icon-and-caption {:disabled true
+                              :on-click #(rf/dispatch [:lab/toggle-boatpanel])} ico/plus "Ny booking"]
+    [button/just-caption {:disabled true
+                          :on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} "HMS Hendelse"]]
    #_[sc/row-sc-g2-w
       [hoc.toggles/switch-local {:disabled true} (r/cursor settings [:rent/show-details]) "Kompakt"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]

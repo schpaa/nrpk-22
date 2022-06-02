@@ -83,52 +83,49 @@
           (into [:<>]
                 (->> collector
                      (map (fn [{:keys [status date-registered date-proper completed? section timeslot]}]
-                            [:div
-                             ;[l/pre uid-registered-tuple]
-                             [sc/row-sc-g4-w
-                              ;[l/pre data::stringified]
-                              (if completed?
-                                [:<>]
-                                (when (or (= loggedin-uid uid) admin?)
-                                  (if (:cancel status)
-                                    [button/icon-and-caption
-                                     {:class    [:regular]
-                                      :disabled true}
-                                     ico/exclamation
-                                     "Frafalt"]
-                                    (if (within-undo-limits? date-registered)
-                                      [button/icon-and-caption
-                                       {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
-                                        :class    [(if admin? :inverse :danger) :pad-right]
-                                        :disabled false}
-                                       ico/trash
-                                       "Avlys"]
-                                      [button/icon-and-caption
-                                       {:class    [:message]
-                                        :disabled false}
-                                       ico/bytte
-                                       "Bytte"]))))
-                              (when (and admin?
-                                         (not (within-undo-limits? date-registered))
-                                         (not completed?)
-                                         (not (:cancel status)))
-                                [button/icon-and-caption
-                                 {:on-click #(actions/frafall {:uid uid :section section :timeslot timeslot})
-                                  :class    [:danger]
-                                  :disabled false}
-                                 ico/thumbsdown
-                                 "Frafall"])
-                              (when (and admin? (not completed?) (:cancel status))
-                                [button/icon-and-caption
-                                 {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
-                                  :class    [:cta :outliner]
-                                  :disabled false}
-                                 ico/thumbsup
-                                 "Deltar"])
-                              [sc/col
-                               [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
-                               [sc/small1 "Registrert "
-                                (booking.flextime/relative-time (some-> date-registered))]]]]))))]]))))
+                            [sc/row-sc-g4-w
+                             (if completed?
+                               [:<>]
+                               (when (or (= loggedin-uid uid) admin?)
+                                 (if (:cancel status)
+                                   [button/icon-and-caption
+                                    {:class    [:regular]
+                                     :disabled true}
+                                    ico/exclamation
+                                    "Frafalt"]
+                                   (if (within-undo-limits? date-registered)
+                                     [button/icon-and-caption
+                                      {:on-click #(actions/delete {:uid uid :section section :timeslot timeslot})
+                                       :class    [(if admin? :inverse :danger) :pad-right]
+                                       :disabled false}
+                                      ico/trash
+                                      "Avlys"]
+                                     [button/icon-and-caption
+                                      {:class    [:message]
+                                       :disabled false}
+                                      ico/bytte
+                                      "Bytte"]))))
+                             (when (and admin?
+                                        (not (within-undo-limits? date-registered))
+                                        (not completed?)
+                                        (not (:cancel status)))
+                               [button/icon-and-caption
+                                {:on-click #(actions/frafall {:uid uid :section section :timeslot timeslot})
+                                 :class    [:danger]
+                                 :disabled false}
+                                ico/thumbsdown
+                                "Frafall"])
+                             (when (and admin? (not completed?) (:cancel status))
+                               [button/icon-and-caption
+                                {:on-click #(actions/deltar {:uid uid :section section :timeslot timeslot})
+                                 :class    [:cta :outliner]
+                                 :disabled false}
+                                ico/thumbsup
+                                "Deltar"])
+                             [sc/col
+                              [sc/text1 {:class [(when completed? :line-through)]} (some-> date-proper times.api/arrival-date)]
+                              [sc/small1 "Registrert "
+                               (booking.flextime/relative-time (some-> date-registered))]]]))))]]))))
 
 
 (defn beskjeder [loggedin-uid datum]
