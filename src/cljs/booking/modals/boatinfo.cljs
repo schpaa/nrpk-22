@@ -187,11 +187,11 @@
 
 ;; components
 
-(defn insert-damage [{:keys [values set-values] :as props}]
+(defn insert-damage [{:keys [values set-values] :as props}]     
   [sc/col-space-4 {:style {:padding "0"}}
-   [sc/xcheckbox-matrix
+   [sc/checkbox-matrix
     (into [:<>]
-          (for [e (sort damage-words)]
+          (for [e (sort damage-words)] 
             [sc/co
              [hoc.toggles/largeswitch-local'
               {:get     #(values e)

@@ -569,7 +569,7 @@
              :vann]]
 
 
-           [sc/xcheckbox-matrix {:style {:color "red"}}
+           [sc/checkbox-matrix {:style {:background "red"}}
 
             (into [:<>]
                   (for [e (sort weather-words)]
