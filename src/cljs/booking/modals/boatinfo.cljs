@@ -18,13 +18,6 @@
 
 ;; styles
 
-(o/defstyled checkbox-matrix :div
-  [:& :gap-x-4 :gap-y-2
-   {:display               "grid"
-    :align-items           "center"
-    :grid-auto-rows        "min-content"
-    :grid-template-columns "repeat(auto-fit,minmax(14ch,1fr))"}])
-
 ;; constants
 
 (def debug nil)
@@ -196,7 +189,7 @@
 
 (defn insert-damage [{:keys [values set-values] :as props}]
   [sc/col-space-4 {:style {:padding "0"}}
-   [checkbox-matrix
+   [sc/xcheckbox-matrix
     (into [:<>]
           (for [e (sort damage-words)]
             [sc/co
