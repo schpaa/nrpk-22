@@ -448,7 +448,7 @@
                            :grid-auto-rows        "auto"
                            :grid-template-columns (if undefined?
                                                     "1fr"
-                                                    "repeat(auto-fill,minmax(16rem,1fr)")}}
+                                                    "repeat(auto-fill,minmax(16rem,1fr))")}}
                   (for [[[_boat-type _navn] r] (sort-by (comp last first) (group-by (comp (juxt :boat-type :navn) val) z))]
                     [:div.flex.flex-col.gap-2.w-full
                      {:style {:padding          "var(--size-2)"
@@ -555,7 +555,7 @@
   [:& :gap-1 :w-full
    {:display               :grid
     :grid-auto-rows        "auto"
-    :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr)"}])
+    :grid-template-columns "repeat(auto-fill,minmax(16rem,1fr))"}])
 
 (defmethod render-list :sjøbasen [_ r]
   (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
@@ -643,7 +643,7 @@
         [:div
          {:style {:display               :grid
                   :grid-gap              "var(--size-1)"
-                  :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr)"}}
+                  :grid-template-columns "repeat(auto-fill,minmax(18rem,1fr))"}}
          (for [[k {:keys [navn number slot description kind] :as v}] (sort-by (comp :slot val) b)]
            [sc/row-sc-g2 {:style {:padding          "var(--size-1)"
                                   :background-color "var(--floating)"}}

@@ -176,7 +176,7 @@
                :height      "3rem"}}
       [sc/co
        [sc/link {:href sms-message} "Send påminnelse om nøkkelvakt " text-date]
-       [sc/small "Ikke bruk iPad'en til dette, bruk din egen telefon."]]]]))
+       [sc/small "iPad'en kan ikke sende tekstmeldinger, bruk egen telefon."]]]]))
 
 (defn table [{:keys [base data] :as m}]
   (let [show-only-available? @(schpaa.state/listen :calendar/show-only-available)

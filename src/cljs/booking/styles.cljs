@@ -12,9 +12,9 @@
     :overflow      :hidden
     :border-radius "var(--radius-round)"}
    [:&.dark
-    {:-filter "contrast(0.98) brightness(0.75) "}]          ;saturate(.5)
+    {:filter "contrast(0.98) brightness(0.75) "}]          ;saturate(.5)
    [:&.light
-    {:-filter "brightness(1)"}]])
+    {:filter "brightness(1)"}]])
 
 (o/defstyled scroll-up-animation :div
   [:& {:display         :flex

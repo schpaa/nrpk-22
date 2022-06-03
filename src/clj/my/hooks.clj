@@ -28,20 +28,12 @@
                                   (concat
                                     girouette-preflight/preflight
                                     global-styles))
-
-                  "\n"
-                  (slurp "template/css/colors.css")
                   "\n"
                   (o/defined-styles)
-                  "\n")]
-    (produce "public/booking/css/ornament.css" content)
-    (println content)
-    (flush))
-
-  #_(produce "public/devcards/css/ornament.css")
-  (do
-    (println "built styles")
-    (flush))
+                  "\n"
+                  (slurp "template/css/colors.css"))] 
+    (produce "public/booking/css/ornament.css" content))
+  (println "rebuild styles")
   build-state)
 
 (comment

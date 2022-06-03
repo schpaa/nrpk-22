@@ -1,3 +1,8 @@
+body {
+    background-color: #DFDBE580;
+    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
 @media print {
    .noprint {
       visibility: hidden;
@@ -29,12 +34,6 @@ html {
     --animation-spin:  spin-sun 7s ease-in-out infinite;
 }
  
-body { 
-/*
-    background-color: #DFDBE580;
-    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
-*/
-}
 
 @keyframes spin-sun {
   to { transform: rotate(0.3turn) scale(.9,.9); }
@@ -120,15 +119,12 @@ outline: 2px solid #a0a8;
 .blinking-cursor {
   font-weight: 500;
   font-size: unset;
-/*
-  -webkit-animation: 1.4s blinking step-end infinite;
-  -moz-animation: 1.4s blinking step-end infinite;
-  -ms-animation: 1.4s blinking step-end infinite;
-  -o-animation: 1.4s blinking step-end infinite;
-*/
+  -webkit-animation: .8s blinking step-end infinite;
+  -moz-animation: .8s blinking step-end infinite;
+  -ms-animation: .8s blinking step-end infinite;
+  -o-animation: .8s blinking step-end infinite;
   animation: blink .8s step-start infinite;
 }
-
 
 .bg-unfocused-field {
     background: var(--field);
@@ -377,7 +373,6 @@ outline: 2px solid #a0a8;
 
 .dark {
     --brand1: var(--brand1-dim);
-
     --selected: var(--dim-selected);
     --selected-copy: var(--dim-selected-copy);
 
@@ -448,6 +443,3 @@ outline: 2px solid #a0a8;
     --text: var(--text-dim);
 }
 
-
-
-.whatiswrong{color:red}

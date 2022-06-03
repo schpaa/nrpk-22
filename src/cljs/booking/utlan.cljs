@@ -532,67 +532,65 @@
 
 (def weather-words ["a" "b" "c"])
 
-(defn window [{:keys [data on-close uid]}]
-  (let [admin? (rf/subscribe [:lab/admin-access])
-        selected-tab (r/atom :arbeidsliste)]
-    [fork/form
-     {:initial-values   {:luft ""
-                         :vann ""
-                         :vær  nil}
-      :prevent-default? true
-      :keywordize-keys  true
-      :on-submit        (fn [{:keys [values]}]
-                          (let [data (assoc values
-                                       :timestamp (str (t/now))
-                                       :uid uid)]
-                            (js/alert (str data))
-                            (on-close)))}
-     (fn [{:keys [handle-submit form-id values set-values] :as props}]
-       [sc/dropdown-dialog'
-        [:div
-         {:style {:padding          "1rem"
-                  :z-index          10
-                  :background-color "var(--toolbar)"}}
-         [sc/dialog-title "Overskrift"]
-         [:form
-          {:id        form-id
-           :on-submit handle-submit}
-          [sc/co
-           [sc/row-sc-g2
-            [field/textinput
-             props
-             "Lufttemperatur"
-             :luft]
-            [field/textinput
-             props
-             "Vanntemperatur"
-             :vann]]
+(defn temperatureform-content [{:keys [data on-close uid]}]
+  [fork/form
+   {:initial-values   {:luft ""
+                       :vann ""
+                       :vær  nil}
+    :prevent-default? true
+    :keywordize-keys  true
+    :on-submit        (fn [{:keys [values]}]
+                        (let [data (assoc values
+                                     :timestamp (str (t/now))
+                                     :uid uid)]
+                          (js/alert (str data))
+                          (on-close)))}
+   (fn [{:keys [handle-submit form-id values set-values] :as props}]
+     [sc/dropdown-dialog'
+      [:div
+       {:style {:padding          "1rem"
+                :z-index          10
+                :background-color "gray" #_"var(--toolbar)"}}
+       [sc/dialog-title "Overskrift"]
+       [:form
+        {:id        form-id
+         :on-submit handle-submit}
+        [sc/co
+         [sc/row-sc-g2
+          [field/textinput
+           props
+           "Lufttemperatur"
+           :luft]
+          [field/textinput
+           props
+           "Vanntemperatur"
+           :vann]]
 
 
-           [sc/checkbox-matrix {:style {:background "red"}}
+         [sc/checkbox-matrix {:style {:background "red"}}
 
-            (into [:<>]
-                  (for [e (sort weather-words)]
-                    [hoc.toggles/largeswitch-local'
-                     {:get     #(values e)
-                      :set     #(set-values {e %})
-                      :view-fn (fn [t c v] [sc/row-sc-g2 t
-                                            [(if v sc/text1 sc/text2) c]])
-                      :caption e}]))]
+          (into [:<>]
+                (for [e (sort weather-words)]
+                  [hoc.toggles/largeswitch-local'
+                   {:get     #(values e)
+                    :set     #(set-values {e %})
+                    :view-fn (fn [t c v] [sc/row-sc-g2 t
+                                          [(if v sc/text1 sc/text2) c]])
+                    :caption e}]))]
 
-           #_(let [selector (r/atom nil)]
-               [widgets/pillbar
-                {} selector [[:a1 "Vind"]
-                             [:a2 "Sol"]
-                             [:a3 "Regn"]
-                             [:a4 "Overskyet"]
-                             [:a5 "Yr"]
-                             [:a6 "Vekslende"]]])]
-          [sc/row-field
-           [:div.grow]
-           [button/regular {:on-click on-close
-                            :type     :button} "Avbryt"]
-           [button/regular {:type :submit} "Ok"]]]]])]))
+         #_(let [selector (r/atom nil)]
+             [widgets/pillbar
+              {} selector [[:a1 "Vind"]
+                           [:a2 "Sol"]
+                           [:a3 "Regn"]
+                           [:a4 "Overskyet"]
+                           [:a5 "Yr"]
+                           [:a6 "Vekslende"]]])]
+        [sc/row-field
+         [:div.grow]
+         [button/regular {:on-click on-close
+                          :type     :button} "Avbryt"]
+         [button/regular {:type :submit} "Ok"]]]]])])
 
 (defn add-temperature []
   (let [uid @(rf/subscribe [:lab/uid])
@@ -606,7 +604,7 @@
                                                   {:boat-type boat-type
                                                    :value     value
                                                    :uid       uid}]))
-                   :content-fn    (fn [e] (window e))}])))
+                   :content-fn    (fn [e] (temperatureform-content e))}])))
 
 (defn graph-2 []
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})

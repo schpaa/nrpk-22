@@ -276,7 +276,8 @@
        caption])))
 
 (defn in-out [all-returned? {:keys [on-click deleted?]} caption]
-  (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])]
+  (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
+        icon (if all-returned? ico/going-out ico/coming-in)]
     (if mobile?
       [button/just-icon
        {:on-click on-click
@@ -284,14 +285,14 @@
                    :round
                    (if all-returned? :regular :cta)]
         :disabled false}
-       ico/status]
+       icon]
       [button/icon-and-caption
        {:on-click on-click
         :class    [(if deleted? :frame)
                    :padded
                    (if all-returned? :regular :cta)]
         :disabled false}
-       ico/status
+       icon
        caption])))
 
 (defn trashcan [on-click {:keys [deleted id]}]
