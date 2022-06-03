@@ -298,12 +298,13 @@
        caption])))
 
 (defn trashcan [on-click {:keys [deleted id]}]
-  [(if deleted scb/round-undo-listitem scb/round-danger-listitem)
-   {:on-click #(on-click id)}
-   [sc/icon-small
-    (if deleted
-      (icon/adapt :rotate-left)
-      ico/trash)]])
+  (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
+    [button/just-icon
+     {:class    [(if deleted :danger-outline :danger)]
+      :on-click #(on-click id)}
+     (if deleted
+       ico/undo
+       ico/trash)]))
 
 (defn edit [attr on-click {:keys [deleted] :as m}]
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
@@ -543,15 +544,14 @@
   (rf/dispatch [:app/open-send-message uid-reciever]))
 
 (defn message-pill [uid-reciever]
-  (schpaa.style.hoc.buttons/pill
-    {:class    [:message :round]
-     :on-click #(send-msg uid-reciever)} (sc/icon ico/melding)))
+  (button/just-icon
+    {:class    [:message]
+     :on-click #(send-msg uid-reciever)}
+    ico/melding))
 
 (defn personal [{:keys [telefon epost uid] :as user} & [extra]]
-  #_(r/with-let [triggered (r/atom false)])
   (if user
-    [sc/surface-a {;:on-click #(swap! triggered not)
-                   :style {:padding "var(--size-2)"}}
+    [sc/surface-a {:style {:padding "var(--size-2)"}}
      [sc/row-sc-g2-w
       {:style {:gap            "var(--size-2)"
                :color          "var(--text1)"

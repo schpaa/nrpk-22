@@ -8,7 +8,9 @@
             [booking.mine-dine-vakter :refer [saldo-header
                                               path-beskjederinbox
                                               path-beskjedersent
-                                              path-endringslogg]]))
+                                              path-endringslogg]]
+            [schpaa.style.hoc.buttons :as button]
+            [booking.ico :as ico]))
 
 (defonce store (r/atom {:selector 1}))
 
@@ -19,21 +21,23 @@
                            (not (:deleted v))))
           @(db/on-value-reaction {:path ["cache-tilbakemeldinger"]})))
 
-(defn selector-to-page-map [selector datum datas]
+(defn selector-to-page-map [selector datum datas fullførte-timer]
   (let [uid @(rf/subscribe [:lab/uid])
+        admin? @(rf/subscribe [:lab/admin-access])
         ipad? ((fn is-master-input? [uid] (= uid @(db/on-value-reaction {:path ["system" "active"]}))) uid)]
     (case @selector
-      1 [sc/col-space-8
-         (when-not ipad?
-           [widgets/disclosure
-            {:class []}
-            :oversikt/vakter
-            "Vakter i '22"
-            (vakter uid datas)
-            "Ingen vakter"])]
+      1 (let [{:keys [saldo timekrav] :as user} (user.database/lookup-userinfo uid)]
+          [sc/col-space-8
+           (when-not ipad?
+             [widgets/disclosure
+              {:class []}
+              :oversikt/vakter
+              "Vakter i '22"
+              (vakter uid datas)
+              "Ingen vakter"])
+           (when (and (or admin? (not ipad?)) saldo timekrav fullførte-timer)
+             [saldo-header saldo timekrav fullførte-timer])])
       2 [sc/col-space-8
-         [sc/title "Booking"]]
-      3 [sc/col-space-8
          [messages uid @datum]
          [tilbakemeldinger uid (cached-datasource uid)]
          (widgets/disclosure {}
@@ -41,44 +45,42 @@
                              "Endringslogg"
                              (endringslogg uid (path-endringslogg uid))
                              "Det er ikke gjort noen endringer.")]
+      3
+      [sc/co
+       [sc/row-center
+        [button/icon-and-caption
+         {:style    {:box-shadow "var(--shadow-2)"}
+          :class    [:cta]
+          :on-click #(case @selector
+                       :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
+                       :sjøbasen nil #_(reset! step 1))}
+         ico/plus
+         "Ny booking"]]
+       [booking.lab/render {}]]
       [:div])))
 
 ;idiom: unwrapped lines are candidates for new constructs
 (defn render [r]
   (if-let [uid @(rf/subscribe [:lab/uid])]
-    (r/with-let [;todo extract
-                 ipad? ((fn is-master-input? [uid] (= uid @(db/on-value-reaction {:path ["system" "active"]}))) uid)
-                 datum (db/on-snapshot-docs-reaction {:path (path-beskjederinbox uid)})
-                 #_#_sent (db/on-snapshot-docs-reaction {:path (path-beskjedersent uid)})]
+    (r/with-let [datum (db/on-snapshot-docs-reaction {:path (path-beskjederinbox uid)})]
       (when @datum
         (if-let [data (db/on-value-reaction {:path ["calendar" uid]})]
-          (let [admin? @(rf/subscribe [:lab/admin-access])
-                {:keys [saldo timekrav] :as user} (user.database/lookup-userinfo uid)
-                datas (clojure.walk/stringify-keys @data)
-                antall-økter #_(->> datas vals (map vals) (remove (comp map? val)) flatten count)
-                (->> datas
-                     vals
-                     (map vals)
-                     flatten
-                     (map (comp first vals))
-                     (remove (fn [m] (get m "cancel")))
-                     count)
-                fullførte-timer (or (* 3 antall-økter) 0)]
+          (let [datas (clojure.walk/stringify-keys @data)
+                ;;(->> datas vals (map vals) (remove (comp map? val)) flatten count)
+                antall-eykt (->> datas
+                                 vals
+                                 (map vals)
+                                 flatten
+                                 (map (comp first vals))
+                                 (remove (fn [m] (get m "cancel")))
+                                 count)
+                completed-hours (or (* 3 antall-eykt) 0)
+                user (user.database/lookup-userinfo uid)]
             [sc/col-space-8
-             [sc/co
-              [widgets/personal user]
-
-              (when (and (or admin? (not ipad?)) saldo timekrav fullførte-timer)
-                [saldo-header saldo timekrav fullførte-timer])]
-
+             [widgets/personal user]
              [widgets/pillbar selector [[1 "Vakter"]
-                                        [2 "Booking"]
-                                        [3 "Meldinger"]]]
-
-             (selector-to-page-map selector datum datas)])
-
-
-
-
+                                        [2 "Meldinger"]
+                                        [3 "Booking"]]]
+             (selector-to-page-map selector datum datas completed-hours)])
           [sc/title1 "Ingen definerte vakter"])))
     [widgets/no-access-view r]))

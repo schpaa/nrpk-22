@@ -135,27 +135,31 @@
        [sc/title1 "Ingen meldinger"]
        (when admin?
          [sc/text storage-path])]
-      [sc/col-space-4
-       [sc/title "Meldinger"]
-       (when admin?
-         [sc/text storage-path])
-       (into [sc/col-space-4]
-             (for [{msg-id :id msg-data :data} (sort-by #(get-in % [:data "timestamp"]) > data)]
-               (let [{:keys [deleted timestamp uid text]} (clojure.walk/keywordize-keys msg-data)]
-                 ^{:key (str msg-id)}
-                 [sc/row-sc-g4-w {:class [:px-3]}
-                  [widgets/trashcan
-                   (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
-                   {:deleted deleted :id msg-id}]
-                  [button/round-cta-pill {:on-click #(reply-to-msg loggedin-uid uid msg-id)} [sc/icon ico/tilbakemelding]]
-                  [sc/col-space-2
-                   [sc/col-space-1
-                    [sc/text2 (if (= uid loggedin-uid)
-                                "Fra deg selv"
-                                [:div [:span "Fra "] [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])} (user.database/lookup-username uid)]])]
-                    (when timestamp
-                      [sc/small2 (booking.flextime/relative-time (times.api/timestamp->local-datetime-str' timestamp))])]
-                   [sc/text1 text]]])))])))
+      [sc/surface-a
+       [sc/col-space-4
+        [sc/title "Meldinger"]
+        (when admin?
+          [sc/text storage-path])
+        (into [sc/col-space-4]
+              (for [{msg-id :id msg-data :data} (sort-by #(get-in % [:data "timestamp"]) > data)]
+                (let [{:keys [deleted timestamp uid text]} (clojure.walk/keywordize-keys msg-data)]
+                  ^{:key (str msg-id)}
+                  [sc/row-sc-g4-w {:class [:px-3]}
+                   [widgets/trashcan
+                    (fn [msg-id] (delete-message msg-id {:deleted (not deleted)}))
+                    {:deleted deleted :id msg-id}]
+                   [button/just-icon
+                    {:class [:cta]
+                     :on-click #(reply-to-msg loggedin-uid uid msg-id)}
+                    ico/tilbakemelding]
+                   [sc/co
+                    [sc/col-space-1
+                     [sc/text2 (if (= uid loggedin-uid)
+                                 "Fra deg selv"
+                                 [:div [:span "Fra "] [sc/link {:href (kee-frame.core/path-for [:r.dine-vakter {:id uid}])} (user.database/lookup-username uid)]])]
+                     (when timestamp
+                       [sc/small2 (booking.flextime/relative-time (times.api/timestamp->local-datetime-str' timestamp))])]
+                    [sc/text1 text]]])))]])))
 
 (defn tilbakemeldinger [loggedin-uid datum]
   (let [admin? @(rf/subscribe [:lab/admin-access])
