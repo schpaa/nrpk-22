@@ -60,10 +60,10 @@
 
 (defn basic [loggedin-uid {:keys [uid]}]
   (if (= uid loggedin-uid)
-    [hoc.buttons/cta-pill {:class    [:narrow]
-                           :on-click #()} "Avlys"]
-    [hoc.buttons/just-icon {:class   [:narrow]
-                            :on-click #()} "Bli med"]))
+    [button/just-caption {:class [:regular :normal]
+                          :on-click #()} "Avlys"]
+    [button/just-caption {:class   [:normal]
+                          :on-click #()} "Bli med"]))
 
 (defn edit [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
   [:<>

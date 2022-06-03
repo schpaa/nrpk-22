@@ -316,8 +316,3 @@
         [user-form r @uid]
         [:div "nope"]))))
 
-(defn always-panel []
-  [sc/row-sc-g2-w
-   ;[widgets/auto-link :r.min-status]
-   #_[schpaa.style.hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:app/navigate-to [:r.min-status]])} ico/nokkelvakt "Mine vakter"]
-   #_[schpaa.style.hoc.buttons/reg-pill-icon {} ico/plus "Skade på materiell"]])

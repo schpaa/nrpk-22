@@ -418,8 +418,8 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [button/cta-pill-icon {} ico/plus "HMS-hendelse"]
-   [button/reg-pill-icon {} ico/plus "Skade på materiell"]])
+   [button/icon-and-caption {} ico/plus "HMS-hendelse"]
+   [button/icon-and-caption {} ico/plus "Skade på materiell"]])
 
 (defn panel []
   ;(when @(rf/subscribe [:lab/nokkelvakt]))

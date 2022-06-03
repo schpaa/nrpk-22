@@ -10,7 +10,8 @@
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [reagent.core :as r]
             [db.core :as db]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [schpaa.style.hoc.buttons :as button]))
 
 (defn f [dt] [booking.flextime/flex-datetime
               (some-> dt t/instant t/date-time)
@@ -100,7 +101,9 @@
 
 (defn always []
   [sc/row-sc-g4-w
-   [schpaa.style.hoc.buttons/reg-pill-icon {:on-click #(db.core/database-set {:path ["presence"] :value {}})} ico/trash "Slett logg"]
+   [button/icon-and-caption
+    {:class [:danger-outline]
+     :on-click #(db.core/database-set {:path ["presence"] :value {}})} ico/trash "Slett logg"]
    [hoc.toggles/switch-local (r/cursor settings [:show-offline]) "vis offline"]])
 
 #_(defn panel []

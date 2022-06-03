@@ -13,7 +13,8 @@
             [schpaa.icon :as icon]
             [re-frame.core :as rf]
             [schpaa.style.hoc.toggles :as hoc.toggles]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [schpaa.style.hoc.buttons :as button]))
 
 (o/defstyled listitem :div
   [:&
@@ -264,5 +265,5 @@
 
 (defn always-panel []
   [sc/row-sc-g2-w
-   [schpaa.style.hoc.buttons/cta-pill-icon {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} ico/plus "Nytt innlegg"]
-   [schpaa.style.hoc.buttons/pill {:class [:regular :narrow]} "Annet?"]])
+   [button/icon-and-caption {:on-click #(rf/dispatch [:lab/just-create-new-blog-entry])} ico/plus "Nytt innlegg"]
+   [button/just-caption {:class [:regular]} "Annet?"]])

@@ -12,8 +12,10 @@
             [schpaa.style.input :as sci]
             [booking.common-widgets :as widgets]
             [schpaa.style.hoc.buttons :as hoc.buttons]
-            [booking.dine-vakter]))
+            [booking.dine-vakter]
+            [schpaa.style.hoc.buttons :as button]))
 
+;todo:
 (o/defstyled table-controller-report :div
   [:& :overflow-x-auto
    {:width "calc(100vw - 14rem)"}
@@ -26,13 +28,14 @@
 
 (defn table-controller-report' [& c]
   (let [narrow-toolbar (not @(schpaa.state/listen :app/toolbar-with-caption))]
-    [:div ;table-controller-report
-     {:style {:padding-inline "1rem"}
+    [table-controller-report
+     {:style {:width "100%"
+              :padding-inline "1rem"}
       :class [(when narrow-toolbar :narrow-toolbar)]} c]))
 
 (o/defstyled table-report :table
   [:&
-   {:width           "auto"
+   {:width           "100%"
     :border-collapse :collapse}
    [:thead
     {:background "var(--floating)"}
@@ -147,9 +150,9 @@
                 (for [[_ {:keys [uid kilde text timestamp] :as m}] (sort-by (comp :timestamp val) > @data')
                       :let [{:keys [telefon navn]} (user.database/lookup-userinfo uid)]]
                   [:tr
-                   [:td [hoc.buttons/round-cta-pill
+                   [:td [button/just-icon
                          {:on-click #(booking.dine-vakter/reply-to-msg loggedin-uid uid nil #_msg-id)}
-                         [sc/icon ico/tilbakemelding]]]
+                         ico/tilbakemelding]]
                    [:td {:style {:vertical-align "top"}} (widgets/user-link uid)]
                    [:td {:class [:message-col]}
                     [sc/col-space-2

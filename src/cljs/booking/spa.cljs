@@ -166,7 +166,7 @@
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
        [+page-builder r
-        {:always-panel user.views/always-panel
+        {;:always-panel user.views/always-panel
          :render       user.views/my-info}]))
 
    :r.logg
@@ -425,7 +425,7 @@
        [+page-builder r
         {;:panel            booking.presence/panel
          :always-panel     booking.presence/always
-         :render-fullwidth #(booking.presence/render r data)}]))
+         :render #(booking.presence/render r data)}]))
 
 
    #_(fn r []

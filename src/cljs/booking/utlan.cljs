@@ -66,10 +66,11 @@
            (map f @st))]
         [sc/row-ec {:class [:pb-6x]}
          [:div.grow]
-         [button/regular {:on-click on-close} "Avbryt"]
-         [button/cta {
-                      :disabled (= initial @st)
-                      :on-click #(on-save @st)} "Bekreft"]]]]
+         [button/just-caption {:class [:regular :normal]
+                               :on-click on-close} "Avbryt"]
+         [button/just-caption {:class [:cta :normal]
+                               :disabled (= initial @st)
+                               :on-click #(on-save @st)} "Bekreft"]]]]
       (finally))))
 
 (rf/reg-fx :rent/innlever-fx

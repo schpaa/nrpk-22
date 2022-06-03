@@ -14,7 +14,8 @@
             [lambdaisland.ornament :as o]
             [booking.ico :as ico]
             [booking.flextime]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [schpaa.style.hoc.buttons :as button]))
 
 ;; styles
 
@@ -312,20 +313,23 @@
            [bottom-button-panel
             [sc/row-sc-g2]
             [:div {:style {:flex "1"}}]
-            [hoc.buttons/regular
+            [button/just-caption
              {:type     :button
-              :style    {:background-color "var(--toolbar)"
-                         :color            "var(--buttoncopy)"}
+              :class    [:regular :normal]
+              :xstyle    {:background-color "var(--toolbar)"
+                          :color            "var(--buttoncopy)"}
               :on-click on-close}
              "Avbryt"]
-            [hoc.buttons/attn
+            [button/just-caption
              {:type     :submit
-              :disabled false}
+              :disabled false
+              :class    [:normal :cta]}
              "Lagre"]]
            [bottom-button-panel
             [:div {:style {:flex "1"}}]
-            [hoc.buttons/regular
+            [button/just-caption
              {:type     :button
+              :class    [:normal]
               :style    {:background-color "var(--toolbar)"
                          :color            "var(--buttoncopy)"}
               :on-click on-close}

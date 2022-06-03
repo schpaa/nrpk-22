@@ -155,10 +155,10 @@
    "Avbryt"])
 
 (defn cancel-booking' [cancel]
-  [button/icon-and-caption
-   {:class    [:danger-outline]
+  [button/just-caption
+   {:class    [:danger-outline :normal]
     :on-click cancel}
-   ico/closewindow
+   ;ico/closewindow
    "Avbryt"])
 
 (defn confirm-booking [complete]
@@ -169,23 +169,23 @@
 
 (defn confirm-booking' [complete]
   [button/icon-and-caption
-   {:class    [:cta]
+   {:class    [:cta :normal]
     :on-click complete}
    ico/check
    "Bekreft"])
 
 (defn previous-step [prev-step]
-  [button/icon-and-caption
-   {:class    [:regular]
+  [button/just-caption
+   {:class    [:regular :normal]
     :on-click prev-step}
-   ico/prevStep
+   ;ico/prevStep
    "Tilbake"])
 
 (defn next-step' [next-step]
-  [button/icon-and-caption {:class    [:cta]
-                            :disabled (empty? @selection)
-                            :on-click next-step}
-   ico/nextStep
+  [button/just-caption {:class    [:cta :normal]
+                        :disabled (empty? @selection)
+                        :on-click next-step}
+   ;ico/nextStep
    "Neste"])
 
 ;; user-interface
@@ -616,7 +616,6 @@
                            (select-all-in-group (into {} e'))
                            [clear-selection (into {} e')]])]
                        [list-of-boats e']])))]])))))
-
 
 (defmethod render-list :b [_ r]
   (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <
