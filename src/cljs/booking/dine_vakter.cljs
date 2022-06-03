@@ -38,15 +38,11 @@
         (into [:<>]
               (for [{:keys [data _id]} data
                     :let [rec data]]
-                [:div
-                 ;{:style {:break-inside :avoid-page}} 
+                [sc/co
+                 (date-header rec)
                  (if-let [beskrivelse (get-in rec ["after" "endringsbeskrivelse"])]
-                   [sc/col-space-2
-                    (date-header rec)
-                    [sc/text1 beskrivelse]]
-                   [sc/col-space-2
-                    (date-header rec)
-                    [sc/text0 (str (some-> (get-in rec ["after"])))]])]))]])))
+                   [sc/text1 beskrivelse]
+                   [sc/text0 (str (some-> (get-in rec ["after"])))])]))]])))
 
 (defn- within-undo-limits? [now date]
   ;(tap> [now date (tick.alpha.interval/new-interval (t/instant date) now)])
@@ -128,7 +124,7 @@
                                (booking.flextime/relative-time (some-> date-registered))]]]))))]]))))
 
 
-(defn beskjeder [loggedin-uid datum]
+(defn messages [loggedin-uid datum]
   (let [admin? false
         path (fn [id] (when id (vector "beskjeder" id "inbox")))
         storage-path (sc/as-shortcut {:style {:text-transform "unset"}} (apply str (interpose "/" (path loggedin-uid))))
@@ -136,11 +132,11 @@
         data (remove (fn [{:keys [id data]}] (get data "deleted" false)) datum)]
     (if (empty? data)
       [sc/col-space-4
-       [sc/title1 "Ingen beskjeder"]
+       [sc/title1 "Ingen meldinger"]
        (when admin?
          [sc/text storage-path])]
       [sc/col-space-4
-       [sc/title "Beskjeder"]
+       [sc/title "Meldinger"]
        (when admin?
          [sc/text storage-path])
        (into [sc/col-space-4]
@@ -221,7 +217,7 @@
                    [sc/row-bl
                     [sc/text1 "Identitet"]
                     (sc/as-identity uid)])]
-                [beskjeder uid @inbox-messages]
+                [messages uid @inbox-messages]
                 (when nøkkelvakt?
                   (when (seq data::stringified)
                     [sc/col-space-4

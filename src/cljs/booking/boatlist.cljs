@@ -207,8 +207,8 @@
 
 (defn arbeidsliste []
   (let [card (fn [[boat-item-id
-                   {:keys [number slot boat-type work-log] :as v}]]
-               [sc/co {:class []}
+                   {:keys [number slot work-log] :as v}]]
+               [sc/co
                 [sc/row-sc-g4-w
                  [widgets/badge
                   {:on-click #(open-modal-boatinfo {:data v})

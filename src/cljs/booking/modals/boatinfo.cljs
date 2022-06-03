@@ -100,7 +100,7 @@
 
 (defn q-button [boat-item-id worklog-entry-id attr icon action]
   (hoc.buttons/pill
-    (merge-with into {:class [:round]
+    (merge-with into {:class    [:round]
                       :type     "button"
                       :on-click #(action boat-item-id worklog-entry-id)} attr)
     [sc/icon icon]))
@@ -127,11 +127,11 @@
 
        (if complete
          (hoc.buttons/pill
-           {:type :button
+           {:type     :button
             :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
             :class    [:round :frame :inverse]} [sc/icon ico/check])
          (hoc.buttons/pill
-           {:type :button
+           {:type     :button
             :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
             :class    [:round :frame]} [sc/icon ico/check]))
 
@@ -175,7 +175,7 @@
      (r/with-let [more? (r/atom false)]
        [:<>
         (when-not @more?
-          [:div.flex.flex-col.items-center.space-y-4 
+          [:div.flex.flex-col.items-center.space-y-4
            [sc/text1 "Dette er slutten av listen"]
            [hoc.buttons/just-caption
             {:type     "button"
@@ -187,11 +187,11 @@
 
 ;; components
 
-(defn insert-damage [{:keys [values set-values] :as props}]     
+(defn insert-damage [{:keys [values set-values] :as props}]
   [sc/col-space-4 {:style {:padding "0"}}
    [sc/checkbox-matrix
     (into [:<>]
-          (for [e (sort damage-words)] 
+          (for [e (sort damage-words)]
             [sc/co
              [hoc.toggles/largeswitch-local'
               {:get     #(values e)
@@ -201,7 +201,7 @@
                :caption e}]]))]
    [sci/textarea props
     nil {:placeholder "Annen beskrivelse"
-         :class [:-mx-2]} "" :description]])
+         :class       [:-mx-2]} "" :description]])
 
 (defn editor [props]
   (let [people (map (fn [[k v]] {:id (some-> k name) :name (:navn v)})
@@ -221,7 +221,6 @@
   [sc/col-space-4 {:style {:padding "1rem"}}
    (let [n (->> work-log (remove (comp :deleted val)) vals count)]
      [sc/row-sc-g2
-      ;[l/pre n (->> work-log (remove (comp :deleted val)) keys)]
       [widgets/badge
        {:class [:big (if (pos? n) :work-log)
                 :right-square (when-not number :active)]}
@@ -229,16 +228,11 @@
        (or slot "ny")]
       [widgets/stability-name-category data]
       [:div.grow]])
-   [sc/col-space-1
-    [widgets/dimensions-and-material data]
-    [sc/col-space-2
-     [sc/text0 description]
-
-     [sc/row-end [sc/text1 (widgets/location location)]]]
-
-
-
-    (when -debug [l/pre data])]])
+   [sc/co
+    [sc/title description]
+    [sc/row-end [sc/text1 (widgets/location location)]]
+    [widgets/dimensions-and-material data]]
+   (when -debug [l/pre data])])
 
 (defn bottom-button-panel [& content]
   [:div
@@ -266,7 +260,7 @@
                        boat-item-id)]
     [sc/dialog-dropdown
      [:div
-      {:style {:padding-bottom  "2rem"
+      {:style {:padding-bottom   "2rem"
                :z-index          10
                :background-color "var(--toolbar)"}}
       [header uid data]]
@@ -294,8 +288,8 @@
                 :on-submit handle-submit}
          [sc/co
           {:xstyle {;:background     (if @selected-tab "var(--floating)" "var(--content)")
-                    :padding-block-end  "1rem"
-                    :padding-inline "1rem"}}
+                    :padding-block-end "1rem"
+                    :padding-inline    "1rem"}}
 
           (if @selected-tab
             (into [:div.px-8.pt-8.pb-1]
@@ -342,8 +336,7 @@
 (defn open-modal-boatinfo [{:keys [data]}]
   (let [uid @(rf/subscribe [:lab/uid])]
     (rf/dispatch-sync [:modal.slideout/clear])
-    (rf/dispatch [:modal.slideout/toggle
-                  true
+    (rf/dispatch [:modal.slideout/show
                   {:data          data
                    :uid           uid
                    :on-flag-click (fn [boat-type value]

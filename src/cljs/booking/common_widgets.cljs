@@ -177,13 +177,14 @@
         ;_ (tap> ["users" uid "starred" boat-type])
         ex-data (when boat-type
                   @(db/on-value-reaction {:path ["users" uid "starred" boat-type]}))]
-    [sc/row {:style {:column-gap  "var(--size-1)"
-                     :align-items :center
-                     :color       (if (and id ex-data)
-                                    "var(--yellow-9)"
-                                    (if id
-                                      "var(--toolbar-)"
-                                      "var(--red-5)"))}}
+    [sc/row-sc-g2
+     {:style {:column-gap  "var(--size-1)"
+              :align-items :center
+              :color       (if (and id ex-data)
+                             "var(--yellow-9)"
+                             (if id
+                               "var(--toolbar-)"
+                               "var(--red-5)"))}}
      (when (pos? @bt-data)
        [sc/text {:line-height "var(--font-lineheight-2)"
                  :font-size   "var(--font-size-1)"
@@ -198,22 +199,23 @@
         ico/stjerne])]))
 
 (defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
-  [sc/col {:class [:truncate :space-y-px :w-full]}
-   (when kind
-     [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])
-
-   [:div.flex.items-center.justify-between.gap-1
-
-    (when (or stability expert) [stability-expert m])
-    [sc/text2 {:style {:overflow      :hidden
-                       :text-overflow :ellipsis
-                       :white-space   :nowrap}} navn]
-    [:div.grow]
-    [favourites-star' {:on-flag-click (fn [boat-type value uid]
-                                        (rf/dispatch [:star/write-star-change
-                                                      {:boat-type boat-type
-                                                       :value     value
-                                                       :uid       uid}]))} m]]])
+  [sc/row-field {:style {:width "100%"}}
+   [sc/col {:class [:truncate :space-y-px :w-full :align-center]}
+    (when kind
+      [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])
+    [sc/row-sc-g2
+     (when (or stability expert) [stability-expert m])
+     [sc/text2 {:style {:overflow      :hidden
+                        :text-overflow :ellipsis
+                        :white-space   :nowrap}} navn]
+     [:div.grow]]]
+   [favourites-star'
+    {:on-flag-click (fn [boat-type value uid]
+                      (rf/dispatch [:star/write-star-change
+                                    {:boat-type boat-type
+                                     :value     value
+                                     :uid       uid}]))}
+    m]])
 
 (defn stability-name-category-front-flag [{:keys [stability expert navn kind] :as m}]
   [sc/col {:class [:truncate :space-y-pxx :w-full]}
