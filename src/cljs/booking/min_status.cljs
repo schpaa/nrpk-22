@@ -56,7 +56,7 @@
                        :sjøbasen nil #_(reset! step 1))}
          ico/plus
          "Ny booking"]]
-       [booking.lab/render {}]]
+       [booking.lab/render-list :sjøbasen nil]]
       [:div])))
 
 ;idiom: unwrapped lines are candidates for new constructs

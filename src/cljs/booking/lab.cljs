@@ -60,27 +60,32 @@
 
 (defn- clear-selection [r]
   ;{:pre [(seq? r)]}
+;  (tap> {:r r})
   (when r
     (let [x (if (map? r)
-              (->> r keys (map name) set)
+              (set (map (comp name key) r))
+              #_(->> r keys (map name) set)
               nil)
           this-group (remove nil? (map @selection x))]
-      (button/just-icon
-        {:disabled (or
-                     (nil? this-group)
-                     (empty? this-group))
-         :on-click #(reset! selection (set/difference @selection x))
-         :class    [:round :inverse :shrink-0]}
-        ico/closewindow))))
+      [:<>
+;       [l/pre (map? r) (map @selection x)]
+;       [l/pre @selection]
+       (button/just-icon
+         {:disabled (or
+                      (nil? this-group)
+                      (empty? this-group))
+          :on-click #(reset! selection (set/difference @selection x))
+          :class    [:round :frame :shrink-0]}
+         ico/closewindow)])))
 
 (defn- select-all-in-group [r]
-  (button/just-icon
+  (button/icon-and-caption
     {:disabled (every? (set @selection) (map vals r))
      :on-click #(doseq [e (map :id (vals r))]
                   (toggle e))
-     :class    [:round :cta :shrink-0]}
-    ico/check))
-
+     :class    [:cta-outline  :shrink-0]}
+    ico/check
+    "Marker alt"))
 
 #_(defn time-input-validation [e]
     (into {} (remove (comp nil? val)
@@ -498,58 +503,57 @@
     :border-radius    "var(--radius-0)"}])
 
 (defn- item [idx v]
-  #_(let [{:keys [id number slot work-log _navn _description]} v
-          selected? (some? (some #{id} (:selection @store)))
-          work-log-count (count (remove (fn [[_k v]] (or (:complete v) (:deleted v))) work-log))
-          has-work-log? (pos? work-log-count)
-          inhibit true                                       ;nil ;(rand-nth [true false])
-          data nil #_(->> (make-series-of-abutting-elements #(-> 10) #(-> 10))
-                          ;#(rand-int 96) #(+ 20 (rand-int 12)))
-                          (drop 1)
-                          (take 4)
-                          ;(mapv digits->time)  !!!
-                          (into []))
-          starts (some-> @start-time t/time t/hour)
-          ends (some-> @end-time t/time t/hour)]
-      [sc/col
-       ;[l/pre starts ends]
-       [sc/row-sc-g2 {:style {:align-items "start"}}
-        [widgets/badge
-         {:class    [:small]
-          :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
-         (when has-work-log?
-           work-log-count)
-         (subs (str number) 0 3)
-         slot]
+  (let [{:keys [id number slot work-log _navn _description]} v
+        selected? (some? (some #{id} (:selection @store)))
+        work-log-count (count (remove (fn [[_k v]] (or (:complete v) (:deleted v))) work-log))
+        has-work-log? (pos? work-log-count)
+        inhibit false;true                                       ;nil ;(rand-nth [true false])
+        data nil #_(->> (make-series-of-abutting-elements #(-> 10) #(-> 10))
+                        ;#(rand-int 96) #(+ 20 (rand-int 12)))
+                        (drop 1)
+                        (take 4)
+                        ;(mapv digits->time)  !!!
+                        (into []))
+        starts (some-> @start-time t/time t/hour)
+        ends (some-> @end-time t/time t/hour)]
+    [sc/col
+     ;[l/pre starts ends]
+     [sc/row-sc-g2 {:style {:align-items "start"}}
+      [widgets/badge
+       {:class    [:small]
+        :on-click #(booking.modals.boatinfo/open-modal-boatinfo {:data v})}
+       (when has-work-log?
+         work-log-count)
+       (subs (str number) 0 3)
+       slot]
+      (when-not has-work-log?
+        [svg-time-graph idx inhibit data
+         (* 8 (or starts 12))
+         (* 8 (or ends 18))])
+      ;intent Device to accept/select boat for booking
+      (when true;(pos? @step)
         (when-not has-work-log?
-          [svg-time-graph idx inhibit data
-           (* 8 (or starts 12))
-           (* 8 (or ends 18))])
-        ;intent Device to accept/select boat for booking
-        (when (pos? @step)
-          (when-not has-work-log?
-            [:div.grid.place-content-center.shrink-0
-             (if inhibit
-               (button/just-icon
-                 {:on-click #(toggle id)
-                  :class    [:round]
-                  :style    {:border-color "var(--red-6)"
-                             :color        "var(--red-6)"}}
-                 [sc/icon ico/exclamation])
-               (button/just-icon
-                 {:on-click #(toggle id)
-                  :class    [:frame :round]
-                  :style    {:border-color     (if selected? "var(--green-6)" "var(--gray-6)")
-                             :background-color (when selected? "var(--green-6)")
-                             :color            (if selected? "var(--green-0)" "var(--gray-6)")}}
-                 (when selected? ico/check)))]))]]))
+          [:div.grid.place-content-center.shrink-0
+           (if inhibit
+             (button/just-icon
+               {:on-click #(toggle id)
+                :class    [:round]
+                :style    {:border-color "var(--red-6)"
+                           :color        "var(--red-6)"}}
+               [sc/icon ico/exclamation])
+             (button/just-icon
+               {:on-click #(toggle id)
+                :class    [:frame :round]
+                :style    {:border-color     (if selected? "var(--green-6)" "var(--gray-6)")
+                           :background-color (when selected? "var(--green-6)")
+                           :color            (if selected? "var(--green-0)" "var(--gray-6)")}}
+               (when selected? ico/check)))]))]]))
 
 (defn- list-of-boats [r]
-  (let [input r #_[{1 {:slot 1 :number 1}}]]
-    [l/pre r #_(input :navn)]
-    #_(into [:div.flex.flex-col.gap-1]
-            (for [[idx v] (map-indexed vector (sort-by (juxt :slot :number) input))]
-              (item idx v)))))
+  [:<>
+   (into [:div.flex.flex-col.gap-1]
+         (for [[idx v] (map-indexed vector (sort-by (comp (juxt :slot :number) val) r))]
+           (item idx (val v))))])
 
 (o/defstyled boat-booking-grid :div
   [:& :gap-1 :w-full
@@ -560,7 +564,7 @@
 (defmethod render-list :sjøbasen [_ r]
   (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
                        (map (comp name key) (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))
-        show-selectors? (pos? @step)
+        show-selectors? true ;(pos? @step)
         has-stars? (when starred-keys
                      (pos? (count starred-keys)))
         data (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
@@ -575,51 +579,84 @@
                                              (into {} (map (fn [[k v]] [k (assoc v :id (some-> k name))])))
                                              (remove (comp nil? :boat-type val))
                                              (group-by (comp :kind val))
-                                             (sort-by (comp second first) <)))]
-    (into [:div.space-y-2]
-          (for [[kind r] data]
-            [widgets/disclosure
-             {:padded-heading true}
-             (or kind "missing-category")
-             [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
-             ;[l/pre kind]
-             (into [:<>]
-                   (for [[k v] r]
-                     [boat-booking-grid
-                      [l/pre k (map? v) (:navn v)]
-                      (into [:<>]
-                            (for [[[a b] xs ]  (group-by (juxt :boat-type :navn (comp first vals)) (filter map? v))]
-                              [l/pre {:a  a
-                                      :b  b
-                                      :rs (:navn (first xs))}]
-                              #_[boat-group-block
-                                 ;[l/pre r]
-                                 [sc/row-sc-g2
-                                  {:style {:height "auto"}}
-                                  [widgets/stability-name-category-front-flag
-                                   (dissoc r :kind)]
+                                             (sort-by first <)))]
+    [sc/col
+     ;[l/pre (count data) data]
+     (tap> data)
+     (into [:div.space-y-2]
+           (for [[kind e] (group-by first data)
+                 :let [boats (map val e)]]
+             (do
+               [widgets/disclosure
+                {:padded-heading true}
+                (or kind "missing-category")
+                [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
+                [boat-booking-grid
+                 ; [[kind boat-type]
+                 ;  [[id {...}]
+                 ;   [id {...}]]
+                 ;  [kind boat-type][[id {...}]]
+                 ;  ...]
+                 (for [[_ e] (group-by :boat-type boats)]
+                   (for [b #_[b id' {:keys [id kind boat-type] :as one-boat}] e]
+                     (for [[[boat-type navn :as z] e'] (group-by (comp (juxt :boat-type :navn) val) b)]
+                       [sc/col
+                        ;[l/pre (count e') boat-type]
+                        [boat-group-block
+                         [sc/row-sc-g2
+                          {:style {:height "auto"}}
 
-                                  (when show-selectors?
-                                    (when (map? r)
-                                      [sc/row-sc-g2
-                                       (clear-selection rs)
-                                       (select-all-in-group rs)]))]
+                          ;[l/pre (second (first e'))]
+                          [widgets/stability-name-category-front-flag
+                           (dissoc (second (first e')) :kind)]
 
-                                 (list-of-boats rs)])
-                            #_(for [[[_boat-type _navn] r]
-                                    (sort-by (comp last) <
-                                             (group-by (comp (juxt :boat-type :navn) val) z))]
-                                [l/pre r]
-                                #_[boat-group-block
-                                   [sc/row-sc-g2
-                                    {:style {:height "auto"}}
-                                    [widgets/stability-name-category-front-flag
-                                     (dissoc (-> r first val) :kind)]
-                                    (when show-selectors?
-                                      [sc/row-sc-g2
-                                       (clear-selection (into {} r))
-                                       (select-all-in-group (into {} r))])]
-                                   (list-of-boats r)]))]))]))))
+                          (when show-selectors?
+                            [sc/row-sc-g2 {:style {:align-items :start}}
+                             [clear-selection (into {} e')]
+                             (select-all-in-group e')])]
+                         [list-of-boats e']]])))
+                 #_[widgets/disclosure
+                    {:padded-heading true}
+                    (or kind "missing-category")
+                    [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
+                    ;[l/pre kind]
+                    (into [:<>]
+                          (for [e #_[_ {:keys [kind boat-type]} :as zzz] boats]
+                            [boat-booking-grid
+                             [l/pre ":>" e]
+                             #_(into [:<>]
+                                     (for [[[a b] rs] (group-by (juxt :boat-type :navn (comp first vals)) v)]
+                                       #_[l/pre r {:a  a
+                                                   :b  b
+                                                   :rs rs #_(:navn (first xs))}]
+                                       [boat-group-block
+                                        [l/pre a]
+                                        [sc/row-sc-g2
+                                         {:style {:height "auto"}}
+                                         [widgets/stability-name-category-front-flag
+                                          (dissoc r :kind)]
+
+                                         (when show-selectors?
+                                           (when (map? r)
+                                             [sc/row-sc-g2
+                                              (clear-selection rs)
+                                              (select-all-in-group rs)]))]
+
+                                        (list-of-boats rs)])
+                                     #_(for [[[_boat-type _navn] r]
+                                             (sort-by (comp last) <
+                                                      (group-by (comp (juxt :boat-type :navn) val) z))]
+                                         [l/pre r]
+                                         #_[boat-group-block
+                                            [sc/row-sc-g2
+                                             {:style {:height "auto"}}
+                                             [widgets/stability-name-category-front-flag
+                                              (dissoc (-> r first val) :kind)]
+                                             (when show-selectors?
+                                               [sc/row-sc-g2
+                                                (clear-selection (into {} r))
+                                                (select-all-in-group (into {} r))])]
+                                            (list-of-boats r)]))]))]]])))]))
 
 (defmethod render-list :b [_ r]
   (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <
@@ -677,8 +714,8 @@
         [sc/text1 (:description v)]
         #_[l/pre k]])]))
 
-(defn render [r]
-  (render-list @selector r))
+(defn render [_r]
+  (render-list @selector _r))
 
 
 (comment
