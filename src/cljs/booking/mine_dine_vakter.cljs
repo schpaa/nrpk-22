@@ -39,8 +39,8 @@
   ([attr header content]
    [sc/surface-a (merge-with into {:style {:padding-inline "var(--size-3)"
                                            :padding-block  "var(--size-2)"}} attr)
-    [sc/col-space-2 {:style {:height          "100%"
-                             :justify-content :space-between}}
+    [sc/co {:style {:height          "100%"
+                    :justify-content :space-between}}
      [sc/small2 header]
      [sc/title1 {:style {:color      "unset"
                          :text-align :right}}
@@ -61,7 +61,7 @@
          style (saldo-style result)]
      [panel
       style
-      [sc/col
+      [sc/co
        [sc/small2 style "Saldo"]
        [sc/small2 {:style (conj {:text-transform "uppercase"}
                                 (:style style))}

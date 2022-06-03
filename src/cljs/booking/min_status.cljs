@@ -10,7 +10,8 @@
                                               path-beskjedersent
                                               path-endringslogg]]
             [schpaa.style.hoc.buttons :as button]
-            [booking.ico :as ico]))
+            [booking.ico :as ico]
+            [tick.core :as t]))
 
 (defonce store (r/atom {:selector 1}))
 
@@ -51,11 +52,14 @@
         [button/icon-and-caption
          {:style    {:box-shadow "var(--shadow-2)"}
           :class    [:cta]
-          :on-click #(case @selector
-                       :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
-                       :sjøbasen nil #_(reset! step 1))}
+          :on-click #(let [start-t (-> t/now t/time (t/truncate :hours) (t/>> (t/new-duration 1 :hours)))
+                           end-t (-> start-t (t/>> (t/new-duration 3 :hours)))]
+                       (reset! booking.lab/start-time (str start-t))
+                       (reset! booking.lab/end-time (str end-t))
+                       (reset! booking.lab/step 1))}
          ico/plus
          "Ny booking"]]
+       [booking.lab/always-panel]
        [booking.lab/render-list :sjøbasen nil]]
       [:div])))
 

@@ -59,33 +59,28 @@
              (set/union e #{id})))))
 
 (defn- clear-selection [r]
-  ;{:pre [(seq? r)]}
-;  (tap> {:r r})
   (when r
     (let [x (if (map? r)
               (set (map (comp name key) r))
-              #_(->> r keys (map name) set)
               nil)
           this-group (remove nil? (map @selection x))]
-      [:<>
-;       [l/pre (map? r) (map @selection x)]
-;       [l/pre @selection]
-       (button/just-icon
-         {:disabled (or
-                      (nil? this-group)
-                      (empty? this-group))
-          :on-click #(reset! selection (set/difference @selection x))
-          :class    [:round :frame :shrink-0]}
-         ico/closewindow)])))
+      (button/just-icon
+        {:disabled (or
+                     (nil? this-group)
+                     (empty? this-group))
+         :on-click #(reset! selection (set/difference @selection x))
+         :class    [(if (or
+                          (nil? this-group)
+                          (empty? this-group)) :frame :danger-outline) :shrink-0]}
+        ico/closewindow))))
 
 (defn- select-all-in-group [r]
-  (button/icon-and-caption
+  (button/just-icon
     {:disabled (every? (set @selection) (map vals r))
      :on-click #(doseq [e (map :id (vals r))]
                   (toggle e))
      :class    [:cta-outline  :shrink-0]}
-    ico/check
-    "Marker alt"))
+    ico/check))
 
 #_(defn time-input-validation [e]
     (into {} (remove (comp nil? val)
@@ -138,6 +133,8 @@
 
 ;; styles
 
+(def start-date (r/cursor store [:booking/start-date]))
+
 (def start-time (r/cursor store [:booking/start]))
 
 (def end-time (r/cursor store [:booking/end]))
@@ -158,10 +155,11 @@
    "Avbryt"])
 
 (defn cancel-booking' [cancel]
-  [button/pill
-   {:class    [:large :round :danger]
+  [button/icon-and-caption
+   {:class    [:danger-outline]
     :on-click cancel}
-   [sc/icon ico/closewindow]])
+   ico/closewindow
+   "Avbryt"])
 
 (defn confirm-booking [complete]
   [button/cta
@@ -170,20 +168,25 @@
    "Bekreft"])
 
 (defn confirm-booking' [complete]
-  [button/pill {:class    [:large :round :cta]
-                :on-click complete}
-   [sc/icon ico/check]])
+  [button/icon-and-caption
+   {:class    [:cta]
+    :on-click complete}
+   ico/check
+   "Bekreft"])
 
 (defn previous-step [prev-step]
-  [button/pill {:class    [:large :round :regular]
-                :on-click prev-step}
-   [sc/icon ico/prevStep]])
+  [button/icon-and-caption
+   {:class    [:regular]
+    :on-click prev-step}
+   ico/prevStep
+   "Tilbake"])
 
 (defn next-step' [next-step]
-  [button/pill {:class    [:large :round :cta]
-                :disabled (empty? @selection)
-                :on-click next-step}
-   [sc/icon ico/nextStep]])
+  [button/icon-and-caption {:class    [:cta]
+                            :disabled (empty? @selection)
+                            :on-click next-step}
+   ico/nextStep
+   "Neste"])
 
 ;; user-interface
 
@@ -224,9 +227,10 @@
 
 (defn plus-minus-time [time]
   (let [has-time (some? @time)]
-    [sc/row-sc-g1
+    [sc/row-sc-g1 {:style {:height "2rem"
+                           :align-items :end}}
 
-     [button/reg-pill-icon
+     [button/just-icon
       {:on-click #(do
                     (reset! time (-> (t/<< (t/time @time) (t/new-duration 1 :hours))
                                      (t/truncate :hours)))
@@ -234,11 +238,26 @@
        :disabled (not has-time)
        :style    {:min-width "3rem"
                   :border    "2px solid var(--text2)"}
-       :class    [:regular :right-square :narrow]}
-      [sc/icon-small ico/minus]]
+       :class    [:regular :right-square]}
+      ico/minus]
+     
+     [button/icon-and-caption
+      {:on-click #(do
+                    (reset! time (-> (t/<< (t/time @time) (t/new-duration 1 :hours))
+                                     (t/truncate :hours)))
+                    (tap> [@time (some-> @time t/time)]))
+       :disabled (not has-time)
+       :style    {:min-width "3rem"
+                  :border    "2px solid var(--text2)"}
+       :class    [:regular :right-square :left-square]}
+      ico/minus
+      "1 time"]
 
-     [:input {:type "time" :value @time :on-change #(reset! time (.. % -target -value))}]
-     [button/reg-pill-icon
+     [:input {:style {:width "6rem"
+                      :height "100%"}
+              :type "time" :value @time :on-change #(reset! time (.. % -target -value))}]
+
+     [button/icon-and-caption
       {:on-click #(do
                     (reset! time (-> (t/>> (some-> @time t/time) (t/new-duration 1 :hours))
                                      (t/truncate :hours)))
@@ -246,94 +265,110 @@
        :disabled (not has-time)
        :style    {:min-width "3rem"
                   :border    "2px solid var(--text2)"}
-       :class    [:inverse :left-square :narrow]}
-      [sc/icon-small ico/plus]]]))
+       :class    [:regular :right-square :left-square]}
+      ico/plus
+      "1 time"]
+     [button/just-icon
+      {:on-click #(do
+                    (reset! time (-> (t/>> (some-> @time t/time) (t/new-duration 1 :hours))
+                                     (t/truncate :hours)))
+                    (tap> [@time (some-> @time t/time)]))
+       :disabled (not has-time)
+       :style    {:min-width "3rem"
+                  :border     "2px solid var(--text2)"}
+       :class    [:regular :left-square]}
+      ico/plus]]))
 
 ;; forms
 
 (defn form-date-and-time [{:action/keys [action/next-step action/cancel]}]
-  [:<>
-   [bs/popup-frame
-    [sc/co
-     [sc/row-field
-      [:div]
-      (next-step' next-step)]
+  [bs/popup-frame
+   [sc/co
+    [sc/row-field
+     [:div]
+     (next-step' next-step)]
 
-     [sc/row-center
-      [bs/timenav
-       {:class [:w-full]}
-       [:div.grid.place-content-center.gap-2.w-full
-        {:style {:grid-template-columns "repeat(4,min-content)"
-                 :grid-auto-rows        "auto"}}
-        [sc/col {:class [:justify-self-start :self-end]
-                 :style {:grid-column   "1/3"
+    [bs/timenav
+     [:div.grid.place-content-center.gap-2
+      {:style {:grid-template-columns "repeat(4,min-content)"
+               :grid-auto-rows        "auto"}}
+      [sc/col {:class [:justify-self-start :self-end]
+               :style {:grid-column   "1/3"
 
-                         :grid-row      "1/1"
-                         :border-radius "var(--radius-0)"}}
+                       :grid-row      "1/1"
+                       :border-radius "var(--radius-0)"}}
 
-         [:input {:type "date" :value "2022-05-23"}]
-         [sc/field-label "Start"]]
+       [:input {:type "date" :value "2022-05-23"}]
+       [sc/field-label "Start"]]
 
-        [:div.justify-self-center.self-center.w-full
-         {:style {:grid-column "1/-1"
-                  :grid-row    "2"}}
-         [plus-minus-time start-time]]
+      [:div.justify-self-center.self-center.w-full
+       {:style {:grid-column "1/-1"
+                :grid-row    "2"}}
+       [plus-minus-time start-time]]
 
-        [:div.justify-self-center.self-center.w-full
-         {:style {:grid-column "1/-1"
-                  :grid-row    "3"}}
-         [plus-minus-time end-time]]
-        [sc/col {:class [:self-start :justify-self-end]
-                 :style {:grid-column   "1/-1"
-                         :grid-row      "4"
-                         :border-radius "var(--radius-0)"}}
+      [:div.justify-self-center.self-center.w-full
+       {:style {:grid-column "1/-1"
+                :grid-row    "3"}}
+       [plus-minus-time end-time]]
+      [sc/col {:class [:self-start :justify-self-end]
+               :style {:grid-column   "1/-1"
+                       :grid-row      "4"
+                       :border-radius "var(--radius-0)"}}
 
-         [sc/field-label {:class [:text-right]} "Slutt"]
-         [:input {:type  "date"
-                  :value "2022-05-23"}]]
-        [:div]]]]
+       [sc/field-label {:class [:text-right]} "Slutt"]
+       [:input {:type  "date"
+                :value "2022-05-23"}]]
+      [:div]]]
 
-     [sc/row-field
-      (cancel-booking' cancel)]]]])
+    [sc/row-field
+     (cancel-booking' cancel)]]])
 
 (defn form-confirm [{:action/keys [prev-step complete action/cancel]}]
   [:<>
    [bs/popup-frame
-    [sc/co
+    [sc/col-space-8
      [sc/row-field
-      (previous-step prev-step)
-      (confirm-booking' complete)]
+      (previous-step prev-step)]
+
 
      [sc/row-sc-g2 {:style {:align-items :start
                             :height      "100%"}}
-      [sc/col
+      [sc/co
        {:class [:justify-center]
         :style {:height "100%"
                 :width  "100%"}}
-       [:div.w-full.h-full
+       [:div;.w-full.h-full
         [sc/title1 "Bekreft booking"]
-        [l/pre (count @selection)]]]]
+
+        [sc/text @start-date]
+        [sc/text @start-time]
+        [sc/text @end-time]
+
+        (for [e @selection]
+          [l/pre e])]]]
 
      [sc/row-field
-      (cancel-booking' cancel)]]]])
+      (cancel-booking' cancel)
+      (confirm-booking' complete)]]]])
 
 ;;
 
 (defn- transition-map [p]
-  {:class      [:absolute :top-0 :w-fullx :mx-auto :-mt-16 :-debug2]
-   :enter      "ease-in-out duration-300 transform -mt-16"
+  {:class      [:absolute :-top-28  :mx-auto :mt-0  :pointer-events-none]
+   :style {:width "100%"}
+   :enter      "ease-in-out duration-300 transform mt-0"
    :enter-from (if p
                  "translate-x-full"
                  "-translate-x-full")
-   :enter-to   "translate-x-0 -mt-16"
-   :entered    "-mt-16  pointer-events-auto"
-   :leave      "ease-in-out duration-300 -mt-16"
+   :enter-to   "translate-x-0 mt-0"
+   :entered    "mt-0"
+   :leave      "ease-in-out duration-300 mt-0"
    :leave-from "translate-x-0 opacity-200"
    :leave-to   (if p
-                 "-mt-16 translate-x-full opacity-0 pointer-events-none"
-                 "-mt-16 -translate-x-full opacity-0 pointer-events-none")})
+                 "mt-0 translate-x-full opacity-0 "
+                 "mt-0 -translate-x-full opacity-0 ")})
 
-(defn always-panel []
+(defn  always-panel []
   (let [next-step #(do
                      (reset! previous-step-value @step)
                      (swap! step (fn [e] (mod (inc e) 3))))
@@ -346,44 +381,16 @@
         cancel #(do (reset! selector :sjøbasen)
                     (reset! step 0))]
     [:div.pointer-events-none
-     {:class [:sticky :top-24 :z-100 :space-y-8]}
-     [sc/row-center {:class [:z-100]}
-      [sc/col-space-8
-       {:class [:pointer-events-auto]}
-
-       [widgets/pillbar {:on-click nil #_#(if (= :booking @selector)
-                                            (reset! step 0))
-                         :class    [:large]}
-        selector
-        [[:nøklevann "Nøklevann"]
-         [:sjøbasen "Sjøbasen"]]]
-
-       [sc/row-center
-        (if (= :sjøbasen @selector)
-          [button/icon-and-caption
-           {:style    {:box-shadow "var(--shadow-2)"}
-            :class    [:large :cta :xnarrow]
-            :on-click #(case @selector
-                         :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
-                         :sjøbasen (reset! step 1))}
-           ico/plus
-           "Ny booking"]
-          [button/icon-and-caption
-           {:style    {:box-shadow "var(--shadow-2)"}
-            :class    [:large :cta]
-            :on-click #(case @selector
-                         :nøklevann (rf/dispatch [:lab/toggle-boatpanel nil])
-                         :sjøbasen (reset! step 1))}
-           ico/plus
-           "Nytt utlån"])]]]
-
+     {:style {:top "10rem"
+              :position "sticky"}
+      :class [:sticky  :z-100 :space-y-8]}
      [:div.relative
-      {:class [:z-100 :w-full]}
+      {:class [:z-100]}
 
       ;spacer
       [ui/transition
        {:show       (= 1 @step)
-        :class      [:w-full :h-64]
+        :class      [ :h-64]
         :enter      "ease-in-out duration-500 transform transition-height"
         :enter-from "h-0"
         :enter-to   "h-64"
@@ -394,7 +401,7 @@
        [:<> [:div.h-full.w-full]]]
 
       [ui/transition
-       {:show   (and (= :sjøbasen @selector) (= 1 @step))
+       {:show   (= 1 @step)
         :appear true}
        [ui/transition-child
         (transition-map (zero? @previous-step-value))
@@ -403,7 +410,7 @@
           :action/cancel    cancel}]]]
 
       [ui/transition
-       {:show   (and (= :sjøbasen @selector) (= 2 @step))
+       {:show   (= 2 @step)
         :appear true}
        [ui/transition-child
         (transition-map (zero? @previous-step-value))
@@ -508,12 +515,13 @@
         work-log-count (count (remove (fn [[_k v]] (or (:complete v) (:deleted v))) work-log))
         has-work-log? (pos? work-log-count)
         inhibit false;true                                       ;nil ;(rand-nth [true false])
-        data nil #_(->> (make-series-of-abutting-elements #(-> 10) #(-> 10))
-                        ;#(rand-int 96) #(+ 20 (rand-int 12)))
-                        (drop 1)
-                        (take 4)
-                        ;(mapv digits->time)  !!!
-                        (into []))
+        data (->> (make-series-of-abutting-elements
+                    ;#(-> 10) #(-> 10))
+                    #(rand-int 96) #(+ 20 (rand-int 12)))
+                  (drop 1)
+                  (take 4)
+                  ;(mapv digits->time)  !!!
+                  (into []))
         starts (some-> @start-time t/time t/hour)
         ends (some-> @end-time t/time t/hour)]
     [sc/col
@@ -531,7 +539,7 @@
          (* 8 (or starts 12))
          (* 8 (or ends 18))])
       ;intent Device to accept/select boat for booking
-      (when true;(pos? @step)
+      (when (= 1 @step)
         (when-not has-work-log?
           [:div.grid.place-content-center.shrink-0
            (if inhibit
@@ -550,8 +558,8 @@
                (when selected? ico/check)))]))]]))
 
 (defn- list-of-boats [r]
-  [:<>
-   (into [:div.flex.flex-col.gap-1]
+  [sc/col-space-2
+   (into [:<>]
          (for [[idx v] (map-indexed vector (sort-by (comp (juxt :slot :number) val) r))]
            (item idx (val v))))])
 
@@ -564,7 +572,7 @@
 (defmethod render-list :sjøbasen [_ r]
   (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
                        (map (comp name key) (filter (comp val) @(db/on-value-reaction {:path ["users" uid "starred"]}))))
-        show-selectors? true ;(pos? @step)
+        show-selectors? (= 1 @step)
         has-stars? (when starred-keys
                      (pos? (count starred-keys)))
         data (let [starred-keys (when-let [uid @(rf/subscribe [:lab/uid])]
@@ -580,83 +588,35 @@
                                              (remove (comp nil? :boat-type val))
                                              (group-by (comp :kind val))
                                              (sort-by first <)))]
-    [sc/col
-     ;[l/pre (count data) data]
-     (tap> data)
-     (into [:div.space-y-2]
-           (for [[kind e] (group-by first data)
-                 :let [boats (map val e)]]
-             (do
-               [widgets/disclosure
-                {:padded-heading true}
-                (or kind "missing-category")
-                [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
-                [boat-booking-grid
-                 ; [[kind boat-type]
-                 ;  [[id {...}]
-                 ;   [id {...}]]
-                 ;  [kind boat-type][[id {...}]]
-                 ;  ...]
-                 (for [[_ e] (group-by :boat-type boats)]
-                   (for [b #_[b id' {:keys [id kind boat-type] :as one-boat}] e]
-                     (for [[[boat-type navn :as z] e'] (group-by (comp (juxt :boat-type :navn) val) b)]
-                       [sc/col
-                        ;[l/pre (count e') boat-type]
-                        [boat-group-block
-                         [sc/row-sc-g2
-                          {:style {:height "auto"}}
+    (into [:div.space-y-2]
+          (for [[kind e] (group-by first data)
+                :let [boats (map val e)]]
+            (do
+              [widgets/disclosure
+               {:padded-heading true}
+               (or kind "missing-category")
+               [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
+               [boat-booking-grid
+                ; [[kind boat-type]
+                ;  [[id {...}]
+                ;   [id {...}]]
+                ;  [kind boat-type][[id {...}]]
+                ;  ...]
+                (for [[_ e] (group-by :boat-type boats)]
+                  (for [b e]
+                    (for [[[boat-type navn :as z] e'] (sort-by (comp second first) (group-by (comp (juxt :boat-type :navn) val) b))]
+                      [boat-group-block
+                       [sc/row-sc-g2
+                        {:style {:height "auto"}}
+                        [widgets/stability-name-category-front-flag
+                         (dissoc (second (first e')) :kind)]
 
-                          ;[l/pre (second (first e'))]
-                          [widgets/stability-name-category-front-flag
-                           (dissoc (second (first e')) :kind)]
+                        (when show-selectors?
+                          [sc/row-sc-g2 {:style {:align-items :start}}
+                           (select-all-in-group (into {} e'))
+                           [clear-selection (into {} e')]])]
+                       [list-of-boats e']])))]])))))
 
-                          (when show-selectors?
-                            [sc/row-sc-g2 {:style {:align-items :start}}
-                             [clear-selection (into {} e')]
-                             (select-all-in-group e')])]
-                         [list-of-boats e']]])))
-                 #_[widgets/disclosure
-                    {:padded-heading true}
-                    (or kind "missing-category")
-                    [sc/title1 (or (schpaa.components.views/normalize-kind kind) "Udefinert")]
-                    ;[l/pre kind]
-                    (into [:<>]
-                          (for [e #_[_ {:keys [kind boat-type]} :as zzz] boats]
-                            [boat-booking-grid
-                             [l/pre ":>" e]
-                             #_(into [:<>]
-                                     (for [[[a b] rs] (group-by (juxt :boat-type :navn (comp first vals)) v)]
-                                       #_[l/pre r {:a  a
-                                                   :b  b
-                                                   :rs rs #_(:navn (first xs))}]
-                                       [boat-group-block
-                                        [l/pre a]
-                                        [sc/row-sc-g2
-                                         {:style {:height "auto"}}
-                                         [widgets/stability-name-category-front-flag
-                                          (dissoc r :kind)]
-
-                                         (when show-selectors?
-                                           (when (map? r)
-                                             [sc/row-sc-g2
-                                              (clear-selection rs)
-                                              (select-all-in-group rs)]))]
-
-                                        (list-of-boats rs)])
-                                     #_(for [[[_boat-type _navn] r]
-                                             (sort-by (comp last) <
-                                                      (group-by (comp (juxt :boat-type :navn) val) z))]
-                                         [l/pre r]
-                                         #_[boat-group-block
-                                            [sc/row-sc-g2
-                                             {:style {:height "auto"}}
-                                             [widgets/stability-name-category-front-flag
-                                              (dissoc (-> r first val) :kind)]
-                                             (when show-selectors?
-                                               [sc/row-sc-g2
-                                                (clear-selection (into {} r))
-                                                (select-all-in-group (into {} r))])]
-                                            (list-of-boats r)]))]))]]])))]))
 
 (defmethod render-list :b [_ r]
   (let [data (sort-by (comp (juxt first last) #(str/split % #" ") first) <

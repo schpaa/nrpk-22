@@ -1468,6 +1468,22 @@ Ensure the default browser behavior of the `hidden` attribute.
   top: 8rem;
 }
 
+.-top-16 {
+  top: -4rem;
+}
+
+.-top-32 {
+  top: -8rem;
+}
+
+.-top-24 {
+  top: -6rem;
+}
+
+.-top-28 {
+  top: -7rem;
+}
+
 .isolate {
   isolation: isolate;
 }
@@ -1699,6 +1715,14 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .-ml-2 {
   margin-left: -0.5rem;
+}
+
+.mt-0 {
+  margin-top: 0px;
+}
+
+.mt-4 {
+  margin-top: 1rem;
 }
 
 .block {

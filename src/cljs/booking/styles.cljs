@@ -48,16 +48,15 @@
       :right  "0rem"}]]])
 
 (o/defstyled popup-frame :div
-  [:&
-   {
-    :outline "1px solid red"
-    :margin-inline    "auto"
+  [:& :pointer-events-auto
+   {:margin-inline    "auto"
     :height           "auto"
     :border-radius    "var(--radius-0)"
     :width            "25rem"
     :box-shadow
-    "0 0 0 16px var(--content),
-       0 0 0 18px var(--floating),
+      "0 0 0 10px var(--content),
+       0 0 0 18px var(--brand1),
+       0 0 0 22px var(--floating),
        var(--shadow-6)"
     :background-color "var(--content)"}])
 
