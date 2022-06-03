@@ -16,10 +16,11 @@
                                               :modal.slideout/extra extra)))
 
 (rf/reg-event-db :modal.slideout/toggle
-                 (fn [db [_ arg extra]] (if (some? arg)
-                                          (assoc db :modal.slideout/toggle arg
-                                                    :modal.slideout/extra extra)
-                                          (update db :modal.slideout/toggle (fnil not true)))))
+                 (fn [db [_ arg extra]]
+                   (if (some? arg)
+                     (assoc db :modal.slideout/toggle arg
+                               :modal.slideout/extra extra)
+                     (update db :modal.slideout/toggle (fnil not true)))))
 
 (rf/reg-event-db :modal.slideout/close
                  (fn [db _] (assoc db :modal.slideout/toggle false)))
@@ -65,7 +66,8 @@
            :style    {:transform-origin "center center"}
            :on-close #(if click-overlay-to-dismiss (close))} ;must press cancel to dismiss
           [:div.fixed.inset-0
-           {:style {:z-index 2000}}
+           ;note:
+           {:style {:z-index 10}}
            [:div.text-center
             [schpaa.style.dialog/standard-overlay]
             ;; trick browser into centering modal contents
@@ -96,12 +98,12 @@
                             :border-bottom-right-radius "var(--radius-2)"
                             :border-bottom-left-radius "var(--radius-2)"
                             :box-shadow (apply str (interpose ","
-                                                              ["0 0 0px calc(var(--size-2) * 1) var(--brand1)"
-                                                               "0 0 0px calc(var(--size-1) * 3) var(--toolbar-)"
-                                                               "var(--shadow-5)"]))}
+                                                              ["0 0 0px calc(var(--size-1) * 2) var(--toolbar-)"
+                                                               "0 0 0px calc(var(--size-1) * 3) var(--toolbar)"
+                                                               "var(--shadow-4)"]))}
                     :class [:overflow-y-auto]}
 
-              (when auto-dismiss
+              (when auto-dismiss            
                 [:svg.absolute {:style {:width :4px :height "100%"} :viewBox "0 0 1 50" :preserveAspectRatio "none"}
                  [:line {:stroke "var(--brand1)" :stroke-width 4 :x1 0 :y1 0 :x2 1 :y2 50}
                   [:animate {:fill "freeze" :attributeName "y2" :from "50" :to "0" :dur (if auto-dismiss (str auto-dismiss "ms"))}]]])

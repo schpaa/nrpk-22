@@ -130,29 +130,7 @@
        [sc/text1 "Vi kan også tilby deg noe mer funksjonalitet når du er innlogget."]]]
      [sc/row-ec
       [hoc.buttons/regular {:type     "button"
-                            :on-click #(on-close)} "Lukk"]]]
-
-    #_[sc/dropdown-dialog
-       [sc/col-space-4
-        [sc/title1 "Hvordan vil du logge inn?"]
-        [sc/surface-a [db.signin/login]]
-        [sc/col-space-4
-         [sc/text2 "Når du logger inn kan vi med større sikkerhet vite hvem som står bak en identitet og med bakgrunn i dette regulere tilganger."]
-         [sc/text1 "Vi kan også tilby deg noe mer funksjonalitet når du er innlogget."]]]
-       [sc/row-ec
-        [hoc.buttons/regular {:type     "button"
-                              :on-click #(on-close)} "Lukk"]]]
-
-    #_[sc/dropdown-dialog
-       [sc/col-space-4
-        [sc/title1 "Hvordan vil du logge inn?"]
-        [sc/surface-a [db.signin/login]]
-        [sc/col-space-4
-         [sc/text2 "Når du logger inn kan vi med større sikkerhet vite hvem som står bak en identitet og med bakgrunn i dette regulere tilganger."]
-         [sc/text1 "Vi kan også tilby deg noe mer funksjonalitet når du er innlogget."]]]
-       [sc/row-ec
-        [hoc.buttons/regular {:type     "button"
-                              :on-click #(on-close)} "Lukk"]]]))
+                            :on-click #(on-close)} "Lukk"]]]))
 
 (defn open-dialog-signin []
   (rf/dispatch [:modal.slideout/toggle

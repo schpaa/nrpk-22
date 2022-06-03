@@ -56,7 +56,7 @@
                          (not (some? (:type e))) ((fnil conj []) "mangler"))})))
 
 (defn addpost-form [{:keys [data type on-close on-save on-submit] :as context}]
-  [sc/dropdown-dialog' {:style {:padding "1rem"}}
+  [sc/dialog-dropdown {:style {:padding "1rem"}}
    [fork/form {:initial-values    data
                :form-id           "addpost-form"
                :validation        form-validation

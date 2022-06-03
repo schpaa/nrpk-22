@@ -23,7 +23,7 @@
                               "//"
                               (.-host js/window.location)
                               page-path)]
-                 [sc/dropdown-dialog' {:style {:padding "1rem"}}
+                 [sc/dialog-dropdown {:style {:padding "1rem"}}
                   [:div
                    [sc/col {:class [:space-y-8]}
                     [sc/col-space-4

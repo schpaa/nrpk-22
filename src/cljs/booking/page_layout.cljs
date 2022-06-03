@@ -121,7 +121,7 @@
       (str/trim (str @account-email))]]))
 
 (defn new-version-available::dialog [_]
-  [sc/dropdown-dialog'
+  [sc/dialog-dropdown
    {:style {:position   :relative
             :overflow   :auto
             :z-index    20

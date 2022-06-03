@@ -50,11 +50,11 @@
         (when-let [time (some->> timestamp (t/instant) (t/date-time))]
           [sc/text1 "Tatt ut " (booking.flextime/relative-time time times.api/arrival-date)]))]]))
 
-(defn disp [{:keys [data on-close on-save]}]
+(defn dialog-innlevering [{:keys [data on-close on-save]}]
   (let [{:keys [initial original timestamp]} data
         db (rf/subscribe [:db/boat-db])]
     (r/with-let [st (r/atom initial)]
-      [sc/dropdown-dialog' {:style {:padding "1rem"}}
+      [sc/dialog-dropdown {:style {:padding "1rem"}}
        [sc/col-space-8
         [sc/col-space-4
          (let [f (fn [[k v]]
@@ -67,9 +67,9 @@
         [sc/row-ec {:class [:pb-6x]}
          [:div.grow]
          [button/regular {:on-click on-close} "Avbryt"]
-         [button/danger {:disabled (= initial @st)
-                         #_(not (some true? (vals @st)))
-                         :on-click #(on-save @st)} "Bekreft"]]]]
+         [button/cta {
+                      :disabled (= initial @st)
+                      :on-click #(on-save @st)} "Bekreft"]]]]
       (finally))))
 
 (rf/reg-fx :rent/innlever-fx
@@ -113,7 +113,7 @@
                                   :boats    (:carry %)
                                   :k        (:k data)}])
       ;placed in function to allow displaying changes when hot-reloaded
-      :content-fn #(disp %)}]))
+      :content-fn #(dialog-innlevering %)}]))
 
 (comment
   (do
@@ -530,7 +530,14 @@
                      ico/undo]]]
         [booking.graph/graph dataset toprow st reset-view]))))
 
-(def weather-words ["a" "b" "c"])
+(def weather-words
+  ["Vind"
+   "Sol"
+   "Regn"
+   "Overskyet"
+   "Yr"
+   "Vekslende"])
+
 
 (defn temperatureform-content [{:keys [data on-close uid]}]
   [fork/form
@@ -546,65 +553,48 @@
                           (js/alert (str data))
                           (on-close)))}
    (fn [{:keys [handle-submit form-id values set-values] :as props}]
-     [sc/dropdown-dialog'
-      [:div
-       {:style {:padding          "1rem"
-                :z-index          10
-                :background-color "gray" #_"var(--toolbar)"}}
-       [sc/dialog-title "Overskrift"]
-       [:form
-        {:id        form-id
-         :on-submit handle-submit}
-        [sc/co
-         [sc/row-sc-g2
-          [field/textinput
-           props
-           "Lufttemperatur"
-           :luft]
-          [field/textinput
-           props
-           "Vanntemperatur"
-           :vann]]
+     [sc/dialog-dropdown
 
+      [sc/col-space-8
+       [sc/co
+        {:style {:padding          "1rem"
+                 :background-color "var(--floating)"}}
+        [sc/dialog-title "Overskrift"]
+        [:form
+         {:id        form-id
+          :on-submit handle-submit}
+         [sc/col-space-8
+          [sc/row-sc-g4
 
-         [sc/checkbox-matrix {:style {:background "red"}}
+           [sc/co
+            [field/textinput props "Lufttemperatur" :luft]
+            [field/textinput props "Vanntemperatur" :vann]]
 
-          (into [:<>]
-                (for [e (sort weather-words)]
-                  [hoc.toggles/largeswitch-local'
-                   {:get     #(values e)
-                    :set     #(set-values {e %})
-                    :view-fn (fn [t c v] [sc/row-sc-g2 t
-                                          [(if v sc/text1 sc/text2) c]])
-                    :caption e}]))]
-
-         #_(let [selector (r/atom nil)]
-             [widgets/pillbar
-              {} selector [[:a1 "Vind"]
-                           [:a2 "Sol"]
-                           [:a3 "Regn"]
-                           [:a4 "Overskyet"]
-                           [:a5 "Yr"]
-                           [:a6 "Vekslende"]]])]
-        [sc/row-field
-         [:div.grow]
-         [button/regular {:on-click on-close
-                          :type     :button} "Avbryt"]
-         [button/regular {:type :submit} "Ok"]]]]])])
+           [sc/checkbox-matrix
+            {:style {:padding-top "1rem"}}
+            (into [:<>]
+                  (for [e (sort weather-words)]
+                    [hoc.toggles/largeswitch-local'
+                     {:get     #(values e)
+                      :set     #(set-values {e %})
+                      :view-fn (fn [t c v] [sc/row-sc-g2 t
+                                            [(if v sc/text1 sc/text2) c]])
+                      :caption e}]))]]
+          [sc/row-field
+           [:div.grow]
+           [button/regular {:class    [:danger]
+                            :on-click on-close
+                            :type     :button} "Avbryt"]
+           [button/cta {:type  :submit
+                        :class [:smalls]} "Ok"]]]]]]])])
 
 (defn add-temperature []
   (let [uid @(rf/subscribe [:lab/uid])
         data {}]
-    (rf/dispatch [:modal.slideout/toggle
-                  true
-                  {:data          data
-                   :uid           uid
-                   :on-flag-click (fn [boat-type value]
-                                    (rf/dispatch [:star/write-star-change
-                                                  {:boat-type boat-type
-                                                   :value     value
-                                                   :uid       uid}]))
-                   :content-fn    (fn [e] (temperatureform-content e))}])))
+    (rf/dispatch [:modal.slideout/show
+                  {:data       data
+                   :uid        uid
+                   :content-fn (fn [e] (temperatureform-content e))}])))
 
 (defn graph-2 []
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})

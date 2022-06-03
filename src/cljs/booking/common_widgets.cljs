@@ -573,7 +573,7 @@
   ([header content footer]
    [dialog-template header content footer nil])
   ([header content footer buttons]
-   [sc/dropdown-dialog' {:style {:padding "1rem"}}
+   [sc/dialog-dropdown {:style {:padding "1rem"}}
     [sc/col-space-4
      [sc/col-space-4
       [sc/row {:class []

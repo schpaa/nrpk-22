@@ -264,7 +264,7 @@
         boat-item-id (some-> id name)
         boat-item-id (when (< 3 (count boat-item-id))
                        boat-item-id)]
-    [sc/dropdown-dialog' 
+    [sc/dialog-dropdown
      [:div
       {:style {:padding-bottom  "2rem"
                :z-index          10
