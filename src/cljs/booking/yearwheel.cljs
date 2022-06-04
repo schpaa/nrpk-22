@@ -70,31 +70,29 @@
         [:form
          {:id        form-id
           :on-submit handle-submit}
-         [sc/col {:class [:space-y-8 :w-full]}
+         [sc/co {:class [:space-y-8 :w-full]}
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
            [sc/row-sc-g2-w {:class []}
-            [sc/label-field-col
-             [sc/label "Kategori"]
-             [sci/combobox-example
-              {}
-              {:value     (values :type)
-               :on-change #(tap> %)
-               :class     [:w-auto]}]]
+            [button/combobox
+             "Kategori" #_{:value     (values :type)
+                           :on-change #(tap> %)
+                           :class     [:w-auto]}]
 
             #_[sci/combobox (conj props {:people       sci/people
                                          :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
-            [sci/input props :date [:w-40] "Dato" :date]
-            [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
-            [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]
+            [sci/input props :date [:w-40] "Dato" :date]]
+           [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
+           [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]
 
           [sc/row-ec
-           [hoc.buttons/regular {:type     "button"
+           [button/just-caption {:type     "button"
+                                 :class [:normal]
                                  :on-click #(on-close)} "Avbryt"]
-           [hoc.buttons/cta {:disabled (or (not (empty? errors))
-                                           (not changed?))
-                             :type     "submit"
-                             :on-click #(on-save)} "Lagre"]]]]))]])
+           [button/just-caption {:disabled (or (not (empty? errors)) (not changed?))
+                                 :type     "submit"
+                                 :class [:normal]
+                                 :on-click #(on-save)} "Lagre"]]]]))]])
 
 (defn submit-fn [{:keys [date content id type tldr] :as values}]
   (if id
@@ -116,7 +114,7 @@
 
 (defn edit-event [m]
   (schpaa.style.dialog/open-dialog-newevent
-    {:form      addpost-form
+    {:form      #(addpost-form %)
      :data      m
      :on-submit submit-fn}))
 

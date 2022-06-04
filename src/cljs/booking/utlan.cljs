@@ -66,9 +66,9 @@
            (map f @st))]
         [sc/row-ec {:class [:pb-6x]}
          [:div.grow]
-         [button/just-caption {:class [:regular :normal]
+         [button/just-caption {:class    [:regular :normal]
                                :on-click on-close} "Avbryt"]
-         [button/just-caption {:class [:cta :normal]
+         [button/just-caption {:class    [:cta :normal]
                                :disabled (= initial @st)
                                :on-click #(on-save @st)} "Bekreft"]]]]
       (finally))))
@@ -456,7 +456,7 @@
 
 (defn deleted? [[_ e]] (:deleted e))
 
-(defn ompc [& xs]
+(defn comp-> [& xs]
   (apply comp (reverse xs)))
 
 (o/defstyled panelbuttonx :button
@@ -469,13 +469,25 @@
        :padding-inline "1rem"
        :padding-block  "1rem"}])
 
+;; common graph state
 
+(def initial-st {:days-back-in-time 30
+                 :client-width      0
+                 :offset            0
+                 :delta             0
+                 :xpos              0
+                 :xstart            0
+                 :touchdown         false})
+
+(defonce st (r/atom initial-st))
+
+;;
 
 (defn graph-1 []
   (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
         existing (remove deleted?)
         base (->> (transduce existing conj activity-records)
-                  (group-by (ompc val :timestamp t/instant t/date str)))
+                  (group-by (comp-> val :timestamp t/instant t/date str)))
         dataset (into {}
                       (map
                         (juxt key
@@ -487,107 +499,135 @@
                                                   (+ (or c 0) c')
                                                   (+ (or d 0) d')])
                                                [0 0 0 0] %)
-                                      #(map (ompc val (juxt :adults :juveniles :children (comp count :list))) %)
+                                      #(map (comp-> val (juxt :adults :juveniles :children (comp count :list))) %)
                                       second))))
                       base)]
-    (r/with-let [initial-st {:days-back-in-time 30
-                             :client-width      0
-                             :offset            0
-                             :delta             0
-                             :xpos              0
-                             :xstart            0
-                             :touchdown         false}
-                 st (r/atom initial-st)
-                 days-back-in-time (r/cursor st [:days-back-in-time])
+    (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])
                  reset-view #(reset! st initial-st)]
-      (let [toprow [sc/row-field
-                    [sc/co
-                     [sc/row-sc-g2
-                      [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                            :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                                       :round]} "16"]
-                      [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                            :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                                       :round]} "8"]
-                      [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                                            :class    [(if (= 30 @days-back-in-time) :inverse :regular)
-                                                       :round]} "4"]]
-                     [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]]
+      (let [command-row [sc/row-field
+                         [sc/co
+                          [sc/row-sc-g2
+                           [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                                                 :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                                            :round]} "16"]
+                           [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                                                 :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                                            :round]} "8"]
+                           [button/just-caption {:on-click #(reset! days-back-in-time 30)
+                                                 :class    [(if (= 30 @days-back-in-time) :inverse :regular)
+                                                            :round]} "4"]]
+                          [sc/small2 {:class [:pl-1 :uppercase]} "Uker"]]
 
-                    [:div.grow]
+                         [:div.grow]
 
-                    [button/just-caption {:on-click #(swap! offset inc)
-                                          :class    [:regular
-                                                     :narrow]} "Forrige"]
+                         [button/just-caption {:on-click #(swap! offset inc)
+                                               :class    [:regular
+                                                          :narrow]} "Forrige"]
 
-                    [button/just-caption {:on-click #(reset! offset 1)
-                                          :class    [(if (= 1 @offset) :inverse :regular)
-                                                     :narrow]} "I går"]
+                         [button/just-caption {:on-click #(reset! offset 1)
+                                               :class    [(if (= 1 @offset) :inverse :regular)
+                                                          :narrow]} "I går"]
 
-                    [button/just-icon {:on-click reset-view
-                                       :class    [(if (= 0 @offset) :regular :cta)
-                                                  :round]}
-                     ico/undo]]]
-        [booking.graph/graph dataset toprow st reset-view]))))
+                         [button/just-icon {:on-click reset-view
+                                            :class    [(if (= 0 @offset) :regular :cta)
+                                                       :round]}
+                          ico/undo]]
+            get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
+                                     (get datum c)
+                                     nil))]
+        [booking.graph/graph dataset command-row st reset-view
+         nil
+         (fn draw-func? [dt x _value-and-color-seq max-value]
+           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+                 cnt (get-data-fn dt 0)
+                 _ (tap> (get-data-fn dt 1))
+                 value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
+                                      [(nth (get-data-fn dt 1) 1) "red"]
+                                      [(nth (get-data-fn dt 1) 2) "green"]]]
+             (for [[idx [value color]] (map-indexed vector value-and-color-seq)
+                   :let [offset (* 0.5 (inc idx))]]
+               [:line
+                (conj {:stroke       color
+                       :stroke-width 0.85
+                       :x1           (- x offset) :y1 (- max-value value)
+                       :x2           (- x offset) :y2 max-value}
+                      (when (pos? idx)
+                        {:stroke-width  3
+                         :vector-effect :non-scaling-stroke}))])))]))))
 
 (def weather-words
-  ["Vind"
-   "Sol"
-   "Regn"
-   "Overskyet"
-   "Yr"
-   "Vekslende"])
+  [[0 "Tåke"]
+   [2 "Pent vær"]
+   [2 "Overskyet"]
+   [2 "Lettskyet"]
+   [2 "Skyet"]
+   [1 "Vindstille"]
+   [1 "Vind"]
+   [1 "Bris"]
+   [1 "Kraftig vind"]
+   [3 "Yr"]
+   [3 "Litt nedbør"]
+   [3 "Styrtregn"]])
 
 
 (defn temperatureform-content [{:keys [data on-close uid]}]
-  [fork/form
-   {:initial-values   {:luft ""
-                       :vann ""
-                       :vær  nil}
-    :prevent-default? true
-    :keywordize-keys  true
-    :on-submit        (fn [{:keys [values]}]
-                        (let [data (assoc values
-                                     :timestamp (str (t/now))
-                                     :uid uid)]
-                          (js/alert (str data))
-                          (on-close)))}
-   (fn [{:keys [handle-submit form-id values set-values] :as props}]
-     [sc/dialog-dropdown
+  [sc/dialog-dropdown
+   [fork/form
+    {:initial-values   {:luft "23"
+                        :vann ""
+                        :vær  nil}
+     :prevent-default? true
+     :keywordize-keys  true
+     :on-submit        (fn [{:keys [values]}]
+                         (let [data (assoc values
+                                      :timestamp (str (t/now))
+                                      :uid uid)]
+                           (js/alert (str data))
+                           (on-close)))}
+    (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
+
 
       [sc/col-space-8
-       [sc/co
+       [sc/col-space-8
         {:style {:padding          "1rem"
+
                  :background-color "var(--floating)"}}
-        [sc/dialog-title "Overskrift"]
+        [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
         [:form
          {:id        form-id
           :on-submit handle-submit}
          [sc/col-space-8
-          [sc/row-sc-g4
-
-           [sc/co
-            [field/textinput props "Lufttemperatur" :luft]
-            [field/textinput props "Vanntemperatur" :vann]]
+          [sc/row-sc-g4 {:style {:gap "2rem"}
+                         :class [:items-start]}
+           [sc/col-space-4 {:class [:w-32]}
+            [field/textinput (assoc props
+                               ;:class [:on-bright]
+                               #_#_:handle-change #(let [v (.. % -target -value)]
+                                                     (tap> v)
+                                                     (set-values :luft v))
+                               :values {:luft (:luft values)} #_(values :luft)) "Lufttemp" :luft]
+            [field/textinput props "Vanntemp" :vann]]
 
            [sc/checkbox-matrix
-            {:style {:padding-top "1rem"}}
+            {:style {:padding-topx "1rem"}}
             (into [:<>]
-                  (for [e (sort weather-words)]
-                    [hoc.toggles/largeswitch-local'
+                  (for [[_ e] (group-by first weather-words)
+                        [_ e] e]
+                    ;[l/pre e]
+                    [hoc.toggles/largeswitch-local''
                      {:get     #(values e)
                       :set     #(set-values {e %})
                       :view-fn (fn [t c v] [sc/row-sc-g2 t
-                                            [(if v sc/text1 sc/text2) c]])
+                                            [(if v sc/text1 sc/text0) c]])
                       :caption e}]))]]
           [sc/row-field
            [:div.grow]
-           [button/regular {:class    [:danger]
-                            :on-click on-close
-                            :type     :button} "Avbryt"]
-           [button/cta {:type  :submit
-                        :class [:smalls]} "Ok"]]]]]]])])
+           [button/just-caption {:class    [:regular :normal]
+                                 :on-click on-close
+                                 :type     :button} "Avbryt"]
+           [button/just-caption {:type  :submit
+                                 :class [:cta :normal]} "Ok"]]]]]])]])
 
 (defn add-temperature []
   (let [uid @(rf/subscribe [:lab/uid])
@@ -601,68 +641,89 @@
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})
         existing (remove deleted?)
         base (->> (transduce (comp existing #_(filter (fn [[k v]] (= 2 (:version v))))) conj temperature-records)
-                  (group-by (ompc val :date str #(times.api/format "%s-%s-%s" (subs % 0 4) (subs % 4 6) (subs % 6 8)))))
-        dataset (into {}
-                      (map
-                        (juxt key (ompc val #(map (ompc val (juxt (ompc :luft js/parseInt)
-                                                                  (ompc :vann js/parseInt)
-                                                                  (ompc :vær js/parseInt))) %) first)))
-                      base)]
+                  (group-by (comp-> val :date str #(times.api/format "%s-%s-%s" (subs % 0 4) (subs % 4 6) (subs % 6 8)))))
+        #_#_dataset (into {}
+                          (map
+                            (juxt key (comp-> val #(map (comp-> val (juxt (comp-> :luft js/parseInt)
+                                                                          (comp-> :vann js/parseInt)
+                                                                          (comp-> :vær js/parseInt))) %) first)))
+                          base)]
 
-    (r/with-let [initial-st {:days-back-in-time 30
-                             :client-width      0
-                             :offset            0
-                             :delta             0
-                             :xpos              0
-                             :xstart            0
-                             :touchdown         false}
-                 st (r/atom initial-st)
-                 reset-view #(reset! st initial-st)
+    (r/with-let [
+                 reset-view-fn #(reset! st initial-st)
                  days-back-in-time (r/cursor st [:days-back-in-time])
                  offset (r/cursor st [:offset])]
-      [booking.graph/graph
-       ;dataset
-       {"2022-04-11" [1 [2 3 4 5]]
-        "2022-04-12" [1 [2 3 4 5]]
-        "2022-04-20" [1 [2 3 4 5]]
-        "2022-05-29" [231 [2 3 4 5]]
-        "2022-05-30" [211 [2 3 4 5]]
-        "2022-05-31" [115 [2 3 4 5]]
-        "2022-06-01" [55 [2 3 4 5]]}
-       [sc/row-field
-        [sc/co
-         [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]
-         [sc/row-sc-g2
-          [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                           :round
-                                           :naxrrow]}
-           "16"]
-          [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                           :round
-                                           :narxrow]}
-           "8"]
-          [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                                :class    [(if (= 30 @days-back-in-time) :inverse :regular)
-                                           :round
-                                           :naxrrow]}
-           "4"]]]
-        [:div.grow]
-        [button/icon-and-caption
-         {:on-click add-temperature
-          :class    [:cta]}
-         ico/plus [:div.truncate "Ny temperatur"]]
+      (let [command-row [sc/row-field
+                         [sc/co
+                          [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]
+                          [sc/row-sc-g2
+                           [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                                                 :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                                            :round]}
 
-        [button/just-caption {:on-click #(reset! offset 1)
-                              ;:style {:box-shadow "var(--shadow-1)"}
-                              :class    [(if (= 1 @offset) :inverse :regular)
-                                         :narrow]} "I går"]
-        [button/just-icon {:on-click reset-view
-                           :class    [(if (= 0 @offset) :regular :cta)
-                                      :round]} ico/undo]]
-       st
-       reset-view])))
+                            "16"]
+                           [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                                                 :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                                            :round]}
+                            "8"]
+                           [button/just-caption {:on-click #(reset! days-back-in-time 30)
+                                                 :class    [(if (= 30 @days-back-in-time) :inverse :regular)
+                                                            :round]}
+
+                            "4"]]]
+                         [:div.grow]
+                         [button/icon-and-caption
+                          {:on-click add-temperature
+                           :class    [:cta]}
+                          ico/plus [:div.truncate "Ny temperatur"]]
+
+                         [button/just-caption {:on-click #(reset! offset 1)
+                                               ;:style {:box-shadow "var(--shadow-1)"}
+                                               :class    [(if (= 1 @offset) :inverse :regular)
+                                                          :narrow]} "I går"]
+                         [button/just-icon {:on-click reset-view-fn
+                                            :class    [(if (= 0 @offset) :regular :cta)
+                                                       :round]} ico/undo]]
+            dataset {"2022-04-11" [11 10]
+                     "2022-04-12" [13 10]
+                     "2022-05-20" [15 10]
+                     "2022-05-29" [23 14]
+                     "2022-05-30" [21 15]
+                     "2022-05-31" [11 16]
+                     "2022-06-01" [15 17]}
+            get-data-fn (fn [dt] (when-some [datum (get dataset dt)]
+                                   datum))]
+        [booking.graph/graph
+         dataset
+         command-row
+         st
+         reset-view-fn
+         nil
+         (fn draw-func? [dt x _value-and-color-seq max-value]
+           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+                 elements-in-vector (get-data-fn dt)
+                 [cnt a] elements-in-vector
+                 value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
+                                      [10 "blue"]
+                                      [15 #_(rand-int 50) "red"]
+                                      [20 #_(rand-int 50) "green"]
+                                      [25 #_(rand-int 50) "orange"]]
+                 offset (* (/ 1 (max 1 (count value-and-color-seq))))
+                 half-offset (/ offset -2)]
+
+             (for [[idx [value color]] (map-indexed vector value-and-color-seq)
+                   :let [x' (if (pos? idx)
+                                (+ x (* offset idx) half-offset)
+                                x)]]
+               [:line
+                (conj {:stroke       color
+                       :stroke-width 0.85
+                       :x1           x' :y1 (- max-value value)
+                       :x2           x' :y2 max-value}
+                      (when (pos? idx)
+                        {:vector-effect :non-scaling-stroke
+                         :stroke-width  3}))])))]))))
+
 
 (defn always-panel []
   [:<>

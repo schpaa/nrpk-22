@@ -314,21 +314,17 @@
                 :field-name]
                [field/textinput
                 {:cursor field-3
-                 :errors      {:field-name ["mangler"]}}
+                 :xerrors      {:field-name ["mangler"]}}
                 "Årsak"
                 :field-name]
                [field/textinput
-                {:errors      {:field-name ["?"]}
-                 :placeholder ""}
+                {:xerrors      {:field-name ["?"]}
+                 :placeholder "tests"}
                 "Antall"
                 :field-name]
 
-               [sc/col
-                {:class [:space-y-1]}
-                [sc/row {:class [:gap-x-1]
-                         :style {:align-items :baseline}}
-                 [sc/label "Komboboks"]]
-                [sci/combobox-example {:class [:on-bright]}]]]
+               [field/combobox "Komboboks"]]
+
               ;[:div {:style {:font-size "60%"}} [l/pre r]]
               [sc/text "Move along nothing to see"]]]]))
 

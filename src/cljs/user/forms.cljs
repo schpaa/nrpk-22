@@ -14,13 +14,13 @@
   [togglepanel :a/a1 "Generelle opplysninger"
    (fn [] [sc/row-sc-g4-w
            [sc/row-sc-g4-w
-            [input props :text {:class [:w-56x]} "Fullt navn" :navn]
-            [input props :text {:class [:w-32]} "Alias" :alias]]
+            [input props :text {:class [:on-bright :w-56x]} "Fullt navn" :navn]
+            [input props :text {:class [:on-bright :w-32]} "Alias" :alias]]
            [sc/row-sc-g4-w
-            [input props :text {:class [:w-32]} "Telefon" :telefon]
-            [input props :text {:class [:w-64x]} "E-post" :epost]]
+            [input props :text {:class [:on-bright :w-32]} "Telefon" :telefon]
+            [input props :text {:class [:on-bright :w-64x]} "E-post" :epost]]
 
-           [sci/select props :våttkort [] "Våttkort" :våttkort "Velg"
+           [sci/select props :våttkort {:class [:on-bright]} "Våttkort" :våttkort "Velg"
             {"0" "Jeg har ikke våttkort"
              "1" "Introkurs 3 timer"
              "2" "Grunnkurs 16 timer"
@@ -32,7 +32,7 @@
    (fn []
      [:<>
       [:div.flex.gap-4.flex-wrap
-       [sci/input props :text {:class [:w-32]} "Våttkort-nr" :våttkortnr]]
+       [sci/input props :text {:class [:on-bright :w-32]} "Våttkort-nr" :våttkortnr]]
       [:div.flex.gap-4.flex-wrap
        [hoc.buttons/checkbox (assoc props :handle-change
                                           #(let [value (-> % .-target .-checked)]
@@ -48,10 +48,10 @@
      [sc/col-space-8
 
       [sc/row-sc-g4-w
-       [input props :text {:class [:w-32]} "Medlem fra år" :medlem-fra-år]
-       [input props :text {:class [:w-32]} "Fødselsår" :fødselsår]
-       [input props :text {:class [:w-32]} "Førstehjelp" :årstall-førstehjelpskurs]
-       [input props :text {:class [:w-32]} "Livredning" :årstall-livredningskurs]]
+       [input props :text {:class [:on-bright :w-32]} "Medlem fra år" :medlem-fra-år]
+       [input props :text {:class [:on-bright :w-32]} "Fødselsår" :fødselsår]
+       [input props :text {:class [:on-bright :w-32]} "Førstehjelp" :årstall-førstehjelpskurs]
+       [input props :text {:class [:on-bright :w-32]} "Livredning" :årstall-livredningskurs]]
 
       [sc/row-sc-g4-w
        [hoc.buttons/checkbox props [] "Jeg arbeider som instruktør for NRPK" :instruktør]
