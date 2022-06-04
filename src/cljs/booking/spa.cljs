@@ -440,7 +440,7 @@
         {;:panel            booking.utlan/panel
          :headline-plugin booking.utlan/headline-plugin
          :always-panel    booking.utlan/always-panel
-         :render          #(booking.utlan/render uid)}]))
+         :render          #() #_ #(booking.utlan/render uid)}]))
 
    :r.debug              (fn [r] (page r {:always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}))

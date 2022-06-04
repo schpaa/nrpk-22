@@ -9,6 +9,7 @@
 (def trash [:> outline/TrashIcon])
 (def trash-filled [:> solid/TrashIcon]) 
 (def check [:> solid/CheckIcon])
+(def bookmark [:> outline/BookmarkIcon])
 (def eye [:> outline/EyeIcon])
 (def eye-off [:> outline/EyeOffIcon])
 (def pencil [:> outline/PencilIcon])

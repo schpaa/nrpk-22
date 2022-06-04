@@ -199,16 +199,19 @@
         ico/stjerne])]))
 
 (defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
-  [sc/row-field {:style {:width "100%"}}
-   [sc/col {:class [:truncate :space-y-px :w-full :align-center]}
+  [:div.flex.justify-between.w-full
+   {;:class [:truncate]
+    :xstyle {:width "100%"}}
+   [sc/col {:class [:space-y-px :xw-full :xalign-center]}
     (when kind
-      [sc/title1 {:class []} (schpaa.components.views/normalize-kind kind)])
-    [sc/row-sc-g2
-     (when (or stability expert) [stability-expert m])
-     [sc/text2 {:style {:overflow      :hidden
-                        :text-overflow :ellipsis
-                        :white-space   :nowrap}} navn]
-     [:div.grow]]]
+      (schpaa.components.views/normalize-kind kind))
+    [sc/row-sc-g2 {:class [:w-56]}
+     (when (or stability expert)
+       [stability-expert m])
+     ;[:div.grow]
+     [sc/text2 {:class [:shrink-1x :w-32x :truncate]} #_{:style {:overflow      :hidden
+                                                                 :text-overflow :ellipsis
+                                                                 :white-space   :nowrap}} (str navn navn navn)]]]
    [favourites-star'
     {:on-flag-click (fn [boat-type value uid]
                       (rf/dispatch [:star/write-star-change
@@ -260,9 +263,9 @@
                                                        :uid       uid}]))}
      m]]])
 
-(defn trashcan' [{:keys [on-click deleted?]} caption]
+(defn trashcan' [{:keys [smallest on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
-    (if mobile?
+    (if (or smallest mobile?)
       [button/just-icon
        {:on-click on-click 
         :class    [(if deleted? :danger-outline :danger)
@@ -277,10 +280,10 @@
        (if deleted? ico/undo ico/trash)
        caption])))
 
-(defn in-out [all-returned? {:keys [on-click deleted?]} caption]
+(defn in-out [all-returned? {:keys [on-click deleted? smallest]} caption]
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
         icon (if all-returned? ico/going-out ico/coming-in)]
-    (if mobile?
+    (if (or smallest mobile?)
       [button/just-icon
        {:on-click on-click
         :class    [(when deleted? :frame)
@@ -306,7 +309,7 @@
        ico/undo
        ico/trash)]))
 
-(defn edit [attr on-click {:keys [deleted] :as m}]
+(defn edit [attr on-click {:keys [deleted ] :as m}]
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
         attr (conj
                attr
@@ -319,7 +322,7 @@
                 :on-click #(on-click m)})]
     (if deleted
       [:div.w-8]
-      (if mobile?
+      (if (or (:smallest attr) mobile?)
         [button/just-icon
          attr
          ico/pencil]

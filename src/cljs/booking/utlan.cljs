@@ -240,6 +240,7 @@
      (if edit-mode?
        [widgets/trashcan'
         {:deleted? deleted
+         :smallest true
          :class    [:border-red]
          :on-click (fn [] (db/database-update
                             {:path  ["activity-22" (name k)]
@@ -249,11 +250,13 @@
        (when-not deleted
          [widgets/in-out
           all-returned?
-          {:on-click #(innlevering {:k         k
+          {:smallest true
+           :on-click #(innlevering {:k         k
                                     :timestamp timestamp
                                     :boats     list})}
           (if all-returned? "ut" "inn")]))
-     [widgets/edit {:disabled false}
+     [widgets/edit {:smallest true
+                    :disabled false}
       #(rf/dispatch [:lab/toggle-boatpanel [k m]])
       m]]))
 
@@ -453,21 +456,20 @@
 
    [hoc.toggles/switch-local (r/cursor settings [:rent/show-deleted]) "vis slettede"]])
 
+;; database primitives
 
 (defn deleted? [[_ e]] (:deleted e))
 
+(defn inactive? [[_ e]] (false? (:active e)))
+
+(def existing (remove deleted?))
+
+(def active (remove inactive?))
+
+;; experimental utils
+
 (defn comp-> [& xs]
   (apply comp (reverse xs)))
-
-(o/defstyled panelbuttonx :button
-  [:& {:position       :relative
-       :min-height     "12rem"
-       :font-size      "200%"
-       :outline        "1px solid red"
-       :background     "blue"
-       :color          "green"
-       :padding-inline "1rem"
-       :padding-block  "1rem"}])
 
 ;; common graph state
 
@@ -541,7 +543,7 @@
          (fn draw-func? [dt x _value-and-color-seq max-value]
            (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
                  cnt (get-data-fn dt 0)
-                 _ (tap> (get-data-fn dt 1))
+                 ;_ (tap> (get-data-fn dt 1))
                  value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
                                       [(nth (get-data-fn dt 1) 1) "red"]
                                       [(nth (get-data-fn dt 1) 2) "green"]]]
@@ -571,63 +573,75 @@
    [3 "Styrtregn"]])
 
 
-(defn temperatureform-content [{:keys [data on-close uid]}]
-  [sc/dialog-dropdown
-   [fork/form
-    {:initial-values   {:luft "23"
-                        :vann ""
-                        :vær  nil}
-     :prevent-default? true
-     :keywordize-keys  true
-     :on-submit        (fn [{:keys [values]}]
-                         (let [data (assoc values
-                                      :timestamp (str (t/now))
-                                      :uid uid)]
-                           (js/alert (str data))
-                           (on-close)))}
-    (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
-
-
-      [sc/col-space-8
-       [sc/col-space-8
-        {:style {:padding          "1rem"
-
-                 :background-color "var(--floating)"}}
-        [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
-        [:form
-         {:id        form-id
-          :on-submit handle-submit}
+(defn temperatureform-content [{:keys [data on-close uid write-fn]}]
+  (let [validation-fn
+        (fn [{:keys [vann luft vær] :as values}]
+          (tap> values)
+          (into {}
+                (remove (comp nil? val)
+                        {:vann (cond-> nil
+                                 (empty? vann) ((fnil conj []) "mangler")
+                                 (not= vann (str (js/parseFloat vann))) ((fnil conj []) "er feil"))
+                         :luft (cond-> nil
+                                 (empty? luft) ((fnil conj []) "mangler")
+                                 (not= luft (str (js/parseFloat luft))) ((fnil conj []) "er feil"))
+                         :vær  (cond-> nil
+                                 (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))]
+    [fork/form
+     {:initial-values   {:luft nil
+                         :vann nil
+                         :vær  nil}
+      :prevent-default? true
+      :keywordize-keys  true
+      :validation       validation-fn
+      :on-submit        (fn [{:keys [values]}]
+                          (let [data (assoc values
+                                       :timestamp (str (t/now))
+                                       :uid uid)]
+                            (when write-fn
+                              (write-fn data))
+                            (on-close)))}
+     (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
+       [sc/dialog-dropdown
+        [sc/col-space-8
          [sc/col-space-8
-          [sc/row-sc-g4 {:style {:gap "2rem"}
-                         :class [:items-start]}
-           [sc/col-space-4 {:class [:w-32]}
-            [field/textinput (assoc props
-                               ;:class [:on-bright]
-                               #_#_:handle-change #(let [v (.. % -target -value)]
-                                                     (tap> v)
-                                                     (set-values :luft v))
-                               :values {:luft (:luft values)} #_(values :luft)) "Lufttemp" :luft]
-            [field/textinput props "Vanntemp" :vann]]
-
-           [sc/checkbox-matrix
-            {:style {:padding-topx "1rem"}}
-            (into [:<>]
-                  (for [[_ e] (group-by first weather-words)
-                        [_ e] e]
-                    ;[l/pre e]
-                    [hoc.toggles/largeswitch-local''
-                     {:get     #(values e)
-                      :set     #(set-values {e %})
-                      :view-fn (fn [t c v] [sc/row-sc-g2 t
-                                            [(if v sc/text1 sc/text0) c]])
-                      :caption e}]))]]
-          [sc/row-field
-           [:div.grow]
-           [button/just-caption {:class    [:regular :normal]
-                                 :on-click on-close
-                                 :type     :button} "Avbryt"]
-           [button/just-caption {:type  :submit
-                                 :class [:cta :normal]} "Ok"]]]]]])]])
+          {:style {:padding          "1rem"
+                   :background-color "var(--floating)"}}
+          [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
+          [:form
+           {:id        form-id
+            :on-submit handle-submit}
+           [sc/col-space-8
+            [sc/row-sc-g4 {:style {:gap "2rem"}
+                           :class [:items-start]}
+             [sc/col-space-4 {:class [:w-32]}
+              [field/textinput (assoc props
+                                 :type "number"
+                                 :values {:luft (:luft values)}) "Lufttemp" :luft]
+              [field/textinput (assoc props
+                                 :type "number") "Vanntemp" :vann]]
+             [sc/checkbox-matrix
+              {:style {:padding-topx "1rem"}}
+              (into [:<>]
+                    (for [[_ e] (group-by first weather-words)
+                          [_ e] e]
+                      [hoc.toggles/largeswitch-local''
+                       {:get     #(get-in values [:vær e])
+                        :set     #(do
+                                    (tap> e)
+                                    (set-values (assoc-in values [:vær e] %)))
+                        :view-fn (fn [t c v]
+                                   [sc/row-sc-g2 t
+                                    [(if v sc/text1 sc/text0) c]])
+                        :caption e}]))]]
+            [sc/row-field
+             [:div.grow]
+             [button/just-caption {:class    [:regular :normal]
+                                   :on-click on-close
+                                   :type     :button} "Avbryt"]
+             [button/just-caption {:type     :submit
+                                   :disabled (not (empty? (validation-fn values)))
+                                   :class    [:cta :normal]} "Lagre"]]]]]]])]))
 
 (defn add-temperature []
   (let [uid @(rf/subscribe [:lab/uid])
@@ -635,128 +649,151 @@
     (rf/dispatch [:modal.slideout/show
                   {:data       data
                    :uid        uid
-                   :content-fn (fn [e] (temperatureform-content e))}])))
+                   :write-fn   #(let [data (-> %
+                                               (assoc :version booking.data/TEMPERATURE-VERSION)
+                                               (update :luft js/parseFloat)
+                                               (update :vann js/parseFloat))]
+                                  (db/database-push {:path ["temperature"]
+                                                     :value data}))
+                   :content-fn #(temperatureform-content %)}])))
+
+(def graph-2-f
+  (juxt key (comp-> val #(map (comp-> val (juxt :luft
+                                                :vann
+                                                #_(comp-> :vær js/parseInt))) %) first)))
 
 (defn graph-2 []
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})
-        existing (remove deleted?)
-        base (->> (transduce (comp existing #_(filter (fn [[k v]] (= 2 (:version v))))) conj temperature-records)
-                  (group-by (comp-> val :date str #(times.api/format "%s-%s-%s" (subs % 0 4) (subs % 4 6) (subs % 6 8)))))
-        #_#_dataset (into {}
-                          (map
-                            (juxt key (comp-> val #(map (comp-> val (juxt (comp-> :luft js/parseInt)
-                                                                          (comp-> :vann js/parseInt)
-                                                                          (comp-> :vær js/parseInt))) %) first)))
-                          base)]
+        base (transduce (comp existing
+                              active
+                              (filter (fn [[_ {:keys [version]}]]
+                                        (tap>
+                                          [version
+                                           booking.data/TEMPERATURE-VERSION
+                                           (compare version booking.data/TEMPERATURE-VERSION)])
+                                        (some #{(compare version booking.data/TEMPERATURE-VERSION)} [0 1]))))
+                        conj temperature-records)
+        grouped-base (group-by (comp-> val :timestamp t/instant t/date str) base)
+        dataset (into {} (map graph-2-f) grouped-base)]
 
-    (r/with-let [
-                 reset-view-fn #(reset! st initial-st)
-                 days-back-in-time (r/cursor st [:days-back-in-time])
-                 offset (r/cursor st [:offset])]
-      (let [command-row [sc/row-field
-                         [sc/co
-                          [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]
-                          [sc/row-sc-g2
-                           [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                                 :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                                            :round]}
+    [:<>
+     ;[l/pre grouped-base]
 
-                            "16"]
-                           [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                                 :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                                            :round]}
-                            "8"]
-                           [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                                                 :class    [(if (= 30 @days-back-in-time) :inverse :regular)
-                                                            :round]}
+     (r/with-let [reset-view-fn #(reset! st initial-st)
+                  days-back-in-time (r/cursor st [:days-back-in-time])
+                  offset (r/cursor st [:offset])]
+       (let [command-row [sc/row-field
+                          [sc/co
+                           [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]
+                           [sc/row-sc-g2
+                            [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                                                  :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                                             :round]}
 
-                            "4"]]]
-                         [:div.grow]
-                         [button/icon-and-caption
-                          {:on-click add-temperature
-                           :class    [:cta]}
-                          ico/plus [:div.truncate "Ny temperatur"]]
+                             "16"]
+                            [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                                                  :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                                             :round]}
+                             "8"]
+                            [button/just-caption {:on-click #(reset! days-back-in-time 30)
+                                                  :class    [(if (= 30 @days-back-in-time) :inverse :regular)
+                                                             :round]}
 
-                         [button/just-caption {:on-click #(reset! offset 1)
-                                               ;:style {:box-shadow "var(--shadow-1)"}
-                                               :class    [(if (= 1 @offset) :inverse :regular)
-                                                          :narrow]} "I går"]
-                         [button/just-icon {:on-click reset-view-fn
-                                            :class    [(if (= 0 @offset) :regular :cta)
-                                                       :round]} ico/undo]]
-            dataset {"2022-04-11" [11 10]
-                     "2022-04-12" [13 10]
-                     "2022-05-20" [15 10]
-                     "2022-05-29" [23 14]
-                     "2022-05-30" [21 15]
-                     "2022-05-31" [11 16]
-                     "2022-06-01" [15 17]}
-            get-data-fn (fn [dt] (when-some [datum (get dataset dt)]
-                                   datum))]
-        [booking.graph/graph
-         dataset
-         command-row
-         st
-         reset-view-fn
-         nil
-         (fn draw-func? [dt x _value-and-color-seq max-value]
-           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
-                 elements-in-vector (get-data-fn dt)
-                 [cnt a] elements-in-vector
-                 value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
-                                      [10 "blue"]
-                                      [15 #_(rand-int 50) "red"]
-                                      [20 #_(rand-int 50) "green"]
-                                      [25 #_(rand-int 50) "orange"]]
-                 offset (* (/ 1 (max 1 (count value-and-color-seq))))
-                 half-offset (/ offset -2)]
+                             "4"]]]
+                          [:div.grow]
+                          [button/icon-and-caption
+                           {:on-click add-temperature
+                            :class    [:cta]}
+                           ico/plus [:div.truncate "Ny temperatur"]]
 
-             (for [[idx [value color]] (map-indexed vector value-and-color-seq)
-                   :let [x' (if (pos? idx)
-                                (+ x (* offset idx) half-offset)
-                                x)]]
-               [:line
-                (conj {:stroke       color
-                       :stroke-width 0.85
-                       :x1           x' :y1 (- max-value value)
-                       :x2           x' :y2 max-value}
-                      (when (pos? idx)
-                        {:vector-effect :non-scaling-stroke
-                         :stroke-width  3}))])))]))))
+                          [button/just-caption {:on-click #(reset! offset 1)
+                                                ;:style {:box-shadow "var(--shadow-1)"}
+                                                :class    [(if (= 1 @offset) :inverse :regular)
+                                                           :narrow]} "I går"]
+                          [button/just-icon {:on-click reset-view-fn
+                                             :class    [(if (= 0 @offset) :regular :cta)
+                                                        :round]} ico/undo]]
+             #_#_dataset {"2022-04-11" [11 10]
+                          "2022-04-12" [13 10]
+                          "2022-05-20" [15 10]
+                          "2022-05-29" [nil 14]
+                          "2022-05-30" [21 nil]
+                          "2022-05-31" [11 16]
+                          "2022-06-01" [15 17]}
+             get-data-fn (fn [dt]
+                           (when-some [datum (get dataset dt)]
+                             datum))]
+         [booking.graph/graph
+          dataset
+          command-row
+          st
+          reset-view-fn
+          nil
+          (fn draw-func! [dt x _value-and-color-seq max-value]
+            (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+                  [cnt v2] (get-data-fn dt)
+                  value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
+                                       [v2 "orange"]
+                                       [0 "red"]
+                                       [0 "green"]]
 
+                  offset (* (/ 1 (max 1 (count value-and-color-seq))))
+                  half-offset (/ offset -2)]
+
+              (for [[idx [value color]] (let [[h & t] (map-indexed vector value-and-color-seq)]
+                                          (conj t h))
+                    :let [x' (if (pos? idx)
+                               ;subtract 0.5 because the point is already at center
+                               (+ x -0.4 (* offset idx) half-offset)
+                               x)]]
+                [:line
+                 (conj {:stroke       color
+                        :stroke-width 0.85
+                        :x1           x' :y1 (- max-value value)
+                        :x2           x' :y2 max-value}
+                       (when (pos? idx)
+                         {:vector-effect :non-scaling-stroke
+                          :stroke-width  3}))])))]))]))
 
 (defn always-panel []
-  [:<>
-   [widgets/disclosure
-    {}
-    :aaaa
-    "Statistikk"
-    [graph-1]]
-   [widgets/disclosure
-    {}
-    :bbbb
-    "Temperatur"
-    [graph-2]]
+  [sc/row-field
+   [sc/col {:style {:width "100%"}}
+    [sc/col-space-8
+     [widgets/disclosure
+      {}
+      :statistikk
+      "Statistikk"
+      [graph-1]]
+     [widgets/disclosure
+      {}
+      :temperatur
+      "Temperatur"
+      [graph-2]]
 
-   [sc/row-center {:class [:sticky :pointer-events-none :noprint]
-                   :style {:z-index 10
-                           :top     "8rem"}}
-    [sc/row-center
-     [sc/col-space-8
-      {:class [:pointer-events-auto]}
-      [widgets/pillbar
-       {:class [:large]
-        :style {:box-shadow "var(--shadow-2)"}}
-       selector
-       [[:b "Ute"]
-        [:a "Alle"]]]
+     [sc/row-center {:class [:sticky :pointer-events-none :noprint]
+                     :style {:z-index 10
+                             :top     "8rem"}}
       [sc/row-center
+       [sc/col-space-8
+        {:class [:pointer-events-auto]}
+        [widgets/pillbar
+         {:class [:large]
+          :style {:box-shadow "var(--shadow-2)"}}
+         selector
+         [[:b "Ute"]
+          [:a "Alle"]]]
+        [sc/row-center
 
-       [button/just-icon
-        {:style    {:box-shadow "var(--shadow-2)"}
-         :class    [:large :cta]
-         :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
-        ico/plus]]]]]])
+         [button/just-icon
+          {:style    {:box-shadow "var(--shadow-2)"}
+           :class    [:large :cta]
+           :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
+          ico/plus]]]]]
+     (booking.utlan/render nil)]]
+   [:div [:div.sticky.top-16
+          {:style {:height   "min-content"
+                   :xoutline "1px dashed red"}}
+          [booking.modals.boatinput/boatpanel-window nil]]]])
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]

@@ -50,16 +50,20 @@
             :background-color "var(--brand1)"}
     [:&:active:enabled {:background-color "var(--orange-8)"}]]
 
-   [:&.remove {:color            "var(--red-1)"
-               :background-color "var(--red-7)"}
-    [:&:active:enabled {:color      "var(--red-1)"
-                        :background "var(--red-8)"}]]
-   [:&:disabled {:opacity    0.2
-                 :color      "var(--text1)"
-                 :background "var(--toolbar-)"}]
+   [:&.await {:color            "var(--gray-0)"
+              :background-color "var(--brand2)"}
+    [:&:active:enabled {:background-color "var(--orange-8)"}]]]
 
-   [:&:active:enabled {:background "var(--green-7)"
-                       :color      "var(--green-1)"}]])
+  [:&.remove {:color            "var(--red-1)"
+              :background-color "var(--red-7)"}
+   [:&:active:enabled {:color      "var(--red-1)"
+                       :background "var(--red-8)"}]]
+  [:&:disabled {:opacity    0.2
+                :color      "var(--text1)"
+                :background "var(--toolbar-)"}]
+
+  [:&:active:enabled {:background "var(--green-7)"
+                      :color      "var(--green-1)"}])
 
 (o/defstyled numberpad-button :button
   [:& :w-full :h-full :duration-100
@@ -116,11 +120,11 @@
    {:display               :grid
     :column-gap            "var(--size-1)"
     :row-gap               "var(--size-1)"
-    :min-width             "24rem"
+    :min-width             "20rem"
     :max-width             "24rem"
     :height                "100%"
-    :grid-template-columns "repeat(5,1fr)"
-    :grid-template-rows    "4rem 4rem auto auto repeat(4,3.5rem)"}
+
+    :grid-template-rows    "4rem 4rem auto auto repeat(4,4rem)"}
    #_[:&.mobile {:grid-template-areas [["check-a  child    juvenile moon        adult"]
                                        ["check-a  child    juvenile key         adult"]
                                        ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
@@ -130,22 +134,24 @@
                                        ["complete       .     numpad   numpad   numpad"]
                                        ["complete .   numpad   numpad   numpad"]]}]
 
-   [:&.right-side {:grid-template-areas [["check-a  child    juvenile moon        adult"]
+   [:&.right-side {:grid-template-columns "min-content repeat(4,1fr)"
+                   :grid-template-areas [["check-a  child    juvenile moon        adult"]
                                          ["check-a  child    juvenile key         adult"]
                                          ["check-b  aboutyou aboutyou aboutyou    aboutyou"]
                                          ["check-c  boats     boats    boats     boats"]
                                          ["complete complete  numpad   numpad   numpad"]
                                          ["complete complete  numpad   numpad   numpad"]
-                                         ["complete complete  numpad   numpad   numpad"]
-                                         ["complete complete  numpad   numpad   numpad"]]}]
-   [:&.left-side {:grid-template-areas [["adult    moon    juvenile child      check-a"]
+                                         ["await await  numpad   numpad   numpad"]
+                                         ["await await  numpad   numpad   numpad"]]}]
+   [:&.left-side {:grid-template-columns "repeat(4,1fr) min-content"
+                  :grid-template-areas [["adult    moon    juvenile child      check-a"]
                                         ["adult    key     juvenile child      check-a"]
                                         ["aboutyou  aboutyou  aboutyou   aboutyou  check-b"]
                                         ["boats     boats     boats      boats     check-c"]
                                         ["numpad    numpad    numpad     complete  complete"]
                                         ["numpad    numpad    numpad     complete  complete"]
-                                        ["numpad    numpad    numpad     complete  complete"]
-                                        ["numpad    numpad    numpad     complete  complete"]]}]])
+                                        ["numpad    numpad    numpad     await await"]
+                                        ["numpad    numpad    numpad     await await"]]}]])
 
 (o/defstyled pad :div
   [:div :flex-center

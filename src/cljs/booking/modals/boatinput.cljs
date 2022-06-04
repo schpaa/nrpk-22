@@ -81,7 +81,7 @@
     (reset! c-field (subs (str @c-field) 0 length))
     (let [has-focus? (= @c-focus fieldname)
           textinput (fn [v]
-                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1
+                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1x
                        [bis/input-caption v (when has-focus? [:span.blinking-cursor.pb-1 "|"])]])]
       [:div.relative.h-16.shrink-0
        {:on-click #()
@@ -404,9 +404,11 @@
 
 (defn- info-panel [has-focus? {:keys [new number navn] :as boat}]
   [:div.p-1
-   {:style (when (and has-focus? boat)
-             {:background-color "var(--selected)"
-              :color            "var(--selected-copy)"})
+   {:style (conj {:width    "100%"
+                  :overflow :clip}
+                 (when (and has-focus? boat)
+                   {:background-color "var(--selected)"
+                    :color            "var(--selected-copy)"}))
     :class [:flex :items-end :h-16]}
    (cond
      (some #{@c-textinput-boat} (map str (keep :number (filter :new @c-boat-list))))
@@ -422,22 +424,23 @@
      [f number navn]
 
      :else
-     [sc/row-sc-g2 {:style {:width           "100%"
-                            :padding-inline  "4px"
-                            :justify-content :space-between}}
-      [widgets/stability-name-category boat]
-      (r/with-let [boat-type (:boat-type boat)
-                   uid (rf/subscribe [:lab/uid])
-                   bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
-                   ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
-        #_[widgets/favourites-star
-           {:bt-data       bt-data
-            :ex-data       ex-data
-            :on-flag-click (fn [boat-type value]
-                             (rf/dispatch [:star/write-star-change
-                                           {:boat-type boat-type
-                                            :value     value
-                                            :uid       @uid}]))}])]
+     #_[sc/row-sc-g2 {:class [:truncate]
+                      :style {:width           "auto"
+                              :padding-inline  "4px"
+                              :justify-content :space-between}}]
+     [widgets/stability-name-category boat]
+     #_(r/with-let [boat-type (:boat-type boat)
+                    uid (rf/subscribe [:lab/uid])
+                    bt-data (db/on-value-reaction {:path ["boat-brand" boat-type "star-count"]})
+                    ex-data (db/on-value-reaction {:path ["users" @uid "starred" boat-type]})]
+         #_[widgets/favourites-star
+            {:bt-data       bt-data
+             :ex-data       ex-data
+             :on-flag-click (fn [boat-type value]
+                              (rf/dispatch [:star/write-star-change
+                                            {:boat-type boat-type
+                                             :value     value
+                                             :uid       @uid}]))}])
      #_(if (or (:selected @st) boat)
          (do
            (if (:selected @st)
@@ -471,20 +474,23 @@
         boat (lookup (or (:selected @st) @c-textinput-boats))]
     [sc/surface-ab
      {:on-click #(reset! c-focus :boats)
-      :class    [:h-full (when has-focus? :focused) :overflow-clip]
+      :class    [:col-span-4
+                 :h-full (when has-focus? :focused)]
       :style    {:display               :grid
+                 :width                 "auto"
                  :column-gap            "var(--size-4)"
                  :row-gap               "var(--size-4)"
                  :grid-template-columns "repeat(4,1fr)"}}
-     [sc/co {:class [:col-span-4]
-             :style {:grid-column "1/-1"
+     [sc/co {:style {:grid-column "1/-1"
                      :grid-row    "1/2"}}
-      [info-panel has-focus? (or boat
-                                 (if @c-selected
-                                   {:new    true
-                                    :number @c-selected
-                                    :navn   "Ny båt"}
-                                   nil))]
+      [info-panel
+       has-focus?
+       (or boat
+           (if @c-selected
+             {:new    true
+              :number @c-selected
+              :navn   "Ny båt"}
+             nil))]
 
       [:div {:style {:width                 :100%
                      :column-gap            "var(--size-2)"
@@ -533,6 +539,21 @@
       :styles   (when ok? {:color      "var(--gray-1)"
                            :background "var(--gray-6)"})}
      (sc/icon-huge ico/nextImage)]))
+
+(defn await [st]
+  (let [ok? (rf/subscribe [::completed])]
+    [bis/push-button
+     {:on-click #(js/alert "put registration on hold, clear the form") #_#(when @(rf/subscribe [::completed])
+                                                                            (actions/confirm-command st)
+                                                                            (cmd/reset-command st))
+      :disabled (not @ok?)
+      :class    [:await]
+      :style    (conj {:border-radius "var(--radius-0)"
+                       :width         "100%"
+                       :height        "100%"})}
+
+     [sc/row-sc-g2
+      (sc/icon-huge ico/bookmark)]]))
 
 (defn complete [st]
   (let [ok? (rf/subscribe [::completed])]
@@ -646,15 +667,15 @@
     (r/create-class
       {:component-did-update
        (fn [this old-argv old-state snapshot]
-         (tap> {:component-did-update this
-                :old-argv             old-argv
-                :old-state            old-state
-                :datas                datas
-                :snapshot             snapshot}))
+         #_(tap> {:component-did-update this
+                  :old-argv             old-argv
+                  :old-state            old-state
+                  :datas                datas
+                  :snapshot             snapshot}))
 
        :component-did-mount
        (fn [_]
-         (if-let [[k v] datas]
+         (if-let [[_k v] datas]
            (do
              (reset! c-adults (:adults v 0))
              (reset! c-juveniles (:juveniles v 0))
@@ -703,20 +724,22 @@
                       (let [f (fn [[area-name component]]
                                 [:div {:style {:grid-area area-name}} component])
                             pointer (fn [complete?]
-                                      [:div.flex.items-center.justify-center
-                                       {:class [:h-full]}
-                                       [sc/icon-large
-                                        {:style (conj {:color "var(--text1)"}
-                                                      (when-not complete?
-                                                        {;:animation-duration        "2s"
-                                                         ;:animation-iteration-count "infinite"
-                                                         ;:animation-delay           "4s"
-                                                         :animation "2s var(--animation-shake-x) 2s infinite"}))}
-                                        (if complete?
-                                          ico/check
-                                          (if right-menu?
-                                            ico/arrowRight'
-                                            ico/arrowLeft'))]])]
+                                      [:div.w-2.h-full {:style {:border-left "8px solid"
+                                                                :border-color (when complete? "var(--brand1)")}}]
+                                      #_[:div.flex.items-center.justify-center
+                                         {:class [:h-full]}
+                                         [sc/icon-large
+                                          {:style (conj {:color "var(--text1)"}
+                                                        (when-not complete?
+                                                          {;:animation-duration        "2s"
+                                                           ;:animation-iteration-count "infinite"
+                                                           ;:animation-delay           "4s"
+                                                           :animation "2s var(--animation-shake-x) 2s infinite"}))}
+                                          (if complete?
+                                            ico/check
+                                            (if right-menu?
+                                              ico/arrowRight'
+                                              ico/arrowLeft'))]])]
                         (mapv f [["child" [children-slider c-children]]
                                  ["juvenile" [juveniles-slider c-juveniles]]
                                  ["moon" [moon-toggle c-moon]]
@@ -729,6 +752,7 @@
                                  ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
                                  ["check-c" (pointer (pos? (count @c-boat-list)))]
                                  ["complete" [complete st]]
+                                 ["await" [await st]]
                                  #_["prev" [move-to-prev st]]
                                  #_["next" [move-to-next st]]]))))]]))})))
 

@@ -5,6 +5,8 @@
 (goog-define VERSION "")
 (goog-define DATE "")
 
+(def TEMPERATURE-VERSION "2")
+
 ;region initial-state
 
 (def start-db {})
