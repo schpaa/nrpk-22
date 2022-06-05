@@ -209,9 +209,7 @@
      (when (or stability expert)
        [stability-expert m])
      ;[:div.grow]
-     [sc/text2 {:class [:shrink-1x :w-32x :truncate]} #_{:style {:overflow      :hidden
-                                                                 :text-overflow :ellipsis
-                                                                 :white-space   :nowrap}} (str navn navn navn)]]]
+     [sc/text2 {:class [:shrink-1x :w-32x :truncate]} (str navn)]]]
    [favourites-star'
     {:on-flag-click (fn [boat-type value uid]
                       (rf/dispatch [:star/write-star-change
@@ -313,8 +311,7 @@
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
         attr (conj
                attr
-               {:disabled true
-                ;:class    [(if mobile? :round)]
+               {:disabled false
                 :style    {:text-transform "uppercase"
                            :border-color   "var(--blue-7)"
                            :background     "var(--blue-6)"

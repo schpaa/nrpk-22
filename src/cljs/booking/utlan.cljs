@@ -180,7 +180,7 @@
     :column-gap            "var(--size-3)"
     :row-gap               "var(--size-1)"
     :padding-block         "var(--size-1)"
-    :grid-template-columns "5rem 1fr 1fr min-content 1fr"
+    :grid-template-columns "3.5rem 1fr 1fr min-content 1fr"
     :grid-template-rows    "min-content min-content"        ;"minmax(2rem,1fr) min(min-content,2rem)"
 
     :grid-template-areas   [["start-date edit content content content"]
@@ -257,7 +257,9 @@
           (if all-returned? "ut" "inn")]))
      [widgets/edit {:smallest true
                     :disabled false}
-      #(rf/dispatch [:lab/toggle-boatpanel [k m]])
+      #(do
+         ;(js/alert m)
+         (rf/dispatch [:lab/set-boatpanel-data [k m]]))
       m]]))
 
 (defn agegroups-detail [{:keys [adults children juveniles] :as m}]
@@ -366,7 +368,6 @@
          [g-area "edit" [edit-bar @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
          [g-area "graph" (when (and details? (t/= (t/date date) (t/today)) (= :b @selector))
                            [timegraph {} settings date end-time-instant boats (t/date-time)])]
-
          [g-area "content"
           [sc/col
            [:div.flex.gap-1.flex-wrap.justify-end
@@ -759,16 +760,18 @@
   [sc/row-field
    [sc/col {:style {:width "100%"}}
     [sc/col-space-8
-     [widgets/disclosure
-      {}
-      :statistikk
-      "Statistikk"
-      [graph-1]]
-     [widgets/disclosure
-      {}
-      :temperatur
-      "Temperatur"
-      [graph-2]]
+     [graph-1]
+     ;[graph-2]
+     #_[widgets/disclosure
+        {}
+        :statistikk
+        "Statistikk"
+        [graph-1]]
+     #_[widgets/disclosure
+        {}
+        :temperatur
+        "Temperatur"
+        [graph-2]]
 
      [sc/row-center {:class [:sticky :pointer-events-none :noprint]
                      :style {:z-index 10
@@ -790,7 +793,7 @@
            :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
           ico/plus]]]]]
      (booking.utlan/render nil)]]
-   [:div [:div.sticky.top-16
+   [:div [:div.sticky.top-24
           {:style {:height   "min-content"
                    :xoutline "1px dashed red"}}
           [booking.modals.boatinput/boatpanel-window nil]]]])

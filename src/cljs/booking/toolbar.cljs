@@ -50,7 +50,7 @@
         #_#(rf/dispatch [:app/navigate-to [:r.min-status]])
         :page-name    #(some #{%} [:r.min-status :r.user])})
 
-     (when (or @admin? @nokkelvakt ipad?)
+     (when (or goog.DEBUG @admin? @nokkelvakt ipad?)
        {:icon-fn      #(-> ico/mystery1)
         :disabled     false
         :caption      "Utlån Nøklevann"

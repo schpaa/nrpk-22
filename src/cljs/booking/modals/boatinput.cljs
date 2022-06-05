@@ -339,7 +339,8 @@
     [sc/surface-ab
      {:on-click #(reset! c-focus :phone)
       :class    [:h-full (when has-focus? :focused) :relative]
-      :style    {:display               :grid
+      :style    {:padding "0"
+                 :display               :grid
                  :column-gap            "var(--size-2)"
                  :row-gap               "var(--size-2)"
                  :grid-template-columns "repeat(4,1fr)"
@@ -409,7 +410,7 @@
                  (when (and has-focus? boat)
                    {:background-color "var(--selected)"
                     :color            "var(--selected-copy)"}))
-    :class [:flex :items-end :h-16]}
+    :class [:flex :items-end :h-16x]}
    (cond
      (some #{@c-textinput-boat} (map str (keep :number (filter :new @c-boat-list))))
      [f "Skriv et annet båtnr" (str @c-textinput-boat " finnes fra før i listen din")]
@@ -476,7 +477,8 @@
      {:on-click #(reset! c-focus :boats)
       :class    [:col-span-4
                  :h-full (when has-focus? :focused)]
-      :style    {:display               :grid
+      :style    {:padding "0"
+                 :display               :grid
                  :width                 "auto"
                  :column-gap            "var(--size-4)"
                  :row-gap               "var(--size-4)"
@@ -657,6 +659,22 @@
 
 ;endregion
 
+(defn set-boatpanel-fields [v]
+  (do
+    (reset! c-adults (:adults v 0))
+    (reset! c-juveniles (:juveniles v 0))
+    (reset! c-children (:children v 0))
+    (reset! c-moon (:moon v))
+    (reset! c-litteral-key (:havekey v))
+    (reset! c-textinput-phone (:phone v))
+    (reset! c-boat-list
+            (mapv (fn [[k _v]]
+                    (if-some [r (lookup-id k)]
+                      (select-keys r [:description :navn :number :kind :id])
+                      {:new    true
+                       :number (name k)})) (:list v)))
+    (reset! c-moon (:moon v))))
+
 (defn boatpanel-window [datas]
   (let [ref (r/atom nil)
         geo (rf/subscribe [:lab/screen-geometry])
@@ -666,30 +684,26 @@
                  @(db/on-value-reaction {:path ["system" "active"]}))]
     (r/create-class
       {:component-did-update
-       (fn [this old-argv old-state snapshot]
-         #_(tap> {:component-did-update this
-                  :old-argv             old-argv
-                  :old-state            old-state
-                  :datas                datas
-                  :snapshot             snapshot}))
+       (fn [this old-argv old-state snapshot])
 
        :component-did-mount
        (fn [_]
          (if-let [[_k v] datas]
-           (do
-             (reset! c-adults (:adults v 0))
-             (reset! c-juveniles (:juveniles v 0))
-             (reset! c-children (:children v 0))
-             (reset! c-moon (:moon v))
-             (reset! c-litteral-key (:havekey v))
-             (reset! c-textinput-phone (:phone v))
-             (reset! c-boat-list
-                     (mapv (fn [[k _v]]
-                             (if-some [r (lookup-id k)]
-                               (select-keys r [:description :navn :number :kind :id])
-                               {:new    true
-                                :number (name k)})) (:list v)))
-             (reset! c-moon (:moon v)))
+           (set-boatpanel-fields v)
+           #_(do
+               (reset! c-adults (:adults v 0))
+               (reset! c-juveniles (:juveniles v 0))
+               (reset! c-children (:children v 0))
+               (reset! c-moon (:moon v))
+               (reset! c-litteral-key (:havekey v))
+               (reset! c-textinput-phone (:phone v))
+               (reset! c-boat-list
+                       (mapv (fn [[k _v]]
+                               (if-some [r (lookup-id k)]
+                                 (select-keys r [:description :navn :number :kind :id])
+                                 {:new    true
+                                  :number (name k)})) (:list v)))
+               (reset! c-moon (:moon v)))
 
            (if ipad?
              (do
@@ -714,18 +728,19 @@
                             (.focus e)
                             (reset! ref e)))}
             [bis/panel
-             {:style {:padding "var(--size-2)"}
+             {:style (when mobile? {:padding "var(--size-2)"})
               :class [(cond
                         right-menu? :right-side
                         ;mobile? :mobile
                         :else :left-side)]}
 
              (doall (concat
-                      (let [f (fn [[area-name component]]
-                                [:div {:style {:grid-area area-name}} component])
+                      (let [layout-fn (fn [[area-name component]]
+                                        [:div {:style {:grid-area area-name}} component])
                             pointer (fn [complete?]
-                                      [:div.w-2.h-full {:style {:border-left "8px solid"
-                                                                :border-color (when complete? "var(--brand1)")}}]
+                                      [:div.w-2.h-full
+                                       {:style {:border-left  "8px solid"
+                                                :border-color (when complete? "var(--brand1)")}}]
                                       #_[:div.flex.items-center.justify-center
                                          {:class [:h-full]}
                                          [sc/icon-large
@@ -740,21 +755,21 @@
                                             (if right-menu?
                                               ico/arrowRight'
                                               ico/arrowLeft'))]])]
-                        (mapv f [["child" [children-slider c-children]]
-                                 ["juvenile" [juveniles-slider c-juveniles]]
-                                 ["moon" [moon-toggle c-moon]]
-                                 ["key" [litteralkey-toggle c-litteral-key]]
-                                 ["adult" [adults-slider c-adults]]
-                                 ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
-                                 ["boats" [selected-boats st c-focus c-textinput-boat]]
-                                 ["numpad" [number-pad st]]
-                                 ["check-a" (pointer @(rf/subscribe [::completed-users]))]
-                                 ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
-                                 ["check-c" (pointer (pos? (count @c-boat-list)))]
-                                 ["complete" [complete st]]
-                                 ["await" [await st]]
-                                 #_["prev" [move-to-prev st]]
-                                 #_["next" [move-to-next st]]]))))]]))})))
+                        (mapv layout-fn [["child" [children-slider c-children]]
+                                         ["juvenile" [juveniles-slider c-juveniles]]
+                                         ["moon" [moon-toggle c-moon]]
+                                         ["key" [litteralkey-toggle c-litteral-key]]
+                                         ["adult" [adults-slider c-adults]]
+                                         ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
+                                         ["boats" [selected-boats st c-focus c-textinput-boat]]
+                                         ["numpad" [number-pad st]]
+                                         ["check-a" (pointer @(rf/subscribe [::completed-users]))]
+                                         ["check-b" (pointer @(rf/subscribe [::completed-contact]))]
+                                         ["check-c" (pointer (pos? (count @c-boat-list)))]
+                                         ["complete" [complete st]]
+                                         ["await" [await st]]
+                                         #_["prev" [move-to-prev st]]
+                                         #_["next" [move-to-next st]]]))))]]))})))
 
 (defn window-content
   ([m]
@@ -776,6 +791,20 @@
                             :content-fn        (fn [e] (if args
                                                          (window-content e args)
                                                          (window-content e nil)))}]]]}))
+
+(rf/reg-event-fx :lab/set-boatpanel-data
+                 (fn [_ [_ args]]
+                   (let [[k v] args]
+                     (tap> v)
+                     (set-boatpanel-fields v))
+                   #_{:fx [[:dispatch
+                            [:lab/set-boatpanel-data args]
+                            #_[:modal.boatinput/show
+                               {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
+                                :mode              (when args :edit)
+                                :content-fn        (fn [e] (if args
+                                                             (window-content e args)
+                                                             (window-content e nil)))}]]]}))
 
 ;region dialog-related
 

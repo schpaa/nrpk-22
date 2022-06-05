@@ -1468,6 +1468,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   top: 8rem;
 }
 
+.top-24 {
+  top: 6rem;
+}
+
 .isolate {
   isolation: isolate;
 }

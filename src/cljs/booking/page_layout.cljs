@@ -8,7 +8,7 @@
     [re-frame.core :as rf]
 
     [db.core :as db]
-    
+
     [schpaa.style.ornament :as sc]
     [schpaa.style.hoc.page-controlpanel :as hoc.panel]
     [schpaa.style.hoc.buttons :as field]
@@ -226,9 +226,12 @@
 
 (defn matches-access "" [r [status _access :as _all-access-tokens]]
   (let [[req-status _req-access :as req-tuple] (-> r :data :access)]
-    (if req-tuple
-      (some #{status} (if (vector? req-status) req-status [req-status]))
-      true)))
+    ;todo
+    (if goog.DEBUG
+      true
+      (if req-tuple
+        (some #{status} (if (vector? req-status) req-status [req-status]))
+        true))))
 
 (defn- render-frontpage [r {:keys [render]} v]
   [:div {:style {:padding-block "8rem"}} [render r]])
@@ -259,7 +262,7 @@
         modify? (booking.access/can-modify? r users-access-tokens)
         pagename (some-> r :data :name)]
     [sc/col-space-8
-     {:style {:padding-block "8rem"
+     {:style {:padding-block "6rem"
               :margin-inline "auto"
               :min-height    "90vh"
               :max-width     "min(calc(100% - 1rem), calc(768px - 3rem))"}}
@@ -305,7 +308,7 @@
                                      :flex-wrap       :wrap :row-gap "1rem"}}
                [field/textinput
                 {:cursor field-1
-                 :class [:on-bright]}
+                 :class  [:on-bright]}
                 "INPUT"
                 :field-name]
                [field/textinput
@@ -313,12 +316,12 @@
                 :label
                 :field-name]
                [field/textinput
-                {:cursor field-3
-                 :xerrors      {:field-name ["mangler"]}}
+                {:cursor  field-3
+                 :xerrors {:field-name ["mangler"]}}
                 "Årsak"
                 :field-name]
                [field/textinput
-                {:xerrors      {:field-name ["?"]}
+                {:xerrors     {:field-name ["?"]}
                  :placeholder "tests"}
                 "Antall"
                 :field-name]
@@ -341,22 +344,17 @@
         [booking.toolbar/bottom-toolbar]]])))
 
 (defn +page-builder
-  "
+  "Takes a route and a map with a description of what goes into a page and returns
+   a hiccup description of said page.
 
+   See `booking.spa/routing-table`
 
-    Takes a route and a map with a description of what goes into a page and gives
-    a hiccup description of said page.
-
-    See `booking.spa/routing-table`
-
-    -> The map consists of these keys:
-    frontpage        --  is this the frontpage? Special case that gives special
-                         treatment to the header among other things.
-    render           --  fn that returns hiccup
-    render-fullwidth --  fn that returns hiccup that ignores margins
-
-
-  "
+   -> The map consists of these keys:
+   frontpage        --  is this the frontpage? Special case that gives special
+                        treatment to the header among other things.
+   render           --  fn that returns hiccup
+   render-fullwidth --  fn that returns hiccup that ignores the left/right-margin
+ "
   [r {:keys [frontpage render headline-plugin] :as m}]
   (let [admin? (rf/subscribe [:lab/admin-access])]
     [:<>
