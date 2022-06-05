@@ -3,7 +3,8 @@
             [lambdaisland.ornament :as o]
             [schpaa.debug :as l]
             [reagent.core :as r]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [re-frame.core :as rf]))
 
 (defn date-iter [start n]
   (lazy-seq
@@ -11,7 +12,7 @@
       (cons a (date-iter start (inc n))))))
 
 (o/defstyled svg-graph :svg
-  :h-48 :w-full :m-0 :py-8)
+  [:& :h-32 :w-full :m-0])
 
 (defn set-ref [a el]
   (when-not @a
@@ -22,7 +23,7 @@
                             get-data-fn]}]
   (let [days-back-in-time @days-back-in-time]
     [svg-graph
-     {:viewBox             (l/strp 0 0 days-back-in-time (+ max-value 20))
+     {:viewBox             (l/strp 0 0 days-back-in-time (+ max-value 15))
       :width               "100%"
       :height              "auto"
       :preserveAspectRatio "none"
@@ -93,39 +94,29 @@
      (str "(totalt=>" (reduce + 0 (map (comp first second) data)) ")")]]])
 
 
-(defn ^{:doc "get-data-fn is a 2-arity taking a date and something else to get data"}
-  lower-right [dataset end-date get-data-fn]
+(defn corner-stats [get-data-fn end-date]
   (if get-data-fn
-   (when-let [end-date (some-> end-date str)]
-     [:div.absolute.right-0.bottom-0
-      [sc/row-sc-g4
+    (when-let [end-date (some-> end-date str)]
+      [sc/row-sc-g4 
        [sc/small1-inline
         {:style {:font-weight "var(--font-weight-6)"}}
-        (str (get-data-fn end-date 0))
-        #_(let [[a [_ _ _ e]] (get dataset (-> end-date str))]
-            a
-            #_(apply str (interpose ", " [a (str e)])))]
+        (str (get-data-fn end-date 0))]
        [sc/small1-inline
-        {;:on-click #(swap! mode (fn [e] (mod (inc e) 4)))
-         :style {:color       "var(--blue-6)"
+        {:style {:color       "var(--blue-6)"
                  :cursor      :default
                  :font-weight "var(--font-weight-6)"}}
-        (str (get-data-fn end-date 1))
-        #_(let [[a [b c d _]] (get dataset (-> end-date str))]
-            (when a
-              [:div.flex.gap-1 (map (fn [e] [:div.w-6 (if (zero? e) "—" e)]) [b c d])]))]]])
-   [:div "no get-data-fn defined"]))
+        (str (get-data-fn end-date 1))]])
+    [sc/small {:class [:error]} "get-data-fn?"]))
 
-(defn upper-right [end-date]
-  [:div.absolute.right-0.top-0
-   (when-let [dt (some-> end-date t/date)]
-     (let [future? (t/< (t/today) dt)]
-       [sc/small1
-        {:style {:line-height 1
-                 :align-self  :start
-                 :color       (if future? "var(--red-5)" "var(--blue-5)")
-                 :font-weight "var(--font-weight-6)"}}
-        (times.api/date-format dt)]))])
+(defn corner-day [end-date]
+  (when-let [dt (some-> end-date t/date)]
+    (let [future? (t/< (t/today) dt)]
+      [sc/text
+       {:style {;:text-transform "uppercase"
+                :line-height    "1"
+                :color          (if future? "var(--red-5)" "var(--blue-5)")
+                :font-weight    "var(--font-weight-6)"}}
+       (times.api/date-format dt)])))
 
 (defn upper-left [first-day max-value]
   [:div.absolute.left-0.top-0
@@ -141,7 +132,8 @@
      (str "(topp=" max-value ")")]]])
 
 (defn graph [_ _ st reset-view get-data-fn draw-fn]
-  (let [mode (r/atom 3)
+  (let [{:keys [right-menu?]} @(rf/subscribe [:lab/screen-geometry])
+        mode (r/atom 3)
         element (r/atom nil)
         client-width (r/cursor st [:client-width])
         touchdown (r/cursor st [:touchdown])
@@ -187,30 +179,19 @@
                                                               (second (get dataset % [0]))]) lookup))
                max-value (max 50 (reduce max 0 (map (comp first second) dataset)))
                first-day (when-some [data data] (drop-while (comp zero? first second) data))]
-
-           [sc/surface-a
-            {:style {:padding       "0.5rem"
-                     :border-radius "var(--radius-0)"
-                     :box-shadow    "var(--shadow-2)"}}
-            [sc/co
-             [:div.relative.h-full
-              (upper-left first-day max-value)
-              (upper-right end-date)
-              (lower-right dataset end-date get-data-fn)
-              (lower-left mode data)
+           [:div.w-full
+            {:style {:background-color "var(--floating)"}}
+            [sc/row {:style {:flex-direction (if right-menu? :row :row-reverse)}}
+             [:div.relative.h-full.w-full
+              {:style {:margin "0.5rem"}}
               [:div
                {:style {:background-color (when (or @mousedown @touchdown) "var(--content)")}}
                (render-graph
-                 {:draw-fn draw-fn
+                 {:draw-fn           draw-fn
                   :indexed-data      (map-indexed vector data)
                   :element           element
                   :days-back-in-time days-back-in-time
                   :first-day         (ffirst first-day)
                   :max-value         max-value
-
                   :get-data-fn       get-data-fn
-                  :mode              mode})]]
-             [sc/col
-              [:div.p-2.-mx-2.-mb-2
-               {:style {:background-color "rgba(0,0,0,0.06)"}}
-               command-row]]]]))})))
+                  :mode              mode})]]]]))})))

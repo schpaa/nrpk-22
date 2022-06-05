@@ -22,7 +22,7 @@
 
 ;; store
 
-(def store (r/atom {:selector :a}))
+(defonce store (r/atom {:selector :a}))
 
 (def selector (r/cursor store [:selector]))
 
@@ -399,8 +399,14 @@
                [widgets/user-link ref-uid])
              [badges item-wrapper m]]])]]])))
 
+(defn stativ []
+  (let [data {"A1" 1 "A2" 1 "A4" 1 "B3" 1 "H" 4}]
+    [:<>
+     (for [[k v] data]
+       [:div k])]))
+
 ;todo REFACTOR!
-(defn render [loggedin-uid]
+(defn render [loggedin-uid selector]
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [details? @(rf/subscribe [:rent/common-show-details])
           show-deleted? @(rf/subscribe [:rent/common-show-deleted])
@@ -409,38 +415,40 @@
           ;show-overview? (= :c @selector)
           data (rf/subscribe [:rent/list])
           data (if show-deleted? @data (remove (comp :deleted val) @data))]
-      (into [:div.flex.flex-col]
-            (for [[k {:keys [timestamp list deleted] :as m}] data
-                  :let [boats list                          ;(sort-by (comp :number val) < list)
-                        date (some-> timestamp t/instant t/date-time)
-                        all-returned? (every? (comp not empty? val) boats)
-                        ;what is the least convoluted way to write this?
-                        end-time-instant (let [[dt _] (sort < (vals boats))]
-                                           (when-not (empty? dt)
-                                             (t/instant dt)))]
-                  :when (cond
-                          (= :b @selector)
-                          (and (passed-date-test? date end-time-instant)
-                               (not all-returned?))
+      (case @selector
+        :c [stativ]
+        (:a :b) (into [:div.flex.flex-col]
+                      (for [[k {:keys [timestamp list deleted] :as m}] data
+                            :let [boats list                ;(sort-by (comp :number val) < list)
+                                  date (some-> timestamp t/instant t/date-time)
+                                  all-returned? (every? (comp not empty? val) boats)
+                                  ;what is the least convoluted way to write this?
+                                  end-time-instant (let [[dt _] (sort < (vals boats))]
+                                                     (when-not (empty? dt)
+                                                       (t/instant dt)))]
+                            :when (cond
+                                    (= :b @selector)
+                                    (and (passed-date-test? date end-time-instant)
+                                         (not all-returned?))
 
-                          ;show-overview?
-                          ;(t/= (t/today) (t/date date))
+                                    ;show-overview?
+                                    ;(t/= (t/today) (t/date date))
 
-                          show-details?
-                          (not all-returned?)
+                                    show-details?
+                                    (not all-returned?)
 
-                          :else true)]
+                                    :else true)]
 
-              [item-line {:k                k
-                          :m                m
-                          :db               db
-                          :all-returned?    all-returned?
-                          #_#_:show-overview? show-overview?
-                          :end-time-instant end-time-instant
-                          :boats            boats
-                          :deleted          deleted
-                          :details?         details?
-                          :date             date}])))))
+                        [item-line {:k                k
+                                    :m                m
+                                    :db               db
+                                    :all-returned?    all-returned?
+                                    #_#_:show-overview? show-overview?
+                                    :end-time-instant end-time-instant
+                                    :boats            boats
+                                    :deleted          deleted
+                                    :details?         details?
+                                    :date             date}]))))))
 
 (defn panel [{:keys []}]
   [sc/row-sc-g4-w {:style {:flex-wrap :wrap}}
@@ -475,6 +483,7 @@
 ;; common graph state
 
 (def initial-st {:days-back-in-time 30
+                 :show-stats        false
                  :client-width      0
                  :offset            0
                  :delta             0
@@ -486,78 +495,72 @@
 
 ;;
 
-(defn graph-1 []
-  (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
-        existing (remove deleted?)
-        base (->> (transduce existing conj activity-records)
-                  (group-by (comp-> val :timestamp t/instant t/date str)))
-        dataset (into {}
-                      (map
-                        (juxt key
-                              (juxt (comp count val)
-                                    (comp
-                                      #(reduce (fn [[a' b' c' d'] [a b c d]]
-                                                 [(+ (or a 0) a')
-                                                  (+ (or b 0) b')
-                                                  (+ (or c 0) c')
-                                                  (+ (or d 0) d')])
-                                               [0 0 0 0] %)
-                                      #(map (comp-> val (juxt :adults :juveniles :children (comp count :list))) %)
-                                      second))))
-                      base)]
-    (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
-                 offset (r/cursor st [:offset])
-                 reset-view #(reset! st initial-st)]
-      (let [command-row [sc/row-field
-                         [sc/co
-                          [sc/row-sc-g2
-                           [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                                 :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                                            :round]} "16"]
-                           [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                                 :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                                            :round]} "8"]
-                           [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                                                 :class    [(if (= 30 @days-back-in-time) :inverse :regular)
-                                                            :round]} "4"]]
-                          [sc/small2 {:class [:pl-1 :uppercase]} "Uker"]]
+(defn sample-command-row [{:keys [days-back-in-time offset reset-view-fn]}]
+  [sc/co {:class [:justify-between :h-full]
+          :style {:height "100%"}}
 
-                         [:div.grow]
+   [button/just-icon {:on-click #(swap! days-back-in-time 180)
+                      :class    [(if true :inverse :regular)
+                                 :round]} ico/closewindow]
 
-                         [button/just-caption {:on-click #(swap! offset inc)
-                                               :class    [:regular
-                                                          :narrow]} "Forrige"]
+   [:div.grow]
 
-                         [button/just-caption {:on-click #(reset! offset 1)
-                                               :class    [(if (= 1 @offset) :inverse :regular)
-                                                          :narrow]} "I går"]
+   [button/just-caption {:on-click #(reset! days-back-in-time 180)
+                         :class    [(if (= 180 @days-back-in-time) :inverse :regular)
+                                    :round]} "16"]
+   [button/just-caption {:on-click #(reset! days-back-in-time 60)
+                         :class    [(if (= 60 @days-back-in-time) :inverse :regular)
+                                    :round]} "8"]
+   [button/just-caption {:on-click #(reset! days-back-in-time 30)
+                         :class    [(if (= 30 @days-back-in-time) :inverse :regular)
+                                    :round]} "4"]
 
-                         [button/just-icon {:on-click reset-view
-                                            :class    [(if (= 0 @offset) :regular :cta)
-                                                       :round]}
-                          ico/undo]]
-            get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
-                                     (get datum c)
-                                     nil))]
-        [booking.graph/graph dataset command-row st reset-view
-         nil
-         (fn draw-func? [dt x _value-and-color-seq max-value]
-           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
-                 cnt (get-data-fn dt 0)
-                 ;_ (tap> (get-data-fn dt 1))
-                 value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
-                                      [(nth (get-data-fn dt 1) 1) "red"]
-                                      [(nth (get-data-fn dt 1) 2) "green"]]]
-             (for [[idx [value color]] (map-indexed vector value-and-color-seq)
-                   :let [offset (* 0.5 (inc idx))]]
-               [:line
-                (conj {:stroke       color
-                       :stroke-width 0.85
-                       :x1           (- x offset) :y1 (- max-value value)
-                       :x2           (- x offset) :y2 max-value}
-                      (when (pos? idx)
-                        {:stroke-width  3
-                         :vector-effect :non-scaling-stroke}))])))]))))
+
+   [:div.grow]
+
+   [button/just-caption {:on-click #(swap! offset inc)
+                         :class    [:round
+                                    :message]} [sc/text "<=="]]
+
+   [button/just-caption {:on-click #(reset! offset 1)
+                         :class    [(when (= 1 @offset) :inverse)
+                                    :round
+                                    :message]} [sc/text "<--"]]
+
+   [:div.grow]
+   [button/just-icon {:on-click reset-view-fn
+                      :class    [(if (= 0 @offset) :regular :cta) :round]}
+    ico/undo]])
+
+(defn graph-1 [end-date dataset]
+  (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
+               offset (r/cursor st [:offset])
+               reset-view-fn #(reset! st initial-st)]
+    (let [get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
+                                   (get datum c)
+                                   nil))]
+      [:div.relative.w-full.h-full
+       [booking.graph/graph dataset nil st reset-view-fn
+        nil
+        (fn draw-func? [dt x _value-and-color-seq max-value]
+          (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+                cnt (get-data-fn dt 0)
+                ;_ (tap> (get-data-fn dt 1))
+                value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
+                                     [(nth (get-data-fn dt 1) 1) "red"]
+                                     [(nth (get-data-fn dt 1) 2) "green"]]]
+            (for [[idx [value color]] (map-indexed vector value-and-color-seq)
+                  :let [offset (* 0.5 (inc idx))]]
+              [:line
+               (conj {:stroke       color
+                      :stroke-width 0.85
+                      :x1           (- x offset) :y1 (- max-value value)
+                      :x2           (- x offset) :y2 max-value}
+                     (when (pos? idx)
+                       {:stroke-width  3
+                        :vector-effect :non-scaling-stroke}))])))]
+       [:div.absolute.bottom-2.right-10
+        [booking.graph/corner-stats get-data-fn end-date]]])))
 
 (def weather-words
   [[0 "Tåke"]
@@ -654,7 +657,7 @@
                                                (assoc :version booking.data/TEMPERATURE-VERSION)
                                                (update :luft js/parseFloat)
                                                (update :vann js/parseFloat))]
-                                  (db/database-push {:path ["temperature"]
+                                  (db/database-push {:path  ["temperature"]
                                                      :value data}))
                    :content-fn #(temperatureform-content %)}])))
 
@@ -663,7 +666,7 @@
                                                 :vann
                                                 #_(comp-> :vær js/parseInt))) %) first)))
 
-(defn graph-2 []
+(defn graph-2 [end-date]
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})
         base (transduce (comp existing
                               active
@@ -676,57 +679,14 @@
                         conj temperature-records)
         grouped-base (group-by (comp-> val :timestamp t/instant t/date str) base)
         dataset (into {} (map graph-2-f) grouped-base)]
-
-    [:<>
-     ;[l/pre grouped-base]
-
-     (r/with-let [reset-view-fn #(reset! st initial-st)
-                  days-back-in-time (r/cursor st [:days-back-in-time])
-                  offset (r/cursor st [:offset])]
-       (let [command-row [sc/row-field
-                          [sc/co
-                           [sc/small2 {:class [:pl-1 :uppercase]} "Antall uker vist"]
-                           [sc/row-sc-g2
-                            [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                                                  :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                                             :round]}
-
-                             "16"]
-                            [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                                                  :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                                             :round]}
-                             "8"]
-                            [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                                                  :class    [(if (= 30 @days-back-in-time) :inverse :regular)
-                                                             :round]}
-
-                             "4"]]]
-                          [:div.grow]
-                          [button/icon-and-caption
-                           {:on-click add-temperature
-                            :class    [:cta]}
-                           ico/plus [:div.truncate "Ny temperatur"]]
-
-                          [button/just-caption {:on-click #(reset! offset 1)
-                                                ;:style {:box-shadow "var(--shadow-1)"}
-                                                :class    [(if (= 1 @offset) :inverse :regular)
-                                                           :narrow]} "I går"]
-                          [button/just-icon {:on-click reset-view-fn
-                                             :class    [(if (= 0 @offset) :regular :cta)
-                                                        :round]} ico/undo]]
-             #_#_dataset {"2022-04-11" [11 10]
-                          "2022-04-12" [13 10]
-                          "2022-05-20" [15 10]
-                          "2022-05-29" [nil 14]
-                          "2022-05-30" [21 nil]
-                          "2022-05-31" [11 16]
-                          "2022-06-01" [15 17]}
-             get-data-fn (fn [dt]
-                           (when-some [datum (get dataset dt)]
-                             datum))]
+    (r/with-let [reset-view-fn #(reset! st initial-st)]
+      (let [get-data-fn (fn [dt]
+                          (when-some [datum (get dataset dt)]
+                            datum))]
+        [:div.relative
          [booking.graph/graph
           dataset
-          command-row
+          nil
           st
           reset-view-fn
           nil
@@ -754,49 +714,94 @@
                         :x2           x' :y2 max-value}
                        (when (pos? idx)
                          {:vector-effect :non-scaling-stroke
-                          :stroke-width  3}))])))]))]))
+                          :stroke-width  3}))])))]
+         [:div.absolute.bottom-2.right-10
+          [booking.graph/corner-stats get-data-fn end-date]]]))))
 
 (defn always-panel []
-  [sc/row-field
-   [sc/col {:style {:width "100%"}}
-    [sc/col-space-8
-     [graph-1]
-     ;[graph-2]
-     #_[widgets/disclosure
-        {}
-        :statistikk
-        "Statistikk"
-        [graph-1]]
-     #_[widgets/disclosure
-        {}
-        :temperatur
-        "Temperatur"
-        [graph-2]]
+  (let [{:keys [right-menu? hidden-menu?]} @(rf/subscribe [:lab/screen-geometry])]
+    ;todo Margins 
+    [sc/row-field {:class [:-mx-4]
+                   :style {:flex-direction (if right-menu? :row-reverse :row)}}
+     [:div [:div.sticky.top-24
+            {:style (conj
+                      {:padding-bottom "0rem"}
+                      (when-not hidden-menu?
+                        (if right-menu?
+                          {:margin-right  "-2rem"
+                           :padding-right "2rem"}
+                          {:margin-left  "-2rem"
+                           :padding-left "2rem"}))
+                      {:height "min-content"})}
+            [booking.modals.boatinput/boatpanel-window nil]]]
+     [sc/col {:style {:width "100%"}}
+      [sc/col-space-8
+       (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
+                    offset (r/cursor st [:offset])
+                    reset-view-fn #(reset! st initial-st)]
+         (let [command-row (sample-command-row
+                             {:days-back-in-time days-back-in-time
+                              :offset            offset
+                              :reset-view-fn     reset-view-fn})
+               activity-records @(db/on-value-reaction {:path ["activity-22"]})
+               existing (remove deleted?)
+               base (->> (transduce existing conj activity-records)
+                         (group-by (comp-> val :timestamp t/instant t/date str)))
+               dataset (into {}
+                             (map
+                               (juxt key
+                                     (juxt (comp count val)
+                                           (comp
+                                             #(reduce (fn [[a' b' c' d'] [a b c d]]
+                                                        [(+ (or a 0) a')
+                                                         (+ (or b 0) b')
+                                                         (+ (or c 0) c')
+                                                         (+ (or d 0) d')])
+                                                      [0 0 0 0] %)
+                                             #(map (comp-> val (juxt :adults :juveniles :children (comp count :list))) %)
+                                             second))))
+                             base)
+               xpos (r/cursor st [:xpos])
+               end-date (t/<< (t/today) (t/new-period (+ @offset @xpos) :days))
+               get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
+                                        (get datum c)
+                                        nil))]
+           [:<>
+            [sc/surface-a {:class [:p-0]
+                           :style {:background-color "var(--floating)"}}
+             [sc/row {}
 
-     [sc/row-center {:class [:sticky :pointer-events-none :noprint]
-                     :style {:z-index 10
-                             :top     "8rem"}}
-      [sc/row-center
-       [sc/col-space-8
-        {:class [:pointer-events-auto]}
-        [widgets/pillbar
-         {:class [:large]
-          :style {:box-shadow "var(--shadow-2)"}}
-         selector
-         [[:b "Ute"]
-          [:a "Alle"]]]
-        [sc/row-center
+              [sc/col {:style {:position "relative"}
+                       :class [:w-full :py-10]}
 
-         [button/just-icon
-          {:style    {:box-shadow "var(--shadow-2)"}
-           :class    [:large :cta]
-           :on-click #(rf/dispatch [:lab/toggle-boatpanel nil])}
-          ico/plus]]]]]
-     (booking.utlan/render nil)]]
-   [:div [:div.sticky.top-24
-          {:style {:height   "min-content"
-                   :xoutline "1px dashed red"}}
-          [booking.modals.boatinput/boatpanel-window nil]]]])
+               [:div.absolute.top-0.left-0.p-2
+                [:div.flex.items-center.h-8
+                 [booking.graph/corner-day end-date]]]
+
+               [:div.absolute.bottom-0.left-0.p-2
+                [:div.h-8.flex.items-center
+                 [button/icon-and-caption
+                  {:on-click add-temperature
+                   :class    [:cta]} ico/plus "Luft– og vanntemperatur"]]]
+
+               [graph-1 end-date dataset]
+               [graph-2 end-date]]
+
+              [:div.p-2 {:style {:background-color "var(--toolbar-)"}} command-row]]]
+            [sc/row-center {:class [:sticky :pointer-events-none :noprint]
+                            :style {:z-index 10
+                                    :top     "6rem"}}
+             [sc/row-center
+              [sc/col-space-8
+               {:class [:pointer-events-auto]}
+               [widgets/pillbar
+                {:class [:large]
+                 :style {:box-shadow "var(--shadow-2)"}}
+                selector
+                [[:b "Ute"]
+                 [:a "Alle"]
+                 [:c "Stativ"]]]]]]
+            (booking.utlan/render nil selector)]))]]]))
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]

@@ -22,7 +22,7 @@
     :align-items "center"
     :width       "100%"
     :margin      "auto"
-    :max-width   "calc(768px - 3rem)"
+    :max-width   "calc(768px)"
     :height      "var(--size-9)"}])
 
 (o/defstyled headerline :div
@@ -88,24 +88,25 @@
 
 (defn header-line [r headline-plugin scroll-pos]
   (let [[links caption] (some-> r :data :header)
-        items (concat [[location-block r links caption (right-menu?)]
-                       [:div.grow]]
+        items (concat
+                [[location-block r links caption (right-menu?)]
+                 [:div.grow]]
 
-                      (when goog.DEBUG
-                        ;todo no use for scroll-pos yet
-                        [[:div.flex.items-center.justify-center.mx-4.tabular-nums
-                          [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]])
+                (when goog.DEBUG
+                  ;todo no use for scroll-pos yet
+                  [[:div.flex.items-center.justify-center.mx-4.tabular-nums
+                    [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]])
 
-                      (when headline-plugin
-                        (when-some [headline (seq (headline-plugin))]
-                          [[:div.flex.px-3.pb-2.gap-3.-mt-2.pt-3
-                            {:style {:border-radius           "var(--radius-2)"
-                                     :border-top-right-radius 0
-                                     :border-top-left-radius  0
-                                     :background-color        "rgba(0,0,0,0.08)"}}
-                            (into [:<>] headline)]]))
+                (when headline-plugin
+                  (when-some [headline (seq (headline-plugin))]
+                    [[:div.flex.px-3.pb-2.gap-3.-mt-2.pt-3
+                      {:style {:border-radius           "var(--radius-2)"
+                               :border-top-right-radius 0
+                               :border-top-left-radius  0
+                               :background-color        "rgba(0,0,0,0.08)"}}
+                      (into [:<>] headline)]]))
 
-                      [[:div.mx-2 [main-menu r]]])
+                [[:div.mx-2 [main-menu r]]])
         items (if (right-menu?) (reverse items) items)]
     [headerline [header-top items]]))
 
