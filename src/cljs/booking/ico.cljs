@@ -91,6 +91,7 @@
 (def arrowLeft [:> solid/ArrowCircleLeftIcon])
 (def arrowRight' [:> solid/ArrowNarrowRightIcon])
 (def arrowLeft' [:> solid/ArrowNarrowLeftIcon])
+(def storeForLater [:> outline/SaveAsIcon])
 
 (def backspace [:> solid/BackspaceIcon])
 (def tag [:> solid/TagIcon])

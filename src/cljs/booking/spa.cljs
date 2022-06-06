@@ -440,7 +440,7 @@
         {;:panel            booking.utlan/panel
          :headline-plugin booking.utlan/headline-plugin
          :always-panel    booking.utlan/always-panel
-         :render          #() #_ #(booking.utlan/render uid)}]))
+         :render          #(vector :div {:style {:background-color "green"}} "test") #_ #(booking.utlan/render uid)}]))
 
    :r.debug              (fn [r] (page r {:always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}))

@@ -1412,8 +1412,8 @@ Ensure the default browser behavior of the `hidden` attribute.
   top: 1rem;
 }
 
-.top-1 {
-  top: 0.25rem;
+.top-px {
+  top: 1px;
 }
 
 .-bottom-1 {
@@ -1456,6 +1456,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   top: 5rem;
 }
 
+.right-10 {
+  right: 2.5rem;
+}
+
 .top-24 {
   top: 6rem;
 }
@@ -1470,22 +1474,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .top-32 {
   top: 8rem;
-}
-
-.right-8 {
-  right: 2rem;
-}
-
-.right-4 {
-  right: 1rem;
-}
-
-.right-6 {
-  right: 1.5rem;
-}
-
-.right-10 {
-  right: 2.5rem;
 }
 
 .isolate {
@@ -1607,14 +1595,14 @@ Ensure the default browser behavior of the `hidden` attribute.
   margin-right: -1.5rem;
 }
 
-.my-px {
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-
 .-mx-4 {
   margin-left: -1rem;
   margin-right: -1rem;
+}
+
+.my-px {
+  margin-top: 1px;
+  margin-bottom: 1px;
 }
 
 .mt-2 {

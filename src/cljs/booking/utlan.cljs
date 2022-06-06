@@ -722,18 +722,20 @@
   (let [{:keys [right-menu? hidden-menu?]} @(rf/subscribe [:lab/screen-geometry])]
     ;todo Margins 
     [sc/row-field {:class [:-mx-4]
-                   :style {:flex-direction (if right-menu? :row-reverse :row)}}
-     [:div [:div.sticky.top-24
-            {:style (conj
-                      {:padding-bottom "0rem"}
-                      (when-not hidden-menu?
-                        (if right-menu?
-                          {:margin-right  "-2rem"
-                           :padding-right "2rem"}
-                          {:margin-left  "-2rem"
-                           :padding-left "2rem"}))
-                      {:height "min-content"})}
-            [booking.modals.boatinput/boatpanel-window nil]]]
+                   :style {
+                           :flex-direction (if right-menu? :row-reverse :row)}}
+     [:div.sticky.top-24
+      {:style (conj
+                {:background-color "rgba(0,0,0,0.05)"
+                 :padding-bottom "0rem"}
+                (when-not hidden-menu?
+                  (if right-menu?
+                    {:margin-right  "-2rem"
+                     :padding-right "1rem"}
+                    {:margin-left  "-2rem"
+                     :padding-left "1rem"}))
+                {:height "min-content"})}
+      [booking.modals.boatinput/boatpanel-window nil]]
      [sc/col {:style {:width "100%"}}
       [sc/col-space-8
        (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
@@ -769,7 +771,7 @@
            [:<>
             [sc/surface-a {:class [:p-0]
                            :style {:background-color "var(--floating)"}}
-             [sc/row {}
+             [sc/row 
 
               [sc/col {:style {:position "relative"}
                        :class [:w-full :py-10]}
@@ -782,12 +784,13 @@
                 [:div.h-8.flex.items-center
                  [button/icon-and-caption
                   {:on-click add-temperature
-                   :class    [:cta]} ico/plus "Luft– og vanntemperatur"]]]
+                   :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]
 
                [graph-1 end-date dataset]
                [graph-2 end-date]]
 
-              [:div.p-2 {:style {:background-color "var(--toolbar-)"}} command-row]]]
+              [:div.p-2 {:style {:width "4rem"
+                                 :background-color "var(--toolbar)"}} command-row]]]
             [sc/row-center {:class [:sticky :pointer-events-none :noprint]
                             :style {:z-index 10
                                     :top     "6rem"}}

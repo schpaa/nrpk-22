@@ -181,7 +181,9 @@
             (cond
               hidden-menu?
               (let [marg :sm:mx-0]
-                [:div#inner-document {:class [marg]} contents])
+                [:div#inner-document
+                 {:style {:background "var(--content)"}
+                  :class [marg]} contents])
 
               (and right-menu? (not hidden-menu?))
               (let [marg (if menu-caption?

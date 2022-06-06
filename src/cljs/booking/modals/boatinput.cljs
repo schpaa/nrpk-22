@@ -76,22 +76,23 @@
 
 (rf/reg-sub :rent/id-lookup :<- [:db/boat-db] :-> identity)
 
-(defn input-area [length caption fieldname]
-  ;cap size of input to length
+(defn input-area
+  "caps size of input to length"
+  [length caption fieldname]
   (let [c-field (r/cursor st [:textfield fieldname])]
     (reset! c-field (subs (str @c-field) 0 length))
     (let [has-focus? (= @c-focus fieldname)
           textinput (fn [v]
-                      [:div.tabular-nums.inline-flex.items-end.justify-center.h-full.pb-1x
-                       [bis/input-caption v (when has-focus? [:span.blinking-cursor.pb-1 "|"])]])]
+                      [:div.inline-flex.items-end.justify-center.h-full
+                       [bis/input-caption v (when has-focus? [:span.blinking-cursor "|"])]])]
       [:div.relative.h-16.shrink-0
        {:on-click #()
         :style    {:padding-inline   "var(--size-2)"
                    :border-radius    "var(--radius-0)"
                    :background-color (if has-focus? "var(--field-focus)" "var(--field)")
                    :color            (if has-focus? "var(--fieldcopy)" "var(--text1)")
-                   :box-shadow       (if has-focus? "var(--inner-shadow-1)")}}
-       [:div.absolute.top-1.left-2
+                   :box-shadow       "var(--inner-shadow-0)"}}
+       [:div.absolute.top-px.left-2
         [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
        (textinput (subs (str @c-field) 0 length))])))
 
@@ -202,6 +203,15 @@
                    (= 3 (count @source)))}
    (sc/icon-huge ico/plusplus)])
 
+(defn plus-button [st source]
+  [bis/push-button
+   {:class    [:add2]
+    :on-click #(cmd/new-boat c-boat-list c-selected source)
+    :value    true
+    :disabled (and                                          ;(not (number-not-in-list @source @c-boat-list))
+                (not (= 3 (count @source))))}
+   (sc/icon-huge ico/plusplus)])
+
 (comment
   (do
     (number-not-in-list @c-textinput-boat @c-boat-list)))
@@ -296,7 +306,7 @@
               :gap                   "var(--size-1)"
               :grid-template-columns "repeat(3,1fr)"
               :grid-auto-rows        "1fr"}}
-     (doall (for [e '[7 8 9 4 5 6 1 2 3 :reset 0 :del]]
+     (doall (for [e '[7 8 9 4 5 6 1 2 3 :add 0 :del]]
               (if (number? e)
                 [bis/push-button
                  {:class    [:button-pad]
@@ -307,21 +317,21 @@
                   (= :del e)
                   [bis/push-button
                    {:on-click #(cmd/backspace-clicked st active-field)
-                    :style    {:color (if (not (empty? @active-field)) "var(--orange-5)" "var(--text2)")}
+                    :style    {:color (if (not (empty? @active-field)) "var(--orange-6)" "var(--text2)")}
                     :enabled  (not (empty? @active-field))}
                    [sc/icon-huge ico/backspace]]
 
-                  (= :reset e)
-                  [reset-button st]
+                  (= :add e)
+                  [plus-button st c-textinput-boat]
 
-                  (= :toggle e)
-                  [bis/push-button
-                   {:on-click #(swap! st update :phone (fnil not false))}
-                   (if (:phone @st)
-                     [sc/icon-large ico/tag]
-                     [sc/icon-large ico/phone])]
+                  #_(= :toggle e
+                       [bis/push-button
+                        {:on-click #(swap! st update :phone (fnil not false))}
+                        (if (:phone @st)
+                          [sc/icon-large ico/tag]
+                          [sc/icon-large ico/phone])
 
-                  :else [:div]))))]))
+                        :else [:div]])))))]))
 
 ;endregion
 
@@ -337,48 +347,46 @@
 (defn hvem-er-du [st c-focus c-textinput-phone]
   (let [field c-textinput-phone
         has-focus? (= :phone @c-focus)]
-    [sc/surface-ab
+    [sc/surface-p
      {:on-click #(reset! c-focus :phone)
-      :class    [:h-full (when has-focus? :focused) :relative]
+      :class    [(when has-focus? :focus) :relative]
       :style    {
 
-                 :margin-left "-0.5rem"
-                 :padding-block "0.5rem"
-                 :padding-left "1rem"
-                 :padding-right "0.5rem"
-                 
-
+                 ;:margin-left           "-0.5rem"
+                 :padding-block         "0.5rem"
+                 :padding-left          "0.5rem"
+                 :padding-right         "0rem"
                  :display               :grid
-                 :column-gap            "var(--size-2)"
+                 ;:column-gap            "var(--size-2)"
                  :row-gap               "var(--size-2)"
                  :grid-template-columns "repeat(4,1fr)"
                  :grid-auto-rows        "4rem"}}
-     [:div {:style {:grid-column "1/-1"}
-            :class [:flex :w-full :items-end :p-1 :h-16]}
-      (if (= 3 (count @field))
-        (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @field)]
-          (do
-            (reset! c-extra m)
-            [sc/col-space-1 {:class [:truncate :h-full :justify-around]}
-             [sc/ptitle1 phone]
-             [sc/ptext {:class [:truncate]} username]])
+     #_[:div {:style {:grid-column "1/-1"}
+              :class [:flex :w-full :items-end :p-1 :h-16]}
+        #_(if (= 3 (count @field))
+            (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @field)]
+              (do
+                (reset! c-extra m)
+                [sc/col-space-1 {:class [:truncate :h-full :justify-around]}
+                 [sc/ptitle1 phone]
+                 [sc/ptext {:class [:truncate]} username]])
 
-          (do
-            (reset! c-extra nil)
-            [sc/ptitle
-             (if (= 3 (count @field))
-               (do
-                 (reset! c-lookup-result nil)
-                 (str @field " er ikke registrert")))]))
-        (do
-          (reset! c-extra nil)
-          (if @c-litteral-key
-            (f "Telefonnr"
-               "eller de 3 siste sifre i nøkkelnr")
-            #_[sc/ptext "Bruk de siste 3 siffer av nøkkelnr. F.eks E18-"
-               [:span.font-bold {:style {:color "var(--brand2)"}} "987"]]
-            (f "Telefonnr"
-               "eller de 3 siste sifre i nøkkelnr"))))]
+              (do
+                (reset! c-extra nil)
+                [sc/ptitle
+                 (if (= 3 (count @field))
+                   (do
+                     (reset! c-lookup-result nil)
+                     (str @field " er ikke registrert")))]))
+            (do
+              (reset! c-extra nil)
+              (if @c-litteral-key
+                (f "Telefonnr"
+                   #_"eller de 3 siste sifre i nøkkelnr")
+                #_[sc/ptext "Bruk de siste 3 siffer av nøkkelnr. F.eks E18-"
+                   [:span.font-bold {:style {:color "var(--brand2)"}} "987"]]
+                (f "Telefonnr"
+                   #_"eller de 3 siste sifre i nøkkelnr"))))]
 
 
      [:div {:style {:grid-column "1/4"
@@ -387,7 +395,7 @@
 
      [:div
       {:style {:grid-column "4"
-               :grid-row    "2"}}
+               :grid-row    "1"}}
       [delete-button st field]]]))
 
 (defn- list-of-selected []
@@ -416,8 +424,8 @@
 (defn- info-panel [has-focus? {:keys [new number navn] :as boat}]
   [:div.pt-1
    {:style (conj {:grid-column "2/-1"
-                  :width    "100%"
-                  :overflow :clip}
+                  :width       "100%"
+                  :overflow    :clip}
                  #_(when (and has-focus? boat)
                      {:background-color "var(--selected)"
                       :color            "var(--selected-copy)"}))
@@ -482,51 +490,67 @@
                  (str @c-textinput-boat " er ikke registrert"))
                "Båtnummer (3 siffer)")]]))])
 
-(defn selected-boats [st c-focus c-textinput-boats]
+(defn boat-input [st c-focus c-textinput-boats]
   (let [has-focus? (= :boats @c-focus)
         boat (lookup (or (:selected @st) @c-textinput-boats))]
-    [sc/surface-ab
+    [sc/surface-p
      {:on-click #(reset! c-focus :boats)
-      :class    [:col-span-4
-                 (when has-focus? :focused)]
-      :style    {
-                 :margin-left "-0.5rem"
-                 :padding-block "0.5rem"
-                 :padding-left "1rem"
-                 :padding-right "0.5rem"
-                 
+      :class    [:top
+                 :col-span-4
+                 (when has-focus? :focus)]
+      :style    {;:margin-left           "-0.25rem"
+                 :padding-block         "0.5rem"
+                 :padding-left          "0.5rem"
+                 :padding-right         "0.5rem"
+
                  :display               :grid
                  :width                 "auto"
                  :column-gap            "var(--size-2)"
-                 :row-gap               "var(--size-2)"
+                 ;:row-gap               "var(--size-2)"
                  :grid-template-columns "repeat(4,1fr)"}}
-     [:div {:style {:grid-column "1/-1"
-                    :grid-row    "1"}}
-      [sc/title "Båtnummer (3 siffer)"]
-      #_[info-panel
-         has-focus?
-         (or boat
-             (if @c-selected
-               {:new    true
-                :number @c-selected
-                :navn   "Ny båt"}
-               nil))]]
-     [sc/co {:style {:grid-column "1/-1"
+
+     [sc/co {:style {:padding     0
+                     :margin      0
+                     :grid-column "1/-1"
                      :grid-row    "2"}}
-      [:div {:style {:width                 :100%
-                     :column-gap            "var(--size-2)"
-                     :display               :grid
+      [:div {:style {:width                 "100%"
+                     :column-gap            "0.25rem"
+                     :row-gap               "0.25rem"
+                     :display               "grid"
                      :grid-template-columns "repeat(4,1fr)"}}
        [:div {:style {:grid-column "1/3"}}
         [input-area 3 "Båtnummer" :boats]]
-       (if (and boat (= 3 (count @c-textinput-boats)))
-         [add-button st c-textinput-boats boat]
-         (if (= 3 (count @c-textinput-boats))
-           [question-button st c-textinput-boats]
-           [add-button st c-textinput-boats c-lookup-result]))
+
+       #_(if (and boat (= 3 (count @c-textinput-boats)))
+           [add-button st c-textinput-boats boat]
+           (if (= 3 (count @c-textinput-boats))
+             [question-button st c-textinput-boats]
+             [add-button st c-textinput-boats c-lookup-result]))
        [:div.flex.items-center.justify-center
         {:style {:grid-column "4"}}
         [delete-button st c-textinput-boats]]]
+      #_[list-of-selected]]]))
+
+(defn selected-boats [st c-focus c-textinput-boats]
+  (let [has-focus? (= :boats @c-focus)
+        boat (lookup (or (:selected @st) @c-textinput-boats))]
+    [sc/surface-p
+     {:on-click #(reset! c-focus :boats)
+      :class    [:col-span-4
+                 :bottom
+                 (when has-focus? :focus)]
+      :style    {;:margin-left           "-0.25rem"
+                 :padding-block         "0.5rem"
+                 :padding-left          "0.5rem"
+                 :padding-right         "0.5rem"
+                 :display               :grid
+                 :column-gap            "var(--size-2)"
+                 ;:row-gap               "var(--size-2)"
+                 :grid-template-columns "repeat(4,1fr)"}}
+
+     [:div
+      {:style {:grid-column "1/-1"
+               :grid-row    "2"}}
       [list-of-selected]]]))
 
 (defn move-to-prev [st]
@@ -574,7 +598,7 @@
                        :height        "100%"})}
 
      [sc/row-sc-g2
-      (sc/icon-huge ico/bookmark)]]))
+      [:div {:style {:transform "rotate(-90deg)"}} (sc/icon-huge ico/storeForLater)]]]))
 
 (defn complete [st]
   (let [ok? (rf/subscribe [::completed])]
@@ -596,28 +620,37 @@
       (sc/icon-huge ico/check)]]))
 
 (defn status []
-  (let [data (when-some [boatnum (cond
-                                   (= 3 (count @c-textinput-boat)) @c-textinput-boat
-                                   (= 3 (count @c-selected)) @c-selected)]
+  [sc/surface-p {:style {:padding          "0.5rem"
+                         :height           "100%"
+                         ;:background-color "var(--content)"
+                         :border-radius    "var(--radius-0)"}}
+   (cond
+     (= :phone @c-focus)
+     [:div.flex.items-end.h-full
+      (if (= 3 (count @c-textinput-phone))
+        (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @c-textinput-phone)]
+          (do
+            (reset! c-extra m)
+            [sc/col-space-1 {:class [:truncate :justify-around]}
+             [sc/ptitle1 phone]
+             [sc/ptext {:class [:truncate]} username]])))]
 
-               (lookup-id (:id (lookup boatnum))))]
-    [sc/surface-ab {:style {:overflow-y    "auto"
-                            :padding-inline "0.5rem"
-                            :padding-block 0
-                            :box-shadow "none"
-                            :border-radius "var(--radius-0)"
-                            :height        "100%"}}
-     [sc/col-space-2
-      ;[sc/title "<beskrivelse/instruksjon>"]
-      ;[sc/text1 @c-selected]
-      ;[sc/text1 @c-focus]
-      ;[sc/text1 (str @c-boat-list)]
-      [widgets/stability-name-category data]
+     (= :boats @c-focus)
+     (when-let [data (when-some [boatnum (cond
+                                           (= 3 (count @c-textinput-boat)) @c-textinput-boat
+                                           (= 3 (count @c-selected)) @c-selected)]
+                       (lookup-id (:id (lookup boatnum))))]
+       [:div {:style {;:padding-inline "0.5rem"
+                      :padding       "0.25rem"
+                      :box-shadow    "none"
+                      :border-radius "var(--radius-0)"
+                      :height        "100%"}}
+        [:div.h-full.overflow-y-auto
+         [sc/co
+          [widgets/stability-name-category data]
+          [sc/title (:description data)]]]]))])
 
-      [sc/text1 (:description data)]]
-      ;[widgets/dimensions-and-material data]]
-     #_(when-some [boatnum (when (= 3 (count @c-textinput-boat)) @c-textinput-boat)]
-         [l/pre ">" (lookup-id (:id (lookup boatnum)))])]))
+
 
 ;endregion
 
@@ -773,8 +806,19 @@
                             pointer (fn [complete?]
                                       [:div.w-2.h-full
                                        {:style {:border-left  "8px solid"
-                                                :border-color (when complete? "var(--brand1)")}}])]
-                        (mapv layout-fn [["child" [children-slider c-children]]
+                                                :border-color (if complete?
+                                                                "var(--brand1)"
+                                                                "var(--red-6)")}}])]
+                        (mapv layout-fn [#_["mode" [:div.grid.h-full {:style {:grid-auto-flow    "column"
+                                                                              :grid-auto-columns "1fr"
+                                                                              :column-gap        "0.25rem"}}
+                                                    [bis/push-button {:class [:new]}
+                                                     [sc/co
+                                                      [sc/text] "Ut"]]
+                                                    [bis/push-button {:class []} "Gruppe"]
+                                                    ;[bis/push-button {:class []} "Annet"]
+                                                    [bis/push-button {:class []} "Inn"]]]
+                                         ["child" [children-slider c-children]]
                                          ["status" [status]]
                                          ["juvenile" [juveniles-slider c-juveniles]]
                                          ["moon" [moon-toggle c-moon]]
@@ -783,6 +827,8 @@
                                          ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
                                          ["boats" [selected-boats st c-focus c-textinput-boat]]
                                          ["numpad" [number-pad st]]
+                                         ["p" [reset-button st]]
+                                         ["i" [boat-input st c-focus c-textinput-boat]]
                                          ["a" (pointer (pos? (count @c-boat-list)))]
                                          ["b" (pointer @(rf/subscribe [::completed-contact]))]
                                          ["c" (pointer @(rf/subscribe [::completed-users]))]
