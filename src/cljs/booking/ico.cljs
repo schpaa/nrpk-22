@@ -92,6 +92,8 @@
 (def arrowRight' [:> solid/ArrowNarrowRightIcon])
 (def arrowLeft' [:> solid/ArrowNarrowLeftIcon])
 (def storeForLater [:> outline/SaveAsIcon])
+(def selector [:> solid/SwitchVerticalIcon])
+(def chart [:> outline/PresentationChartBarIcon])
 
 (def backspace [:> solid/BackspaceIcon])
 (def tag [:> solid/TagIcon])

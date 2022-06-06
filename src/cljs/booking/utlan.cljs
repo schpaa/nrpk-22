@@ -483,7 +483,7 @@
 ;; common graph state
 
 (def initial-st {:days-back-in-time 30
-                 :show-stats        false
+                 ;:show-stats        false
                  :client-width      0
                  :offset            0
                  :delta             0
@@ -493,39 +493,41 @@
 
 (defonce st (r/atom initial-st))
 
+(def show-stats (r/cursor st [:show-stats]))
+
 ;;
 
-(defn sample-command-row [{:keys [days-back-in-time offset reset-view-fn]}]
+(defn sample-command-row [{:keys [toggle-view-fn days-back-in-time offset reset-view-fn]}]
   [sc/co {:class [:justify-between :h-full]
           :style {:height "100%"}}
 
-   [button/just-icon {:on-click #(swap! days-back-in-time 180)
-                      :class    [(if true :inverse :regular)
+   [button/just-icon {:on-click #(toggle-view-fn)
+                      :class    [(if true :xinverse :regular)
                                  :round]} ico/closewindow]
 
    [:div.grow]
 
    [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                         :class    [(if (= 180 @days-back-in-time) :inverse :regular)
-                                    :round]} "16"]
+                         :class    [(if (= 180 @days-back-in-time) :frame :xregular)
+                                    :round]} [sc/text1 "16"]]
    [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                         :class    [(if (= 60 @days-back-in-time) :inverse :regular)
-                                    :round]} "8"]
+                         :class    [(if (= 60 @days-back-in-time) :frame :xregular)
+                                    :round]} [sc/text1 "8"]]
    [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                         :class    [(if (= 30 @days-back-in-time) :inverse :regular)
-                                    :round]} "4"]
+                         :class    [(if (= 30 @days-back-in-time) :frame :xregular)
+                                    :round]} [sc/text1 "4"]]
 
 
    [:div.grow]
 
    [button/just-caption {:on-click #(swap! offset inc)
                          :class    [:round
-                                    :message]} [sc/text "<=="]]
+                                    :regular]} "-1"]
 
-   [button/just-caption {:on-click #(reset! offset 1)
-                         :class    [(when (= 1 @offset) :inverse)
-                                    :round
-                                    :message]} [sc/text "<--"]]
+   [button/just-icon {:on-click #(reset! offset 1)
+                      :class    [(when (= 1 @offset) :inverse)
+                                 :round
+                                 :regular]} ico/arrowLeft']
 
    [:div.grow]
    [button/just-icon {:on-click reset-view-fn
@@ -718,6 +720,9 @@
          [:div.absolute.bottom-2.right-10
           [booking.graph/corner-stats get-data-fn end-date]]]))))
 
+(defn- toggle-graph-view []
+  (swap! show-stats (fnil not false)))
+
 (defn always-panel []
   (let [{:keys [right-menu? hidden-menu?]} @(rf/subscribe [:lab/screen-geometry])]
     ;todo Margins 
@@ -726,8 +731,6 @@
                            :flex-direction (if right-menu? :row-reverse :row)}}
      [:div.sticky.top-24
       {:style (conj
-                {:background-color "rgba(0,0,0,0.05)"
-                 :padding-bottom "0rem"}
                 (when-not hidden-menu?
                   (if right-menu?
                     {:margin-right  "-2rem"
@@ -740,11 +743,12 @@
       [sc/col-space-8
        (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
                     offset (r/cursor st [:offset])
-                    reset-view-fn #(reset! st initial-st)]
-         (let [command-row (sample-command-row
-                             {:days-back-in-time days-back-in-time
-                              :offset            offset
-                              :reset-view-fn     reset-view-fn})
+                    reset-view-fn #(swap! st update merge initial-st)]
+         (let [graph-command-row (sample-command-row
+                                   {:toggle-view-fn    toggle-graph-view
+                                    :days-back-in-time days-back-in-time
+                                    :offset            offset
+                                    :reset-view-fn     reset-view-fn})
                activity-records @(db/on-value-reaction {:path ["activity-22"]})
                existing (remove deleted?)
                base (->> (transduce existing conj activity-records)
@@ -769,28 +773,38 @@
                                         (get datum c)
                                         nil))]
            [:<>
-            [sc/surface-a {:class [:p-0]
-                           :style {:background-color "var(--floating)"}}
-             [sc/row 
+            (if-not @show-stats
+              [sc/surface-p {:style {:padding #_-inline-end "0.25rem"
+                                     :xpadding-block-start "0.5rem"
+                                     :xpadding-block-end "0.25rem"}}
+               [sc/row-field {:style {:align-items :center}}
+                [sc/text1 "75"]
+                [sc/text1 "23"]
+                [:div.grow]
+                [button/just-icon {:on-click toggle-graph-view
+                                   :class    [:regular :round :large]} ico/chart]]]
+              [sc/surface-a {:class [:p-0]
+                             :style {:background-color "var(--floating)"}}
+               [sc/row
 
-              [sc/col {:style {:position "relative"}
-                       :class [:w-full :py-10]}
+                [sc/col {:style {:position "relative"}
+                         :class [:w-full :py-10]}
 
-               [:div.absolute.top-0.left-0.p-2
-                [:div.flex.items-center.h-8
-                 [booking.graph/corner-day end-date]]]
+                 [:div.absolute.top-0.left-0.p-2
+                  [:div.flex.items-center.h-8
+                   [booking.graph/corner-day end-date]]]
 
-               [:div.absolute.bottom-0.left-0.p-2
-                [:div.h-8.flex.items-center
-                 [button/icon-and-caption
-                  {:on-click add-temperature
-                   :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]
+                 [:div.absolute.bottom-0.left-0.p-2
+                  [:div.h-8.flex.items-center
+                   [button/icon-and-caption
+                    {:on-click add-temperature
+                     :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]
 
-               [graph-1 end-date dataset]
-               [graph-2 end-date]]
+                 [graph-1 end-date dataset]
+                 [graph-2 end-date]]
 
-              [:div.p-2 {:style {:width "4rem"
-                                 :background-color "var(--toolbar)"}} command-row]]]
+                [:div.p-2 {:style {:width             "3rem"
+                                   :xbackground-color "var(--toolbar)"}} graph-command-row]]])
             [sc/row-center {:class [:sticky :pointer-events-none :noprint]
                             :style {:z-index 10
                                     :top     "6rem"}}

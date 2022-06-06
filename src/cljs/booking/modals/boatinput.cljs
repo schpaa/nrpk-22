@@ -57,11 +57,12 @@
 (def c-adults (r/cursor st [:adults]))
 (def c-moon (r/cursor st [:moon]))
 (def c-litteral-key (r/cursor st [:litteral-key]))
-(def c-lookup-result (r/cursor st [:lookup-results]))
+;(def c-lookup-result (r/cursor st [:lookup-results]))
 (def c-boat-list (r/cursor st [:list]))
 (def c-textinput-phone (r/cursor st [:textfield :phone]))
 (def c-textinput-boat (r/cursor st [:textfield :boats]))
 (def c-selected (r/cursor st [:selected]))
+
 (defn focused-field [c-focus]
   (cond
     (= :boats @c-focus) c-textinput-boat
@@ -620,35 +621,44 @@
       (sc/icon-huge ico/check)]]))
 
 (defn status []
-  [sc/surface-p {:style {:padding          "0.5rem"
-                         :height           "100%"
-                         ;:background-color "var(--content)"
-                         :border-radius    "var(--radius-0)"}}
-   (cond
-     (= :phone @c-focus)
-     [:div.flex.items-end.h-full
-      (if (= 3 (count @c-textinput-phone))
-        (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @c-textinput-phone)]
-          (do
-            (reset! c-extra m)
-            [sc/col-space-1 {:class [:truncate :justify-around]}
-             [sc/ptitle1 phone]
-             [sc/ptext {:class [:truncate]} username]])))]
+  [:<>
+   ;[l/pre @c-extra]
+   [sc/surface-p {:class [(if (or (and (= :boats @c-focus)
+                                       @c-boat-list
+                                       @c-selected)
 
-     (= :boats @c-focus)
-     (when-let [data (when-some [boatnum (cond
-                                           (= 3 (count @c-textinput-boat)) @c-textinput-boat
-                                           (= 3 (count @c-selected)) @c-selected)]
-                       (lookup-id (:id (lookup boatnum))))]
-       [:div {:style {;:padding-inline "0.5rem"
-                      :padding       "0.25rem"
-                      :box-shadow    "none"
-                      :border-radius "var(--radius-0)"
-                      :height        "100%"}}
-        [:div.h-full.overflow-y-auto
-         [sc/co
-          [widgets/stability-name-category data]
-          [sc/title (:description data)]]]]))])
+                                  (and (= :phone @c-focus)
+                                       (some? @c-extra))) :focus)]
+                  :style {:padding       "0.5rem"
+                          :height        "100%"
+                          ;:background-color "var(--content)"
+                          :border-radius "var(--radius-0)"}}
+    (cond
+      (= :phone @c-focus)
+      [:div.flex.items-end.h-full
+       (if (= 3 (count @c-textinput-phone))
+         (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @c-textinput-phone)]
+           (do
+             (reset! c-extra m)
+             [sc/col-space-1 {:class [:truncate :justify-around]}
+              [sc/ptitle1 phone]
+              [sc/ptext {:class [:truncate]} username]]))
+         (reset! c-extra nil))]
+
+      (= :boats @c-focus)
+      (when-let [data (when-some [boatnum (cond
+                                            (= 3 (count @c-textinput-boat)) @c-textinput-boat
+                                            (= 3 (count @c-selected)) @c-selected)]
+                        (lookup-id (:id (lookup boatnum))))]
+        [:div {:style {;:padding-inline "0.5rem"
+                       :padding       "0.25rem"
+                       :box-shadow    "none"
+                       :border-radius "var(--radius-0)"
+                       :height        "100%"}}
+         [:div.h-full.overflow-y-auto
+          [sc/co
+           [widgets/stability-name-category data]
+           [sc/title (:description data)]]]]))]])
 
 
 
@@ -803,12 +813,11 @@
              (doall (concat
                       (let [layout-fn (fn [[area-name component]]
                                         [:div {:style {:grid-area area-name}} component])
-                            pointer (fn [complete?]
+                            pointer (fn pointer [complete?]
                                       [:div.w-2.h-full
-                                       {:style {:border-left  "8px solid"
-                                                :border-color (if complete?
-                                                                "var(--brand1)"
-                                                                "var(--red-6)")}}])]
+                                       {:style (when-not complete?
+                                                 {:border-left  "8px solid"
+                                                  :border-color "var(--red-6)"})}])]
                         (mapv layout-fn [#_["mode" [:div.grid.h-full {:style {:grid-auto-flow    "column"
                                                                               :grid-auto-columns "1fr"
                                                                               :column-gap        "0.25rem"}}

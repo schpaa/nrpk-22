@@ -143,7 +143,7 @@
                                           ["c adult moon juvenile child "]
                                           ["c adult key  juvenile child "]
                                           [". . . . ."]
-                                          ["status status status status ."]
+                                          ["status status status status status"]
                                           [". . . . ."]
                                           ["numpad numpad numpad numpad ."]
                                           ["numpad numpad numpad numpad ."]

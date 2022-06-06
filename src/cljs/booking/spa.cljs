@@ -439,8 +439,8 @@
        [+page-builder r
         {;:panel            booking.utlan/panel
          :headline-plugin booking.utlan/headline-plugin
-         :always-panel    booking.utlan/always-panel
-         :render          #(vector :div {:style {:background-color "green"}} "test") #_ #(booking.utlan/render uid)}]))
+         :render    booking.utlan/always-panel
+         :xrender          #(vector :div {:style {:background-color "green"}} "test") #_ #(booking.utlan/render uid)}]))
 
    :r.debug              (fn [r] (page r {:always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}))
