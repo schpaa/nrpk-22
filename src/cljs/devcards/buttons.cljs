@@ -19,7 +19,9 @@
             [booking.common-widgets :as widgets]
             [schpaa.debug :as l]
             [schpaa.style.hoc.buttons :as button]
-            [booking.styles :as b]))
+            [booking.styles :as b]
+            [schpaa.style.input]
+            [reagent.core :as r]))
 
 (defcard-rg pill
   [:div
@@ -192,3 +194,9 @@
    :padding false
    :heading false})
 
+(defcard-rg input
+  [:div
+   [button/textinput {:touched #(-> :as)
+                      :cursor (r/atom "123")
+                      :values {:b nil}} :a :b]])
+  

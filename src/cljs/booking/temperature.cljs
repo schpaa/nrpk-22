@@ -6,7 +6,8 @@
             [schpaa.style.hoc.buttons :as button]
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [re-frame.core :as rf]
-            [db.core :as db]))
+            [db.core :as db]
+            [reagent.core :as r]))
 
 (def weather-words
   [[0 "Tåke"]
@@ -23,8 +24,14 @@
    [3 "Styrtregn"]])
 
 
+(defonce gunk (r/atom {:gunk "test"
+                       :luft "123"
+                       :vann ""
+                       :testfield "data"}))
+
 (defn temperatureform-content [{:keys [data on-close uid write-fn]}]
-  (let [validation-fn
+  (let [
+        validation-fn                                    
         (fn [{:keys [vann luft vær] :as values}]
           (tap> values)
           (into {}
@@ -38,19 +45,21 @@
                          :vær  (cond-> nil
                                  (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))]
     [fork/form
-     {:initial-values   {:luft nil
-                         :vann nil
-                         :vær  nil}
-      :prevent-default? true
-      :keywordize-keys  true
-      :validation       validation-fn
-      :on-submit        (fn [{:keys [values]}]
-                          (let [data (assoc values
-                                       :timestamp (str (t/now))
-                                       :uid uid)]
-                            (when write-fn
-                              (write-fn data))
-                            (on-close)))}
+     {:initial-values      {}
+      :prevent-default?    true
+      :state               gunk
+      :keywordize-keys     true
+      :validation          validation-fn
+      :component-did-mount (fn [{:keys [set-values set-untouched] :as v}]
+                             (set-values @gunk)
+                             (set-untouched :luft))
+      :on-submit           (fn [{:keys [values]}]
+                             (let [data (assoc values
+                                          :timestamp (str (t/now))
+                                          :uid uid)]
+                               (when write-fn
+                                 (write-fn data))
+                               (on-close)))}
      (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
        [sc/dialog-dropdown
         [sc/col-space-8
@@ -61,15 +70,18 @@
           [:form
            {:id        form-id
             :on-submit handle-submit}
+
            [sc/col-space-8
+            [field/textinput props "A testfield" :testfield]
+
             [sc/row-sc-g4 {:style {:gap "2rem"}
                            :class [:items-start]}
              [sc/col-space-4 {:class [:w-32]}
               [field/textinput (assoc props
                                  :type "number"
-                                 :values {:luft (:luft values)}) "Lufttemp" :luft]
+                                 :values {:luft (:luft values)}) "Luft" :luft]
               [field/textinput (assoc props
-                                 :type "number") "Vanntemp" :vann]]
+                                 :type "number") "Vann" :vann]]
              [sc/checkbox-matrix
               {:style {:padding-topx "1rem"}}
               (into [:<>]
