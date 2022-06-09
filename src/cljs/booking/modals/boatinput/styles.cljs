@@ -121,54 +121,102 @@
 
 
 (o/defstyled panel :div
-  [:& :mx-auto :min-h-full
-   {:display               :grid
-    :column-gap            "var(--size-1)"
-    ;:row-gap               "var(--size-1)"
-    :min-width             "20rem"
-    :max-width             "24rem"
+  [:& :min-h-full
+   {:display               "grid"
+    :margin                0
+    :padding               0
     :height                "100%"
-
+    :column-gap            "var(--size-1)"
+    :min-width             "20rem"
+    :max-width             "20rem"
+    :grid-template-columns "auto"
     :grid-template-rows
-    "min-content min-content min-content 0.5rem min-content 0.5rem 4rem 4rem 0.5rem 1fr 0.25rem
-    4rem 0.25rem 4rem 0.25rem 4rem 0.25rem 4rem"}
+    "min-content
+    0.5rem 4rem 0.25rem 4rem
 
-   [:&.left-side {:grid-template-columns " min-content repeat(4,1fr)"
-                  :grid-template-areas   [["mode mode mode mode ."]
-                                          ["a  i i i i"]
-                                          ["a boats     boats    boats     boats "]
-                                          [". . . . ."]
-                                          ["b aboutyou aboutyou aboutyou    aboutyou "]
-                                          [". . . . ."]
-                                          ["c adult moon juvenile child "]
-                                          ["c adult key  juvenile child "]
-                                          [". . . . ."]
-                                          ["status status status status status"]
-                                          [". . . . ."]
-                                          ["numpad numpad numpad numpad ."]
-                                          ["numpad numpad numpad numpad ."]
-                                          ["numpad numpad numpad numpad o"]
-                                          ["numpad numpad numpad numpad ."]
-                                          ["numpad numpad numpad numpad w"]
-                                          ["numpad numpad numpad numpad ."]
-                                          ["numpad numpad numpad numpad p"]]}]
+    0.5rem min-content
+    0.5rem min-content
+    1rem
+    minmax(4rem,1fr)
+    1rem
+    4rem 0.25rem
+    4rem 0.25rem
+    4rem 0.25rem
+    4rem
+    "}
 
-   [:&.right-side {:grid-template-columns "min-content repeat(4,1fr)"
-                   :grid-template-areas   [[". mode mode mode mode"]
-                                           ["i i i i a"]
-                                           ["a boats boats boats boats"]
-                                           [". . . . ."]
-                                           ["b aboutyou aboutyou aboutyou aboutyou"]
-                                           [". . . . ."]
-                                           ["c adult moon juvenile child"]
-                                           ["c adult key  juvenile child"]
-                                           [". . . . ."]
-                                           [". status status status status"]
-                                           [". . . . ."]
-                                           [". . numpad numpad numpad"]
-                                           ["o o numpad numpad numpad"]
-                                           [". w numpad numpad numpad"]
-                                           [". p numpad numpad numpad"]]}]])
+   [:&.left
+    {:grid-template-columns "min-content repeat(4,minmax(0,1fr))"
+     :grid-template-areas   [
+                             ["in in in in in"]
+
+
+                             [".  .  .  .  . "]
+                             ["c1 ad mo ju ch"]
+                             ["c1 ad .  ju ch"]
+                             ["c1 ad ky ju ch"]
+
+                             [".  .  .  .  . "]
+                             ["b1 ay ay ay ay"] ;-
+
+                             [".  .  .  .  . "]
+                             ["a1 bo bo bo bo"]
+
+
+                             [".  .  .  .  . "]
+                             ["st st st st st"]
+                             [".  .  .  .  . "]
+                             ["np np np np . "]
+                             ["np np np np . "]
+                             ["np np np np co"]
+                             ["np np np np . "]
+                             ["np np np np aw"]
+                             ["np np np np . "]
+                             ["np np np np re"]]}
+    [:&.alt
+     {:grid-template-rows "min-content
+       0.5rem
+       auto
+       0.5rem
+       4rem 0.24rem
+       4rem 0.24rem
+       4rem 0.24rem
+       4rem
+       "
+      :grid-template-areas [["in in in in in"]
+                            [".  .  .  .  . "]
+                            ["st st st st st"]
+                            [".  .  .  .  . "]
+                            ["np np np np . "]
+                            ["np np np np . "]
+                            ["np np np np co"]
+                            ["np np np np . "]
+                            ["np np np np aw"]
+                            ["np np np np . "]
+                            ["np np np np re"]]}]]
+
+   [:&.right
+    {:grid-template-columns "repeat(4,minmax(0,1fr)) min-content"
+     :grid-template-areas   [;[". mode mode mode mode"]
+                             ["in in in in in"]
+                             [".  .  .  .  . "]
+                             ["bo bo bo bo a1"]
+                             [".  .  .  .  . "]
+                             ["ay ay ay ay b1"]
+                             [".  .  .  .  . "]
+                             ["ch ju mo ad c1"]
+                             ["ch ju .  ad c1"]
+                             ["ch ju ky ad c1"]
+                             [".  .  .  .  . "]
+                             ["st st st st st"]
+                             [".  .  .  .  . "]
+                             [".  np np np np"]
+                             [".  np np np np"]
+                             ["co np np np np"]
+                             [".  np np np np"]
+                             ["aw np np np np"]
+                             [".  np np np np"]
+                             ["re np np np np"]]}]])
 
 (o/defstyled pad :div
   [:div :flex-center

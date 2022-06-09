@@ -70,3 +70,39 @@
     :xpadding-block "0.25rem"
     :padding-inline "0.25rem"}
    [:focus]])
+
+(o/defstyled ro-jb :div
+  :flex :justify-between :items-baseline
+  {})
+
+(o/defstyled ro :div                
+  :flex :justify-start :items-center :gap-2)
+
+
+(o/defstyled ro-js :div
+  :flex :justify-start :items-baseline :gap-2
+  {})
+
+(o/defstyled text-truncate :div
+  :truncate
+  {:line-height 1})
+
+(o/defstyled text :div 
+  [:& :debug
+   {:line-height 1
+    ;:height "100%"
+    :color "var(--text1)"}])
+
+(o/defstyled title :div
+  [:&
+   {:font-size      "var(--font-size-3)"
+    :letter-spacing "var(--font-letterspacing-0)"
+    :font-weight    "var(--font-weight-5)"}])
+
+(o/defstyled small :div
+  [:&
+   {:letter-spacing "0.02rem"
+    :font-size      "var(--font-size-0)"
+    :opacity        0.7
+    :font-weight    "var(--font-weight-3)"}
+   [:&.error {:color "red"}]])

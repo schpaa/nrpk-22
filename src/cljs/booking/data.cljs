@@ -6,6 +6,7 @@
 (goog-define DATE "")
 
 (def TEMPERATURE-VERSION "2")
+(def SHOW-BADGE false)
 
 ;region initial-state
 

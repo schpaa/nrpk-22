@@ -86,16 +86,16 @@
   (when-let [s (rf/subscribe [:lab/screen-geometry])]
     (:right-menu? @s)))
 
-(defn header-line [r headline-plugin scroll-pos]
+(defn header-line [r headline-plugin scroll-pos right-menu?]
   (let [[links caption] (some-> r :data :header)
         items (concat
-                [[location-block r links caption (right-menu?)]
+                [[location-block r links caption right-menu?]
                  [:div.grow]]
 
-                (when goog.DEBUG
-                  ;todo no use for scroll-pos yet
-                  [[:div.flex.items-center.justify-center.mx-4.tabular-nums
-                    [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]])
+                #_(when goog.DEBUG
+                    ;todo no use for scroll-pos yet
+                    [[:div.flex.items-center.justify-center.mx-4.tabular-nums
+                      [sc/small1 (when scroll-pos (times.api/format "%04d" scroll-pos))]]])
 
                 (when headline-plugin
                   (when-some [headline (seq (headline-plugin))]
@@ -104,11 +104,9 @@
                                :border-top-right-radius 0
                                :border-top-left-radius  0
                                :background-color        "rgba(0,0,0,0.08)"}}
-                      (into [:<>] headline)]]))
-
-                [[:div.mx-2 [main-menu r]]])
-        items (if (right-menu?) (reverse items) items)]
-    [headerline [header-top items]]))
+                      (into [:<>] (if right-menu? headline (reverse headline)))]]))
+                [[:div.mx-2 [main-menu r]]])]     
+    [headerline [header-top (if right-menu? (reverse items) items)]]))
 
 (defn header [r scroll-pos headline-plugin]
   (let [{:keys [hidden-menu? right-menu? mobile? menu-caption?]} @(rf/subscribe [:lab/screen-geometry])
@@ -120,4 +118,4 @@
     [header-overlay
      {:style {:margin-left  (when-not right-menu? marg)
               :margin-right (when right-menu? marg)}}
-     [header-line r headline-plugin scroll-pos]]))
+     [header-line r headline-plugin scroll-pos right-menu?]]))

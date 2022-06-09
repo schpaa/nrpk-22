@@ -15,16 +15,11 @@
             [db.core :as db]
             [schpaa.style.button2]
             [schpaa.style.hoc.buttons :as button]
+            [booking.temperature]
             [booking.timegraph :refer [timegraph]]
             [fork.reagent :as fork]
             [schpaa.style.input :as sci]
             [schpaa.style.hoc.buttons :as field]))
-
-;; store
-
-(defonce store (r/atom {:selector :a}))
-
-(def selector (r/cursor store [:selector]))
 
 ;region innlevering
 
@@ -126,13 +121,34 @@
 
 ;endregion
 
-;; machinery
+;; state
 
 (defonce settings
-         (r/atom {:rent/show-details    false
+         (r/atom {:selector             :c
+                  :stats                {:båtlogg/vis-statistikk true
+                                         :days-back-in-time      30
+                                         :offset                 0}
+                  :list                 {:rent/show-details false}
                   :rent/show-timegraph  false
                   :rent/graph-view-mode 0
                   :rent/show-deleted    false}))
+
+;;gain separation
+
+(def c-days-back-in-time (r/cursor settings [:stats :days-back-in-time]))
+(def c-offset (r/cursor settings [:stats :offset]))
+(def c-xstart (r/cursor settings [:stats :start]))
+(def c-xpos (r/cursor settings [:stats :xpos]))
+(def c-show-statistics (r/cursor settings [:stats :båtlogg/vis-statistikk]))
+(def c-show-details (r/cursor settings [:list :rent/show-details]))
+(def selector (r/cursor settings [:selector]))
+
+(defn reset-view-fn []
+  (reset! c-days-back-in-time 15)
+
+  #_(swap! settings update-in [:stats] (fn [v] assoc v
+                                         :days-back-in-time 15
+                                         :offset 3)))
 
 (o/defstyled round-normal-listitem :div
   [:& :h-8 :w-8 :cursor-pointer :-mb-2
@@ -207,8 +223,7 @@
 
 (rf/reg-sub :rent/common-show-details
             (fn [_]
-              (and                                          ;@(schpaa.state/listen :r.utlan)
-                @(r/cursor settings [:rent/show-details]))))
+              @(r/cursor settings [:rent/show-details])))
 
 (rf/reg-sub :rent/common-show-timegraph
             (fn [_]
@@ -220,7 +235,7 @@
               (and @(schpaa.state/listen :r.utlan)
                    #_@(r/cursor settings [:rent/edit]))))
 
-;; components
+;;components 1
 
 (defn- badges [deleted-item {:keys [deleted sleepover havekey] :as m}]
   ;note: Deleted-item is a partially applied sc/deleted-item
@@ -406,7 +421,7 @@
        [:div k])]))
 
 ;todo REFACTOR!
-(defn render [loggedin-uid selector]
+(defn render-list [loggedin-uid selector]
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [details? @(rf/subscribe [:rent/common-show-details])
           show-deleted? @(rf/subscribe [:rent/common-show-deleted])
@@ -483,7 +498,7 @@
 ;; common graph state
 
 (def initial-st {:days-back-in-time 30
-                 ;:show-stats        false
+                 :show-stats        true
                  :client-width      0
                  :offset            0
                  :delta             0
@@ -493,56 +508,34 @@
 
 (defonce st (r/atom initial-st))
 
-(def show-stats (r/cursor st [:show-stats]))
-
 ;;
 
-(defn sample-command-row [{:keys [toggle-view-fn days-back-in-time offset reset-view-fn]}]
-  [sc/co {:class [:justify-between :h-full]
-          :style {:height "100%"}}
+(defn local-pillbar [selector data]
+  [sc/row-center {:class [:sticky :pointer-events-none :noprint]
+                  :style {:z-index 10
+                          :top     "6rem"}}
+   [sc/row-center
+    [sc/col-space-8
+     {:class [:pointer-events-auto]}
+     [widgets/pillbar
+      {:class [:small]
+       :style {:box-shadow "var(--shadow-2)"}}
+      selector
+      data]]]])
 
-   [button/just-icon {:on-click #(toggle-view-fn)
-                      :class    [(if true :xinverse :regular)
-                                 :round]} ico/closewindow]
-
-   [:div.grow]
-
-   [button/just-caption {:on-click #(reset! days-back-in-time 180)
-                         :class    [(if (= 180 @days-back-in-time) :frame :xregular)
-                                    :round]} [sc/text1 "16"]]
-   [button/just-caption {:on-click #(reset! days-back-in-time 60)
-                         :class    [(if (= 60 @days-back-in-time) :frame :xregular)
-                                    :round]} [sc/text1 "8"]]
-   [button/just-caption {:on-click #(reset! days-back-in-time 30)
-                         :class    [(if (= 30 @days-back-in-time) :frame :xregular)
-                                    :round]} [sc/text1 "4"]]
-
-
-   [:div.grow]
-
-   [button/just-caption {:on-click #(swap! offset inc)
-                         :class    [:round
-                                    :regular]} "-1"]
-
-   [button/just-icon {:on-click #(reset! offset 1)
-                      :class    [(when (= 1 @offset) :inverse)
-                                 :round
-                                 :regular]} ico/arrowLeft']
-
-   [:div.grow]
-   [button/just-icon {:on-click reset-view-fn
-                      :class    [(if (= 0 @offset) :regular :cta) :round]}
-    ico/undo]])
-
-(defn graph-1 [end-date dataset]
-  (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
-               offset (r/cursor st [:offset])
-               reset-view-fn #(reset! st initial-st)]
+(defn graph-1 [{:keys [end-date]} dataset]
+  (r/with-let [reset-view-fn #(reset! st initial-st)]
     (let [get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
                                    (get datum c)
                                    nil))]
       [:div.relative.w-full.h-full
-       [booking.graph/graph dataset nil st reset-view-fn
+       [booking.graph/graph dataset nil {:c-days-back-in-time c-days-back-in-time
+                                         :c-offset            c-offset
+                                         :c-xpos              c-xpos
+                                         :c-xstart            c-xstart
+                                         :touchdown           (r/cursor st [:touchdown])
+                                         :mousedown           (r/cursor st [:mousedown])
+                                         :client-width        (r/cursor st [:client-width])} reset-view-fn
         nil
         (fn draw-func? [dt x _value-and-color-seq max-value]
           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
@@ -564,111 +557,12 @@
        [:div.absolute.bottom-2.right-10
         [booking.graph/corner-stats get-data-fn end-date]]])))
 
-(def weather-words
-  [[0 "Tåke"]
-   [2 "Pent vær"]
-   [2 "Overskyet"]
-   [2 "Lettskyet"]
-   [2 "Skyet"]
-   [1 "Vindstille"]
-   [1 "Vind"]
-   [1 "Bris"]
-   [1 "Kraftig vind"]
-   [3 "Yr"]
-   [3 "Litt nedbør"]
-   [3 "Styrtregn"]])
-
-
-(defn temperatureform-content [{:keys [data on-close uid write-fn]}]
-  (let [validation-fn
-        (fn [{:keys [vann luft vær] :as values}]
-          (tap> values)
-          (into {}
-                (remove (comp nil? val)
-                        {:vann (cond-> nil
-                                 (empty? vann) ((fnil conj []) "mangler")
-                                 (not= vann (str (js/parseFloat vann))) ((fnil conj []) "er feil"))
-                         :luft (cond-> nil
-                                 (empty? luft) ((fnil conj []) "mangler")
-                                 (not= luft (str (js/parseFloat luft))) ((fnil conj []) "er feil"))
-                         :vær  (cond-> nil
-                                 (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))]
-    [fork/form
-     {:initial-values   {:luft nil
-                         :vann nil
-                         :vær  nil}
-      :prevent-default? true
-      :keywordize-keys  true
-      :validation       validation-fn
-      :on-submit        (fn [{:keys [values]}]
-                          (let [data (assoc values
-                                       :timestamp (str (t/now))
-                                       :uid uid)]
-                            (when write-fn
-                              (write-fn data))
-                            (on-close)))}
-     (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
-       [sc/dialog-dropdown
-        [sc/col-space-8
-         [sc/col-space-8
-          {:style {:padding          "1rem"
-                   :background-color "var(--floating)"}}
-          [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
-          [:form
-           {:id        form-id
-            :on-submit handle-submit}
-           [sc/col-space-8
-            [sc/row-sc-g4 {:style {:gap "2rem"}
-                           :class [:items-start]}
-             [sc/col-space-4 {:class [:w-32]}
-              [field/textinput (assoc props
-                                 :type "number"
-                                 :values {:luft (:luft values)}) "Lufttemp" :luft]
-              [field/textinput (assoc props
-                                 :type "number") "Vanntemp" :vann]]
-             [sc/checkbox-matrix
-              {:style {:padding-topx "1rem"}}
-              (into [:<>]
-                    (for [[_ e] (group-by first weather-words)
-                          [_ e] e]
-                      [hoc.toggles/largeswitch-local''
-                       {:get     #(get-in values [:vær e])
-                        :set     #(do
-                                    (tap> e)
-                                    (set-values (assoc-in values [:vær e] %)))
-                        :view-fn (fn [t c v]
-                                   [sc/row-sc-g2 t
-                                    [(if v sc/text1 sc/text0) c]])
-                        :caption e}]))]]
-            [sc/row-field
-             [:div.grow]
-             [button/just-caption {:class    [:regular :normal]
-                                   :on-click on-close
-                                   :type     :button} "Avbryt"]
-             [button/just-caption {:type     :submit
-                                   :disabled (not (empty? (validation-fn values)))
-                                   :class    [:cta :normal]} "Lagre"]]]]]]])]))
-
-(defn add-temperature []
-  (let [uid @(rf/subscribe [:lab/uid])
-        data {}]
-    (rf/dispatch [:modal.slideout/show
-                  {:data       data
-                   :uid        uid
-                   :write-fn   #(let [data (-> %
-                                               (assoc :version booking.data/TEMPERATURE-VERSION)
-                                               (update :luft js/parseFloat)
-                                               (update :vann js/parseFloat))]
-                                  (db/database-push {:path  ["temperature"]
-                                                     :value data}))
-                   :content-fn #(temperatureform-content %)}])))
-
 (def graph-2-f
   (juxt key (comp-> val #(map (comp-> val (juxt :luft
                                                 :vann
                                                 #_(comp-> :vær js/parseInt))) %) first)))
 
-(defn graph-2 [end-date]
+(defn graph-2 [end-date*]
   (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})
         base (transduce (comp existing
                               active
@@ -680,145 +574,190 @@
                                         (some #{(compare version booking.data/TEMPERATURE-VERSION)} [0 1]))))
                         conj temperature-records)
         grouped-base (group-by (comp-> val :timestamp t/instant t/date str) base)
-        dataset (into {} (map graph-2-f) grouped-base)]
-    (r/with-let [reset-view-fn #(reset! st initial-st)]
-      (let [get-data-fn (fn [dt]
-                          (when-some [datum (get dataset dt)]
-                            datum))]
-        [:div.relative
-         [booking.graph/graph
-          dataset
-          nil
-          st
-          reset-view-fn
-          nil
-          (fn draw-func! [dt x _value-and-color-seq max-value]
-            (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
-                  [cnt v2] (get-data-fn dt)
-                  value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
-                                       [v2 "orange"]
-                                       [0 "red"]
-                                       [0 "green"]]
+        dataset (into {} (map graph-2-f) grouped-base)
+        ;todo fix
+        reset-view-fn #(reset! settings initial-st)]
+    (let [get-data-fn (fn [dt]
+                        (when-some [datum (get dataset dt)]
+                          datum))]
+      [:div.relative
+       [l/boundary
+        (fn [err] [sc/text {:class [:p-1 :error]} (l/default-error-body err)])
+        [booking.graph/graph
+         dataset
+         {:c-days-back-in-time c-days-back-in-time
+          :c-xpos              c-xpos
+          :c-offset            c-offset
+          :c-xstart            c-xstart}                    ;st
+         reset-view-fn
+         nil
+         (fn draw-func! [dt x _value-and-color-seq max-value]
+           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+                 [cnt v2] (get-data-fn dt)
+                 value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
+                                      [v2 "orange"]
+                                      [0 "red"]
+                                      [0 "green"]]
 
-                  offset (* (/ 1 (max 1 (count value-and-color-seq))))
-                  half-offset (/ offset -2)]
+                 offset (* (/ 1 (max 1 (count value-and-color-seq))))
+                 half-offset (/ offset -2)]
 
-              (for [[idx [value color]] (let [[h & t] (map-indexed vector value-and-color-seq)]
-                                          (conj t h))
-                    :let [x' (if (pos? idx)
-                               ;subtract 0.5 because the point is already at center
-                               (+ x -0.4 (* offset idx) half-offset)
-                               x)]]
-                [:line
-                 (conj {:stroke       color
-                        :stroke-width 0.85
-                        :x1           x' :y1 (- max-value value)
-                        :x2           x' :y2 max-value}
-                       (when (pos? idx)
-                         {:vector-effect :non-scaling-stroke
-                          :stroke-width  3}))])))]
-         [:div.absolute.bottom-2.right-10
-          [booking.graph/corner-stats get-data-fn end-date]]]))))
+             (for [[idx [value color]] (let [[h & t] (map-indexed vector value-and-color-seq)]
+                                         (conj t h))
+                   :let [x' (if (pos? idx)
+                              ;subtract 0.5 because the point is already at center
+                              (+ x -0.4 (* offset idx) half-offset)
+                              x)]]
+               [:line
+                (conj {:stroke       color
+                       :stroke-width 0.85
+                       :x1           x' :y1 (- max-value value)
+                       :x2           x' :y2 max-value}
+                      (when (pos? idx)
+                        {:vector-effect :non-scaling-stroke
+                         :stroke-width  3}))])))]]
+       #_[:div.absolute.bottom-2.right-10
+          [booking.graph/corner-stats get-data-fn @end-date*]]])))
 
 (defn- toggle-graph-view []
-  (swap! show-stats (fnil not false)))
+  (swap! c-show-statistics (fnil not false)))
 
-(defn always-panel []
+(defn- correct-margins []
+  {:padding-inline "0"})
+
+;; components 2
+
+(defn sample-command-row [{:keys [toggle-view-fn reset-view-fn]}]
+  [sc/co {:class [:justify-between :h-full]
+          :style {:height "100%"}}
+
+   [button/just-icon {:on-click #(toggle-view-fn)} ico/closewindow]
+   [:div.grow]
+   [button/just-caption {:on-click #(reset! c-days-back-in-time 90)
+                         :class    [(if (= 90 @c-days-back-in-time) :frame)
+                                    :round]} [sc/text1 "12"]]
+   [button/just-caption {:on-click #(reset! c-days-back-in-time 60)
+                         :class    [(if (= 60 @c-days-back-in-time) :frame)
+                                    :round]} [sc/text1 "8"]]
+   [button/just-caption {:on-click #(reset! c-days-back-in-time 30)
+                         :class    [(if (= 30 @c-days-back-in-time) :frame)
+                                    :round]} [sc/text1 "4"]]
+
+
+   [:div.grow]
+
+   [button/just-caption {:on-click #(swap! c-offset inc)
+                         :class    [:round
+                                    :regular]} "-1"]
+
+   [button/just-icon {:on-click #(reset! c-offset 1)
+                      :class    [(when (= 1 @c-offset) :inverse)
+                                 :round
+                                 :regular]} ico/arrowLeft']
+
+   [:div.grow]
+   [button/just-icon {:on-click reset-view-fn
+                      :class    [(if (= 0 @c-offset) :regular :cta) :round]}
+    ico/undo]])
+
+(defn- render-statistics [{:keys [end-date* reset-view-fn graphs]}]
+  [sc/surface-a {:class [:p-0]
+                 :style {:background-color "var(--floating)"}}
+   [sc/row
+    [sc/col {:style {:position "relative"}
+             :class [:w-full :py-10]}
+
+     ;fixtures
+     [:div.absolute.top-0.left-0.p-2
+      [:div.flex.items-center.h-8
+       [booking.graph/corner-day @end-date*]]]
+
+     ;fixtures
+     [:div.absolute.bottom-0.left-0.p-2
+      [:div.h-8.flex.items-center
+       [button/icon-and-caption
+        {:on-click booking.temperature/add-temperature
+         :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]
+
+     (into [:<>] (map identity graphs))]
+
+    [:div.p-2
+     {:style {:width   "3rem"
+              :padding "0.5rem"}}
+     (sample-command-row
+       {:toggle-view-fn #(swap! c-show-statistics not)
+        :reset-view-fn  reset-view-fn})]]])
+
+(rf/reg-sub :end-date (fn [_] (t/<< (t/today) (t/new-period (+ @c-offset @c-xpos) :days))))
+
+(defn render-new []
   (let [{:keys [right-menu? hidden-menu?]} @(rf/subscribe [:lab/screen-geometry])]
     ;todo Margins 
-    [sc/row-field {:class [:-mx-4]
-                   :style {
-                           :flex-direction (if right-menu? :row-reverse :row)}}
-     [:div.sticky.top-24
+    [:div.flex.justify-between
+     {:class [:gap-4]
+      :style {:padding-bottom "0.5rem"
+              :flex-direction (if right-menu? :row-reverse :row)}}
+     [:div.sticky.top-24.m-0.p-0
       {:style (conj
-                (when-not hidden-menu?
-                  (if right-menu?
-                    {:margin-right  "-2rem"
-                     :padding-right "1rem"}
-                    {:margin-left  "-2rem"
-                     :padding-left "1rem"}))
+                (correct-margins)
+                {}                                          ;:background-color "rgba(255,0,255,0.2)"
+
+
+                #_(if-not hidden-menu?
+                    (if right-menu?
+                      {:margin-right  "-2rem"
+                       :padding-right "1rem"}
+                      {:margin-left  "-2rem"
+                       :padding-left "0rem"})
+                    {})
                 {:height "min-content"})}
       [booking.modals.boatinput/boatpanel-window nil]]
-     [sc/col {:style {:width "100%"}}
-      [sc/col-space-8
-       (r/with-let [days-back-in-time (r/cursor st [:days-back-in-time])
-                    offset (r/cursor st [:offset])
-                    reset-view-fn #(swap! st update merge initial-st)]
-         (let [graph-command-row (sample-command-row
-                                   {:toggle-view-fn    toggle-graph-view
-                                    :days-back-in-time days-back-in-time
-                                    :offset            offset
-                                    :reset-view-fn     reset-view-fn})
-               activity-records @(db/on-value-reaction {:path ["activity-22"]})
-               existing (remove deleted?)
-               base (->> (transduce existing conj activity-records)
-                         (group-by (comp-> val :timestamp t/instant t/date str)))
-               dataset (into {}
-                             (map
-                               (juxt key
-                                     (juxt (comp count val)
-                                           (comp
-                                             #(reduce (fn [[a' b' c' d'] [a b c d]]
-                                                        [(+ (or a 0) a')
-                                                         (+ (or b 0) b')
-                                                         (+ (or c 0) c')
-                                                         (+ (or d 0) d')])
-                                                      [0 0 0 0] %)
-                                             #(map (comp-> val (juxt :adults :juveniles :children (comp count :list))) %)
-                                             second))))
-                             base)
-               xpos (r/cursor st [:xpos])
-               end-date (t/<< (t/today) (t/new-period (+ @offset @xpos) :days))
-               get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
-                                        (get datum c)
-                                        nil))]
-           [:<>
-            (if-not @show-stats
-              [sc/surface-p {:style {:padding #_-inline-end "0.25rem"
-                                     :xpadding-block-start "0.5rem"
-                                     :xpadding-block-end "0.25rem"}}
-               [sc/row-field {:style {:align-items :center}}
-                [sc/text1 "75"]
-                [sc/text1 "23"]
-                [:div.grow]
-                [button/just-icon {:on-click toggle-graph-view
-                                   :class    [:regular :round :large]} ico/chart]]]
-              [sc/surface-a {:class [:p-0]
-                             :style {:background-color "var(--floating)"}}
-               [sc/row
 
-                [sc/col {:style {:position "relative"}
-                         :class [:w-full :py-10]}
+     [sc/col-space-8 {:style {:width "100%"}
+                      :class []}
+      (r/with-let []                                        ;todo
 
-                 [:div.absolute.top-0.left-0.p-2
-                  [:div.flex.items-center.h-8
-                   [booking.graph/corner-day end-date]]]
+        (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
+              existing (remove deleted?)
+              base (->> (transduce existing conj activity-records)
+                        (group-by (comp-> val :timestamp t/instant t/date str)))
+              dataset (into {}
+                            (map
+                              (juxt key
+                                    (juxt (comp count val)
+                                          (comp
+                                            #(reduce (fn [[a' b' c' d'] [a b c d]]
+                                                       [(+ (or a 0) a')
+                                                        (+ (or b 0) b')
+                                                        (+ (or c 0) c')
+                                                        (+ (or d 0) d')])
+                                                     [0 0 0 0] %)
+                                            #(map (comp-> val (juxt :adults :juveniles :children (comp count :list))) %)
+                                            second))))
+                            base)
 
-                 [:div.absolute.bottom-0.left-0.p-2
-                  [:div.h-8.flex.items-center
-                   [button/icon-and-caption
-                    {:on-click add-temperature
-                     :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]
+              end-date (rf/subscribe [:end-date])
+              get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
+                                       (get datum c)
+                                       nil))]
+          [:<>
+           (when @c-show-statistics
+             [render-statistics
+              {:end-date*      end-date
+               ;:dataset           dataset
+               ;:offset            c-offset
+               :reset-view-fn reset-view-fn
+               :graphs        [#_[graph-1 end-date dataset]
+                               [graph-2 end-date]]}])
 
-                 [graph-1 end-date dataset]
-                 [graph-2 end-date]]
+           (local-pillbar selector
+                          [[:b "Ute"]
+                           [:a "Alle"]
+                           [:c "Stativ"]])
 
-                [:div.p-2 {:style {:width             "3rem"
-                                   :xbackground-color "var(--toolbar)"}} graph-command-row]]])
-            [sc/row-center {:class [:sticky :pointer-events-none :noprint]
-                            :style {:z-index 10
-                                    :top     "6rem"}}
-             [sc/row-center
-              [sc/col-space-8
-               {:class [:pointer-events-auto]}
-               [widgets/pillbar
-                {:class [:large]
-                 :style {:box-shadow "var(--shadow-2)"}}
-                selector
-                [[:b "Ute"]
-                 [:a "Alle"]
-                 [:c "Stativ"]]]]]]
-            (booking.utlan/render nil selector)]))]]]))
+           [l/pre-s @settings]
+
+           (booking.utlan/render-list nil selector)]))]]))
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]
@@ -828,12 +767,19 @@
                                      :value {}})
                    {}))
 
+(defn as-toggle [attr class toggle]
+  (merge-with into attr
+              {:class    [:round (if @toggle class :clear)]
+               :on-click #(swap! toggle not)}))
+
 (defn headline-plugin []
   (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
         details-mode? @(rf/subscribe [:rent/common-show-details])]
     [[button/just-large-icon
-      {:class    [:round (if details-mode? :message :clear)]
-       :on-click #(swap! (r/cursor settings [:rent/show-details]) not)}
+      (as-toggle {:class [:round :square-top]} :selected c-show-statistics)
+      ico/chart]
+     [button/just-large-icon
+      (as-toggle {:class [:round :square-top]} :inverse c-show-details)
       ico/more-details]
      [button/just-large-icon
       {:class    [:round

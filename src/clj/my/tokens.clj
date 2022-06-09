@@ -3,8 +3,11 @@
             [garden.selectors :as s]))
 
 
-(defn set-it []
-  (o/set-tokens! {:components [{:id     :disabled-button
+(defn set-it! []
+  (o/set-tokens! {:components [{:id     :debug
+                                :garden [:& {:opacity    1
+                                             :outline      "2px solid red"}]}
+                               {:id     :disabled-button
                                 :garden [:& {:opacity    0.5
                                              :color      "var(--surface000)"
                                              :background "var(--surface00)"}]}

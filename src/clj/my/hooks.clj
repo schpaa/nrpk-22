@@ -19,20 +19,19 @@
 (defn produce [filename c]
   (spit filename c))
 
+;;this is a commentary
+
 (defn write-styles-hook
   {:shadow.build/stage :flush}
   [build-state & args]
-  (my.tokens/set-it)
-  (let [content (str
-                  (gc/compile-css {:pretty-print? false}
-                                  (concat
-                                    girouette-preflight/preflight
-                                    global-styles))
-                  "\n"
-                  (o/defined-styles)
-                  "\n"
-                  (slurp "template/css/colors.css"))] 
-    (produce "public/booking/css/ornament.css" content))
+  (my.tokens/set-it!)
+  (-> "public/booking/css/ornament.css"
+      (produce (apply str (interpose "\n")
+                      [(gc/compile-css
+                        {:pretty-print? false}
+                        (concat  girouette-preflight/preflight global-styles))
+                       (o/defined-styles)
+                       (slurp "template/css/colors.css")])))
   (println "rebuild styles")
   build-state)
 

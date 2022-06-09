@@ -18,13 +18,13 @@
         booking? (rf/subscribe [:lab/booking])
         nokkelvakt (rf/subscribe [:lab/nokkelvakt])]
     ;(tap> [ipad?])
-    [(when goog.DEBUG
-       {:on-click   #()
-        :caption    "Lufttemperatur Vanntemperatur"
-        :content-fn (fn []
-                      [:div.w-full.h-full
-                       {:style {:background-color "var(--floating)"}}
-                       [widgets/temperature {:air 27.2 :water 23.5 :on-click #(rf/dispatch [:app/navigate-to [:r.temperature]])}]])})
+    [#_(when goog.DEBUG
+         {:on-click   #()
+          :caption    "Lufttemperatur Vanntemperatur"
+          :content-fn (fn []
+                        [:div.w-full.h-full
+                         {:style {:background-color "var(--floating)"}}
+                         [widgets/temperature {:air 27.2 :water 23.5 :on-click #(rf/dispatch [:app/navigate-to [:r.temperature]])}]])})
 
      {:icon-fn      #(sc/icon-large ico/new-home)
       :default-page :r.forsiden
@@ -65,12 +65,12 @@
         :default-page :r.nokkelvakt
         :page-name    :r.nokkelvakt})
 
-     (when (or @admin? @booking?)
-       {:icon-fn      (fn [] (sc/icon-large ico/booking))
-        :caption      "Booking Sjøbasen"
-        :default-page :r.booking
-        :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
-        :page-name    :r.booking})
+     #_(when (or @admin? @booking?)
+         {:icon-fn      (fn [] (sc/icon-large ico/booking))
+          :caption      "Booking Sjøbasen"
+          :default-page :r.booking
+          :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
+          :page-name    :r.booking})
 
      (when (or @member? @admin? @registered?)
        {:icon-fn      (fn [] (sc/icon-large ico/yearwheel))

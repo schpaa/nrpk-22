@@ -9,7 +9,7 @@ module.exports = {
 //    "./public/eykt/js/cljs-runtime/**/*.js",
 //    "./public/eykt/**/*.{html,js}",
 //    "./lib/**/*.{cljs,js}",
-//    "./public/devcards/**/*.{html,js}",
+    "./public/devcards/**/*.{html,js}",
 //    "./public/devcards/js/cljs-runtime/**/*.js",
     ],
     darkMode: 'class',

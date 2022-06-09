@@ -147,7 +147,7 @@
           :selected      hoc/selected
           :uid           (:uid user-auth)
           :on-submit     #(send :e.complete %)
-          :cancel #(send :e.cancel-booking)
+          :cancel        #(send :e.cancel-booking)
           :my-state      schpaa.components.views/my-state
           :booking-data' (sort-by :date > (booking.database/read))}]]))
 
@@ -158,7 +158,7 @@
      (let [id (some-> r :path-params :id)
            data (db/on-value-reaction {:path ["booking-posts" "articles" (name id)]})]
        [+page-builder r
-                                        ;[l/ppre-x r id @data]
+        ;[l/ppre-x r id @data]
         {:render (fn [] [:div.max-w-xl.mx-auto.container
                          [sc/markdown [schpaa.markdown/md->html (:content @data)]]])}]))
 
@@ -167,14 +167,14 @@
      (let [user-auth @(rf/subscribe [::db/user-auth])]
        [+page-builder r
         {;:always-panel user.views/always-panel
-         :render       user.views/my-info}]))
+         :render user.views/my-info}]))
 
    :r.logg
    (fn [r]
      (let [user-auth @(rf/subscribe [::db/user-auth])]
        [page-boundary r
         [user.views/userstatus-form user-auth]
-                                        ;[render-back-tabbar]
+        ;[render-back-tabbar]
         (let [{:keys [bg bg+ fg- fg fg+ hd p p- p+ he]} (st/fbg' :void)]
           [:div.max-w-md.mr-auto
            [:div.space-y-px.flex.flex-col.w-full
@@ -216,7 +216,7 @@
                         (when @receipts'
                           (let [receipts (reduce (fn [a [k v]] (update a (-> v :articles :id) (fnil inc 0))) {} @receipts')]
                             [:<>
-                                        ;[l/ppre-x receipts]
+                             ;[l/ppre-x receipts]
                              [sc/row-center
                               [hoc.buttons/cta {:on-click schpaa.style.dialog/open-dialog-addpost} "Skriv et nytt innlegg"]]
                              (when @data
@@ -273,7 +273,7 @@
 
    :r.aktivitetsliste
    (fn [r]
-                                        ;todo: () or [], and does it matter here?
+     ;todo: () or [], and does it matter here?
      [+page-builder r
       {:render-fullwidth booking.aktivitetsliste/render
        :panel            booking.aktivitetsliste/panel
@@ -287,14 +287,14 @@
 
    :r.yearwheel
    (fn [r]
-     [+page-builder r {:panel        booking.yearwheel/panel
+     [+page-builder r {:panel           booking.yearwheel/panel
                        :headline-plugin booking.yearwheel/headline-plugin
-                       :always-panel booking.yearwheel/always-panel
-                       :render       booking.yearwheel/render}])
+                       :always-panel    booking.yearwheel/always-panel
+                       :render          booking.yearwheel/render}])
 
    :r.nokkelvakt
    (fn [r]
-                                        ;:calendar/show-only-available
+     ;:calendar/show-only-available
      (let [user (rf/subscribe [::db/user-auth])
            db (rf/subscribe [:db/boat-db])
            boat-types (rf/subscribe [:db/boat-type])]
@@ -302,10 +302,10 @@
        [+page-builder r
         {:always-panel (fn [] [sc/col-space-4
                                [sc/row-sc-g2-w
-                                        ;[hoc.buttons/cta-pill {:disabled false :class [:narrow]} "Vår/Sommer"]
-                                        ;[hoc.buttons/reg-pill {:disabled false :class [:narrow]} "Utvidet åpningstid"]
-                                        ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Sensommer"]
-                                        ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Høst"]
+                                ;[hoc.buttons/cta-pill {:disabled false :class [:narrow]} "Vår/Sommer"]
+                                ;[hoc.buttons/reg-pill {:disabled false :class [:narrow]} "Utvidet åpningstid"]
+                                ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Sensommer"]
+                                ;[hoc.buttons/reg-pill {:disabled true :class [:narrow]} "Høst"]
                                 [hoc.toggles/ls-sm :calendar/show-only-available "Skjul komplette økter"]]])
 
          :render       (fn []
@@ -358,7 +358,7 @@
                     (o/defstyled image-container :div.relative
                       :overflow-hidden
                       {:border-radius "var(--radius-round)"
-                                        ;:border        "2px solid red"
+                       ;:border        "2px solid red"
                        :aspect-ratio  "1/1"
                        :height        "var(--size-10)"
                        :clip-path     "circle(100%)"
@@ -407,9 +407,9 @@
                                            ansvar))]]]
                         [:div.absolute.bottom-2.right-2
                          (sc/icon-small
-                          {:style    {:color "var(--text3)"}
-                           :on-click #(rf/dispatch [:app/give-feedback {:navn navn :caption "Vær kort og konstruktiv. Meldingen blir ikke nødvendigvis besvart."}])}
-                          ico/tilbakemelding)]])])])}])
+                           {:style    {:color "var(--text3)"}
+                            :on-click #(rf/dispatch [:app/give-feedback {:navn navn :caption "Vær kort og konstruktiv. Meldingen blir ikke nødvendigvis besvart."}])}
+                           ico/tilbakemelding)]])])])}])
    :r.oversikt.organisasjon
    (fn [r]
      [+page-builder
@@ -424,8 +424,8 @@
      (let [data (rf/subscribe [::db/presence-status])]
        [+page-builder r
         {;:panel            booking.presence/panel
-         :always-panel     booking.presence/always
-         :render #(booking.presence/render r data)}]))
+         :always-panel booking.presence/always
+         :render       #(booking.presence/render r data)}]))
 
 
    #_(fn r []
@@ -439,13 +439,13 @@
        [+page-builder r
         {;:panel            booking.utlan/panel
          :headline-plugin booking.utlan/headline-plugin
-         :render    booking.utlan/always-panel
-         :xrender          #(vector :div {:style {:background-color "green"}} "test") #_ #(booking.utlan/render uid)}]))
+         :render          booking.utlan/render-new
+         :xrender         #(vector :div {:style {:background-color "green"}} "test") #_#(booking.utlan/render-list uid)}]))
 
    :r.debug              (fn [r] (page r {:always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}))
    :r.oversikt           (fn [r] (page r {:render booking.oversikt/render}))
-                                        ;todo Fordi når man skal bytte er det greit å alltid ha ett sted hvor dette kan skje
+   ;todo Fordi når man skal bytte er det greit å alltid ha ett sted hvor dette kan skje
    :r.dine-vakter        (fn [r] (page r {:render booking.dine-vakter/render}))
    :r.min-status         (fn [r] (page r {:render-halfwidth true
                                           :render           booking.min-status/render}))
@@ -489,8 +489,8 @@
                                         c (- 8 (count n))]
                                     (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
-   :r.temperature        (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
-                                          :render          (fn [] [booking.temperature/render r])}))
+   #_#_:r.temperature        (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
+                                              :render          (fn [] [booking.temperature/render r])}))
    :r.users
    (fn [r] (page r {:render-fullwidth booking.users/render
                     :always-panel     booking.users/always-panel
@@ -500,10 +500,10 @@
      (let [user-auth (rf/subscribe [::db/user-auth])]
        (fn [r]
          (page r {:always-panel content.booking-blog/always-panel
-                  :srender       (fn [r] [content.booking-blog/render
-                                          {:fsm  {}
-                                           :uid  (:uid @user-auth)
-                                           :path ["booking-posts" "articles"]}])}))))
+                  :srender      (fn [r] [content.booking-blog/render
+                                         {:fsm  {}
+                                          :uid  (:uid @user-auth)
+                                          :path ["booking-posts" "articles"]}])}))))
    :r.page-not-found     (fn [r] (page r {:render (fn [] [error-page r])}))})
 
 (comment

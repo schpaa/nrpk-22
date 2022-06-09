@@ -131,17 +131,19 @@
      {:style {:font-weight "var(--font-weight-6)"}}
      (str "(topp=" max-value ")")]]])
 
-(defn graph [_ _ st reset-view get-data-fn draw-fn]
+(defn graph [_  {:keys [c-days-back-in-time
+                        c-xpos
+                        c-offset
+                        c-xstart
+
+                        touchdown
+                        mousedown
+                        client-width]} reset-view-fn _ _]
   (let [{:keys [right-menu?]} @(rf/subscribe [:lab/screen-geometry])
         mode (r/atom 3)
-        element (r/atom nil)
-        client-width (r/cursor st [:client-width])
-        touchdown (r/cursor st [:touchdown])
-        mousedown (r/cursor st [:mousedown])
-        xstart (r/cursor st [:xstart])
-        offset (r/cursor st [:offset])
-        xpos (r/cursor st [:xpos])
-        days-back-in-time (r/cursor st [:days-back-in-time])]
+        element (r/atom nil)]
+
+
     (r/create-class
       {:component-did-mount
        (fn [_]
@@ -152,31 +154,30 @@
                                    (when @element
                                      (reset! client-width (.-clientWidth @element)))
                                    (reset! touchdown true)
-                                   (reset! xstart (round x))))
+                                   (reset! c-xstart (round x))))
              (.addEventListener @element "touchend"
                                 (fn []
-                                  (reset! offset (+ @offset @xpos))
-                                  (reset! xpos 0)
+                                  (reset! c-offset (+ @c-offset @c-xpos))
+                                  (reset! c-xpos 0)
                                   (reset! touchdown false)
                                   (if (t/< (t/today)
-                                           (t/<< (t/today) (t/new-period (+ @offset @xpos) :days)))
-                                    (reset-view))))
+                                           (t/<< (t/today) (t/new-period (+ @c-offset @c-xpos) :days)))
+                                    (reset-view-fn))))
              (.addEventListener @element "touchmove"
                                 #(let [seg-width (when (pos? @client-width)
-                                                   (/ @client-width @days-back-in-time))
+                                                   (/ @client-width @c-days-back-in-time))
                                        touches (aget (.-targetTouches %) 0)
-                                       rel-pos-to-startx (- (.-pageX touches) @xstart)
+                                       rel-pos-to-startx (- (.-pageX touches) @c-xstart)
                                        rel-x (when (pos? seg-width)
                                                (round (/ rel-pos-to-startx seg-width)))]
-                                   (reset! xpos rel-x))))))
+                                   (reset! c-xpos rel-x))))))
        :reagent-render
-       (fn [dataset command-row _ st get-data-fn draw-fn]
-         (let [;offset (r/cursor st [:offset])
-               end-date (t/<< (t/today) (t/new-period (+ @offset @xpos) :days))
-               start-date (t/<< end-date (t/new-period @days-back-in-time :days))
+       (fn [dataset _ _reset-view-fn get-data-fn draw-fn]
+         (let [end-date (t/<< (t/today) (t/new-period (+ @c-offset @c-xpos) :days))
+               start-date (t/<< end-date (t/new-period @c-days-back-in-time :days))
                lookup (map str (date-iter start-date 1))
-               data (take @days-back-in-time (map #(vector % [(first (get dataset % [0]))
-                                                              (second (get dataset % [0]))]) lookup))
+               data (take @c-days-back-in-time (map #(vector % [(first (get dataset % [0]))
+                                                                (second (get dataset % [0]))]) lookup))
                max-value (max 50 (reduce max 0 (map (comp first second) dataset)))
                first-day (when-some [data data] (drop-while (comp zero? first second) data))]
            [:div.w-full
@@ -186,11 +187,12 @@
               {:style {:margin "0.5rem"}}
               [:div
                {:style {:background-color (when (or @mousedown @touchdown) "var(--content)")}}
+               ;todo Totally not needed, pass the record here
                (render-graph
                  {:draw-fn           draw-fn
                   :indexed-data      (map-indexed vector data)
                   :element           element
-                  :days-back-in-time days-back-in-time
+                  :days-back-in-time c-days-back-in-time
                   :first-day         (ffirst first-day)
                   :max-value         max-value
                   :get-data-fn       get-data-fn

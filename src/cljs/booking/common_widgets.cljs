@@ -153,7 +153,7 @@
                             :color      "unset"
                             :flex       "1 0 1"}} caption]))]))
 
-(defn stability-expert [{:keys [stability expert]}]
+(defn stability-circle [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center
    [:svg.w-5.inline-block {:viewBox "-3 -3 6 6"}
     [:circle {:cx           0 :cy 0 :r 2
@@ -198,25 +198,26 @@
         {:on-click #(on-flag-click boat-type (or (not ex-data) true) uid)}
         ico/stjerne])]))
 
-(defn stability-name-category [{:keys [stability expert navn kind id] :as m}]
+(defn stability-name-category [{:keys [hide-flag? stability expert navn kind id] :as m}]
   [:div.flex.justify-between.w-full
    {;:class [:truncate]
-    :xstyle {:width "100%"}}
-   [sc/col {:class [:space-y-px :xw-full :xalign-center]}
+    :style {:width "100%"}}
+   [sc/col {:class [:space-y-px :truncate]}
     (when kind
       (schpaa.components.views/normalize-kind kind))
-    [sc/row-sc-g2 {:class [:w-56]}
+    [sc/row-sc-g2 {:class [:w-56x]}
      (when (or stability expert)
-       [stability-expert m])
+       [stability-circle m])
      ;[:div.grow]
      [sc/text2 {:class [:shrink-1x :w-32x :truncate]} (str navn)]]]
-   [favourites-star'
-    {:on-flag-click (fn [boat-type value uid]
-                      (rf/dispatch [:star/write-star-change
-                                    {:boat-type boat-type
-                                     :value     value
-                                     :uid       uid}]))}
-    m]])
+   (when-not hide-flag?
+     [favourites-star'
+      {:on-flag-click (fn [boat-type value uid]
+                        (rf/dispatch [:star/write-star-change
+                                      {:boat-type boat-type
+                                       :value     value
+                                       :uid       uid}]))}
+      m])])
 
 (defn stability-name-category-front-flag [{:keys [stability expert navn kind] :as m}]
   [sc/col {:class [:truncate :space-y-pxx :w-full]}
@@ -231,35 +232,42 @@
                                       :value     value
                                       :uid       uid}]))}
      m]
-    (when (or stability expert) [stability-expert m])
+    (when (or stability expert) [stability-circle m])
     [sc/text1 {:style {:overflow      :hidden
                        :text-overflow :ellipsis
                        :white-space   :nowrap}} navn]]])
 
 
-(defn stability-name-category' [{:keys [url? k reversed?]}
+(defn stability-name-category' [{:keys [k url? reversed? hide-flag?]}
                                 {:keys [stability expert navn kind] :as m}]
   [sc/col {:style {:flex-direction (if reversed? :column-reverse)}
-           :class [:truncate :space-y-px :w-full]}
-   (when kind
-     [sc/text1 {:class []} (schpaa.components.views/normalize-kind kind)])
+           :class [:space-y-px :truncate :w-fullx]}
+   [sc/row-sc-g1 {:style {:line-height 1}}
+    (when (or stability expert)
+      [stability-circle m])
+    (when kind
+      [sc/text2 {:class [:truncate]} (schpaa.components.views/normalize-kind kind)])]
 
-   [:div.flex.items-center.justify-between.gap-1
-    (when (or stability expert) [stability-expert m])
-    (if url?
+   [:div.flex.items-center.justify-start.gap-1.h-full.w-full
+
+    (if (and url? k)
       (data-url {:caption      navn
                  :checked-path ["boat-brand" k]
-                 :text         #(vector sc/title1 {:style {:overflow      :hidden
-                                                           :text-overflow :ellipsis
-                                                           :white-space   :nowrap}} %)}))
+                 :text         #(vector sc/title {:class [:truncate]
+                                                  :style {
+                                                          :overflow      :hidden
+                                                          :text-overflow :ellipsis
+                                                          :white-space   :nowrap}} %)})
+      [sc/title {:class [:truncate]} navn])
 
-    [:div.grow]
-    [favourites-star' {:on-flag-click (fn [boat-type value uid]
-                                        (rf/dispatch [:star/write-star-change
-                                                      {:boat-type boat-type
-                                                       :value     value
-                                                       :uid       uid}]))}
-     m]]])
+    ;[:div.grow]
+    (when-not hide-flag?
+      [favourites-star' {:on-flag-click (fn [boat-type value uid]
+                                          (rf/dispatch [:star/write-star-change
+                                                        {:boat-type boat-type
+                                                         :value     value
+                                                         :uid       uid}]))}
+       m])]])
 
 (defn trashcan' [{:keys [smallest on-click deleted?]} caption]
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
@@ -622,7 +630,7 @@
      [sc/row
       {:style {:justify-content "center"
                :flex-wrap       "wrap"}}
-      (into [:<>] (map f (remove deleted? vs)))])))
+      (into [:<>] (map f (remove nil? vs)))])))
 
 (defn cell [category table [k v]]
   [sc/surface-a {:on-click #(if k
@@ -836,7 +844,8 @@
 (defn data-url [{:keys [checked-path text caption]}]
   (let [path (apply str (interpose "/" (mapv #(if (keyword? %) (name %) %) checked-path)))]
     (sc/link {:class  [:truncate]
-              :style  {:text-decoration "none"}
+              :style  {:text-decoration "none"
+                       :line-height "auto"}
               :target "_blank"
               :href   (if goog.DEBUG
                         (str "http://localhost:4000/database/nrpk-vakt/data/" path)

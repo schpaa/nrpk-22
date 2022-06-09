@@ -114,7 +114,7 @@
     --textmarker-background-light: var(--yellow-2);
     --textmarker-background-dim: var(--yellow-5);
 
-    --light-selected: var(--yellow-5);
+    --light-selected: var(--yellow-3);
     --light-selected-copy: var(--gray-9);
     --dim-selected: var(--gray-9);
     --dim-selected-copy: var(--gray-0);

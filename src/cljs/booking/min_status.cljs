@@ -83,7 +83,7 @@
             [sc/col-space-8
              [widgets/personal user]
              [widgets/pillbar selector [[1 "Vakter"]
-                                        [2 "Meldinger"]
+                                        [2 "Logg"]
                                         [3 "Booking"]]]
              (selector-to-page-map selector datum datas completed-hours)])
           [sc/title1 "Ingen definerte vakter"])))

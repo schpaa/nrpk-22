@@ -225,6 +225,7 @@
 
             [booking.header/header r @scrollpos headline-plugin]]))})))
 
+
 (defn matches-access "" [r [status _access :as _all-access-tokens]]
   (let [[req-status _req-access :as req-tuple] (-> r :data :access)]
     ;todo
@@ -334,7 +335,7 @@
 
        [widgets/after-content]
 
-       (when (or goog.DEBUG @admin?)
+       (when booking.data/SHOW-BADGE
          [:div.fixed.bottom-0.noprint
           {:style {:z-index   10
                    :left      :50%
@@ -360,7 +361,8 @@
   (let [admin? (rf/subscribe [:lab/admin-access])]
     [:<>
      [check-latest-version]
-     [page-boundary r {:frontpage frontpage :headline-plugin headline-plugin}
+     [page-boundary r {:frontpage frontpage
+                       :headline-plugin headline-plugin}
       (if frontpage
         [render r]
         [render-normal r m admin?])]]))

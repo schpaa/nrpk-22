@@ -9,12 +9,10 @@
                      8030 "public/test"
                      3001 ["public/devcards" "public"]}
  :builds            {:devcards
-                     {:target           :browser            ; using :browser-test to pickup all files that match `-test$`
-                      ;:ns-regexp        "-cards$" ; default option for :browser-test is -test$
+                     {:target           :browser
                       :output-dir       "public/devcards/js"
-                      ;:runner-ns        example.devcards ; must have init fn to run
-                      :modules          {:main {:init-fn example.devcards/init!}}
-                      :after-load       example.devcards/reload!
+                      :modules          {:main {:init-fn devcards.devcards/init!}}
+                      :after-load       devcards.devcards/reload!
                       :compiler-options {:devcards           true
                                          :output-feature-set :es8}
                       :js-options       {:resolve

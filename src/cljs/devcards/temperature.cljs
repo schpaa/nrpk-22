@@ -1,4 +1,4 @@
-(ns example.temperature
+(ns devcards.temperature
   (:require-macros [devcards.core :as dc :refer [defcard-rg]])
   (:require [devcards.core :as dc :include-macros true]
             [reagent.core]
@@ -17,7 +17,7 @@
             [schpaa.style.ornament :as sc]
             [re-frame.core :as rf]
             [booking.common-widgets :as widgets]
-            [example.uuc :as uuc]))
+            [devcards.uuc :as uuc]))
 
 (defcard-rg fuckitisslow
             [:div.h-24.w-24

@@ -97,10 +97,10 @@
         [sc/small {:style {:font-weight "var(--font-weight-5)"}} caption]]
        (textinput (subs (str @c-field) 0 length))])))
 
-(defn lookup [id]
+(defn lookup [boatnumber]
   ;todo define as defonce
   (let [data @(rf/subscribe [:rent/lookup])]
-    (get data id)))
+    (get data boatnumber)))
 
 (defn lookup-id [id]
   (let [id (if (keyword? id) id (keyword id))
@@ -129,10 +129,10 @@
       :style {:position  :relative
               :display   :flex
               :flex-grow 1
-              :height    :100%
+              :height    "100%"
               :overflow  :hidden}}
-     [:div {:class [:flex :h-20 :items-end]} content]
-     [:div.inset-0.absolute.flex.flex-col.justify-between
+     [:div {:class [:flex :h-16 :items-end]} content]
+     [:div.inset-x-0.inset-y-4.absolute.flex.flex-col.justify-between
       {:style {:color "var(--text1)"}}
       [bis/center
        {:class    [:absolute :top-0 :pb-10]
@@ -151,7 +151,7 @@
   ;todo refactor
   [up-down-button
    {:content  [:div.flex.items-end.h-full
-               [:img.h-12.object-fit.-ml-px {:src "/img/human.png"}]]
+               [:img.h-10.object-fit.-ml-px {:src "/img/human.png"}]]
     :value    (or @c 0)
     :increase #(cmd/increase-children c)
     :decrease #(cmd/decrease-children c)}])
@@ -159,7 +159,7 @@
 (defn juveniles-slider [c]
   [up-down-button
    {:content  [:div.flex.items-end.h-full
-               [:img.h-16.object-fit.-ml-px {:src "/img/teen.png"}]]
+               [:img.h-14.object-fit.-ml-px {:src "/img/teen.png"}]]
 
     :value    (or @c 0)
     :increase #(cmd/increase-juveniles c)
@@ -168,7 +168,7 @@
 (defn adults-slider [c]
   [up-down-button
    {:content  [:div.flex.items-end.h-full
-               [:img.h-20.object-fit {:src "/img/human.png"}]]
+               [:img.h-16.object-fit {:src "/img/human.png"}]]
     :value    (or @c 0)
     :increase #(cmd/increase-adults c)
     :decrease #(cmd/decrease-adults c)}])
@@ -392,7 +392,7 @@
 
      [:div {:style {:grid-column "1/4"
                     :overflow    :hidden}}
-      [input-area 8 "Telefon– eller nøkkelnummer" :phone]]
+      [input-area 8 "Tlf– eller nøkkelnr (3 siste siffer)" :phone]]
 
      [:div
       {:style {:grid-column "4"
@@ -533,12 +533,12 @@
       #_[list-of-selected]]]))
 
 (defn selected-boats [st c-focus c-textinput-boats]
-  (let [has-focus? (= :boats @c-focus)
+  (let [has-focus? false;(= :boats @c-focus)
         boat (lookup (or (:selected @st) @c-textinput-boats))]
     [sc/surface-p
      {:on-click #(reset! c-focus :boats)
       :class    [:col-span-4
-                 :bottom
+                 :bottom :top
                  (when has-focus? :focus)]
       :style    {;:margin-left           "-0.25rem"
                  :padding-block         "0.5rem"
@@ -548,43 +548,10 @@
                  :column-gap            "var(--size-2)"
                  ;:row-gap               "var(--size-2)"
                  :grid-template-columns "repeat(4,1fr)"}}
-
      [:div
       {:style {:grid-column "1/-1"
                :grid-row    "2"}}
       [list-of-selected]]]))
-
-(defn move-to-prev [st]
-  (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
-                 (pos? (count (:list @st)))
-                 (or (and (pos? (count (:item @st)))
-                          (some #{(:item @st)} (:list @st)))
-                     (empty? (:item @st))))]
-
-    [bis/push-button
-     {
-      :enabled  ok?
-      :disabled true
-      :class    [:disabled]
-      :styles   (when ok? {:color      "var(--gray-1)"
-                           :background "var(--gray-6)"})}
-     (sc/icon-huge ico/prevImage)]))
-
-(defn move-to-next [st]
-  (let [ok? (and (pos? (+ (:adults @st) (:juveniles @st) (:children @st)))
-                 (pos? (count (:list @st)))
-                 (or (and (pos? (count (:item @st)))
-                          (some #{(:item @st)} (:list @st)))
-                     (empty? (:item @st))))]
-
-    [bis/push-button
-     {
-      :enabled  ok?
-      :disabled true
-
-      :styles   (when ok? {:color      "var(--gray-1)"
-                           :background "var(--gray-6)"})}
-     (sc/icon-huge ico/nextImage)]))
 
 (defn await [st]
   (let [ok? (rf/subscribe [::partial-complete])]
@@ -620,47 +587,80 @@
      [sc/row-sc-g2
       (sc/icon-huge ico/check)]]))
 
+(defn preview-phone []
+  [:div.flex.items-end.h-full
+   (if (= 3 (count @c-textinput-phone))
+     (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @c-textinput-phone)]
+       (do
+         (reset! c-extra m)
+         [sc/col-space-1 {:class [:truncate :justify-around]}
+          [sc/ptitle1 phone]
+          [sc/ptext {:class [:truncate]} username]]))
+     (reset! c-extra nil))])
+
+(defn preview-boatinfo []
+  (let [admin? (rf/subscribe [:lab/admin-access])
+        boatnumber (cond
+                     (= 3 (count @c-textinput-boat)) @c-textinput-boat
+                     (= 3 (count @c-selected)) @c-selected)
+
+        #_#_data (some-> id lookup-id)]
+    ;(tap> {:data data})
+    (when boatnumber
+      (when-let [{:keys [id] :as data} (some-> boatnumber lookup)]
+        ;[l/pre id]
+
+        [:div
+         {:style {:min-width "0"
+                  :padding       "0.25rem"
+                  :box-shadow    "none"
+                  :border-radius "var(--radius-0)"
+                  :height        "100%"}}
+
+
+         [sc/col
+          [sc/row-sc-g2 {:style {:width "100%"
+                                 :align-items "center"}}
+           [widgets/badge {:class ['small]} (:number data) (:slot data)]
+           [widgets/stability-name-category'
+            {:hide-flag? true
+             :reversed?  false
+             :url?       @admin?
+             :k          id}
+            data]]
+          ;[widgets/stability-name-category (assoc data :hide-flag? true)]
+          ;[l/pre data]
+          [sc/title (:description data)]]
+         #_[:div.h-full {:class [:truncate :-debug]}
+            [sc/co {:class []}
+             [sc/row-sc {:class [:truncate :h-full]}
+              [widgets/badge {:class ['small]} (:number data) (:slot data)]
+              [:div.truncate "adjklasdjklasjkldjklasdjklasdjkl"]
+              [widgets/stability-name-category'
+               {:hide-flag? true
+                :reversed?  true
+                :url?       @admin?
+                :k          id}
+               data]]
+             ;[widgets/stability-name-category (assoc data :hide-flag? true)]
+             [sc/title (:description data)]]]]))))
+
 (defn status []
-  [:<>
-   ;[l/pre @c-extra]
-   [sc/surface-p {:class [(if (or (and (= :boats @c-focus)
-                                       @c-boat-list
-                                       @c-selected)
-
-                                  (and (= :phone @c-focus)
-                                       (some? @c-extra))) :focus)]
-                  :style {:padding       "0.5rem"
-                          :height        "100%"
-                          ;:background-color "var(--content)"
-                          :border-radius "var(--radius-0)"}}
-    (cond
-      (= :phone @c-focus)
-      [:div.flex.items-end.h-full
-       (if (= 3 (count @c-textinput-phone))
-         (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @c-textinput-phone)]
-           (do
-             (reset! c-extra m)
-             [sc/col-space-1 {:class [:truncate :justify-around]}
-              [sc/ptitle1 phone]
-              [sc/ptext {:class [:truncate]} username]]))
-         (reset! c-extra nil))]
-
-      (= :boats @c-focus)
-      (when-let [data (when-some [boatnum (cond
-                                            (= 3 (count @c-textinput-boat)) @c-textinput-boat
-                                            (= 3 (count @c-selected)) @c-selected)]
-                        (lookup-id (:id (lookup boatnum))))]
-        [:div {:style {;:padding-inline "0.5rem"
-                       :padding       "0.25rem"
-                       :box-shadow    "none"
-                       :border-radius "var(--radius-0)"
-                       :height        "100%"}}
-         [:div.h-full.overflow-y-auto
-          [sc/co
-           [widgets/stability-name-category data]
-           [sc/title (:description data)]]]]))]])
-
-
+  [sc/surface-b
+   {:class [(if (or (and (= :boats @c-focus)
+                         @c-boat-list
+                         @c-selected)
+                    (and (= :phone @c-focus)
+                         (some? @c-extra))) :focus)]
+    :style {:padding       "0.5rem"
+            :height        "100%"
+            :overflow-y    "auto"
+            :overflow-x "hidden"
+            :border-radius "var(--radius-0)"}}
+   ;[sc/text "this is a very long text that spans several lines"]
+   (if (= :phone @c-focus)
+     [preview-phone]
+     [preview-boatinfo])])
 
 ;endregion
 
@@ -790,63 +790,61 @@
 
        :reagent-render
        (fn [datas]
-         (let [{:keys [right-menu? mobile?]} @geo]
+         (let [{:keys [right-menu? mobile?]} @geo
+               layout-fn (fn [[area-name component]]
+                           [:div {:style {:grid-area area-name}} component])
+               pointer (fn pointer [complete?]
+                         [:div.h-full
+                          {:style (conj {:border-left "8px solid"}
+                                        (when-not complete?
+                                          {:border-color "var(--red-6)"}))}])
+               recall-mode? false]
            [sc/row
             {:tab-index 0
-             :style     (when-not mobile? {:height "calc(100lvh - 6rem)"})
-             :class     (if mobile?
-                          [:outline-none
-                           :h-full :flex :flex-col :justify-end]
-                          [:outline-none
-
-                           :focus:outline-none])
+             ;note:
+             :style     (when-not mobile? {:height "calc(100dvh - 6rem)"})
+             :class     (cond-> [:outline-none]
+                          mobile? (conj [:h-full :flex :flex-col :justify-end])
+                          (not mobile?) (conj [:pb-2 :focus:outline-none]))
              :ref       (fn [e]
                           (when-not @ref
                             (.addEventListener e "keydown" keydown-f)
                             (.focus e)
                             (reset! ref e)))}
             [bis/panel
-             {:style (when mobile? {:padding "var(--size-2)"})
-              :class [(cond
-                        right-menu? :right-side
-                        :else :left-side)]}
-             (doall (concat
-                      (let [layout-fn (fn [[area-name component]]
-                                        [:div {:style {:grid-area area-name}} component])
-                            pointer (fn pointer [complete?]
-                                      [:div.w-2.h-full
-                                       {:style (when-not complete?
-                                                 {:border-left  "8px solid"
-                                                  :border-color "var(--red-6)"})}])]
-                        (mapv layout-fn [#_["mode" [:div.grid.h-full {:style {:grid-auto-flow    "column"
-                                                                              :grid-auto-columns "1fr"
-                                                                              :column-gap        "0.25rem"}}
-                                                    [bis/push-button {:class [:new]}
-                                                     [sc/co
-                                                      [sc/text] "Ut"]]
-                                                    [bis/push-button {:class []} "Gruppe"]
-                                                    ;[bis/push-button {:class []} "Annet"]
-                                                    [bis/push-button {:class []} "Inn"]]]
-                                         ["child" [children-slider c-children]]
-                                         ["status" [status]]
-                                         ["juvenile" [juveniles-slider c-juveniles]]
-                                         ["moon" [moon-toggle c-moon]]
-                                         ["key" [litteralkey-toggle c-litteral-key]]
-                                         ["adult" [adults-slider c-adults]]
-                                         ["aboutyou" [hvem-er-du st c-focus c-textinput-phone]]
-                                         ["boats" [selected-boats st c-focus c-textinput-boat]]
-                                         ["numpad" [number-pad st]]
-                                         ["p" [reset-button st]]
-                                         ["i" [boat-input st c-focus c-textinput-boat]]
-                                         ["a" (pointer (pos? (count @c-boat-list)))]
-                                         ["b" (pointer @(rf/subscribe [::completed-contact]))]
-                                         ["c" (pointer @(rf/subscribe [::completed-users]))]
-                                         ["d" (pointer @(rf/subscribe [::partial-complete]))]
-                                         ["e" (pointer @(rf/subscribe [::completed]))]
-                                         ["w" [await st]]
-                                         ["o" [complete st]]]))))]]))})))
+             {:class [(if right-menu? :right :left) (if recall-mode? :alt)]}
+             (map layout-fn
+                  (if recall-mode?
+                    [["in" [boat-input st c-focus c-textinput-boat]]
+                     ["st" [status]]
+                     ["np" [number-pad st]]
+                     ["re" [reset-button st]]
+                     ["aw" [await st]]
+                     ["co" [complete st]]]
+                    [["in" [boat-input st c-focus c-textinput-boat]]
 
+                     ["ch" [children-slider c-children]]
+                     ["ju" [juveniles-slider c-juveniles]]
+                     ["mo" [moon-toggle c-moon]]
+                     ["ky" [litteralkey-toggle c-litteral-key]]
+                     ["ad" [adults-slider c-adults]]
+                     ["ay" [hvem-er-du st c-focus c-textinput-phone]]
 
+                     ["bo" [selected-boats st c-focus c-textinput-boat]]
+
+                     ["st" [status]]
+
+                     ["a1" (pointer (pos? (count @c-boat-list)))]
+                     ["b1" (pointer @(rf/subscribe [::completed-contact]))]
+                     ["c1" (pointer @(rf/subscribe [::completed-users]))]
+                     ["d1" (pointer @(rf/subscribe [::partial-complete]))]
+                     ["e1" (pointer @(rf/subscribe [::completed]))]
+
+                     ["np" [number-pad st]]
+
+                     ["re" [reset-button st]]
+                     ["aw" [await st]]
+                     ["co" [complete st]]]))]]))})))
 
 (defn window-content
   ([m]

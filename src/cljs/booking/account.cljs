@@ -7,7 +7,8 @@
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [clojure.string :as str]
             [lambdaisland.ornament :as o]
-            [booking.common-widgets :as widgets]))
+            [booking.common-widgets :as widgets]
+            [user.database]))
 
 (o/defstyled corner-logo' :img
   [:& :absolute :-top-20 :-right-12 :rotate-45 :opacity-20 :w-32])
