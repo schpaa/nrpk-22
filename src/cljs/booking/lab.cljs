@@ -26,7 +26,8 @@
             [lambdaisland.ornament :as o]
             [schpaa.style.button2 :as scb2]
             [schpaa.icon :as icon]
-            [headlessui-reagent.core :as ui]))
+            [headlessui-reagent.core :as ui]
+            [booking.styles :as b]))
 
 ;; store
 
@@ -422,7 +423,7 @@
 (defmulti render-list (fn [a r] a))
 
 (defmethod render-list :default [_ r]
-  [sc/surface-ab
+  [b/surface
    {:style {:width         "100%"
             :max-width     "768px"
             :margin-inline "auto"}}

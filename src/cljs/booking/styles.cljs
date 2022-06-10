@@ -78,7 +78,6 @@
 (o/defstyled ro :div                
   :flex :justify-start :items-center :gap-2)
 
-
 (o/defstyled ro-js :div
   :flex :justify-start :items-baseline :gap-2
   {})
@@ -88,9 +87,8 @@
   {:line-height 1})
 
 (o/defstyled text :div 
-  [:& :debug
+  [:& 
    {:line-height 1
-    ;:height "100%"
     :color "var(--text1)"}])
 
 (o/defstyled title :div
@@ -106,3 +104,16 @@
     :opacity        0.7
     :font-weight    "var(--font-weight-3)"}
    [:&.error {:color "red"}]])
+
+(o/defstyled screen :div
+  [:&
+   :font-sans
+   :h-auto
+   :overflow-hidden
+   {:background-color "rgba(0,0,0,0.1)"
+    :xwidth            "50ch"}])
+
+(o/defstyled surface :div
+  [:& :p-2 :select-none
+   {;:box-shadow       "var(--shadow-1)"
+    :xborder-radius "var(--radius-1)"}])

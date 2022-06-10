@@ -1,6 +1,8 @@
 (ns devcards.buttons
   (:require-macros [devcards.core :as dc :refer [defcard-rg]])
-  (:require [devcards.core :as dc :include-macros true]
+  (:require [booking.styles :refer [ro ro-js screen surface text text-truncate
+                                    title]]
+            [devcards.core :as dc :include-macros true]
             [reagent.core]
             ["highlight.js" :as hljs]
             [breaking-point.core :as bp]
@@ -19,7 +21,6 @@
             [booking.common-widgets :as widgets]
             [schpaa.debug :as l]
             [schpaa.style.hoc.buttons :as button]
-            [booking.styles :as b]
             [schpaa.style.input]
             [reagent.core :as r]))
 
@@ -32,7 +33,7 @@
 
 (defcard-rg pill
   [:div
-   [b/ro-js
+   [ro-js
     [button/just-icon {:class [:inverse]} ico/closewindow]
     [button/just-icon {:class [:danger]} ico/closewindow]
     [button/just-icon {:class [:frame]} ico/closewindow]
@@ -47,7 +48,7 @@
 
 (defcard-rg pill
   [:div
-   [b/ro-js
+   [ro-js
     [button/icon-and-caption
      {:on-click #()
       :class    [:square-top :small :cta-outline]}
@@ -61,14 +62,14 @@
 
 (defcard-rg pill
   [:div
-   [b/ro-js
+   [ro-js
     [button/icon-and-caption
      {:on-click #()
       :class    [:regular :large]}
      ico/closewindow
      "Bli til Båtlogg"]
-    [b/text-truncate {:style {:position "relative"
-                              :top      "14px"}} "some text between"]
+    [text-truncate {:style {:position "relative"
+                            :top      "14px"}} "some text between"]
     [button/icon-and-caption
      {:on-click #()
       :class    [:regular :small :self-end]}
@@ -77,23 +78,23 @@
 
 (defcard-rg pill
   [sc/surface-a
-   [b/ro-js {:class [:h-24]}
+   [ro-js {:class [:h-24]}
     [button/just-icon {:class [:regular :round :self-start]} ico/closewindow]
     [button/just-icon {:class [:regular :round :self-baseline]} ico/closewindow]
     [button/just-icon {:class [:large :cta :round :self-baseline]} ico/closewindow]
-    [b/text {:style {:position "relative"
-                     :top      "-3px"}
-             :class [:self-baseline]} "text"]
+    [text {:style {:position "relative"
+                   :top      "-3px"}
+           :class [:self-baseline]} "text"]
     [button/just-icon {:class [:regular :round :self-baseline]} ico/closewindow]
     [button/just-icon {:class [:relative :round :self-baseline]} ico/closewindow]
-    [b/text {:class [:self-start]} "some"]
-    [b/text {:class [:self-end]} "between"]
+    [text {:class [:self-start]} "some"]
+    [text {:class [:self-end]} "between"]
     [button/just-icon {:class [:regular :round :self-end]} ico/closewindow]]])
 
 (defcard-rg pill-with-just-caption
   [:div
    [sc/surface-a {:class [:h-32]}
-    [b/ro-js {:class [:h-full]}
+    [ro-js {:class [:h-full]}
      [button/just-caption
       {:class [:square-top :small :square-bottom]
        :style {:max-width  "10rem"
@@ -162,17 +163,19 @@
     ico/commandPaletteClosed
     "Bli til Båtlogg nu"]])
 
-(defn screen [& c]
-  [:div {:class [:font-sans :h-64 :w-96  :overflow-hidden :bg-white]} c])
+(def hf-ic {:style {:align-items :center
+                    :display :flex
+                    :background-color "var(--toolbar)"}
+            :class [:h-full]})
 
 (defcard-rg stability-name-category'
   (fn [_]
     [screen
-     [b/ro {:class [:p-4 :w-full :h-12x :bg-alt]}
-      
+     [ro {:class [:pl-4 :w-full :h-16 :bg-alt]}
+
       [:div "a"]
 
-      [widgets/badge {:class [ :small]} 2 "000" "X Y"]
+      [widgets/badge {:class [:small]} 2 "000" "X Y"]
 
       (widgets/stability-name-category'
         {:k          "123"
@@ -183,20 +186,49 @@
          :expert    true
          :navn      "navnasdasd asd asd asd asd asd asd asd asd "
          :kind      "grkayak"})
-
-      [button/icon-and-caption
-       {:class    [:cta-outline]
-        :on-click #()}
-       ico/chart
-       "utfør"]]])
+      [surface hf-ic
+       [ro-js
+        [text "hello1"]
+        [button/just-icon {} ico/chart]]]
+      [surface hf-ic
+       [ro
+        [title "hello2"]
+        [button/just-icon {:class [:large]} ico/chart]]]
+      [surface (merge hf-ic {:style {:background "red" :color "white"}})
+       [button/icon-and-caption
+        {:class [:large]}
+        ico/experimental
+        [title "sublime :message"]]]
+      [surface hf-ic
+       [ro
+        [button/icon-and-caption
+         {:class    [:center :shadow-sm :bg-alt]
+          :on-click #()}
+         ico/chart
+         "A"]
+        [button/icon-and-caption
+         {:class    [:xlight :center :text-alt :shadow-sm :dark :bg-alt]
+          :on-click #()}
+         ico/chart
+         "A"]
+        [button/icon-and-caption
+         {:class    [:light :center :text-alt :shadow-sm :bg-alt]
+          :on-click #()}
+         ico/chart
+         "A"]
+        [button/icon-and-caption
+         {:class    [:center :shadow-sm :bg-alt :text-white]
+          :on-click #()}
+         ico/chart
+         "A"]]]]])
   {}
-  {:frame false
+  {:frame   true
    :padding false
-   :heading false})
+   :heading true})
 
 (defcard-rg input
   [:div
    [button/textinput {:touched #(-> :as)
-                      :cursor (r/atom "123")
-                      :values {:b nil}} :a :b]])
+                      :cursor  (r/atom "123")
+                      :values  {:b nil}} :a :b]])
   

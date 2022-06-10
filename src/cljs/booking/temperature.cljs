@@ -7,7 +7,8 @@
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [re-frame.core :as rf]
             [db.core :as db]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [schpaa.debug :as l]))
 
 (def weather-words
   [[0 "Tåke"]
@@ -24,86 +25,84 @@
    [3 "Styrtregn"]])
 
 
-(defonce gunk (r/atom {:gunk "test"
-                       :luft "123"
-                       :vann ""
+(defonce gunk (r/atom {:vær       {}
+                       :luft      "12"
+                       :vann      "0"
                        :testfield "data"}))
 
-(defn temperatureform-content [{:keys [data on-close uid write-fn]}]
-  (let [
-        validation-fn                                    
-        (fn [{:keys [vann luft vær] :as values}]
-          (tap> values)
-          (into {}
-                (remove (comp nil? val)
-                        {:vann (cond-> nil
-                                 (empty? vann) ((fnil conj []) "mangler")
-                                 (not= vann (str (js/parseFloat vann))) ((fnil conj []) "er feil"))
-                         :luft (cond-> nil
-                                 (empty? luft) ((fnil conj []) "mangler")
-                                 (not= luft (str (js/parseFloat luft))) ((fnil conj []) "er feil"))
-                         :vær  (cond-> nil
-                                 (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))]
-    [fork/form
-     {:initial-values      {}
-      :prevent-default?    true
-      :state               gunk
-      :keywordize-keys     true
-      :validation          validation-fn
-      :component-did-mount (fn [{:keys [set-values set-untouched] :as v}]
-                             (set-values @gunk)
-                             (set-untouched :luft))
-      :on-submit           (fn [{:keys [values]}]
-                             (let [data (assoc values
-                                          :timestamp (str (t/now))
-                                          :uid uid)]
-                               (when write-fn
-                                 (write-fn data))
-                               (on-close)))}
-     (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
-       [sc/dialog-dropdown
-        [sc/col-space-8
+(defn validation-fn [{:keys [vann luft vær] :as values}]
+  (tap> values)
+  (into {}
+        (remove (comp nil? val)
+                {:vann (cond-> nil
+                         (empty? vann) ((fnil conj []) "mangler")
+                         (not= vann (str (js/parseFloat vann))) ((fnil conj []) "er feil"))
+                 :luft (cond-> nil
+                         (empty? luft) ((fnil conj []) "mangler")
+                         (not= luft (str (js/parseFloat luft))) ((fnil conj []) "er feil"))
+                 :vær  (cond-> nil
+                         (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))
+
+(defn tempform-content [{:keys [data on-close uid write-fn]}]
+  [fork/form
+   {:prevent-default?    true
+    :keywordize-keys     true
+    :validation          validation-fn
+    :component-did-mount (fn [{:keys [set-values set-untouched] :as v}]
+                           (set-values @gunk)
+                           (set-untouched :luft))
+    :on-submit           (fn [{:keys [values]}]
+                           (let [data (assoc values
+                                        :timestamp (str (t/now))
+                                        :uid uid)]
+                             (when write-fn
+                               (write-fn data))
+                             (on-close)))}
+   (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
+     [sc/dialog-dropdown
+      [l/pre-s @gunk]
+      [sc/col-space-8
+       [sc/col-space-8
+        {:style {:padding          "1rem"
+                 :background-color "var(--floating)"}}
+        [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
+        [:form
+         {:id        form-id
+          :on-submit handle-submit}
+
          [sc/col-space-8
-          {:style {:padding          "1rem"
-                   :background-color "var(--floating)"}}
-          [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
-          [:form
-           {:id        form-id
-            :on-submit handle-submit}
+          [field/textinput props "A testfield" :testfield]
 
-           [sc/col-space-8
-            [field/textinput props "A testfield" :testfield]
-
-            [sc/row-sc-g4 {:style {:gap "2rem"}
-                           :class [:items-start]}
-             [sc/col-space-4 {:class [:w-32]}
-              [field/textinput (assoc props
-                                 :type "number"
-                                 :values {:luft (:luft values)}) "Luft" :luft]
-              [field/textinput (assoc props
-                                 :type "number") "Vann" :vann]]
-             [sc/checkbox-matrix
-              {:style {:padding-topx "1rem"}}
-              (into [:<>]
-                    (for [[_ e] (group-by first weather-words)
-                          [_ e] e]
-                      [hoc.toggles/largeswitch-local''
-                       {:get     #(get-in values [:vær e])
-                        :set     #(do
-                                    (tap> e)
-                                    (set-values (assoc-in values [:vær e] %)))
-                        :view-fn (fn [t c v]
-                                   [sc/row-sc-g2 t
-                                    [(if v sc/text1 sc/text0) c]])
-                        :caption e}]))]]
-            [sc/row-field
-             [:div.grow]
-             [button/just-caption {:class    [:regular :normal]
-                                   :on-click on-close
-                                   :type     :button} "Avbryt"]
-             [button/just-caption {:type     :submit
-                                   :disabled (not (empty? (validation-fn values)))
-                                   :class    [:cta :normal]} "Lagre"]]]]]]])]))
+          [sc/row-sc-g4 {:style {:gap "2rem"}
+                         :class [:items-start]}
+           [sc/col-space-4 {:class [:w-32]}
+            [field/textinput (assoc props
+                               :type "text"
+                               :values {:luft (:luft values)}) "Luft" :luft]
+            [field/textinput (assoc props
+                               :type "text") "Vann" :vann]]
+           [sc/checkbox-matrix
+            {:style {:padding-topx "1rem"}}
+            (into [:<>]
+                  (for [[_ e] (group-by first weather-words)
+                        [_ e] e]
+                    [hoc.toggles/largeswitch-local''
+                     {:get     #(get-in values [:vær e])
+                      :set     #(do
+                                  (tap> e)
+                                  (set-values (assoc-in values [:vær e] %)))
+                      :view-fn (fn [t c v]
+                                 [sc/row-sc-g2 t
+                                  [(if v sc/text1 sc/text0) c]])
+                      :caption e}]))]]
+          [sc/row-field
+           [:div.grow]
+           [button/just-caption {:class    [:regular :normal]
+                                 :on-click on-close
+                                 :type     :button} "Avbryt"]
+           [button/just-caption {:type     :submit
+                                 :disabled (not (empty? (validation-fn values)))
+                                 :class    [:cta :normal]} "Lagre"]]]]]]])])
 
 (defn add-temperature []
   (let [uid @(rf/subscribe [:lab/uid])
@@ -117,7 +116,7 @@
                                                (update :vann js/parseFloat))]
                                   (db/database-push {:path  ["temperature"]
                                                      :value data}))
-                   :content-fn #(temperatureform-content %)}])))
+                   :content-fn #(tempform-content %)}])))
 
 ;(ns booking.temperature
 ;  (:require [booking.ico :as ico]

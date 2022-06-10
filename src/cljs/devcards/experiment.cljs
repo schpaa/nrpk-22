@@ -9,13 +9,32 @@
             [schpaa.debug :as l]
             [reagent.core :as r]))
 
-(defprotocol Appearance
-  (init [_ z])
-  (draw [_ x]))
+(defprotocol Functionality
+  (compute [this _])
+  (draw [this _]))
+
+(deftype ProgConstruct [st]
+  IEquiv
+  (-equiv [o other]
+    (prn (:st other))
+    (= (:st o) (:st other)))
+  Functionality
+  (compute [this _])
+  (draw [this _]
+    (prn "THIS is " this)))
+
+(reify Functionality
+  (compute [x z])
+  (draw [y z]))
+
+(comment
+  (let [x (->ProgConstruct {})
+        y (->ProgConstruct {:z 1})]
+    (= x y)))
 
 (defrecord Component [m]
-  Appearance
-  (init [_ _])
+  Functionality
+  (compute [_ _])
   (draw [this x]
     [sc/surface-a {:class (o/classname sc/sample-123)}
      [sc/co
@@ -32,8 +51,8 @@
        [:div 'c]]]]))
 
 (defrecord Simplex [state]
-  Appearance
-  (init [this data]
+  Functionality
+  (compute [this data]
     (swap! state assoc :data data)
     this)
   (draw [this n]
@@ -61,10 +80,9 @@
 #_(do
     (let [s (->Component {:orig 'opts2})
           x (->Simplex (r/atom {:st 'initial-state}))
-          x (init x {:new 'data1})
-          x (init x {:new 'data2})]
+          x (compute x {:new 'data1})
+          x (compute x {:new 'data2})]
       (reset! st {:series (iterate (fn [_] (rand-nth [s x])) nil)})))
-
 
 
 (comment
@@ -73,8 +91,8 @@
 (defn initial-st []
   (let [s (->Component {:orig 'opts2})
         x (->Simplex (r/atom {:st 'initial-state}))
-        x (init x {:new 'data1})
-        x (init x {:new 'data2})]
+        x (compute x {:new 'data1})
+        x (compute x {:new 'data2})]
     {:dummy 1231
      :series #(iterate (fn [_] (rand-nth [s x])) nil)}))
 
@@ -110,9 +128,7 @@
      [:div.error
       {:class (o/classname sc/error)}
       (-> d deref :stuff :data deref :data)]
-     #_[l/pre (if-some [x (some->> d deref :stuff :data)]
-                x
-                'nope)]
+
      #_[:div '{:edn 'this-is}]])
   {:s (Simplex. (r/atom {:atom 123}))
    :stuff {:data some-data}}
