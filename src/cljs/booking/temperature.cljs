@@ -8,7 +8,8 @@
             [re-frame.core :as rf]
             [db.core :as db]
             [reagent.core :as r]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [booking.styles :as b]))
 
 (def weather-words
   [[0 "Tåke"]
@@ -25,16 +26,24 @@
    [3 "Styrtregn"]])
 
 
-(defonce gunk (r/atom {:vær       {}
-                       :luft      "12"
-                       :vann      "0"
-                       :testfield "data"}))
+(def gunk (r/atom {:vær       {"Tåke" true}
+                   ;:luft      "12"
+                   ;:vann      "0"
+                   ;:date      (t/date (t/now))
+                   ;:time      (t/truncate (t/time (t/now)) :minutes)
+                   :testfield "data"}))
 
-(defn validation-fn [{:keys [vann luft vær] :as values}]
+(defn validation-fn [{:keys [vann luft vær date time] :as values}]
   (tap> values)
   (into {}
         (remove (comp nil? val)
-                {:vann (cond-> nil
+                {:date (cond-> nil
+                         (nil? (try (some-> date t/date) (catch js/Error  _ nil))) ((fnil conj []) "mangler"))
+
+                 :time (cond-> nil
+                         (nil? (try (some-> time t/time) (catch js/Error  _ nil))) ((fnil conj []) "mangler"))
+
+                 :vann (cond-> nil
                          (empty? vann) ((fnil conj []) "mangler")
                          (not= vann (str (js/parseFloat vann))) ((fnil conj []) "er feil"))
                  :luft (cond-> nil
@@ -43,14 +52,18 @@
                  :vær  (cond-> nil
                          (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))
 
+(comment
+  (do
+    (validation-fn {:vann "1"})))
+
 (defn tempform-content [{:keys [data on-close uid write-fn]}]
   [fork/form
    {:prevent-default?    true
     :keywordize-keys     true
-    :validation          validation-fn
-    :component-did-mount (fn [{:keys [set-values set-untouched] :as v}]
+    :validation          #(validation-fn %)
+    :component-did-mount (fn [{:keys [set-values set-untouched set-touched]}]
                            (set-values @gunk)
-                           (set-untouched :luft))
+                           #_(set-touched :luft))
     :on-submit           (fn [{:keys [values]}]
                            (let [data (assoc values
                                         :timestamp (str (t/now))
@@ -60,7 +73,7 @@
                              (on-close)))}
    (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
      [sc/dialog-dropdown
-      [l/pre-s @gunk]
+      ;[l/pre-s @gunk]
       [sc/col-space-8
        [sc/col-space-8
         {:style {:padding          "1rem"
@@ -69,9 +82,13 @@
         [:form
          {:id        form-id
           :on-submit handle-submit}
-
          [sc/col-space-8
-          [field/textinput props "A testfield" :testfield]
+          [b/ro-js-ie
+           [field/dateinput props "Dato" :date]
+           [field/timeinput props "Tid" :time]
+           [button/regular {:on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                                    :date (t/date (t/now))})
+                            :class    [:small]} "Nå"]]
 
           [sc/row-sc-g4 {:style {:gap "2rem"}
                          :class [:items-start]}

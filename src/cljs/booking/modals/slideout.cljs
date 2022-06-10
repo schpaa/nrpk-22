@@ -98,8 +98,8 @@
                             :border-bottom-right-radius "var(--radius-2)"
                             :border-bottom-left-radius "var(--radius-2)"
                             :box-shadow (apply str (interpose ","
-                                                              ["0 0 0px calc(var(--size-1) * 2) var(--toolbar-)"
-                                                               "0 0 0px calc(var(--size-1) * 3) var(--toolbar)"
+                                                              [;"0 0 0px calc(var(--size-1) * 1) var(--toolbar-)"
+                                                               "0 0 0px calc(var(--size-1) * 2) var(--toolbar)"
                                                                "var(--shadow-4)"]))}
                     :class [:overflow-y-auto]}
 

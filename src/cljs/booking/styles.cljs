@@ -82,6 +82,10 @@
   :flex :justify-start :items-baseline :gap-2
   {})
 
+(o/defstyled ro-js-ie :div
+  :flex :justify-start :items-end :gap-2
+  {})
+
 (o/defstyled text-truncate :div
   :truncate
   {:line-height 1})

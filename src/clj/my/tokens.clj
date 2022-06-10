@@ -52,3 +52,14 @@
                                :bleu-300 "2d6589"
                                :bleu-200 "3c709c"
                                :bleu-100 "4e7baf"}}))
+
+#_(do
+    (defmacro try-some-> [& forms]
+      `(try
+        (some-> ~@(forms))
+        (catch Error _ nil)))
+
+    (macroexpand-1 '(try-some-> z str))
+
+    (defn try-some-> [& x]
+      (try (apply some-> x) (catch js/Error _ nil))))
