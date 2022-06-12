@@ -50,6 +50,10 @@
 
 (defonce st (r/atom (if goog.DEBUG {} #_test-state {})))
 
+(def c-active-line (r/cursor st [:active-line]))
+(defn set-active-line [k]
+  (reset! c-active-line k))
+
 (def c-focus (r/cursor st [:focus]))
 (def c-extra (r/cursor st [:extra]))
 (def c-children (r/cursor st [:children]))
@@ -79,7 +83,7 @@
 
 (defn input-area
   "caps size of input to length"
-  [length caption fieldname]
+  [length caption fieldname st]
   (let [c-field (r/cursor st [:textfield fieldname])]
     (reset! c-field (subs (str @c-field) 0 length))
     (let [has-focus? (= @c-focus fieldname)
@@ -180,9 +184,8 @@
     :style    (if @c {:color            "var(--selected-copy)"
                       :background-color "var(--selected)"
                       :box-shadow       "var(--shadow-1)"}
-                     {:color            "var(--text2"
-                      :background-color "var(--floating)"})}
-   [sc/icon-large (if @c ico/key-outline ico/key-filled)]])
+                     {:color            "var(--text0"})}
+   [sc/icon-large (if @c ico/key-filled ico/key-outline)]])
 
 (defn moon-toggle [c]
   [bis/toggle-button
@@ -191,8 +194,7 @@
     :style    (if @c {:color            "var(--selected-copy)"
                       :box-shadow       "var(--shadow-1)"
                       :background-color "var(--selected)"}
-                     {:color            "var(--text2)"
-                      :background-color "var(--floating)"})}
+                     {:color            "var(--text0)"})}
    [sc/icon-large (if @c ico/moon-filled ico/moon-outline)]])
 
 (defn question-button [st source]
@@ -205,13 +207,18 @@
    (sc/icon-huge ico/plusplus)])
 
 (defn plus-button [st source]
-  [bis/push-button
-   {:class    [:add2]
-    :on-click #(cmd/new-boat c-boat-list c-selected source)
-    :value    true
-    :disabled (and                                          ;(not (number-not-in-list @source @c-boat-list))
-                (not (= 3 (count @source))))}
-   (sc/icon-huge ico/plusplus)])
+  (let [field-empty? (zero? (count @source))
+        field-complete? (= 3 (count @source))]
+    [bis/push-button
+     {:class    [:add2]
+      :on-click #(if field-empty?
+                   (reset! c-focus :boats)
+                   (cmd/new-boat c-boat-list c-selected source))
+      :value    true
+      :disabled (and                                        ;(not (number-not-in-list @source @c-boat-list))
+                  (not= 0 (count @source))
+                  (not (= 3 (count @source))))}
+     (sc/icon-huge (if field-complete? ico/coming-in ico/going-out))]))
 
 (comment
   (do
@@ -240,6 +247,7 @@
                       (reset! c-textinput nil)
                       (reset! c-selected nil))))
       :disabled nothing-selected
+      :class    [:outline-none]
       :style    {:color "var(--text)"}}
      (sc/icon-large ico/closewindow)]))
 
@@ -345,7 +353,7 @@
 
 ;region components
 
-(defn hvem-er-du [st c-focus c-textinput-phone]
+(defn phone-input [st c-focus c-textinput-phone]
   (let [field c-textinput-phone
         has-focus? (= :phone @c-focus)]
     [sc/surface-p
@@ -392,11 +400,13 @@
 
      [:div {:style {:grid-column "1/4"
                     :overflow    :hidden}}
-      [input-area 8 "Tlf– eller nøkkelnr (3 siste siffer)" :phone]]
+      [input-area 8 "Tlf– eller nøkkelnr (3 siste siffer)" :phone st]]
 
      [:div
-      {:style {:grid-column "4"
-               :grid-row    "1"}}
+      {:style {:grid-column   "4"
+               :grid-row      "1"
+               :height        "100%"
+               :place-content :center}}
       [delete-button st field]]]))
 
 (defn- list-of-selected []
@@ -413,7 +423,7 @@
               (for [{:keys [new number]} (reverse @c-boat-list)]
                 [sc/badge {:class    [(when new :new)
                                       :truncate
-                                      (when (equals-to @c-selected number) :selected)]
+                                      (if (equals-to @c-selected number) :inverse :selected)]
                            :on-click (fn []
                                        (if (= number @c-selected)
                                          (swap! st dissoc :selected)
@@ -497,53 +507,41 @@
     [sc/surface-p
      {:on-click #(reset! c-focus :boats)
       :class    [:top
-                 :col-span-4
                  (when has-focus? :focus)]
-      :style    {;:margin-left           "-0.25rem"
-                 :padding-block         "0.5rem"
-                 :padding-left          "0.5rem"
-                 :padding-right         "0.5rem"
-
-                 :display               :grid
-                 :width                 "auto"
-                 :column-gap            "var(--size-2)"
-                 ;:row-gap               "var(--size-2)"
-                 :grid-template-columns "repeat(4,1fr)"}}
-
-     [sc/co {:style {:padding     0
-                     :margin      0
-                     :grid-column "1/-1"
-                     :grid-row    "2"}}
-      [:div {:style {:width                 "100%"
-                     :column-gap            "0.25rem"
-                     :row-gap               "0.25rem"
-                     :display               "grid"
-                     :grid-template-columns "repeat(4,1fr)"}}
-       [:div {:style {:grid-column "1/3"}}
-        [input-area 3 "Båtnummer" :boats]]
-
+      :style    {:padding-block "0.5rem"
+                 :padding-left  "0.5rem"
+                 :padding-right "0.5rem"
+                 :width         "auto"
+                 :column-gap    "var(--size-2)"
+                 :grid-column   "2/3"}}
+     [:div.relative
+      {:style {:width      "100%"
+               :column-gap "0.25rem"
+               :row-gap    "0.25rem"}}
+      [:div {:style {:grid-column "4"}}
+       [input-area 3 "Båtnummer" :boats st]
        #_(if (and boat (= 3 (count @c-textinput-boats)))
            [add-button st c-textinput-boats boat]
            (if (= 3 (count @c-textinput-boats))
              [question-button st c-textinput-boats]
-             [add-button st c-textinput-boats c-lookup-result]))
-       [:div.flex.items-center.justify-center
-        {:style {:grid-column "4"}}
-        [delete-button st c-textinput-boats]]]
-      #_[list-of-selected]]]))
+             [add-button st c-textinput-boats c-lookup-result]))]
+      [:div.absolute.inset-y-0.right-0.flex.items-center.justify-center.w-12.outline-none
+       {:style {:padding-top "1rem"}}
+       [delete-button st c-textinput-boats]]]]))
 
 (defn selected-boats [st c-focus c-textinput-boats]
   (let [has-focus? false                                    ;(= :boats @c-focus)
         boat (lookup (or (:selected @st) @c-textinput-boats))]
-    [sc/surface-p
+    [sc/surface-ab
      {:on-click #(reset! c-focus :boats)
       :class    [:col-span-4
                  :bottom :top
                  (when has-focus? :focus)]
       :style    {;:margin-left           "-0.25rem"
-                 :padding-block         "0.5rem"
-                 :padding-left          "0.5rem"
-                 :padding-right         "0.5rem"
+                 :padding               0
+                 ;:padding-block         "0.5rem"
+                 ;:padding-left          "0.5rem"
+                 ;:padding-right         "0.5rem"
                  :display               :grid
                  :column-gap            "var(--size-2)"
                  ;:row-gap               "var(--size-2)"
@@ -568,6 +566,23 @@
      [sc/row-sc-g2
       [:div {:style {:transform "rotate(-90deg)"}} (sc/icon-huge ico/storeForLater)]]]))
 
+(defn remove-item [st]
+  (let [ok? true #_(rf/subscribe [::completed])]
+    [bis/push-button
+     {:on-click #(when @(rf/subscribe [::completed])
+                   (actions/confirm-command st)
+                   (cmd/reset-command st))
+      :disabled (not ok?)
+      :class    [:add]
+      :style    (conj {:background "var(--pink-5)"
+                       :border-radius "var(--radius-0)"
+                       :width         "100%"
+                       :height        "100%"})}
+
+
+     [sc/row-sc-g2
+      (sc/icon-huge ico/closewindow)]]))
+
 (defn complete [st]
   (let [ok? (rf/subscribe [::completed])]
     [bis/push-button
@@ -588,7 +603,7 @@
       (sc/icon-huge ico/check)]]))
 
 (defn preview-phone []
-  [:div.flex.items-end.h-full
+  [:div.flex.items-start.h-full
    (if (= 3 (count @c-textinput-phone))
      (if-let [[username phone uid :as m] (user.database/lookup-by-litteralkeyid @c-textinput-phone)]
        (do
@@ -652,11 +667,13 @@
                          @c-selected)
                     (and (= :phone @c-focus)
                          (some? @c-extra))) :focus)]
-    :style {:padding       "0.5rem"
-            :height        "100%"
-            :overflow-y    "auto"
-            :overflow-x    "hidden"
-            :border-radius "var(--radius-0)"}}
+    :style {:background-color "transparent"
+            :box-shadow       "none"
+            :padding          "0.5rem"
+            :height           "100%"
+            :overflow-y       "auto"
+            :overflow-x       "hidden"
+            :border-radius    "var(--radius-0)"}}
    ;[sc/text "this is a very long text that spans several lines"]
    (if (= :phone @c-focus)
      [preview-phone]
@@ -801,8 +818,11 @@
                recall-mode? false]
            [sc/row
             {:tab-index 0
+
              ;note:
-             :style     (when-not mobile? {:height "calc(100dvh - 6rem)"})
+             :style     (conj
+                          {:padding "0.5rem"}
+                          (when-not mobile? {:height "calc(100dvh - 6rem)"}))
              :class     (cond-> [:outline-none]
                           mobile? (conj [:h-full :flex :flex-col :justify-end])
                           (not mobile?) (conj [:pb-2 :focus:outline-none]))
@@ -812,7 +832,9 @@
                             (.focus e)
                             (reset! ref e)))}
             [bis/panel
-             {:class [(if right-menu? :right :left) (if recall-mode? :alt)]}
+             {:class [
+                      (if right-menu? :right :left)
+                      (if recall-mode? :alt)]}
              (map layout-fn
                   (if recall-mode?
                     [["in" [boat-input st c-focus c-textinput-boat]]
@@ -821,36 +843,32 @@
                      ["re" [reset-button st]]
                      ["aw" [await st]]
                      ["co" [complete st]]]
-                    [["in" [boat-input st c-focus c-textinput-boat]]
 
+                    [["in" [boat-input st c-focus c-textinput-boat]]
                      ["ch" [children-slider c-children]]
                      ["ju" [juveniles-slider c-juveniles]]
                      ["mo" [moon-toggle c-moon]]
                      ["ky" [litteralkey-toggle c-litteral-key]]
                      ["ad" [adults-slider c-adults]]
-                     ["ay" [hvem-er-du st c-focus c-textinput-phone]]
-
+                     ["ay" [phone-input st c-focus c-textinput-phone]]
                      ["bo" [selected-boats st c-focus c-textinput-boat]]
-
                      ["st" [status]]
-
                      ["a1" (pointer (pos? (count @c-boat-list)))]
                      ["b1" (pointer @(rf/subscribe [::completed-contact]))]
                      ["c1" (pointer @(rf/subscribe [::completed-users]))]
                      ["d1" (pointer @(rf/subscribe [::partial-complete]))]
                      ["e1" (pointer @(rf/subscribe [::completed]))]
-
                      ["np" [number-pad st]]
-
                      ["re" [reset-button st]]
                      ["aw" [await st]]
-                     ["co" [complete st]]]))]]))})))
+                     ["co" [complete st]]
+                     ["cl" [remove-item st]]]))]]))})))
 
 (defn window-content [{:keys [on-close]} args]
   [:div
    {:style {:overflow-y :auto
             :width      "100%"
-            :height "auto"
+            :height     "auto"
             ;:min-height "0"
             :min-height "50rem"}}
    [boatpanel-window args]])
@@ -866,6 +884,7 @@
 (rf/reg-event-fx :lab/set-boatpanel-data
                  (fn [_ [_ args]]
                    (let [[k v] args]
+                     (set-active-line k)
                      (set-boatpanel-fields v))))
 
 ;; dialog re-frame

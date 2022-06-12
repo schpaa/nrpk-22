@@ -20,7 +20,8 @@
             [fork.reagent :as fork]
             [schpaa.style.input :as sci]
             [schpaa.style.hoc.buttons :as field]
-            [booking.styles :as b]))
+            [booking.styles :as b]
+            [booking.modals.boatinput]))
 
 ;region innlevering
 
@@ -200,7 +201,7 @@
     :grid-template-columns "3.5rem 1fr 1fr min-content 1fr"
     :grid-template-rows    "min-content min-content"        ;"minmax(2rem,1fr) min(min-content,2rem)"
 
-    :grid-template-areas   [["start-date edit content content content"]
+    :grid-template-areas   [["start-date content content content content"]
                             ["badges start-time start-time details details "]
                             [". graph . . ."]]}])
 
@@ -372,16 +373,21 @@
 (defn g-area [grid-area content]
   [:div {:style {:grid-area grid-area}} content])
 
-(defn item-line [{:keys [date end-time-instant k m all-returned? boats deleted db details?]}]
+(defn item-line [{:keys [active-line?
+                         date end-time-instant k m all-returned? boats deleted db details?]}]
   (let [{:keys [ref-uid phone]} m
         item-wrapper #(sc/item-wrapper-style {:class [(when deleted :deleted)]} %)
         {:keys [start-date start-time end-time]} (preformat-dates date end-time-instant)]
     (when @selector
       [sc/zebra
+       {:class    [(when active-line? :selected)]
+        :on-click #(if active-line?
+                     (rf/dispatch [:lab/set-boatpanel-data nil])
+                     (rf/dispatch [:lab/set-boatpanel-data [k m]]))}
        [:div.flex.w-full
         [logg-listitem-grid
          [g-area "badges" (when details? [agegroups-detail m])]
-         [g-area "edit" [edit-bar @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
+         ;[g-area "edit" [edit-bar @(rf/subscribe [:rent/common-show-deleted]) k m all-returned?]]
          [g-area "graph" (when (and details? (t/= (t/date date) (t/today)) (= :b @selector))
                            [timegraph {} settings date end-time-instant boats (t/date-time)])]
          [g-area "content"
@@ -426,13 +432,14 @@
   (when-let [db @(rf/subscribe [:db/boat-db])]
     (let [details? @(rf/subscribe [:rent/common-show-details])
           show-deleted? @(rf/subscribe [:rent/common-show-deleted])
-          ;show-timegraph? (= :b @selector) #_(rf/subscribe [:rent/common-show-timegraph])
-          show-details? (= :b @selector) #_@(rf/subscribe [:rent/common-show-details])
-          ;show-overview? (= :c @selector)
+          show-timegraph? (= :b @selector) #_(rf/subscribe [:rent/common-show-timegraph])
+          show-details? (= :a @selector) #_@(rf/subscribe [:rent/common-show-details])
+          show-overview? (= :a @selector)
           data (rf/subscribe [:rent/list])
           data (if show-deleted? @data (remove (comp :deleted val) @data))]
       (case @selector
         :c [stativ]
+
         (:a :b) (into [:div.flex.flex-col]
                       (for [[k {:keys [timestamp list deleted] :as m}] data
                             :let [boats list                ;(sort-by (comp :number val) < list)
@@ -447,15 +454,13 @@
                                     (and (passed-date-test? date end-time-instant)
                                          (not all-returned?))
 
-                                    ;show-overview?
-                                    ;(t/= (t/today) (t/date date))
-
                                     show-details?
                                     (not all-returned?)
 
                                     :else true)]
 
-                        [item-line {:k                k
+                        [item-line {:active-line? (= k @booking.modals.boatinput/c-active-line)
+                                    :k                k
                                     :m                m
                                     :db               db
                                     :all-returned?    all-returned?
@@ -524,6 +529,12 @@
       selector
       data]]]])
 
+;; graph
+
+(defn when-correct-credentials [fc]
+  (when-let [uid @(rf/subscribe [:lab/uid])]
+    (fc uid)))
+
 (defn reduce-sum-visitors [x]
   (reduce (fn [agr {:keys [adults juveniles children boats]}]
             (-> agr
@@ -566,29 +577,6 @@
                                        val))
                            base))]
     dataset))
-
-(defn graph-1 [end-date datasource]
-  (let [reset-view-fn #(reset! st initial-st)
-        dataset (dataset-for-graph-1 datasource)
-        get-data-fn (fn [dt] (if-some [datum (get dataset dt)]
-                               ((juxt :adults :children :juveniles :boats) datum)
-                               nil))]
-    [:div.relative.w-full.h-fullx.-debug
-     [booking.graph/graph
-      dataset
-      ;;todo pass the state as an argument to graph-1
-      {:c-days-back-in-time c-days-back-in-time
-       :c-offset            c-offset
-       :c-xpos              c-xpos
-       :c-xstart            c-xstart
-       :touchdown           (r/cursor st [:touchdown])
-       :mousedown           (r/cursor st [:mousedown])
-       :client-width        (r/cursor st [:client-width])}
-      reset-view-fn
-      get-data-fn
-      graph-1-draw-func?]
-     [:div.absolute.bottom-0.right-10
-      [booking.graph/corner-stats get-data-fn end-date]]]))
 
 (def transformer
   (juxt key
@@ -682,7 +670,28 @@
   (filter (fn [[_ {:keys [version]}]]
             (some #{(compare version booking.data/TEMPERATURE-VERSION)} [0 1]))))
 
-
+(defn graph-1 [end-date datasource]
+  (let [reset-view-fn #(reset! st initial-st)
+        dataset (dataset-for-graph-1 datasource)
+        get-data-fn (fn [dt] (if-some [datum (get dataset dt)]
+                               ((juxt :adults :children :juveniles :boats) datum)
+                               nil))]
+    [:div.relative.w-full
+     [booking.graph/graph
+      dataset
+      ;;todo pass the state as an argument to graph-1
+      {:c-days-back-in-time c-days-back-in-time
+       :c-offset            c-offset
+       :c-xpos              c-xpos
+       :c-xstart            c-xstart
+       :touchdown           (r/cursor st [:touchdown])
+       :mousedown           (r/cursor st [:mousedown])
+       :client-width        (r/cursor st [:client-width])}
+      reset-view-fn
+      get-data-fn
+      graph-1-draw-func?]
+     [:div.absolute.bottom-0.right-10
+      [booking.graph/corner-stats get-data-fn end-date]]]))
 
 (defn graph-2 [end-date temperature-data]
   (let [
@@ -699,7 +708,7 @@
                           datum))]
       [l/boundary
        (fn [err] [sc/text {:class [:p-4 :stripes]} (l/default-error-body err)])
-       [:div.relative.-debug
+       [:div.relative
         [booking.graph/graph
          transformed-dataset
          {:c-days-back-in-time c-days-back-in-time
@@ -736,10 +745,10 @@
 (defn- toggle-graph-view []
   (swap! c-show-statistics (fnil not false)))
 
+;;
+
 (defn- correct-margins []
   {:padding-inline "0"})
-
-;; components 2
 
 (defn sample-command-row [{:keys [toggle-view-fn reset-view-fn]}]
   [sc/co {;:class [:justify-between :h-full]
@@ -780,10 +789,6 @@
    [button/just-icon {:on-click reset-view-fn
                       :class    [(if (= 0 @c-offset) :regular :cta) :round]}
     ico/undo]])
-
-(defn when-correct-credentials [fc]
-  (when-let [uid @(rf/subscribe [:lab/uid])]
-    (fc uid)))
 
 (defn- render-statistics [{:keys [end-date* reset-view-fn graphs]}]
   [sc/surface-a {:class [:pl-2 :p-0]
@@ -846,45 +851,29 @@
         [:div.sticky.top-24.m-0.p-0
          {:style (conj
                    (correct-margins)
-                   {}
-                   #_(if-not hidden-menu?
-                       (if right-menu?
-                         {:margin-right  "-2rem"
-                          :padding-right "1rem"}
-                         {:margin-left  "-2rem"
-                          :padding-left "0rem"})
-                       {})
                    {:height "min-content"})}
          [booking.modals.boatinput/boatpanel-window nil]]]]
 
       [:div.flex.justify-between
-       {:class [:gap-4]
+       {:class [:gap-0]
         :style {:padding-bottom "0.5rem"
                 :flex-direction (if right-menu? :row-reverse :row)}}
-       [:div.sticky.top-24.m-0.p-0
+       [:div.sticky.top-24.m-0
         {:style (conj
                   (correct-margins)
-                  {}
-                  #_(if-not hidden-menu?
-                      (if right-menu?
-                        {:margin-right  "-2rem"
-                         :padding-right "1rem"}
-                        {:margin-left  "-2rem"
-                         :padding-left "0rem"})
-                      {})
-                  {:height "min-content"})}
+                  {:background-color (when @booking.modals.boatinput/c-active-line "var(--blue-3)")
+                   :height           "min-content"})}
         [booking.modals.boatinput/boatpanel-window nil]]
        [sc/col-space-8 {:style {:width "100%"}}
-        (let []
-          [:<>
-           (when @c-show-statistics
-             [render-statistics
-              {:end-date*     end-date
-               :reset-view-fn reset-view-fn
-               :graphs        [[graph-1 end-date @(db/on-value-reaction {:path ["activity-22"]})]
-                               [graph-2 end-date @(db/on-value-reaction {:path ["temperature"]})]]}])
-           (local-pillbar selector [[:b "Ute"] [:a "Alle"] [:c "Stativ"]])
-           (booking.utlan/render-list nil selector)])]])))
+        [:<>
+         (when @c-show-statistics
+           [render-statistics
+            {:end-date*     end-date
+             :reset-view-fn reset-view-fn
+             :graphs        [[graph-1 end-date @(db/on-value-reaction {:path ["activity-22"]})]
+                             [graph-2 end-date @(db/on-value-reaction {:path ["temperature"]})]]}])
+         (local-pillbar selector [[:b "Ute"] [:a "Alle"] [:c "Stativ"]])
+         (booking.utlan/render-list nil selector)]]])))
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]

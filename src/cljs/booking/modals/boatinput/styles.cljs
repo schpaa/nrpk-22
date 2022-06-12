@@ -14,24 +14,6 @@
    :font-size   "var(--font-size-5)"
    :font-weight "var(--font-weight-4)"})
 
-(o/defstyled button :button
-  :w-full :h-full
-  {:display       :grid
-   :place-content :center
-   :border-radius "var(--radius-1)"
-   :background    "var(--surface4)"
-   :color         "var(--surface1)"}
-  [:&:hover {:background "var(--surface5)"}]
-  [:&:disabled {:color      "var(--surface2)"
-                :background "none" #_"var(--surface0)"}]
-  [:&:active:enabled {:background "var(--surface3)"
-                      :color      "var(--surface2)"}]
-  ([{:keys [ref on-click disabled enabled style]} ch]
-   ^{:ref      ref
-     :on-click on-click
-     :disabled (if (some? enabled) (not enabled) disabled)}
-   [:<> [:div ch]]))
-
 (o/defstyled debug-1 :div
   {:outline "1px solid green"})
 
@@ -95,7 +77,7 @@
   [:& :flex :flex-col :justify-around :items-center :select-none
    {:position         :relative
     :sbox-shadow      "var(--inner-shadow-1)"
-    :background-color "var(--floating)"                     ;"var(--vener)"
+    :background-color "var(--toolbar)"                     ;"var(--vener)"
 
     :border-radius    "var(--radius-0)"}
 
@@ -115,42 +97,39 @@
 (o/defstyled toggle-button :div
   :w-full :h-full
   {:display       :grid
-   :background    "var(--floating)"
+   :background    "var(--toolbar)"
    :place-content :center
    :border-radius "var(--radius-0)"})
 
 
 (o/defstyled panel :div
-  [:& ;:min-h-full
+  [:&
    {:display               "grid"
     :margin                0
     :padding               0
-    ;:height                "100%"
-    :column-gap            "var(--size-1)"
+    :column-gap "0.25rem"
     :min-width             "20rem"
     :max-width             "20rem"
     :grid-template-columns "auto"
-    :grid-template-rows
-    "min-content
+    :grid-template-rows "min-content
+
     0.5rem 4rem 0.25rem 4rem
 
-    0.5rem min-content
-    0.5rem min-content
+    0.25rem min-content
+    0.25rem min-content
     1rem
     minmax(5rem,1fr)
     1rem
-    4rem 0.25rem
-    4rem 0.25rem
-    4rem 0.25rem
-    4rem
+    5rem 0.25rem
+    5rem 0.25rem
+    5rem 0.25rem
+    5rem
     "}
 
    [:&.left
     {:grid-template-columns "min-content repeat(4,minmax(0,1fr))"
      :grid-template-areas   [
-                             ["in in in in in"]
-
-
+                             [" . in in  .  ."]
                              [".  .  .  .  . "]
                              ["c1 ad mo ju ch"]
                              ["c1 ad .  ju ch"]
@@ -164,9 +143,9 @@
 
 
                              [".  .  .  .  . "]
-                             ["st st st st st"]
+                             [".  st st st st"]
                              [".  .  .  .  . "]
-                             ["np np np np . "]
+                             ["np np np np cl"]
                              ["np np np np . "]
                              ["np np np np co"]
                              ["np np np np . "]
@@ -183,7 +162,7 @@
        4rem 0.24rem
        4rem
        "
-      :grid-template-areas [["in in in in in"]
+      :grid-template-areas [[". .  in in .  "]
                             [".  .  .  .  . "]
                             ["st st st st st"]
                             [".  .  .  .  . "]
@@ -197,26 +176,49 @@
 
    [:&.right
     {:grid-template-columns "repeat(4,minmax(0,1fr)) min-content"
-     :grid-template-areas   [;[". mode mode mode mode"]
-                             ["in in in in in"]
-                             [".  .  .  .  . "]
-                             ["bo bo bo bo a1"]
-                             [".  .  .  .  . "]
-                             ["ay ay ay ay b1"]
+     :grid-template-areas   [
+                             [".  . in in . "]
                              [".  .  .  .  . "]
                              ["ch ju mo ad c1"]
                              ["ch ju .  ad c1"]
                              ["ch ju ky ad c1"]
+
                              [".  .  .  .  . "]
-                             ["st st st st st"]
+                             ["ay ay ay ay b1"] ;-
+
                              [".  .  .  .  . "]
-                             [".  np np np np"]
+                             ["bo bo bo bo a1"]
+
+
+                             [".  .  .  .  . "]
+                             ["st st st st ."]
+                             [".  .  .  .  . "]
+                             ["cl  np np np np"]
                              [".  np np np np"]
                              ["co np np np np"]
                              [".  np np np np"]
                              ["aw np np np np"]
                              [".  np np np np"]
-                             ["re np np np np"]]}]])
+                             ["re np np np np"]]
+     #_[[".  .  in in . "]
+        [".  .  .  .  . "]
+        ["bo bo bo bo a1"]
+        [".  .  .  .  . "]
+        ["ay ay ay ay b1"]
+        [".  .  .  .  . "]
+        ["ch ju mo ad c1"]
+        ["ch ju .  ad c1"]
+        ["ch ju ky ad c1"]
+        [".  .  .  .  . "]
+        ["st st st st st"]
+        [".  .  .  .  . "]
+        [".  np np np np"]
+        [".  np np np np"]
+        ["co np np np np"]
+        [".  np np np np"]
+        ["aw np np np np"]
+        [".  np np np np"]
+        ["re np np np np"]]}]])
 
 (o/defstyled pad :div
   [:div :flex-center
@@ -226,5 +228,5 @@
    [:<> [:div {:style {:border-radius (str "var(--radius-blob-" (inc (rand-int 5)) ")")}} ch]]))
 
 (o/defstyled clear-field-button :button
-  :flex-center :w-full :h-full
+  :flex-center :w-full :h-full :outline-none
   [:&:disabled {:opacity 0.2}])

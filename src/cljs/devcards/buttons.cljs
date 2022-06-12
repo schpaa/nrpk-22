@@ -3,6 +3,7 @@
   (:require [booking.styles :refer [ro ro-js screen surface text text-truncate
                                     title]]
             [devcards.core :as dc :include-macros true]
+            [booking.modals.boatinput]
             [reagent.core]
             ["highlight.js" :as hljs]
             [breaking-point.core :as bp]
@@ -24,7 +25,9 @@
             [schpaa.style.input]
             [reagent.core :as r]
             [booking.temperature]
-            [schpaa.style.switch]))
+            [schpaa.style.switch]
+            [db.core :as db]
+            [booking.data :as app-data]))
 
 (defcard-rg pill
   [:div
@@ -36,7 +39,7 @@
 (defcard-rg pill
   [:div
    [ro-js
-    [button/just-icon {:class [:inverse]} ico/closewindow]
+    [button/just-icon {:class [:inverse]} ico/closewindow]              
     [button/just-icon {:class [:danger]} ico/closewindow]
     [button/just-icon {:class [:frame]} ico/closewindow]
     [button/just-icon {:class [:selected]} ico/closewindow]
@@ -271,6 +274,21 @@
         {:uid "uid"
          :write-fn #(let []
                       (js/alert %))}]]]])
+
+  wdata
+  {:inspect-data true})
+
+
+
+(defcard-rg input-field 
+  (fn [a _]
+    [:div
+     [screen {:class [:p-4]}
+      [booking.modals.boatinput/boat-input
+       (r/atom {:focus :boats
+                :textfield {:boats "12"}})
+       (r/atom :boats)
+       (r/atom "")]]])
 
   wdata
   {:inspect-data true})

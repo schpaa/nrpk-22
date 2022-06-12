@@ -433,14 +433,11 @@
         {:aa               {}
          :render-fullwidth #(booking.users/render r data)}])
 
-   :r.utlan
-   (fn [r]
-     (let [uid @(rf/subscribe [:lab/uid])]
-       [+page-builder r
-        {;:panel            booking.utlan/panel
-         :headline-plugin booking.utlan/headline-plugin
-         :render          booking.utlan/render-new
-         :xrender         #(vector :div {:style {:background-color "green"}} "test") #_#(booking.utlan/render-list uid)}]))
+   :r.utlan              (fn [r]
+                           (let [uid @(rf/subscribe [:lab/uid])]
+                             [+page-builder r
+                              {:headline-plugin booking.utlan/headline-plugin
+                               :render          booking.utlan/render-new}]))
 
    :r.debug              (fn [r] (page r {:always-panel     booking.lab/always-panel
                                           :render-fullwidth booking.lab/render}))
@@ -489,8 +486,8 @@
                                         c (- 8 (count n))]
                                     (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
    :r.booking            (fn [r] (page r (booking.booking/page r)))
-   #_#_:r.temperature        (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
-                                              :render          (fn [] [booking.temperature/render r])}))
+   #_#_:r.temperature (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
+                                       :render          (fn [] [booking.temperature/render r])}))
    :r.users
    (fn [r] (page r {:render-fullwidth booking.users/render
                     :always-panel     booking.users/always-panel
