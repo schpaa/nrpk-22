@@ -6,8 +6,6 @@
 (defstyled debug :div
   {:outline "1px solid yellow"})
 
-
-
 (defstyled outer-button :div
   [:& :flex-center :relative])
 
@@ -15,20 +13,19 @@
   {:border-radius "var(--radius-round)"})
 
 (defstyled button :button
-  [:& :flex-center :p-3 :outline-none :focus:outline-none
-   :self-center
+  [:& :-mt-4 :flex-center :p-2 :outline-none :focus:outline-none :self-center
    {:aspect-ratio "1/1"
-    :max-width    "4rem"
+    ;:max-width    "4rem"
     :color        "var(--text3)"}
    [#{:&.normal :&.selected}
     {:opacity 1}]
    [:&.normal
-    {:color             "var(--text1)"
-     :xbackground-color "var(--toolbar-)"}]
+    {:color             "var(--text2)"}]
    [:&.selected round
     {:color            "var(--text1)"
-     :box-shadow       "var(--shadow-2)"
-     :background-color "var(--content)"}]])
+     ;:box-shadow       "var(--shadow-2)"
+     :background-color "var(--floating)"}]])
+
 
 (defstyled icontext :p
   [:& :absolute :top-1 :text-center
@@ -66,18 +63,16 @@
 (defstyled toolbar :div
   {:display :none}
   [:at-media {:max-width "511px"}
-   [:& :grid :gap-0 :w-full :px-4 :pb-8
-    {;fix <--- hardcoded!
-
-     :height                "7rem"
+   [:& :grid :gap-0 :w-full :px-4 :pb-4
+    {:height                "6rem"
      :width                 :100vw
      :bottom                0
-     :background-color      "var(--toolbar-)"
+     :background-color      "var(--toolbar)"
      :grid-template-rows    "auto 0rem "
      :grid-template-columns "repeat(5,1fr)"}
     [:&.admin
      {:grid-template-columns "repeat(7,1fr)"}]]])
 
 (defn render [d]
-  (into [toolbar]
-        (map-indexed button-fn d)))
+  [toolbar (into [:<>]
+                 (map-indexed button-fn d))])

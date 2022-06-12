@@ -79,8 +79,21 @@
 ;todo refactor on right-side
 
 (defn vertical-button
-  [{:keys [right-side caption opposite-on-click with-caption? opposite-icon-fn tall-height
-           special icon icon-fn content-fn class on-click page-name badge disabled]}]
+  [{:keys [icon-fn
+
+           caption
+           right-side
+           opposite-on-click
+           with-caption?
+           opposite-icon-fn
+           tall-height
+           special
+           class
+           on-click
+           page-name
+           badge
+           disabled
+           content-fn]}]
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         selected? (if (fn? page-name)
                     (page-name current-page)
@@ -93,14 +106,14 @@
                  :gap-2 :flex :flex-row-reverse :justify-center (when selected? :selected)]
       :on-click #(on-click current-page)}
 
-     (when (and right-side caption)
+     (when (and right-side with-caption?)
        [sc/text2 {:style {:width       "auto"
                           :white-space :normal
                           :color       "unset"
                           :flex-grow   1
                           :flex        "1 1 auto"}} caption])
 
-     (when (and right-side opposite-icon-fn caption)
+     (when (and right-side opposite-icon-fn with-caption?)
        [:div.h-20.flex.justify-center.items-center
         {:on-click opposite-on-click}
         [sc/icon (opposite-icon-fn)]])
@@ -139,19 +152,84 @@
                         (if special :special)]}
            [sc/icon-large {:class [:shrink-0]} (icon-fn current-page)]))]]
 
-     (when-not right-side
-       (when with-caption?
+     (when with-caption?
+       (when-not right-side
          (when opposite-icon-fn
            [:div.w-16.h-20.flex.justify-center.items-center
             {:on-click opposite-on-click}
             [sc/icon (opposite-icon-fn)]])))
 
-     (when-not right-side
-       (when caption
+     (when with-caption?
+       (when-not right-side
          [sc/text2 {:style {:text-align :right
                             :flex-grow  1
                             :color      "unset"
                             :flex       "1 0 1"}} caption]))]))
+
+(defn vertical-button'
+  [{:keys [icon-fn
+
+           caption
+           right-side
+           opposite-on-click
+           with-caption?
+           opposite-icon-fn
+           tall-height
+           special
+           class
+           on-click
+           page-name
+           badge
+           disabled
+           content-fn]}]
+  (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+        selected? (if (fn? page-name)
+                    (page-name current-page)
+                    (= current-page page-name))
+        screen-side (if right-side :right-side :left-side)]
+    [sc/toolbar-button-with-caption
+     {:style    {:justify-content :center
+                 :align-items     :center}
+      :class    [:w-full
+                 :gap-2 :flex :flex-row-reverse :justify-center (when selected? :selected)]
+      :on-click #(on-click current-page)}
+
+     [:div.relative
+      {:style {
+               :display         :flex
+               :width           "4rem"
+               :align-items     "center"
+               :justify-content "center"
+               :flex-shrink     0
+               :height          (if tall-height
+                                  "var(--size-10)"
+                                  "var(--size-9)")}}
+      [:div.h-full.w-full.items-center.justify-between.relative
+       {:style {:display        "flex"
+
+                :flex-direction "column"
+                :pointer-events "auto"
+                :height         "var(--size-9)"}}
+       ;;badge
+       (when badge
+         (let [{value :value attr :attr} (badge)]
+           (if right-side
+             [sc/top-right-badge attr value]
+             [sc/top-left-badge attr value])))
+
+       (cond
+         content-fn
+         (content-fn)
+
+         icon-fn
+         (sc/toolbar-button
+           {:disabled  disabled
+            :tab-index (when selected? "-1")
+            :class     [screen-side
+                        (if selected? (or (when class (class current-page)) :selected))
+                        :mb-4
+                        (if special :special)]}
+           (icon-fn current-page)))]]]))
 
 (defn stability-circle [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center

@@ -9,28 +9,30 @@
             [db.core :as db]
             [reagent.core :as r]
             [schpaa.debug :as l]
-            [booking.styles :as b]))
+            [booking.styles :as b :refer [ro surface text title co co4]]
+            [booking.ico :as ico]))
 
 (def weather-words
-  [[0 "Tåke"]
-   [2 "Pent vær"]
-   [2 "Overskyet"]
-   [2 "Lettskyet"]
-   [2 "Skyet"]
-   [1 "Vindstille"]
-   [1 "Vind"]
-   [1 "Bris"]
-   [1 "Kraftig vind"]
-   [3 "Yr"]
+  [#_[0 "Tåke"
+      0 "Dårlig sikt"]
+   [1 "Klart vær"]
+   [1 "Lettskyet"]
+   [1 "Delvis skyet"]
+   [1 "Skyet"]
+   [2 "Vindstille"]
+   [2 "Svak vind"]
+   [2 "Bris"]
+   [2 "Frisk bris"]
+   [3 "Opphold"]
    [3 "Litt nedbør"]
-   [3 "Styrtregn"]])
+   [3 "Regn"]])
 
 
-(def gunk (r/atom {:vær       {"Tåke" true}
-                   ;:luft      "12"
-                   ;:vann      "0"
-                   ;:date      (t/date (t/now))
-                   ;:time      (t/truncate (t/time (t/now)) :minutes)
+(def gunk (r/atom {:vær       {"Klart vær" true}
+                   :luft      ""
+                   :vann      ""
+                   :date      (t/date (t/now))
+                   :time      (t/truncate (t/time (t/now)) :minutes)
                    :testfield "data"}))
 
 (defn validation-fn [{:keys [vann luft vær date time] :as values}]
@@ -38,17 +40,17 @@
   (into {}
         (remove (comp nil? val)
                 {:date (cond-> nil
-                         (nil? (try (some-> date t/date) (catch js/Error  _ nil))) ((fnil conj []) "mangler"))
+                         (nil? (try (some-> date t/date) (catch js/Error _ nil))) ((fnil conj []) "mangler"))
 
                  :time (cond-> nil
-                         (nil? (try (some-> time t/time) (catch js/Error  _ nil))) ((fnil conj []) "mangler"))
+                         (nil? (try (some-> time t/time) (catch js/Error _ nil))) ((fnil conj []) "mangler"))
 
                  :vann (cond-> nil
                          (empty? vann) ((fnil conj []) "mangler")
-                         (not= vann (str (js/parseFloat vann))) ((fnil conj []) "er feil"))
+                         (not= vann (str (js/parseFloat vann))) ((fnil conj []) "har feil format"))
                  :luft (cond-> nil
                          (empty? luft) ((fnil conj []) "mangler")
-                         (not= luft (str (js/parseFloat luft))) ((fnil conj []) "er feil"))
+                         (not= luft (str (js/parseFloat luft))) ((fnil conj []) "har feil format"))
                  :vær  (cond-> nil
                          (empty? (filter (comp true? val) vær)) ((fnil conj []) "mangler"))})))
 
@@ -56,74 +58,124 @@
   (do
     (validation-fn {:vann "1"})))
 
-(defn tempform-content [{:keys [data on-close uid write-fn]}]
-  [fork/form
-   {:prevent-default?    true
-    :keywordize-keys     true
-    :validation          #(validation-fn %)
-    :component-did-mount (fn [{:keys [set-values set-untouched set-touched]}]
-                           (set-values @gunk)
-                           #_(set-touched :luft))
-    :on-submit           (fn [{:keys [values]}]
-                           (let [data (assoc values
-                                        :timestamp (str (t/now))
-                                        :uid uid)]
-                             (when write-fn
-                               (write-fn data))
-                             (on-close)))}
-   (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
-     [sc/dialog-dropdown
-      ;[l/pre-s @gunk]
-      [sc/col-space-8
-       [sc/col-space-8
-        {:style {:padding          "1rem"
-                 :background-color "var(--floating)"}}
-        [:div.px-1 [sc/dialog-title "Registrer luft og vanntemperatur"]]
-        [:form
-         {:id        form-id
-          :on-submit handle-submit}
-         [sc/col-space-8
-          [b/ro-js-ie
-           [field/dateinput props "Dato" :date]
-           [field/timeinput props "Tid" :time]
-           [button/regular {:on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
-                                                    :date (t/date (t/now))})
-                            :class    [:small]} "Nå"]]
+(defn ensure [uid component]
+  (if-not uid
+    [sc/surface-a [b/text {:class []} "Ingen tilgang"]]
+    component))
 
-          [sc/row-sc-g4 {:style {:gap "2rem"}
-                         :class [:items-start]}
-           [sc/col-space-4 {:class [:w-32]}
-            [field/textinput (assoc props
-                               :type "text"
-                               :values {:luft (:luft values)}) "Luft" :luft]
-            [field/textinput (assoc props
-                               :type "text") "Vann" :vann]]
-           [sc/checkbox-matrix
-            {:style {:padding-topx "1rem"}}
-            (into [:<>]
-                  (for [[_ e] (group-by first weather-words)
-                        [_ e] e]
-                    [hoc.toggles/largeswitch-local''
-                     {:get     #(get-in values [:vær e])
-                      :set     #(do
-                                  (tap> e)
-                                  (set-values (assoc-in values [:vær e] %)))
-                      :view-fn (fn [t c v]
-                                 [sc/row-sc-g2 t
-                                  [(if v sc/text1 sc/text0) c]])
-                      :caption e}]))]]
-          [sc/row-field
-           [:div.grow]
-           [button/just-caption {:class    [:regular :normal]
-                                 :on-click on-close
-                                 :type     :button} "Avbryt"]
-           [button/just-caption {:type     :submit
-                                 :disabled (not (empty? (validation-fn values)))
-                                 :class    [:cta :normal]} "Lagre"]]]]]]])])
+(defn is-this-today? [dt])
 
-(defn add-temperature []
-  (let [uid @(rf/subscribe [:lab/uid])
-        data {}]
+(defn temperature-form-content [{:keys [on-close uid write-fn]}]
+  (ensure uid
+          [fork/form                                         
+           {:prevent-default?    true
+            :keywordize-keys     true
+            :validation          #(validation-fn %)
+            :component-did-mount (fn [{:keys [set-values set-untouched set-touched]}]
+                                   (set-values @gunk))
+            :on-submit           (fn [{:keys [values]}]
+                                   (let [data (assoc values
+                                                :timestamp (str (t/now))
+                                                :uid uid)]
+                                     (when write-fn
+                                       (write-fn data))
+                                     (on-close)))}
+           (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
+             [sc/dialog-dropdown
+              [co
+               [co
+                {:style {:background-color "var(--floating)"}}
+                [sc/dialog-title  "Registrer vær"]
+                [:form
+                 {:id        form-id
+                  :on-submit handle-submit}
+                 [b/co4 
+                  [surface {:style {:width "100%"
+                                    :padding-inline "1rem"}
+                            :class [:emboss]}
+                   [ro {:class [:space-x-4]
+                        :style {:align-items :start
+                                :justify-content :start}}
+                    [co4
+                     [field/dateinput props "Dato" :date]
+                     [ro {:style {:align-items :start}}
+                      [button/just-caption
+                       {:disabled (t/= (t/today) (values :date))
+                        :on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                                :date (t/date (t/now))})
+                        :class    [:regular]} "Nå"]
+
+                      [button/just-icon
+                       {:type     "button"
+                        :on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                                :date (t/<< (t/date (values :date)) (t/new-period 1 :days))})
+                        :class    [:round :message]
+                        :disabled (empty? (str (values :date)))}
+                       [sc/icon-small ico/arrowLeft']]
+
+                      [button/just-icon
+                       {:on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                                :date (t/>> (t/date (values :date)) (t/new-period 1 :days))})
+                        :disabled
+                        (or
+                          (empty? (str (values :date)))
+                          (when-not (empty? (str (values :date)))
+                            (when-let [dt (some-> (values :date) t/date)]
+                              (t/< (t/yesterday) dt))))
+                        :class    [:round :message]}
+                       [sc/icon-small ico/arrowRight']]]]
+                    [co4
+                     [field/timeinput props "Klokke" :time]
+                     [ro
+                      [button/just-caption
+                       {:type     "button"
+                        :on-click #(set-values {:time (t/time "11:00")})
+                        :class    [:frame]} "11:00"]
+                      [button/just-caption
+                       {:type     "button"
+                        :on-click #(set-values {:time (t/time "14:00")})
+                        :class    [:frame]} "14:00"]
+                      [button/just-caption
+                       {:type     "button"
+                        :on-click #(set-values {:time (t/time "18:00")})
+                        :class    [:frame]} "18:00"]]]]]
+                  [sc/row-sc-g4 {:style {:gap            "2rem"
+                                         :padding-inline "1rem"}
+                                 :class [:items-start]}
+                   [b/co4 {:style {:flex "1"}
+                           :class [:self-start]}
+                    [field/textinput (assoc props
+                                       :type "text"
+                                       :autofocus true
+                                       :values {:luft (:luft values)}) [:span "Luft" [:sup "ºC"]] :luft]
+                    [field/textinput (assoc props
+                                       :type "text") [:span "Vann" [:sup "ºC"]] :vann]]
+                   [sc/surface-a {:style {:flex "3"}}
+                    [sc/checkbox-matrix
+                     (into [:<>]
+                           (for [[_ e] (group-by first weather-words)]
+                             [:div.pb-1
+                              (for [[_ e] e]
+                                [:div.pb-1
+                                 [hoc.toggles/largeswitch-squared
+                                  {:get     #(get-in values [:vær e])
+                                   :set     #(set-values (assoc-in values [:vær e] %))
+                                   :view-fn (fn [t c v]
+                                              [sc/row-sc-g2 t
+                                               [(if v sc/text1 sc/text0) c]])
+                                   :caption e}]])]))]]]
+                  [sc/row-field {:style {:padding "1rem"
+                                         :width   "100%"}}
+                   [:div.grow]
+                   [button/just-caption {:class    [:regular :normal]
+                                         :on-click on-close
+                                         :type     :button} "Avbryt"]
+                   [button/just-caption {:type     :submit
+                                         :disabled (not (empty? (validation-fn values)))
+                                         :class    [:cta :normal]} "Lagre"]]]]]]])]))
+
+(defn add-temperature [uid]
+  (let [data {}]
     (rf/dispatch [:modal.slideout/show
                   {:data       data
                    :uid        uid
@@ -133,7 +185,7 @@
                                                (update :vann js/parseFloat))]
                                   (db/database-push {:path  ["temperature"]
                                                      :value data}))
-                   :content-fn #(tempform-content %)}])))
+                   :content-fn #(temperature-form-content %)}])))
 
 ;(ns booking.temperature
 ;  (:require [booking.ico :as ico]

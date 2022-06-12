@@ -27,7 +27,7 @@
       :class []}
      (corner-logo)
      [sc/col-space-8
-      [sc/dialog-title' "NRPK"]
+      [sc/dialog-title "NRPK"]
 
       [sc/col-space-2
        [sc/text1 (str "Velkommen " (str/trim (or (:navn user) "")) " — du er logget inn!")]
@@ -103,7 +103,7 @@
             :max-height "80vh"}}
    (corner-logo)
    [sc/col-space-4
-    [sc/dialog-title' "NRPK"]
+    [sc/dialog-title "NRPK"]
     [sc/row-sc-g2
      [sc/col-space-4
       [sc/text1 "Du har logget ut!"]]

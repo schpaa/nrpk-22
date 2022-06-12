@@ -1,5 +1,6 @@
 (ns booking.toolbar
   (:require [re-frame.core :as rf]
+            [lambdaisland.ornament :as o]
             [db.core :as db]
             [schpaa.style.ornament :as sc]
             [booking.common-widgets :as widgets]
@@ -162,7 +163,7 @@
 
 
      (when (or @admin? @nokkelvakt)
-       {:icon          ico/mystery1
+       {:icon-fn       #(-> ico/mystery1)
         :disabled      false
         :caption       "Utlån Nøklevann"
         :short-caption "Utlån"
@@ -219,9 +220,68 @@
                                                           :caption cap)])))
                   (remove nil? (vertical-toolbar-definitions))))])))
 
+(o/defstyled outer-button :div
+           [:& :flex-center :relative])
+
+(o/defstyled toolbar :div
+           {:display :none}
+           [:at-media {:max-width "511px"}
+            [:& :grid :gap-0 :w-full
+             {:height                "6rem"
+              :width                 :100vw
+              :bottom                0
+              :background-color      "var(--toolbar)"
+              :grid-template-rows    "auto 0rem "
+              :grid-template-columns "repeat(5,1fr)"}
+             [:&.admin
+              {:grid-template-columns "repeat(7,1fr)"}]]])
+
+(o/defstyled round :div
+           {:border-radius "var(--radius-round)"})
+
+(o/defstyled button :button
+           [:& :-mt-4 :flex-center :p-2 :outline-none :focus:outline-none :self-center
+            {:aspect-ratio "1/1"
+             ;:max-width    "4rem"
+             :color        "var(--text3)"}
+            [#{:&.normal :&.selected}
+             {:opacity 1}]
+            [:&.normal
+             {:color             "var(--text2)"}]
+            [:&.selected round
+             {:color            "var(--text1)"
+              ;:box-shadow       "var(--shadow-2)"
+              :background-color "var(--floating)"}]])
+
+(defn button-fn [idx d]
+
+  [widgets/vertical-button (conj d {:right-side    false    ;right-side?
+                                    :with-caption? nil})]   ;with-caption?
+                                     
+  #_(let [{:keys [page-name]} d
+          current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
+          disable? (:disabled d)
+          active? (if (fn? page-name)
+                    (page-name current-page)
+                    (= current-page page-name))
+          class (if active? :selected (if (not disable?) :normal))]
+      [outer-button
+       {:on-click #((:on-click d))}
+       [button
+        {:class [:relative
+                 class
+                 :flex :items-end]}
+        [sc/col-c-space-2
+         [sc/icon-huge
+          {:class (:class d)
+           :style {}}
+          (let [f (or (:icon d) (:icon-fn d))]
+            (if (fn? f) (f page-name) f))]]]
+       #_[icontext {:class [class]} (:short-caption d)]]))
+
 (defn bottom-toolbar []
   (let [switch? @(schpaa.state/listen :lab/menu-position-right)
         data ((if switch? reverse identity) (horizontal-toolbar-definitions))]
-    [booking.fiddle/render data]))
+    [toolbar (map widgets/vertical-button' data)]))
 
 

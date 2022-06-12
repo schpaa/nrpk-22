@@ -75,8 +75,17 @@
   :flex :justify-between :items-baseline
   {})
 
+(o/defstyled co :div
+  :flex :flex-col :justify-start :items-start :h-full)
+
+(o/defstyled co4 co
+  :space-y-4)
+
+(o/defstyled col :div
+  :flex :space-y-8 :flex-col :justify-start :items-stretch )
+
 (o/defstyled ro :div                
-  :flex :justify-start :items-center :gap-2)
+  :flex :justify-start :items-center :gap-2 :h-full)
 
 (o/defstyled ro-js :div
   :flex :justify-start :items-baseline :gap-2
@@ -111,13 +120,20 @@
 
 (o/defstyled screen :div
   [:&
-   :font-sans
    :h-auto
    :overflow-hidden
-   {:background-color "rgba(0,0,0,0.1)"
+   {:font-family "Sans-serif"
+    :background-color "rgba(0,0,0,0.1)"
     :xwidth            "50ch"}])
 
 (o/defstyled surface :div
-  [:& :p-2 :select-none
-   {;:box-shadow       "var(--shadow-1)"
-    :xborder-radius "var(--radius-1)"}])
+  [:& :p-4 :select-none :h-full
+   {:box-shadow       "var(--shadow-inner-1)"
+    ;:border "2px solid var(--text2)"
+    :border-radius "var(--radius-0)"}
+   [:&.floating
+    {:background-color "var(--floating)"}]
+   [:&.content   
+    {:background-color "var(--content)"}]
+   [:&.emboss
+    {:background-color "var(--floating-)" #_"rgba(255,255,255,1)"}]])

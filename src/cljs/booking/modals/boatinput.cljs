@@ -533,7 +533,7 @@
       #_[list-of-selected]]]))
 
 (defn selected-boats [st c-focus c-textinput-boats]
-  (let [has-focus? false;(= :boats @c-focus)
+  (let [has-focus? false                                    ;(= :boats @c-focus)
         boat (lookup (or (:selected @st) @c-textinput-boats))]
     [sc/surface-p
      {:on-click #(reset! c-focus :boats)
@@ -611,7 +611,7 @@
         ;[l/pre id]
 
         [:div
-         {:style {:min-width "0"
+         {:style {:min-width     "0"
                   :padding       "0.25rem"
                   :box-shadow    "none"
                   :border-radius "var(--radius-0)"
@@ -619,7 +619,7 @@
 
 
          [sc/col
-          [sc/row-sc-g2 {:style {:width "100%"
+          [sc/row-sc-g2 {:style {:width       "100%"
                                  :align-items "center"}}
            [widgets/badge {:class ['small]} (:number data) (:slot data)]
            [widgets/stability-name-category'
@@ -655,7 +655,7 @@
     :style {:padding       "0.5rem"
             :height        "100%"
             :overflow-y    "auto"
-            :overflow-x "hidden"
+            :overflow-x    "hidden"
             :border-radius "var(--radius-0)"}}
    ;[sc/text "this is a very long text that spans several lines"]
    (if (= :phone @c-focus)
@@ -846,16 +846,14 @@
                      ["aw" [await st]]
                      ["co" [complete st]]]))]]))})))
 
-(defn window-content
-  ([m]
-   (window-content nil))
-  ([{:keys [on-close]} args]
-   [:div
-    {:style {:overflow-y :auto
-             :width      "auto"
-             :max-height "90vh"}}
-
-    [boatpanel-window args]]))
+(defn window-content [{:keys [on-close]} args]
+  [:div
+   {:style {:overflow-y :auto
+            :width      "100%"
+            :height "auto"
+            ;:min-height "0"
+            :min-height "50rem"}}
+   [boatpanel-window args]])
 
 (rf/reg-event-fx :lab/toggle-boatpanel
                  (fn [_ [_ args]]
@@ -863,25 +861,14 @@
                           [:modal.boatinput/show
                            {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
                             :mode              (when args :edit)
-                            :content-fn        (fn [e] (if args
-                                                         (window-content e args)
-                                                         (window-content e nil)))}]]]}))
+                            :content-fn        (fn [e] (window-content e args))}]]]}))
 
 (rf/reg-event-fx :lab/set-boatpanel-data
                  (fn [_ [_ args]]
                    (let [[k v] args]
-                     (tap> v)
-                     (set-boatpanel-fields v))
-                   #_{:fx [[:dispatch
-                            [:lab/set-boatpanel-data args]
-                            #_[:modal.boatinput/show
-                               {:on-primary-action #(rf/dispatch [:modal.boatinput/clear])
-                                :mode              (when args :edit)
-                                :content-fn        (fn [e] (if args
-                                                             (window-content e args)
-                                                             (window-content e nil)))}]]]}))
+                     (set-boatpanel-fields v))))
 
-;region dialog-related
+;; dialog re-frame
 
 (rf/reg-sub :modal.boatinput/is-visible :-> #(get % :modal.boatinput/visible false))
 
@@ -899,7 +886,9 @@
                                           ;(reset! st {})
                                           (assoc db :modal.boatinput/context nil)))
 
-(defn render-boatinput
+;;
+
+(defn boatinput-dialog
   "centered dialog used by this component"
   []
   (let [{:keys [context vis close]} {:context @(rf/subscribe [:modal.boatinput/get-context])
@@ -972,6 +961,3 @@
                                          ;todo remove comment to allow closing
                                          (close))
                              :action action)))]]]]]))))
-
-;endregion
-

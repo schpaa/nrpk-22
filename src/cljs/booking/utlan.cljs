@@ -19,7 +19,8 @@
             [booking.timegraph :refer [timegraph]]
             [fork.reagent :as fork]
             [schpaa.style.input :as sci]
-            [schpaa.style.hoc.buttons :as field]))
+            [schpaa.style.hoc.buttons :as field]
+            [booking.styles :as b]))
 
 ;region innlevering
 
@@ -523,101 +524,214 @@
       selector
       data]]]])
 
-(defn graph-1 [{:keys [end-date]} dataset]
-  (r/with-let [reset-view-fn #(reset! st initial-st)]
-    (let [get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
-                                   (get datum c)
-                                   nil))]
-      [:div.relative.w-full.h-full
-       [booking.graph/graph dataset nil {:c-days-back-in-time c-days-back-in-time
-                                         :c-offset            c-offset
-                                         :c-xpos              c-xpos
-                                         :c-xstart            c-xstart
-                                         :touchdown           (r/cursor st [:touchdown])
-                                         :mousedown           (r/cursor st [:mousedown])
-                                         :client-width        (r/cursor st [:client-width])} reset-view-fn
-        nil
-        (fn draw-func? [dt x _value-and-color-seq max-value]
-          (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
-                cnt (get-data-fn dt 0)
-                ;_ (tap> (get-data-fn dt 1))
-                value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
-                                     [(nth (get-data-fn dt 1) 1) "red"]
-                                     [(nth (get-data-fn dt 1) 2) "green"]]]
-            (for [[idx [value color]] (map-indexed vector value-and-color-seq)
-                  :let [offset (* 0.5 (inc idx))]]
-              [:line
-               (conj {:stroke       color
-                      :stroke-width 0.85
-                      :x1           (- x offset) :y1 (- max-value value)
-                      :x2           (- x offset) :y2 max-value}
-                     (when (pos? idx)
-                       {:stroke-width  3
-                        :vector-effect :non-scaling-stroke}))])))]
-       [:div.absolute.bottom-2.right-10
-        [booking.graph/corner-stats get-data-fn end-date]]])))
+(defn reduce-sum-visitors [x]
+  (reduce (fn [agr {:keys [adults juveniles children boats]}]
+            (-> agr
+                (update :adults + adults)
+                (update :juveniles + juveniles)
+                (update :children + children)
+                (update :boats + boats)))
+          {} x))
+
+(defn map-prepare-form [[_ v]]
+  (assoc (select-keys v [:adults :juveniles :children])
+    :boats (count (:list v))))
+
+(defn graph-1-draw-func? [dt x max-value get-data-fn]
+  (let [[_ _ _ boats] (get-data-fn dt)
+        weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+        value-and-color-seq [[(or boats 0) (if weekend? "var(--text1)" "var(--text3)")]
+                             #_[(or adults 0) "red"]
+                             #_[(or children 0) "green"]]]
+    (for [[idx [value color]] (map-indexed vector value-and-color-seq)
+          :let [offset (* 0.5 (inc idx))]]
+      [:line
+       (conj {:stroke       color
+              :stroke-width 0.85
+              :x1           (- x offset) :y1 (- max-value value)
+              :x2           (- x offset) :y2 max-value}
+             (when (pos? idx)
+               {:stroke-width  3
+                :vector-effect :non-scaling-stroke}))])))
+
+(def timestamp-grouped
+  (comp str t/date t/instant :timestamp val))
+
+(defn dataset-for-graph-1 [activity-records]
+  (let [base (->> (transduce existing conj activity-records) (group-by timestamp-grouped))
+        dataset (into {}
+                      (map (juxt key
+                                 (comp reduce-sum-visitors
+                                       #(map map-prepare-form %)
+                                       val))
+                           base))]
+    dataset))
+
+(defn graph-1 [end-date datasource]
+  (let [reset-view-fn #(reset! st initial-st)
+        dataset (dataset-for-graph-1 datasource)
+        get-data-fn (fn [dt] (if-some [datum (get dataset dt)]
+                               ((juxt :adults :children :juveniles :boats) datum)
+                               nil))]
+    [:div.relative.w-full.h-fullx.-debug
+     [booking.graph/graph
+      dataset
+      ;;todo pass the state as an argument to graph-1
+      {:c-days-back-in-time c-days-back-in-time
+       :c-offset            c-offset
+       :c-xpos              c-xpos
+       :c-xstart            c-xstart
+       :touchdown           (r/cursor st [:touchdown])
+       :mousedown           (r/cursor st [:mousedown])
+       :client-width        (r/cursor st [:client-width])}
+      reset-view-fn
+      get-data-fn
+      graph-1-draw-func?]
+     [:div.absolute.bottom-0.right-10
+      [booking.graph/corner-stats get-data-fn end-date]]]))
+
+(def transformer
+  (juxt key
+        (juxt (comp Math/round :avg :luft val)
+              (comp Math/round :avg :vann val))))
+
+(defn reduce-to-avg [data]
+  (comment
+    (do
+      (let [data {"2022-06-03"
+                  {:antall 1,
+                   :luft   {:timestamps [["00:50" -2]], :avg -2},
+                   :vann   {:timestamps [["00:50" 4]], :avg 4}},
+                  "2022-06-05"
+                  {:antall 2,
+                   :luft
+                   {:timestamps [["00:50" 18] ["07:51" 21]],
+                    :avg        20,
+                    :max        21,
+                    :min        18},
+                   :vann
+                   {:timestamps [["00:50" 14] ["07:51" 15]],
+                    :avg        15.5,
+                    :max        15,
+                    :min        14}},
+                  "2022-06-01"
+                  {:antall 1,
+                   :luft   {:timestamps [["07:56" 22]], :avg 22},
+                   :vann   {:timestamps [["07:56" 12]], :avg 12}},
+                  "2022-06-09"
+                  {:antall 1,
+                   :luft   {:timestamps [["10:04" 12]], :avg 12},
+                   :vann   {:timestamps [["10:04" 13]], :avg 13}},
+                  "2022-06-11"
+                  {:antall 3,
+                   :luft
+                   {:timestamps [["10:54" 1] ["23:47" 2] ["23:49" 12]],
+                    :avg        5.333333333333333,
+                    :max        12,
+                    :min        1},
+                   :vann
+                   {:timestamps [["10:54" 2] ["23:47" 3] ["23:49" 23]],
+                    :avg        10,
+                    :max        23,
+                    :min        2}},
+                  "2022-06-12"
+                  {:antall 7,
+                   :luft
+                   {:timestamps
+                    [["13:38" 44]
+                     ["13:59" 6]
+                     ["13:59" 6]
+                     ["13:59" 3]
+                     ["13:59" 3]
+                     ["13:59" 2]
+                     ["14:27" 16]],
+                    :avg 11.571428571428571,
+                    :max 44,
+                    :min 2},
+                   :vann
+                   {:timestamps
+                    [["13:38" 33]
+                     ["13:59" 6]
+                     ["13:59" 6]
+                     ["13:59" 3]
+                     ["13:59" 3]
+                     ["13:59" 2]
+                     ["14:27" 14]],
+                    :avg 9.857142857142858,
+                    :max 33,
+                    :min 2}}}]
+        (into {} (map transformer data)))))
+  (let [c (count data)
+        series-n (fn [slot data] (map #(nth % slot) data))
+        f (fn [slot data]
+            (let [v (series-n slot data)]
+              (conj {:timestamps (mapv (juxt (comp times.api/time-format t/time t/instant first) #(nth % slot)) data)}
+                    (if (< 1 c)
+                      {:avg (/ (reduce + slot v) c)
+                       :max (apply max v)
+                       :min (apply min v)}
+                      {:avg (nth (first data) slot)}))))]
+    {:antall c
+     :luft   (f 1 data)
+     :vann   (f 2 data)}))
 
 (def graph-2-f
-  (juxt key (comp-> val #(map (comp-> val (juxt :luft
-                                                :vann
-                                                #_(comp-> :vær js/parseInt))) %) first)))
+  (juxt key (comp reduce-to-avg #(map (comp-> val (juxt :timestamp :luft :vann)) %) val)))
 
-(defn graph-2 [end-date*]
-  (let [temperature-records @(db/on-value-reaction {:path ["temperature"]})
-        base (transduce (comp existing
-                              active
-                              (filter (fn [[_ {:keys [version]}]]
-                                        (tap>
-                                          [version
-                                           booking.data/TEMPERATURE-VERSION
-                                           (compare version booking.data/TEMPERATURE-VERSION)])
-                                        (some #{(compare version booking.data/TEMPERATURE-VERSION)} [0 1]))))
-                        conj temperature-records)
+(def current-version
+  (filter (fn [[_ {:keys [version]}]]
+            (some #{(compare version booking.data/TEMPERATURE-VERSION)} [0 1]))))
+
+
+
+(defn graph-2 [end-date temperature-data]
+  (let [
+        base (transduce (comp existing active current-version)
+                        conj
+                        temperature-data)
         grouped-base (group-by (comp-> val :timestamp t/instant t/date str) base)
         dataset (into {} (map graph-2-f) grouped-base)
+        transformed-dataset (into {} (map transformer dataset))
         ;todo fix
         reset-view-fn #(reset! settings initial-st)]
     (let [get-data-fn (fn [dt]
-                        (when-some [datum (get dataset dt)]
+                        (when-some [datum (get transformed-dataset dt)]
                           datum))]
-      [:div.relative
-       [l/boundary
-        (fn [err] [sc/text {:class [:p-1 :error]} (l/default-error-body err)])
+      [l/boundary
+       (fn [err] [sc/text {:class [:p-4 :stripes]} (l/default-error-body err)])
+       [:div.relative.-debug
         [booking.graph/graph
-         dataset
+         transformed-dataset
          {:c-days-back-in-time c-days-back-in-time
           :c-xpos              c-xpos
           :c-offset            c-offset
-          :c-xstart            c-xstart}                    ;st
+          :c-xstart            c-xstart}                ;st
          reset-view-fn
-         nil
-         (fn draw-func! [dt x _value-and-color-seq max-value]
-           (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
-                 [cnt v2] (get-data-fn dt)
-                 value-and-color-seq [[cnt (if weekend? "var(--text1)" "var(--text3)")]
-                                      [v2 "orange"]
-                                      [0 "red"]
-                                      [0 "green"]]
+         get-data-fn
+         (fn draw-func! [dt x max-value get-data-fn]
+           (when-let [data-point (or (get-data-fn dt) :empty)]
+             (let [weekend? (some #{(t/int (t/day-of-week dt))} [6 7])
+                   [luft vann] (if (= :empty data-point) [1 -1] data-point)
+                   value-and-color-seq [nil
+                                        [luft "var(--green-5)"]
+                                        [vann "var(--blue-5)"]]
+                   offset (* (/ 1 (max 1 (count value-and-color-seq))))
+                   half-offset (/ offset -2)]
 
-                 offset (* (/ 1 (max 1 (count value-and-color-seq))))
-                 half-offset (/ offset -2)]
-
-             (for [[idx [value color]] (let [[h & t] (map-indexed vector value-and-color-seq)]
-                                         (conj t h))
-                   :let [x' (if (pos? idx)
-                              ;subtract 0.5 because the point is already at center
-                              (+ x -0.4 (* offset idx) half-offset)
-                              x)]]
-               [:line
-                (conj {:stroke       color
-                       :stroke-width 0.85
-                       :x1           x' :y1 (- max-value value)
-                       :x2           x' :y2 max-value}
-                      (when (pos? idx)
-                        {:vector-effect :non-scaling-stroke
-                         :stroke-width  3}))])))]]
-       #_[:div.absolute.bottom-2.right-10
-          [booking.graph/corner-stats get-data-fn @end-date*]]])))
+               (for [[idx [value color :as e]] (let [[h & t] (map-indexed vector value-and-color-seq)]
+                                                 (conj t h))
+                     :let [x' (if (pos? idx)
+                                ;subtract 0.5 because the point is already at center
+                                (+ x (* offset idx) half-offset)
+                                x)]
+                     :when (some? e)]
+                 [:line {:vector-effect :non-scaling-stroke
+                         :stroke        color
+                         :stroke-width  4
+                         :x1            x' :y1 (- max-value value)
+                         :x2            x' :y2 max-value}]))))]
+        [:div.absolute.bottom-0.right-10
+         [booking.graph/corner-stats get-data-fn end-date]]]])))
 
 (defn- toggle-graph-view []
   (swap! c-show-statistics (fnil not false)))
@@ -628,136 +742,149 @@
 ;; components 2
 
 (defn sample-command-row [{:keys [toggle-view-fn reset-view-fn]}]
-  [sc/co {:class [:justify-between :h-full]
+  [sc/co {;:class [:justify-between :h-full]
           :style {:height "100%"}}
 
    [button/just-icon {:on-click #(toggle-view-fn)} ico/closewindow]
    [:div.grow]
-   [button/just-caption {:on-click #(reset! c-days-back-in-time 90)
-                         :class    [(if (= 90 @c-days-back-in-time) :frame)
-                                    :round]} [sc/text1 "12"]]
-   [button/just-caption {:on-click #(reset! c-days-back-in-time 60)
-                         :class    [(if (= 60 @c-days-back-in-time) :frame)
-                                    :round]} [sc/text1 "8"]]
-   [button/just-caption {:on-click #(reset! c-days-back-in-time 30)
-                         :class    [(if (= 30 @c-days-back-in-time) :frame)
-                                    :round]} [sc/text1 "4"]]
+   [button/just-caption
+    {:on-click #(reset! c-days-back-in-time 90)
+     :class    [:round (if (= 90 @c-days-back-in-time) :selected)]}
+    [b/text "12"]]
+   [button/just-caption
+    {:on-click #(reset! c-days-back-in-time 60)
+     :class    [:round (if (= 60 @c-days-back-in-time) :selected)]}
+    [b/text "8"]]
+   [button/just-caption
+    {:on-click #(reset! c-days-back-in-time 30)
+     :class    [:round (if (= 30 @c-days-back-in-time) :selected)]}
+    [b/text "4"]]
 
 
    [:div.grow]
 
-   [button/just-caption {:on-click #(swap! c-offset inc)
-                         :class    [:round
-                                    :regular]} "-1"]
-
-   [button/just-icon {:on-click #(reset! c-offset 1)
-                      :class    [(when (= 1 @c-offset) :inverse)
-                                 :round
+   [button/just-icon {:on-click #(swap! c-offset inc)
+                      :class    [:round
                                  :regular]} ico/arrowLeft']
+
+   [button/just-icon {:on-click #(swap! c-offset dec)
+                      :class    [:round
+                                 :regular]} ico/arrowRight']
+
+   [button/just-caption {:on-click #(reset! c-offset 1)
+                         :class    [(when (= 1 @c-offset) :inverse)
+                                    :round
+                                    :regular]} "-1"]
 
    [:div.grow]
    [button/just-icon {:on-click reset-view-fn
                       :class    [(if (= 0 @c-offset) :regular :cta) :round]}
     ico/undo]])
 
-(defn- render-statistics [{:keys [end-date* reset-view-fn graphs]}]
-  [sc/surface-a {:class [:p-0]
-                 :style {:background-color "var(--floating)"}}
-   [sc/row
-    [sc/col {:style {:position "relative"}
-             :class [:w-full :py-10]}
+(defn when-correct-credentials [fc]
+  (when-let [uid @(rf/subscribe [:lab/uid])]
+    (fc uid)))
 
+(defn- render-statistics [{:keys [end-date* reset-view-fn graphs]}]
+  [sc/surface-a {:class [:pl-2 :p-0]
+                 :style {:background-color "var(--floating)"}}
+   [sc/row {:style {:width "100%"}}
+    [b/co4
+     {:style {:position      "relative"
+              :align-items   "stretch"
+              :padding-block "3rem"
+              :width         "100%"}}
      ;fixtures
      [:div.absolute.top-0.left-0.p-2
       [:div.flex.items-center.h-8
-       [booking.graph/corner-day @end-date*]]]
+       [booking.graph/corner-day end-date*]]]
 
      ;fixtures
-     [:div.absolute.bottom-0.left-0.p-2
-      [:div.h-8.flex.items-center
-       [button/icon-and-caption
-        {:on-click booking.temperature/add-temperature
-         :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]
-
+     (when-correct-credentials
+       (fn [uid]
+         [:div.absolute.bottom-0.-left-2.pb-0
+          [:div.h-8.flex.items-center
+           [button/icon-and-caption
+            {:on-click #(booking.temperature/add-temperature uid)
+             :class    [:squared-right :right-square :left-square :regular]} ico/plus "Luft– og vanntemperatur"]]]))
+     ;graphs
      (into [:<>] (map identity graphs))]
 
-    [:div.p-2
-     {:style {:width   "3rem"
+    [:div
+     {:style {:width   "auto"
               :padding "0.5rem"}}
      (sample-command-row
        {:toggle-view-fn #(swap! c-show-statistics not)
         :reset-view-fn  reset-view-fn})]]])
 
-(rf/reg-sub :end-date (fn [_] (t/<< (t/today) (t/new-period (+ @c-offset @c-xpos) :days))))
+(rf/reg-sub :end-date
+            (fn [_] (t/<< (t/today) (t/new-period (+ @c-offset @c-xpos) :days))))
+
+(def reduce-sum-visitors'
+  #(reduce (fn [[a' b' c' d'] [a b c d]]
+             [(+ (or a 0) a')
+              (+ (or b 0) b')
+              (+ (or c 0) c')
+              (+ (or d 0) d')])
+           [0 0 0 0 0] %))
 
 (defn render-new []
-  (let [{:keys [right-menu? hidden-menu?]} @(rf/subscribe [:lab/screen-geometry])]
+  (let [{:keys [mobile? right-menu? hidden-menu?]} @(rf/subscribe [:lab/screen-geometry])
+        end-date @(rf/subscribe [:end-date])]
     ;todo Margins 
-    [:div.flex.justify-between
-     {:class [:gap-4]
-      :style {:padding-bottom "0.5rem"
-              :flex-direction (if right-menu? :row-reverse :row)}}
-     [:div.sticky.top-24.m-0.p-0
-      {:style (conj
-                (correct-margins)
-                {}                                          ;:background-color "rgba(255,0,255,0.2)"
+    (if mobile?
+      [b/col
+       (when @c-show-statistics
+         [render-statistics
+          {:end-date*     end-date
+           :reset-view-fn reset-view-fn
+           :graphs        [[graph-1 end-date @(db/on-value-reaction {:path ["activity-22"]})]
+                           [graph-2 end-date @(db/on-value-reaction {:path ["temperature"]})]]}])
+       [:div.flex.justify-between
+        {:style {:padding-bottom "0.5rem"
+                 :flex-direction (if right-menu? :row-reverse :row)}}
+        [:div.sticky.top-24.m-0.p-0
+         {:style (conj
+                   (correct-margins)
+                   {}
+                   #_(if-not hidden-menu?
+                       (if right-menu?
+                         {:margin-right  "-2rem"
+                          :padding-right "1rem"}
+                         {:margin-left  "-2rem"
+                          :padding-left "0rem"})
+                       {})
+                   {:height "min-content"})}
+         [booking.modals.boatinput/boatpanel-window nil]]]]
 
-
-                #_(if-not hidden-menu?
-                    (if right-menu?
-                      {:margin-right  "-2rem"
-                       :padding-right "1rem"}
-                      {:margin-left  "-2rem"
-                       :padding-left "0rem"})
-                    {})
-                {:height "min-content"})}
-      [booking.modals.boatinput/boatpanel-window nil]]
-
-     [sc/col-space-8 {:style {:width "100%"}
-                      :class []}
-      (r/with-let []                                        ;todo
-
-        (let [activity-records @(db/on-value-reaction {:path ["activity-22"]})
-              existing (remove deleted?)
-              base (->> (transduce existing conj activity-records)
-                        (group-by (comp-> val :timestamp t/instant t/date str)))
-              dataset (into {}
-                            (map
-                              (juxt key
-                                    (juxt (comp count val)
-                                          (comp
-                                            #(reduce (fn [[a' b' c' d'] [a b c d]]
-                                                       [(+ (or a 0) a')
-                                                        (+ (or b 0) b')
-                                                        (+ (or c 0) c')
-                                                        (+ (or d 0) d')])
-                                                     [0 0 0 0] %)
-                                            #(map (comp-> val (juxt :adults :juveniles :children (comp count :list))) %)
-                                            second))))
-                            base)
-
-              end-date (rf/subscribe [:end-date])
-              get-data-fn (fn [dt c] (if-some [datum (get dataset dt)]
-                                       (get datum c)
-                                       nil))]
+      [:div.flex.justify-between
+       {:class [:gap-4]
+        :style {:padding-bottom "0.5rem"
+                :flex-direction (if right-menu? :row-reverse :row)}}
+       [:div.sticky.top-24.m-0.p-0
+        {:style (conj
+                  (correct-margins)
+                  {}
+                  #_(if-not hidden-menu?
+                      (if right-menu?
+                        {:margin-right  "-2rem"
+                         :padding-right "1rem"}
+                        {:margin-left  "-2rem"
+                         :padding-left "0rem"})
+                      {})
+                  {:height "min-content"})}
+        [booking.modals.boatinput/boatpanel-window nil]]
+       [sc/col-space-8 {:style {:width "100%"}}
+        (let []
           [:<>
            (when @c-show-statistics
              [render-statistics
-              {:end-date*      end-date
-               ;:dataset           dataset
-               ;:offset            c-offset
+              {:end-date*     end-date
                :reset-view-fn reset-view-fn
-               :graphs        [#_[graph-1 end-date dataset]
-                               [graph-2 end-date]]}])
-
-           (local-pillbar selector
-                          [[:b "Ute"]
-                           [:a "Alle"]
-                           [:c "Stativ"]])
-
-           [l/pre-s @settings]
-
-           (booking.utlan/render-list nil selector)]))]]))
+               :graphs        [[graph-1 end-date @(db/on-value-reaction {:path ["activity-22"]})]
+                               [graph-2 end-date @(db/on-value-reaction {:path ["temperature"]})]]}])
+           (local-pillbar selector [[:b "Ute"] [:a "Alle"] [:c "Stativ"]])
+           (booking.utlan/render-list nil selector)])]])))
 
 (rf/reg-event-fx :lab/remove-boatlogg-database
                  (fn [_ _]
@@ -776,10 +903,10 @@
   (let [delete-mode? @(rf/subscribe [:rent/common-show-deleted])
         details-mode? @(rf/subscribe [:rent/common-show-details])]
     [[button/just-large-icon
-      (as-toggle {:class [:round :square-top]} :selected c-show-statistics)
+      (as-toggle {:class [  ]} :selected c-show-statistics)
       ico/chart]
      [button/just-large-icon
-      (as-toggle {:class [:round :square-top]} :inverse c-show-details)
+      (as-toggle {:class [ ]} :inverse c-show-details)
       ico/more-details]
      [button/just-large-icon
       {:class    [:round

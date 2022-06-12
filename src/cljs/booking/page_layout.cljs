@@ -173,7 +173,7 @@
            [:<>
             ;popups
             [:div.noprint
-             [booking.modals.boatinput/render-boatinput]
+             [booking.modals.boatinput/boatinput-dialog]
              [booking.modals.centered/render]
              [booking.modals.slideout/render]
              [booking.modals.commandpalette/window-anchor]]

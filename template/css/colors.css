@@ -29,7 +29,8 @@
     --light-content-transp-top: rgba(229, 230, 230,0.9);
     --light-content-transp-bottom: rgba(229, 230, 230,0.7);
     --light-content-transp: rgba(229, 230, 230,0);
-    --light-floating: var(--gray-00);
+    --light-floating: var(--gray-0);
+    --light-floating-: var(--gray-00);
 
     --dim-toolbar: var(--gray-9);
     --dim-toolbar-: var(--gray-10);
@@ -39,6 +40,7 @@
     --dim-content-transp: rgba(59, 62, 63, 0);
 
     --dim-floating: var(--gray-7);
+    --dim-floating-: var(--gray-8);
 
     --weak-factor: 0.7;
     --brand-hue: 146;
@@ -198,6 +200,7 @@
     --content-transp: var(--light-content-transp);
 
     --floating: var(--light-floating);
+    --floating-: var(--light-floating-);
     --switchon: var(--light-switchon);
     --switchoff: var(--light-switchoff);
     --brand1: var(--light-brand1);
@@ -274,6 +277,7 @@
     --content-transp-bottom: var(--dim-content-transp-bottom);
     --content-transp: var(--dim-content-transp);
     --floating: var(--dim-floating);
+    --floating-: var(--dim-floating-);
     --switchon: var(--dim-switchon);
     --switchoff: var(--dim-switchoff);
     --brand1: var(--dim-brand1);
@@ -297,6 +301,11 @@
     --text: var(--text-dim);
 }
 
+
+.stripes {
+    background-color: rgba(255,0,0,0.1);
+    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+}
 
 body {
     background-color: #DFDBE580;

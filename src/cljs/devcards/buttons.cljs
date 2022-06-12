@@ -22,7 +22,9 @@
             [schpaa.debug :as l]
             [schpaa.style.hoc.buttons :as button]
             [schpaa.style.input]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [booking.temperature]
+            [schpaa.style.switch]))
 
 (defcard-rg pill
   [:div
@@ -163,8 +165,8 @@
     ico/commandPaletteClosed
     "Bli til Båtlogg nu"]])
 
-(def hf-ic {:style {:align-items :center
-                    :display :flex
+(def hf-ic {:style {:align-items      :center
+                    :display          :flex
                     :background-color "var(--toolbar)"}
             :class [:h-full]})
 
@@ -231,4 +233,44 @@
    [button/textinput {:touched #(-> :as)
                       :cursor  (r/atom "123")
                       :values  {:b nil}} :a :b]])
-  
+
+(defonce wdata (r/atom {:vind 2
+                        :luft 2}))
+
+(defn dialog [c]
+  [:div
+   {:style {:width                      "512px"
+            :max-width                  "min(calc(100vw - 2rem),512px)"
+            :border-bottom-right-radius "var(--radius-2)"
+            :border-bottom-left-radius  "var(--radius-2)"
+            :box-shadow                 (apply str (interpose ","
+                                                              [;"0 0 0px calc(var(--size-1) * 1) var(--toolbar-)"
+                                                               "0 0 0px calc(var(--size-1) * 2) var(--toolbar)"
+                                                               "var(--shadow-4)"]))}
+    :class [:overflow-y-auto]}
+   c])
+
+(defcard-rg tempform
+  (fn [a _]
+    [:div
+     [screen {:class [:p-4]}
+      [dialog
+       [booking.temperature/temperature-form-content
+        {:write-fn #(let []
+                      (js/alert %))}]]]])
+
+  wdata
+  {:inspect-data true})
+
+(defcard-rg tempform
+  (fn [a _]
+    [:div
+     [screen {:class [:p-4]}
+      [dialog 
+       [booking.temperature/temperature-form-content
+        {:uid "uid"
+         :write-fn #(let []
+                      (js/alert %))}]]]])
+
+  wdata
+  {:inspect-data true})

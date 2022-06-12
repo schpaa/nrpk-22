@@ -121,11 +121,11 @@
 
 
 (o/defstyled panel :div
-  [:& :min-h-full
+  [:& ;:min-h-full
    {:display               "grid"
     :margin                0
     :padding               0
-    :height                "100%"
+    ;:height                "100%"
     :column-gap            "var(--size-1)"
     :min-width             "20rem"
     :max-width             "20rem"
@@ -137,7 +137,7 @@
     0.5rem min-content
     0.5rem min-content
     1rem
-    minmax(4rem,1fr)
+    minmax(5rem,1fr)
     1rem
     4rem 0.25rem
     4rem 0.25rem
