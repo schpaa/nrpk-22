@@ -180,7 +180,7 @@
          r {}]
     (if xs
       (let [[id vs] (first xs)]
-        ;(tap> ["rooo4" id vs])
+
         (recur (next xs)
                (reduce-kv (fn [a k v] (update a (if (keyword? k) (name k) k) #(assoc % id v)))
                           r vs)))

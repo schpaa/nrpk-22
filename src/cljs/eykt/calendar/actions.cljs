@@ -15,7 +15,6 @@
   (let [uid (some-> uid name)
         timeslot (some-> timeslot name)
         path ["calendar" uid section timeslot uid "registered"]
-        _ (tap> {:check-can-change? path})
         uid' (keyword uid)]
        (when-some [last-write (db.core/on-value-reaction {:path path})]
          (let [_ (tap> {:last-write' @last-write})

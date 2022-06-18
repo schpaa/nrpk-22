@@ -1,4 +1,4 @@
-# Nøkkelvaktinstruks
+# Vaktinstruks
 
 ## Nøkkelvaktens viktigste oppgaver er å bidra til at klubbens medlemmer padler sikkert og representere klubben på en serviceinnstilt og vennlig måte.
 

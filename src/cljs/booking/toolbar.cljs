@@ -127,6 +127,7 @@
 
       :on-click          #(schpaa.state/toggle :app/toolbar-with-caption)}]))
 
+
 (defn horizontal-toolbar-definitions []
   (let [;uid (rf/subscribe [:lab/uid])
         admin? (rf/subscribe [:lab/admin-access])
@@ -254,10 +255,8 @@
               :background-color "var(--floating)"}]])
 
 (defn button-fn [idx d]
-
   [widgets/vertical-button (conj d {:right-side    false    ;right-side?
                                     :with-caption? nil})]   ;with-caption?
-                                     
   #_(let [{:keys [page-name]} d
           current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
           disable? (:disabled d)
@@ -282,6 +281,4 @@
 (defn bottom-toolbar []
   (let [switch? @(schpaa.state/listen :lab/menu-position-right)
         data ((if switch? reverse identity) (horizontal-toolbar-definitions))]
-    [toolbar (map widgets/vertical-button' data)]))
-
-
+    [toolbar (map widgets/toolbar-button data)]))

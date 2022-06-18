@@ -368,17 +368,14 @@
                                        :on-change #(let [z (-> % .-target .-value)]
                                                      (do
                                                        (handle-change %)
-                                                       (tap> {:id      (:id values)
-                                                              "value"  %
-                                                              "z"      z
-                                                              "value'" (values :start-date)})
+
                                                        (let [v (if (seq z)
                                                                  (some-> z
                                                                          (t/date)
                                                                          ((:fn (get (zipmap (map :id data) data) (:id values))))
                                                                          str)
                                                                  nil)]
-                                                         (tap> {"v" v})
+
                                                          (set-handle-change
                                                            {:path  :end-date
                                                             :value v}))))
@@ -399,7 +396,7 @@
                [:div.w-48.space-y-2
                 [schpaa.style.radio/radio-group-example
                  #(do
-                    (tap> {:a %})
+
                     (set-values {:id %})
                     (let [v (if (seq (values :start-date))
                               (some-> (values :start-date)

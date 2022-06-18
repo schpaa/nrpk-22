@@ -266,7 +266,7 @@
                                              (db/database-update {:path  ["beskjeder" uid]
                                                                   :value {:timestamp-lastvisit-userpage (str (t/now))}})
                                              (disable :booking-expert)
-                                             (tap> {:user-form/component-did-mount (:navn initial-values)})
+
                                              (set-values initial-values))
 
                       :on-submit           (fn [{:keys [state values] :as x}]

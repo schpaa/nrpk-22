@@ -14,8 +14,6 @@
   (def data (r/atom st)))
 
 (defonce data (r/atom (reduce (fn [a {:keys [id tldr type date content] :as e}]
-                                (tap> date)
-                                (tap> (some-> date t/date-time t/date))
                                 (update a id assoc
                                         :type type
                                         :tldr tldr

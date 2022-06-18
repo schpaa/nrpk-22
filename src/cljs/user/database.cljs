@@ -31,7 +31,7 @@
         values (dissoc values :uid)]
     (db/firestore-set {:path ["users2" uid] :value values})
     (db/database-update {:path ["users" uid] :value values})
-    (tap> values)
+
     st))
 
 (defn lookup-userinfo [uid]

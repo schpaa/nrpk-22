@@ -22,6 +22,7 @@
     [booking.yearwheel-testdata]
     [schpaa.style.hoc.buttons :as hoc.buttons]
     [booking.access]
+    [booking.styles :as b]
     [booking.flextime :refer [flex-datetime]]
     [schpaa.debug :as l]
     [booking.common-widgets :as widgets]
@@ -56,7 +57,7 @@
                          (not (some? (:type e))) ((fnil conj []) "mangler"))})))
 
 (defn addpost-form [{:keys [data type on-close on-save on-submit] :as context}]
-  [sc/dialog-dropdown {:style {:padding "1rem"}}
+  [sc/dialog-dropdown {:style {:paddingx "1rem"}}
    [fork/form {:initial-values    data
                :form-id           "addpost-form"
                :validation        form-validation
@@ -65,26 +66,34 @@
                :keywordize-keys   true
                :on-submit         (fn [{:keys [values]}]
                                     (on-submit values))}
-    (defn form-fn [{:keys [errors form-id handle-submit dirty values set-values] :as props}]
+    (fn form-fn [{:keys [errors form-id handle-submit dirty values set-values] :as props}]
       (let [changed? dirty]
         [:form
          {:id        form-id
           :on-submit handle-submit}
-         [sc/co {:class [:space-y-8 :w-full]}
+         [sc/co {:class [ :space-y-8 :w-full]}
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
-           [sc/row-sc-g2-w {:class []}
-            [button/combobox
-             "Kategori" #_{:value     (values :type)
-                           :on-change #(tap> %)
-                           :class     [:w-auto]}]
+           [booking.styles/co4 {:class [:px-4]}
+            [sc/row-sc-g2-w
+             [button/combobox
+              "Kategori"
 
-            #_[sci/combobox (conj props {:people       sci/people
-                                         :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
-            [sci/input props :date [:w-40] "Dato" :date]]
-           [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
-           [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]
+              #_[sci/combobox-example
+               {}
+               {:value     (values :type)
+                :on-change #(tap> %)
+                :class     [:w-auto]}]
+              #_{:value     (values :type)
+                            :on-change #(tap> %)
+                            :class     [:w-auto]}]
+             #_[sci/combobox (conj props {:people       sci/people
+                                          :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
+             [sci/input props :date [:w-40] "Dato" :date]]
+            [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
+            [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]
 
+          [l/pre errors]
           [sc/row-ec
            [button/just-caption {:type     "button"
                                  :class [:normal]
@@ -120,10 +129,11 @@
 
 ;; panels
 
-
-
 (defn headline-plugin []
-  [[:div.h-12 [sc/text2 "Stuff"]]
+  [[button/just-icon {:class [:large]
+                      :on-click #(edit-event nil)} ico/plus]
+   [button/just-icon {:class [:large]} ico/trash]]
+  #_[[:div.h-12 [sc/text2 "Stuff"]]
    [button/just-icon {:class [:large :cta]} ico/check]
    [:div.h-12 [sc/text1 "Stuff"]]])
 

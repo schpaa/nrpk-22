@@ -46,7 +46,6 @@
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-details]) "Detaljer"]
       [hoc.toggles/switch-local {:disabled false} (r/cursor settings [:rent/show-timegraph]) "Tidslinje"]]])
 
-
 (defn panel [{:keys []}]
   [sc/col-space-8
    [sc/row-sc-g4-w
@@ -76,8 +75,6 @@
                                  :value {:deleted (not deleted)}}))
     (assoc m :id (name k))]
    [widgets/edit {:disabled false} #(rf/dispatch [:lab/toggle-boatpanel]) m]])
-
-
 
 (defn- badges [{:keys [sleepover havekey] :as m}]
   [sc/row-ec-g1 {:style {:grid-area "badges"

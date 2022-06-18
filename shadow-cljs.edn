@@ -47,7 +47,7 @@
 
                      :booking
                      {:build-hooks       [(my.hooks/write-styles-hook)
-                                          #_(shadow-git-inject.core/hook)]
+                                          (shadow-git-inject.core/hook)]
                       :git-inject        {:ignore-dirty?   false
                                           :version-pattern "^v(.*)$"}
                       :target            :browser

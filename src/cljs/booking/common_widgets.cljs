@@ -166,14 +166,9 @@
                             :color      "unset"
                             :flex       "1 0 1"}} caption]))]))
 
-(defn vertical-button'
+(defn toolbar-button
   [{:keys [icon-fn
-
-           caption
            right-side
-           opposite-on-click
-           with-caption?
-           opposite-icon-fn
            tall-height
            special
            class
@@ -182,6 +177,7 @@
            badge
            disabled
            content-fn]}]
+
   (let [current-page (some-> (rf/subscribe [:kee-frame/route]) deref :data :name)
         selected? (if (fn? page-name)
                     (page-name current-page)
@@ -222,14 +218,14 @@
          (content-fn)
 
          icon-fn
-         (sc/toolbar-button
-           {:disabled  disabled
-            :tab-index (when selected? "-1")
-            :class     [screen-side
-                        (if selected? (or (when class (class current-page)) :selected))
-                        :mb-4
-                        (if special :special)]}
-           (icon-fn current-page)))]]]))
+         [sc/toolbar-button
+            {:disabled  disabled
+             :tab-index (when selected? "-1")
+             :class     [screen-side
+                         (if selected? (or (when class (class current-page)) :selected))
+                         :mb-4
+                         (if special :special)]}
+            (icon-fn current-page)])]]]))
 
 (defn stability-circle [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center

@@ -15,7 +15,8 @@
             [fork.re-frame :as fork]
             [schpaa.components.fields :as fields]
             [schpaa.components.sidebar]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [nrpk.hov]))
 
 (defn- empty-list-message [msg]
   (let [{:keys [bg fg- fg fg+ p p- hd hd- hl]} (st/fbg' :void)]
@@ -65,7 +66,7 @@
     [{}]))
 
 (defn store-item [st {:keys [data source-path] :as event}]
-  (tap> ["store-item" event])
+  
   (let [{:keys [content]} data
         id (.-key (db/database-push {:path  source-path
                                      :value {:created (str (t/now))
@@ -85,13 +86,13 @@
                                                             :content content})))))
 
 (defn set-item-to-visible [{:keys [data] :as event}]
-  (tap> event)
+
   (let [{:keys [id source-path]} data]
     (db/database-update {:path (conj source-path (name id)) :value {:hidden false}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:hidden false})))))
 
 (defn set-item-to-hidden [{:keys [data] :as event}]
-  (tap> event)
+  
   (let [{:keys [id source-path]} data]
     (db/database-update {:path (conj source-path (name id)) :value {:hidden true}})
     #_(swap! rapport-state #(merge-with into % (assoc % id {:hidden true})))))
@@ -652,5 +653,5 @@
             (send :e.))]
 
        (do
-         (tap> [:>>>s *fsm-rapport])
+
          [:div.text-white.bg-black "OTHER " (str *fsm-rapport)]))]))

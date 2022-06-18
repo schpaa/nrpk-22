@@ -11,7 +11,7 @@
               [[:r.dokumenter {:id "hms-håndbok"}] "HMS-Håndbok"]]}
    {:state   :oversikt/bli-medlem
     :title   "Bli medlem"
-    :ingress "Forslag til ingress?"
+    :ingress "Alle over 12 år må ta et innmeldingskurs på 2-3 timer før de kan bli medlem. Disse holdes på forsommeren hvert år. Barn kan meldes inn direkte."
     :links   [:r.min-status
               :r.user]}
    {:state   :oversikt/nøklevann
@@ -39,7 +39,7 @@
 
    {:state   :oversikt/Nøkkelvakt
     :title   "Nøkkelvakt"
-    :ingress "Nøkkelvaktene er en gruppe med omtrent 130 frivillige medlemmer som betjener klubbens anlegg ved Nøklevann i klubbens åpningstider. Nøkkelvaktene hjelper medlemmene, sjekker medlemsskap og bidrar til sikkerheten i klubbens aktivitet."
+    :ingress ""
 
     :links   [[:r.dokumenter {:id "huskeliste-ved-nøkkelvakt"}]
               [:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}]
@@ -157,7 +157,7 @@
         [sc/row-sc-g4-w
          (let [data [[0 [:r.dokumenter {:id "huskeliste-ved-nøkkelvakt"}] "Huskeliste ved nøkkelvakt"]
                      [1 [:r.dokumenter {:id "sikkerhetsutstyr-ved-nøklevann"}] "Sikkerhetsutstyr ved Nøklevann"]
-                     [2 [:r.dokumenter {:id "vaktinstruks"}] "Nøkkelvaktinstruks"]
+                     [2 [:r.dokumenter {:id "vaktinstruks"}] "Vaktinstruks"]
                      [3 [:r.dokumenter {:id "regler-utenom-vakt"}] "Regler utenom vakt"]
 
                      [4 :r.conditions "Plikter som nøkkelvakt"]

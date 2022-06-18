@@ -63,7 +63,7 @@
   (let [path ["boad-item" boat-item-id "work-log" id]
         datum {:path  path
                :value {:deleted delete}}]
-    (tap> datum)
+
     (db/database-update datum)
     #(tap> {:delete-worklog-entry
             {:id   id
@@ -73,7 +73,7 @@
   (let [path ["boad-item" (some-> boat-item-id name) "work-log" id]
         datum {:path  path
                :value {:complete complete}}]
-    (tap> datum)
+
     (db/database-update datum)
     #(tap> {:delete-worklog-entry
             {:id   id

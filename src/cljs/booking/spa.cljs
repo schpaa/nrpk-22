@@ -287,9 +287,9 @@
 
    :r.yearwheel
    (fn [r]
-     [+page-builder r {:panel           booking.yearwheel/panel
+     [+page-builder r {                                     ;:panel           booking.yearwheel/panel
                        :headline-plugin booking.yearwheel/headline-plugin
-                       :always-panel    booking.yearwheel/always-panel
+                       ;:always-panel    booking.yearwheel/always-panel
                        :render          booking.yearwheel/render}])
 
    :r.nokkelvakt

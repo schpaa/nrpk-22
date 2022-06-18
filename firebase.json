@@ -30,10 +30,12 @@
       "port": 5001
     },
     "firestore": {
+      "host": "0.0.0.0",
       "port": 8080
     },
     "database": {
-      "port": 9009
+      "port": 9009,
+      "host": "0.0.0.0"
     },
     "hosting": {
       "port": 5000
