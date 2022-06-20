@@ -194,7 +194,7 @@
 ;; components
 
 (defn insert-damage [{:keys [values set-values] :as props}]
-  [sc/col-space-4 {:style {:padding "0"}}
+  [b/co4
    [sc/checkbox-matrix
     (into [:<>]
           (for [e (sort damage-words)]
@@ -207,7 +207,7 @@
                :caption e}]]))]
    [sci/textarea props
     nil {:placeholder "Annen beskrivelse"
-         :class       [:-mx-2]} "" :description]])
+         :class       [:w-full]} "" :description]])
 
 (defn editor [props]
   (let [people (map (fn [[k v]] {:id (some-> k name) :name (:navn v)})
@@ -258,6 +258,28 @@
 
 (defonce selected-tab (r/atom :feil))
 
+(defn boat-form [{:keys [values]}]
+  (let [{:keys [id boat-type items]} values]
+    [b/co4 
+     [b/rof
+      [sci/combobox
+       {:sidecar-right [button/icon-and-caption
+                        {:style {:border-radius "var(--radius-1)"
+                                 :border        "2px solid white"}
+                         :class [:field :flip]}
+                        ico/arrowRight'
+                        "Gå til"]
+        :items         items}
+       [:w-full]
+       "Båt-type"]]
+
+     [b/co
+      ;;urls to firebase
+      [b/ro [b/text {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
+       (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
+      [b/ro [b/text {:style {:user-select :all}} id] [sc/text1 "(id)"]
+       (widgets/data-url {:checked-path ["boad-item" id]})]]]))
+
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid admin?]}]
   (let [{:keys [id boat-type]} data
         boat-item-id (some-> id name)
@@ -297,7 +319,7 @@
                     :padding-inline    "1rem"}}
 
           (if @selected-tab
-            (into [:div.px-8.pt-8.pb-1]
+            (into [:div.px-8.py-4]
                   [(case @selected-tab
                      :feil [insert-damage props]
 
@@ -310,12 +332,7 @@
                                                      :deleted false}]])
                                       (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])
 
-                     [sc/co
-                      ;;urls to firebase
-                      [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
-                       (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
-                      [sc/row-sc-g2 [sc/text1 {:style {:user-select :all}} id] [sc/text1 "(id)"]
-                       (widgets/data-url {:checked-path ["boad-item" id]})]])])
+                     [boat-form props])])
             [:div.h-8])]
          (if dirty
            [bottom-button-panel

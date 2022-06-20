@@ -79,13 +79,16 @@
   :flex :flex-col :justify-start :items-start :h-full)
 
 (o/defstyled co4 co
-  :space-y-4)
+  :space-y-4 :w-full)
 
 (o/defstyled col :div
   :flex :space-y-8 :flex-col :justify-start :items-stretch)
 
 (o/defstyled ro :div                
   :flex :justify-start :items-center :gap-2 :h-full)
+
+(o/defstyled rof :div
+  :flex :justify-start :items-center :gap-2 :h-full :w-full)
 
 (o/defstyled ro-js :div
   :flex :justify-start :items-baseline :gap-2

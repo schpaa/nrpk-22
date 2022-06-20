@@ -1542,6 +1542,10 @@ video {
   right: 0.25rem;
 }
 
+.top-16 {
+  top: 4rem;
+}
+
 .-left-2 {
   left: -0.5rem;
 }
@@ -1552,10 +1556,6 @@ video {
 
 .bottom-2 {
   bottom: 0.5rem;
-}
-
-.top-16 {
-  top: 4rem;
 }
 
 .-top-28 {
@@ -3010,10 +3010,6 @@ video {
 
 .pl-2 {
   padding-left: 0.5rem;
-}
-
-.pt-8 {
-  padding-top: 2rem;
 }
 
 .pt-1 {

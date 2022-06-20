@@ -370,7 +370,7 @@
                  "mt-0 translate-x-full opacity-0 "
                  "mt-0 -translate-x-full opacity-0 ")})
 
-(defn  always-panel []
+(defn always-panel []
   (let [next-step #(do
                      (reset! previous-step-value @step)
                      (swap! step (fn [e] (mod (inc e) 3))))
@@ -676,7 +676,12 @@
         #_[l/pre k]])]))
 
 (defn render [_r]
-  (render-list @selector _r))
+  [b/col
+   [:div.sticky.top-16.z-10
+     [widgets/pillbar {:class [:small]} selector [[:nøklevann "Nøklevann"]
+                                                  [:sjøbasen "Sjøbasen"]]]]
+
+   (render-list @selector _r)])
 
 
 (comment
