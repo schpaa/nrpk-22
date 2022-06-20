@@ -13,7 +13,7 @@
             [schpaa.modal.readymade :refer []]
             [booking.bookinglist]
             [schpaa.state]
-            [booking.views.picker]
+            [booking.views.picker]            
             [booking.views]
             [schpaa.style.hoc.buttons :as hoc.buttons]
             [booking.ico :as ico]

@@ -15,11 +15,8 @@
             [booking.ico :as ico]
             [booking.flextime]
             [clojure.string :as str]
-            [schpaa.style.hoc.buttons :as button]))
-
-;; styles
-
-;; constants
+            [schpaa.style.hoc.buttons :as button]
+            [booking.styles :as b]))
 
 (def debug nil)
 
@@ -35,7 +32,7 @@
                    "Styrepinne"
                    "Styrewire"
                    "Feste"
-                   "Pedaler"
+                   "Fotstøtte"
                    "Kjøl"
                    "Cockpit"
                    "Sete"
@@ -100,22 +97,27 @@
 ;; worklog
 
 (defn q-button [boat-item-id worklog-entry-id attr icon action]
-  (hoc.buttons/pill
+  (hoc.buttons/just-icon
     (merge-with into {:class    [:round]
                       :type     "button"
                       :on-click #(action boat-item-id worklog-entry-id)} attr)
-    [sc/icon icon]))
+    icon))
 
 (defn worklog-card
-  [{:keys [class]} {:keys [deleted complete timestamp description uid] :as worklog-entry}
+  [{:keys [class]}
+   {:keys [deleted complete timestamp description uid] :as worklog-entry}
    boat-item-id worklog-entry-id]
-  (let [q-button (partial q-button boat-item-id worklog-entry-id)]
-    [sc/zebra'
+  (let [;todo use a map, not slots!
+        q-button (partial q-button boat-item-id worklog-entry-id)]
+    [sc/surface-a
      {:sstyle {;:margin-inline "4rem"
                :margin-before "4rem"
                :border-bottom "1px dashed var(--text2)"}}
-     [sc/col-space-4
-      [sc/row-sc-g4-w {:style {:width "100%"}}
+
+     ;[l/pre worklog-entry]
+     [b/co4
+      [sc/row-sc-g4-w {:class [:pl-2]
+                       :style {:width "100%"}}
        (if deleted
          (q-button
            {:class [:frame]}
@@ -127,29 +129,32 @@
            (fn [a b] (delete-worklog-entry a (some-> b name) true))))
 
        (if complete
-         (hoc.buttons/pill
+         (hoc.buttons/just-icon
            {:type     :button
             :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
-            :class    [:round :frame :inverse]} [sc/icon ico/check])
-         (hoc.buttons/pill
+            :class    [ :inverse]}
+           ico/check)                                                   
+         (hoc.buttons/just-icon
            {:type     :button
             :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
-            :class    [:round :frame]} [sc/icon ico/check]))
+            :class    []} ico/check))
 
        ;todo compress!
-       [sc/col-space-1 {:style {:flex "1"}}
-        [sc/small
-         (some-> timestamp t/instant t/date-time booking.flextime/relative-time)]
-        [sc/small0 (or uid "Nøkkelvakt")]]]
+       [b/co {:style {:flex "1"}} 
+        (some-> timestamp t/instant t/date-time booking.flextime/relative-time)
+        [b/small (or uid "Nøkkelvakt")]]]
 
-      (when-not complete
-        [sc/col-space-2 {:class class}
-         [sc/row-sc-g1-w
-          (->> (dissoc worklog-entry :description :timestamp :complete :deleted)
-               (map (comp name key))
-               (map sc/pill2))]
+      (when-not (empty? description)
+        [:div.px-2 [b/text {:style {:text-decoration-line (when complete "line-through")}} description]])
 
-         [sc/text1 {:style {:text-decoration-line (when complete "line-through")}} description]])]]))
+      (let [data (dissoc worklog-entry :description :timestamp :complete :deleted :uid)]
+        (when-not (empty? data)
+          [sc/co
+           ;[l/pre data (some? data) (empty? data)]
+           [sc/row-sc-g1-w
+            (->> data
+                 (map (comp name key))
+                 (map b/keyword-tag))]]))]]))
 
 (defn insert-worklog [boat-item-id work-log]
   (let [all-data (->> @work-log
@@ -212,8 +217,8 @@
       [sc/label "Sample Label"]
       [sci/combobox
        (conj props
-             {:people       people
-              :person-by-id #(zipmap (map :id people) people)})
+             {:values      people
+              :value-by-id #(zipmap (map :id people) people)})
 
        :kind? [:w-full] :lable :names]]
      [sci/textarea props :text [] "Sample Label" :description]]))
@@ -253,9 +258,8 @@
 
 (defonce selected-tab (r/atom :feil))
 
-(defn modal-boatinfo-windowcontent [{:keys [data on-close uid]}]
-  (let [admin? (rf/subscribe [:lab/admin-access])
-        {:keys [id boat-type]} data
+(defn modal-boatinfo-windowcontent [{:keys [data on-close uid admin?]}]
+  (let [{:keys [id boat-type]} data
         boat-item-id (some-> id name)
         boat-item-id (when (< 3 (count boat-item-id))
                        boat-item-id)]
@@ -271,7 +275,7 @@
       [sc/row-center
        (widgets/pillbar {:class [:small]} selected-tab
                         [[:feil "Mangler"]
-                         (if @admin? [:arbeidsliste "Arbeidsliste"])
+                         (if admin? [:arbeidsliste "Arbeidsliste"])
                          [:data "Data"]])]]
 
      [fork/form {:prevent-default?  true
@@ -300,6 +304,10 @@
                      :arbeidsliste (when boat-item-id
                                      [insert-worklog
                                       boat-item-id
+                                      #_(r/atom [[1 {:id 1
+                                                     :description "desc"
+                                                     :state "state"
+                                                     :deleted false}]])
                                       (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])
 
                      [sc/co
@@ -316,8 +324,8 @@
             [button/just-caption
              {:type     :button
               :class    [:regular :normal]
-              :xstyle    {:background-color "var(--toolbar)"
-                          :color            "var(--buttoncopy)"}
+              :xstyle   {:background-color "var(--toolbar)"
+                         :color            "var(--buttoncopy)"}
               :on-click on-close}
              "Avbryt"]
             [button/just-caption
@@ -338,11 +346,13 @@
 ;; main accessor
 
 (defn open-modal-boatinfo [{:keys [data]}]
-  (let [uid @(rf/subscribe [:lab/uid])]
+  (let [uid @(rf/subscribe [:lab/uid])
+        admin? @(rf/subscribe [:lab/admin-access])]
     (rf/dispatch-sync [:modal.slideout/clear])
     (rf/dispatch [:modal.slideout/show
                   {:data          data
                    :uid           uid
+                   :admin? admin?
                    :on-flag-click (fn [boat-type value]
                                     (rf/dispatch [:star/write-star-change
                                                   {:boat-type boat-type

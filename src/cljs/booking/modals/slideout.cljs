@@ -93,8 +93,9 @@
                                 ;REMEMBER TO RESET STATE!!!
                                 (reset! write-success false))
                               (rf/dispatch [:modal.slideout/clear]))}
-             [:div {:style {:width     "512px"
+             [:div {:style {;intent: WHAT WAS THE INTENT WITH THIS? :width     "512px"
                             :max-width "calc(100vw - 2rem)"
+                            :min-width "100%"
                             :border-bottom-right-radius "var(--radius-2)"
                             :border-bottom-left-radius "var(--radius-2)"
                             :box-shadow (apply str (interpose ","

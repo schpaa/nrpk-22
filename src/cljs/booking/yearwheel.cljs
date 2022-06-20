@@ -56,51 +56,82 @@
                  :type (cond-> nil
                          (not (some? (:type e))) ((fnil conj []) "mangler"))})))
 
+(def people' (map-indexed (fn [idx e] {:id idx :name e}) ["Styremøte"
+                                                          "Nøkkelvaktmøte"
+                                                          "Dugnad"
+                                                          "Sesongåpning"
+                                                          "Sesongavslutning"
+                                                          "Åpen dag"
+                                                          "Innmeldingskurs"
+                                                          "Våttkortkurs"
+                                                          "Livredningskurs"
+                                                          "Innlegg"
+                                                          "HMS hendelse"
+                                                          "Skade på materiell"
+                                                          "Mangler på materiell"
+                                                          "Salg av materiell"
+                                                          "Annonsering av kurs"
+                                                          "Åpent møte"
+                                                          "Sommerskole"
+                                                          "Administrasjon"
+                                                          "Årsmøte"
+                                                          "Annet"
+                                                          "Frist"]))
+
 (defn addpost-form [{:keys [data type on-close on-save on-submit] :as context}]
   [sc/dialog-dropdown {:style {:paddingx "1rem"}}
-   [fork/form {:initial-values    data
-               :form-id           "addpost-form"
-               :validation        form-validation
-               :prevent-default?  true
-               :clean-on-unmount? true
-               :keywordize-keys   true
-               :on-submit         (fn [{:keys [values]}]
-                                    (on-submit values))}
+   [fork/form {:initial-values      data
+               :form-id             "addpost-form"
+               :validation          form-validation
+               :component-did-mount (fn [{:keys [set-values]}]
+                                      (set-values (merge context {})))
+
+               :prevent-default?    true
+               :clean-on-unmount?   true
+               :keywordize-keys     true
+               :on-submit           (fn [{:keys [values]}]
+                                      (on-submit values))}
     (fn form-fn [{:keys [errors form-id handle-submit dirty values set-values] :as props}]
       (let [changed? dirty]
         [:form
          {:id        form-id
           :on-submit handle-submit}
-         [sc/co {:class [ :space-y-8 :w-full]}
+         [sc/co {:class [:space-y-8 :w-full]}
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
            [booking.styles/co4 {:class [:px-4]}
+            ;[l/pre-s context]
             [sc/row-sc-g2-w
-             [button/combobox
-              "Kategori"
+             ;[sci/input props :number [] "Label" :fieldname]
+             (let [items [{:id 0 :name "Thang1"}
+                          {:id 1 :name "Thing2"}]]
+               [sci/combobox
+                (conj props {:value       (values :type)
+                             :value-by-id #(get people' %)
+                             :on-change   #(set-values {:type %})
+                             :items       people'
+                             :class       [:w-auto]})
+                []
+                "Kategori"
+                :type])
+             #_[sci/input props :text [] "Label" :fieldname]
 
-              #_[sci/combobox-example
-               {}
-               {:value     (values :type)
-                :on-change #(tap> %)
-                :class     [:w-auto]}]
-              #_{:value     (values :type)
-                            :on-change #(tap> %)
-                            :class     [:w-auto]}]
-             #_[sci/combobox (conj props {:people       sci/people
-                                          :person-by-id #(zipmap (map :id sci/people) sci/people)}) :kind? [:w-56] "Kategori" :type]
+             #_[sci/combobox (conj props
+                                   {:values      sci/people
+                                    :value-by-id #(zipmap (map :id sci/people) sci/people)})
+                :kind? [:w-56] "Kategori" :type]
              [sci/input props :date [:w-40] "Dato" :date]]
             [sci/input props :text {:class [:w-full]} "Beskrivelse" :tldr]
             [sci/textarea props :text {:class [:w-full]} "Innhold (markdown)" :content]]]
 
-          [l/pre errors]
-          [sc/row-ec
+          ;[l/pre errors]
+          [sc/row-ec {:class [:p-4]}
            [button/just-caption {:type     "button"
-                                 :class [:normal]
+                                 :class    [:normal :regular]
                                  :on-click #(on-close)} "Avbryt"]
            [button/just-caption {:disabled (or (not (empty? errors)) (not changed?))
                                  :type     "submit"
-                                 :class [:normal]
+                                 :class    [:normal :cta]
                                  :on-click #(on-save)} "Lagre"]]]]))]])
 
 (defn submit-fn [{:keys [date content id type tldr] :as values}]
@@ -130,12 +161,12 @@
 ;; panels
 
 (defn headline-plugin []
-  [[button/just-icon {:class [:large]
+  [[button/just-icon {:class    [:large]
                       :on-click #(edit-event nil)} ico/plus]
    [button/just-icon {:class [:large]} ico/trash]]
   #_[[:div.h-12 [sc/text2 "Stuff"]]
-   [button/just-icon {:class [:large :cta]} ico/check]
-   [:div.h-12 [sc/text1 "Stuff"]]])
+     [button/just-icon {:class [:large :cta]} ico/check]
+     [:div.h-12 [sc/text1 "Stuff"]]])
 
 (defn always-panel
   ([]

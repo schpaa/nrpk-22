@@ -27,7 +27,8 @@
             [schpaa.style.button2 :as scb2]
             [schpaa.icon :as icon]
             [headlessui-reagent.core :as ui]
-            [booking.styles :as b]))
+            [booking.styles :as b]
+            [booking.modals.boatinfo]))
 
 ;; store
 

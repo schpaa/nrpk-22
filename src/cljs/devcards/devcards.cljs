@@ -12,6 +12,8 @@
             [devcards.temperature]
             [devcards.experiment]
             [booking.data :as app-data]
+            [devcards.dialogs]
+            [devcards.boatinfo]
             [db.core :as db]))
 
 (js/goog.exportSymbol "hljs" hljs)

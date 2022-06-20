@@ -82,7 +82,7 @@
   :space-y-4)
 
 (o/defstyled col :div
-  :flex :space-y-8 :flex-col :justify-start :items-stretch )
+  :flex :space-y-8 :flex-col :justify-start :items-stretch)
 
 (o/defstyled ro :div                
   :flex :justify-start :items-center :gap-2 :h-full)
@@ -101,7 +101,7 @@
 
 (o/defstyled text :div 
   [:& 
-   {:line-height 1
+   {:line-height 1.2
     :color "var(--text1)"}])
 
 (o/defstyled title :div
@@ -137,3 +137,19 @@
     {:background-color "var(--content)"}]
    [:&.emboss
     {:background-color "var(--floating-)" #_"rgba(255,255,255,1)"}]])
+
+(o/defstyled big-rounded :div
+  {:border-radius "var(--radius-2)"})
+
+(o/defstyled keyword-tag :div
+  [:& big-rounded :inline-block :h-auto]
+  {:display        :flex
+   :align-items    :center
+   :font-size      "var(--font-size-0)"
+   :font-weight    "var(--font-weight-4)"
+   :padding-inline "var(--size-3)"
+   :padding-block  "var(--size-1)"
+   :background     "var(--content)"
+   :color          "var(--text0)"
+   :text-transform "uppercase"
+   :letter-spacing "var(--font-letterspacing-2)"})

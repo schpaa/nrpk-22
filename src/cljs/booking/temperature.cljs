@@ -27,7 +27,6 @@
    [3 "Litt nedbør"]
    [3 "Regn"]])
 
-
 (def gunk (r/atom {:vær       {"Klart vær" true}
                    :luft      ""
                    :vann      ""
@@ -67,7 +66,7 @@
 
 (defn temperature-form-content [{:keys [on-close uid write-fn]}]
   (ensure uid
-          [fork/form                                         
+          [fork/form
            {:prevent-default?    true
             :keywordize-keys     true
             :validation          #(validation-fn %)
@@ -81,98 +80,100 @@
                                        (write-fn data))
                                      (on-close)))}
            (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
+             #_[:div.bg-white "test"]
              [sc/dialog-dropdown
               [co
-               [co
-                {:style {:background-color "var(--floating)"}}
-                [sc/dialog-title  "Registrer vær"]
-                [:form
-                 {:id        form-id
-                  :on-submit handle-submit}
-                 [b/co4 
-                  [surface {:style {:width "100%"
-                                    :padding-inline "1rem"}
-                            :class [:emboss]}
-                   [ro {:class [:space-x-4]
-                        :style {:align-items :start
-                                :justify-content :start}}
-                    [co4
-                     [field/dateinput props "Dato" :date]
-                     [ro {:style {:align-items :start}}
-                      [button/just-caption
-                       {:disabled (t/= (t/today) (values :date))
-                        :on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
-                                                :date (t/date (t/now))})
-                        :class    [:regular]} "Nå"]
+               {:style {:background-color "var(--floating)"}}
 
-                      [button/just-icon
-                       {:type     "button"
-                        :on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
-                                                :date (t/<< (t/date (values :date)) (t/new-period 1 :days))})
-                        :class    [:round :message]
-                        :disabled (empty? (str (values :date)))}
-                       [sc/icon-small ico/arrowLeft']]
+               [sc/dialog-title "Registrer vær"]
+               [:form
+                {:id        form-id
+                 :on-submit handle-submit}
+                [b/co4
+                 [surface {:style {:width          "100%"
+                                   :padding-inline "1rem"}
+                           :class [:emboss]}
+                  [ro {:class [:space-x-4]
+                       :style {:align-items     :start
+                               :justify-content :start}}
+                   [co4
+                    [field/dateinput props "Dato" :date]
+                    [ro {:style {:align-items :start}}
+                     [button/just-caption
+                      {:disabled (t/= (t/today) (values :date))
+                       :on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                               :date (t/date (t/now))})
+                       :class    [:regular]} "Nå"]
 
-                      [button/just-icon
-                       {:on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
-                                                :date (t/>> (t/date (values :date)) (t/new-period 1 :days))})
-                        :disabled
-                        (or
-                          (empty? (str (values :date)))
-                          (when-not (empty? (str (values :date)))
-                            (when-let [dt (some-> (values :date) t/date)]
-                              (t/< (t/yesterday) dt))))
-                        :class    [:round :message]}
-                       [sc/icon-small ico/arrowRight']]]]
-                    [co4
-                     [field/timeinput props "Klokke" :time]
-                     [ro
-                      [button/just-caption
-                       {:type     "button"
-                        :on-click #(set-values {:time (t/time "11:00")})
-                        :class    [:frame]} "11:00"]
-                      [button/just-caption
-                       {:type     "button"
-                        :on-click #(set-values {:time (t/time "14:00")})
-                        :class    [:frame]} "14:00"]
-                      [button/just-caption
-                       {:type     "button"
-                        :on-click #(set-values {:time (t/time "18:00")})
-                        :class    [:frame]} "18:00"]]]]]
-                  [sc/row-sc-g4 {:style {:gap            "2rem"
-                                         :padding-inline "1rem"}
-                                 :class [:items-start]}
-                   [b/co4 {:style {:flex "1"}
-                           :class [:self-start]}
-                    [field/textinput (assoc props
-                                       :type "text"
-                                       :autofocus true
-                                       :values {:luft (:luft values)}) [:span "Luft" [:sup "ºC"]] :luft]
-                    [field/textinput (assoc props
-                                       :type "text") [:span "Vann" [:sup "ºC"]] :vann]]
-                   [sc/surface-a {:style {:flex "3"}}
-                    [sc/checkbox-matrix
-                     (into [:<>]
-                           (for [[_ e] (group-by first weather-words)]
-                             [:div.pb-1
-                              (for [[_ e] e]
-                                [:div.pb-1
-                                 [hoc.toggles/largeswitch-squared
-                                  {:get     #(get-in values [:vær e])
-                                   :set     #(set-values (assoc-in values [:vær e] %))
-                                   :view-fn (fn [t c v]
-                                              [sc/row-sc-g2 t
-                                               [(if v sc/text1 sc/text0) c]])
-                                   :caption e}]])]))]]]
-                  [sc/row-field {:style {:padding "1rem"
-                                         :width   "100%"}}
-                   [:div.grow]
-                   [button/just-caption {:class    [:regular :normal]
-                                         :on-click on-close
-                                         :type     :button} "Avbryt"]
-                   [button/just-caption {:type     :submit
-                                         :disabled (not (empty? (validation-fn values)))
-                                         :class    [:cta :normal]} "Lagre"]]]]]]])]))
+                     [button/just-icon
+                      {:type     "button"
+                       :on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                               :date (t/<< (t/date (values :date)) (t/new-period 1 :days))})
+                       :class    [:round :message]
+                       :disabled (empty? (str (values :date)))}
+                      [sc/icon-small ico/arrowLeft']]
+
+                     [button/just-icon
+                      {:on-click #(set-values {:time (t/truncate (t/time (t/now)) :minutes)
+                                               :date (t/>> (t/date (values :date)) (t/new-period 1 :days))})
+                       :disabled
+                       (or
+                         (empty? (str (values :date)))
+                         (when-not (empty? (str (values :date)))
+                           (when-let [dt (some-> (values :date) t/date)]
+                             (t/< (t/yesterday) dt))))
+                       :class    [:round :message]}
+                      [sc/icon-small ico/arrowRight']]]]
+                   [co4
+                    [field/timeinput props "Klokke" :time]
+                    [ro
+                     [button/just-caption
+                      {:type     "button"
+                       :on-click #(set-values {:time (t/time "11:00")})
+                       :class    [:frame]} "11:00"]
+                     [button/just-caption
+                      {:type     "button"
+                       :on-click #(set-values {:time (t/time "14:00")})
+                       :class    [:frame]} "14:00"]
+                     [button/just-caption
+                      {:type     "button"
+                       :on-click #(set-values {:time (t/time "18:00")})
+                       :class    [:frame]} "18:00"]]]]]
+                 [sc/row-sc-g4 {:style {:gap            "2rem"
+
+                                        :padding-inline "1rem"}
+                                :class [:items-start]}
+                  [b/co4 {:style {:flex "1"}
+                          :class [:self-start]}
+                   [field/textinput (assoc props
+                                      :type "text"
+                                      :autofocus true
+                                      :values {:luft (:luft values)}) [:span "Luft" [:sup "ºC"]] :luft]
+                   [field/textinput (assoc props
+                                      :type "text") [:span "Vann" [:sup "ºC"]] :vann]]
+                  [sc/surface-a {:style {:flex "3"}}
+                   [sc/checkbox-matrix
+                    (into [:<>]
+                          (for [[_ e] (group-by first weather-words)]
+                            [:div.pb-1
+                             (for [[_ e] e]
+                               [:div.pb-1
+                                [hoc.toggles/largeswitch-squared
+                                 {:get     #(get-in values [:vær e])
+                                  :set     #(set-values (assoc-in values [:vær e] %))
+                                  :view-fn (fn [t c v]
+                                             [sc/row-sc-g2 t
+                                              [(if v sc/text1 sc/text0) c]])
+                                  :caption e}]])]))]]]
+                 [sc/row-field {:style {:padding "1rem"
+                                        :width   "100%"}}
+                  [:div.grow]
+                  [button/just-caption {:class    [:regular :normal]
+                                        :on-click on-close
+                                        :type     :button} "Avbryt"]
+                  [button/just-caption {:type     :submit
+                                        :disabled (not (empty? (validation-fn values)))
+                                        :class    [:cta :normal]} "Lagre"]]]]]])]))
 
 (defn add-temperature [uid]
   (let [data {}]
