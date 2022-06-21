@@ -917,7 +917,7 @@
 
 (defn data-url [{:keys [checked-path text caption]}]
   (let [path (apply str (interpose "/" (mapv #(if (keyword? %) (name %) %) checked-path)))]
-    (sc/link {:class  [:truncate]
+    (sc/link {:class  [:truncate :neutral]
               :style  {:text-decoration "none"
                        :line-height "auto"}
               :target "_blank"

@@ -75,20 +75,31 @@
   :flex :justify-between :items-baseline
   {})
 
-(o/defstyled co :div
-  :flex :flex-col :justify-start :items-start :h-full)
+(o/defstyled debug1 :div
+  {:-outline "1px dashed red"})
 
-(o/defstyled co4 co
+(o/defstyled debug2 :div
+  {:-outline "1px dashed blue"})
+
+(o/defstyled co0 :div
+  :flex :flex-col :justify-start :items-start :h-full
+  debug2
+  [:&.frame {:border "1px solid black"}])
+
+(o/defstyled co co0
   :space-y-4 :w-full)
 
 (o/defstyled col :div
   :flex :space-y-8 :flex-col :justify-start :items-stretch)
 
-(o/defstyled ro :div                
-  :flex :justify-start :items-center :gap-2 :h-full)
+(o/defstyled ro :div
+  :flex :justify-start :items-center :gap-2 :h-full debug1)
+
+(o/defstyled roe ro
+  :justify-end  :w-full debug1)
 
 (o/defstyled rof :div
-  :flex :justify-start :items-center :gap-2 :h-full :w-full)
+  ro  :h-full :w-full)
 
 (o/defstyled ro-js :div
   :flex :justify-start :items-baseline :gap-2
@@ -115,10 +126,10 @@
 
 (o/defstyled small :div
   [:&
-   {:letter-spacing "0.02rem"
+   {:letter-spacing "0.05rem"
     :font-size      "var(--font-size-0)"
-    :opacity        0.7
-    :font-weight    "var(--font-weight-3)"}
+    ;:opacity        0.7
+    :font-weight    "var(--font-weight-4)"}
    [:&.error {:color "red"}]])
 
 (o/defstyled screen :div

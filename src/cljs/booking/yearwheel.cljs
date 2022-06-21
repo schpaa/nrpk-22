@@ -83,8 +83,8 @@
    [fork/form {:initial-values      data
                :form-id             "addpost-form"
                :validation          form-validation
-               :component-did-mount (fn [{:keys [set-values]}]
-                                      (set-values (merge context {})))
+               :component-did-mount (fn [{:keys [set-untouched]}]
+                                      (set-untouched data))
 
                :prevent-default?    true
                :clean-on-unmount?   true
@@ -96,24 +96,25 @@
         [:form
          {:id        form-id
           :on-submit handle-submit}
+         [l/pre-s values]
          [sc/co {:class [:space-y-8 :w-full]}
           [sc/col-space-4
            [sc/dialog-title "Ny aktivitet"]
-           [booking.styles/co4 {:class [:px-4]}
+           [booking.styles/co {:class [:px-4]}
             ;[l/pre-s context]
             [sc/row-sc-g2-w
              ;[sci/input props :number [] "Label" :fieldname]
              (let [items [{:id 0 :name "Thang1"}
                           {:id 1 :name "Thing2"}]]
                [sci/combobox
-                (conj props {:value       (values :type)
-                             :value-by-id #(get people' %)
-                             :on-change   #(set-values {:type %})
-                             :items       people'
-                             :class       [:w-auto]})
-                []
-                "Kategori"
-                :type])
+                props
+                {:value       (values :type)
+                 :value-by-id #(get people' %)
+                 :on-change   #(set-values {:type %})
+                 :items       people'
+                 :class       [:w-auto]
+                 :label       "Kategori"
+                 :fieldname   :type}])
              #_[sci/input props :text [] "Label" :fieldname]
 
              #_[sci/combobox (conj props

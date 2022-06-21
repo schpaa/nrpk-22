@@ -1,12 +1,14 @@
 (ns devcards.boatinfo
-  (:require-macros [devcards.core :as dc :refer [defcard-rg]])
-  (:require [booking.modals.boatinfo :as sud]               ; system under design
+  (:require-macros [devcards.core :refer [defcard-rg]])
+  (:require [booking.modals.boatinfo :as sud]
             [tick.core :as t]
             [fork.reagent :as fork]
             [reagent.core :as r]
             [schpaa.style.input :as sci]
             [booking.styles :as b]
-            [schpaa.debug :as l]))
+            [schpaa.debug :as l]
+            [schpaa.style.hoc.buttons :as button]))
+
 
 (def uid "RX12902139012309123")
 
@@ -37,52 +39,88 @@
 
 (defonce st (r/atom {}))
 
-(defn default-form-wrapper [c]
+(defn default-form-wrapper [{:keys [content-fn on-submit validation-fn current-values state]}]
   [fork/form
    {:prevent-default?    true
     :keywordize-keys     true
-    ;:validation          #(validation-fn %)
-    :component-did-mount (fn [{:keys [set-values set-untouched set-touched]}]
-                           #_(set-values @gunk))
+    :form-id             "form-id-100"
+    :validation          #(validation-fn %)
+    :component-did-mount (fn [{:keys [set-untouched] :as f}]
+                           ;(tap> [:component-did-mount
+                           ;       current-values
+                           ;       (keys f)])
+                           (set-untouched current-values))
     :on-submit           (fn [{:keys [values]}]
                            (let [data (assoc values
                                         :timestamp (str (t/now))
                                         :uid uid)]
-                             #_(when write-fn
-                                 (write-fn data))
-                             #_(on-close)))
-    ;:state            st
-    :initial-values      {}}
-   (fn [{:keys [form-id] :as props}]
-     [:form.p-0 {:id form-id}
-      [b/co4
-       [sci/input props :text {:class []} :props "props"]
-       [sci/combobox
-        (conj props {:items [{:id 1 :name "name"} {:id 2 :name "name2"}]})
-        [] :props "Props"]
-       (when c (c props))]])])
+                             (on-submit data)))
+    :state               state}
+   (fn [{:keys [values form-id handle-submit] :as props}]
+     [:form.p-0 {:id        form-id
+                 :on-submit handle-submit}
+      ;(tap> values)
+      (when content-fn (content-fn props))])])
 
+(def state (r/atom {:boat-type 1}))
 
-(defn datasource []
-  (transduce (comp
-               (map (fn [[k v]] (assoc v :id k))))
-             conj
-             []
-             @(db.core/on-value-reaction {:path ["boat-brand"]})))
-
-(defonce state (r/atom {}))
+(defn prepare-for-combobox [ds]
+  (transduce
+    (comp
+      (map (fn [[k v]] (assoc v :id k)))
+      (map (fn [{:keys [id navn]}] {:id id :name navn})))
+    conj [] ds))
 
 (defcard-rg data
-  (fn [st _]
-    [:div {:style {:background-color "var(--yellow-2)"
-                   :padding          "1rem"}}
-     (default-form-wrapper
-       (fn [props]
-         (sud/boat-form (assoc props
-                          :values {:boat-type "sample-boat-type"
-                                   :id "sample-id"
-                                   :items (map (fn [{:keys [id navn]}] {:id id :name navn}) (datasource))}))))])
-  state
+  (fn [state _]
+    (r/with-let [boat-types (db.core/on-value-reaction {:path ["boat-brand"]})]
+      [:div {:style {:background-color "var(--yellow-2)"
+                     :padding          "1rem"}}
+       [l/pre-s (count @boat-types)]
+       (default-form-wrapper
+         {:state          state
+          :on-submit      (fn [values] (js/alert values))
+          :current-values {:textfield "abc"
+                           :boat-type 1}
+          :validation-fn  (fn [{:keys [textfield boat-type]}]
+                            (into {} (remove (comp nil? val)
+                                             {:boat-type (cond-> nil
+                                                           (empty? boat-type)
+                                                           ((fnil conj []) "mangler"))
+                                              :textfield (cond-> nil
+                                                           (empty? textfield)
+                                                           ((fnil conj []) "mangler"))})))
+
+          :content-fn     (fn [{:keys [values errors dirty reset] :as props}]
+                            [b/co
+                             [l/pre-s values]
+                             [sci/combobox
+                              props
+                              {:items     (prepare-for-combobox @boat-types)
+                               :class     [:w-full]
+                               :fieldname :boat-type
+                               :label     "Båt-type"}]
+
+                             #_(sud/boat-form
+                                 {:props  props
+                                  :values {:boat-type  "sample-boat-type"
+                                           :id         "sample-id"
+                                           :boat-types @(db.core/on-value-reaction {:path ["boat-brand"]})}})
+                             [sci/input props :text [] "Test" :textfield]
+
+                             (let [ok? (nil? errors)]
+                               [b/roe
+                                [button/just-caption {:type  :button
+                                                      :class [:normal :frame]} "Help"]
+                                [:div.grow]
+                                [button/just-caption {:type     :reset
+                                                      :disabled (not dirty)
+                                                      :on-click #(reset)
+                                                      :class    [:normal :regular]} "Reset"]
+                                [button/just-caption {:type     :submit
+                                                      :disabled (not ok?)
+                                                      :class    [:normal :cta]} "Save"]])])})]))
+  (r/atom {:test "abc"})
   {:inspect-values true})
 
 

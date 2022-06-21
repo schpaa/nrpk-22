@@ -794,7 +794,7 @@
   [sc/surface-a {:class [:pl-2 :p-0]
                  :style {:background-color "var(--floating)"}}
    [sc/row {:style {:width "100%"}}
-    [b/co4
+    [b/co
      {:style {:position      "relative"
               :align-items   "stretch"
               :padding-block "3rem"

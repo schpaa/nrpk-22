@@ -115,7 +115,7 @@
                :border-bottom "1px dashed var(--text2)"}}
 
      ;[l/pre worklog-entry]
-     [b/co4
+     [b/co
       [sc/row-sc-g4-w {:class [:pl-2]
                        :style {:width "100%"}}
        (if deleted
@@ -132,15 +132,15 @@
          (hoc.buttons/just-icon
            {:type     :button
             :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) false)
-            :class    [ :inverse]}
-           ico/check)                                                   
+            :class    [:inverse]}
+           ico/check)
          (hoc.buttons/just-icon
            {:type     :button
             :on-click #(complete-worklog-entry boat-item-id (some-> worklog-entry-id name) true)
             :class    []} ico/check))
 
        ;todo compress!
-       [b/co {:style {:flex "1"}} 
+       [b/co0 {:style {:flex "1"}}
         (some-> timestamp t/instant t/date-time booking.flextime/relative-time)
         [b/small (or uid "Nøkkelvakt")]]]
 
@@ -194,7 +194,7 @@
 ;; components
 
 (defn insert-damage [{:keys [values set-values] :as props}]
-  [b/co4
+  [b/co
    [sc/checkbox-matrix
     (into [:<>]
           (for [e (sort damage-words)]
@@ -216,11 +216,11 @@
      [sc/col-space-1
       [sc/label "Sample Label"]
       [sci/combobox
-       (conj props
-             {:values      people
-              :value-by-id #(zipmap (map :id people) people)})
-
-       :kind? [:w-full] :lable :names]]
+       props
+       {:values      people
+        :value-by-id #(zipmap (map :id people) people)
+        :class [:w-full]
+        :label :names}]]
      [sci/textarea props :text [] "Sample Label" :description]]))
 
 (defn header [_uid {:keys [id work-log slot location description number] :as data}]
@@ -258,27 +258,55 @@
 
 (defonce selected-tab (r/atom :feil))
 
-(defn boat-form [{:keys [values]}]
-  (let [{:keys [id boat-type items]} values]
-    [b/co4 
-     [b/rof
-      [sci/combobox
-       {:sidecar-right [button/icon-and-caption
-                        {:style {:border-radius "var(--radius-1)"
-                                 :border        "2px solid white"}
-                         :class [:field :flip]}
-                        ico/arrowRight'
-                        "Gå til"]
-        :items         items}
-       [:w-full]
-       "Båt-type"]]
+(defn prepare-for-combobox [ds]
+  (transduce
+    (comp
+      (map (fn [[k v]] (assoc v :id k)))
+      (map (fn [{:keys [id navn]}] {:id id :name navn})))
+    conj [] ds))
 
-     [b/co
-      ;;urls to firebase
-      [b/ro [b/text {:style {:user-select :all}} boat-type] [sc/text1 "(type)"]
-       (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
-      [b/ro [b/text {:style {:user-select :all}} id] [sc/text1 "(id)"]
-       (widgets/data-url {:checked-path ["boad-item" id]})]]]))
+(defn boat-form [{:keys [props values]}]
+  (let [{:keys [id boat-type boat-types]} values
+        boat-types (->> boat-types
+                        prepare-for-combobox)]
+    [sc/surface-a
+     [b/co {:class [:frame :p-4]}
+      [b/rof
+       [b/co
+        [sci/combobox
+         props
+         {:items     boat-types
+          #_#_:sidecar-right
+          [b/ro
+           [button/icon-and-caption
+            {:style {:border-radius "var(--radius-1)"
+                     :border        "2px solid white"}
+             :class [:field :flip]}
+            ico/arrowRight'
+            "Gå til"]
+           [button/just-icon {:class [:frame]} ico/trash]
+           [button/icon-and-caption
+            {:xstyle {:border-radius "var(--radius-1)"
+                      :border        "2px solid white"}
+             :class  [:field :light :left-square :right-squarex]}
+            ico/arrowRight'
+            "Gå fra"]]
+          :class     [:w-full]
+          :fieldname :boat-type
+          :label     "Båt-type"}]
+
+        [:div.flex.justify-end.w-full
+         {:style {:user-select :all}}
+         [b/small
+          [b/rof
+           [b/co0
+            [b/ro
+             (l/strp "TYPE:" boat-type)
+             (widgets/data-url {:checked-path ["boat-brand" boat-type]})]
+            [:div.self-end
+             [b/ro {:class [:text-right]}
+              [b/small (l/strp "ID:" id)]
+              (widgets/data-url {:checked-path ["boad-item" id]})]]]]]]]]]]))
 
 (defn modal-boatinfo-windowcontent [{:keys [data on-close uid admin?]}]
   (let [{:keys [id boat-type]} data
@@ -326,10 +354,10 @@
                      :arbeidsliste (when boat-item-id
                                      [insert-worklog
                                       boat-item-id
-                                      #_(r/atom [[1 {:id 1
+                                      #_(r/atom [[1 {:id          1
                                                      :description "desc"
-                                                     :state "state"
-                                                     :deleted false}]])
+                                                     :state       "state"
+                                                     :deleted     false}]])
                                       (db/on-value-reaction {:path ["boad-item" boat-item-id "work-log"]})])
 
                      [boat-form props])])
@@ -369,7 +397,7 @@
     (rf/dispatch [:modal.slideout/show
                   {:data          data
                    :uid           uid
-                   :admin? admin?
+                   :admin?        admin?
                    :on-flag-click (fn [boat-type value]
                                     (rf/dispatch [:star/write-star-change
                                                   {:boat-type boat-type

@@ -9,7 +9,7 @@
             [db.core :as db]
             [reagent.core :as r]
             [schpaa.debug :as l]
-            [booking.styles :as b :refer [ro surface text title co co4]]
+            [booking.styles :as b :refer [ro surface text title co0 co]]
             [booking.ico :as ico]))
 
 (def weather-words
@@ -82,21 +82,21 @@
            (fn [{:keys [handle-submit form-id values set-values handle-change] :as props}]
              #_[:div.bg-white "test"]
              [sc/dialog-dropdown
-              [co
+              [co0
                {:style {:background-color "var(--floating)"}}
 
                [sc/dialog-title "Registrer vær"]
                [:form
                 {:id        form-id
                  :on-submit handle-submit}
-                [b/co4
+                [b/co
                  [surface {:style {:width          "100%"
                                    :padding-inline "1rem"}
                            :class [:emboss]}
                   [ro {:class [:space-x-4]
                        :style {:align-items     :start
                                :justify-content :start}}
-                   [co4
+                   [co
                     [field/dateinput props "Dato" :date]
                     [ro {:style {:align-items :start}}
                      [button/just-caption
@@ -124,7 +124,7 @@
                              (t/< (t/yesterday) dt))))
                        :class    [:round :message]}
                       [sc/icon-small ico/arrowRight']]]]
-                   [co4
+                   [co
                     [field/timeinput props "Klokke" :time]
                     [ro
                      [button/just-caption
@@ -143,8 +143,8 @@
 
                                         :padding-inline "1rem"}
                                 :class [:items-start]}
-                  [b/co4 {:style {:flex "1"}
-                          :class [:self-start]}
+                  [b/co {:style   {:flex "1"}
+                         :class [:self-start]}
                    [field/textinput (assoc props
                                       :type "text"
                                       :autofocus true
