@@ -8,31 +8,30 @@
     [girouette.tw.preflight :as girouette-preflight]
     [my.tokens]))
 
-(defcssfn url)
-(defcssfn format)
+;(defcssfn url)
+;(defcssfn format)
 
 (def global-styles [[:body {:font-family           "Inter"
                             :font-weight           400
-                            :font-size             "1rem"
+                            :font-size             "1rem" 
                             :font-feature-settings "'cv10', 'salt', 'zero'"}]])
 
-(defn produce [filename c]
-  (spit filename c))
 
 ;;this is a commentary
 
 (defn write-styles-hook
   {:shadow.build/stage :flush}
   [build-state & args]
+  (require 'my.tokens :reload)
   (my.tokens/set-it!)
-  (-> "public/booking/css/ornament.css"
-      (produce (apply str (interpose "\n")
-                      [(gc/compile-css
-                        {:pretty-print? false}
-                        (concat  girouette-preflight/preflight global-styles))
-                       (o/defined-styles)
-                       (slurp "template/css/colors.css")])))
-  (println "rebuild styles")
+  (spit "public/booking/css/ornament.css"
+           (apply str (interpose "/* test */\n")
+                  [(slurp "template/css/colors.css")
+                   (gc/compile-css
+                     {:pretty-print? false}
+                     (concat girouette-preflight/preflight global-styles))
+                   (o/defined-styles)]))
+  (println "(eykt) corebuilt styles")
   build-state)
 
 (comment

@@ -40,15 +40,17 @@
     nil))
 
 (defn +memo-lookup-username [uid]
-
   (if-some [_ @(rf/subscribe [::db/user-auth])]
     (:navn @(db/on-value-reaction {:path ["users" uid]}))
     nil))
 
-#_(def lookup-username (memoize +memo-lookup-username))
+(def lookup-username' (memoize +memo-lookup-username))
+
 (defn lookup-username [uid]
   (when-some [_ @(rf/subscribe [::db/user-auth])]
     (:navn @(db/on-value-reaction {:path ["users" uid]}))))
+
+
 
 (defn lookup-by-litteralkeyid [id]
   (when-some [_ @(rf/subscribe [::db/user-auth])]
@@ -67,7 +69,7 @@
           alias (if (empty? (:alias u)) nil (:alias u))
           navn (if (empty? (:navn u)) nil (:navn u))]
 
-      (or alias navn uid (str "failed<lookup-alias>'" uid "'")))))
+      (or alias navn uid #_(str "failed<lookup-alias>'" uid "'")))))
 
 (defn lookup-phone [phone]
   (if-some [_ @(rf/subscribe [::db/user-auth])]

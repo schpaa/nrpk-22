@@ -9,7 +9,8 @@
             [re-frame.core :as rf]
             [booking.ico :as ico]
             [tick.core :as t]
-            [db.core :as db]))
+            [db.core :as db]
+            [clojure.string :as string]))
 
 (defonce state (r/atom {:kald-periode     false
                         :nøkkelnummer     false
@@ -103,6 +104,56 @@
        [:d "Tilbakemeldinger"]]]]]])
 
 (def admin::c (r/cursor state [:admin]))
+
+(defn write-csv
+  "Takes a file (path, name and extension) and
+   csv-data (vector of vectors with all values) and
+   writes csv file."
+  [ csv-data]
+  (apply str (interpose "\n" (for [e csv-data]
+                               (string/join "," e)))))
+
+(defn maps->csv-data
+ "Takes a collection of maps and returns csv-data
+   (vector of vectors with all values)."
+  [maps]
+  (let [columns (-> maps first keys)
+        headers (mapv name columns)
+        rows (mapv #(mapv % columns) maps)]
+    (into [headers] rows)))
+
+(defn write-csv-from-maps
+  "Takes a file (path, name and extension) and a collection of maps
+   transforms data (vector of vectors with all values)
+   writes csv file."
+  [ maps]
+  (->> maps maps->csv-data write-csv))
+
+(comment
+  (do
+    (write-csv-from-maps [{:navn "Arne" :age 1}{:navn "Bjarne" :age 2}])))
+
+(comment
+  "create a csv represenation"
+  (do
+    (let [ensure-number (fn [p] (let [n (js/parseInt p)] (if (js/isNaN n) 0 n)))
+          godkjent-og-ikke-utmeldt (fn [{:keys [godkjent utmeldt timekrav]}] (and godkjent (not utmeldt) (some? timekrav)))
+          eksporterte-felt #(select-keys % [:uid :navn :timekrav :saldo :fødselsår])
+          convert-timekrav (fn [{:keys [timekrav saldo] :as v}] (assoc v :ny (- saldo timekrav)))
+          ensure-timekrav (fn [{:keys [timekrav] :as v}] (assoc v :timekrav (ensure-number timekrav)))]
+      (let [data (transduce (comp
+                              (map val)
+                              (filter godkjent-og-ikke-utmeldt)
+                              (map eksporterte-felt)
+                              (map ensure-timekrav)
+                              (map convert-timekrav))
+                            conj [] @(db/on-value-reaction {:path ["users"]}))
+            fields (mapv key (first data))]
+        (println (count data))
+        (println (write-csv-from-maps data))))))
+
+
+
 
 (defn render [r]
   (let [data (transduce (comp

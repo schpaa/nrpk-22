@@ -16,6 +16,7 @@
             [schpaa.components.fields :as fields]
             [schpaa.components.sidebar]
             [clojure.set :as set]
+            [schpaa.components.views]
             [nrpk.hov]))
 
 (defn- empty-list-message [msg]

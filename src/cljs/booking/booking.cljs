@@ -11,7 +11,9 @@
             [schpaa.style.hoc.toggles :as hoc.toggles]
             [booking.utlan]
             [schpaa.debug :as l]
-            [schpaa.style.hoc.buttons :as button]))
+            [schpaa.style.hoc.buttons :as button]
+            [booking.styles :as b]
+            [clojure.string :as str]))
 
 (defonce settings
          (r/atom {:rent/show-details    false
@@ -59,9 +61,9 @@
 
 (defn basic [loggedin-uid {:keys [uid]}]
   (if (= uid loggedin-uid)
-    [button/just-caption {:class [:regular :normal]
+    [button/just-caption {:class    [:regular :normal]
                           :on-click #()} "Avlys"]
-    [button/just-caption {:class   [:normal]
+    [button/just-caption {:class    [:normal]
                           :on-click #()} "Bli med"]))
 
 (defn edit [loggedin-uid edit-mode? k {:keys [uid deleted timestamp list] :as m}]
@@ -183,29 +185,172 @@
                                   slot))
                  (remove nil? boats))]))])
 
-(defn page [r]
-  (let [user-auth (rf/subscribe [::db/user-auth])
-        loggedin-uid @(rf/subscribe [:lab/uid])]
-    {:panel        panel
-     :always-panel commands
-     :render
-     (fn []
-       (let [data (rf/subscribe [:booking/list])
-             show-deleted? @(rf/subscribe [:booking/common-show-deleted])
-             db @(rf/subscribe [:db/boat-db])
-             lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
-                                             (map (fn [[k v]] [k [(:number v) (:slot v)]]))))]
-         [sc/col-space-8
-          [sc/col-space-1
-           (into [:<>]
-                 (for [[k {:keys [start end  list ] :as m}]
-                       (if show-deleted?
-                         @data
-                         @data)]
-                   [logg-item k (assoc m
-                                  :k k
-                                  :db db
-                                  :boats (map (fn [[id _returned]] (get lookup-id->number (keyword id) (str " ? " id))) list)
-                                  :loggedin-uid loggedin-uid
-                                  :start (t/date-time start)
-                                  :end (t/date-time end))]))]]))}))
+(defn datasource [source]
+  (let [not-deleted (comp not :deleted)
+        only-version-2 (comp (partial <= 2) :version)
+        attach-id #(assoc (second %) :id (first %))
+        after-today (comp #(t/< (t/<< (t/today) (t/new-period 10 :weeks)) (t/date %)) t/date-time :timestamp)]
+    (transduce (comp
+                 (map attach-id)
+                 (filter only-version-2)
+                 (filter not-deleted)
+                 (filter after-today))
+               conj
+               []
+               source)))
+
+(comment
+  (fn []
+    (let []))                                               ;show-deleted? @(rf/subscribe [:booking/common-show-deleted])
+  ;db @(rf/subscribe [:db/boat-db])
+  lookup-id->number (into {} (->> (remove (comp empty? :number val) db)
+                                  (map (fn [[k v]] [k [(:number v) (:slot v)]])))))
+
+(defn as-name [uid]
+  (user.database/lookup-username uid))
+
+(defn as-phone [uid]
+  (:telefon (user.database/lookup-userinfo uid)))
+
+(defn from-to [start-time end-time]
+  (let [more-than-1-day? (not (t/= (t/date start-time) (t/date end-time)))]
+    [b/co0
+     [:div.flex.gap-1 {:style {}
+                       :class [:w-32
+                               :shrink-0]}
+      [b/text (times.api/time-format start-time)]
+      [b/text "->"]
+      (if more-than-1-day?
+        [b/co1
+         [b/text (times.api/day-month end-time)]
+         [b/text (times.api/time-format (t/time end-time))]]
+        [b/text (times.api/time-format (t/time end-time))])]]))
+
+(def state (r/atom {:detail-level {}}))
+
+(def detail-level (r/cursor state [:detail-level]))
+
+;<script src="https://gist.github.com/martinklepsch/c090f114a0b9d95b0b4ae5809ef22f3b.js"></script>
+
+(comment
+  (let [dat [1 2 3]
+        r (into {} (map (juxt identity (constantly true)) (range (count dat))))]
+    [r
+     (not-any? (comp true? val) r)]))
+
+(rf/reg-sub :db/boat-db
+            (fn [_]
+              [(db/on-value-reaction {:path ["boat-brand"]})
+               (db/on-value-reaction {:path ["boad-item"]})])
+            (fn [[brands items] _]
+              (into {}
+                    (comp
+                      (map (fn [[id {:keys [boat-type] :as item}]]
+                             [id (conj (get brands (keyword boat-type))
+                                       item)])))
+                    items)))
+
+(defn page []
+  (let [db (rf/subscribe [:db/boat-db])
+        lookup-id->number (into {} (->> (remove (comp empty? :number val) @db)
+                                        (map (fn [[k v]] [k [(:number v) (:slot v)]]))))
+        raw (concat [[:a {:version   2
+                          :list      ["1" "2" "3" "4"]
+                          ;:uid "123"
+                          :alias     "Alias"
+                          :timestamp (t/now) :start (t/now)
+                          :end       (t/at (t/tomorrow) t/noon)}]
+                     [:c {:version   2
+                          ;:uid "123"
+                          :alias     "Alias"
+                          :list      ["1" "2"]
+                          :timestamp (t/now) :start (t/now)
+                          :end       (t/at (t/tomorrow) t/noon)}]
+                     [:b {:version   2
+                          ;:uid "123"
+                          :alias     "Alias"
+                          :list      ["1"]
+                          :timestamp (t/now) :start (t/now)
+                          :end       (t/at (t/tomorrow) t/noon)}]]
+
+                    @(rf/subscribe [:booking/list]))
+        dat (->> raw
+                 (datasource)
+                 (group-by (comp t/date t/date-time :start)))]
+    (fn []
+      [b/co
+       (button/just-caption
+         {:class    [:small :frame :flip]
+          :on-click #(reset! detail-level
+                             (if (not-any? (comp true? val) @detail-level)
+                               (into {} (map (juxt identity (constantly true)) (range (count dat))))
+                               (into {} (map (juxt identity (constantly false)) (range (count dat))))))}
+         ;ico/selector
+         (if (some #{true} (vals @detail-level)) "Vis alt" "Vis minimalt"))
+       [l/pre @detail-level]
+       [:<> (for [[idx [g e]] (map-indexed vector dat)]
+              [b/ro-js {:on-click #(swap! detail-level update idx (fnil not false))
+                        :class    [:h-auto :w-full]
+                        :style    {:align-items "stretch"}}
+               [:div.flex.items-stretch.w-full.gap-1
+                [:div.self-stretch.flex.items-stretch
+                 [widgets/booking-date g]]
+                [b/co1 {:class [:w-full]}
+                 (case (get @detail-level idx)
+                   true [b/ro1
+                         {:class [:w-full :p-1]
+                          :style {:background-color "var(--floating)"}}
+
+                         (for [{:keys [list] :as e} e
+                               [idx [a b]] (map-indexed vector list)
+                               :let []]
+                           [widgets/simple-badge {:class [:truncate :self-baseline]}
+                            (+ 100 idx)])]
+
+                   (for [e e
+                         :let [{:keys [uid alias timestamp list start end]} e
+                               registered (times.api/day-month (t/date-time timestamp))
+                               start-time (t/date-time start)
+                               end-date (t/date-time end)
+                               items (quote 1)]]
+                     [b/ro {:class [:w-full :p-1]
+                            :style {:background-color   "var(--floating)"
+                                    :line-height        1.2
+                                    :padding-inline-end "0.5rem"
+                                    :align-items        "start"}}
+                      [b/co1 (for [[idx [e _]] (map-indexed vector list)
+                                   :let [e (name e)]]
+                               [widgets/simple-badge {:class [:truncate :self-baseline]}
+                                (+ 100 idx)
+                                "A2"])]
+
+                      [b/ro {:class [:py-2]}
+                       [:div.self-start.-debugx (from-to start-time end-date)]
+                       [b/co {:style {:height "min-content"}
+                              :class [:self-start]}
+                        [b/ro1
+                         [b/dim {:class [:shrink-0]} registered]
+                         [b/text
+                          {:class [:w-full :whitespace-nowrap :truncate]
+                           :style {:text-align "left"
+                                   :flex       "1"
+                                   :width      "100%"}}
+                          (str/trim (if uid (or (as-name uid) "??") (or alias "?")))]]
+                        [b/dim (if uid
+                                 (widgets/user-link uid)
+                                 "---")]]]]))]]])]])
+
+    #_[sc/col-space-8
+       [sc/col-space-1
+        (into [:<>]
+              (for [[k {:keys [start end list] :as m}]
+                    (if show-deleted?
+                      @data
+                      @data)]
+                [logg-item k (assoc m
+                               :k k
+                               :db db
+                               :boats (map (fn [[id _returned]] (get lookup-id->number (keyword id) (str " ? " id))) list)
+                               :loggedin-uid loggedin-uid
+                               :start (t/date-time start)
+                               :end (t/date-time end))]))]]))

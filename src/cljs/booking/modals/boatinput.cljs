@@ -506,7 +506,7 @@
         boat (lookup (or (:selected @st) @c-textinput-boats))]
     [sc/surface-p
      {:on-click #(reset! c-focus :boats)
-      :class    [:top
+      :class    [:top :p-4
                  (when has-focus? :focus)]
       :style    {:padding-block "0.5rem"
                  :padding-left  "0.5rem"

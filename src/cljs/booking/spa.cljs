@@ -47,7 +47,8 @@
             [booking.oversikt]
             [booking.users]
             [eykt.calendar.core]
-            [booking.temperature]))
+            [booking.temperature]
+            [booking.oversikt.styret :as bos]))
 
 ;; shortcuts
 
@@ -287,7 +288,7 @@
 
    :r.yearwheel
    (fn [r]
-     [+page-builder r {                                     ;:panel           booking.yearwheel/panel
+     [+page-builder r {;:panel           booking.yearwheel/panel
                        :headline-plugin booking.yearwheel/headline-plugin
                        ;:always-panel    booking.yearwheel/always-panel
                        :render          booking.yearwheel/render}])
@@ -335,81 +336,8 @@
    :r.oversikt.styret
    (fn [r]
      [+page-builder r
-      {:render (fn []
-                 [:<>
-                  (-> (inline "./oversikt/styret.md") schpaa.markdown/md->html sc/markdown)
-                  (let [data [["/img/personas/noun-persona-436706.png" :m "Ulf Pedersen" "Styreleder" ["Nøkkelvakt\u00adansvarlig"]]
-                              ["/img/personas/noun-persona-622291.png" :m "Tormod Tørstad" "Nestleder" ["Anleggs\u00ADansvarlig for Sjøbasen" "Utstyrs\u00ADansvarlig"]]
-                              ["/img/personas/noun-persona-633483.png" :m "Stein-Owe Hansen" "Styremedlem" ["Sekretær"]]
-                              ["/img/personas/noun-persona-410775.png" :m "Adrian A. Mitchell" "Styremedlem" ["Kasserer"]]
-                              ["/img/personas/noun-persona-622293.png" :m "Chris Schreiner" "Styremedlem" ["Hjemmesiden" "Booking" "Båtlogg" "Eykt"]]
-                              ["/img/personas/noun-persona-4144954.png" :f "Line Stolpestad" "Styremedlem" ["Aktivitets\u00ADansvarlig"]]
-                              ["/img/personas/noun-persona-426505.png" :m "Jan Gunnar Jakobsen" "Vara" []]
-                              ["/img/personas/noun-persona-497844.png" :f "Ylva Eide" "Styremedlem" []]
-                              ["/img/personas/noun-persona-415635.png" :f "Kjersti Selseth" "Styremedlem" []]
-                              ["/img/personas/noun-persona-488544.png" :m "Ole Håbjørn Larsen" "Vara" ["Anleggs\u00ADansvarlig Nøklevann"]]]]
-                    (o/defstyled card :div.relative
-                      :p-4
-                      {:min-height       "13ch"
-                       :background-color "var(--floating)"
-                       :border-radius    "var(--radius-1)"
-                       :box-shadow       "var(--shadow-1)"})
+      {:render bos/render}])
 
-                    (o/defstyled image-container :div.relative
-                      :overflow-hidden
-                      {:border-radius "var(--radius-round)"
-                       ;:border        "2px solid red"
-                       :aspect-ratio  "1/1"
-                       :height        "var(--size-10)"
-                       :clip-path     "circle(100%)"
-                       :overflow      :hidden})
-
-                    (o/defstyled image :img
-                      :p-2 :overflow-hidden
-                      {:transition       "750ms ease-in"
-                       :transform-origin "bottom left"
-                       :background       "var(--textmarker-background)"
-                       :color            "var(--text3)"
-                       :aspect-ratio     "1/1"
-                       :height           "var(--size-10)"
-                       :box-shadow       "var(--inner-shadow-1)"
-                       :border-radius    "var(--radius-round)"}
-                      [:&:hover
-                       {;:transition       "2000ms"
-
-                        :transform "rotate(-70deg) "}])
-
-                    [:ul {:style {:display               :grid
-                                  :gap                   "8px 8px"
-                                  :grid-template-columns "repeat(auto-fit,minmax(20ch,1fr))"}}
-                     (for [[idx [url gender navn role ansvar]] (map-indexed vector data)]
-                       [card
-                        [:div                               ;.flex.items-start.justify-between.gap-4
-                         [:div.float-right.pl-2.-mr-2.-mt-2
-                          [image-container
-                           [image {:src (if url
-                                          url
-                                          (first (nth (filter (comp #(= gender %) second) booking.personas/faces) idx)))}]
-                           [:img {:style {:position   :absolute
-                                          :inset      "0"
-                                          :margin     :auto
-                                          :width      "90%"
-                                          :z-index    -1
-                                          :object-fit :contain}
-                                  :src   "/img/tidslinje_3.png"}]]]
-                         [:div.clear-left.space-y-1.mr-3
-                          [:h3 {:style {:font-family "Merriweather"}} role]
-                          [sc/text1 navn]
-                          [sc/small1
-                           (interpose ", "
-                                      (map (fn [e]
-                                             [:span {:style {:line-height "var(--font-lineheight-3)"}} e])
-                                           ansvar))]]]
-                        [:div.absolute.bottom-2.right-2
-                         (sc/icon-small
-                           {:style    {:color "var(--text3)"}
-                            :on-click #(rf/dispatch [:app/give-feedback {:navn navn :caption "Vær kort og konstruktiv. Meldingen blir ikke nødvendigvis besvart."}])}
-                           ico/tilbakemelding)]])])])}])
    :r.oversikt.organisasjon
    (fn [r]
      [+page-builder
@@ -485,7 +413,8 @@
                                   (let [n (.toString e 2)
                                         c (- 8 (count n))]
                                     (apply str n (take c (repeatedly (constantly " 0 ")))))])])}))
-   :r.booking            (fn [r] (page r (booking.booking/page r)))
+   :r.booking            (fn [r] (page r {:render (booking.booking/page)}))
+
    #_#_:r.temperature (fn [r] (page r {:headline-plugin booking.utlan/headline-plugin
                                        :render          (fn [] [booking.temperature/render r])}))
    :r.users

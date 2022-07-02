@@ -1,7 +1,10 @@
 (ns booking.fiddle
   (:require [lambdaisland.ornament :refer [defstyled]]
             [schpaa.style.ornament :as sc]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [booking.styles :as b]
+            [schpaa.style.hoc.buttons :as button]
+            [booking.ico :as ico]))
 
 (defstyled debug :div
   {:outline "1px solid yellow"})
@@ -47,7 +50,7 @@
                   (= current-page page-name))
         class (if active? :selected (if (not disable?) :normal))]
     [outer-button
-     {:on-click #((:on-click d))}
+     {:on-click #((:on-click d))} 
      [button
       {:class [:relative
                class
@@ -74,5 +77,11 @@
      {:grid-template-columns "repeat(7,1fr)"}]]])
 
 (defn render [d]
-  [toolbar (into [:<>]
-                 (map-indexed button-fn d))])
+  [sc/surface-ab {:class [:p-1]}
+   [:p "test"]
+   ;[button/icon-and-caption {:class [:small :cta]} ico/check "caption"]
+   ;[button/just-icon {:class [:small :message]} ico/check]
+   [b/text "test"]
+   [:div {:style {:background "var(--red-4)"}} "hei"]
+   #_[toolbar (into [:<>]
+                    (map-indexed button-fn d))]])

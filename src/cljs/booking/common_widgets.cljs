@@ -17,7 +17,8 @@
             [schpaa.style.hoc.buttons :as button]
             [booking.styles]
             [clojure.set :as set]
-            [booking.data]))
+            [booking.data]
+            [booking.styles :as b]))
 
 (declare data-url)
 
@@ -219,13 +220,13 @@
 
          icon-fn
          [sc/toolbar-button
-            {:disabled  disabled
-             :tab-index (when selected? "-1")
-             :class     [screen-side
-                         (if selected? (or (when class (class current-page)) :selected))
-                         :mb-4
-                         (if special :special)]}
-            (icon-fn current-page)])]]]))
+          {:disabled  disabled
+           :tab-index (when selected? "-1")
+           :class     [screen-side
+                       (if selected? (or (when class (class current-page)) :selected))
+                       :mb-4
+                       (if special :special)]}
+          (icon-fn current-page)])]]]))
 
 (defn stability-circle [{:keys [stability expert]}]
   [:div.px-px.flex.justify-center.items-center
@@ -347,7 +348,7 @@
   (let [{mobile? :mobile?} @(rf/subscribe [:lab/screen-geometry])]
     (if (or smallest mobile?)
       [button/just-icon
-       {:on-click on-click 
+       {:on-click on-click
         :class    [(if deleted? :danger-outline :danger)
                    (if mobile? :round :pad-right)]
         :disabled false}
@@ -389,7 +390,7 @@
        ico/undo
        ico/trash)]))
 
-(defn edit [attr on-click {:keys [deleted ] :as m}]
+(defn edit [attr on-click {:keys [deleted] :as m}]
   (let [{:keys [mobile?]} @(rf/subscribe [:lab/screen-geometry])
         attr (conj
                attr
@@ -592,8 +593,7 @@
                [:div.overflow-visible.w-full question]]])]
 
        [ui/disclosure
-        {
-         :style {:cursor :default}}
+        {:style {:cursor :default}}
         (fn [_]
           [sc/co {:class [:overflow-x-hidden :w-full]}
            [ui/disclosure-button
@@ -682,7 +682,17 @@
       [sc/badge-2 (update attr :class conj :right-square :round :work-log) e])
     [sc/row
      [sc/badge-2 (update attr :class conj :right-square :regular) n]
-     [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")]]]))
+     (when v [sc/badge-2 (update attr :class conj :slot) (if v (str/trim v) "—")])]]))
+
+(defn simple-badge
+  ([attr e]
+   (simple-badge attr e nil))
+  ([attr e slot]
+   [sc/row-sc'
+    [sc/row
+     [sc/badge-2 (update attr :class conj :small (when slot :right-square) :regular) e]
+     (when slot [sc/badge-2 (update attr :class conj :slot :left-square :small :regular) slot])]]))
+
 
 (defn deleted? [[k v]]
   (nil? k))
@@ -917,9 +927,9 @@
 
 (defn data-url [{:keys [checked-path text caption]}]
   (let [path (apply str (interpose "/" (mapv #(if (keyword? %) (name %) %) checked-path)))]
-    (sc/link {:class  [:truncate]
+    (sc/link {:class  [:truncate :neutral]
               :style  {:text-decoration "none"
-                       :line-height "auto"}
+                       :line-height     "auto"}
               :target "_blank"
               :href   (if goog.DEBUG
                         (str "http://localhost:4000/database/nrpk-vakt/data/" path)
@@ -927,3 +937,32 @@
              (if text
                (text caption)
                "url"))))
+
+
+
+(defn booking-date [date]
+  (let [start-date (times.api/day-month date)
+        day-name (times.api/day-name date :length 2)]
+    [b/ro1
+     {:style {:width      "4rem"
+              :border-bottom-left-radius "var(--radius-1)"
+              :border-top-left-radius "var(--radius-1)"
+              :overflow :clip
+              :min-width  "6rem"
+              :min-height "min-content"
+              :height     "100%"}}
+     [b/ddaycontainer
+      [b/center
+       [b/text {:class [:whitespace-nowrap :uppercase]
+                :style {;:width            "100%"
+                        ;:height           "100%"
+                        :color "var(--text2)"}}
+        day-name]]]
+     [b/center
+      {:class [:self-start]
+       :style {:background-color "var(--toolbar)"}}
+      [b/text {:class [:whitespace-nowrap]
+               :style {:text-align :end
+                       :max-height "3rem"
+                       :color      "var(--text1)"}}
+       start-date]]]))

@@ -22,28 +22,26 @@
             [schpaa.debug :as l]
             [tick.core :as t]))
 
-
 (defcard-rg somecard
   [:div
    {:style {:font-size "100%"}}
    [sud/addpost-form
-    {:data {:text 1
-            :tldr "kort beskrivelse"
-            :content "# some content"
-            :date      (str (t/today))
-            :type     0}}]])
+    {:data {:type    0
+            :tldr    "kort beskrivelse"
+            :content "# some markdown-content"
+            :date    (str (t/today))}}]])
 
 (defcard-rg boatinfo
   [:div
    {:style {:font-size "100%"}}
    [sud2/modal-boatinfo-windowcontent
-    {:uid "x"
+    {:uid    "x"
      :admin? true
-     :data {;id work-log slot location description
-            :slot "3A"
-            :work-log []
-            :number "XYZ"
-            :id "1" :boat-type "2"}}]])
+     :data   {;id work-log slot location description
+              :slot     "3A"
+              :work-log []
+              :number   "XYZ"
+              :id       "1" :boat-type "2"}}]])
 
 
 
@@ -69,14 +67,15 @@
         [sci/input props :text {:class []} :label :fieldname]
         [:div.w-56
          [sci/combobox
+          {}
           {:value-by-id   #(get (zipmap (map :id values) values) %)
            :items         values
            :value         0
            :name          :combobox-field
-           :handle-change handle-change}
-          [:someclass]
-          "Names"
-          :combobox-field]]]])]])
+           :handle-change handle-change
+           :class         [:someclass]
+           :label         "Names"
+           :fieldname     :combobox-field}]]]])]])
 
 (defonce state (r/atom {:selected  1
                         :selected2 0}))
@@ -111,20 +110,24 @@
    [:div.w-56
     [l/pre-s (:selected @st)]
     [sci/combobox
+     {}
      {:value       (:selected @st)
       :value-by-id #(get (zipmap (map :id values) values) % "|?|")
       :on-change   #(swap! st assoc :selected %)
-      :items       values}
-     [] "Some test-label" :combobox-field]]
+      :items       values
+      :class       []
+      :label       "Some test-label"
+      :fieldname   :combobox-field}]]
 
    [:div.w-56
     [l/pre-s (:selected2 @st)]
     [sci/combobox
      {:value     (:selected2 @st)
-
       :on-change #(swap! st assoc :selected2 %)
       :items     values2}
-     [] "Some test-label" :combobox-field2]]])
+     {:class     []
+      :label     "Some test-label"
+      :fieldname :combobox-field2}]]])
 
 (defcard-rg combobox-basics
   (fn [st _]
