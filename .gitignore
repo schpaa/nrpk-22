@@ -1,0 +1,7 @@
+*.log
+.shadow-cljs
+node_modules
+.cpcache
+.firebase
+*.swp
+public/booking/**
