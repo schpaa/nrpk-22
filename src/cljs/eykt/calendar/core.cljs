@@ -2,7 +2,8 @@
   (:require [db.core :as db]
             [tick.core :as t]
             [schpaa.time]
-            [eykt.calendar.views :as views]))
+            [eykt.calendar.views :as views]
+            [schpaa.debug :as l]))
 
 (def all-week [t/MONDAY t/TUESDAY t/WEDNESDAY t/THURSDAY t/FRIDAY t/SATURDAY t/SUNDAY])
 
@@ -166,15 +167,9 @@
     (when-let [c (calculate config n)]
       (cons c (iterate-dates config (inc n))))))
 
-#_(defn expand-date-range [config]
-    (let [config {:rules     (expand short-rules)
-                  :utc-start (t/at (t/date "2022-05-07") (t/time "00:00"))
-                  :utc-end   (t/at (t/date "2022-10-09") (t/time "00:00"))}]
-      (iterate-dates config 0)))
-
 (defn routine
   "Takes input (from db) and dislocates the keys of the parent and the immediate child.
-  Unsure where and how to use this, (if at all useful?)"
+  This sets the core premise of how the calendar deals with data"
   [db-input]
   (loop [xs db-input
          r {}]
@@ -195,6 +190,8 @@
                     0)
                   (filter (fn [[v]] (pos? (:slots v)))))]
     (fn [r]
-      [views/table
-       {:base (routine @listener)
-        :data data}])))
+      [:div
+       (count data)
+       [views/table
+        {:base (routine @listener)
+         :data data}]])))

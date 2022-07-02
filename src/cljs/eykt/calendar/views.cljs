@@ -8,7 +8,9 @@
             [times.api :refer [format]]
             [booking.ico :as ico]
             [schpaa.style.ornament :as sc]
-            [schpaa.style.hoc.buttons :as button]))
+            [schpaa.style.hoc.buttons :as button]
+            [booking.styles :as b]
+            [clojure.string :as str]))
 
 ;; styles
                              
@@ -23,7 +25,7 @@
    {:user-select   :none
     :border-radius "var(--radius-0)"}])
 
-(o/defstyled avail-user-slot :div
+(o/defstyled avail-user-slot' :div
   [:&
    {:color            "green"
     :box-shadow       "var(--inner-shadow-1)"
@@ -79,28 +81,60 @@
 
 (defn- badge-text [this-uid owner? cancelled?]
   (let [{:keys [alias navn]} (user.database/lookup-userinfo (name this-uid))
-        badge-text (cond
-                     (not (empty? alias)) alias
-                     (not (empty? navn)) navn
-                     :else "...")]
-    [sc/text1 {:style {:color (if cancelled? :unset (when owner? :unset))}
-               :class [:truncate]}
-     badge-text]))
+        navn (cond
+               (not (empty? alias)) alias
+               (not (empty? navn)) navn
+               :else "...")
+        fornavn (butlast (str/split " " badge-text))
+        etternavn (last (str/split " " badge-text))
+        xs (str/split navn #" ")
+        etternavn (last xs)
+        fornavn (apply str (str/join " " (butlast xs)))]
+    [b/co0 {:class [:truncate]
+            :style {:justify-content :space-between}}
+     [b/text
+      {:class [:bold :truncate]
+       :style {:line-height 1.1
+               :color (if cancelled? :unset (when owner? :unset))}}
+      etternavn]
+     [b/small {:class [:truncate]
+               :style {}}
+      fornavn]]))
+
+(comment                                 
+  (let [navn "peter johsnen-iversen"
+        xs (str/split navn #" ")
+        etternavn (last xs)
+        fornavn (apply str (butlast xs))]
+    {:fornavn fornavn
+     :etternavn etternavn}))
 
 ;endregion
+
+(defn avail-user-slot [ uid section starttime-key]
+  [b/co0 {:class [:truncate]
+          :style {:justify-content :space-between}
+          :sstyle    {:background-color "var(--floating)"
+                      :padding          "0.25rem"}
+          :on-click (fn [] (let [args {:uid uid :section section :timeslot starttime-key}]
+                             (actions/add args)))}
+   [b/text
+    {:class [:bold]
+     :style {:line-height 1.1}}
+    "Ledig"]])
+
 
 (defn occupied-slot [uid [this-uid status]]
   (let [owner? (= this-uid uid)
         cancelled? (and (map? status) (:cancel status))
         path (if owner? [:r.min-status] [:r.dine-vakter {:id this-uid}])]
     [sc/taken-user-slot2
-     {:class    [:h-full (if cancelled? :cancelled (when owner? :owner))]
-      :style    {:color "white"
+     {:class    [:h-12 (if cancelled? :cancelled (when owner? :owner))]
+      :style    {:color "var(--text1)"
                  :background-color (if owner?
                                      "var(--brand1)"
                                      "var(--toolbar)")}
       :on-click #(rf/dispatch [:app/navigate-to path])}
-
      (badge-text this-uid owner? cancelled?)]))
 
 (defn command [mobile? uid base section slots-free starttime-key]
@@ -126,12 +160,12 @@
 
          (if mobile?
            [button/just-icon
-            {:class    [:cta :padded]
+            {:class    [:cta]
              ;:type     :button
              :on-click #(actions/add path)}
             ico/bytte]
            [button/icon-and-caption
-            {:class    [:cta :padded]
+            {:class    [:cta  :flip]
              ;:type     :button
              :on-click #(actions/add path)}
             ico/plus
@@ -220,12 +254,17 @@
                                         :style {:width       "100%"
                                                 :flex-wrap   :nowrap
                                                 :align-items "start"}}
-                        [sc/col-space-1
-                         {:class [:justify-center :h-10 :w-16]
-                          :style {:white-space :nowrap
-                                  :max-width   "3rem"}}
-                         [sc/text1 "" (t/hour starttime) "–" (t/hour endtime)]]
+                        [b/co
+                         {:class [:w-16]
+                          :style {:white-space :nowrap}}
+
+                         [b/ro {:style {:justify-content "space-between"}}
+                          [b/text  (t/hour starttime)]
+                          [b/text  "—"]
+                          [b/text (t/hour endtime)]]]
+
                         [command mobile? uid base section slots-free starttime-key]
+
                         ; for every line
                         [:div {;:class [:-debug3 :h-full]
                                :style {:flex "1 0 auto"
@@ -233,15 +272,9 @@
                                        :column-gap "0.5rem"
                                        :row-gap "0.5rem"
                                        :display "grid"
-                                       :grid-auto-rows "2.5rem"
+                                       ;:grid-auto-rows "2.5rem"
                                        :grid-template-columns "repeat(auto-fill,minmax(6rem,1fr))"}}
                          (mapcat identity
                                  [(mapv (fn [e] [occupied-slot uid e]) slots-on-this-eykt)
-                                  (mapv (fn [] [avail-user-slot
-                                                {:style    {:background-color "var(--floating)"
-                                                            :padding          "0.25rem"}
-                                                 :on-click (fn [] (let [args {:uid uid :section section :timeslot starttime-key}]
-                                                                    (actions/add args)))}
-                                                "Ledig"])
-
+                                  (mapv (fn [] [avail-user-slot uid section starttime-key])
                                         (range slots-free))])]]]))]))]))

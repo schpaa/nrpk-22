@@ -126,8 +126,8 @@
 ;; state
 
 (defonce settings
-         (r/atom {:selector             :c
-                  :stats                {:båtlogg/vis-statistikk true
+         (r/atom {:selector             :a
+                  :stats                {:båtlogg/vis-statistikk false
                                          :days-back-in-time      30
                                          :offset                 0}
                   :list                 {:rent/show-details false}

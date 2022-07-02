@@ -22,7 +22,6 @@
             [schpaa.debug :as l]
             [tick.core :as t]))
 
-
 (defcard-rg somecard
   [:div
    {:style {:font-size "100%"}}

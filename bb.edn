@@ -31,7 +31,8 @@
                  (shell "open http://localhost:9630"))
                                         ;-devcards:css (shell "npx tailwindcss -i ./template/styles/style.css -o ./public/devcards/css/output.css --watch")
                                         ; -o ./public/eykt/css/output.css
-  -dev:css     (shell "npx tailwindcss -o ./public/booking/css/output.css  --watch")
+  -dev:css     (shell "npx tailwindcss -o ./public/booking/css/output.css --watch")
+  devcard:css  (shell "npx tailwindcss -o ./public/devcard/css/output.css --watch")
   -dev:watch   (clojure (str "-M:shadow-cljs server "))
   -dev         {:depends [-dev:watch]}
   stats        {:depends []

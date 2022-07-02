@@ -9,6 +9,7 @@
 (def trash [:> outline/TrashIcon])
 (def trash-filled [:> solid/TrashIcon]) 
 (def check [:> solid/CheckIcon])
+(def comboBoxSelector [:> solid/SelectorIcon])
 (def bookmark [:> outline/BookmarkIcon])
 (def eye [:> outline/EyeIcon])
 (def eye-off [:> outline/EyeOffIcon])

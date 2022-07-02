@@ -3,13 +3,14 @@
  :deps              {:aliases [:shadow-cljs]}
  :nrepl             {:port 9000}
  :cache-blockers    #{lambdaisland.ornament}
- ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
+                                        ;:dependencies      [[day8/shadow-git-inject "0.0.5"]]
  :dev-http          {8010 "public/booking"
                      8020 "public/eykt"
                      8030 "public/test"
                      3001 ["public/devcards" "public"]}
  :builds            {:devcards
                      {:target           :browser
+                      :build-hooks      [(my.hooks/write-styles-hook)]
                       :output-dir       "public/devcards/js"
                       :modules          {:main {:init-fn devcards.devcards/init!}}
                       :after-load       devcards.devcards/reload!
@@ -56,7 +57,7 @@
                       :after-load        booking.core/reload!
                       :ignore-warnings true
                       :modules           {:main {:init-fn booking.core/init!}}
-                      :module-hash-names 4    
+                      :module-hash-names 4
                       :release           {:output-dir       "dist/booking/js"
                                           :compiler-options {#_#_:warnings-as-errors {:ignore #{taoensso cljc.java-time}
                                                                                       :warnings-types #{:undeclared-var}}

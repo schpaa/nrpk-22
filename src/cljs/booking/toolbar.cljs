@@ -44,14 +44,14 @@
         :page-name    :r.mine-vakter-ipad #_#(some #{%} [:r.min-status :r.user])}
 
        {:icon-fn      (fn [] (sc/icon-large ico/user))
-        :caption      "Mine opplysninger"
+        :caption      "Mine opplysninger"                                      
         :default-page :r.min-status
         :class        #(if (= % :r.user) :oversikt :selected)
         :on-click     #(rf/dispatch [:app/navigate-to [(if (= % :r.min-status) :r.user :r.min-status)]])
         #_#(rf/dispatch [:app/navigate-to [:r.min-status]])
         :page-name    #(some #{%} [:r.min-status :r.user])})
 
-     (when (or goog.DEBUG @admin? @nokkelvakt ipad?)
+     (when (or goog.DEBUG @admin? @nokkelvakt ipad?) 
        {:icon-fn      #(-> ico/mystery1)
         :disabled     false
         :caption      "Utlån Nøklevann"
@@ -66,12 +66,12 @@
         :default-page :r.nokkelvakt
         :page-name    :r.nokkelvakt})
 
-     #_(when (or @admin? @booking?)
-         {:icon-fn      (fn [] (sc/icon-large ico/booking))
-          :caption      "Booking Sjøbasen"
-          :default-page :r.booking
-          :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
-          :page-name    :r.booking})
+     (when (or @admin? @booking?)
+       {:icon-fn      (fn [] (sc/icon-large ico/booking))
+        :caption      "Booking Sjøbasen"
+        :default-page :r.booking
+        :on-click     #(rf/dispatch [:app/navigate-to [:r.booking]])
+        :page-name    :r.booking})
 
      (when (or @member? @admin? @registered?)
        {:icon-fn      (fn [] (sc/icon-large ico/yearwheel))

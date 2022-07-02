@@ -42,10 +42,12 @@
 (defn default-form-wrapper [{:keys [content-fn on-submit validation-fn current-values state]}]
   [fork/form
    {:prevent-default?    true
-    :keywordize-keys     true
+    :keywordize-keys     true         
     :form-id             "form-id-100"
+    ;:initial-values current-values        
     :validation          #(validation-fn %)
-    :component-did-mount (fn [{:keys [set-untouched] :as f}]
+    ;:component-will-unmount (fn [_] (js/alert "!"))
+    :component-did-mount (fn [{:keys [set-values set-touched set-untouched] :as f}]
                            ;(tap> [:component-did-mount
                            ;       current-values
                            ;       (keys f)])
@@ -60,32 +62,33 @@
      [:form.p-0 {:id        form-id
                  :on-submit handle-submit}
       ;(tap> values)
-      (when content-fn (content-fn props))])])
+      [b/co
+       (when content-fn (content-fn props))
+       [l/pre-s values]]])])
 
 (def state (r/atom {:boat-type 1}))
 
 (defn prepare-for-combobox [ds]
-  (transduce
-    (comp
-      (map (fn [[k v]] (assoc v :id k)))
-      (map (fn [{:keys [id navn]}] {:id id :name navn})))
-    conj [] ds))
+  (into []
+        (comp
+          (map (fn [[k {:keys [navn]}]] {:id k :name navn})))
+        ds))
 
 (defcard-rg data
   (fn [state _]
-    (r/with-let [boat-types (db.core/on-value-reaction {:path ["boat-brand"]})]
-      [:div {:style {:background-color "var(--yellow-2)"
+    (r/with-let [boat-types #_(r/atom {"id1" {:navn "name"}}) (db.core/on-value-reaction {:path ["boat-brand"]})]
+      [:div {:style {:background-color "var(--pink-2)"
                      :padding          "1rem"}}
-       [l/pre-s (count @boat-types)]
+       ;[l/pre-s @boat-types]    
        (default-form-wrapper
          {:state          state
           :on-submit      (fn [values] (js/alert values))
-          :current-values {:textfield "abc"
-                           :boat-type 1}
+          :current-values {:boat-type (name :-Me9qgkllZSqK9rccZxe)
+                           :textfield "abasdc"}
           :validation-fn  (fn [{:keys [textfield boat-type]}]
                             (into {} (remove (comp nil? val)
                                              {:boat-type (cond-> nil
-                                                           (empty? boat-type)
+                                                           (nil? boat-type)
                                                            ((fnil conj []) "mangler"))
                                               :textfield (cond-> nil
                                                            (empty? textfield)
@@ -93,13 +96,23 @@
 
           :content-fn     (fn [{:keys [values errors dirty reset] :as props}]
                             [b/co
-                             [l/pre-s values]
+                             ;[l/pre-s values]
                              [sci/combobox
                               props
                               {:items     (prepare-for-combobox @boat-types)
+                               :on-add    #(swap! boat-types assoc :new {:navn %})
                                :class     [:w-full]
-                               :fieldname :boat-type
-                               :label     "Båt-type"}]
+                               :label     "Båt-type"
+                               :fieldname :boat-type}]
+
+                             [sci/combobox
+                              props
+                              {:items     (prepare-for-combobox {:add-item {:navn "Legg til"}
+                                                                 :new-item {:navn "Ny"}})
+                               :on-add    #()
+                               :class     [:w-full]
+                               :label     "Selector"
+                               :fieldname :selector}]
 
                              #_(sud/boat-form
                                  {:props  props
